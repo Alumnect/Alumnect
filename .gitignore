@@ -1,0 +1,16 @@
+# React / Node rác
+**/node_modules/
+**/dist/
+**/build/
+**/.env
+
+# Java Spring Boot rác
+**/target/
+**/.gradle/
+.idea/
+*.iml
+*.class
+
+# Hệ điều hành rác
+.DS_Store
+Thumbs.db
