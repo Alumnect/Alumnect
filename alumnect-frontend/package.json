@@ -7,9 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "prepare": "cd .. && npx husky",
-    "postinstall": "git config --local push.autoSetupRemote true"
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^19.2.6",
