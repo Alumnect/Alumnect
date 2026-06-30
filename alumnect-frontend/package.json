@@ -8,8 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepare": "cd .. && husky",
-    "postinstall": "git config push.autoSetupRemote true"
+    "prepare": "cd .. && npx husky",
+    "postinstall": "git config --local push.autoSetupRemote true"
   },
   "dependencies": {
     "react": "^19.2.6",

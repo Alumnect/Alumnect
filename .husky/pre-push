@@ -1,30 +1,27 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
-# 1. Lấy tên nhánh hiện tại
-local_branch="$(git rev-parse --abbrev-ref HEAD)"
+branch=$(git rev-parse --abbrev-ref HEAD)
 
-# 2. Regex quy chuẩn trùng khớp với GitHub
-valid_branch_regex="^(feature|bugfix|hotfix|chore|docs)\/[a-z0-9._-]+$"
+regex='^(feature|bugfix|hotfix|chore|docs)/[a-z0-9]+(-[a-z0-9]+)*$'
 
-# 3. Loại trừ nhánh chính
-if [ "$local_branch" = "main" ] || [ "$local_branch" = "dev" ]; then
-    exit 0
+if ! printf "%s" "$branch" | grep -Eq "$regex"; then
+  echo ""
+  echo "======================================="
+  echo "❌ INVALID BRANCH NAME"
+  echo "======================================="
+  echo ""
+  echo "Current branch:"
+  echo "   $branch"
+  echo ""
+  echo "Allowed examples:"
+  echo "   feature/login-page"
+  echo "   feature/user-profile"
+  echo "   bugfix/api-error"
+  echo "   hotfix/payment"
+  echo "   chore/update-readme"
+  echo "   docs/setup-guide"
+  echo ""
+  exit 1
 fi
 
-# 4. Kiểm tra điều kiện đặt tên nhánh
-if ! echo "$local_branch" | grep -Eq "$valid_branch_regex"; then
-    echo "========================================================================="
-    echo "❌ LỖI GIT LOCAL: TÊN NHÁNH KHÔNG ĐÚNG QUY CHUẨN CỦA DỰ ÁN!"
-    echo "-------------------------------------------------------------------------"
-    echo "Bạn đang đứng ở nhánh: '$local_branch'"
-    echo "Hệ thống (bao gồm cả Admin) bắt buộc đặt tên theo cú pháp:"
-    echo "  - feature/ten-chuc-nang   (Ví dụ: feature/login-page)"
-    echo "  - bugfix/ten-loi          (Ví dụ: bugfix/fix-cors-error)"
-    echo "  - hotfix/loi-khan-cap     (Ví dụ: hotfix/fix-crash-payment)"
-    echo "  - chore/cấu-hình          (Ví dụ: chore/update-docker)"
-    echo "  - docs/tai-lieu           (Ví dụ: docs/update-readme)"
-    echo "========================================================================="
-    exit 1
-fi
-
-exit 0
+echo "✅ Branch name OK"
