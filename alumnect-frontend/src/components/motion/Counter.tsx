@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { animate, useInView, useReducedMotion } from 'framer-motion'
+import { cn } from '@/lib/utils'
 
 type CounterProps = {
   value: number
@@ -36,7 +37,7 @@ export function Counter({ value, className, suffix = '', prefix = '', duration =
     : Math.round(display).toLocaleString('en-US')
 
   return (
-    <span ref={ref} className={className}>
+    <span ref={ref} className={cn('tabular-nums', className)}>
       {prefix}
       {formatted}
       {suffix}

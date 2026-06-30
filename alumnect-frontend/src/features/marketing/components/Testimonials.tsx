@@ -36,8 +36,8 @@ export function Testimonials() {
       </Container>
 
       <div className="relative mt-14 space-y-5">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32 bg-gradient-to-r from-ink-900 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-32 bg-gradient-to-l from-ink-900 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#faf4ec] to-transparent sm:w-40" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#faf4ec] to-transparent sm:w-40" />
         <Marquee speed={44}>
           {row1.map((t, i) => (
             <Card key={`a-${i}`} t={t} />

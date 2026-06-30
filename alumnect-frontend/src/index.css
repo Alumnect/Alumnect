@@ -28,10 +28,10 @@
   --color-cream-200: #f4ebe0;
   --color-cream-300: #ecdfce;
 
-  /* ---- Warm plum ink (text) ---- */
-  --color-plum-300: #b8b0c2;
-  --color-plum-400: #9f95ac;
-  --color-plum-500: #837a90;
+  /* ---- Warm plum ink (text) — tuned for WCAG-AA on cream ---- */
+  --color-plum-300: #9b91a8;
+  --color-plum-400: #877d96;
+  --color-plum-500: #6f6680;
   --color-plum-600: #6a6178;
   --color-plum-700: #534b62;
   --color-plum-800: #413a50;
@@ -57,11 +57,14 @@
   --color-coral-300: #ffc8ba;
   --color-coral-400: #ffa48f;
   --color-coral-500: #fb8366;
+  --color-coral-600: #ec5f3e;
+  --color-coral-700: #cf4a2c;
 
   /* ---- Mint ---- */
   --color-mint-300: #bdecd9;
   --color-mint-400: #8bdcb9;
   --color-mint-500: #5ecb9b;
+  --color-mint-700: #2f9e74;
 
   /* ---- Sky ---- */
   --color-sky-300: #c0e2ff;
@@ -71,12 +74,14 @@
   /* ---- Aqua / teal (legacy name kept) ---- */
   --color-aqua-400: #4dc6d4;
   --color-aqua-500: #29adbe;
+  --color-aqua-700: #1b7a86;
 
   /* ---- Honey / gold (alumni prestige accent) ---- */
   --color-gold-300: #ffdf9c;
   --color-gold-400: #f8c863;
   --color-gold-500: #efaf3e;
   --color-gold-600: #d4922a;
+  --color-gold-700: #a66b14;
 
   /* ---- Soft, warm shadows & glows ---- */
   --shadow-soft: 0 12px 36px -18px rgb(120 100 140 / 0.32);

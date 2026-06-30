@@ -5,7 +5,7 @@ import { Reveal, Magnetic, Starfield } from '@/components/motion'
 
 export function FinalCTA() {
   return (
-    <section className="relative py-12">
+    <section className="relative py-20">
       <Container>
         <Reveal>
           <div className="relative overflow-hidden rounded-[2.4rem] px-6 py-20 text-center shadow-soft ring-1 ring-inset ring-plum-900/10">

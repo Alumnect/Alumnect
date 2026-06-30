@@ -45,7 +45,7 @@ export function WordReveal({ text, className, delay = 0, highlightClass = 'text-
         const hl = w.startsWith('*') && w.endsWith('*')
         const clean = hl ? w.slice(1, -1) : w
         return (
-          <span key={i} className="inline-block overflow-hidden align-bottom">
+          <span key={i} className="inline-block overflow-hidden pb-[0.16em] align-bottom -mb-[0.16em]">
             <motion.span
               className={cn('inline-block', hl && highlightClass)}
               variants={{

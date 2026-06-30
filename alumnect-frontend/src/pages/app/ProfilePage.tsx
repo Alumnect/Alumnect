@@ -9,7 +9,7 @@ import {
   BadgeCheck,
   Calendar,
 } from 'lucide-react'
-import { Avatar, Badge, Card } from '@/components/ui'
+import { Avatar, Badge, Card, SmartImage } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Counter } from '@/components/motion'
 import { compact } from '@/lib/utils'
@@ -29,12 +29,12 @@ export function ProfilePage() {
       {/* cover */}
       <Reveal>
         <div className="relative h-48 overflow-hidden rounded-3xl sm:h-60">
-          <img
+          <SmartImage
             src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1600&auto=format&fit=crop"
-            alt=""
-            className="h-full w-full object-cover"
+            alt="Profile cover"
+            className="h-full w-full"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-plum-900/40 to-transparent" />
           <Button size="sm" variant="glass" className="absolute right-4 top-4" leftIcon={<Settings size={15} />}>
             Edit profile
           </Button>

@@ -85,3 +85,21 @@ npm run build    # tsc -b && vite build  (passes clean)
 - lucide-react in this version has **no brand icons** (Github/LinkedIn/etc.) — use
   generic icons.
 - White text is only used on gradient/photo-scrim surfaces; body/card text is `plum-*`.
+
+## 7. Changelog
+
+### 2026-06-30
+- Initial premium UI/UX build (design system, motion library, landing, auth, member app, admin).
+- Re-themed from dark "techy" to **warm pastel / human** direction; removed the global cursor-follow glow.
+- Member app shell converted to a **Facebook/LinkedIn-style top header** (primary tabs, Create,
+  Messages, Notifications, More-apps menu, account dropdown) + mobile bottom bar & sheet; tabs are
+  icon-only with hover-label tooltips and a shared underline active marker.
+- Ran a multi-agent premium design audit and applied the high-value fixes:
+  - `SmartImage` (loading shimmer + pastel fallback) for all cover/banner photos; `Avatar` falls back
+    to initials on load error — broken external images can no longer show.
+  - Photo-independent, richer hero (composed in-app preview + feature chips) to fix the "empty" feel.
+  - WCAG-AA contrast pass (darkened `plum`, added `aqua-700`/`gold-700`/`mint-700`/`coral-600-700`,
+    re-toned badges); fixed the Testimonials edge-fade (was white over cream).
+  - Reduced-motion guard on cursor parallax, descender-clip fix in `WordReveal`, `tabular-nums` counter,
+    removed the permanent fake notification dot, spacing-rhythm tidy-ups.
+  - Added shared `EmptyState`; vertical-rhythm + Button height normalisation.

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CalendarDays, MapPin, Users, Clock } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, SmartImage } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { EVENTS } from '@/lib/constants'
@@ -41,8 +41,8 @@ export function EventsPage() {
           <StaggerItem key={e.id}>
             <Card hover={false} className="group h-full overflow-hidden transition-all hover:-translate-y-1 hover:shadow-glow">
               <div className="relative h-44 overflow-hidden">
-                <img src={e.cover} alt={e.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 to-transparent" />
+                <SmartImage src={e.cover} alt={e.title} className="h-full w-full" imgClassName="transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
                 <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
                   <span className="text-[10px] font-bold uppercase text-gold-600">{e.month}</span>
                   <span className="text-xl font-extrabold text-plum-900">{e.day}</span>

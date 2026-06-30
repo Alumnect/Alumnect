@@ -1,30 +1,49 @@
 import { motion, useTransform } from 'framer-motion'
-import { Sparkles, ArrowRight, PlayCircle, BadgeCheck, TrendingUp, MapPin, ChevronDown } from 'lucide-react'
+import {
+  Sparkles,
+  ArrowRight,
+  PlayCircle,
+  BadgeCheck,
+  TrendingUp,
+  MapPin,
+  ChevronDown,
+  Heart,
+  MessageCircle,
+  Repeat2,
+  Award,
+  Briefcase,
+  CalendarDays,
+  HelpCircle,
+  LineChart,
+} from 'lucide-react'
 import { Container, Badge, Avatar } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
 import { AuroraBackground, Starfield, WordReveal, Magnetic, Counter, ParallaxLayer } from '@/components/motion'
 import { useMousePosition } from '@/hooks/useMousePosition'
 
-const HERO_IMG =
-  'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1400&auto=format&fit=crop'
+const CHIPS = [
+  { icon: BadgeCheck, label: 'Verified profiles' },
+  { icon: Briefcase, label: 'Alumni jobs' },
+  { icon: CalendarDays, label: 'Events' },
+  { icon: HelpCircle, label: 'Mentorship' },
+  { icon: LineChart, label: 'Salary insights' },
+]
 
 export function Hero() {
   const { x, y } = useMousePosition(50, 16)
 
-  // depth-varied parallax offsets driven by the cursor
-  const bannerX = useTransform(x, (v) => v * 22)
-  const bannerY = useTransform(y, (v) => v * 22)
-  const bannerRot = useTransform(x, (v) => v * 6)
-  const card1X = useTransform(x, (v) => v * -55)
-  const card1Y = useTransform(y, (v) => v * -40)
-  const card2X = useTransform(x, (v) => v * 60)
-  const card2Y = useTransform(y, (v) => v * -28)
-  const card3X = useTransform(x, (v) => v * -36)
-  const card3Y = useTransform(y, (v) => v * 48)
+  const winX = useTransform(x, (v) => v * 20)
+  const winY = useTransform(y, (v) => v * 20)
+  const winRot = useTransform(x, (v) => v * 5)
+  const c1x = useTransform(x, (v) => v * -52)
+  const c1y = useTransform(y, (v) => v * -38)
+  const c2x = useTransform(x, (v) => v * 58)
+  const c2y = useTransform(y, (v) => v * -26)
+  const c3x = useTransform(x, (v) => v * -34)
+  const c3y = useTransform(y, (v) => v * 46)
 
   return (
     <section className="relative overflow-hidden pb-24 pt-36 lg:pt-44">
-      {/* backdrop */}
       <AuroraBackground />
       <Starfield count={16} />
       <div className="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-[0.5]" />
@@ -43,7 +62,7 @@ export function Hero() {
 
             <h1 className="mt-6 text-balance text-5xl font-extrabold leading-[1.04] text-plum-900 sm:text-6xl lg:text-[4.4rem]">
               <WordReveal text="Where FPTU *graduates* truly" />
-              <br className="hidden sm:block" />
+              <br className="hidden lg:block" />
               <WordReveal text="stay *connected* for life." delay={0.4} />
             </h1>
 
@@ -57,11 +76,28 @@ export function Hero() {
               jobs, events, mentorship, a salary board and an interactive alumni map. No noise. No fakes.
             </motion.p>
 
+            {/* feature chips */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1, duration: 0.6 }}
+              className="mt-6 flex flex-wrap gap-2"
+            >
+              {CHIPS.map((c) => (
+                <span
+                  key={c.label}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-plum-900/[0.07] bg-white/70 px-3 py-1.5 text-xs font-semibold text-plum-600 backdrop-blur"
+                >
+                  <c.icon size={13} className="text-brand-500" /> {c.label}
+                </span>
+              ))}
+            </motion.div>
+
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.15, duration: 0.6 }}
-              className="mt-9 flex flex-wrap items-center gap-3"
+              transition={{ delay: 1.25, duration: 0.6 }}
+              className="mt-8 flex flex-wrap items-center gap-3"
             >
               <Magnetic>
                 <ButtonLink to="/register" variant="primary" size="lg" rightIcon={<ArrowRight size={18} />}>
@@ -73,11 +109,10 @@ export function Hero() {
               </ButtonLink>
             </motion.div>
 
-            {/* social proof */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.35, duration: 0.6 }}
+              transition={{ delay: 1.45, duration: 0.6 }}
               className="mt-10 flex items-center gap-4"
             >
               <div className="flex -space-x-3">
@@ -94,62 +129,109 @@ export function Hero() {
             </motion.div>
           </div>
 
-          {/* ---- Visual (mouse-reactive) ---- */}
+          {/* ---- Visual: composed in-app preview (no external photo) ---- */}
           <div className="relative">
             <motion.div
               initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-              style={{ x: bannerX, y: bannerY, rotate: bannerRot }}
+              style={{ x: winX, y: winY, rotate: winRot }}
               className="relative mx-auto max-w-md [transform-style:preserve-3d]"
             >
-              {/* main banner card */}
-              <div className="ring-gradient relative overflow-hidden rounded-[2rem] shadow-[0_40px_120px_-44px_rgba(124,134,238,0.7)]">
-                <img src={HERO_IMG} alt="FPTU alumni graduation" className="h-[30rem] w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-plum-900/80 via-plum-900/10 to-transparent" />
-                <div className="absolute bottom-5 left-5 right-5">
-                  <Badge tone="gold" icon={<BadgeCheck size={13} />}>Class of 2026</Badge>
-                  <p className="mt-3 text-lg font-bold text-white">FPTU Alumni Homecoming</p>
-                  <p className="text-sm text-white/80">480 attending · Đà Nẵng campus</p>
+              {/* soft glow */}
+              <div className="absolute -inset-6 -z-10 rounded-[2.6rem] bg-gradient-to-br from-brand-300/45 via-violet-300/35 to-coral-300/45 blur-2xl" />
+
+              {/* app window */}
+              <div className="ring-gradient overflow-hidden rounded-[2rem] bg-cream-50 shadow-[0_44px_120px_-44px_rgba(124,134,238,0.7)]">
+                {/* window bar */}
+                <div className="flex items-center gap-2 border-b border-plum-900/[0.06] bg-white/80 px-4 py-3">
+                  <span className="h-2.5 w-2.5 rounded-full bg-coral-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-gold-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-mint-400" />
+                  <span className="ml-2 flex-1 rounded-full bg-plum-900/[0.05] px-3 py-1 text-[11px] font-medium text-plum-400">
+                    alumnect.edu.vn / feed
+                  </span>
+                </div>
+
+                {/* mock feed */}
+                <div className="space-y-3 p-4">
+                  {/* post */}
+                  <div className="rounded-2xl bg-white p-4 ring-1 ring-inset ring-plum-900/[0.05]">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar src="https://i.pravatar.cc/100?img=12" name="Minh Anh" size={38} verified />
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-center gap-1.5 text-sm font-bold text-plum-900">
+                          Trần Minh Anh
+                          <span className="rounded-full bg-gold-300/50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-gold-600">Achievement</span>
+                        </p>
+                        <p className="text-[11px] text-plum-400">Senior Engineer @ FPT Software · 2h</p>
+                      </div>
+                    </div>
+                    <p className="mt-2.5 text-[13px] leading-relaxed text-plum-700">
+                      Just got promoted to Senior Engineer! Forever grateful to the seniors who mentored me here. 🚀
+                    </p>
+                    <div className="mt-3 flex items-center gap-4 text-[11px] font-semibold text-plum-400">
+                      <span className="inline-flex items-center gap-1 text-coral-500"><Heart size={13} className="fill-coral-500" /> 248</span>
+                      <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> 36</span>
+                      <span className="inline-flex items-center gap-1"><Repeat2 size={13} /> 12</span>
+                    </div>
+                  </div>
+
+                  {/* job mini */}
+                  <div className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-inset ring-plum-900/[0.05]">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100 text-lg">🟢</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-plum-900">Frontend Intern</p>
+                      <p className="truncate text-[11px] text-plum-400">VNG · Đà Nẵng · 54 applicants</p>
+                    </div>
+                    <span className="rounded-lg bg-gradient-to-r from-brand-500 to-violet-500 px-3 py-1.5 text-[11px] font-bold text-white">Apply</span>
+                  </div>
                 </div>
               </div>
 
-              {/* floating glass: verified profile */}
-              <motion.div style={{ x: card1X, y: card1Y }} className="absolute -left-10 top-12 hidden w-56 sm:block">
-                <div className="animate-bob rounded-3xl glass-strong p-3.5">
-                  <div className="flex items-center gap-3">
-                    <Avatar src="https://i.pravatar.cc/100?img=33" name="Hải Long" verified size={42} />
+              {/* floating chip: verified profile */}
+              <motion.div style={{ x: c1x, y: c1y }} className="absolute -left-12 top-10 hidden w-52 lg:block">
+                <div className="animate-bob rounded-2xl glass-strong p-3">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar src="https://i.pravatar.cc/100?img=33" name="Hải Long" verified size={38} />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-plum-900">Nguyễn Hải Long</p>
-                      <p className="truncate text-xs text-brand-600">PM @ Grab · IB K13</p>
+                      <p className="truncate text-xs font-bold text-plum-900">Nguyễn Hải Long</p>
+                      <p className="truncate text-[10px] text-brand-600">PM @ Grab · IB K13</p>
                     </div>
                   </div>
                 </div>
               </motion.div>
 
-              {/* floating glass: hiring */}
-              <motion.div style={{ x: card2X, y: card2Y }} className="absolute -right-8 top-40 hidden w-52 sm:block">
-                <div className="animate-bob rounded-3xl glass-strong p-3.5" style={{ animationDelay: '1.2s' }}>
-                  <div className="flex items-center gap-2 text-coral-500">
-                    <TrendingUp size={16} />
-                    <span className="text-xs font-bold uppercase tracking-wide">Now hiring</span>
+              {/* floating chip: now hiring */}
+              <motion.div style={{ x: c2x, y: c2y }} className="absolute -right-10 top-36 hidden w-44 lg:block">
+                <div className="animate-bob rounded-2xl glass-strong p-3" style={{ animationDelay: '1.2s' }}>
+                  <div className="flex items-center gap-1.5 text-coral-500">
+                    <TrendingUp size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-wide">Now hiring</span>
                   </div>
-                  <p className="mt-2 text-sm font-semibold text-plum-900">Frontend Intern</p>
-                  <p className="text-xs text-plum-500">VNG · 54 applicants</p>
+                  <p className="mt-1 text-xs font-semibold text-plum-900">+1,260 jobs posted</p>
                 </div>
               </motion.div>
 
-              {/* floating glass: map ping */}
-              <motion.div style={{ x: card3X, y: card3Y }} className="absolute -bottom-6 left-6 hidden sm:block">
-                <div className="flex animate-bob items-center gap-2 rounded-3xl glass-strong px-4 py-3" style={{ animationDelay: '0.7s' }}>
-                  <span className="relative grid h-8 w-8 place-items-center rounded-full bg-aqua-400/20 text-aqua-500">
-                    <MapPin size={16} />
+              {/* floating chip: map ping */}
+              <motion.div style={{ x: c3x, y: c3y }} className="absolute -bottom-6 left-4 hidden lg:block">
+                <div className="flex animate-bob items-center gap-2 rounded-2xl glass-strong px-3.5 py-2.5" style={{ animationDelay: '0.7s' }}>
+                  <span className="relative grid h-7 w-7 place-items-center rounded-full bg-aqua-400/20 text-aqua-500">
+                    <MapPin size={14} />
                     <span className="absolute inset-0 animate-ping rounded-full bg-aqua-400/30" />
                   </span>
                   <div>
-                    <p className="text-sm font-bold text-plum-900">9,800 alumni</p>
-                    <p className="text-xs text-plum-500">in HCMC</p>
+                    <p className="text-xs font-bold text-plum-900">9,800 alumni</p>
+                    <p className="text-[10px] text-plum-500">in HCMC</p>
                   </div>
+                </div>
+              </motion.div>
+
+              {/* floating chip: achievement badge */}
+              <motion.div style={{ x: c2x, y: c3y }} className="absolute -right-6 -bottom-2 hidden lg:block">
+                <div className="flex animate-bob items-center gap-2 rounded-2xl glass-strong px-3 py-2" style={{ animationDelay: '1.8s' }}>
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-300/50 text-gold-600"><Award size={14} /></span>
+                  <p className="text-xs font-bold text-plum-900">540+ events</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -157,7 +239,7 @@ export function Hero() {
         </div>
 
         {/* scroll cue */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.6 }} className="mt-16 flex justify-center">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.6 }} className="mt-20 flex justify-center">
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 1.8, repeat: Infinity }}

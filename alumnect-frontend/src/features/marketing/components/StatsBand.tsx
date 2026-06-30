@@ -4,7 +4,7 @@ import { STATS } from '@/lib/constants'
 
 export function StatsBand() {
   return (
-    <section className="relative py-10">
+    <section className="relative py-16">
       <Container>
         <Reveal>
           <div className="ring-gradient relative overflow-hidden rounded-3xl card-surface px-6 py-12">

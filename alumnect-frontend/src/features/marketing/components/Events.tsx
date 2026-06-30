@@ -1,5 +1,6 @@
 import { Users, ArrowRight } from 'lucide-react'
 import { Container, SectionHeading, Badge } from '@/components/ui/primitives'
+import { SmartImage } from '@/components/ui/SmartImage'
 import { ButtonLink } from '@/components/ui/Button'
 import { Reveal, Parallax } from '@/components/motion'
 import { EVENTS } from '@/lib/constants'
@@ -24,10 +25,11 @@ export function Events() {
           <Parallax speed={-30}>
             <Reveal>
               <div className="group relative h-full min-h-[22rem] overflow-hidden rounded-[2rem] ring-1 ring-inset ring-plum-900/10 shadow-soft">
-                <img
+                <SmartImage
                   src={feature.cover}
                   alt={feature.title}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 h-full w-full"
+                  imgClassName="transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-plum-900/90 via-plum-900/35 to-transparent" />
                 <div className="absolute left-5 top-5 flex flex-col items-center rounded-2xl glass-strong px-4 py-2 text-center">
