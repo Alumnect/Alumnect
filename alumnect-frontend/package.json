@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "git config push.autoSetupRemote true"
   },
   "dependencies": {
     "react": "^19.2.6",
