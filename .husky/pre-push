@@ -2,7 +2,7 @@
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 
-regex='^(feature|bugfix|hotfix|chore|docs)/[a-z0-9]+(-[a-z0-9]+)*$'
+regex='^(dev|main|(feature|bugfix|hotfix|chore|docs)/[a-z0-9]+(-[a-z0-9]+)*)$'
 
 if ! printf "%s" "$branch" | grep -Eq "$regex"; then
   echo ""
