@@ -1,2 +1,5 @@
 export { AuthScaffold, Field } from './components/AuthScaffold'
 export { GoogleButton } from './components/GoogleButton'
+export { useLogin, useRegister, useForgotPassword, useLogout } from './hooks/useAuthMutations'
+export { loginSchema, registerSchema, forgotSchema } from './model/schemas'
+export type { LoginInput, RegisterInput, ForgotInput } from './model/schemas'

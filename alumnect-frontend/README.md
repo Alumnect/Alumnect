@@ -122,7 +122,18 @@ see `FRONTEND_STRUCTURE.md` for the canonical patterns.
 
 ---
 
+## Authentication
+
+- `features/auth` holds Zod schemas, the auth API, and RHF-wired login / register /
+  forgot-password forms via TanStack Query mutations.
+- `components/routing/guards.tsx` provides `ProtectedRoute` and `RoleRoute`.
+- A single flag controls behaviour: **`VITE_REQUIRE_AUTH`**.
+  - `false` (default) — demo mode: the app is fully browsable and "sign in" creates a
+    local demo session.
+  - `true` — guards enforce auth/role and hooks call the real Spring Boot API.
+
 ## Status
 
-UI/UX layer is complete (all screens, mock data) and the production build passes.
-Next: real auth + RBAC route guards, then replace mock data feature-by-feature.
+UI/UX layer is complete (all screens), the data layer (Axios + Zustand + TanStack Query)
+and auth/RBAC scaffolding are in place, and the production build passes. Next: turn on
+`VITE_REQUIRE_AUTH` against the live backend and replace mock data feature-by-feature.

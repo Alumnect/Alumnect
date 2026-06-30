@@ -5,6 +5,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Bell, Plus, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
+import { useAuthStore } from '@/store/authStore'
+import { DEMO_USER } from '@/config/auth'
+import { useLogout } from '@/features/auth'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -66,6 +69,9 @@ export function AppShell() {
   const location = useLocation()
   const [sheet, setSheet] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const user = useAuthStore((s) => s.user) ?? DEMO_USER
+  const logoutM = useLogout()
+  const roleLabel = user.role === 'ADMIN' ? 'Admin' : user.role === 'STUDENT' ? 'Student' : 'Alumni'
 
   return (
     <div className="relative min-h-screen bg-cream-100 text-plum-600">
@@ -183,16 +189,16 @@ export function AppShell() {
               panelClass="w-64"
               button={
                 <span className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-plum-900/[0.05]">
-                  <Avatar src="https://i.pravatar.cc/120?img=12" name="Minh Anh" size={36} ring />
+                  <Avatar src={user.avatarUrl} name={user.name} size={36} ring />
                   <ChevronDown size={15} className="hidden text-plum-400 sm:block" />
                 </span>
               }
             >
               <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-brand-50">
-                <Avatar src="https://i.pravatar.cc/120?img=12" name="Minh Anh" size={42} verified />
+                <Avatar src={user.avatarUrl} name={user.name} size={42} verified={user.verified} />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-plum-900">Trần Minh Anh</p>
-                  <p className="truncate text-xs text-brand-600">Verified Alumni · SE K15</p>
+                  <p className="truncate text-sm font-bold text-plum-900">{user.name}</p>
+                  <p className="truncate text-xs text-brand-600">{user.verified ? 'Verified ' : ''}{roleLabel}</p>
                 </div>
               </Link>
               <div className="my-1 h-px bg-plum-900/[0.07]" />
@@ -210,12 +216,13 @@ export function AppShell() {
                 )
               })}
               <div className="my-1 h-px bg-plum-900/[0.07]" />
-              <Link
-                to="/login"
-                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-rose-500 transition-colors hover:bg-rose-500/10"
+              <button
+                type="button"
+                onClick={() => logoutM.mutate()}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-coral-600 transition-colors hover:bg-coral-300/25"
               >
                 <LogOut size={16} /> Sign out
-              </Link>
+              </button>
             </Popover>
           </div>
         </div>
