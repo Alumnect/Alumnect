@@ -1,73 +1,128 @@
-# React + TypeScript + Vite
+# AlumNect — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The web client for **AlumNect (ACCP)** — the verified, official home for the FPT
+University alumni community (FPTU SEP490 capstone). A premium, warm, human social
+platform: verified profiles, community feed, jobs, events, mentorship, a Q&A forum,
+an anonymous salary board, an interactive alumni map, direct messaging and an admin
+dashboard.
 
-Currently, two official plugins are available:
+> Full product requirements live in the root [`README.md`](../README.md) (SRS).
+> Architecture conventions: [`FRONTEND_STRUCTURE.md`](./FRONTEND_STRUCTURE.md).
+> Design system & changelog: [`UI_UX_NOTES.md`](./UI_UX_NOTES.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Concern | Choice |
+| --- | --- |
+| Build / dev | **Vite 8** |
+| UI | **React 19** + **TypeScript** (strict) |
+| Styling | **Tailwind CSS v4** (CSS-first `@theme`) |
+| Animation | **Framer Motion** |
+| Routing | **React Router v6** |
+| Server state | **TanStack Query v5** |
+| Client state | **Zustand** (persisted) |
+| Forms / validation | **React Hook Form** + **Zod** |
+| HTTP | **Axios** (JWT + auto-refresh queue) |
+| Icons | **lucide-react** |
 
-## Expanding the ESLint configuration
+Design direction: warm cream canvas, pastel periwinkle/violet/coral/mint/sky/honey
+accents, plum ink, soft shadows, and rich micro-interactions (scroll reveals,
+parallax, tilt, magnetic buttons, marquees, counters, page transitions).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```bash
+# 1. install
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# 2. environment
+cp .env.example .env.local   # then set VITE_API_BASE_URL
+
+# 3. run
+npm run dev                  # http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite dev server (HMR). |
+| `npm run build` | Type-check (`tsc -b`) + production build. |
+| `npm run preview` | Preview the production build locally. |
+| `npm run lint` | Run ESLint. |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Environment variables
+
+| Var | Default | Description |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | `http://localhost:8080/api/v1` | Base URL of the Spring Boot REST API. |
+
+`.env.local` is git-ignored; commit only `.env.example`.
+
+---
+
+## Project structure (Enterprise Feature-Based)
+
+```text
+src/
+├── app/                # (reserved) app-level wiring
+├── assets/             # static assets
+├── components/
+│   ├── ui/             # stateless design-system primitives (Button, Card, Avatar, SmartImage…)
+│   ├── motion/         # animation primitives (Reveal, Parallax, Counter, TiltCard, Marquee…)
+│   ├── layout/         # MarketingLayout, AppShell (top header), AdminShell
+│   └── viz/            # data-viz (WorldMap…)
+├── features/           # self-contained modules: marketing, auth (+ api/components/hooks/model)
+├── hooks/              # shared hooks (useMousePosition…)
+├── lib/                # http.ts (axios+refresh), queryClient.ts, utils.ts, constants.ts (mock)
+├── pages/              # route pages — LandingPage, auth/*, app/*, admin/*, NotFoundPage
+├── store/              # Zustand stores (authStore)
+├── App.tsx             # providers + router
+└── main.tsx            # entry
 ```
+
+Import flow is one-way: `app → pages → features → shared (components/hooks/store/lib)`.
+Features expose a public API via `index.ts` (no deep imports, no cross-feature imports).
+
+---
+
+## Routes
+
+- `/` — marketing landing
+- `/login` · `/register` · `/forgot-password` — auth
+- `/app` — member shell (Facebook/LinkedIn-style top header) → feed, alumni, profile,
+  jobs, events, forum, salary, map, career, messages, notifications, subscription
+- `/admin` — admin shell → overview, users, verifications, reports, revenue, broadcast, moderation
+
+---
+
+## Data layer
+
+- `src/lib/http.ts` — Axios instance that attaches the JWT, unwraps `response.data`,
+  and transparently refreshes the access token on `401` (single refresh + request queue).
+- `src/store/authStore.ts` — persisted Zustand store (`user`, tokens, `role`).
+- `src/lib/queryClient.ts` — shared TanStack Query client.
+
+Pages currently render mock data from `src/lib/constants.ts`. Wiring to the API is
+done per feature under `features/<name>/{api,hooks,model}` behind TanStack Query —
+see `FRONTEND_STRUCTURE.md` for the canonical patterns.
+
+---
+
+## Conventions
+
+- Strict TS: `verbatimModuleSyntax` (use `import type`), `noUnusedLocals/Parameters`,
+  `erasableSyntaxOnly` (no enums). Path alias `@/*` → `src/*`.
+- Keep components stateless/presentational; business logic lives in feature hooks.
+- Commits follow Conventional Commits. Work on `feature/*` branches → PR into `dev`.
+
+---
+
+## Status
+
+UI/UX layer is complete (all screens, mock data) and the production build passes.
+Next: real auth + RBAC route guards, then replace mock data feature-by-feature.

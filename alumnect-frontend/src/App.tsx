@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '@/lib/queryClient'
 import { MarketingLayout, AppShell, AdminShell, ScrollToTop } from '@/components/layout'
 import { LandingPage } from '@/pages/LandingPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -23,9 +25,10 @@ import { AdminSectionPage } from '@/pages/admin/AdminSectionPage'
 
 function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <Routes>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ScrollToTop />
+        <Routes>
         {/* Public marketing site */}
         <Route element={<MarketingLayout />}>
           <Route path="/" element={<LandingPage />} />
@@ -65,8 +68,9 @@ function App() {
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }
 
