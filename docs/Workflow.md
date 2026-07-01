@@ -84,7 +84,7 @@ sequenceDiagram
     participant Service as Service Implementation
     participant Mapper as MapStruct Mapper
     participant Repo as JPA Repository
-    database DB as PostgreSQL
+    participant DB as PostgreSQL
 
     Client->>Controller: HTTP Request (JSON Body)
     Note over Controller: Spring tự động validate dữ liệu<br/>dựa trên JSR-380 trong DTO
