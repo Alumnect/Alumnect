@@ -135,79 +135,14 @@ Sau khi hoàn thành hoặc cập nhật các API:
 ### 4.5. Quy tắc viết tài liệu SRS & Thiết kế Chi tiết (`docs/update_SRS/`)
 Mỗi Use Case khi hoàn thành bắt buộc phải có một tệp tài liệu đặc tả độc lập nằm tại thư mục `docs/update_SRS/` với định dạng tên file: `SRS_UC_[Mã_Use_Case]_[Tên_Tính_Năng].md`.
 
-Nội dung tệp tài liệu phải bao gồm đầy đủ các cấu phần sau đây bằng Tiếng Việt:
+Nội dung tệp tài liệu này bắt buộc phải được sao chép và điền đầy đủ các phần thông tin dựa trên khuôn mẫu chuẩn tại tệp [TemplateSRS.md](docs/update_SRS/TemplateSRS.md).
 
-```markdown
-# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: [MÃ UC] - [TÊN TÍNH NĂNG]
-
-## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
-
-### 2.2.3 Business Workflow (Luồng nghiệp vụ)
-[Mô tả bằng sơ đồ Mermaid (State/Activity Diagram) hoặc danh sách các bước xử lý nghiệp vụ thực tế của hệ thống từ đầu tới cuối]
-
-### 3.2 Tên Module (Ví dụ: 3.2 Quản Lý Tài Khoản)
-Mô tả chung về module chứa chức năng này.
-
-#### 3.2.1 Tên chức năng (Ví dụ: 3.2.1 Đăng ký tài khoản cựu sinh viên)
-*   **Mục tiêu**: [Mục tiêu của chức năng]
-*   **Tác nhân**: [Tác nhân thực hiện, ví dụ: Guest, Student, Alumni, Admin]
-*   **Mô tả**: [Mô tả ngắn gọn chức năng xử lý gì]
-*   **Không cần hình ảnh thiết kế màn hình**
-
-### 5. Requirement Appendix (Phụ lục Yêu cầu)
-
-#### 5.1 Business Rules (Quy tắc Nghiệp vụ)
-*   [Quy tắc 1: Mô tả các điều kiện kiểm tra, logic ràng buộc dữ liệu. Ví dụ: Email đăng ký cựu sinh viên phải là duy nhất, mã số sinh viên cũ không được trống...]
-*   [Quy tắc 2: Logic xử lý trạng thái tài khoản. Ví dụ: Đăng ký vai trò ALUMNI thì trạng thái mặc định là WAITING_APPROVAL, phải gửi kèm minh chứng...]
-
-#### 5.2 Common Requirement (Yêu cầu chung - nếu có)
-*   [Mô tả các yêu cầu chung về bảo mật, giới hạn thời gian gửi OTP, giới hạn nhập sai OTP tối đa 5 lần...]
-
-#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
-Bảng kê chi tiết các thông điệp phản hồi từ hệ thống tương ứng với từng trường hợp thành công hoặc lỗi dữ liệu:
-
-| Mã thông điệp | Loại lỗi | Trường dữ liệu (Field) | Thông điệp hiển thị (Tiếng Việt) | HTTP Status |
-| :--- | :--- | :--- | :--- | :--- |
-| MSG_SUCCESS | Thành công | Không có | "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận." | 200 OK |
-| MSG_ERR_01 | Validate | fullName | "Họ và tên không được để trống" | 400 Bad Request |
-| MSG_ERR_02 | Trùng lặp | email | "Email này đã được đăng ký trên hệ thống." | 409 Conflict |
-| MSG_ERR_03 | Nghiệp vụ | studentCode | "Mã số sinh viên là bắt buộc khi đăng ký với vai trò Cựu sinh viên" | 400 Bad Request |
-
-#### 5.4 Other Requirement (Yêu cầu khác - nếu có)
-*   [Các yêu cầu về hiệu năng, ghi log hoặc sao lưu nếu phát sinh]
-
----
-
-## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
-
-### 3. Detail Design (Thiết kế chi tiết)
-
-#### 3.1 Tên chức năng (Ví dụ: 3.1 Đăng ký tài khoản cựu sinh viên)
-
-##### 3.1.1 Class Diagram (Sơ đồ Lớp)
-[Sử dụng Mermaid Class Diagram mô tả mối quan hệ giữa các component/class của cả Backend và Frontend tham gia vào luồng. Phải bao gồm các lớp: Controller, Service, Repository, Entity, DTO, Mapper]
-
-```mermaid
-classDiagram
-    %% Định nghĩa các lớp ở đây
-```
-
-##### 3.1.2 Sequence Diagram Name 1: Luồng thành công (Success Flow)
-[Sơ đồ Mermaid Sequence mô tả tương tác từ Client (Frontend) qua Controller, Service, Mapper, Repository, Database, MailService và phản hồi ngược lại Client trong kịch bản thành công]
-
-```mermaid
-sequenceDiagram
-    %% Định nghĩa luồng tương tác thành công ở đây
-```
-
-##### 3.1.3 Sequence Diagram Name 2: Luồng thất bại - [Tên trường hợp lỗi] (Alternative/Exception Flow)
-[Có thể có nhiều sơ đồ Sequence phụ để mô tả các kịch bản ngoại lệ quan trọng như: Lỗi validation đầu vào, Lỗi trùng lặp email, Nhập sai mã OTP quá 5 lần]
-
-```mermaid
-sequenceDiagram
-    %% Định nghĩa luồng tương tác lỗi ở đây
-```
-```
+Các nguyên tắc sinh tài liệu SRS bắt buộc:
+1. **Đồng bộ mã nguồn (Matching Source Code)**: Mọi biểu đồ lớp (Class Diagram), tham số DTO và mã thông điệp phản hồi (Application Messages List) trong tài liệu phải khớp chính xác 100% với code thực tế đã lập trình.
+2. **Định dạng sơ đồ Mermaid**:
+   * Sơ đồ lớp (Class Diagram) phải thể hiện đầy đủ liên kết giữa Controller, Service, DTO, Mapper, Entity, và Repository.
+   * Sơ đồ tuần tự (Sequence Diagram) phải chia rõ luồng thành công (Success Flow) và các luồng ngoại lệ/thất bại (Exception/Alternative Flows).
+   * Trong Sequence Diagram, bắt buộc khai báo database là `participant` (ví dụ: `participant DB as PostgreSQL`), tuyệt đối không sử dụng từ khóa `database` để tránh lỗi cú pháp vẽ sơ đồ.
 
 ---
 
