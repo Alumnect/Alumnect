@@ -285,6 +285,37 @@
 								"description": "### Đăng ký Alumni thiếu mã số sinh viên hoặc năm tốt nghiệp\n* **Mã phản hồi thất bại**: 400 Bad Request"
 							},
 							"response": []
+						},
+						{
+							"name": "Đăng ký ALUMNI thất bại - Thiếu ảnh minh chứng (proofUrl)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Trần Thiếu Minh Chứng\",\n  \"email\": \"alumni_thieuminhchung@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ALUMNI\",\n  \"majorId\": 2,\n  \"cohort\": 14,\n  \"studentCode\": \"HE140003\",\n  \"graduationYear\": 2022\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Đăng ký Alumni thiếu ảnh minh chứng (proofUrl)\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Thông báo lỗi mong muốn**: \"Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên\""
+							},
+							"response": []
 						}
 					]
 				},
@@ -690,7 +721,7 @@
 					"name": "01.6. Lưu trữ tệp tin (File Storage)",
 					"item": [
 						{
-							"name": "Sinh link ký sẵn (Presigned URL) để upload - Thành công",
+							"name": "Sinh link ký sẵn (Presigned URL) để upload (Mặc định - common) - Thành công",
 							"request": {
 								"method": "GET",
 								"header": [],
@@ -716,7 +747,69 @@
 										}
 									]
 								},
-								"description": "### API Sinh link ký sẵn (Presigned URL) của Cloudflare R2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lấy link upload PUT tạm thời (uploadUrl) và link xem công khai (publicUrl).\n* **Mã phản hồi thành công**: 200 OK."
+								"description": "### API Sinh link ký sẵn (Presigned URL) của Cloudflare R2 (Mặc định)\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lấy link upload PUT tạm thời (uploadUrl) và link xem công khai (publicUrl) trong folder mặc định là `common`.\n* **Mã phản hồi thành công**: 200 OK."
+							},
+							"response": []
+						},
+						{
+							"name": "Sinh link ký sẵn (Presigned URL) với folder tùy chỉnh (proofs) - Thành công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/files/presigned-url?fileName=bang_tot_nghiep.png&contentType=image/png&folder=proofs",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"files",
+										"presigned-url"
+									],
+									"query": [
+										{
+											"key": "fileName",
+											"value": "bang_tot_nghiep.png"
+										},
+										{
+											"key": "contentType",
+											"value": "image/png"
+										},
+										{
+											"key": "folder",
+											"value": "proofs"
+										}
+									]
+								},
+								"description": "### API Sinh link ký sẵn (Presigned URL) với folder chỉ định\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lấy link upload PUT tạm thời và link xem công khai trong folder chỉ định (ví dụ: `proofs`).\n* **Mã phản hồi thành công**: 200 OK."
+							},
+							"response": []
+						},
+						{
+							"name": "Sinh link ký sẵn (Presigned URL) thất bại - Thiếu tham số bắt buộc",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/files/presigned-url?contentType=image/png",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"files",
+										"presigned-url"
+									],
+									"query": [
+										{
+											"key": "contentType",
+											"value": "image/png"
+										}
+									]
+								},
+								"description": "### API Sinh link ký sẵn (Presigned URL) thất bại do thiếu fileName\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Mục đích**: Kiểm tra xem Spring Boot có báo lỗi thiếu request parameter khi không cung cấp fileName hay không."
 							},
 							"response": []
 						}

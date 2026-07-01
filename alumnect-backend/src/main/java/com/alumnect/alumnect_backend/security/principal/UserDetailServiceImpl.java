@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.security.principal;
 
+import com.alumnect.alumnect_backend.common.enums.AccountStatus;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.entity.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,10 +46,10 @@ public class UserDetailServiceImpl implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPasswordHash() != null ? user.getPasswordHash() : "",
-                user.isEmailVerified() && user.getAccountStatus() == com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE,
+                user.isEmailVerified() && user.getAccountStatus() == AccountStatus.ACTIVE,
                 true, // Tài khoản chưa hết hạn
                 true, // Mật khẩu chưa hết hạn
-                user.getAccountStatus() != com.alumnect.alumnect_backend.common.enums.AccountStatus.LOCKED, // Tài khoản không bị khóa
+                user.getAccountStatus() != AccountStatus.LOCKED, // Tài khoản không bị khóa
                 Collections.singletonList(authority)
         );
     }
