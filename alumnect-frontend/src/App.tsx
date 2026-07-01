@@ -1,121 +1,76 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '@/lib/queryClient'
+import { MarketingLayout, AppShell, AdminShell, ScrollToTop } from '@/components/layout'
+import { LandingPage } from '@/pages/LandingPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
+import { LoginPage } from '@/pages/auth/LoginPage'
+import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { FeedPage } from '@/pages/app/FeedPage'
+import { AlumniDirectoryPage } from '@/pages/app/AlumniDirectoryPage'
+import { JobsPage } from '@/pages/app/JobsPage'
+import { EventsPage } from '@/pages/app/EventsPage'
+import { ForumPage } from '@/pages/app/ForumPage'
+import { SalaryPage } from '@/pages/app/SalaryPage'
+import { MapPage } from '@/pages/app/MapPage'
+import { CareerPage } from '@/pages/app/CareerPage'
+import { MessagesPage } from '@/pages/app/MessagesPage'
+import { NotificationsPage } from '@/pages/app/NotificationsPage'
+import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
+import { ProfilePage } from '@/pages/app/ProfilePage'
+import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
+import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
+import { AdminSectionPage } from '@/pages/admin/AdminSectionPage'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ScrollToTop />
+        <Routes>
+        {/* Public marketing site */}
+        <Route element={<MarketingLayout />}>
+          <Route path="/" element={<LandingPage />} />
+        </Route>
 
-      <div className="ticks"></div>
+        {/* Auth (full-screen, own scaffold) */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {/* Authenticated member app */}
+        <Route path="/app" element={<AppShell />}>
+          <Route index element={<FeedPage />} />
+          <Route path="alumni" element={<AlumniDirectoryPage />} />
+          <Route path="jobs" element={<JobsPage />} />
+          <Route path="events" element={<EventsPage />} />
+          <Route path="forum" element={<ForumPage />} />
+          <Route path="salary" element={<SalaryPage />} />
+          <Route path="map" element={<MapPage />} />
+          <Route path="career" element={<CareerPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {/* Admin console */}
+        <Route path="/admin" element={<AdminShell />}>
+          <Route index element={<AdminOverviewPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />
+          <Route path="reports" element={<AdminSectionPage sectionKey="reports" />} />
+          <Route path="revenue" element={<AdminSectionPage sectionKey="revenue" />} />
+          <Route path="broadcast" element={<AdminSectionPage sectionKey="broadcast" />} />
+          <Route path="moderation" element={<AdminSectionPage sectionKey="moderation" />} />
+        </Route>
+
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }
 
