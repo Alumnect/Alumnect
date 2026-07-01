@@ -242,14 +242,27 @@ sequenceDiagram
 
 ### GIAI ĐOẠN 3: CẬP NHẬT POSTMAN COLLECTION & KIỂM THỬ API
 
-Sau khi triển khai xong API ở Backend, lập trình viên/AI Assistant bắt buộc phải cập nhật tệp [postman_collection.json](file:///d:/Alumnect/postman_collection.json) ở thư mục gốc của dự án:
-1. Xác định thư mục nghiệp vụ tương ứng trong mảng `"item"` (ví dụ: `"01. Authentication & Registration"`, `"02. User Profiles"`...).
-2. Bổ sung các testcase API (Success, Validation Fail, Conflict, Not Found...) với các trường thông tin:
-   * **`name`**: Tên mô tả rõ ràng kịch bản kiểm thử (VD: `Đăng ký tài khoản - Lỗi trùng Email`).
-   * **`request.url`**: Sử dụng biến môi trường `{{baseUrl}}` (VD: `{{baseUrl}}/api/v1/users/register`).
-   * **`request.body`**: JSON raw body mẫu chuẩn xác.
-   * **`request.description`**: Tài liệu Markdown mô tả phân quyền truy cập, các tham số, và các mẫu phản hồi thành công/thất bại tương ứng.
-3. **Quy tắc Tối ưu hóa và Tự động hóa trên Postman**:
+Sau khi triển khai xong API ở Backend, lập trình viên/AI Assistant bắt buộc phải cập nhật tệp [postman_collection.json](file:///d:/Alumnect/postman_collection.json) ở thư mục gốc của dự án theo đúng chuẩn phân chia thư mục nghiệp vụ và kịch bản dưới đây:
+
+1. **Chuẩn Phân Chia Cấu Trúc Thư Mục (Folder Hierarchy)**:
+   * **Thư mục cấp 1 (Root Folders - Nhóm Module Lớn)**: Đặt tên theo các module chức năng chính/Use Case lớn của dự án, đánh số thứ tự dạng hai chữ số (ví dụ: `01. Authentication & Registration`, `02. User Profiles`, `03. Admin Operations`).
+   * **Thư mục cấp 2 (Sub-folders - Nhóm Nghiệp Vụ Nhỏ)**: Phân chia nhỏ hơn theo từng nhóm endpoint nghiệp vụ cụ thể. Cách đánh số theo dạng `XX.Y.` (ví dụ: `01.1. Chuyên ngành (Majors)`, `01.2. Đăng ký tài khoản (Register)`, `01.6. Lưu trữ tệp tin (File Storage)`).
+   * **Sắp xếp logic**: Các thư mục có mối liên kết luồng nghiệp vụ cần được sắp xếp theo thứ tự thực thi hợp lý (ví dụ: sinh link/upload file minh chứng luôn chạy trước đăng ký sử dụng link đó).
+
+2. **Chuẩn Đặt Tên Request và Kịch Bản Kiểm Thử (Naming Conventions)**:
+   * Tất cả các request trong collection phải được đặt tên rõ ràng theo cấu trúc: `[Tên API/Hành động] - [Kết quả mong đợi]`.
+     * **Kịch bản thành công (Success Cases)**: Đặt hậu tố `- Thành công` (ví dụ: `Đăng ký vai trò Sinh viên (STUDENT) - Thành công`).
+     * **Kịch bản lỗi nghiệp vụ (Business Logic Failures)**: Chỉ rõ lỗi mong đợi (ví dụ: `Đăng ký thất bại - Trùng email đang hoạt động (ACTIVE)`).
+     * **Kịch bản lỗi ràng buộc dữ liệu (Validation Failures)**: Chỉ rõ trường dữ liệu bị thiếu/sai (ví dụ: `Đăng ký ALUMNI thất bại - Thiếu ảnh minh chứng (proofUrl)`).
+
+3. **Yêu Cầu Nội Dung Request & Dọn Dẹp Sạch Sẽ (Request Quality & Cleanup)**:
+   * **`request.url`**: Bắt buộc sử dụng biến môi trường/collection làm tiền tố: `{{baseUrl}}/api/v1/...`
+   * **`request.body`**: JSON raw body mẫu chuẩn xác, sử dụng dữ liệu test thực tế có nghĩa bằng Tiếng Việt (ví dụ: `"fullName": "Trần Văn Cựu Sinh Viên"`).
+   * **Không chứa dữ liệu cục bộ**: Tuyệt đối không để lại các đường dẫn tuyệt đối riêng tư từ máy cá nhân lập trình viên (ví dụ: `d:\\MyFolder\\avatar.png`) trong trường `"src"` của request upload file. Bắt buộc thay bằng giá trị rỗng hoặc tên file tương đối tiêu chuẩn (ví dụ: `bang_tot_nghiep.png`).
+   * **Sử dụng Placeholder**: Các link ảnh minh chứng mặc định nên dùng link giả lập ví dụ mẫu (ví dụ: `https://example.com/minh-chung-bang-tot-nghiep.jpg`) để người khác dễ dàng chạy thử.
+   * **`request.description`**: Viết tài liệu Markdown ngắn mô tả phân quyền (Public, Token, Admin...), mục đích API và mã phản hồi mong đợi.
+
+4. **Quy Tắc Tự Động Hóa trên Postman**:
    * **Tự động trích xuất JWT Token**: Đối với API đăng nhập (Login), bắt buộc phải thêm đoạn mã script sau vào tab **Tests** của request đó để tự động gán token nhận được vào biến collection `jwtToken` (tránh việc người làm phải copy-paste thủ công):
      ```javascript
      var jsonData = pm.response.json();
@@ -258,9 +271,8 @@ Sau khi triển khai xong API ở Backend, lập trình viên/AI Assistant bắt
      }
      ```
    * **Sử dụng biến Authorization**: Đối với toàn bộ các API yêu cầu đăng nhập, chọn tab **Authorization**, đặt Type là **Bearer Token** và điền giá trị là `{{jwtToken}}` để tự động thừa hưởng token từ quá trình đăng nhập.
-   * **Bản địa hóa dữ liệu test**: Dữ liệu gửi lên trong Request Body phải là dữ liệu thực tế dạng tiếng Việt có nghĩa (ví dụ: `"fullName": "Nguyễn Văn A"` thay vì các ký tự vô nghĩa).
 
-4. **Kiểm thử và Thử nghiệm API (API Testing & Verification)**:
+5. **Kiểm thử và Thử nghiệm API (API Testing & Verification)**:
    * Sau khi hoàn thành và khởi chạy Spring Boot Backend locally, người làm hoặc AI Assistant có thể kiểm thử trực tiếp bằng ba cách:
      * **Cách 1: Kiểm thử tự động toàn bộ Collection bằng Newman** (Khuyên dùng để kiểm tra tự động hàng loạt):
        ```bash

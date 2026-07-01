@@ -12,8 +12,8 @@ public class Endpoints {
     // Swagger / OpenAPI — cho phép truy cập tài liệu API và trang giao diện Swagger UI
     // Thêm /error để Spring Boot trả đúng mã lỗi (404/400) thay vì trả 403 giả
     public static final String[] SWAGGER_ENDPOINTS = {
-        "/v3/api-docs",
-        "/v3/api-docs/**",
+        "/api/v1/v3/api-docs",
+        "/api/v1/v3/api-docs/**",
         "/swagger-ui.html",
         "/swagger-ui/**",
         "/swagger-resources/**",

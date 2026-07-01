@@ -31,9 +31,10 @@ public class FileController {
     @GetMapping("/presigned-url")
     public ResponseEntity<ApiResponse<PresignedUrlResponse>> getPresignedUrl(
             @RequestParam("fileName") String fileName,
-            @RequestParam("contentType") String contentType) {
+            @RequestParam("contentType") String contentType,
+            @RequestParam(value = "folder", defaultValue = "common") String folder) {
 
-        PresignedUrlResponse response = storageService.generatePresignedUploadUrl(fileName, contentType, "proofs");
+        PresignedUrlResponse response = storageService.generatePresignedUploadUrl(fileName, contentType, folder);
         return ResponseEntity.ok(ApiResponse.success("Sinh link ký sẵn thành công", response));
     }
 }

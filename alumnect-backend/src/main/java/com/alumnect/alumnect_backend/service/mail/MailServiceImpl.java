@@ -9,7 +9,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
- * Lớp dịch vụ thực thi việc gửi email thực tế qua giao thức SMTP (Gmail) hoặc in ra console làm giả lập nếu cấu hình lỗi.
+ * Lớp dịch vụ thực thi việc gửi email thực tế qua giao thức SMTP (Gmail) hoặc
+ * in ra console làm giả lập nếu cấu hình lỗi.
  * Triển khai interface {@link MailService}.
  */
 @Service
@@ -19,12 +20,10 @@ public class MailServiceImpl implements MailService {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
-    // Đường dẫn gốc của ứng dụng Backend, dùng để tạo đường dẫn xác nhận trực tiếp
-    private static final String APP_URL = "http://localhost:8080"; 
-
     /**
      * Thực hiện tạo khuôn mẫu HTML và gửi email chứa mã OTP xác thực tài khoản.
-     * Nếu không có kết nối SMTP hoặc lỗi xảy ra, thông tin sẽ được in ra console để phát triển cục bộ dễ dàng.
+     * Nếu không có kết nối SMTP hoặc lỗi xảy ra, thông tin sẽ được in ra console để
+     * phát triển cục bộ dễ dàng.
      */
     @Override
     @Async
@@ -67,16 +66,13 @@ public class MailServiceImpl implements MailService {
                 + "</div>";
 
         try {
-            if (mailSender == null) {
-                throw new IllegalStateException("JavaMailSender chưa được khởi tạo. Chuyển sang hiển thị trên console.");
-            }
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
+
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            
+
             mailSender.send(message);
             log.info("Gửi email xác thực thành công tới: {}", toEmail);
         } catch (Exception e) {
