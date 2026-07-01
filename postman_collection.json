@@ -1,0 +1,902 @@
+{
+	"info": {
+		"_postman_id": "8b0fd3eb-9e7f-47be-a5e2-9b2f29e1db2a",
+		"name": "AlumNect Unified API Engine",
+		"description": "# AlumNect API Collection\n\nĐây là bộ sưu tập API chính thức của dự án **AlumNect** dùng để phát triển, tích hợp frontend và kiểm thử hệ thống.\n\n## 🛠️ Cấu hình ban đầu\n* **baseUrl**: Mặc định là `http://localhost:8080` (Cấu hình ở tab **Variables** của Collection này).\n* **jwtToken**: Mã JWT dùng để truy cập vào các API yêu cầu đăng nhập. Khi đăng nhập thành công, bạn điền token vào biến `jwtToken` để toàn bộ các request tự động thừa hưởng cơ chế Bearer Auth.\n\n## 📁 Cấu trúc thư mục hiện tại & tương lai\n1. **`01. Authentication & Registration`**: Đăng ký vai trò STUDENT/ALUMNI, xác minh email, đăng nhập cục bộ & đăng nhập Google.\n2. **`02. User Profiles`**: Đọc/Cập nhật thông tin chi tiết và cài đặt giao diện/ngôn ngữ.\n3. **`03. Admin Operations`**: Quản trị viên duyệt hồ sơ chứng minh tốt nghiệp của cựu sinh viên.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Authentication & Registration",
+			"description": "Thư mục chứa các API công khai liên quan đến Đăng ký tài khoản (UC01), xác minh tài khoản qua Email, và đăng nhập hệ thống.",
+			"item": [
+				{
+					"name": "01.1. Chuyên ngành (Majors)",
+					"item": [
+						{
+							"name": "Lấy danh sách chuyên ngành FPTU - Thành công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/majors",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"majors"
+									]
+								},
+								"description": "### API Lấy Danh Mục Chuyên Ngành\n* **Quyền truy cập**: Public (Không cần Token).\n* **Mục đích**: Trả về danh sách tất cả 37 chuyên ngành và chuyên ngành hẹp của Đại học FPT được lưu trong DB để Frontend hiển thị trên hộp chọn (dropdown) đăng ký.\n* **Phản hồi mong muốn (200 OK)**:\n```json\n{\n  \"code\": 0,\n  \"message\": \"Fetch majors successfully\",\n  \"data\": [\n    { \"id\": 1, \"code\": \"SE\", \"name\": \"Kỹ thuật phần mềm\" },\n    { \"id\": 2, \"code\": \"AI\", \"name\": \"Trí tuệ nhân tạo\" }\n  ]\n}\n```"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "01.2. Đăng ký tài khoản (Register)",
+					"item": [
+						{
+							"name": "Đăng ký vai trò Sinh viên (STUDENT) - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Văn Sinh Viên\",\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"password\": \"Password123!\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE180001\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### API Đăng Ký Tài Khoản Sinh Viên\n* **Quyền truy cập**: Public.\n* **Quy tắc đầu vào**:\n  * `fullName`: Tối đa 150 ký tự, không trống.\n  * `email`: Đúng định dạng email.\n  * `password`: Tối thiểu 8 ký tự.\n  * `role`: Phải là `STUDENT`.\n  * `majorId`: ID chuyên ngành (lấy từ API majors).\n  * `cohort`: Khóa học (ví dụ: `18`).\n  * `studentCode`: Mã số sinh viên.\n* **Phản hồi thành công (200 OK)**: Hệ thống sẽ tạo tài khoản với trạng thái `PENDING` và in mã token kích hoạt ra màn hình terminal của Backend (để xác nhận email giả lập)."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký vai trò Cựu sinh viên (ALUMNI) - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Trần Văn Cựu Sinh Viên\",\n  \"email\": \"alumni_test@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ALUMNI\",\n  \"majorId\": 2,\n  \"cohort\": 14,\n  \"studentCode\": \"HE140002\",\n  \"graduationYear\": 2022,\n  \"proofUrl\": \"https://example.com/minh-chung-bang-tot-nghiep.jpg\",\n  \"note\": \"Tôi muốn đăng ký làm cựu sinh viên ngành Thiết kế đồ họa\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### API Đăng Ký Tài Khoản Cựu Sinh Viên\n* **Quyền truy cập**: Public.\n* **Quy tắc đặc thù cho ALUMNI**:\n  * Bắt buộc cung cấp `studentCode` (Mã số sinh viên cũ).\n  * Bắt buộc cung cấp `graduationYear` (Năm tốt nghiệp).\n  * Cung cấp link `proofUrl` chứa ảnh minh chứng bằng tốt nghiệp/bảng điểm.\n* **Cơ chế xác thực**: Sau khi kích hoạt email thành công, tài khoản ALUMNI vẫn chưa thể đăng nhập hoàn toàn mà phải chờ Quản trị viên duyệt hồ sơ minh chứng tốt nghiệp."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký ghi đè tài khoản PENDING - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Văn Sinh Viên Mới\",\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"password\": \"NewPassword123!\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE180001\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Đăng ký đè thông tin lên email cũ đang có trạng thái PENDING\n* **Mục đích**: Cho phép cập nhật thông tin và mật khẩu, gửi lại mã OTP mới mà không báo trùng email.\n* **Mã phản hồi thành công**: 200 OK."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký thất bại - Trùng email đang hoạt động (ACTIVE)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Văn Trùng Lặp\",\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"password\": \"Password123!\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE180001\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Thử đăng ký email đã kích hoạt ACTIVE\n* **Mã phản hồi thất bại**: 409 Conflict\n* **Thông báo lỗi mong muốn**: \"Email này đã được đăng ký và kích hoạt thành công. Vui lòng đăng nhập.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký thất bại - Trùng email đang chờ duyệt (WAITING_APPROVAL)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Trần Trùng Lặp\",\n  \"email\": \"alumni_test@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ALUMNI\",\n  \"majorId\": 2,\n  \"cohort\": 14,\n  \"studentCode\": \"HE140002\",\n  \"graduationYear\": 2022,\n  \"proofUrl\": \"https://example.com/minh-chung.jpg\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Thử đăng ký email Alumni đã xác minh đang chờ duyệt\n* **Mã phản hồi thất bại**: 409 Conflict\n* **Thông báo lỗi mong muốn**: \"Tài khoản của bạn đã xác thực email thành công và đang chờ quản trị viên phê duyệt. Vui lòng đợi admin duyệt.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký thất bại - Trùng email đang bị khóa (LOCKED)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Văn Khóa\",\n  \"email\": \"locked_user@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE180001\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Thử đăng ký email đã bị khóa LOCKED\n* **Mã phản hồi thất bại**: 409 Conflict\n* **Thông báo lỗi mong muốn**: \"Tài khoản liên kết với email này đã bị khóa. Vui lòng liên hệ quản trị viên.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký thất bại - Mật khẩu yếu (< 8 ký tự)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Văn Yếu\",\n  \"email\": \"yeu@gmail.com\",\n  \"password\": \"123\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE180001\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Đăng ký mật khẩu không đủ độ dài\n* **Mã phản hồi thất bại**: 400 Bad Request (Validation failure)"
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký ALUMNI thất bại - Thiếu thông tin bắt buộc",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Trần Thiếu\",\n  \"email\": \"alumni_thieu@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ALUMNI\",\n  \"majorId\": 2,\n  \"cohort\": 14\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Đăng ký Alumni thiếu mã số sinh viên hoặc năm tốt nghiệp\n* **Mã phản hồi thất bại**: 400 Bad Request"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "01.3. Xác minh Email (Verify Email)",
+					"item": [
+						{
+							"name": "Xác minh email STUDENT - Thành công (Kích hoạt ngay)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token=123456",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										},
+										{
+											"key": "token",
+											"value": "123456"
+										}
+									]
+								},
+								"description": "### Xác minh tài khoản Student\n* **Mã phản hồi thành công**: 200 OK.\n* **Thông báo phản hồi**: \"Xác thực email thành công! Tài khoản của bạn đã được kích hoạt.\"\n* **Kết quả**: accountStatus chuyển sang ACTIVE."
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh email ALUMNI - Thành công (Chờ admin duyệt)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=alumni_test@gmail.com&token=123456",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "alumni_test@gmail.com"
+										},
+										{
+											"key": "token",
+											"value": "123456"
+										}
+									]
+								},
+								"description": "### Xác minh tài khoản Alumni\n* **Mã phản hồi thành công**: 200 OK.\n* **Thông báo phản hồi**: \"Xác thực email thành công! Tài khoản của bạn đang chờ quản trị viên phê duyệt.\"\n* **Kết quả**: accountStatus chuyển sang WAITING_APPROVAL."
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh email thất bại - Sai mã OTP (Còn lượt thử)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token=111111",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										},
+										{
+											"key": "token",
+											"value": "111111"
+										}
+									]
+								},
+								"description": "### Nhập sai OTP nhưng chưa quá 5 lần\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Phản hồi mẫu**: \"Mã xác thực không chính xác. Bạn còn 4 lần thử.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh email thất bại - Sai mã OTP quá 5 lần (Khóa token)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token=111111",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										},
+										{
+											"key": "token",
+											"value": "111111"
+										}
+									]
+								},
+								"description": "### Nhập sai OTP lần thứ 5 trở đi\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Phản hồi mẫu**: \"Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh email thất bại - Mã OTP hết hạn (Quá 5 phút)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token=123456",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										},
+										{
+											"key": "token",
+											"value": "123456"
+										}
+									]
+								},
+								"description": "### Thử xác thực với mã OTP đã tạo cách đó hơn 5 phút\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Phản hồi mẫu**: \"Mã xác thực đã hết hạn\""
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh email thất bại - Mã OTP đã sử dụng trước đó",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token=123456",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										},
+										{
+											"key": "token",
+											"value": "123456"
+										}
+									]
+								},
+								"description": "### Thử xác thực với mã OTP đã kích hoạt thành công trước đó\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Phản hồi mẫu**: \"Mã xác thực này đã được sử dụng trước đó\""
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh email thất bại - Tài khoản không tồn tại",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sai_email@gmail.com&token=123456",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-email"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sai_email@gmail.com"
+										},
+										{
+											"key": "token",
+											"value": "123456"
+										}
+									]
+								},
+								"description": "### Gọi verify email của tài khoản không có trong DB\n* **Mã phản hồi thất bại**: 404 Not Found"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "01.4. Gửi lại mã OTP (Resend OTP)",
+					"item": [
+						{
+							"name": "Gửi lại mã OTP - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/resend-otp?email=sinhvien@fpt.edu.vn",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"resend-otp"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										}
+									]
+								},
+								"description": "### Gửi lại OTP thành công (Mã cũ đã hết hạn hoặc quá 5 phút)\n* **Mã phản hồi thành công**: 200 OK.\n* **Vận hành**: Các mã cũ sẽ bị vô hiệu hóa, gửi email chứa mã mới."
+							},
+							"response": []
+						},
+						{
+							"name": "Gửi lại mã OTP thành công khi mã cũ bị khóa (Không cần chờ 5 phút)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/resend-otp?email=sinhvien@fpt.edu.vn",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"resend-otp"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										}
+									]
+								},
+								"description": "### Mã cũ bị khóa do nhập sai 5 lần, người dùng bấm resend ngay lập tức\n* **Đặc tính**: Bypass qua luật chặn 5 phút để tạo OTP mới lập tức (Cải tiến UX mới).\n* **Mã phản hồi thành công**: 200 OK."
+							},
+							"response": []
+						},
+						{
+							"name": "Gửi lại mã OTP thất bại - Chưa quá 5 phút (Spam)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/resend-otp?email=sinhvien@fpt.edu.vn",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"resend-otp"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien@fpt.edu.vn"
+										}
+									]
+								},
+								"description": "### Bấm resend liên tiếp khi mã cũ vẫn còn hiệu lực và chưa quá 5 phút\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Phản hồi mẫu**: \"Vui lòng đợi X phút Y giây trước khi yêu cầu gửi lại mã OTP mới.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Gửi lại mã OTP thất bại - Email đã được xác minh",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/resend-otp?email=sinhvien_da_verify@fpt.edu.vn",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"resend-otp"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sinhvien_da_verify@fpt.edu.vn"
+										}
+									]
+								},
+								"description": "### Yêu cầu gửi lại OTP cho email đã kích hoạt trước đó\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Phản hồi mẫu**: \"Tài khoản này đã được xác thực email trước đó\""
+							},
+							"response": []
+						},
+						{
+							"name": "Gửi lại mã OTP thất bại - Email không tồn tại",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/resend-otp?email=sai_email@gmail.com",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"resend-otp"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "sai_email@gmail.com"
+										}
+									]
+								},
+								"description": "### Yêu cầu gửi lại OTP cho email không có trong DB\n* **Mã phản hồi thất bại**: 404 Not Found"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "01.5. Đăng nhập hệ thống (LOCAL)",
+					"item": [
+						{
+							"name": "Đăng nhập hệ thống (LOCAL)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### API Đăng Nhập Hệ Thống (Placeholder)\n* **Quyền truy cập**: Public.\n* **Mục đích**: Đăng nhập bằng tài khoản nội bộ, trả về chuỗi Token JWT để truy cập các tài nguyên bảo mật."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "01.6. Lưu trữ tệp tin (File Storage)",
+					"item": [
+						{
+							"name": "Sinh link ký sẵn (Presigned URL) để upload - Thành công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/files/presigned-url?fileName=bang_tot_nghiep.png&contentType=image/png",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"files",
+										"presigned-url"
+									],
+									"query": [
+										{
+											"key": "fileName",
+											"value": "bang_tot_nghiep.png"
+										},
+										{
+											"key": "contentType",
+											"value": "image/png"
+										}
+									]
+								},
+								"description": "### API Sinh link ký sẵn (Presigned URL) của Cloudflare R2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lấy link upload PUT tạm thời (uploadUrl) và link xem công khai (publicUrl).\n* **Mã phản hồi thành công**: 200 OK."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "02. User Profiles",
+			"description": "Thư mục chứa các API quản lý thông tin cá nhân và thiết lập của người dùng. Các API này yêu cầu xác thực bằng JWT.",
+			"item": [
+				{
+					"name": "Lấy thông tin cá nhân hiện tại",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"me"
+							]
+						},
+						"description": "### API Lấy Thông Tin Cá Nhân\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu JWT Token ở header dưới dạng Bearer Token).\n* **Mục đích**: Trả về chi tiết trang cá nhân hiện tại bao gồm Họ tên, Ảnh đại diện, Chuyên ngành, Niên khóa."
+					},
+					"response": []
+				},
+				{
+					"name": "Cập nhật thiết lập giao diện & ngôn ngữ",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"theme\": \"DARK\",\n  \"language\": \"en\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/settings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"settings"
+							]
+						},
+						"description": "### API Cập Nhật Thiết Lập Cài Đặt\n* **Quyền truy cập**: Đã đăng nhập.\n* **Mục đích**: Cập nhật tùy chọn màu nền (LIGHT/DARK/SYSTEM) và ngôn ngữ hiển thị (vi/en) của tài khoản."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03. Admin Operations",
+			"description": "Thư mục chứa các API kiểm duyệt và hệ thống chỉ dành cho vai trò Quản trị viên (ADMIN). Yêu cầu Token JWT của ADMIN.",
+			"item": [
+				{
+					"name": "Xem danh sách yêu cầu xác thực tốt nghiệp PENDING",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/verifications?status=PENDING&page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"verifications"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "PENDING"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "### API Lấy Danh Sách Xác Thực Tốt Nghiệp\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Trả về danh sách các cựu sinh viên đang đợi kiểm duyệt bằng đại học để phê duyệt tài khoản."
+					},
+					"response": []
+				},
+				{
+					"name": "Phê duyệt / Từ chối yêu cầu xác thực tốt nghiệp",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"APPROVED\",\n  \"reviewNote\": \"Minh chứng hợp lệ. Chấp nhận tài khoản cựu sinh viên FPTU.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/verifications/1/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"verifications",
+								"1",
+								"review"
+							]
+						},
+						"description": "### API Phê Duyệt Minh Chứng Tốt Nghiệp\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Chấp thuận (APPROVED) hoặc Từ chối (REJECTED) yêu cầu của Alumni.\n* **Kết quả của APPROVED**: \n  * Cập nhật trạng thái `verification_requests` = `APPROVED`.\n  * Cập nhật `users.is_account_verified` = `true` cho cựu sinh viên đó."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwtToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwtToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
