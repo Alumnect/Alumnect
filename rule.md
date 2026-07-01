@@ -8,8 +8,9 @@ Tài liệu này định nghĩa chi tiết các nguyên tắc lập trình, chu�
 
 1. **Documentation Driven Development (DDD)**: Tài liệu là nguồn gốc duy nhất của sự thật. Không viết mã nếu không có tài liệu mô tả yêu cầu hoặc đặc tả hệ thống tương ứng.
 2. **Specification Driven Development (SDD)**: Mọi chức năng phải có Đặc tả yêu cầu phần mềm (SRS), Use Case (UC) chi tiết trước khi tiến hành triển khai.
-3. **Design Driven Development**: Sử dụng hệ thống Design Tokens và các kiểu dáng Pastel Premium được quy định trước khi phát triển UI Components.
-4. **Strict Directory Structure Adherence**: Việc tạo mới hoặc sửa đổi mã nguồn Backend/Frontend bắt buộc phải tuân thủ chính xác 100% cấu trúc thư mục quy định tại tệp tài liệu [FolderStructure.md]
+3. **Design Driven Development**: Sử dụng hệ thống Design Tokens và các kiểu dáng Pastel Premium được quy định tại tệp tài liệu [DesignSystem.md](docs/DesignSystem.md).
+4. **Strict Directory Structure Adherence**: Việc tạo mới hoặc sửa đổi mã nguồn Backend/Frontend bắt buộc phải tuân thủ chính xác 100% cấu trúc thư mục quy định tại tệp tài liệu [FolderStructure.md](docs/FolderStructure.md).
+5. **Workflow-Compliant Development**: Mọi quy trình triển khai tính năng bắt buộc phải tuân thủ 100% theo các bước hành động cụ thể tại tệp tài liệu [Workflow.md](docs/Workflow.md).
 
 ---
 
@@ -47,7 +48,7 @@ Mỗi class, interface, controller endpoint, service method, JPA entity field, D
 
 ## 3. WORKFLOW THỰC THI MỘT USE CASE (UC) CHI TIẾT
 
-Khi nhận được yêu cầu phát triển hoặc chỉnh sửa một Use Case, AI Assistant phải tự động thực thi đầy đủ và tuần tự 6 bước sau:
+Khi nhận được yêu cầu phát triển hoặc chỉnh sửa một Use Case, AI Assistant và lập trình viên phải thực thi đầy đủ và tuần tự 6 bước theo hướng dẫn chi tiết tại tệp [Workflow.md](docs/Workflow.md):
 
 ```mermaid
 graph TD
@@ -84,7 +85,7 @@ graph TD
     *   Mỗi feature bắt buộc phải có file `index.ts` (barrel file) để export ra các thành phần dùng chung ở ngoài.
     *   Các page chính trong `src/pages/` chỉ import các component và hook từ features để lắp ghép giao diện.
 2. **Thiết kế giao diện (UI/UX) theo Design System**:
-    *   **Tài liệu tham chiếu**: Áp dụng nghiêm ngặt các quy định tại tài liệu [DesignSystem.md](file:///d:/DOAN/Alumnect/Alumnect/docs/DesignSystem.md) làm chuẩn thiết kế Frontend duy nhất.
+    *   **Tài liệu tham chiếu**: Áp dụng nghiêm ngặt các quy định tại tài liệu [DesignSystem.md] làm chuẩn thiết kế Frontend duy nhất.
     *   **Phong cách**: Tông màu ấm áp, gần gũi và sang trọng (Premium Pastel). Sử dụng các thẻ trắng mềm (`pillowy white cards` qua class `.card-surface`), viền bo tròn lớn (`rounded-3xl`), và chữ màu mực mận chín (`plum` qua các biến `--color-plum-*`) thay cho màu đen/xám thô.
     *   **Bảng màu chuẩn**: Áp dụng đúng các biến Tailwind v4 `@theme` (Ví dụ: nền `--color-ink-900` / `#faf4ec`, bề mặt thẻ `--color-ink-850` / `#ffffff`, chữ tiêu đề `--color-plum-900` / `#322c3f`, chữ body `--color-plum-600` / `#6a6178`, màu thương hiệu tím oải hương `--color-brand-500` / `#7f86ee`, cùng các màu nhấn bổ trợ như cam san hô `--color-coral-500`, xanh mint `--color-mint-500`, xanh trời `--color-sky-500`... đúng vai trò nghiệp vụ).
     *   **Hiệu ứng đặc biệt**: Sử dụng chữ chuyển màu `.text-gradient`, kính mờ `.glass` / `.glass-strong` cho Navbar/Modal, bóng đổ thẻ `.card-surface`, spotlight hover `.spotlight`, và viền mỏng chuyển màu `.ring-gradient`.
