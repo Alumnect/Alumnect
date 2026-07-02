@@ -52,7 +52,8 @@ public class RegisterRequest {
     @NotNull(message = "Khóa học không được để trống")
     private Integer cohort;
 
-    /** Mã số sinh viên (tùy chọn với STUDENT, bắt buộc với ALUMNI khi xử lý logic) */
+    /** Mã số sinh viên (bắt buộc đối với tất cả người dùng) */
+    @NotBlank(message = "Mã số sinh viên không được để trống")
     @Size(max = 20, message = "Mã số sinh viên không được vượt quá 20 ký tự")
     private String studentCode;
 

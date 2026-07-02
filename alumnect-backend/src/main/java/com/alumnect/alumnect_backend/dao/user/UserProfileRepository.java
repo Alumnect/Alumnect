@@ -9,4 +9,9 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
+    /** Kiểm tra mã số sinh viên đã tồn tại chưa (dùng khi đăng ký tài khoản mới tinh) */
+    boolean existsByStudentCodeIgnoreCase(String studentCode);
+
+    /** Kiểm tra mã số sinh viên đã tồn tại ở tài khoản khác chưa (dùng khi đăng ký đè/sửa tài khoản PENDING của chính mình) */
+    boolean existsByStudentCodeIgnoreCaseAndUserIdNot(String studentCode, Long userId);
 }

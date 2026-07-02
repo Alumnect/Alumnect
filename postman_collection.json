@@ -316,6 +316,99 @@
 								"description": "### Đăng ký Alumni thiếu ảnh minh chứng (proofUrl)\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Thông báo lỗi mong muốn**: \"Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên\""
 							},
 							"response": []
+						},
+						{
+							"name": "Đăng ký STUDENT thất bại - Thiếu mã số sinh viên (studentCode)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Thiếu Mã\",\n  \"email\": \"student_thieuma@fpt.edu.vn\",\n  \"password\": \"Password123!\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Đăng ký Sinh viên thiếu mã số sinh viên\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Thông báo lỗi mong muốn**: \"Mã số sinh viên không được để trống\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký thất bại - Trùng mã số sinh viên (studentCode)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Văn Trùng Mã\",\n  \"email\": \"sinhvien_trungma@fpt.edu.vn\",\n  \"password\": \"Password123!\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE180001\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Đăng ký thất bại - Trùng mã số sinh viên với tài khoản khác\n* **Mã phản hồi thất bại**: 409 Conflict\n* **Thông báo lỗi mong muốn**: \"Mã số sinh viên này đã được đăng ký trong hệ thống.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký ALUMNI thất bại - Năm tốt nghiệp lớn hơn năm hiện tại",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"fullName\": \"Nguyễn Tương Lai\",\n  \"email\": \"alumni_tuonglai@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ALUMNI\",\n  \"majorId\": 2,\n  \"cohort\": 14,\n  \"studentCode\": \"HE140999\",\n  \"graduationYear\": 2099,\n  \"proofUrl\": \"http://example.com/proof.jpg\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								},
+								"description": "### Đăng ký Alumni có năm tốt nghiệp lớn hơn năm hiện tại\n* **Mã phản hồi thất bại**: 400 Bad Request\n* **Thông báo lỗi mong muốn**: \"Năm tốt nghiệp không được lớn hơn năm hiện tại\""
+							},
+							"response": []
 						}
 					]
 				},
@@ -328,7 +421,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token=123456",
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token={{studentOtpToken}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -345,7 +438,7 @@
 										},
 										{
 											"key": "token",
-											"value": "123456"
+											"value": "{{studentOtpToken}}"
 										}
 									]
 								},
@@ -359,7 +452,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=alumni_test@gmail.com&token=123456",
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=alumni_test@gmail.com&token={{alumniOtpToken}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -376,7 +469,7 @@
 										},
 										{
 											"key": "token",
-											"value": "123456"
+											"value": "{{alumniOtpToken}}"
 										}
 									]
 								},
@@ -483,7 +576,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token=123456",
+									"raw": "{{baseUrl}}/api/v1/auth/verify-email?email=sinhvien@fpt.edu.vn&token={{studentOtpToken}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -500,7 +593,7 @@
 										},
 										{
 											"key": "token",
-											"value": "123456"
+											"value": "{{studentOtpToken}}"
 										}
 									]
 								},

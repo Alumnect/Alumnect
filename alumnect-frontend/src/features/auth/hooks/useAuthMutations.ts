@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import { AUTH_ENFORCED, DEMO_USER } from '@/config/auth'
 import { authApi } from '../api/authApi'
 import type { AuthResponse } from '../api/authApi'
-import type { LoginInput, RegisterInput, ForgotInput } from '../model/schemas'
+import type { LoginInput, ForgotInput } from '../model/schemas'
 
 /** Sign in — real API when enforced, otherwise a local demo session. */
 export function useLogin() {
@@ -28,17 +28,6 @@ export function useLogin() {
   })
 }
 
-/** Register — real API when enforced; demo just routes to sign-in. */
-export function useRegister() {
-  const navigate = useNavigate()
-  return useMutation({
-    mutationFn: async (input: RegisterInput) => {
-      if (!AUTH_ENFORCED) return { message: 'demo' }
-      return authApi.register(input)
-    },
-    onSuccess: () => navigate('/login'),
-  })
-}
 
 export function useForgotPassword() {
   return useMutation({

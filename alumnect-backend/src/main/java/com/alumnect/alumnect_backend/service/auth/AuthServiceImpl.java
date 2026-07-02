@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
@@ -105,6 +106,18 @@ public class AuthServiceImpl implements AuthService {
             user.setAuthProvider(AuthProvider.LOCAL);
         }
 
+        // 1b. Kiểm tra mã số sinh viên đã được đăng ký chưa
+        String studentCode = request.getStudentCode() != null ? request.getStudentCode().trim() : "";
+        if (isNewUser) {
+            if (userProfileRepository.existsByStudentCodeIgnoreCase(studentCode)) {
+                throw new ConflictException("Mã số sinh viên này đã được đăng ký trong hệ thống.");
+            }
+        } else {
+            if (userProfileRepository.existsByStudentCodeIgnoreCaseAndUserIdNot(studentCode, user.getId())) {
+                throw new ConflictException("Mã số sinh viên này đã được đăng ký bởi tài khoản khác.");
+            }
+        }
+
         // 2. Lấy thông tin vai trò người dùng (STUDENT hoặc ALUMNI)
         String roleName = request.getRole().trim().toUpperCase();
         if (!roleName.equals("STUDENT") && !roleName.equals("ALUMNI")) {
@@ -117,6 +130,20 @@ public class AuthServiceImpl implements AuthService {
         Major major = majorRepository.findById(request.getMajorId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Chuyên ngành không tồn tại với ID: " + request.getMajorId()));
+
+        // 3b. Kiểm tra các trường bắt buộc đặc thù của vai trò ALUMNI trước khi ghi vào CSDL
+        if (roleName.equals("ALUMNI")) {
+            if (request.getGraduationYear() == null) {
+                throw new BadRequestException("Năm tốt nghiệp là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
+            }
+            int currentYear = LocalDate.now().getYear();
+            if (request.getGraduationYear() > currentYear) {
+                throw new BadRequestException("Năm tốt nghiệp không được lớn hơn năm hiện tại");
+            }
+            if (request.getProofUrl() == null || request.getProofUrl().trim().isEmpty()) {
+                throw new BadRequestException("Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
+            }
+        }
 
         // 4. Tạo/Cập nhật thực thể User và mã hóa mật khẩu bằng BCrypt
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
@@ -165,18 +192,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 7. Nếu vai trò đăng ký là ALUMNI, tạo/cập nhật phiếu yêu cầu xác minh tư cách
-        // cựu sinh viên
+        // cựu sinh viên (các validation đã được kiểm tra ở bước 3b trước khi save)
         if (roleName.equals("ALUMNI")) {
-            if (request.getStudentCode() == null || request.getStudentCode().trim().isEmpty()) {
-                throw new BadRequestException("Mã số sinh viên là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
-            }
-            if (request.getGraduationYear() == null) {
-                throw new BadRequestException("Năm tốt nghiệp là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
-            }
-            if (request.getProofUrl() == null || request.getProofUrl().trim().isEmpty()) {
-                throw new BadRequestException("Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
-            }
-
             VerificationRequest verRequest;
             Optional<VerificationRequest> existingVerRequestOpt = verificationRequestRepository.findByUser(user);
             if (existingVerRequestOpt.isPresent()) {
@@ -257,13 +274,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    /**
-     * Xác thực email bằng chuỗi mã OTP 6 số.
-     * Cập nhật email_verified = true và phân loại luồng trạng thái tài khoản:
-     * - STUDENT → kích hoạt trực tiếp thành ACTIVE
-     * - ALUMNI → đưa về trạng thái WAITING_APPROVAL (chờ Admin xét duyệt phiếu minh
-     * chứng)
-     */
     /**
      * Xác thực email bằng chuỗi mã OTP 6 số và địa chỉ email đi kèm.
      * Cập nhật email_verified = true và phân loại luồng trạng thái tài khoản.

@@ -36,15 +36,22 @@ Hãy đọc kỹ tệp quy trình phát triển và quy tắc code tại [Workfl
    * Tạo tệp `Review_Backend_[Mã_UC]_[Tên_Tính_Năng].md` tại thư mục gốc chứa kết quả chạy test Newman/curl làm bằng chứng kiểm thử trước khi chuyển sang Frontend. Tệp này được cấu hình bỏ qua trong `.gitignore`.
 
 4. **GIAI ĐOẠN 4: LẬP TRÌNH FRONTEND (REACT + TS)**
-   * Code đúng kiến trúc Feature-Based (tạo thư mục riêng trong `src/features/[feature_name]/`, dùng file `index.ts` để barrel export).
+   * Code đúng kiến trúc Feature-Based (tạo thư mục riêng trong `src/features/[feature_name]/`, dùng file `index.ts` để barrel export). Các component giao diện lớn hoặc phức tạp của feature phải được chia tách riêng biệt và lưu trữ tại thư mục `/components` (ví dụ: `RegisterForm.tsx`, `OtpVerification.tsx`) để tối ưu tính tái sử dụng và kiểm soát mã nguồn.
    * Áp dụng nghiêm ngặt Hệ thống Nhận diện Giao diện Pastel Premium đã tích hợp ở mục 4 của `Workflow.md` (nền canvas kem ấm `#faf4ec`, surface trắng `#ffffff`, chữ mực mận `#322c3f`/`#6a6178`, tím lavender `#7f86ee`, các hiệu ứng kính mờ, text gradient, hoạt ảnh float/breathe/sheen/pop).
    * Tái sử dụng các UI components dùng chung tại `primitives.tsx` (`<Card>`, `<Avatar>`, `<Skeleton>`, `<EmptyState>`) và `<SmartImage />`.
-   * Sử dụng `react-hook-form` + `zod` để validate form phía client, React Query để quản lý query/mutation cache, Zustand để quản lý global client state.
+   * Sử dụng `react-hook-form` + `zod` để validate form phía client (định nghĩa các thông điệp lỗi của Zod schema giống khớp 100% với các thông báo trong Backend DTO), React Query để quản lý query/mutation cache, Zustand để quản lý global client state.
    * Chạy lệnh kiểm tra biên dịch Frontend bằng `npm run build` hoặc `npx tsc --noEmit` trước khi bàn giao.
+   * Bắt buộc trích xuất và hiển thị trực tiếp thông điệp lỗi nghiệp vụ trả về từ Backend (qua `error.message` của mutation/query được `http.ts` đóng gói từ `ApiResponse.message`) lên Alert Banner hoặc Toast thông báo lỗi của giao diện người dùng.
+   * Tạo tệp `Review_Frontend_[Mã_UC]_[Tên_Tính_Năng].md` tại thư mục gốc chứa nhật ký (log) chạy build thành công làm bằng chứng trước khi bàn giao và sinh tài liệu đặc tả. Tệp này được cấu hình bỏ qua trong `.gitignore`.
+
 
 5. **GIAI ĐOẠN 5: SINH TÀI LIỆU ĐẶC TẢ SRS CHI TIẾT**
    * Tạo tệp `docs/update_SRS/SRS_UC_[Mã_UC]_[Tên_Tính_Năng].md` sao chép từ tệp mẫu `TemplateSRS.md`.
    * Biểu đồ lớp (Class Diagram) và Sơ đồ tuần tự (Sequence Diagram) phải khớp 100% với code thực tế.
    * Sơ đồ tuần tự (Sequence Diagram) phải được gộp chung thành **một sơ đồ duy nhất** (chứa cả kịch bản thành công và lỗi rẽ nhánh qua các khối `alt/else`), không dùng từ khóa `database` (sử dụng `participant DB as PostgreSQL`).
    * Phải viết đầy đủ phần **mô tả chi tiết bằng chữ** đi kèm bên dưới các sơ đồ Mermaid theo hướng dẫn trong file mẫu.
+
+6. **GIAI ĐOẠN 6: KIỂM TRA SỰ NHẤT QUÁN & TẠO FILE REVIEW SRS VS CODE**
+   * Thực hiện kiểm tra chéo cực kỳ chặt chẽ giữa tài liệu đặc tả SRS mới tạo/cập nhật và mã nguồn thực tế (Backend + Frontend).
+   * Tạo tệp `Review_SRS_vs_Code_[Mã_UC]_[Tên_Tính_Năng].md` tại thư mục gốc của dự án chứa báo cáo chi tiết sự nhất quán (kết quả so khớp nghiệp vụ, DTO, Validation, Class Diagram, Sequence Diagram, UI Form, OTP Screen, và danh sách 12 error messages kèm checklist hành động). Tệp này được cấu hình bỏ qua trong `.gitignore`.
 ```
