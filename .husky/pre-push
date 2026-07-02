@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+regex='^(dev|main|(feature|bugfix|hotfix|chore|docs)/[a-z0-9]+(-[a-z0-9]+)*)$'
+
+if ! printf "%s" "$branch" | grep -Eq "$regex"; then
+  echo ""
+  echo "======================================="
+  echo "❌ INVALID BRANCH NAME"
+  echo "======================================="
+  echo ""
+  echo "Current branch:"
+  echo "   $branch"
+  echo ""
+  echo "Allowed examples:"
+  echo "   feature/login-page"
+  echo "   feature/user-profile"
+  echo "   bugfix/api-error"
+  echo "   hotfix/payment"
+  echo "   chore/update-readme"
+  echo "   docs/setup-guide"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Branch name OK"
