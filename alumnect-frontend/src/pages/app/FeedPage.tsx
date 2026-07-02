@@ -1,3 +1,12 @@
+/**
+ * FeedPage — Trang bảng tin cộng đồng (UC15 - View community Feed).
+ *
+ * Trách nhiệm:
+ *  - Lấy dữ liệu bài viết qua hook `useFeed` (TanStack Query, infinite scroll).
+ *  - Áp dụng phân quyền theo vai trò: Guest chỉ đọc; Student/Alumni đăng bài & tương tác.
+ *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / rỗng / lỗi (retry) / phân quyền / thành công.
+ *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
+ */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -13,13 +22,24 @@ import {
   TrendingUp,
   Sparkles,
   ArrowRight,
+  Flag,
+  Loader2,
+  AlertTriangle,
+  Inbox,
+  Lock,
 } from 'lucide-react'
 import { Avatar, Badge, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import { FEED_POSTS, ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
+import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
 import { compact, cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/authStore'
+import type { AuthUser } from '@/store/authStore'
+import { AUTH_ENFORCED, DEMO_USER } from '@/config/auth'
+import { useFeed } from '@/features/feed'
+import type { FeedFilter, Post } from '@/features/feed'
 
+/** Nhãn + tông màu badge cho từng loại bài viết. */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
   achievement: { label: 'Achievement', tone: 'gold' },
   recruitment: { label: 'Hiring', tone: 'aqua' },
@@ -27,11 +47,24 @@ const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua'
   normal: { label: 'Post', tone: 'brand' },
 }
 
-function Composer() {
+/** Các tab lọc bảng tin theo loại bài viết (UC15: lọc theo loại). */
+const FILTERS: { key: FeedFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'achievement', label: 'Achievements' },
+  { key: 'recruitment', label: 'Hiring' },
+  { key: 'event', label: 'Events' },
+]
+
+/**
+ * Ô soạn bài viết ở đầu bảng tin — chỉ hiển thị cho thành viên đã đăng nhập
+ * (Student/Alumni). Guest sẽ thấy `GuestPrompt` thay thế (BR-12).
+ * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
+ */
+function Composer({ viewer }: { viewer: AuthUser }) {
   return (
     <Card hover={false} className="p-4">
       <div className="flex gap-3">
-        <Avatar src="https://i.pravatar.cc/120?img=12" name="Minh Anh" size={44} verified />
+        <Avatar src={viewer.avatarUrl ?? 'https://i.pravatar.cc/120?img=12'} name={viewer.name} size={44} verified={viewer.verified} />
         <button className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]">
           Share an achievement, ask, or post a job…
         </button>
@@ -57,12 +90,48 @@ function Composer() {
   )
 }
 
-function PostCard({ post }: { post: (typeof FEED_POSTS)[number] }) {
-  const [liked, setLiked] = useState(false)
+/**
+ * Trạng thái phân quyền cho Guest: bảng tin ở chế độ chỉ đọc, mời đăng nhập
+ * để có thể đăng bài và tương tác (BR-12 / MSG28).
+ */
+function GuestPrompt() {
+  return (
+    <Card hover={false} className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-500/10 text-brand-600">
+          <Lock size={20} />
+        </span>
+        <div>
+          <p className="font-bold text-plum-900">Bạn đang xem ở chế độ khách</p>
+          <p className="text-sm text-plum-500">Đăng nhập để đăng bài, thích và bình luận với cộng đồng đã xác thực.</p>
+        </div>
+      </div>
+      <Link
+        to="/login"
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+      >
+        Đăng nhập <ArrowRight size={15} />
+      </Link>
+    </Card>
+  )
+}
+
+/**
+ * Thẻ hiển thị một bài viết trên bảng tin.
+ * @param post Dữ liệu bài viết
+ * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
+ */
+function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
+  const [liked, setLiked] = useState(post.liked)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
+
+  // Vô hiệu hóa nút tương tác đối với Guest, kèm gợi ý đăng nhập.
+  const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
+
   return (
     <Card hover={false} className="overflow-hidden">
       <div className="p-5">
+        {/* --- Phần 1: Header — avatar, tên tác giả, badge loại bài, thời gian, menu "..." --- */}
         <div className="flex items-center gap-3">
           <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
           <div className="min-w-0 flex-1">
@@ -72,36 +141,60 @@ function PostCard({ post }: { post: (typeof FEED_POSTS)[number] }) {
             </p>
             <p className="truncate text-xs text-plum-400">{post.role} · {post.time}</p>
           </div>
-          <button className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
+          {/* Menu tác giả (Edit/Delete) — thuộc UC khác, ở đây chỉ hiển thị icon */}
+          <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
             <MoreHorizontal size={18} />
           </button>
         </div>
 
-        <p className="mt-4 text-[15px] leading-relaxed text-plum-800">{post.text}</p>
+        {/* --- Phần 2: Nội dung văn bản của bài viết --- */}
+        <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-plum-800">{post.text}</p>
       </div>
 
+      {/* --- Phần 3: Ảnh đính kèm (nếu có), lazy-load để tối ưu hiệu năng --- */}
       {post.image && (
-        <img src={post.image} alt="" className="max-h-[26rem] w-full object-cover" loading="lazy" />
+        <img src={post.image} alt={`Ảnh đính kèm bài viết của ${post.author}`} className="max-h-[26rem] w-full object-cover" loading="lazy" />
       )}
 
+      {/* --- Phần 4: Thanh hành động — Thích / Bình luận / Đăng lại / Báo cáo / Lưu.
+          Toàn bộ bị vô hiệu hóa (disabled) với Guest theo BR-12 --- */}
       <div className="flex items-center gap-1 p-3">
+        {/* Nút Thích: cập nhật lạc quan tại chỗ (optimistic) cho người đã đăng nhập */}
         <button
-          onClick={() => setLiked((v) => !v)}
+          onClick={() => canInteract && setLiked((v) => !v)}
+          disabled={!canInteract}
+          title={guardTitle}
           className={cn(
             'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-            liked ? 'text-rose-500' : 'text-plum-500 hover:bg-plum-900/[0.04] hover:text-plum-900',
+            !canInteract && 'cursor-not-allowed opacity-60',
+            liked ? 'text-rose-500' : 'text-plum-500 enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900',
           )}
         >
           <Heart size={18} className={liked ? 'fill-rose-400' : ''} />
           {compact(post.likes + (liked ? 1 : 0))}
         </button>
-        <button className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900">
+        <button
+          disabled={!canInteract}
+          title={guardTitle}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <MessageCircle size={18} /> {compact(post.comments)}
         </button>
-        <button className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900">
+        <button
+          disabled={!canInteract}
+          title={guardTitle}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
-        <button className="ml-auto grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900">
+        <button
+          disabled={!canInteract}
+          title={guardTitle}
+          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Flag size={17} />
+        </button>
+        <button aria-label="Lưu bài viết" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900">
           <Bookmark size={18} />
         </button>
       </div>
@@ -109,6 +202,68 @@ function PostCard({ post }: { post: (typeof FEED_POSTS)[number] }) {
   )
 }
 
+/** Khung xương (skeleton) hiển thị trong lúc tải bảng tin lần đầu. */
+function PostSkeleton() {
+  return (
+    <Card hover={false} className="p-5">
+      <div className="flex items-center gap-3">
+        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-plum-900/[0.07]" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3.5 w-40 animate-pulse rounded bg-plum-900/[0.07]" />
+          <div className="h-3 w-24 animate-pulse rounded bg-plum-900/[0.06]" />
+        </div>
+      </div>
+      <div className="mt-4 space-y-2">
+        <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.06]" />
+        <div className="h-3.5 w-11/12 animate-pulse rounded bg-plum-900/[0.06]" />
+        <div className="h-3.5 w-2/3 animate-pulse rounded bg-plum-900/[0.06]" />
+      </div>
+      <div className="mt-4 h-40 w-full animate-pulse rounded-xl bg-plum-900/[0.05]" />
+    </Card>
+  )
+}
+
+/**
+ * Trạng thái lỗi khi tải bảng tin thất bại (MSG05) — hiển thị nút Thử lại.
+ * @param message Thông điệp lỗi trả về
+ * @param onRetry Hàm gọi lại API
+ */
+function FeedError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  return (
+    <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+        <AlertTriangle size={24} />
+      </span>
+      <div>
+        <p className="font-bold text-plum-900">Không tải được bảng tin</p>
+        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+      </div>
+      <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
+    </Card>
+  )
+}
+
+/** Trạng thái rỗng khi cộng đồng chưa có bài viết nào ("No posts yet"). */
+function FeedEmpty() {
+  return (
+    <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
+        <Inbox size={24} />
+      </span>
+      <div>
+        <p className="font-bold text-plum-900">Chưa có bài viết nào</p>
+        <p className="mt-1 text-sm text-plum-500">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
+      </div>
+    </Card>
+  )
+}
+
+/**
+ * Thẻ khung cho các mục ở cột phải (gợi ý theo dõi, sự kiện, Q&A nổi bật).
+ * @param title Tiêu đề của mục
+ * @param action Nhãn liên kết hành động phụ (tùy chọn, vd "See all")
+ * @param children Nội dung bên trong thẻ
+ */
 function SidebarCard({ title, action, children }: { title: string; action?: string; children: React.ReactNode }) {
   return (
     <Card hover={false} className="p-5">
@@ -121,23 +276,120 @@ function SidebarCard({ title, action, children }: { title: string; action?: stri
   )
 }
 
+/**
+ * Trang bảng tin cộng đồng (UC15 - View community Feed).
+ * Lấy dữ liệu qua `useFeed` (infinite scroll), áp dụng phân quyền theo vai trò
+ * (Guest chỉ đọc; Student/Alumni đăng bài & tương tác) và xử lý đầy đủ các
+ * trạng thái loading / empty / error / permission.
+ */
 export function FeedPage() {
+  // === Bước 1: State cục bộ — bộ lọc loại bài viết đang chọn ===
+  const [filter, setFilter] = useState<FeedFilter>('all')
+
+  // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
+  const user = useAuthStore((s) => s.user)
+  // Người xem hiện tại: ưu tiên phiên đăng nhập thật; nếu không có thì dùng
+  // DEMO_USER ở chế độ demo (AUTH_ENFORCED = false), hoặc null (Guest) khi bật enforce.
+  const viewer: AuthUser | null = user ?? (AUTH_ENFORCED ? null : DEMO_USER)
+  const isGuest = !viewer
+  // Chỉ Student/Alumni mới được đăng bài & tương tác (Admin không phải người đăng).
+  const canPost = !!viewer && (viewer.role === 'STUDENT' || viewer.role === 'ALUMNI')
+
+  // === Bước 3: Gọi dữ liệu bảng tin qua hook infinite-query ===
+  const {
+    data,
+    isLoading,          // đang tải trang đầu tiên
+    isError,            // gọi API thất bại
+    error,              // đối tượng lỗi (dùng lấy message)
+    refetch,            // tải lại (nút Thử lại)
+    fetchNextPage,      // tải trang kế tiếp
+    hasNextPage,        // còn trang để tải không
+    isFetchingNextPage, // đang tải trang kế tiếp
+  } = useFeed(filter)
+
+  // === Bước 4: Gộp tất cả trang đã tải thành một danh sách bài viết phẳng ===
+  const posts = data?.pages.flatMap((p) => p.items) ?? []
+
+  // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
     <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1fr_320px]">
-      {/* main feed */}
+      {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
       <div className="space-y-5">
-        <Reveal><Composer /></Reveal>
-        <Stagger className="space-y-5" gap={0.1}>
-          {FEED_POSTS.map((p) => (
-            <StaggerItem key={p.id}>
-              <PostCard post={p} />
-            </StaggerItem>
+        {/* Khối A: Ô soạn bài (Student/Alumni) hoặc lời mời đăng nhập (Guest) */}
+        <Reveal>{canPost && viewer ? <Composer viewer={viewer} /> : <GuestPrompt />}</Reveal>
+
+        {/* Khối B: Tabs lọc theo loại bài viết (All / Achievements / Hiring / Events) */}
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={cn(
+                'rounded-full px-4 py-1.5 text-sm font-semibold transition-colors',
+                filter === f.key
+                  ? 'bg-gradient-to-r from-brand-600 to-violet-600 text-white shadow-sm'
+                  : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.07] hover:text-plum-900',
+              )}
+            >
+              {f.label}
+            </button>
           ))}
-        </Stagger>
+        </div>
+
+        {/* Khối C: Vùng nội dung theo trạng thái, xét lần lượt:
+            1) loading  → khung xương skeleton
+            2) error    → thẻ lỗi + nút Thử lại (MSG05)
+            3) rỗng     → thông báo "Chưa có bài viết nào"
+            4) có dữ liệu → danh sách bài viết + nút tải thêm */}
+        {isLoading ? (
+          // (1) Đang tải trang đầu: hiển thị 3 skeleton
+          <div className="space-y-5">
+            <PostSkeleton />
+            <PostSkeleton />
+            <PostSkeleton />
+          </div>
+        ) : isError ? (
+          // (2) Lỗi tải: cho phép người dùng thử lại
+          <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
+        ) : posts.length === 0 ? (
+          // (3) Không có bài viết nào
+          <FeedEmpty />
+        ) : (
+          // (4) Có dữ liệu: render danh sách + điều khiển phân trang
+          <>
+            <Stagger className="space-y-5" gap={0.08}>
+              {posts.map((p) => (
+                <StaggerItem key={p.id}>
+                  <PostCard post={p} canInteract={!isGuest} />
+                </StaggerItem>
+              ))}
+            </Stagger>
+
+            {/* Điều khiển tải thêm trang (infinite/paged loading) */}
+            <div className="pt-1 text-center">
+              {hasNextPage ? (
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  leftIcon={isFetchingNextPage ? <Loader2 size={16} className="animate-spin" /> : undefined}
+                >
+                  {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm bài viết'}
+                </Button>
+              ) : (
+                <p className="text-sm text-plum-400">Bạn đã xem hết bảng tin 🎉</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* right rail */}
+      {/* ============ CỘT PHẢI: GỢI Ý (ẩn trên mobile) ============
+          Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
+          Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
       <aside className="hidden space-y-5 lg:block">
+        {/* Mục 1: Gợi ý người để theo dõi */}
         <Reveal direction="left">
           <SidebarCard title="Who to follow" action="See all">
             <ul className="space-y-4">
@@ -155,6 +407,7 @@ export function FeedPage() {
           </SidebarCard>
         </Reveal>
 
+        {/* Mục 2: Sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>
           <SidebarCard title="Upcoming events" action="All events">
             <ul className="space-y-3">
@@ -174,6 +427,7 @@ export function FeedPage() {
           </SidebarCard>
         </Reveal>
 
+        {/* Mục 3: Câu hỏi Q&A đang nổi bật */}
         <Reveal direction="left" delay={0.2}>
           <SidebarCard title="Trending Q&A" action="Forum">
             <ul className="space-y-3">
@@ -191,6 +445,7 @@ export function FeedPage() {
           </SidebarCard>
         </Reveal>
 
+        {/* Mục 4: CTA mời xác thực để nhận huy hiệu Verified Alumni */}
         <Reveal direction="left" delay={0.3}>
           <div className="ring-gradient relative overflow-hidden rounded-2xl card-surface p-5">
             <Sparkles className="text-gold-600" size={22} />
