@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
+import { ProtectedRoute, RoleRoute } from '@/components/routing/guards'
 import { MarketingLayout, AppShell, AdminShell, ScrollToTop } from '@/components/layout'
 import { LandingPage } from '@/pages/LandingPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -40,7 +41,14 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Authenticated member app */}
-        <Route path="/app" element={<AppShell />}>
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <AppShell />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<FeedPage />} />
           <Route path="alumni" element={<AlumniDirectoryPage />} />
           <Route path="jobs" element={<JobsPage />} />
@@ -56,7 +64,14 @@ function App() {
         </Route>
 
         {/* Admin console */}
-        <Route path="/admin" element={<AdminShell />}>
+        <Route
+          path="/admin"
+          element={
+            <RoleRoute role="ADMIN">
+              <AdminShell />
+            </RoleRoute>
+          }
+        >
           <Route index element={<AdminOverviewPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />

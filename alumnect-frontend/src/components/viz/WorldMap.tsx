@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { compact } from '@/lib/utils'
-import { MAP_MARKERS } from '@/lib/constants'
+import type { MapMarker } from '@/lib/constants'
 
 /**
  * Stylised dotted world map with pulsing alumni markers.
  * Lightweight (no map library) — perfect for previews and the Alumni Map page.
+ * @param markers Danh sách điểm đánh dấu để hiển thị (component không tự mang dữ liệu mock).
  */
-export function WorldMap({ className }: { className?: string }) {
+export function WorldMap({ className, markers = [] }: { className?: string; markers?: MapMarker[] }) {
   const [active, setActive] = useState<string | null>(null)
 
   return (
@@ -19,8 +20,8 @@ export function WorldMap({ className }: { className?: string }) {
 
         {/* connection lines between major hubs */}
         <svg className="absolute inset-0 h-full w-full" aria-hidden>
-          {MAP_MARKERS.slice(0, 4).map((m, i) => {
-            const next = MAP_MARKERS[(i + 1) % 4]
+          {markers.slice(0, 4).map((m, i) => {
+            const next = markers[(i + 1) % 4]
             return (
               <motion.line
                 key={m.id}
@@ -47,7 +48,7 @@ export function WorldMap({ className }: { className?: string }) {
         </svg>
 
         {/* markers */}
-        {MAP_MARKERS.map((m, i) => (
+        {markers.map((m, i) => (
           <button
             key={m.id}
             className="group absolute -translate-x-1/2 -translate-y-1/2"

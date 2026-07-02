@@ -19,11 +19,7 @@ export function Counter({ value, className, suffix = '', prefix = '', duration =
   const [display, setDisplay] = useState(0)
 
   useEffect(() => {
-    if (!inView) return
-    if (reduce) {
-      setDisplay(value)
-      return
-    }
+    if (!inView || reduce) return
     const controls = animate(0, value, {
       duration,
       ease: [0.16, 1, 0.3, 1],
@@ -32,9 +28,11 @@ export function Counter({ value, className, suffix = '', prefix = '', duration =
     return () => controls.stop()
   }, [inView, value, duration, reduce])
 
+  // Khi reduced-motion bật, hiển thị thẳng giá trị cuối cùng thay vì chạy hiệu ứng đếm số.
+  const shown = inView && reduce ? value : display
   const formatted = compactFmt
-    ? new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(Math.round(display))
-    : Math.round(display).toLocaleString('en-US')
+    ? new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(Math.round(shown))
+    : Math.round(shown).toLocaleString('en-US')
 
   return (
     <span ref={ref} className={cn('tabular-nums', className)}>

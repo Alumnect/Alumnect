@@ -47,8 +47,13 @@ export function ProfilePage() {
           <div className="flex items-end gap-4">
             <Avatar src="https://i.pravatar.cc/200?img=12" name="Trần Minh Anh" size={120} verified ring />
             <div className="pb-2">
-              <h1 className="flex items-center gap-2 text-2xl font-extrabold text-plum-900 sm:text-3xl">
-                Trần Minh Anh <BadgeCheck className="text-brand-400" size={22} />
+              {/*
+                Tên hiển thị: dùng leading-[1.35] + pt-1 để chừa khoảng trên cho
+                dấu tiếng Việt xếp tầng (vd chữ "ầ" = mũ + huyền). Nếu để line-height
+                mặc định chật của text-3xl, phần dấu phía trên sẽ bị cắt.
+              */}
+              <h1 className="flex items-center gap-2 pt-1 text-2xl font-extrabold leading-[1.35] text-plum-900 sm:text-3xl">
+                Trần Minh Anh <BadgeCheck className="shrink-0 text-brand-400" size={22} />
               </h1>
               <p className="text-plum-500">Senior Software Engineer @ FPT Software</p>
             </div>
