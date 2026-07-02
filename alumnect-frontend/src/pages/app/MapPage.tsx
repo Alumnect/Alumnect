@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { Map as MapIcon, Filter } from 'lucide-react'
-import { PageHeader, Badge, Card } from '@/components/ui'
+import { PageHeader, Badge, Card, EmptyState } from '@/components/ui'
 import { Reveal } from '@/components/motion'
 import { WorldMap } from '@/components/viz/WorldMap'
-import { MAP_MARKERS } from '@/lib/constants'
+import type { MapMarker } from '@/lib/constants'
 import { compact, cn } from '@/lib/utils'
 
 const COHORTS = ['All cohorts', 'K11–K13', 'K14–K16', 'K17+']
+
+// TODO(team): chưa có API Alumni Map — thay MAP_MARKERS bằng dữ liệu thật khi backend sẵn sàng.
+const MAP_MARKERS: MapMarker[] = []
 
 export function MapPage() {
   const [cohort, setCohort] = useState('All cohorts')
@@ -36,7 +39,7 @@ export function MapPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <Reveal>
           <div className="ring-gradient rounded-3xl p-2">
-            <WorldMap />
+            <WorldMap markers={sorted} />
           </div>
         </Reveal>
 
@@ -46,15 +49,19 @@ export function MapPage() {
               <h3 className="font-bold text-plum-900">Top hubs</h3>
               <Badge tone="aqua">Live</Badge>
             </div>
-            <ul className="space-y-3">
-              {sorted.map((m, i) => (
-                <li key={m.id} className="flex items-center gap-3">
-                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-plum-900/[0.04] text-xs font-bold text-plum-500">{i + 1}</span>
-                  <span className="flex-1 text-sm font-semibold text-plum-900">{m.city}</span>
-                  <span className="text-sm font-bold text-brand-600">{compact(m.count)}</span>
-                </li>
-              ))}
-            </ul>
+            {sorted.length === 0 ? (
+              <EmptyState icon={<MapIcon size={22} />} title="Chưa có dữ liệu" description="Bản đồ sẽ hiển thị khi có dữ liệu alumni theo khu vực." />
+            ) : (
+              <ul className="space-y-3">
+                {sorted.map((m, i) => (
+                  <li key={m.id} className="flex items-center gap-3">
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-plum-900/[0.04] text-xs font-bold text-plum-500">{i + 1}</span>
+                    <span className="flex-1 text-sm font-semibold text-plum-900">{m.city}</span>
+                    <span className="text-sm font-bold text-brand-600">{compact(m.count)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
         </Reveal>
       </div>

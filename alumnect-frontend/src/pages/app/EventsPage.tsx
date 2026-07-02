@@ -1,16 +1,27 @@
 import { useState } from 'react'
 import { CalendarDays, MapPin, Users, Clock } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, SmartImage } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, SmartImage, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
-import { EVENTS } from '@/lib/constants'
+import type { EventItem } from '@/lib/constants'
 import { compact, cn } from '@/lib/utils'
 
 const TABS = ['Upcoming', 'This month', 'Online', 'My events']
+const CURRENT_MONTH = new Date().toLocaleString('en', { month: 'short' }).toUpperCase()
+
+// TODO(team): chưa có API Events — thay EVENTS bằng dữ liệu thật khi backend sẵn sàng.
+const EVENTS: EventItem[] = []
 
 export function EventsPage() {
   const [tab, setTab] = useState('Upcoming')
   const [rsvp, setRsvp] = useState<Record<string, boolean>>({})
+
+  const filteredEvents = EVENTS.filter((e) => {
+    if (tab === 'This month') return e.month === CURRENT_MONTH
+    if (tab === 'Online') return e.location.toLowerCase().includes('online')
+    if (tab === 'My events') return !!rsvp[e.id]
+    return true // 'Upcoming' — toàn bộ sự kiện trong dữ liệu mock đều ở tương lai
+  })
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -36,8 +47,16 @@ export function EventsPage() {
         ))}
       </div>
 
+      {filteredEvents.length === 0 ? (
+        <EmptyState
+          icon={<CalendarDays size={24} />}
+          title="No events here yet"
+          description="Try another tab, or check back soon for new events."
+          action={<Button size="sm" variant="secondary" onClick={() => setTab('Upcoming')}>Clear filter</Button>}
+        />
+      ) : (
       <Stagger className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" gap={0.08}>
-        {EVENTS.map((e) => (
+        {filteredEvents.map((e) => (
           <StaggerItem key={e.id}>
             <Card hover={false} className="group h-full overflow-hidden transition-all hover:-translate-y-1 hover:shadow-glow">
               <div className="relative h-44 overflow-hidden">
@@ -50,7 +69,7 @@ export function EventsPage() {
                 <Badge tone="violet" className="absolute right-3 top-3">{e.tag}</Badge>
               </div>
               <div className="p-5">
-                <h3 className="text-lg font-bold text-plum-900">{e.title}</h3>
+                <h2 className="text-lg font-bold text-plum-900">{e.title}</h2>
                 <p className="mt-2 flex items-center gap-1.5 text-sm text-plum-500"><MapPin size={14} /> {e.location}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-sm text-plum-500"><Clock size={14} /> {e.date} · 18:00</p>
                 <div className="mt-4 flex items-center justify-between border-t border-plum-900/8 pt-4">
@@ -75,6 +94,7 @@ export function EventsPage() {
           </StaggerItem>
         ))}
       </Stagger>
+      )}
 
       <Reveal>
         <div className="mt-8 flex justify-center">

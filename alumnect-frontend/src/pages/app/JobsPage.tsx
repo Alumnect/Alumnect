@@ -1,16 +1,26 @@
 import { useState } from 'react'
 import { Briefcase, MapPin, Search, Bookmark, Building2, Clock } from 'lucide-react'
-import { PageHeader, Badge, Card } from '@/components/ui'
+import { PageHeader, Badge, Card, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import { JOBS } from '@/lib/constants'
+import type { Job } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 const TYPES = ['All roles', 'Full-time', 'Internship', 'Remote']
 
+// TODO(team): chưa có API Jobs — thay JOBS bằng dữ liệu thật khi backend sẵn sàng.
+const JOBS: Job[] = []
+
 export function JobsPage() {
   const [type, setType] = useState('All roles')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
+
+  // "Remote" lọc theo địa điểm làm việc; các loại còn lại khớp trực tiếp field `type`.
+  const filteredJobs = JOBS.filter((job) => {
+    if (type === 'All roles') return true
+    if (type === 'Remote') return job.location.includes('Remote')
+    return job.type === type
+  })
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -53,8 +63,16 @@ export function JobsPage() {
         ))}
       </div>
 
+      {filteredJobs.length === 0 ? (
+        <EmptyState
+          icon={<Briefcase size={24} />}
+          title="No jobs match this filter"
+          description="Try another role type or check back soon for new postings."
+          action={<Button size="sm" variant="secondary" onClick={() => setType('All roles')}>Clear filter</Button>}
+        />
+      ) : (
       <Stagger className="space-y-4" gap={0.06}>
-        {JOBS.map((job) => (
+        {filteredJobs.map((job) => (
           <StaggerItem key={job.id}>
             <Card hover={false} className="p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -63,7 +81,7 @@ export function JobsPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-bold text-plum-900">{job.title}</h3>
+                    <h2 className="text-lg font-bold text-plum-900">{job.title}</h2>
                     {job.featured && <Badge tone="gold">Featured</Badge>}
                   </div>
                   <p className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-plum-500">
@@ -95,6 +113,7 @@ export function JobsPage() {
           </StaggerItem>
         ))}
       </Stagger>
+      )}
     </div>
   )
 }

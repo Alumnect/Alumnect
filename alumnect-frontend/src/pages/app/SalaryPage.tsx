@@ -1,16 +1,23 @@
 import { useState } from 'react'
 import { LineChart, ShieldCheck, Plus, Filter } from 'lucide-react'
-import { PageHeader, Badge, Card } from '@/components/ui'
+import { PageHeader, Badge, Card, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
-import { SALARY } from '@/lib/constants'
+import type { SalaryRow } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 const REGIONS = ['All regions', 'HCMC', 'Hà Nội', 'Đà Nẵng', 'Remote']
 
+// TODO(team): chưa có API Salary Board — thay SALARY bằng dữ liệu thật khi backend sẵn sàng.
+const SALARY: SalaryRow[] = []
+
 export function SalaryPage() {
   const [region, setRegion] = useState('All regions')
-  const max = Math.max(...SALARY.map((s) => s.p75))
+  // Giữ `max` tính trên TOÀN BỘ dữ liệu (không phải tập đã lọc) để thang đo
+  // biểu đồ không nhảy khi đổi vùng — giúp so sánh trực quan giữa các lần lọc.
+  // Fallback 1 khi chưa có dữ liệu để tránh Math.max() trả về -Infinity.
+  const max = SALARY.length ? Math.max(...SALARY.map((s) => s.p75)) : 1
+  const rows = SALARY.filter((s) => region === 'All regions' || s.region === region)
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -57,8 +64,16 @@ export function SalaryPage() {
             <Badge tone="success" icon={<ShieldCheck size={13} />}>Anonymous</Badge>
           </div>
 
+          {rows.length === 0 ? (
+            <EmptyState
+              icon={<LineChart size={24} />}
+              title="No salary data for this region yet"
+              description="Try another region, or contribute your own data point."
+              action={<Button size="sm" variant="secondary" onClick={() => setRegion('All regions')}>Clear filter</Button>}
+            />
+          ) : (
           <Stagger className="space-y-5" gap={0.07}>
-            {SALARY.map((s) => (
+            {rows.map((s) => (
               <StaggerItem key={`${s.role}-${s.level}-${s.region}`}>
                 <div>
                   <div className="mb-2 flex items-center justify-between text-sm">
@@ -87,6 +102,7 @@ export function SalaryPage() {
               </StaggerItem>
             ))}
           </Stagger>
+          )}
         </Card>
       </Reveal>
 

@@ -20,7 +20,7 @@ export function SubscriptionPage() {
         subtitle="Choose a posting package to recruit from the FPTU alumni network."
       />
 
-      <Stagger className="grid gap-5 md:grid-cols-3" gap={0.1}>
+      <Stagger className="grid gap-5 sm:grid-cols-2 md:grid-cols-3" gap={0.1}>
         {PACKAGES.map((p) => (
           <StaggerItem key={p.name}>
             <Card
@@ -35,7 +35,7 @@ export function SubscriptionPage() {
                   Most popular
                 </Badge>
               )}
-              <h3 className="text-lg font-bold text-plum-900">{p.name}</h3>
+              <h2 className="text-lg font-bold text-plum-900">{p.name}</h2>
               <p className="mt-3">
                 <span className="text-3xl font-extrabold text-plum-900">{p.price === 0 ? 'Free' : vnd(p.price)}</span>
                 {p.price !== 0 && <span className="text-sm text-plum-400"> {p.period}</span>}

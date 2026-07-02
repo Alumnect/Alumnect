@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { forwardRef } from 'react'
+import type { ReactNode, InputHTMLAttributes } from 'react'
 import { motion } from 'framer-motion'
 import { BadgeCheck, Quote } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -42,7 +43,7 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
                 “The verified badge changes everything. You know you're talking to real graduates.”
               </p>
               <div className="mt-4 flex items-center gap-3">
-                <img src="https://i.pravatar.cc/80?img=33" alt="" className="h-10 w-10 rounded-full" />
+                <img src="https://i.pravatar.cc/80?img=33" alt="Nguyễn Hải Long" className="h-10 w-10 rounded-full" />
                 <div>
                   <p className="flex items-center gap-1 text-sm font-bold text-plum-900">
                     Nguyễn Hải Long <BadgeCheck size={14} className="text-brand-500" />
@@ -86,39 +87,37 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
   )
 }
 
-/** Styled text field for auth forms. */
-export function Field({
-  label,
-  type = 'text',
-  placeholder,
-  icon,
-  trailing,
-  name,
-}: {
+type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string
-  type?: string
-  placeholder?: string
   icon?: ReactNode
   trailing?: ReactNode
-  name?: string
-}) {
+  error?: string
+}
+
+/** Styled text field for auth forms — RHF-ready (forwards ref, shows error). */
+export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
+  { label, icon, trailing, error, className, ...rest },
+  ref,
+) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-semibold text-plum-700">{label}</span>
       <span className="relative flex items-center">
         {icon && <span className="pointer-events-none absolute left-3.5 text-plum-400">{icon}</span>}
         <input
-          type={type}
-          name={name}
-          placeholder={placeholder}
+          ref={ref}
+          {...rest}
           className={cn(
             'h-12 w-full rounded-xl border border-plum-900/10 bg-cream-100 px-4 text-sm text-plum-900 placeholder:text-plum-400 transition-colors focus:border-brand-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/25',
             icon && 'pl-10',
             trailing && 'pr-11',
+            error && 'border-coral-400 focus:border-coral-400 focus:ring-coral-400/30',
+            className,
           )}
         />
         {trailing && <span className="absolute right-3">{trailing}</span>}
       </span>
+      {error && <span className="mt-1 block text-xs font-medium text-coral-600">{error}</span>}
     </label>
   )
-}
+})

@@ -66,8 +66,12 @@ export function MessagesPage() {
               </div>
             </div>
             <div className="flex items-center gap-1 text-plum-400">
-              {[Phone, Video, MoreVertical].map((Icon, i) => (
-                <button key={i} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-plum-900/[0.05] hover:text-plum-900"><Icon size={17} /></button>
+              {[
+                { Icon: Phone, label: 'Gọi thoại' },
+                { Icon: Video, label: 'Gọi video' },
+                { Icon: MoreVertical, label: 'Tùy chọn khác' },
+              ].map(({ Icon, label }) => (
+                <button key={label} aria-label={label} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-plum-900/[0.05] hover:text-plum-900"><Icon size={17} /></button>
               ))}
             </div>
           </div>

@@ -1,5 +1,6 @@
-export { Button, ButtonLink, buttonClasses } from './Button'
-export type { ButtonVariant, ButtonSize } from './Button'
+export { Button, ButtonLink } from './Button'
+export { buttonClasses } from './buttonStyles'
+export type { ButtonVariant, ButtonSize } from './buttonStyles'
 export { Container, Badge, SectionHeading, Card, Avatar, Skeleton, EmptyState } from './primitives'
 export { Logo } from './Logo'
 export { PageHeader } from './PageHeader'

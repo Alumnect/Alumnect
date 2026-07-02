@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { HelpCircle, ChevronUp, MessageSquare, Search, Flame, Clock, CheckCircle2 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
-import { QUESTIONS } from '@/lib/constants'
+import type { Question } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 const TOPICS = ['All', 'Career', 'Interview', 'Engineering', 'Education', 'Startup']
@@ -13,9 +13,28 @@ const SORTS = [
   { key: 'unanswered', label: 'Unanswered', icon: CheckCircle2 },
 ]
 
+// TODO(team): chưa có API Forum — thay QUESTIONS bằng dữ liệu thật khi backend sẵn sàng.
+const QUESTIONS: Question[] = []
+
+/** Quy đổi chuỗi thời gian mock ('3h', '2d'…) sang số giờ để so sánh độ mới. */
+function hoursAgo(time: string): number {
+  const match = /^(\d+)(h|d)$/.exec(time)
+  if (!match) return Number.POSITIVE_INFINITY
+  const [, n, unit] = match
+  return unit === 'd' ? Number(n) * 24 : Number(n)
+}
+
 export function ForumPage() {
   const [topic, setTopic] = useState('All')
   const [sort, setSort] = useState('hot')
+
+  const questions = QUESTIONS.filter((q) => topic === 'All' || q.topic === topic)
+  if (sort === 'hot') questions.sort((a, b) => b.votes - a.votes)
+  else if (sort === 'new') questions.sort((a, b) => hoursAgo(a.time) - hoursAgo(b.time))
+  else if (sort === 'unanswered') {
+    questions.sort((a, b) => a.answers - b.answers)
+  }
+  const visibleQuestions = sort === 'unanswered' ? questions.filter((q) => q.answers === 0) : questions
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -58,8 +77,16 @@ export function ForumPage() {
         </div>
       </div>
 
+      {visibleQuestions.length === 0 ? (
+        <EmptyState
+          icon={<HelpCircle size={24} />}
+          title={sort === 'unanswered' ? 'No unanswered questions' : 'No questions found'}
+          description="Try a different topic filter, or be the first to ask."
+          action={<Button size="sm" variant="secondary" onClick={() => setTopic('All')}>Clear filter</Button>}
+        />
+      ) : (
       <Stagger className="space-y-4" gap={0.06}>
-        {QUESTIONS.map((q) => (
+        {visibleQuestions.map((q) => (
           <StaggerItem key={q.id}>
             <Card hover={false} className="p-5 transition-all hover:-translate-y-0.5">
               <div className="flex gap-4">
@@ -71,7 +98,7 @@ export function ForumPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <Badge tone="violet" className="mb-2 px-2 py-0.5 text-[10px]">{q.topic}</Badge>
-                  <h3 className="text-lg font-bold leading-snug text-plum-900 hover:text-brand-600">{q.title}</h3>
+                  <h2 className="text-lg font-bold leading-snug text-plum-900 hover:text-brand-600">{q.title}</h2>
                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
                     {q.tags.map((t) => (
                       <span key={t} className="rounded-md bg-plum-900/[0.04] px-2 py-0.5 text-[11px] font-medium text-plum-500">#{t}</span>
@@ -94,6 +121,7 @@ export function ForumPage() {
           </StaggerItem>
         ))}
       </Stagger>
+      )}
     </div>
   )
 }
