@@ -268,6 +268,7 @@ export const JOBS = [
   { id: 'j5', title: 'Mobile Engineer (Flutter)', company: 'VNG', location: 'HCMC · On-site', type: 'Full-time', salary: '$1,600 – $2,600', tags: ['Flutter', 'Dart'], featured: false, logo: '🟢' },
   { id: 'j6', title: 'AI Research Engineer', company: 'Viettel AI', location: 'Hà Nội · On-site', type: 'Full-time', salary: '$2,400 – $4,000', tags: ['PyTorch', 'NLP', 'LLM'], featured: true, logo: '🔴' },
 ]
+export type Job = (typeof JOBS)[number]
 
 /** Mock events. */
 export const EVENTS = [
@@ -276,18 +277,20 @@ export const EVENTS = [
   { id: 'e3', title: 'Alumni Startup Demo Night', date: 'Aug 18', month: 'AUG', day: '18', location: 'Dreamplex, HCMC', attendees: 320, cover: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1200&auto=format&fit=crop', tag: 'Networking' },
   { id: 'e4', title: 'Career Fair: Hire from the Network', date: 'Sep 09', month: 'SEP', day: '09', location: 'FPT Campus, Hà Nội', attendees: 760, cover: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=1200&auto=format&fit=crop', tag: 'Career' },
 ]
+export type EventItem = (typeof EVENTS)[number]
 
 /** Mock alumni directory. */
 export const ALUMNI = [
-  { id: 'a1', name: 'Trần Minh Anh', role: 'Senior SWE @ FPT Software', cohort: 'SE · K15', avatar: 'https://i.pravatar.cc/160?img=12', skills: ['React', 'Node', 'AWS'], verified: true, followers: 1240 },
-  { id: 'a2', name: 'Nguyễn Hải Long', role: 'Product Manager @ Grab', cohort: 'IB · K13', avatar: 'https://i.pravatar.cc/160?img=33', skills: ['Strategy', 'Analytics'], verified: true, followers: 2310 },
-  { id: 'a3', name: 'Phạm Thu Hà', role: 'Talent Lead @ VNG', cohort: 'MKT · K12', avatar: 'https://i.pravatar.cc/160?img=45', skills: ['Recruiting', 'Branding'], verified: true, followers: 980 },
-  { id: 'a4', name: 'Lê Quốc Bảo', role: 'Data Analyst @ Shopee', cohort: 'AI · K16', avatar: 'https://i.pravatar.cc/160?img=8', skills: ['SQL', 'Python', 'ML'], verified: true, followers: 640 },
-  { id: 'a5', name: 'Vũ Khánh Vy', role: 'UX Designer @ Momo', cohort: 'GD · K14', avatar: 'https://i.pravatar.cc/160?img=20', skills: ['Figma', 'Research'], verified: false, followers: 410 },
-  { id: 'a6', name: 'Đỗ Gia Huy', role: 'DevOps @ Techcombank', cohort: 'SE · K13', avatar: 'https://i.pravatar.cc/160?img=51', skills: ['K8s', 'Terraform'], verified: true, followers: 720 },
-  { id: 'a7', name: 'Hoàng Thảo My', role: 'BA @ Viettel', cohort: 'IS · K15', avatar: 'https://i.pravatar.cc/160?img=27', skills: ['BPMN', 'SQL'], verified: true, followers: 530 },
-  { id: 'a8', name: 'Bùi Tuấn Kiệt', role: 'Founder @ Stealth', cohort: 'SE · K11', avatar: 'https://i.pravatar.cc/160?img=15', skills: ['Leadership', 'Go'], verified: true, followers: 3100 },
+  { id: 'a1', name: 'Trần Minh Anh', role: 'Senior SWE @ FPT Software', category: 'Software', cohort: 'SE · K15', avatar: 'https://i.pravatar.cc/160?img=12', skills: ['React', 'Node', 'AWS'], verified: true, followers: 1240 },
+  { id: 'a2', name: 'Nguyễn Hải Long', role: 'Product Manager @ Grab', category: 'Product', cohort: 'IB · K13', avatar: 'https://i.pravatar.cc/160?img=33', skills: ['Strategy', 'Analytics'], verified: true, followers: 2310 },
+  { id: 'a3', name: 'Phạm Thu Hà', role: 'Talent Lead @ VNG', category: 'Business', cohort: 'MKT · K12', avatar: 'https://i.pravatar.cc/160?img=45', skills: ['Recruiting', 'Branding'], verified: true, followers: 980 },
+  { id: 'a4', name: 'Lê Quốc Bảo', role: 'Data Analyst @ Shopee', category: 'Data', cohort: 'AI · K16', avatar: 'https://i.pravatar.cc/160?img=8', skills: ['SQL', 'Python', 'ML'], verified: true, followers: 640 },
+  { id: 'a5', name: 'Vũ Khánh Vy', role: 'UX Designer @ Momo', category: 'Design', cohort: 'GD · K14', avatar: 'https://i.pravatar.cc/160?img=20', skills: ['Figma', 'Research'], verified: false, followers: 410 },
+  { id: 'a6', name: 'Đỗ Gia Huy', role: 'DevOps @ Techcombank', category: 'Software', cohort: 'SE · K13', avatar: 'https://i.pravatar.cc/160?img=51', skills: ['K8s', 'Terraform'], verified: true, followers: 720 },
+  { id: 'a7', name: 'Hoàng Thảo My', role: 'BA @ Viettel', category: 'Business', cohort: 'IS · K15', avatar: 'https://i.pravatar.cc/160?img=27', skills: ['BPMN', 'SQL'], verified: true, followers: 530 },
+  { id: 'a8', name: 'Bùi Tuấn Kiệt', role: 'Founder @ Stealth', category: 'Business', cohort: 'SE · K11', avatar: 'https://i.pravatar.cc/160?img=15', skills: ['Leadership', 'Go'], verified: true, followers: 3100 },
 ]
+export type AlumniProfile = (typeof ALUMNI)[number]
 
 /** Mock forum questions. */
 export const QUESTIONS = [
@@ -296,6 +299,7 @@ export const QUESTIONS = [
   { id: 'q3', title: 'Is a master degree worth it for a product manager in Vietnam?', topic: 'Education', votes: 31, answers: 14, author: 'Nguyễn Hải Long', time: '1d', tags: ['education', 'pm'] },
   { id: 'q4', title: 'Best resources to learn Spring Boot in 2026?', topic: 'Engineering', votes: 56, answers: 19, author: 'Đỗ Gia Huy', time: '2d', tags: ['java', 'spring'] },
 ]
+export type Question = (typeof QUESTIONS)[number]
 
 /** Mock salary rows for the salary board. */
 export const SALARY = [
@@ -306,6 +310,7 @@ export const SALARY = [
   { role: 'UX Designer', level: 'Mid', region: 'Remote', median: 26, p25: 20, p75: 34, samples: 48 },
   { role: 'DevOps Engineer', level: 'Senior', region: 'HCMC', median: 50, p25: 40, p75: 66, samples: 39 },
 ]
+export type SalaryRow = (typeof SALARY)[number]
 
 /** Mock career path stages. */
 export const CAREER_PATH = [
@@ -326,6 +331,7 @@ export const MAP_MARKERS = [
   { id: 'm7', city: 'San Francisco', count: 410, x: 14, y: 34 },
   { id: 'm8', city: 'Berlin', count: 230, x: 47, y: 24 },
 ]
+export type MapMarker = (typeof MAP_MARKERS)[number]
 
 /** Pricing / posting packages. */
 export const PACKAGES = [
@@ -362,3 +368,4 @@ export const ADMIN_KPIS = [
   { label: 'Active jobs', value: 486, delta: '-3.1%', up: false },
   { label: 'Monthly revenue', value: 78_400_000, delta: '+14.6%', up: true, currency: true },
 ]
+export type AdminKpi = (typeof ADMIN_KPIS)[number]

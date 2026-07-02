@@ -325,7 +325,7 @@ export function AppShell() {
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-plum-900/15" />
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-extrabold text-plum-900">Explore more</h3>
-                <button onClick={() => setSheet(false)} className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05]">
+                <button onClick={() => setSheet(false)} aria-label="Đóng" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05]">
                   <X size={18} />
                 </button>
               </div>

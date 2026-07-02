@@ -1,16 +1,14 @@
 import { useState } from 'react'
-import { Search, MoreVertical, Lock, Unlock, BadgeCheck } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
+import { Search, MoreVertical, Lock, Unlock, BadgeCheck, Users } from 'lucide-react'
+import { PageHeader, Badge, Card, Avatar, EmptyState } from '@/components/ui'
 import { Reveal } from '@/components/motion'
-import { ALUMNI } from '@/lib/constants'
+import type { AlumniProfile } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
-const ROWS = ALUMNI.map((a, i) => ({
-  ...a,
-  email: `${a.name.split(' ').slice(-1)[0].toLowerCase()}@fpt.edu.vn`,
-  role: i % 4 === 0 ? 'Student' : 'Alumni',
-  status: i === 2 ? 'Locked' : i === 4 ? 'Pending' : 'Active',
-}))
+type UserRow = AlumniProfile & { email: string; role: string; status: string }
+
+// TODO(team): chưa có API User Management — thay ROWS bằng dữ liệu thật khi backend sẵn sàng.
+const ROWS: UserRow[] = []
 
 const TABS = ['All', 'Alumni', 'Student', 'Pending', 'Locked']
 
@@ -40,6 +38,9 @@ export function AdminUsersPage() {
       </div>
 
       <Reveal>
+        {ROWS.length === 0 ? (
+          <EmptyState icon={<Users size={24} />} title="Chưa có người dùng" description="Danh sách sẽ hiển thị khi có dữ liệu thật từ backend." />
+        ) : (
         <Card hover={false} className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
@@ -95,6 +96,7 @@ export function AdminUsersPage() {
             </tbody>
           </table>
         </Card>
+        )}
       </Reveal>
     </div>
   )

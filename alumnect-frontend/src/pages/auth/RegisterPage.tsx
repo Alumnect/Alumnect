@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { User, Mail, Lock, Eye, EyeOff, GraduationCap, Users, ArrowRight, BadgeCheck } from 'lucide-react'
 import { AuthScaffold, Field, GoogleButton, useRegister, registerSchema } from '@/features/auth'
@@ -20,13 +20,14 @@ export function RegisterPage() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', email: '', password: '', role: 'ALUMNI', agree: false },
   })
-  const role = watch('role')
+  // Dùng useWatch thay vì watch() để tương thích với React Compiler memoization.
+  const role = useWatch({ control, name: 'role' })
 
   return (
     <AuthScaffold>

@@ -43,7 +43,7 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
                 “The verified badge changes everything. You know you're talking to real graduates.”
               </p>
               <div className="mt-4 flex items-center gap-3">
-                <img src="https://i.pravatar.cc/80?img=33" alt="" className="h-10 w-10 rounded-full" />
+                <img src="https://i.pravatar.cc/80?img=33" alt="Nguyễn Hải Long" className="h-10 w-10 rounded-full" />
                 <div>
                   <p className="flex items-center gap-1 text-sm font-bold text-plum-900">
                     Nguyễn Hải Long <BadgeCheck size={14} className="text-brand-500" />

@@ -44,12 +44,17 @@ export function MarketingFooter() {
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-plum-500">{BRAND.tagline}.</p>
             <div className="mt-5 flex items-center gap-2">
-              {[Globe, MessageCircle, Send, Mail].map((Icon, i) => (
+              {[
+                { Icon: Globe, label: 'Website' },
+                { Icon: MessageCircle, label: 'Chat cộng đồng' },
+                { Icon: Send, label: 'Telegram' },
+                { Icon: Mail, label: 'Email' },
+              ].map(({ Icon, label }) => (
                 <a
-                  key={i}
+                  key={label}
                   href="#"
                   className="grid h-10 w-10 place-items-center rounded-xl bg-plum-900/[0.04] text-plum-600 ring-1 ring-inset ring-plum-900/10 transition-all hover:bg-plum-900/[0.06] hover:text-plum-900"
-                  aria-label="social link"
+                  aria-label={label}
                 >
                   <Icon size={18} />
                 </a>
