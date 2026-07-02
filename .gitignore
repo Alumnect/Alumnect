@@ -17,3 +17,5 @@ Thumbs.db
 
 # Tài liệu Review tính năng cục bộ (không push lên git)
 /Review_Backend*.md
+/Review_Frontend*.md
+/Review_SRS_vs_Code*.md

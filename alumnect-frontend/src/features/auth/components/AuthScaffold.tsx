@@ -86,28 +86,28 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
   )
 }
 
+import React from 'react'
+
 /** Styled text field for auth forms. */
-export function Field({
-  label,
-  type = 'text',
-  placeholder,
-  icon,
-  trailing,
-  name,
-}: {
-  label: string
-  type?: string
-  placeholder?: string
-  icon?: ReactNode
-  trailing?: ReactNode
-  name?: string
-}) {
+export const Field = React.forwardRef<
+  HTMLInputElement,
+  {
+    label: string
+    type?: string
+    placeholder?: string
+    icon?: ReactNode
+    trailing?: ReactNode
+    name?: string
+    error?: string
+  } & React.InputHTMLAttributes<HTMLInputElement>
+>(({ label, type = 'text', placeholder, icon, trailing, name, error, ...props }, ref) => {
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-semibold text-plum-700">{label}</span>
       <span className="relative flex items-center">
         {icon && <span className="pointer-events-none absolute left-3.5 text-plum-400">{icon}</span>}
         <input
+          ref={ref}
           type={type}
           name={name}
           placeholder={placeholder}
@@ -115,10 +115,17 @@ export function Field({
             'h-12 w-full rounded-xl border border-plum-900/10 bg-cream-100 px-4 text-sm text-plum-900 placeholder:text-plum-400 transition-colors focus:border-brand-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/25',
             icon && 'pl-10',
             trailing && 'pr-11',
+            error && 'border-coral-400/60 focus:ring-coral-500/25 focus:border-coral-500'
           )}
+          {...props}
         />
         {trailing && <span className="absolute right-3">{trailing}</span>}
       </span>
+      {error && (
+        <span className="mt-1 block text-xs font-medium text-coral-500">{error}</span>
+      )}
     </label>
   )
-}
+})
+
+Field.displayName = 'Field'

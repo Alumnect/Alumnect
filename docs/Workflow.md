@@ -30,6 +30,7 @@ graph TD
     B --> C[Giai đoạn 3: Cập nhật Postman Collection & Kiểm thử API]
     C --> D[Giai đoạn 4: Lập trình Frontend]
     D --> E[Giai đoạn 5: Sinh tài liệu đặc tả SRS]
+    E --> F[Giai đoạn 6: Kiểm tra sự nhất quán & Tạo file Review SRS vs Code]
 ```
 
 ---
@@ -382,9 +383,11 @@ sequenceDiagram
        * Kích hoạt làm mới cache (Invalidate Queries) thông qua `queryClient.invalidateQueries` để React Query tự động tải lại dữ liệu mới nhất từ Server.
        * Cập nhật trạng thái chia sẻ nếu cần vào **Zustand Store**.
      * Giao diện UI nhận được dữ liệu cập nhật và tự động Re-render để hiển thị cho người dùng.
-   * **Nếu Gọi API Thất bại (Error Flow)**:
-     * API Client bắt lỗi và ném ra ngoại lệ (Throw Error) kích hoạt callback `onError`.
-     * Custom Hook (hoặc UI) hiển thị thông báo Toast cảnh báo lỗi chi tiết lấy từ phản hồi của Backend để thông báo cho người dùng.
+    * **Nếu Gọi API Thất bại (Error Flow)**:
+      * API Client bắt lỗi và ném ra ngoại lệ (Throw Error) kích hoạt callback `onError`.
+      * **Bóc tách và hiển thị thông điệp lỗi:** Bộ chặn Axios (Axios response interceptor trong `src/lib/http.ts`) tự động bóc tách thuộc tính `message` của lỗi trả về từ Backend (nằm trong đối tượng `ApiResponse` JSON) và đóng gói vào `new Error(message)`. 
+      * Giao diện UI bắt buộc phải lấy giá trị `message` này (qua `error.message` của mutation hoặc thuộc tính `err.message` trong catch block) để kết xuất trực tiếp lên Alert Banner hoặc Toast thông báo lỗi của người dùng, giúp phản ánh đúng thông điệp nghiệp vụ phía Backend (ví dụ: email trùng, OTP bị khóa do nhập sai 5 lần).
+
 
 #### Quy trình triển khai Features:
 
@@ -411,13 +414,14 @@ src/features/[feature_name]/
 
 #### 4. UI Components & Pages
 * **Thiết kế UI & Tái sử dụng Component**: Áp dụng nghiêm ngặt các quy định về Hệ thống Nhận diện Giao diện (Premium Pastel Design System) nêu phía trên. Ưu tiên sử dụng các UI components dùng chung đã định nghĩa sẵn tại [primitives.tsx](file:///d:/Alumnect/alumnect-frontend/src/components/ui/primitives.tsx):
+  * **Chia nhỏ thành phần (Component Separation):** Tránh viết toàn bộ mã nguồn giao diện và logic trong một trang duy nhất. Hãy chia nhỏ trang thành các component độc lập đặt tại `/components` của feature (ví dụ: tách biểu mẫu đăng ký thành `RegisterForm.tsx` và màn hình xác thực thành `OtpVerification.tsx`) để tăng khả năng tái sử dụng, dễ kiểm soát và bảo trì.
   * **Layout**: Dùng component `<Container>` để bọc nội dung có chiều rộng tối đa (max-w-7xl). Các thẻ trắng mềm (`pillowy white cards`) phải sử dụng component `<Card>` (tự động có các class `.card-surface` hoặc `.glass` và các góc bo tròn lớn `rounded-3xl`).
   * **Trạng thái Empty**: Sử dụng component `<EmptyState>` chuẩn cho các danh sách trống kèm hình minh họa pastel và nút bấm kêu gọi hành động (CTA).
   * **Trạng thái Tải dữ liệu (Loading)**: Khi đang fetch API, sử dụng component `<Skeleton>` cho hiệu ứng xương kem ấm (`shimmer skeleton`), tuyệt đối không dùng spinner quay tròn thô ráp.
   * **Hình ảnh & Avatar**:
     * Tất cả hình ảnh tải lên hoặc hình ảnh bài viết phải bọc trong component [SmartImage.tsx](file:///d:/Alumnect/alumnect-frontend/src/components/ui/SmartImage.tsx) để tự động xử lý shimmer loading và ảnh fallback khi bị lỗi đường dẫn.
     * Ảnh đại diện người dùng phải sử dụng component `<Avatar>` (tự động xử lý trạng thái ảnh bị lỗi và chuyển đổi sang chữ cái initials trên nền pastel).
-* **Quản lý Form & Validation**: Đối với các Form nhập liệu (như Đăng nhập, Đăng ký, Update profile...), bắt buộc sử dụng thư viện `react-hook-form` kết hợp với `zod` schema để kiểm tra tính hợp lệ của dữ liệu đầu vào phía Client trước khi gửi request lên Server, hiển thị thông báo lỗi chi tiết ngay dưới ô nhập liệu tương ứng.
+* **Quản lý Form & Validation**: Đối với các Form nhập liệu (như Đăng nhập, Đăng ký, Update profile...), bắt buộc sử dụng thư viện `react-hook-form` kết hợp với `zod` schema để kiểm tra tính hợp lệ của dữ liệu đầu vào phía Client trước khi gửi request lên Server, hiển thị thông báo lỗi chi tiết ngay dưới ô nhập liệu tương ứng. **Các thông điệp lỗi (validation error messages) trong Zod schema bắt buộc phải khớp 100% từng chữ với các thông điệp lỗi trong Backend DTO để duy trì tính đồng bộ nghiệp vụ.**
 * **Quản lý Client State**: Sử dụng **Zustand** (`src/store/`) nếu cần quản lý trạng thái chia sẻ toàn cục không thuộc về server state.
 
 #### 5. Barrel Export & Routing
@@ -435,6 +439,7 @@ src/features/[feature_name]/
     npx tsc --noEmit
     ```
   * Đảm bảo không có bất kỳ lỗi biên dịch TypeScript hay lỗi Lint nghiêm trọng nào làm gián đoạn tiến trình xuất bản sản phẩm.
+  * **Tạo tệp Review Frontend:** Sau khi biên dịch thành công, AI Assistant bắt buộc phải tạo tệp `Review_Frontend_[Mã_UC]_[Tên_Tính_Năng].md` tại thư mục gốc chứa các file thay đổi, chi tiết chức năng UI/UX và log chạy build thành công. Tệp này được cấu hình bỏ qua trong `.gitignore` để không bị push lên repository chung.
 
 ---
 
@@ -451,5 +456,30 @@ Tài liệu này bao gồm 2 phần chính:
 2. **Phần 2: Thiết kế Chi tiết (Report 4)**:
    * **Class Diagram**: Sơ đồ lớp Mermaid thể hiện mối quan hệ giữa các component thực tế kết hợp với **phần chữ giải thích vai trò của từng lớp** (Controller, DTO, Service, Mapper, Repository, Entity).
    * **Sequence Diagram**: Sơ đồ tương tác Mermaid tích hợp đầy đủ cả luồng thành công (Success Flow) và các luồng ngoại lệ/lỗi (Alternative/Exception Flows) trong một sơ đồ duy nhất (sử dụng các khối `alt/else`), kết hợp với **phần chữ mô tả chi tiết từng luồng xử lý tương ứng**.
+
+---
+
+### GIAI ĐOẠN 6: KIỂM TRA SỰ NHẤT QUÁN & TẠO FILE REVIEW SRS VS CODE
+
+Bước chốt chặn cuối cùng của quy trình là kiểm tra chéo tính nhất quán và độ chính xác giữa tài liệu đặc tả SRS vừa viết/cập nhật với mã nguồn thực tế đã hoàn thành.
+
+1. **Kiểm tra chéo (Cross-verification)**:
+   * **Nghiệp vụ**: Đảm bảo tất cả các kịch bản thành công và lỗi, logic rẽ nhánh, cooldown, retry limits hoạt động đúng như tài liệu mô tả.
+   * **Validation & DTO**: Đối chiếu các ràng buộc trong DTO `@Annotation` của Backend, Zod Schema của Frontend và mô tả chi tiết trường dữ liệu trong SRS.
+   * **Class Diagram**: Kiểm tra các lớp, phương thức, entity, và mối quan hệ thực tế có khớp chính xác với Class Diagram trong SRS không.
+   * **Sequence Diagram**: Kiểm tra từng bước tương tác, thứ tự kiểm tra/lưu dữ liệu có khớp 100% với sơ đồ Sequence Diagram không.
+   * **Error Messages**: Đảm bảo toàn bộ các thông điệp lỗi nghiệp vụ được hiển thị đúng nội dung bằng Tiếng Việt và khớp mã MSG ID.
+   * **UI/UX Form & OTP Screen**: Đối chiếu các thành phần giao diện thực tế (nút bấm, dropdown, placeholder, hoạt ảnh) với mô tả trong SRS.
+
+2. **Tạo tệp Review SRS vs Code (Review SRS vs Code Document)**:
+   * Đường dẫn: Tạo ở thư mục gốc của dự án với tên `Review_SRS_vs_Code_[Mã_UC]_[Tên_Tính_Năng].md` (ví dụ: `Review_SRS_vs_Code_UC01_Register.md`).
+   * Tệp này được cấu hình bỏ qua trong `.gitignore` để không bị push lên repository chung nhằm tránh rác repository.
+   * Cấu trúc tệp tin Review bắt buộc bao gồm:
+     * **Tổng quan**: Bảng đánh giá nhanh độ nhất quán từng phần và điểm số phần trăm nhất quán tổng thể.
+     * **Các lỗi sai lệch**: Phân loại theo mức độ Nghiêm trọng (Critical), Trung bình (Warning), Nhẹ (Minor) của cả Code và SRS kèm đề xuất/phương án sửa đổi cụ thể.
+     * **Bảng kiểm tra chi tiết**: Đối chiếu từng dòng nghiệp vụ, validation trường dữ liệu, class, entity, component, method, API endpoint, và danh sách các thông điệp lỗi.
+     * **Checklist hành động (Action Checklist)**: Danh sách các đầu việc cần làm để sửa code hoặc cập nhật SRS đạt độ khớp tuyệt đối, kèm ô chọn đánh dấu tiến độ (`[x]`).
+
+---
 
 ---
