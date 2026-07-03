@@ -1041,6 +1041,170 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "04. Community Feed",
+			"item": [
+				{
+					"name": "04.1. Xem bảng tin cộng đồng (View Feed)",
+					"item": [
+						{
+							"name": "Guest xem bảng tin - Chỉ thấy bài PUBLIC - Thành công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts?page=0&size=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								},
+								"description": "### API Xem Bảng Tin Cộng Đồng (UC15 - View community Feed)\n* **Quyền truy cập**: Public (Guest xem được ở chế độ chỉ đọc — BR-12).\n* **Mục đích**: Lấy một trang bài viết trên bảng tin, sắp xếp mới nhất trước.\n* **Kịch bản**: Guest (không gửi Bearer token) chỉ nhận được các bài viết có `visibility = PUBLIC`, bài viết `MEMBERS` bị loại trừ.\n* **Phản hồi mong muốn (200 OK)**:\n```json\n{\n  \"error\": 0,\n  \"message\": \"Lấy bảng tin thành công\",\n  \"data\": {\n    \"content\": [ { \"id\": \"1\", \"type\": \"normal\", \"author\": \"...\", \"visibility bị ẩn khỏi response nhưng chỉ PUBLIC mới xuất hiện\" } ],\n    \"pageNumber\": 0,\n    \"pageSize\": 10,\n    \"totalElements\": 2,\n    \"totalPages\": 1,\n    \"last\": true\n  }\n}\n```",
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Guest lọc theo loại bài viết (type=achievement) - Thành công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts?type=achievement",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "achievement"
+										}
+									]
+								},
+								"description": "### Lọc bảng tin theo loại bài viết\n* **Quyền truy cập**: Public.\n* **Mục đích**: Kiểm tra tham số `type` lọc đúng loại bài viết (\"normal\" | \"achievement\" | \"recruitment\" | \"event\").\n* **Phản hồi mong muốn (200 OK)**: chỉ trả về các bài viết PUBLIC có `type = achievement`.",
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Xem bảng tin thất bại - Loại bài viết không hợp lệ",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts?type=invalidtype",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "invalidtype"
+										}
+									]
+								},
+								"description": "### Kịch bản lỗi validate\n* **Quyền truy cập**: Public.\n* **Mục đích**: Kiểm tra hệ thống từ chối giá trị `type` không nằm trong danh sách hợp lệ.\n* **Phản hồi mong muốn (400 Bad Request)**:\n```json\n{ \"error\": 400, \"message\": \"Loại bài viết không hợp lệ: invalidtype\", \"data\": null }\n```",
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thành viên đã đăng nhập xem bảng tin - Thấy cả bài PUBLIC và MEMBERS - Thành công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts?page=0&size=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								},
+								"description": "### Xem bảng tin với vai trò thành viên (Student/Alumni/Admin)\n* **Quyền truy cập**: Bearer Token ({{jwtToken}}).\n* **Mục đích**: Xác nhận thành viên đã đăng nhập thấy TOÀN BỘ bài viết chưa bị ẩn, bao gồm cả bài viết `visibility = MEMBERS` mà Guest không thấy được (BR-12).\n* **Lưu ý quan trọng**: Endpoint `/auth/login` hiện **chưa được triển khai** ở nhánh này (ngoài phạm vi UC15). Để chạy request này, cần tự set biến collection `jwtToken` bằng một token JWT hợp lệ (VD: mint thủ công qua `JwtService.generateToken(user)` với tài khoản đã đăng ký + xác thực email) cho tới khi UC \"Đăng nhập\" được triển khai.\n* **Phản hồi mong muốn (200 OK)**: `totalElements` bằng đúng số bài viết chưa bị ẩn (PUBLIC + MEMBERS)."
+							},
+							"response": []
+						},
+						{
+							"name": "Xem bảng tin - Phân trang trang kế tiếp - Thành công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts?page=0&size=1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "1"
+										}
+									]
+								},
+								"description": "### Kiểm tra phân trang\n* **Quyền truy cập**: Public.\n* **Mục đích**: `size=1` để xác nhận `totalPages > 1` và `last = false` khi còn dữ liệu, phục vụ tính năng \"Tải thêm bài viết\" (infinite scroll) phía Frontend.",
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
 		}
 	],
 	"auth": {
