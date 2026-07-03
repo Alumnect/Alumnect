@@ -2,6 +2,8 @@ package com.alumnect.alumnect_backend.controller.auth;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
 import com.alumnect.alumnect_backend.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,5 +98,44 @@ public class AuthController {
         String ipAddress = httpRequest.getRemoteAddr();
         com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.refresh(request, userAgent, ipAddress);
         return ResponseEntity.ok(ApiResponse.success("Làm mới token thành công!", response));
+    }
+
+    /**
+     * API Đăng nhập bằng Google OAuth2.
+     * Xác thực token, kiểm tra tài khoản, trả về cặp tokens hoặc báo lỗi nếu chưa đăng ký.
+     *
+     * @param request DTO chứa Google ID token
+     * @param userAgent Header User-Agent từ client
+     * @param httpRequest Đối tượng request HTTP để lấy địa chỉ IP
+     * @return Response chứa cặp Access/Refresh Token và thông tin tài khoản
+     */
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> loginWithGoogle(
+            @Valid @RequestBody GoogleLoginRequest request,
+            @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        String ipAddress = httpRequest.getRemoteAddr();
+        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.loginWithGoogle(request, userAgent, ipAddress);
+        return ResponseEntity.ok(ApiResponse.success("Đăng nhập bằng Google thành công!", response));
+    }
+
+    /**
+     * API Đăng ký tài khoản mới bằng Google OAuth2.
+     * Nhận Google ID token và thông tin hồ sơ bổ sung để đăng ký.
+     *
+     * @param request DTO chứa Google ID token cùng các thông tin hồ sơ bổ sung
+     * @param userAgent Header User-Agent từ client
+     * @param httpRequest Đối tượng request HTTP để lấy địa chỉ IP
+     * @return Response chứa cặp Access/Refresh Token và thông tin tài khoản
+     */
+    @PostMapping("/google/register")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> registerWithGoogle(
+            @Valid @RequestBody GoogleRegisterRequest request,
+            @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        String ipAddress = httpRequest.getRemoteAddr();
+        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.registerWithGoogle(request, userAgent, ipAddress);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng ký tài khoản qua Google thành công!", response));
     }
 }

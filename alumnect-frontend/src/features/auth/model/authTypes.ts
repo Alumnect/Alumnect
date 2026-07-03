@@ -78,3 +78,56 @@ export const registerSchema = z.object({
 });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>
+
+export interface GoogleRegisterPayload {
+  token: string
+  fullName: string
+  role: 'STUDENT' | 'ALUMNI'
+  majorId: number
+  cohort: number
+  studentCode: string
+  graduationYear?: number
+  proofUrl?: string
+  note?: string
+}
+
+export const googleRegisterSchema = z.object({
+  token: z.string().min(1, 'Google token không được để trống'),
+  fullName: z
+    .string()
+    .min(1, 'Họ và tên không được để trống')
+    .max(150, 'Họ và tên không được vượt quá 150 ký tự'),
+  role: z.enum(['STUDENT', 'ALUMNI']),
+  majorId: z.coerce.number().min(1, 'Chuyên ngành không được để trống'),
+  cohort: z.coerce.number().min(1, 'Khóa học không được để trống'),
+  studentCode: z.string().min(1, 'Mã số sinh viên không được để trống').max(20, 'Mã số sinh viên không được vượt quá 20 ký tự'),
+  graduationYear: z.coerce.number().optional(),
+  proofUrl: z.string().max(500, 'URL minh chứng không được vượt quá 500 ký tự').optional(),
+  note: z.string().max(500, 'Ghi chú không được vượt quá 500 ký tự').optional(),
+}).superRefine((data, ctx) => {
+  if (data.role === 'ALUMNI') {
+    const currentYear = new Date().getFullYear();
+    if (!data.graduationYear || data.graduationYear <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['graduationYear'],
+        message: 'Năm tốt nghiệp là bắt buộc khi đăng ký với vai trò Cựu sinh viên',
+      });
+    } else if (data.graduationYear > currentYear) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['graduationYear'],
+        message: 'Năm tốt nghiệp không được lớn hơn năm hiện tại',
+      });
+    }
+    if (!data.proofUrl || data.proofUrl.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['proofUrl'],
+        message: 'Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên',
+      });
+    }
+  }
+});
+
+export type GoogleRegisterFormValues = z.infer<typeof googleRegisterSchema>

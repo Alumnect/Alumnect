@@ -1,6 +1,6 @@
 import http from '@/lib/http'
 import type { AuthUser, Role } from '@/store/authStore'
-import type { Major, RegisterPayload, PresignedUrlResponse } from '../model/authTypes'
+import type { Major, RegisterPayload, PresignedUrlResponse, GoogleRegisterPayload } from '../model/authTypes'
 import type { LoginInput, ForgotInput } from '../model/schemas'
 
 export interface LoginResponse {
@@ -86,5 +86,45 @@ export const authApi = {
    */
   logout: async () => {
     await http.post('/auth/logout')
+  },
+
+  /**
+   * Đăng nhập bằng Google OAuth2 ID Token
+   */
+  loginWithGoogle: async (token: string): Promise<AuthResponse> => {
+    const response = await http.post<any, ApiResponse<LoginResponse>>('/auth/google', { token })
+    const { accessToken, refreshToken, id, email, fullName, role, avatarUrl, accountStatus } = response.data
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: String(id),
+        email,
+        name: fullName,
+        role: role as Role,
+        verified: accountStatus === 'ACTIVE',
+        avatarUrl: avatarUrl || undefined
+      }
+    }
+  },
+
+  /**
+   * Đăng ký tài khoản bằng Google OAuth2 ID Token cùng thông tin hồ sơ
+   */
+  registerWithGoogle: async (payload: GoogleRegisterPayload): Promise<AuthResponse> => {
+    const response = await http.post<any, ApiResponse<LoginResponse>>('/auth/google/register', payload)
+    const { accessToken, refreshToken, id, email, fullName, role, avatarUrl, accountStatus } = response.data
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: String(id),
+        email,
+        name: fullName,
+        role: role as Role,
+        verified: accountStatus === 'ACTIVE',
+        avatarUrl: avatarUrl || undefined
+      }
+    }
   },
 }
