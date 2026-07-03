@@ -1,6 +1,9 @@
 package com.alumnect.alumnect_backend.service.auth;
 
+import com.alumnect.alumnect_backend.dto.request.auth.LoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest;
+import com.alumnect.alumnect_backend.dto.response.auth.LoginResponse;
 
 /**
  * Interface định nghĩa các dịch vụ xác thực và đăng ký tài khoản.
@@ -31,4 +34,24 @@ public interface AuthService {
      * @param email Địa chỉ email yêu cầu gửi lại mã
      */
     void resendOtp(String email);
+
+    /**
+     * Đăng nhập hệ thống (Local Login).
+     *
+     * @param request DTO chứa thông tin email và mật khẩu
+     * @param userAgent Thông tin trình duyệt/thiết bị của client
+     * @param ipAddress Địa chỉ IP của client
+     * @return DTO chứa cặp tokens và thông tin tài khoản cơ bản
+     */
+    LoginResponse login(LoginRequest request, String userAgent, String ipAddress);
+
+    /**
+     * Làm mới Access Token bằng Refresh Token.
+     *
+     * @param request DTO chứa mã refresh token
+     * @param userAgent Thông tin trình duyệt/thiết bị của client
+     * @param ipAddress Địa chỉ IP của client
+     * @return DTO chứa cặp tokens mới
+     */
+    LoginResponse refresh(RefreshRequest request, String userAgent, String ipAddress);
 }

@@ -36,7 +36,8 @@ public class Endpoints {
         "/api/v1/auth/register", // Đăng ký tài khoản mới
         "/api/v1/auth/login",    // Đăng nhập lấy JWT token
         "/api/v1/auth/google",   // Đăng nhập bằng Google OAuth2
-        "/api/v1/auth/resend-otp" // Gửi lại mã OTP xác thực
+        "/api/v1/auth/resend-otp", // Gửi lại mã OTP xác thực
+        "/api/v1/auth/refresh"   // Làm mới access token bằng refresh token
     };
 
     // Endpoint dành riêng cho Admin

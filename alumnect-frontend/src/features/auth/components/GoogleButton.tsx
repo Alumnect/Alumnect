@@ -1,19 +1,17 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { AUTH_ENFORCED, DEMO_USER } from '@/config/auth'
 
-/** Google OAuth button. Demo mode creates a local session; real OAuth is TODO. */
+/** Nút đăng nhập Google OAuth. Chuyển hướng người dùng tới endpoint OAuth2 của Backend. */
 export function GoogleButton({ label }: { label: string }) {
   const navigate = useNavigate()
-  const login = useAuthStore((s) => s.login)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   const onClick = () => {
-    if (!AUTH_ENFORCED) {
-      login({ user: DEMO_USER, accessToken: 'demo-access', refreshToken: 'demo-refresh' })
+    if (isAuthenticated) {
       navigate('/app')
       return
     }
-    // TODO: redirect to the backend Google OAuth 2.0 authorize endpoint.
+    // Chuyển hướng tới endpoint Google OAuth 2.0 của Spring Boot Backend
     window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`
   }
 

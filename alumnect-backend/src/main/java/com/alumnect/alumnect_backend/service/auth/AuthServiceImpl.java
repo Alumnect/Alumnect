@@ -7,8 +7,14 @@ import com.alumnect.alumnect_backend.common.enums.VerificationType;
 import com.alumnect.alumnect_backend.dao.auth.VerificationTokenRepository;
 import com.alumnect.alumnect_backend.dao.user.*;
 import com.alumnect.alumnect_backend.dao.verification.VerificationRequestRepository;
+import com.alumnect.alumnect_backend.dao.auth.RefreshTokenRepository;
+import com.alumnect.alumnect_backend.dto.request.auth.LoginRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
+import com.alumnect.alumnect_backend.dto.response.auth.LoginResponse;
+import com.alumnect.alumnect_backend.entity.auth.RefreshToken;
 import com.alumnect.alumnect_backend.entity.auth.VerificationToken;
+import com.alumnect.alumnect_backend.security.jwt.JwtService;
 import com.alumnect.alumnect_backend.entity.user.*;
 import com.alumnect.alumnect_backend.entity.verification.VerificationRequest;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
@@ -23,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -53,6 +61,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private VerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private VerificationRequestRepository verificationRequestRepository;
@@ -131,7 +145,8 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Chuyên ngành không tồn tại với ID: " + request.getMajorId()));
 
-        // 3b. Kiểm tra các trường bắt buộc đặc thù của vai trò ALUMNI trước khi ghi vào CSDL
+        // 3b. Kiểm tra các trường bắt buộc đặc thù của vai trò ALUMNI trước khi ghi vào
+        // CSDL
         if (roleName.equals("ALUMNI")) {
             if (request.getGraduationYear() == null) {
                 throw new BadRequestException("Năm tốt nghiệp là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
@@ -429,5 +444,223 @@ public class AuthServiceImpl implements AuthService {
 
         // Gửi email mới chứa mã OTP
         mailService.sendVerificationEmail(user.getEmail(), tokenString, fullName);
+    }
+
+    /**
+     * Băm SHA-256 mã token.
+     */
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1)
+                    hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi băm token", e);
+        }
+    }
+
+    /**
+     * Đăng nhập hệ thống (Local Login).
+     */
+    @Override
+    @Transactional
+    public LoginResponse login(LoginRequest request, String userAgent, String ipAddress) {
+        String email = request.getEmail().trim().toLowerCase();
+
+        // 1. Tìm tài khoản bằng email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("Tài khoản hoặc mật khẩu không chính xác"));
+
+        // 2. Kiểm tra nhà cung cấp đăng nhập (local login yêu cầu password_hash khác
+        // null)
+        if (user.getAuthProvider() != AuthProvider.LOCAL || user.getPasswordHash() == null) {
+            throw new BadRequestException("Tài khoản này được đăng ký thông qua mạng xã hội khác");
+        }
+
+        // 3. So khớp mật khẩu đã băm
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("Tài khoản hoặc mật khẩu không chính xác");
+        }
+
+        // 4. Kiểm tra xem email đã được xác minh chưa
+        if (!user.isEmailVerified()) {
+            throw new BadRequestException(
+                    "Email của bạn chưa được xác thực. Vui lòng kiểm tra hòm thư để xác thực trước.");
+        }
+
+        // 5. Kiểm tra trạng thái hoạt động của tài khoản
+        if (user.getAccountStatus() == AccountStatus.LOCKED) {
+            throw new BadRequestException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+        }
+        if (user.getAccountStatus() == AccountStatus.WAITING_APPROVAL) {
+            throw new BadRequestException("Tài khoản của bạn đang chờ quản trị viên phê duyệt. Vui lòng đợi.");
+        }
+        if (user.getAccountStatus() == AccountStatus.PENDING) {
+            throw new BadRequestException(
+                    "Email của bạn chưa được xác thực. Vui lòng kiểm tra hòm thư để xác thực trước.");
+        }
+
+        // 6. Cập nhật last_login_at
+        user.setLastLoginAt(Instant.now());
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            log.error("Lỗi khi cập nhật thời gian đăng nhập: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật thời gian đăng nhập");
+        }
+
+        // 7. Tạo Access Token (JWT, hạn 24h — BR-02) và Refresh Token (JWT, hạn 7 ngày
+        // — BR-03)
+        String accessToken = jwtService.generateToken(user);
+        String rawRefreshToken = jwtService.generateRefreshToken(user);
+
+        // 8. Băm SHA-256 Refresh Token và lưu vào database
+        String tokenHash = hashToken(rawRefreshToken);
+        RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .user(user)
+                .tokenHash(tokenHash)
+                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                .revoked(false)
+                .userAgent(userAgent)
+                .ipAddress(ipAddress)
+                .build();
+        try {
+            refreshTokenRepository.save(refreshTokenEntity);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu Refresh Token: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể tạo phiên đăng nhập mới");
+        }
+
+        // 9. Lấy họ tên và avatar từ UserProfile
+        String fullName = "";
+        String avatarUrl = null;
+        Optional<UserProfile> profileOpt = userProfileRepository.findById(user.getId());
+        if (profileOpt.isPresent()) {
+            fullName = profileOpt.get().getFullName();
+            avatarUrl = profileOpt.get().getAvatarUrl();
+        }
+
+        // 10. Trả về LoginResponse DTO
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(rawRefreshToken)
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .fullName(fullName)
+                .avatarUrl(avatarUrl)
+                .accountStatus(user.getAccountStatus().name())
+                .build();
+    }
+
+    /**
+     * Làm mới Access Token bằng Refresh Token.
+     */
+    @Override
+    @Transactional
+    public LoginResponse refresh(RefreshRequest request, String userAgent, String ipAddress) {
+        String rawRefreshToken = request.getRefreshToken();
+
+        // 1. Giải mã email từ Refresh Token JWT — nếu token bị giả mạo/hết hạn sẽ ném
+        // exception
+        try {
+            jwtService.extractUsername(rawRefreshToken);
+        } catch (Exception e) {
+            throw new BadRequestException(
+                    "Phiên đăng nhập đã hết hạn hoặc bị thu hồi vì lý do bảo mật. Vui lòng đăng nhập lại.");
+        }
+
+        // 2. Băm SHA-256 mã Refresh Token gửi lên
+        String tokenHash = hashToken(rawRefreshToken);
+
+        // 3. Tìm Refresh Token trong CSDL bằng mã băm
+        RefreshToken refreshTokenEntity = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new BadRequestException(
+                        "Phiên đăng nhập đã hết hạn hoặc bị thu hồi vì lý do bảo mật. Vui lòng đăng nhập lại."));
+
+        User user = refreshTokenEntity.getUser();
+
+        // 4. Nếu token đã bị thu hồi (revoked = true) -> Nghi ngờ Replay Attack!
+        // (BR-06)
+        if (refreshTokenEntity.isRevoked()) {
+            // Biện pháp bảo mật: Xóa toàn bộ token của người dùng này để buộc đăng xuất tất
+            // cả thiết bị
+            try {
+                refreshTokenRepository.deleteByUser(user);
+            } catch (Exception e) {
+                log.error("Lỗi khi xóa các Refresh Token trong Replay Attack: ", e);
+            }
+            throw new BadRequestException(
+                    "Phiên đăng nhập đã hết hạn hoặc bị thu hồi vì lý do bảo mật. Vui lòng đăng nhập lại.");
+        }
+
+        // 5. Kiểm tra xem token đã hết hạn chưa (kiểm tra thêm ở DB — BR-04)
+        if (refreshTokenEntity.getExpiresAt().isBefore(Instant.now())) {
+            throw new BadRequestException(
+                    "Phiên đăng nhập đã hết hạn hoặc bị thu hồi vì lý do bảo mật. Vui lòng đăng nhập lại.");
+        }
+
+        // 6. Kiểm tra trạng thái tài khoản
+        if (user.getAccountStatus() == AccountStatus.LOCKED) {
+            throw new BadRequestException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+        }
+
+        // 7. Xoay vòng Refresh Token (Token Rotation): Thu hồi token cũ — BR-05
+        refreshTokenEntity.setRevoked(true);
+        try {
+            refreshTokenRepository.save(refreshTokenEntity);
+        } catch (Exception e) {
+            log.error("Lỗi khi cập nhật trạng thái thu hồi của Refresh Token: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể xoay vòng phiên đăng nhập");
+        }
+
+        // 8. Tạo cặp Access Token và Refresh Token mới (đều là JWT — BR-02, BR-03)
+        String newAccessToken = jwtService.generateToken(user);
+        String newRawRefreshToken = jwtService.generateRefreshToken(user);
+        String newTokenHash = hashToken(newRawRefreshToken);
+
+        // 9. Lưu Refresh Token mới vào CSDL (lưu dạng băm SHA-256 — BR-04)
+        RefreshToken newRefreshTokenEntity = RefreshToken.builder()
+                .user(user)
+                .tokenHash(newTokenHash)
+                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                .revoked(false)
+                .userAgent(userAgent)
+                .ipAddress(ipAddress)
+                .build();
+        try {
+            refreshTokenRepository.save(newRefreshTokenEntity);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu Refresh Token mới: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể làm mới phiên đăng nhập");
+        }
+
+        // 10. Lấy họ tên và avatar từ UserProfile
+        String fullName = "";
+        String avatarUrl = null;
+        Optional<UserProfile> profileOpt = userProfileRepository.findById(user.getId());
+        if (profileOpt.isPresent()) {
+            fullName = profileOpt.get().getFullName();
+            avatarUrl = profileOpt.get().getAvatarUrl();
+        }
+
+        // 11. Trả về LoginResponse DTO
+        return LoginResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRawRefreshToken)
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .fullName(fullName)
+                .avatarUrl(avatarUrl)
+                .accountStatus(user.getAccountStatus().name())
+                .build();
     }
 }
