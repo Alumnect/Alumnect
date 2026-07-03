@@ -35,7 +35,6 @@ import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
-import { AUTH_ENFORCED, DEMO_USER } from '@/config/auth'
 import { useFeed } from '@/features/feed'
 import type { FeedFilter, Post } from '@/features/feed'
 
@@ -288,9 +287,8 @@ export function FeedPage() {
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
-  // Người xem hiện tại: ưu tiên phiên đăng nhập thật; nếu không có thì dùng
-  // DEMO_USER ở chế độ demo (AUTH_ENFORCED = false), hoặc null (Guest) khi bật enforce.
-  const viewer: AuthUser | null = user ?? (AUTH_ENFORCED ? null : DEMO_USER)
+  // Người xem hiện tại: phiên đăng nhập thật hoặc null (Guest).
+  const viewer: AuthUser | null = user ?? null
   const isGuest = !viewer
   // Chỉ Student/Alumni mới được đăng bài & tương tác (Admin không phải người đăng).
   const canPost = !!viewer && (viewer.role === 'STUDENT' || viewer.role === 'ALUMNI')
