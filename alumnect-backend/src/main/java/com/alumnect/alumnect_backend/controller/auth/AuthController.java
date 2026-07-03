@@ -61,4 +61,40 @@ public class AuthController {
         authService.resendOtp(email);
         return ResponseEntity.ok(ApiResponse.success("Gửi lại mã OTP thành công! Vui lòng kiểm tra email của bạn.", null));
     }
+
+    /**
+     * API Đăng nhập hệ thống (Local Login).
+     *
+     * @param request DTO chứa thông tin đăng nhập (email + password)
+     * @param userAgent Header User-Agent từ client
+     * @param httpRequest Đối tượng request HTTP để lấy địa chỉ IP
+     * @return Response chứa thông tin đăng nhập thành công kèm cặp Access/Refresh Token
+     */
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> login(
+            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.auth.LoginRequest request,
+            @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        String ipAddress = httpRequest.getRemoteAddr();
+        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.login(request, userAgent, ipAddress);
+        return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", response));
+    }
+
+    /**
+     * API Làm mới Access Token (Refresh Token).
+     *
+     * @param request DTO chứa mã refresh token
+     * @param userAgent Header User-Agent từ client
+     * @param httpRequest Đối tượng request HTTP để lấy địa chỉ IP
+     * @return Response chứa cặp Access/Refresh Token mới
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> refresh(
+            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest request,
+            @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        String ipAddress = httpRequest.getRemoteAddr();
+        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.refresh(request, userAgent, ipAddress);
+        return ResponseEntity.ok(ApiResponse.success("Làm mới token thành công!", response));
+    }
 }

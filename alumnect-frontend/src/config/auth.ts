@@ -1,18 +1,10 @@
-import type { AuthUser } from '@/store/authStore'
+/** 
+ * Cấu hình xác thực và bảo vệ route cho ứng dụng AlumNect.
+ * Khi AUTH_ENFORCED = true, route guards yêu cầu đăng nhập và vai trò hợp lệ.
+ */
 
 /**
- * When `true`, route guards enforce auth/role and the auth hooks call the real
- * Spring Boot API. When `false` (default in dev / no backend), the app stays
- * fully browsable and "sign in" creates a local demo session.
+ * Luôn bật chế độ xác thực thực tế — bắt buộc đăng nhập qua API Spring Boot.
+ * @deprecated Không còn dùng biến môi trường VITE_REQUIRE_AUTH nữa.
  */
-export const AUTH_ENFORCED = import.meta.env.VITE_REQUIRE_AUTH === 'true'
-
-/** Demo identity used in non-enforced mode and as a display fallback. */
-export const DEMO_USER: AuthUser = {
-  id: 'demo-1',
-  email: 'minhanh@fpt.edu.vn',
-  name: 'Trần Minh Anh',
-  role: 'ALUMNI',
-  verified: true,
-  avatarUrl: 'https://i.pravatar.cc/120?img=12',
-}
+export const AUTH_ENFORCED = true

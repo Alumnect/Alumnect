@@ -1,26 +1,16 @@
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { AUTH_ENFORCED, DEMO_USER } from '@/config/auth'
 import { authApi } from '../api/authApi'
 import type { AuthResponse } from '../api/authApi'
 import type { LoginInput, ForgotInput } from '../model/schemas'
 
-/** Sign in — real API when enforced, otherwise a local demo session. */
+/** Đăng nhập — gọi API Spring Boot thực tế. */
 export function useLogin() {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
   return useMutation({
-    mutationFn: async (input: LoginInput): Promise<AuthResponse> => {
-      if (!AUTH_ENFORCED) {
-        return {
-          user: { ...DEMO_USER, email: input.email || DEMO_USER.email },
-          accessToken: 'demo-access',
-          refreshToken: 'demo-refresh',
-        }
-      }
-      return authApi.login(input)
-    },
+    mutationFn: (input: LoginInput): Promise<AuthResponse> => authApi.login(input),
     onSuccess: (data) => {
       login(data)
       navigate('/app')
@@ -28,13 +18,9 @@ export function useLogin() {
   })
 }
 
-
 export function useForgotPassword() {
   return useMutation({
-    mutationFn: async (input: ForgotInput) => {
-      if (!AUTH_ENFORCED) return { message: 'demo' }
-      return authApi.forgotPassword(input)
-    },
+    mutationFn: (input: ForgotInput) => authApi.forgotPassword(input),
   })
 }
 
@@ -43,12 +29,10 @@ export function useLogout() {
   const logout = useAuthStore((s) => s.logout)
   return useMutation({
     mutationFn: async () => {
-      if (AUTH_ENFORCED) {
-        try {
-          await authApi.logout()
-        } catch {
-          /* ignore network errors on logout */
-        }
+      try {
+        await authApi.logout()
+      } catch {
+        /* Bỏ qua lỗi mạng khi đăng xuất */
       }
     },
     onSuccess: () => {

@@ -1,7 +1,18 @@
 import http from '@/lib/http'
-import type { AuthUser } from '@/store/authStore'
+import type { AuthUser, Role } from '@/store/authStore'
 import type { Major, RegisterPayload, PresignedUrlResponse } from '../model/authTypes'
 import type { LoginInput, ForgotInput } from '../model/schemas'
+
+export interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  id: number
+  email: string
+  role: string
+  fullName: string
+  avatarUrl?: string
+  accountStatus: string
+}
 
 export interface ApiResponse<T> {
   error: number
@@ -47,8 +58,22 @@ export const authApi = {
   /**
    * Đăng nhập lấy JWT token
    */
-  login: async (input: LoginInput) =>
-    (await http.post('/auth/login', input)) as unknown as AuthResponse,
+  login: async (input: LoginInput): Promise<AuthResponse> => {
+    const response = await http.post<any, ApiResponse<LoginResponse>>('/auth/login', input)
+    const { accessToken, refreshToken, id, email, fullName, role, avatarUrl, accountStatus } = response.data
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: String(id),
+        email,
+        name: fullName,
+        role: role as Role,
+        verified: accountStatus === 'ACTIVE',
+        avatarUrl: avatarUrl || undefined
+      }
+    }
+  },
 
   /**
    * Yêu cầu khôi phục mật khẩu

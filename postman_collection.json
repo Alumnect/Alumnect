@@ -778,7 +778,55 @@
 					"name": "01.5. Đăng nhập hệ thống (LOCAL)",
 					"item": [
 						{
-							"name": "Đăng nhập hệ thống (LOCAL)",
+							"name": "Đăng nhập thất bại - Tài khoản chưa xác thực (PENDING)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien_pending@fpt.edu.vn\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Thử đăng nhập bằng email chưa verify OTP (PENDING)\n* **Mong muốn**: 400 Bad Request, báo lỗi email chưa xác thực."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập hệ thống (LOCAL) - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.data && jsonData.data.accessToken) {",
+											"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+											"}",
+											"if (jsonData.data && jsonData.data.refreshToken) {",
+											"    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"method": "POST",
 								"header": [
@@ -804,7 +852,365 @@
 										"login"
 									]
 								},
-								"description": "### API Đăng Nhập Hệ Thống (Placeholder)\n* **Quyền truy cập**: Public.\n* **Mục đích**: Đăng nhập bằng tài khoản nội bộ, trả về chuỗi Token JWT để truy cập các tài nguyên bảo mật."
+								"description": "### API Đăng Nhập Hệ Thống - Thành công\n* **Quyền truy cập**: Public.\n* **Mục đích**: Đăng nhập bằng tài khoản nội bộ, trả về chuỗi Token JWT và Refresh Token.\n* **Script**: Tự động lưu accessToken vào `jwtToken` và refreshToken vào `refreshToken` variables."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Sai mật khẩu",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"password\": \"WrongPassword!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập sai mật khẩu\n* **Kết quả mong muốn**: 400 Bad Request\n* **Nội dung lỗi**: \"Tài khoản hoặc mật khẩu không chính xác\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Email không tồn tại",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"khongton_tai@fpt.edu.vn\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập email không có trong hệ thống\n* **Kết quả mong muốn**: 400 Bad Request, trả về cùng thông điệp bảo mật."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Tài khoản đang chờ duyệt (WAITING_APPROVAL)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"alumni_test@gmail.com\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập bằng tài khoản ALUMNI đã verify email nhưng chưa duyệt\n* **Mong đợi**: 400 Bad Request, báo lỗi đang chờ duyệt."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Sai định dạng email (Validation)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"invalid_email_format\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập với email không đúng định dạng\n* **Mong đợi**: 400 Bad Request (Validation DTO)."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Mật khẩu để trống (Validation)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"password\": \"\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập với mật khẩu trống\n* **Mong đợi**: 400 Bad Request (Validation DTO)."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Tài khoản bị khóa (LOCKED)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"locked_user@gmail.com\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập bằng tài khoản đang bị khóa (LOCKED)\n* **Mong đợi**: 400 Bad Request, báo lỗi tài khoản đã bị khóa."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Tài khoản liên kết mạng xã hội (Google)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"google_user@gmail.com\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập bằng tài khoản đăng ký thông qua Google (Social Login) sử dụng mật khẩu\n* **Mong đợi**: 400 Bad Request, báo lỗi tài khoản được đăng ký thông qua mạng xã hội khác."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập thất bại - Email để trống (Validation)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"\",\n  \"password\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								},
+								"description": "### Đăng nhập với email trống\n* **Mong đợi**: 400 Bad Request (Validation DTO)."
+							},
+							"response": []
+						},
+						{
+							"name": "Làm mới Access Token (Refresh Token) - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.data && jsonData.data.accessToken) {",
+											"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+											"}",
+											"if (jsonData.data && jsonData.data.refreshToken) {",
+											"    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/refresh",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"refresh"
+									]
+								},
+								"description": "### API Làm mới Access Token\n* **Quyền truy cập**: Public (Nhận Refresh Token trong request body).\n* **Mục đích**: Nhận refresh token cũ, xoay vòng cấp cặp token mới."
+							},
+							"response": []
+						},
+						{
+							"name": "Làm mới Access Token thất bại - Token đã bị thu hồi (Replay Attack)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/refresh",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"refresh"
+									]
+								},
+								"description": "### Thử làm mới token bằng Refresh Token cũ đã bị thu hồi (Replay Attack)\n* **Mong đợi**: 400 Bad Request, báo lỗi token bị thu hồi vì lý do bảo mật."
+							},
+							"response": []
+						},
+						{
+							"name": "Làm mới Access Token thất bại - Token hết hạn hoặc không hợp lệ (Expired / Invalid)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"invalid_or_expired_jwt_refresh_token\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/refresh",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"refresh"
+									]
+								},
+								"description": "### Thử làm mới token bằng Refresh Token đã hết hạn hoặc không hợp lệ\n* **Mong đợi**: 400 Bad Request, báo lỗi phiên đăng nhập đã hết hạn hoặc bị thu hồi."
 							},
 							"response": []
 						}
@@ -1081,6 +1487,11 @@
 		},
 		{
 			"key": "jwtToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
 			"value": "",
 			"type": "string"
 		}
