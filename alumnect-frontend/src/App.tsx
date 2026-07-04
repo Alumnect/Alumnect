@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
-import { ProtectedRoute, RoleRoute } from '@/components/routing/guards'
+import { ProtectedOutlet, RoleRoute } from '@/components/routing/guards'
 import { MarketingLayout, AppShell, AdminShell, ScrollToTop } from '@/components/layout'
 import { LandingPage } from '@/pages/LandingPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -40,27 +40,23 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-        {/* Authenticated member app */}
-        <Route
-          path="/app"
-          element={
-            <ProtectedRoute>
-              <AppShell />
-            </ProtectedRoute>
-          }
-        >
+        {/* Member app — bảng tin (index) mở cho cả Guest theo UC15/BR-12,
+            các trang con còn lại vẫn yêu cầu đăng nhập */}
+        <Route path="/app" element={<AppShell />}>
           <Route index element={<FeedPage />} />
-          <Route path="alumni" element={<AlumniDirectoryPage />} />
-          <Route path="jobs" element={<JobsPage />} />
-          <Route path="events" element={<EventsPage />} />
-          <Route path="forum" element={<ForumPage />} />
-          <Route path="salary" element={<SalaryPage />} />
-          <Route path="map" element={<MapPage />} />
-          <Route path="career" element={<CareerPage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="profile" element={<ProfilePage />} />
+          <Route element={<ProtectedOutlet />}>
+            <Route path="alumni" element={<AlumniDirectoryPage />} />
+            <Route path="jobs" element={<JobsPage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="forum" element={<ForumPage />} />
+            <Route path="salary" element={<SalaryPage />} />
+            <Route path="map" element={<MapPage />} />
+            <Route path="career" element={<CareerPage />} />
+            <Route path="messages" element={<MessagesPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="subscription" element={<SubscriptionPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
         </Route>
 
         {/* Admin console */}

@@ -83,8 +83,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
         log.error("Hệ thống xảy ra lỗi: ", ex);
+        // Không nối ex.getMessage() vào response để tránh lộ chi tiết nội bộ ra client;
+        // chi tiết đầy đủ đã được ghi vào log phía trên. Chuỗi này đồng thời là nội dung
+        // chuẩn MSG-FEED-03 mà Frontend hiển thị nguyên văn khi tải bảng tin thất bại.
         return new ResponseEntity<>(
-                ApiResponse.error(500, "Lỗi hệ thống nội bộ: " + ex.getMessage()),
+                ApiResponse.error(500, "Đã có lỗi hệ thống xảy ra. Vui lòng thử lại."),
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
     }

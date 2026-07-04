@@ -44,6 +44,7 @@ public class PostServiceImpl implements PostService {
      * <p>
      * Luồng xử lý:
      * <ol>
+     *   <li>Kiểm tra tham số phân trang ({@code page} ≥ 0, {@code size} ≥ 1), ném lỗi 400 nếu vi phạm.</li>
      *   <li>Chuyển chuỗi {@code type} (nếu có) sang enum {@link PostType}, ném lỗi 400 nếu giá trị không hợp lệ.</li>
      *   <li>Truy vấn trang bài viết qua {@link PostRepository#findFeed}, đã JOIN FETCH sẵn tác giả (User) để tránh N+1 query.</li>
      *   <li>Truy vấn gộp (batch) hồ sơ {@link UserProfile} của toàn bộ tác giả xuất hiện trong trang — tránh N+1 query lần 2.</li>
@@ -52,6 +53,15 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     public PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated) {
+        // Validate tham số phân trang trước khi tạo PageRequest — nếu không, PageRequest.of()
+        // sẽ ném IllegalArgumentException và bị trả về nhầm HTTP 500 thay vì 400.
+        if (page < 0) {
+            throw new BadRequestException("Tham số page phải là số nguyên không âm");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("Tham số size phải là số nguyên dương");
+        }
+
         PostType postType = parsePostType(type);
         boolean guestMode = !isAuthenticated;
 

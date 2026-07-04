@@ -6,8 +6,8 @@ import type { FeedFilter, FeedPageResult, Post } from '../model/post'
 
 /**
  * Tầng gọi API cho UC15 - View community Feed.
- * Khi backend sẵn sàng (AUTH_ENFORCED = true) sẽ gọi thật `GET /api/posts`;
- * ở chế độ demo (mặc định) trả về dữ liệu mock để app vẫn chạy độc lập FE.
+ * Mặc định (AUTH_ENFORCED = true) gọi thật `GET /api/v1/posts`;
+ * đặt AUTH_ENFORCED = false để chạy demo bằng dữ liệu mock độc lập FE.
  */
 
 /** Số bài viết mỗi trang (đồng bộ với tham số `size` gửi lên backend). */
@@ -89,8 +89,9 @@ async function getMockPage(page: number, filter: FeedFilter): Promise<FeedPageRe
 export const feedApi = {
   /**
    * Lấy một trang bảng tin cộng đồng.
-   * Gọi `GET /api/posts?page={n}&size={m}&sort=recent[&type=...]`; token Bearer
-   * (nếu có) được interceptor `http` tự đính kèm để backend trả cờ `liked`.
+   * Gọi `GET /api/v1/posts?page={n}&size={m}&sort=recent[&type=...]`; token Bearer
+   * (nếu có) được interceptor `http` tự đính kèm để backend phân biệt Guest/thành viên
+   * khi lọc theo phạm vi hiển thị (BR-12). Trường `liked` luôn là false ở UC15 (BR-14).
    * @param page Chỉ số trang cần lấy (0-based)
    * @param filter Bộ lọc loại bài viết ('all' = không lọc)
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)

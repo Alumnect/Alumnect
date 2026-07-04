@@ -313,8 +313,17 @@ export function FeedPage() {
     <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1fr_320px]">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
       <div className="space-y-5">
-        {/* Khối A: Ô soạn bài (Student/Alumni) hoặc lời mời đăng nhập (Guest) */}
-        <Reveal>{canPost && viewer ? <Composer viewer={viewer} /> : <GuestPrompt />}</Reveal>
+        {/* Khối A: Ô soạn bài (chỉ Student/Alumni) hoặc lời mời đăng nhập (chỉ Guest).
+            Admin đã đăng nhập không thấy cả hai — xem bảng tin như một thành viên thường. */}
+        {canPost && viewer ? (
+          <Reveal>
+            <Composer viewer={viewer} />
+          </Reveal>
+        ) : isGuest ? (
+          <Reveal>
+            <GuestPrompt />
+          </Reveal>
+        ) : null}
 
         {/* Khối B: Tabs lọc theo loại bài viết (All / Achievements / Hiring / Events) */}
         <div className="flex flex-wrap gap-2">

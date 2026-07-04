@@ -61,12 +61,12 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect: bản
 **Function details**:
 - **Data**: `id`, `type`, `author`, `role`, `avatar`, `verified`, `time`, `text`, `image`, `likes`, `comments`, `reposts`, `liked`.
 - **Validation**:
-  - `page` (số nguyên ≥ 0, mặc định 0), `size` (số nguyên dương, mặc định 5).
+  - `page` (số nguyên ≥ 0, mặc định 0), `size` (số nguyên dương, mặc định 5) — vi phạm trả về **MSG-FEED-06** (HTTP 400).
   - `type` (nếu có): phải thuộc {`normal`, `achievement`, `recruitment`, `event`} — sai định dạng trả về **MSG-FEED-01**.
 - **Business rules**: xem mục 5.1 (BR-08, BR-11, BR-12).
-- **Error Handling**: lỗi validate `type` → HTTP 400 (MSG-FEED-01); lỗi hệ thống/mất kết nối → HTTP 500, Frontend hiển thị `FeedError` với nút "Thử lại" gọi `refetch()`.
+- **Error Handling**: lỗi validate `page`/`size` → HTTP 400 (MSG-FEED-06); lỗi validate `type` → HTTP 400 (MSG-FEED-01); lỗi hệ thống/mất kết nối → HTTP 500, Frontend hiển thị `FeedError` với nút "Thử lại" gọi `refetch()`.
 - **Normal case**: Trả về đúng số bài viết theo quyền xem, phân trang chính xác, hiển thị mượt trên UI.
-- **Abnormal case**: DB không có bài viết nào → `content = []`, Frontend hiển thị `FeedEmpty` (MSG-FEED-02); tham số `type` sai → 400 (MSG-FEED-01).
+- **Abnormal case**: DB không có bài viết nào → `content = []`, Frontend hiển thị `FeedEmpty` (MSG-FEED-02); tham số `type` sai → 400 (MSG-FEED-01); tham số `page`/`size` sai → 400 (MSG-FEED-06).
 
 ---
 
@@ -84,7 +84,7 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect: bản
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 - Dữ liệu bảng tin được phân trang (`page`/`size`), không tải toàn bộ một lần.
-- Mọi thời gian hiển thị theo định dạng tương đối ngắn gọn (VD: "5m", "3h", "2d"), tính theo giờ Asia/Ho_Chi_Minh mặc định của hệ thống.
+- Mọi thời gian hiển thị theo định dạng tương đối ngắn gọn ("vừa xong" nếu dưới 1 phút; "5m", "3h", "2d"), tính bằng hiệu số giữa thời điểm hiện tại và thời điểm tạo bài viết — không phụ thuộc múi giờ hiển thị.
 - Giao tiếp Client–Server qua HTTPS/TLS ở môi trường production.
 
 #### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
@@ -93,9 +93,10 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect: bản
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | MSG-FEED-01 | Toast/inline lỗi | Tham số `type` không hợp lệ | "Loại bài viết không hợp lệ: {type}" | 400 |
 | 2 | MSG-FEED-02 | In line (empty state) | Bảng tin chưa có bài viết nào | "Chưa có bài viết nào — Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên." | 200 (content rỗng) |
-| 3 | MSG-FEED-03 | In line (error state) | Lỗi tải bảng tin (mạng/server) | "Không tải được bảng tin — Đã có lỗi hệ thống xảy ra. Vui lòng thử lại." | 500 / network error |
+| 3 | MSG-FEED-03 | In line (error state) | Lỗi tải bảng tin (mạng/server) | "Không tải được bảng tin — Đã có lỗi hệ thống xảy ra. Vui lòng thử lại." (lỗi server); dòng mô tả thay bằng "Mất kết nối mạng. Vui lòng thử lại." khi lỗi mạng | 500 / network error |
 | 4 | MSG-FEED-04 | In line | Guest cố tương tác (like/comment/repost/report) | "Đăng nhập để tương tác" (title trên nút bị disabled) | N/A (chặn ở Frontend) |
 | 5 | MSG-FEED-05 | Success (implicit) | Lấy bảng tin thành công | "Lấy bảng tin thành công" | 200 |
+| 6 | MSG-FEED-06 | Toast/inline lỗi | Tham số `page`/`size` không hợp lệ | "Tham số page phải là số nguyên không âm" / "Tham số size phải là số nguyên dương" | 400 |
 
 ---
 
@@ -235,6 +236,6 @@ sequenceDiagram
 
 ###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
 1. **Luồng 1 - Thành công (Normal Case)**: Client gửi GET kèm tham số phân trang (và `type` tùy chọn). Controller xác định vai trò người xem qua `Authentication`. Service truy vấn 1 lần lấy trang bài viết (đã JOIN FETCH tác giả) + 1 lần batch-fetch hồ sơ tác giả (tổng cộng 2 query, không N+1). Mapper ghép dữ liệu, tính thời gian tương đối, trả `PostResponse`. Controller đóng gói `ApiResponse` thành công.
-2. **Luồng 2 - Lỗi validate tham số (`type` không hợp lệ)**: `parsePostType` không khớp bất kỳ giá trị `PostType` nào → ném `BadRequestException`, `GlobalExceptionHandler` bắt và trả 400 kèm thông điệp tiếng Việt cụ thể.
+2. **Luồng 2 - Lỗi validate tham số (`type` không hợp lệ)**: `parsePostType` không khớp bất kỳ giá trị `PostType` nào → ném `BadRequestException`, `GlobalExceptionHandler` bắt và trả 400 kèm thông điệp tiếng Việt cụ thể. Tương tự, `page`/`size` vi phạm quy tắc (page < 0, size ≤ 0) cũng bị Service chặn ngay đầu luồng và trả 400 (MSG-FEED-06).
 3. **Luồng 3 - Rẽ nhánh RBAC (BR-12)**: Cờ `guestMode` được truyền thẳng vào JPQL — Guest không nhận được bất kỳ bài `MEMBERS` nào từ tầng DB (không lọc ở tầng ứng dụng), đảm bảo không rò rỉ dữ liệu qua sai sót logic Java.
 4. **Luồng 4 - Hiển thị rỗng (Frontend)**: Khi `content = []` (không có bài viết nào khớp điều kiện), Frontend hiển thị `FeedEmpty` thay vì danh sách trống trơn.

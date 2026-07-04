@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * Model & schema cho tính năng UC15 - View community Feed.
  * Định nghĩa kiểu dữ liệu một bài viết trên bảng tin và schema Zod dùng để
- * xác thực/chuẩn hóa dữ liệu trả về từ API `GET /api/posts` (khoan dung với
+ * xác thực/chuẩn hóa dữ liệu trả về từ API `GET /api/v1/posts` (khoan dung với
  * nhiều biến thể định dạng backend).
  */
 
