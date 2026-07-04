@@ -1041,6 +1041,32 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "04. Alumni Map",
+			"description": "Thư mục chứa các API bản đồ cựu sinh viên (UC55). API công khai (Public API), không yêu cầu Token JWT.",
+			"item": [
+				{
+					"name": "Xem Bản đồ cựu sinh viên",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alumni-map",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alumni-map"
+							]
+						},
+						"description": "### API Lấy Danh Sách Vị Trí Cựu Sinh Viên\n* **Quyền truy cập**: Công khai (Không yêu cầu đăng nhập / JWT Token).\n* **Mục đích**: Trả về danh sách vị trí tọa độ địa lý và thông tin hiển thị tóm tắt của các cựu sinh viên hoạt động."
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"auth": {

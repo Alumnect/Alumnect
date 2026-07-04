@@ -26,7 +26,8 @@ public class Endpoints {
         "/api/v1/majors",           // Lấy danh sách chuyên ngành (dùng lúc đăng ký)
         "/api/v1/auth/verify-email",    // Xác nhận email qua mã OTP (click link hoặc nhập mã)
         "/api/v1/auth/verify-email/**",
-        "/api/v1/files/presigned-url" // Sinh link ký sẵn để tải file
+        "/api/v1/files/presigned-url", // Sinh link ký sẵn để tải file
+        "/api/v1/alumni-map"          // Bản đồ vị trí cựu sinh viên công khai cho khách
     };
 
     // Endpoint công khai — POST, không cần đăng nhập

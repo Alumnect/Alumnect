@@ -43,23 +43,19 @@ function App() {
         {/* Authenticated member app */}
         <Route
           path="/app"
-          element={
-            <ProtectedRoute>
-              <AppShell />
-            </ProtectedRoute>
-          }
+          element={<AppShell />}
         >
-          <Route index element={<FeedPage />} />
-          <Route path="alumni" element={<AlumniDirectoryPage />} />
-          <Route path="jobs" element={<JobsPage />} />
-          <Route path="events" element={<EventsPage />} />
-          <Route path="forum" element={<ForumPage />} />
-          <Route path="salary" element={<SalaryPage />} />
+          <Route index element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
+          <Route path="alumni" element={<ProtectedRoute><AlumniDirectoryPage /></ProtectedRoute>} />
+          <Route path="jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
+          <Route path="events" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+          <Route path="forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
+          <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
           <Route path="map" element={<MapPage />} />
           <Route path="career" element={<CareerPage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+          <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 
