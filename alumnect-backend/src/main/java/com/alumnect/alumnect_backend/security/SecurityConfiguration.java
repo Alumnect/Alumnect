@@ -27,6 +27,9 @@ public class SecurityConfiguration {
     @Autowired
     private JwtFilter jwtFilter;
 
+    @Autowired
+    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+
     /**
      * Bean cung cấp thuật toán mã hóa mật khẩu BCrypt.
      */
@@ -72,6 +75,10 @@ public class SecurityConfiguration {
             corsConfig.addAllowedHeader("*");
             return corsConfig;
         }));
+
+        // Trả về 401 JSON (thay vì 403 mặc định) khi request chưa xác thực/token hết hạn —
+        // Frontend dựa vào mã 401 này để kích hoạt cơ chế tự làm mới Access Token
+        http.exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint));
 
         // Sử dụng phiên làm việc không trạng thái (Stateless Session) vì dùng token JWT
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

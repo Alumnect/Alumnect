@@ -564,7 +564,7 @@ public class AuthServiceImpl implements AuthService {
      * Làm mới Access Token bằng Refresh Token.
      */
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = BadRequestException.class)
     public LoginResponse refresh(RefreshRequest request, String userAgent, String ipAddress) {
         String rawRefreshToken = request.getRefreshToken();
 
