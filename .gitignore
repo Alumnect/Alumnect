@@ -8,8 +8,12 @@
 **/target/
 **/.gradle/
 .idea/
+.vscode/
 *.iml
 *.class
+
+# Cấu hình cục bộ chứa mật khẩu (Spring Boot đọc ./config/) — không commit
+/alumnect-backend/config/
 
 # Hệ điều hành rác
 .DS_Store

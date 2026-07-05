@@ -1447,6 +1447,326 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "04. Q&A Forum (UC38 - View Question List)",
+			"description": "Thư mục chứa các API công khai của Module 4 (Q&A Forum) cho UC38 - Xem danh sách câu hỏi. Guest/Student/Alumni đều xem được, không cần đăng nhập. Hỗ trợ phân trang, sắp xếp (recent/votes/answers) và lọc theo chủ đề.",
+			"item": [
+				{
+					"name": "04.1. Danh sách câu hỏi (Questions)",
+					"item": [
+						{
+							"name": "Lấy danh sách câu hỏi (mới nhất) - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=0&size=10&sort=recent",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										},
+										{
+											"key": "sort",
+											"value": "recent"
+										}
+									]
+								},
+								"description": "### API Xem Danh Sách Câu Hỏi\n* **Quyền truy cập**: Public (Guest/Student/Alumni).\n* **Tham số**: `page` (0-based, mặc định 0), `size` (mặc định 10), `sort` (`recent`|`votes`|`answers`), `topicId` (tùy chọn).\n* **Nghiệp vụ**: Chỉ trả về câu hỏi trạng thái `ACTIVE` (ẩn HIDDEN/DELETED), sắp xếp mới nhất trước.\n* **Phản hồi (200 OK)**: `data` là `PageResponse` gồm `content[]`, `pageNumber`, `pageSize`, `totalElements`, `totalPages`, `last`."
+							},
+							"response": []
+						},
+						{
+							"name": "Sắp xếp theo lượt vote - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=0&size=5&sort=votes",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "5"
+										},
+										{
+											"key": "sort",
+											"value": "votes"
+										}
+									]
+								},
+								"description": "### Sắp Xếp Theo Vote\n* Trả về câu hỏi có nhiều lượt vote nhất trước (`sort=votes`)."
+							},
+							"response": []
+						},
+						{
+							"name": "Sắp xếp theo số câu trả lời - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=0&size=5&sort=answers",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "5"
+										},
+										{
+											"key": "sort",
+											"value": "answers"
+										}
+									]
+								},
+								"description": "### Sắp Xếp Theo Số Trả Lời\n* Trả về câu hỏi có nhiều câu trả lời nhất trước (`sort=answers`)."
+							},
+							"response": []
+						},
+						{
+							"name": "Lọc câu hỏi theo chủ đề - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?topicId=1&page=0&size=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "topicId",
+											"value": "1"
+										},
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								},
+								"description": "### Lọc Theo Chủ Đề\n* Chỉ trả về câu hỏi thuộc `topicId` chỉ định (lấy id từ API `/questions/topics`)."
+							},
+							"response": []
+						},
+						{
+							"name": "Lấy câu hỏi thất bại - Tham số page âm (400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=-1&size=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "-1"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								},
+								"description": "### Lỗi Validation Phân Trang\n* `page` âm -> Backend ném `BadRequestException`.\n* **Phản hồi mong đợi (400 Bad Request)**: \"Tham số page phải là số nguyên không âm\"."
+							},
+							"response": []
+						},
+						{
+							"name": "Lấy câu hỏi thất bại - Sắp xếp không hợp lệ (400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?sort=khong_hop_le",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "sort",
+											"value": "khong_hop_le"
+										}
+									]
+								},
+								"description": "### Lỗi Tiêu Chí Sắp Xếp\n* `sort` không thuộc {recent, votes, answers} -> Backend ném `BadRequestException`.\n* **Phản hồi mong đợi (400 Bad Request)**: \"Tiêu chí sắp xếp không hợp lệ: ...\"."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "04.2. Chủ đề diễn đàn (Topics)",
+					"item": [
+						{
+							"name": "Lấy danh mục chủ đề diễn đàn - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions/topics",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions",
+										"topics"
+									]
+								},
+								"description": "### API Lấy Danh Mục Chủ Đề Diễn Đàn\n* **Quyền truy cập**: Public (Guest xem được).\n* **Mục đích**: Trả về danh sách chủ đề (id + name) để đổ vào bộ lọc câu hỏi ở Frontend.\n* **Phản hồi (200 OK)**: `data` là mảng `{ id, name }`."
+							},
+							"response": []
+						}
+					]
+				}
+			]
 		}
 	],
 	"auth": {
