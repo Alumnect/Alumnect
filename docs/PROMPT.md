@@ -1,7 +1,7 @@
 # CÂU LỆNH PROMPT TIÊU CHUẨN (COPY TOÀN BỘ NỘI DUNG DƯỚI ĐÂY GỬI CHO AI CHAT)
 
 ```text
-Hãy đọc kỹ tệp quy trình phát triển và quy tắc code tại [Workflow.md](file:///d:/Alumnect/docs/Workflow.md) và tệp mẫu đặc tả tại [TemplateSRS.md](file:///d:/Alumnect/docs/update_SRS/TemplateSRS.md). Sau đó, thực hiện khảo sát cấu trúc mã nguồn, cơ sở dữ liệu hiện tại của dự án kết hợp với yêu cầu chức năng vắn tắt dưới đây để lập trình toàn bộ (Backend + Frontend), kiểm thử và tự động sinh tài liệu đặc tả SRS chi tiết dựa trên code thực tế đã viết:
+Hãy đọc kỹ tệp quy trình phát triển và quy tắc code tại [Workflow.md](Alumnect/docs/Workflow.md) và tệp mẫu đặc tả tại [TemplateSRS.md](file:///d:/Alumnect/docs/update_SRS/TemplateSRS.md). Sau đó, thực hiện khảo sát cấu trúc mã nguồn, cơ sở dữ liệu hiện tại của dự án kết hợp với yêu cầu chức năng vắn tắt dưới đây để lập trình toàn bộ (Backend + Frontend), kiểm thử và tự động sinh tài liệu đặc tả SRS chi tiết dựa trên code thực tế đã viết:
 
 ---
 
