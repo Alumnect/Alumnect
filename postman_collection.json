@@ -1313,6 +1313,171 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "01.7. Đăng nhập bằng Google (Google OAuth2)",
+					"item": [
+						{
+							"name": "Đăng nhập Google - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.data && jsonData.data.accessToken) {",
+											"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+											"}",
+											"if (jsonData.data && jsonData.data.refreshToken) {",
+											"    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_here\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google"
+									]
+								},
+								"description": "### API Đăng nhập bằng Google OAuth2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Gửi ID Token của Google để xác thực và nhận access/refresh tokens của hệ thống."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập Google thất bại - Tài khoản chưa đăng ký (404)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_not_registered\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google"
+									]
+								},
+								"description": "### Đăng nhập bằng tài khoản Google chưa đăng ký\n* **Kết quả mong đợi**: 404 Not Found kèm theo thông tin email và name trong thuộc tính data để điền sẵn vào form đăng ký."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký sinh viên (STUDENT) bằng Google - Thành công (Có Token)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.data && jsonData.data.accessToken) {",
+											"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+											"}",
+											"if (jsonData.data && jsonData.data.refreshToken) {",
+											"    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_here\",\n  \"fullName\": \"Jane Google User\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE189999\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google",
+										"register"
+									]
+								},
+								"description": "### API Đăng ký tài khoản Sinh viên mới qua Google OAuth2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lưu tài khoản mới sử dụng Google ID Token và các thông tin trường học bắt buộc. Trả về cặp tokens và đăng nhập trực tiếp."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký cựu sinh viên (ALUMNI) bằng Google - Thành công (Chờ duyệt, không Token)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_here\",\n  \"fullName\": \"Jane Google Alumni\",\n  \"role\": \"ALUMNI\",\n  \"majorId\": 1,\n  \"cohort\": 14,\n  \"studentCode\": \"HE149999\",\n  \"graduationYear\": 2022,\n  \"proofUrl\": \"https://example.com/proof.png\",\n  \"note\": \"Tôi đăng ký bằng tài khoản Google\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google",
+										"register"
+									]
+								},
+								"description": "### API Đăng ký tài khoản cựu sinh viên qua Google OAuth2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lưu tài khoản mới sử dụng Google ID Token và thông tin cựu sinh viên bắt buộc. Trả về thông tin đăng ký thành công nhưng không kèm token đăng nhập (chờ duyệt)."
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},

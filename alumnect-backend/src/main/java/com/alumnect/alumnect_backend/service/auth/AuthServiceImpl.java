@@ -20,6 +20,17 @@ import com.alumnect.alumnect_backend.entity.verification.VerificationRequest;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.exception.GoogleUserNotFoundException;
+import com.alumnect.alumnect_backend.exception.WaitingApprovalException;
+import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
+import com.alumnect.alumnect_backend.entity.auth.UserOAuthProvider;
+import com.alumnect.alumnect_backend.dao.auth.UserOAuthProviderRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import java.util.Map;
 import com.alumnect.alumnect_backend.mapper.auth.AuthMapper;
 import com.alumnect.alumnect_backend.service.mail.MailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,6 +93,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UserSettingsRepository userSettingsRepository;
+
+    @Autowired
+    private UserOAuthProviderRepository userOAuthProviderRepository;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${app.google.client-id}")
+    private String googleClientId;
 
     /**
      * Thực hiện đăng ký tài khoản người dùng mới (STUDENT hoặc ALUMNI).
@@ -660,6 +680,347 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole().getName())
                 .fullName(fullName)
                 .avatarUrl(avatarUrl)
+                .accountStatus(user.getAccountStatus().name())
+                .build();
+    }
+
+    /**
+     * Xác thực Google ID Token bằng cách gửi yêu cầu tới endpoint tokeninfo của Google.
+     * Kiểm tra tính hợp lệ của token và so khớp với Client ID của hệ thống.
+     *
+     * @param tokenString Chuỗi ID Token nhận từ Client
+     * @return Map chứa thông tin các claims trong Google ID Token (email, name, sub, picture...)
+     */
+    private Map<String, Object> verifyGoogleToken(String tokenString) {
+        try {
+            String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + tokenString;
+
+            // Gọi HTTP GET request tới Google API để xác thực token bằng RestTemplate bean dùng chung
+            ResponseEntity<Map> responseEntity = this.restTemplate.getForEntity(url, Map.class);
+
+            if (responseEntity.getStatusCode() != HttpStatus.OK || responseEntity.getBody() == null) {
+                throw new BadRequestException("Token xác thực Google không hợp lệ hoặc đã hết hạn");
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = (Map<String, Object>) responseEntity.getBody();
+
+            // Kiểm tra claim audience (aud) so khớp với client id của hệ thống
+            String aud = (String) body.get("aud");
+            if (aud == null || !aud.equals(googleClientId)) {
+                throw new BadRequestException("Token xác thực Google không khớp với Client ID của hệ thống");
+            }
+
+            // Kiểm tra email_verified của Google
+            Object emailVerifiedObj = body.get("email_verified");
+            boolean verified = false;
+            if (emailVerifiedObj instanceof Boolean) {
+                verified = (Boolean) emailVerifiedObj;
+            } else if (emailVerifiedObj instanceof String) {
+                verified = Boolean.parseBoolean((String) emailVerifiedObj);
+            }
+
+            if (!verified) {
+                throw new BadRequestException("Tài khoản Google này chưa được xác thực email");
+            }
+
+            return body;
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Lỗi xảy ra khi xác thực Google ID Token: ", e);
+            throw new BadRequestException("Không thể xác thực tài khoản Google vào lúc này. Vui lòng thử lại sau.");
+        }
+    }
+
+    /**
+     * Đăng nhập vào hệ thống sử dụng tài khoản Google.
+     * Xác thực Google ID Token, kiểm tra tài khoản liên kết, và trả về cặp tokens.
+     */
+    @Override
+    @Transactional(noRollbackFor = WaitingApprovalException.class)
+    public LoginResponse loginWithGoogle(GoogleLoginRequest request, String userAgent, String ipAddress) {
+        // 1. Xác thực Google token và lấy thông tin người dùng
+        Map<String, Object> googleClaims = verifyGoogleToken(request.getToken());
+
+        String providerUserId = (String) googleClaims.get("sub");
+        String email = ((String) googleClaims.get("email")).trim().toLowerCase();
+
+        // 2. Tìm kiếm trong bảng user_oauth_providers trước
+        Optional<UserOAuthProvider> oauthOpt = userOAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", providerUserId);
+
+        User user;
+        if (oauthOpt.isPresent()) {
+            user = oauthOpt.get().getUser();
+        } else {
+            // 3. Nếu chưa liên kết OAuth, kiểm tra xem email đã tồn tại trong hệ thống chưa
+            Optional<User> existingUserOpt = userRepository.findByEmail(email);
+            if (existingUserOpt.isPresent()) {
+                user = existingUserOpt.get();
+
+                // Tạo liên kết OAuth
+                UserOAuthProvider newOauth = UserOAuthProvider.builder()
+                        .user(user)
+                        .provider("GOOGLE")
+                        .providerUserId(providerUserId)
+                        .build();
+                userOAuthProviderRepository.save(newOauth);
+
+                // Cập nhật nhà cung cấp xác thực chính của người dùng thành GOOGLE
+                user.setAuthProvider(AuthProvider.GOOGLE);
+                user.setPasswordHash(null); // Xóa mật khẩu cũ
+                userRepository.save(user);
+            } else {
+                // 4. Nếu email chưa tồn tại -> Ném lỗi GoogleUserNotFoundException để Frontend biết và điền sẵn form đăng ký
+                String name = (String) googleClaims.get("name");
+                if (name == null) {
+                    name = "";
+                }
+                throw new GoogleUserNotFoundException(email, name, providerUserId, "Tài khoản Google chưa được đăng ký trên hệ thống.");
+            }
+        }
+
+        // 5. Kiểm tra trạng thái tài khoản
+        if (user.getAccountStatus() == AccountStatus.LOCKED) {
+            throw new BadRequestException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+        }
+        if (user.getAccountStatus() == AccountStatus.WAITING_APPROVAL) {
+            throw new BadRequestException("Tài khoản của bạn đang chờ quản trị viên phê duyệt. Vui lòng đợi.");
+        }
+        if (user.getAccountStatus() == AccountStatus.PENDING) {
+            String roleName = user.getRole().getName().toUpperCase();
+            if (roleName.equals("STUDENT")) {
+                user.setAccountStatus(AccountStatus.ACTIVE);
+                user.setEmailVerified(true);
+                user.setAccountVerified(true);
+            } else if (roleName.equals("ALUMNI")) {
+                user.setAccountStatus(AccountStatus.WAITING_APPROVAL);
+                user.setEmailVerified(true);
+                user.setAccountVerified(false);
+                userRepository.save(user);
+                throw new WaitingApprovalException("Tài khoản của bạn đang chờ quản trị viên phê duyệt. Vui lòng đợi.");
+            }
+            userRepository.save(user);
+        }
+
+        // 6. Cập nhật thời điểm đăng nhập cuối cùng
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        // 7. Tạo cặp JWT tokens
+        String accessToken = jwtService.generateToken(user);
+        String rawRefreshToken = jwtService.generateRefreshToken(user);
+
+        // Băm và lưu Refresh Token vào database
+        String tokenHash = hashToken(rawRefreshToken);
+        RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .user(user)
+                .tokenHash(tokenHash)
+                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                .revoked(false)
+                .userAgent(userAgent)
+                .ipAddress(ipAddress)
+                .build();
+        try {
+            refreshTokenRepository.save(refreshTokenEntity);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu Refresh Token Google Login: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể tạo phiên đăng nhập mới");
+        }
+
+        // Lấy thông tin cá nhân
+        String fullName = "";
+        String avatarUrl = null;
+        Optional<UserProfile> profileOpt = userProfileRepository.findById(user.getId());
+        if (profileOpt.isPresent()) {
+            fullName = profileOpt.get().getFullName();
+            avatarUrl = profileOpt.get().getAvatarUrl();
+        }
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(rawRefreshToken)
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .fullName(fullName)
+                .avatarUrl(avatarUrl)
+                .accountStatus(user.getAccountStatus().name())
+                .build();
+    }
+
+    /**
+     * Đăng ký tài khoản người dùng mới sử dụng tài khoản Google.
+     * Xác thực token, lấy email từ Google, kiểm tra thông tin bổ sung và lưu vào DB.
+     */
+    @Override
+    @Transactional
+    public LoginResponse registerWithGoogle(GoogleRegisterRequest request, String userAgent, String ipAddress) {
+        // 1. Xác thực Google token
+        Map<String, Object> googleClaims = verifyGoogleToken(request.getToken());
+
+        String providerUserId = (String) googleClaims.get("sub");
+        String email = ((String) googleClaims.get("email")).trim().toLowerCase();
+
+        // 2. Kiểm tra xem email đã tồn tại chưa
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new ConflictException("Email này đã được đăng ký trên hệ thống. Vui lòng đăng nhập.");
+        }
+
+        // 3. Kiểm tra xem liên kết OAuth này đã tồn tại chưa
+        if (userOAuthProviderRepository.existsByProviderAndProviderUserId("GOOGLE", providerUserId)) {
+            throw new ConflictException("Tài khoản Google này đã được liên kết với một tài khoản khác.");
+        }
+
+        // 3b. Kiểm tra mã số sinh viên đã được đăng ký chưa
+        String studentCode = request.getStudentCode() != null ? request.getStudentCode().trim() : "";
+        if (userProfileRepository.existsByStudentCodeIgnoreCase(studentCode)) {
+            throw new ConflictException("Mã số sinh viên này đã được đăng ký trong hệ thống.");
+        }
+
+        // 4. Lấy vai trò (STUDENT hoặc ALUMNI)
+        String roleName = request.getRole().trim().toUpperCase();
+        if (!roleName.equals("STUDENT") && !roleName.equals("ALUMNI")) {
+            throw new BadRequestException("Vai trò không hợp lệ để đăng ký: " + roleName);
+        }
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new ResourceNotFoundException("Vai trò không tồn tại: " + roleName));
+
+        // 5. Lấy chuyên ngành
+        Major major = majorRepository.findById(request.getMajorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Chuyên ngành không tồn tại với ID: " + request.getMajorId()));
+
+        // 5b. Ràng buộc với ALUMNI
+        if (roleName.equals("ALUMNI")) {
+            if (request.getGraduationYear() == null) {
+                throw new BadRequestException("Năm tốt nghiệp là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
+            }
+            int currentYear = LocalDate.now().getYear();
+            if (request.getGraduationYear() > currentYear) {
+                throw new BadRequestException("Năm tốt nghiệp không được lớn hơn năm hiện tại");
+            }
+            if (request.getProofUrl() == null || request.getProofUrl().trim().isEmpty()) {
+                throw new BadRequestException("Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
+            }
+        }
+
+        // 6. Tạo người dùng mới
+        User user = new User();
+        user.setEmail(email);
+        user.setPasswordHash(null); // Không sử dụng mật khẩu cho tài khoản đăng ký qua Google
+        user.setRole(role);
+        user.setAuthProvider(AuthProvider.GOOGLE);
+        user.setEmailVerified(true); // Google đã xác thực email
+
+        if (roleName.equals("STUDENT")) {
+            user.setAccountStatus(AccountStatus.ACTIVE);
+            user.setAccountVerified(true);
+        } else {
+            user.setAccountStatus(AccountStatus.WAITING_APPROVAL); // Chờ phê duyệt của Admin đối với Alumni
+            user.setAccountVerified(false);
+        }
+
+        try {
+            user = userRepository.save(user);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu tài khoản người dùng Google: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể tạo tài khoản người dùng mới");
+        }
+
+        // 7. Tạo liên kết OAuth
+        UserOAuthProvider oauth = UserOAuthProvider.builder()
+                .user(user)
+                .provider("GOOGLE")
+                .providerUserId(providerUserId)
+                .build();
+        try {
+            userOAuthProviderRepository.save(oauth);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu liên kết OAuth: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể tạo liên kết OAuth2");
+        }
+
+        // 8. Tạo hồ sơ cá nhân (UserProfile)
+        String picture = (String) googleClaims.get("picture");
+        UserProfile profile = UserProfile.builder()
+                .user(user)
+                .fullName(request.getFullName().trim())
+                .avatarUrl(picture) // lấy avatar mặc định của người dùng từ Google
+                .major(major)
+                .cohort(request.getCohort())
+                .studentCode(studentCode)
+                .build();
+
+        try {
+            userProfileRepository.save(profile);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu thông tin hồ sơ Google: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể lưu thông tin hồ sơ cá nhân");
+        }
+
+        // 9. Tạo cài đặt mặc định
+        UserSettings settings = UserSettings.builder()
+                .user(user)
+                .theme("SYSTEM")
+                .language("vi")
+                .build();
+        saveUserSettings(settings);
+
+        // 10. Nếu là ALUMNI, tạo yêu cầu xác minh
+        if (roleName.equals("ALUMNI")) {
+            VerificationRequest verRequest = VerificationRequest.builder()
+                    .user(user)
+                    .graduationYear(request.getGraduationYear())
+                    .major(major)
+                    .proofUrl(request.getProofUrl())
+                    .note(request.getNote())
+                    .status(VerificationStatus.PENDING)
+                    .build();
+            try {
+                verificationRequestRepository.save(verRequest);
+            } catch (Exception e) {
+                log.error("Lỗi khi lưu yêu cầu xác minh cựu sinh viên qua Google: ", e);
+                throw new RuntimeException("Lỗi hệ thống: Không thể lưu yêu cầu xác minh cựu sinh viên");
+            }
+        }
+
+        // 11. Ghi nhận thời gian đăng nhập
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        // 12. Tạo token phản hồi nếu là STUDENT (được kích hoạt ngay)
+        String accessToken = null;
+        String rawRefreshToken = null;
+
+        if (roleName.equals("STUDENT")) {
+            accessToken = jwtService.generateToken(user);
+            rawRefreshToken = jwtService.generateRefreshToken(user);
+            String tokenHash = hashToken(rawRefreshToken);
+
+            RefreshToken refreshTokenEntity = RefreshToken.builder()
+                    .user(user)
+                    .tokenHash(tokenHash)
+                    .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                    .revoked(false)
+                    .userAgent(userAgent)
+                    .ipAddress(ipAddress)
+                    .build();
+            try {
+                refreshTokenRepository.save(refreshTokenEntity);
+            } catch (Exception e) {
+                log.error("Lỗi khi lưu Refresh Token Google Register: ", e);
+                throw new RuntimeException("Lỗi hệ thống: Không thể tạo phiên đăng nhập mới");
+            }
+        }
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(rawRefreshToken)
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().getName())
+                .fullName(profile.getFullName())
+                .avatarUrl(profile.getAvatarUrl())
                 .accountStatus(user.getAccountStatus().name())
                 .build();
     }

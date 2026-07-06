@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
@@ -10,6 +10,9 @@ import { Button } from '@/components/ui/Button'
 export function LoginPage() {
   const [show, setShow] = useState(false)
   const loginM = useLogin()
+  const location = useLocation()
+  const successMessage = location.state?.successMessage as string | undefined
+
   const {
     register,
     handleSubmit,
@@ -23,6 +26,15 @@ export function LoginPage() {
     <AuthScaffold>
       <h2 className="text-3xl font-extrabold text-plum-900">Welcome back</h2>
       <p className="mt-2 text-sm text-plum-500">Sign in to reconnect with your network.</p>
+
+      {successMessage && (
+        <div className="mt-4 rounded-xl bg-teal-50 border border-teal-200/50 p-3 text-xs text-teal-700 flex items-start gap-2 animate-pop">
+          <svg className="h-4 w-4 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l5-5z" clipRule="evenodd" />
+          </svg>
+          <span>{successMessage}</span>
+        </div>
+      )}
 
       <form className="mt-8 space-y-4" onSubmit={handleSubmit((v) => loginM.mutate(v))} noValidate>
         <Field

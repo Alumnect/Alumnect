@@ -50,4 +50,11 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> error(int code, String message) {
         return new ApiResponse<>(code, message, null);
     }
+
+    /**
+     * Tạo response lỗi với mã lỗi tùy chỉnh, thông báo tùy chỉnh và dữ liệu đi kèm.
+     */
+    public static <T> ApiResponse<T> error(int code, String message, T data) {
+        return new ApiResponse<>(code, message, data);
+    }
 }
