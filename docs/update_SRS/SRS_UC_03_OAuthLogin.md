@@ -20,8 +20,8 @@ stateDiagram-v2
     check_verification --> Throw404Metadata : Token hợp lệ & Tài khoản chưa đăng ký
     check_verification --> Throw400Invalid : Token không hợp lệ / Hết hạn
     
-    AutoLinkLocalAccount --> UpdateAuthProviderToGoogle : Cập nhật auth_provider thành 'GOOGLE', xóa password_hash
-    UpdateAuthProviderToGoogle --> ReturnToken
+    AutoLinkLocalAccount --> LinkOAuthAccount : Tạo liên kết OAuth (giữ nguyên auth_provider và password_hash)
+    LinkOAuthAccount --> ReturnToken
     
     Throw404Metadata --> FrontendRedirectRegister : Frontend bắt lỗi 404, chuyển hướng sang /register
     FrontendRedirectRegister --> FillFormData : Điền sẵn email, fullName, và ẩn trường mật khẩu, khóa email
@@ -39,7 +39,7 @@ stateDiagram-v2
     *   **Xác thực Google**: Google Identity Services hiển thị cửa sổ popup yêu cầu người dùng chọn tài khoản Google và xác nhận quyền truy cập. Sau khi hoàn tất, Google trả về một chuỗi `credential` (ID Token).
     *   **Xác thực Backend**: Frontend gửi ID Token lên Backend endpoint `/api/v1/auth/google`. Backend sử dụng `RestTemplate` gọi API Google `tokeninfo` để kiểm tra độ tin cậy của Token, so khớp Client ID (`aud`) và trạng thái xác thực Email (`email_verified`).
     *   **Xử lý Liên kết/Phân luồng**:
-        *   **Liên kết tự động**: Nếu email tài khoản Google trùng khớp với một tài khoản cục bộ (`LOCAL`) có sẵn trong hệ thống, hệ thống tự động lưu bản ghi liên kết mới vào bảng `user_oauth_providers`, đổi nhà cung cấp xác thực (`auth_provider`) chính của người dùng thành `GOOGLE`, xóa mật khẩu cục bộ (`password_hash`), sau đó kích hoạt/đăng nhập.
+        *   **Liên kết tự động**: Nếu email tài khoản Google trùng khớp với một tài khoản cục bộ (`LOCAL`) có sẵn trong hệ thống, hệ thống tự động lưu bản ghi liên kết mới vào bảng `user_oauth_providers`, giữ nguyên mật khẩu cục bộ (`password_hash`) và phương thức xác thực (`auth_provider` vẫn giữ là `LOCAL`), sau đó kích hoạt/đăng nhập bằng Google hoặc bằng Email/Mật khẩu cục bộ (Hybrid Login).
         *   **Người dùng mới (Redirection)**: Nếu email chưa tồn tại, Backend ném lỗi `GoogleUserNotFoundException` (HTTP 404) cùng dữ liệu `email`, `fullName` và `providerUserId` (sub ID) của Google. Frontend nhận dữ liệu này, tự động chuyển hướng sang trang đăng ký với các trường email (được khóa, không cho sửa) và tên được điền sẵn, đồng thời ẩn trường mật khẩu.
         *   **Hoàn tất hồ sơ mới**: Người dùng hoàn thành các thông tin trường học bắt buộc (Mã số sinh viên, Chuyên ngành, Khóa học) rồi nhấn đăng ký. Backend lưu thông tin người dùng với trạng thái `ACTIVE` (đối với sinh viên) hoặc `WAITING_APPROVAL` (đối với cựu sinh viên).
 *   **Bước 3 - Kết thúc**: Hệ thống trả về cặp JWT tokens (Access Token và Refresh Token) cùng thông tin cơ bản của người dùng, đưa người dùng vào trang Dashboard hệ thống.
@@ -78,7 +78,7 @@ Module Quản lý tài khoản chịu trách nhiệm về toàn bộ các quy tr
     *   Mã số sinh viên không được trùng lặp.
     *   Ảnh minh chứng và năm tốt nghiệp là bắt buộc với vai trò Cựu sinh viên (ALUMNI).
 *   **Business rules**:
-    *   Tài khoản đăng nhập qua Google không được phép đăng nhập thông thường bằng mật khẩu cục bộ (để tránh lỗ hổng bảo mật).
+    *   Tài khoản đăng nhập qua Google có thể đăng nhập thông thường bằng mật khẩu cục bộ nếu tài khoản đã được thiết lập mật khẩu cục bộ (Hybrid Login).
     *   Hệ thống chỉ chấp nhận email Google có trạng thái `email_verified` bằng `true`.
 *   **Error Handling**:
     *   **404 Not Found**: Tài khoản Google chưa được đăng ký trong hệ thống (kèm dữ liệu để tự điền form).
@@ -95,7 +95,7 @@ Module Quản lý tài khoản chịu trách nhiệm về toàn bộ các quy tr
 
 | ID | Định nghĩa Quy tắc (Rule Definition) |
 | :--- | :--- |
-| BR-05 | Người dùng đã liên kết/đăng ký bằng Google sẽ bị xóa mật khẩu cục bộ và chỉ có thể xác thực qua Google. |
+| BR-05 | Người dùng liên kết bằng Google sẽ giữ nguyên mật khẩu cục bộ (nếu có) và đăng nhập bằng cả 2 cách (Hybrid Login). |
 | BR-06 | Chỉ chấp nhận tài khoản Google có email đã được xác minh (`email_verified` = true). |
 | BR-07 | Khi đăng ký bằng Google với vai trò Cựu sinh viên (ALUMNI), tài khoản sẽ ở trạng thái `WAITING_APPROVAL` và phải gửi kèm minh chứng tốt nghiệp. |
 | BR-08 | Khi đăng ký bằng Google với vai trò Sinh viên (STUDENT), tài khoản sẽ được kích hoạt ở trạng thái `ACTIVE` ngay lập tức mà không cần xác minh OTP qua email. |
@@ -242,13 +242,33 @@ sequenceDiagram
     
     alt Trường hợp 1: Tài khoản đã liên kết trước đó
         Repo-->>Service: Trả về UserOAuthProvider
+        alt Trạng thái User là ACTIVE
+            Service->>Service: Tạo JWT Access Token & Refresh Token
+            Service-->>Controller: Trả về LoginResponse DTO (Có tokens)
+            Controller-->>Client: HTTP 200 OK (Đăng nhập thành công)
+        else Trạng thái User là WAITING_APPROVAL
+            Service-->>Controller: Ném WaitingApprovalException
+            Controller-->>Client: HTTP 400 Bad Request (Tài khoản chờ duyệt)
+        else Trạng thái User là LOCKED
+            Service-->>Controller: Ném BadRequestException
+            Controller-->>Client: HTTP 400 Bad Request (Tài khoản bị khóa)
+        end
     else Trường hợp 2: Chưa liên kết nhưng email đã đăng ký tài khoản cục bộ (LOCAL)
         Service->>UserRepo: findByEmail(email)
         UserRepo-->>Service: Trả về User (LOCAL)
         Service->>Repo: save(New UserOAuthProvider)
-        Service->>UserRepo: Đổi authProvider = GOOGLE, passwordHash = NULL
-        UserRepo->>DB: UPDATE users set auth_provider = 'GOOGLE'
-        DB-->>UserRepo: OK
+        Note over Service: Giữ nguyên authProvider (LOCAL) và giữ nguyên passwordHash
+        alt Trạng thái User là ACTIVE
+            Service->>Service: Tạo JWT Access Token & Refresh Token
+            Service-->>Controller: Trả về LoginResponse DTO (Có tokens)
+            Controller-->>Client: HTTP 200 OK (Đăng nhập thành công)
+        else Trạng thái User là WAITING_APPROVAL
+            Service-->>Controller: Ném WaitingApprovalException
+            Controller-->>Client: HTTP 400 Bad Request (Tài khoản chờ duyệt)
+        else Trạng thái User là LOCKED
+            Service-->>Controller: Ném BadRequestException
+            Controller-->>Client: HTTP 400 Bad Request (Tài khoản bị khóa)
+        end
     else Trường hợp 3: Tài khoản Google chưa tồn tại trên hệ thống (Người dùng mới)
         Service-->>Controller: Ném GoogleUserNotFoundException (email, name, sub)
         Note over Controller: Bắt lỗi bởi GlobalExceptionHandler
@@ -262,15 +282,14 @@ sequenceDiagram
         Service->>Repo: Lưu UserOAuthProvider mới
         Service->>DB: INSERT INTO users, user_oauth_providers, user_profiles...
         DB-->>Service: Lưu thành công
-    end
-    
-    alt Trạng thái User là STUDENT (ACTIVE)
-        Service->>Service: Tạo JWT Access Token & Refresh Token
-        Service-->>Controller: Trả về LoginResponse DTO (Có tokens)
-        Controller-->>Client: HTTP 201 Created (Đăng nhập & chuyển vào /app)
-    else Trạng thái User là ALUMNI (WAITING_APPROVAL)
-        Service-->>Controller: Trả về LoginResponse DTO (tokens = null)
-        Controller-->>Client: HTTP 201 Created (Chuyển hướng về /login hiển thị thông báo chờ duyệt)
+        alt Đăng ký vai trò STUDENT (ACTIVE)
+            Service->>Service: Tạo JWT Access Token & Refresh Token
+            Service-->>Controller: Trả về LoginResponse DTO (Có tokens)
+            Controller-->>Client: HTTP 201 Created (Đăng nhập trực tiếp)
+        else Đăng ký vai trò ALUMNI (WAITING_APPROVAL)
+            Service-->>Controller: Trả về LoginResponse DTO (tokens = null)
+            Controller-->>Client: HTTP 201 Created (Chuyển hướng về /login chờ duyệt)
+        end
     end
 ```
 
@@ -279,7 +298,7 @@ sequenceDiagram
     *   Client gửi ID Token qua request POST.
     *   Backend gọi API Google xác thực token. Sau đó truy vấn bảng `user_oauth_providers`.
     *   Nếu tìm thấy, lấy thông tin người dùng trực tiếp.
-    *   Nếu chưa liên kết OAuth nhưng tìm thấy email trong bảng `users`, hệ thống tự động lưu bản ghi liên kết mới và cập nhật cấu hình bảo mật tài khoản đó thành `GOOGLE` (xóa password hash cũ).
+    *   Nếu chưa liên kết OAuth nhưng tìm thấy email trong bảng `users`, hệ thống tự động lưu bản ghi liên kết mới và giữ nguyên cấu hình bảo mật (giữ nguyên password hash và authProvider cũ) để hỗ trợ Hybrid Login.
     *   Trả về cặp JWT tokens cùng trạng thái HTTP 200 OK.
 2.  **Luồng Đăng ký tài khoản Google mới (404 Redirect)**:
     *   Nếu email Google chưa tồn tại trong hệ thống, Backend ném ngoại lệ `GoogleUserNotFoundException`.
