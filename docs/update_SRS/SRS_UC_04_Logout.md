@@ -8,9 +8,9 @@
 stateDiagram-v2
     [*] --> AuthenticatedState : Người dùng đang ở trạng thái đã đăng nhập
     AuthenticatedState --> ClickLogoutBtn : Người dùng nhấn nút "Đăng xuất"
-    ClickLogoutBtn --> ClearFrontendState : Frontend gọi API /auth/logout thành công hoặc bỏ qua lỗi mạng
-    ClearFrontendState --> DeleteSessionInDB : Backend tìm và xóa Refresh Token khỏi PostgreSQL
-    DeleteSessionInDB --> RedirectToLogin : Frontend xóa sạch localStorage (Zustand) và chuyển hướng về /login
+    ClickLogoutBtn --> DeleteSessionInDB : Frontend gọi API /api/v1/auth/logout để Backend tìm và xóa Refresh Token khỏi PostgreSQL
+    DeleteSessionInDB --> ClearFrontendState : Backend phản hồi thành công (hoặc Frontend bỏ qua lỗi mạng)
+    ClearFrontendState --> RedirectToLogin : Frontend xóa sạch localStorage (Zustand) và chuyển hướng về /login
     RedirectToLogin --> [*] : Hoàn tất đăng xuất
 ```
 
