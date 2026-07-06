@@ -1213,6 +1213,68 @@
 								"description": "### Thử làm mới token bằng Refresh Token đã hết hạn hoặc không hợp lệ\n* **Mong đợi**: 400 Bad Request, báo lỗi phiên đăng nhập đã hết hạn hoặc bị thu hồi."
 							},
 							"response": []
+						},
+						{
+							"name": "Đăng xuất hệ thống - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/logout",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"logout"
+									]
+								},
+								"description": "### API Đăng xuất hệ thống - Thành công\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu JWT Token ở header và Refresh Token trong body).\n* **Mục đích**: Thu hồi và xóa phiên đăng nhập trong cơ sở dữ liệu."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng xuất hệ thống thất bại - Token không hợp lệ hoặc đã hết hạn",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"invalid_or_expired_refresh_token_for_logout\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/logout",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"logout"
+									]
+								},
+								"description": "### API Đăng xuất hệ thống - Thất bại do Token không tồn tại\n* **Mong đợi**: 400 Bad Request, báo lỗi phiên đăng nhập không tồn tại hoặc đã hết hạn."
+							},
+							"response": []
 						}
 					]
 				},

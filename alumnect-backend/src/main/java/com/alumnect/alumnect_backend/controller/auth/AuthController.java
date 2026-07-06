@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.LogoutRequest;
 import com.alumnect.alumnect_backend.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,5 +138,18 @@ public class AuthController {
         com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.registerWithGoogle(request, userAgent, ipAddress);
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng ký tài khoản qua Google thành công!", response));
+    }
+
+    /**
+     * API Đăng xuất hệ thống.
+     * Xác minh Refresh Token và thực hiện thu hồi phiên làm việc trong DB.
+     *
+     * @param request DTO chứa refresh token cần hủy
+     * @return Response phản hồi đăng xuất thành công
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody LogoutRequest request) {
+        authService.logout(request);
+        return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công!", null));
     }
 }

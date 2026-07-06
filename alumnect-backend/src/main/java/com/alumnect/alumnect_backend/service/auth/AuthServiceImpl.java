@@ -11,6 +11,7 @@ import com.alumnect.alumnect_backend.dao.auth.RefreshTokenRepository;
 import com.alumnect.alumnect_backend.dto.request.auth.LoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.LogoutRequest;
 import com.alumnect.alumnect_backend.dto.response.auth.LoginResponse;
 import com.alumnect.alumnect_backend.entity.auth.RefreshToken;
 import com.alumnect.alumnect_backend.entity.auth.VerificationToken;
@@ -1023,5 +1024,24 @@ public class AuthServiceImpl implements AuthService {
                 .avatarUrl(profile.getAvatarUrl())
                 .accountStatus(user.getAccountStatus().name())
                 .build();
+    }
+
+    /**
+     * Đăng xuất khỏi hệ thống.
+     * Xác minh Refresh Token và thực hiện xóa khỏi CSDL để chấm dứt phiên.
+     */
+    @Override
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String tokenHash = hashToken(request.getRefreshToken());
+        RefreshToken tokenEntity = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new BadRequestException("Phiên đăng nhập không tồn tại hoặc đã hết hạn."));
+
+        try {
+            refreshTokenRepository.delete(tokenEntity);
+        } catch (Exception e) {
+            log.error("Lỗi xảy ra khi xóa Refresh Token lúc đăng xuất: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể hoàn tất đăng xuất");
+        }
     }
 }

@@ -348,7 +348,13 @@ export function AppShell() {
               <div className="mt-4 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 <Link to="/app/profile" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">My Profile</Link>
                 <Link to="/admin" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">Admin</Link>
-                <Link to="/login" className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500">Sign out</Link>
+                <button
+                  type="button"
+                  onClick={() => logoutM.mutate()}
+                  className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500"
+                >
+                  Sign out
+                </button>
               </div>
             </motion.div>
           </>
