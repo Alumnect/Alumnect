@@ -22,7 +22,10 @@ public class GoogleRegisterRequest {
     @NotBlank(message = "Google ID token không được để trống")
     private String token;
 
-    /** Họ và tên của người dùng (có thể lấy mặc định từ Google hoặc do người dùng tự nhập) */
+    /**
+     * Họ và tên của người dùng (có thể lấy mặc định từ Google hoặc do người dùng tự
+     * nhập)
+     */
     @NotBlank(message = "Họ và tên không được để trống")
     @Size(max = 150, message = "Họ và tên không được vượt quá 150 ký tự")
     private String fullName;

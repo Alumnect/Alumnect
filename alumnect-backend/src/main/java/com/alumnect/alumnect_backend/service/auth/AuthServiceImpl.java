@@ -499,9 +499,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadRequestException("Tài khoản hoặc mật khẩu không chính xác"));
 
-        // 2. Kiểm tra nhà cung cấp đăng nhập (local login yêu cầu password_hash khác
-        // null)
-        if (user.getAuthProvider() != AuthProvider.LOCAL || user.getPasswordHash() == null) {
+        // 2. Kiểm tra tài khoản có mật khẩu cục bộ hay không
+        if (user.getPasswordHash() == null) {
             throw new BadRequestException("Tài khoản này được đăng ký thông qua mạng xã hội khác");
         }
 
@@ -767,10 +766,7 @@ public class AuthServiceImpl implements AuthService {
                         .build();
                 userOAuthProviderRepository.save(newOauth);
 
-                // Cập nhật nhà cung cấp xác thực chính của người dùng thành GOOGLE
-                user.setAuthProvider(AuthProvider.GOOGLE);
-                user.setPasswordHash(null); // Xóa mật khẩu cũ
-                userRepository.save(user);
+
             } else {
                 // 4. Nếu email chưa tồn tại -> Ném lỗi GoogleUserNotFoundException để Frontend biết và điền sẵn form đăng ký
                 String name = (String) googleClaims.get("name");
@@ -864,8 +860,25 @@ public class AuthServiceImpl implements AuthService {
         String email = ((String) googleClaims.get("email")).trim().toLowerCase();
 
         // 2. Kiểm tra xem email đã tồn tại chưa
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new ConflictException("Email này đã được đăng ký trên hệ thống. Vui lòng đăng nhập.");
+        Optional<User> existingUserOpt = userRepository.findByEmail(email);
+        User user;
+        boolean isNewUser = true;
+
+        if (existingUserOpt.isPresent()) {
+            user = existingUserOpt.get();
+            if (user.getAccountStatus() == AccountStatus.WAITING_APPROVAL) {
+                throw new ConflictException(
+                        "Tài khoản của bạn đã xác thực email thành công và đang chờ quản trị viên phê duyệt. Vui lòng đợi admin duyệt.");
+            } else if (user.getAccountStatus() == AccountStatus.ACTIVE) {
+                throw new ConflictException("Email này đã được đăng ký và kích hoạt thành công. Vui lòng đăng nhập.");
+            } else if (user.getAccountStatus() == AccountStatus.LOCKED) {
+                throw new ConflictException(
+                        "Tài khoản liên kết với email này đã bị khóa. Vui lòng liên hệ quản trị viên.");
+            }
+            isNewUser = false;
+        } else {
+            user = new User();
+            user.setEmail(email);
         }
 
         // 3. Kiểm tra xem liên kết OAuth này đã tồn tại chưa
@@ -875,8 +888,14 @@ public class AuthServiceImpl implements AuthService {
 
         // 3b. Kiểm tra mã số sinh viên đã được đăng ký chưa
         String studentCode = request.getStudentCode() != null ? request.getStudentCode().trim() : "";
-        if (userProfileRepository.existsByStudentCodeIgnoreCase(studentCode)) {
-            throw new ConflictException("Mã số sinh viên này đã được đăng ký trong hệ thống.");
+        if (isNewUser) {
+            if (userProfileRepository.existsByStudentCodeIgnoreCase(studentCode)) {
+                throw new ConflictException("Mã số sinh viên này đã được đăng ký trong hệ thống.");
+            }
+        } else {
+            if (userProfileRepository.existsByStudentCodeIgnoreCaseAndUserIdNot(studentCode, user.getId())) {
+                throw new ConflictException("Mã số sinh viên này đã được đăng ký bởi tài khoản khác.");
+            }
         }
 
         // 4. Lấy vai trò (STUDENT hoặc ALUMNI)
@@ -889,7 +908,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 5. Lấy chuyên ngành
         Major major = majorRepository.findById(request.getMajorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Chuyên ngành không tồn tại với ID: " + request.getMajorId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Chuyên ngành không tồn tại với ID: " + request.getMajorId()));
 
         // 5b. Ràng buộc với ALUMNI
         if (roleName.equals("ALUMNI")) {
@@ -905,13 +925,13 @@ public class AuthServiceImpl implements AuthService {
             }
         }
 
-        // 6. Tạo người dùng mới
-        User user = new User();
-        user.setEmail(email);
-        user.setPasswordHash(null); // Không sử dụng mật khẩu cho tài khoản đăng ký qua Google
+        // 6. Tạo/Cập nhật người dùng mới
         user.setRole(role);
         user.setAuthProvider(AuthProvider.GOOGLE);
         user.setEmailVerified(true); // Google đã xác thực email
+        if (isNewUser) {
+            user.setPasswordHash(null); // Không sử dụng mật khẩu cho tài khoản đăng ký qua Google mới
+        }
 
         if (roleName.equals("STUDENT")) {
             user.setAccountStatus(AccountStatus.ACTIVE);
@@ -925,32 +945,48 @@ public class AuthServiceImpl implements AuthService {
             user = userRepository.save(user);
         } catch (Exception e) {
             log.error("Lỗi khi lưu tài khoản người dùng Google: ", e);
-            throw new RuntimeException("Lỗi hệ thống: Không thể tạo tài khoản người dùng mới");
+            throw new RuntimeException("Lỗi hệ thống: Không thể lưu tài khoản người dùng");
         }
 
-        // 7. Tạo liên kết OAuth
-        UserOAuthProvider oauth = UserOAuthProvider.builder()
-                .user(user)
-                .provider("GOOGLE")
-                .providerUserId(providerUserId)
-                .build();
-        try {
-            userOAuthProviderRepository.save(oauth);
-        } catch (Exception e) {
-            log.error("Lỗi khi lưu liên kết OAuth: ", e);
-            throw new RuntimeException("Lỗi hệ thống: Không thể tạo liên kết OAuth2");
+        // 7. Tạo liên kết OAuth nếu chưa tồn tại
+        if (!userOAuthProviderRepository.existsByProviderAndProviderUserId("GOOGLE", providerUserId)) {
+            UserOAuthProvider oauth = UserOAuthProvider.builder()
+                    .user(user)
+                    .provider("GOOGLE")
+                    .providerUserId(providerUserId)
+                    .build();
+            try {
+                userOAuthProviderRepository.save(oauth);
+            } catch (Exception e) {
+                log.error("Lỗi khi lưu liên kết OAuth: ", e);
+                throw new RuntimeException("Lỗi hệ thống: Không thể tạo liên kết OAuth2");
+            }
         }
 
         // 8. Tạo hồ sơ cá nhân (UserProfile)
-        String picture = (String) googleClaims.get("picture");
-        UserProfile profile = UserProfile.builder()
-                .user(user)
-                .fullName(request.getFullName().trim())
-                .avatarUrl(picture) // lấy avatar mặc định của người dùng từ Google
-                .major(major)
-                .cohort(request.getCohort())
-                .studentCode(studentCode)
-                .build();
+        UserProfile profile;
+        if (isNewUser) {
+            String picture = (String) googleClaims.get("picture");
+            profile = UserProfile.builder()
+                    .user(user)
+                    .fullName(request.getFullName().trim())
+                    .avatarUrl(picture) // lấy avatar mặc định của người dùng từ Google
+                    .major(major)
+                    .cohort(request.getCohort())
+                    .studentCode(studentCode)
+                    .build();
+        } else {
+            profile = userProfileRepository.findById(user.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ người dùng"));
+            profile.setFullName(request.getFullName().trim());
+            profile.setCohort(request.getCohort());
+            profile.setStudentCode(studentCode);
+            profile.setMajor(major);
+            String picture = (String) googleClaims.get("picture");
+            if (picture != null) {
+                profile.setAvatarUrl(picture);
+            }
+        }
 
         try {
             userProfileRepository.save(profile);
@@ -959,30 +995,53 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Lỗi hệ thống: Không thể lưu thông tin hồ sơ cá nhân");
         }
 
-        // 9. Tạo cài đặt mặc định
-        UserSettings settings = UserSettings.builder()
-                .user(user)
-                .theme("SYSTEM")
-                .language("vi")
-                .build();
-        saveUserSettings(settings);
-
-        // 10. Nếu là ALUMNI, tạo yêu cầu xác minh
-        if (roleName.equals("ALUMNI")) {
-            VerificationRequest verRequest = VerificationRequest.builder()
+        // 9. Tạo cài đặt mặc định nếu là user mới
+        if (isNewUser) {
+            UserSettings settings = UserSettings.builder()
                     .user(user)
-                    .graduationYear(request.getGraduationYear())
-                    .major(major)
-                    .proofUrl(request.getProofUrl())
-                    .note(request.getNote())
-                    .status(VerificationStatus.PENDING)
+                    .theme("SYSTEM")
+                    .language("vi")
                     .build();
+            saveUserSettings(settings);
+        }
+
+        // 10. Nếu là ALUMNI, tạo/cập nhật yêu cầu xác minh
+        if (roleName.equals("ALUMNI")) {
+            VerificationRequest verRequest;
+            Optional<VerificationRequest> existingVerRequestOpt = verificationRequestRepository.findByUser(user);
+            if (existingVerRequestOpt.isPresent()) {
+                verRequest = existingVerRequestOpt.get();
+                verRequest.setGraduationYear(request.getGraduationYear());
+                verRequest.setProofUrl(request.getProofUrl());
+                verRequest.setNote(request.getNote());
+                verRequest.setStatus(VerificationStatus.PENDING);
+            } else {
+                verRequest = VerificationRequest.builder()
+                        .user(user)
+                        .graduationYear(request.getGraduationYear())
+                        .proofUrl(request.getProofUrl())
+                        .note(request.getNote())
+                        .status(VerificationStatus.PENDING)
+                        .build();
+            }
+            verRequest.setMajor(major);
+
             try {
                 verificationRequestRepository.save(verRequest);
             } catch (Exception e) {
                 log.error("Lỗi khi lưu yêu cầu xác minh cựu sinh viên qua Google: ", e);
                 throw new RuntimeException("Lỗi hệ thống: Không thể lưu yêu cầu xác minh cựu sinh viên");
             }
+        } else {
+            // Nếu vai trò mới là STUDENT, xóa phiếu xác minh cũ của user này nếu có
+            verificationRequestRepository.findByUser(user).ifPresent(verReq -> {
+                try {
+                    verificationRequestRepository.delete(verReq);
+                } catch (Exception e) {
+                    log.error("Lỗi khi xóa yêu cầu xác minh cũ: ", e);
+                    throw new RuntimeException("Lỗi hệ thống: Không thể xóa yêu cầu xác minh cũ");
+                }
+            });
         }
 
         // 11. Ghi nhận thời gian đăng nhập
