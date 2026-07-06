@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.LogoutRequest;
 import com.alumnect.alumnect_backend.dto.response.auth.LoginResponse;
 
 /**
@@ -78,4 +79,12 @@ public interface AuthService {
      * @return DTO chứa cặp tokens và thông tin tài khoản cơ bản sau khi đăng ký
      */
     LoginResponse registerWithGoogle(GoogleRegisterRequest request, String userAgent, String ipAddress);
+
+    /**
+     * Đăng xuất khỏi hệ thống.
+     * Thu hồi và xóa bỏ Refresh Token khỏi CSDL.
+     *
+     * @param request DTO chứa mã refresh token cần hủy
+     */
+    void logout(LogoutRequest request);
 }

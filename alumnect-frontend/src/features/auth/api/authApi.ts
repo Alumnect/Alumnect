@@ -1,4 +1,5 @@
 import http from '@/lib/http'
+import { useAuthStore } from '@/store/authStore'
 import type { AuthUser, Role } from '@/store/authStore'
 import type { Major, RegisterPayload, PresignedUrlResponse, GoogleRegisterPayload } from '../model/authTypes'
 import type { LoginInput, ForgotInput } from '../model/schemas'
@@ -85,7 +86,8 @@ export const authApi = {
    * Đăng xuất hệ thống
    */
   logout: async () => {
-    await http.post('/auth/logout')
+    const refreshToken = useAuthStore.getState().refreshToken
+    await http.post('/auth/logout', { refreshToken })
   },
 
   /**
