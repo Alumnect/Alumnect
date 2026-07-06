@@ -21,6 +21,7 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.exception.GoogleUserNotFoundException;
+import com.alumnect.alumnect_backend.exception.WaitingApprovalException;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
 import com.alumnect.alumnect_backend.entity.auth.UserOAuthProvider;
@@ -737,7 +738,7 @@ public class AuthServiceImpl implements AuthService {
      * Xác thực Google ID Token, kiểm tra tài khoản liên kết, và trả về cặp tokens.
      */
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = WaitingApprovalException.class)
     public LoginResponse loginWithGoogle(GoogleLoginRequest request, String userAgent, String ipAddress) {
         // 1. Xác thực Google token và lấy thông tin người dùng
         Map<String, Object> googleClaims = verifyGoogleToken(request.getToken());
@@ -797,7 +798,7 @@ public class AuthServiceImpl implements AuthService {
                 user.setEmailVerified(true);
                 user.setAccountVerified(false);
                 userRepository.save(user);
-                throw new BadRequestException("Tài khoản của bạn đang chờ quản trị viên phê duyệt. Vui lòng đợi.");
+                throw new WaitingApprovalException("Tài khoản của bạn đang chờ quản trị viên phê duyệt. Vui lòng đợi.");
             }
             userRepository.save(user);
         }

@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
         data.put("providerUserId", ex.getProviderUserId());
 
         return new ResponseEntity<>(
-                new ApiResponse<>(404, ex.getMessage(), data),
+                ApiResponse.error(404, ex.getMessage(), data),
                 HttpStatus.NOT_FOUND
         );
     }
@@ -88,7 +88,7 @@ public class GlobalExceptionHandler {
         });
 
         return new ResponseEntity<>(
-                new ApiResponse<>(-1, "Dữ liệu gửi lên không hợp lệ", errors),
+                ApiResponse.error(-1, "Dữ liệu gửi lên không hợp lệ", errors),
                 HttpStatus.BAD_REQUEST
         );
     }
