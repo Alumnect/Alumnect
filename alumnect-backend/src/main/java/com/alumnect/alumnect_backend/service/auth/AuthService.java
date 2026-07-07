@@ -87,4 +87,11 @@ public interface AuthService {
      * @param request DTO chứa mã refresh token cần hủy
      */
     void logout(LogoutRequest request);
+
+    /**
+     * Đăng xuất người dùng khỏi tất cả các thiết bị bằng cách thu hồi toàn bộ refresh token.
+     *
+     * @param email Địa chỉ email của người dùng
+     */
+    void logoutAllDevices(String email);
 }

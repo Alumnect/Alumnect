@@ -1103,4 +1103,22 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Lỗi hệ thống: Không thể hoàn tất đăng xuất");
         }
     }
+
+    /**
+     * Đăng xuất người dùng khỏi tất cả các thiết bị bằng cách thu hồi toàn bộ refresh token.
+     *
+     * @param email Địa chỉ email của người dùng
+     */
+    @Override
+    @Transactional
+    public void logoutAllDevices(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+        try {
+            refreshTokenRepository.deleteByUser(user);
+        } catch (Exception e) {
+            log.error("Lỗi xảy ra khi xóa toàn bộ Refresh Token: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể đăng xuất khỏi tất cả các thiết bị");
+        }
+    }
 }

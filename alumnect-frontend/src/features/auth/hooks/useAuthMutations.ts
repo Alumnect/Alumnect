@@ -77,3 +77,9 @@ export function useGoogleRegister() {
     },
   })
 }
+
+export function useLogoutAllDevices() {
+  return useMutation({
+    mutationFn: () => authApi.logoutAllDevices(),
+  })
+}

@@ -17,6 +17,7 @@ import {
   BadgeCheck,
   Megaphone,
   UserCog,
+  Lock,
 } from 'lucide-react'
 
 export const BRAND = {
@@ -64,6 +65,7 @@ export const APP_MORE_NAV: NavItem[] = [
 /** Items inside the avatar / account dropdown. */
 export const APP_ACCOUNT_NAV: NavItem[] = [
   { label: 'My Profile', to: '/app/profile', icon: Users },
+  { label: 'Change Password', to: '/app/change-password', icon: Lock },
   { label: 'Subscription', to: '/app/subscription', icon: CreditCard },
   { label: 'Admin Console', to: '/admin', icon: ShieldCheck },
 ]
