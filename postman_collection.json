@@ -1815,6 +1815,212 @@
 			"description": "Thư mục chứa các API kiểm duyệt và hệ thống chỉ dành cho vai trò Quản trị viên (ADMIN). Yêu cầu Token JWT của ADMIN.",
 			"item": [
 				{
+					"name": "Đăng nhập ADMIN - Thành công",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.accessToken) {",
+									"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@fpt.edu.vn\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "### Đăng nhập với quyền ADMIN\n* **Mục đích**: Lấy JWT token của ADMIN và lưu vào biến `jwtToken` phục vụ các API ADMIN tiếp theo."
+					},
+					"response": []
+				},
+				{
+					"name": "Thống kê tổng quan dashboard - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/dashboard/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"dashboard",
+								"summary"
+							]
+						},
+						"description": "### API Thống Kê Tổng Quan Dashboard\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy số liệu thống kê KPIs hệ thống và biểu đồ số lượng đăng ký 7 ngày qua."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem danh sách người dùng - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users?query=&role=&status=&majorId=&cohort=&page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": ""
+								},
+								{
+									"key": "role",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "majorId",
+									"value": ""
+								},
+								{
+									"key": "cohort",
+									"value": ""
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "### API Xem Danh Sách Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Tìm kiếm, phân trang và lọc người dùng."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết người dùng - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"1"
+							]
+						},
+						"description": "### API Xem Chi Tiết Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy thông tin hồ sơ chi tiết của người dùng bằng ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Khóa tài khoản người dùng - Thành công",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"LOCKED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users/1/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"1",
+								"status"
+							]
+						},
+						"description": "### API Khóa Tài Khoản Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Đổi trạng thái tài khoản thành LOCKED."
+					},
+					"response": []
+				},
+				{
+					"name": "Mở khóa tài khoản người dùng - Thành công",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users/1/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"1",
+								"status"
+							]
+						},
+						"description": "### API Mở Khóa Tài Khoản Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Đổi trạng thái tài khoản thành ACTIVE."
+					},
+					"response": []
+				},
+				{
 					"name": "Xem danh sách yêu cầu xác thực tốt nghiệp PENDING",
 					"request": {
 						"method": "GET",
@@ -1852,7 +2058,7 @@
 				{
 					"name": "Phê duyệt / Từ chối yêu cầu xác thực tốt nghiệp",
 					"request": {
-						"method": "POST",
+						"method": "PUT",
 						"header": [
 							{
 								"key": "Content-Type",
