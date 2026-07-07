@@ -1598,6 +1598,215 @@
 						"description": "### API Cập Nhật Thiết Lập Cài Đặt\n* **Quyền truy cập**: Đã đăng nhập.\n* **Mục đích**: Cập nhật tùy chọn màu nền (LIGHT/DARK/SYSTEM) và ngôn ngữ hiển thị (vi/en) của tài khoản."
 					},
 					"response": []
+				},
+				{
+					"name": "02.3. Đổi mật khẩu (Change Password)",
+					"item": [
+						{
+							"name": "Đổi mật khẩu - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmNewPassword\": \"NewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thành công\n* **Quyền truy cập**: Đã đăng nhập (Bearer Token).\n* **Nghiệp vụ**: Đổi mật khẩu thành công. Sau khi thành công, Frontend sẽ hiển thị Modal hỏi người dùng có muốn đăng xuất khỏi tất cả thiết bị không (gọi API /logout-all riêng).\n* **Kết quả**: 200 OK."
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Sai mật khẩu hiện tại",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"WrongPassword!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmNewPassword\": \"NewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do sai mật khẩu hiện tại\n* **Kết quả**: 400 Bad Request.\n* **Thông báo**: \"Mật khẩu hiện tại không chính xác.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Mật khẩu mới trùng mật khẩu cũ",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"Password123!\",\n  \"confirmNewPassword\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do mật khẩu mới trùng mật khẩu cũ\n* **Kết quả**: 400 Bad Request.\n* **Thông báo**: \"Mật khẩu mới không được trùng với mật khẩu hiện tại.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Xác nhận mật khẩu không khớp",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmNewPassword\": \"DifferentNewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do xác nhận mật khẩu không khớp\n* **Kết quả**: 400 Bad Request.\n* **Thông báo**: \"Xác nhận mật khẩu mới không trùng khớp.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Mật khẩu mới quá yếu (Validation)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"123\",\n  \"confirmNewPassword\": \"123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do mật khẩu mới quá ngắn hoặc thiếu chữ số\n* **Kết quả**: 400 Bad Request (Validation failure)."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng xuất tất cả thiết bị - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/logout-all",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"logout-all"
+									]
+								},
+								"description": "### Đăng xuất tài khoản khỏi tất cả các thiết bị\n* **Quyền truy cập**: Đã đăng nhập (Bearer Token).\n* **Nghiệp vụ**: Xóa sạch toàn bộ refresh tokens của người dùng này khỏi CSDL, buộc đăng nhập lại từ mọi thiết bị."
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},

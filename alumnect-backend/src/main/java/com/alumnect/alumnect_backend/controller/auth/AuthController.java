@@ -9,6 +9,7 @@ import com.alumnect.alumnect_backend.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -151,5 +152,18 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody LogoutRequest request) {
         authService.logout(request);
         return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công!", null));
+    }
+
+    /**
+     * API Đăng xuất tài khoản người dùng khỏi tất cả các thiết bị.
+     * Thu hồi toàn bộ refresh token liên kết với tài khoản này.
+     *
+     * @return Response phản hồi đăng xuất khỏi mọi thiết bị thành công
+     */
+    @PostMapping("/logout-all")
+    public ResponseEntity<ApiResponse<Void>> logoutAll() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        authService.logoutAllDevices(email);
+        return ResponseEntity.ok(ApiResponse.success("Đăng xuất khỏi tất cả các thiết bị thành công!", null));
     }
 }

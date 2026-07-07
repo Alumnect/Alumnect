@@ -20,6 +20,7 @@ import { MessagesPage } from '@/pages/app/MessagesPage'
 import { NotificationsPage } from '@/pages/app/NotificationsPage'
 import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
+import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
 import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminSectionPage } from '@/pages/admin/AdminSectionPage'
@@ -61,6 +62,7 @@ function App() {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="change-password" element={<ChangePasswordPage />} />
         </Route>
 
         {/* Admin console */}

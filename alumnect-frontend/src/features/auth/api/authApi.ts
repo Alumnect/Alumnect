@@ -91,6 +91,12 @@ export const authApi = {
   },
 
   /**
+   * Đăng xuất người dùng khỏi tất cả thiết bị
+   */
+  logoutAllDevices: () =>
+    http.post<any, ApiResponse<void>>('/auth/logout-all', {}),
+
+  /**
    * Đăng nhập bằng Google OAuth2 ID Token
    */
   loginWithGoogle: async (token: string): Promise<AuthResponse> => {
