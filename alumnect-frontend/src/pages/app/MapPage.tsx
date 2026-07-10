@@ -1,6 +1,8 @@
 /**
  * MapPage – Trang Alumni Geo-Dashboard.
  *
+ * Cập nhật: Tách riêng tính năng Bản đồ cựu sinh viên (Alumni Map) khỏi Career Path.
+ *
  * Kiến trúc bản đồ mới:
  * - MapLibre GL JS là engine duy nhất (một instance)
  * - VietMap style cho Việt Nam
