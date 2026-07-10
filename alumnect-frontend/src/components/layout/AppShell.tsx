@@ -193,16 +193,16 @@ export function AppShell() {
                   panelClass="w-64"
                   button={
                     <span className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-plum-900/[0.05]">
-                      <Avatar src={user.avatarUrl} name={user.name} size={36} ring />
+                      <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={36} ring />
                       <ChevronDown size={15} className="hidden text-plum-400 sm:block" />
                     </span>
                   }
                 >
                   <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-brand-50">
-                    <Avatar src={user.avatarUrl} name={user.name} size={42} verified={user.verified} />
+                    <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={42} verified={user?.verified} />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-plum-900">{user.name}</p>
-                      <p className="truncate text-xs text-brand-600">{user.verified ? 'Verified ' : ''}{roleLabel}</p>
+                      <p className="truncate text-sm font-bold text-plum-900">{user?.name}</p>
+                      <p className="truncate text-xs text-brand-600">{user?.verified ? 'Verified ' : ''}{roleLabel}</p>
                     </div>
                   </Link>
                   <div className="my-1 h-px bg-plum-900/[0.07]" />
