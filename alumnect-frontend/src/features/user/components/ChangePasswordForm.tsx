@@ -7,8 +7,8 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useChangePassword } from '../hooks/useUserMutations'
-import { changePasswordSchema } from '../model/userTypes'
-import type { ChangePasswordFormValues } from '../model/userTypes'
+import { changePasswordSchema } from '../model/schemas'
+import type { ChangePasswordFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
 import { Field, useLogoutAllDevices } from '@/features/auth'
 

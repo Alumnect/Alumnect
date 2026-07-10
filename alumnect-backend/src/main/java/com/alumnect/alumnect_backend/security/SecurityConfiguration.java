@@ -15,6 +15,9 @@ import com.alumnect.alumnect_backend.security.filter.JwtFilter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import jakarta.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import java.util.Arrays;
 
 /**
@@ -63,6 +66,26 @@ public class SecurityConfiguration {
                 .requestMatchers(Endpoints.ADMIN_ENDPOINT).hasRole("ADMIN")
                 // Mọi request còn lại đều phải được xác thực bằng JWT
                 .anyRequest().authenticated());
+
+        // Cấu hình Exception Handling để trả về JSON chuẩn cho lỗi 401 và 403
+        http.exceptionHandling(exception -> exception
+                // Lỗi 401: Chưa xác thực (chưa đăng nhập hoặc token hết hạn/không hợp lệ)
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                    response.setContentType("application/json;charset=UTF-8");
+                    ApiResponse<Void> apiResponse = ApiResponse.error(401, "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.");
+                    response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+                    response.getWriter().flush();
+                })
+                // Lỗi 403: Đã xác thực nhưng thiếu quyền truy cập (ví dụ STUDENT truy cập ADMIN API)
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+                    response.setContentType("application/json;charset=UTF-8");
+                    ApiResponse<Void> apiResponse = ApiResponse.error(403, "Bạn không có quyền thực hiện chức năng này.");
+                    response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+                    response.getWriter().flush();
+                })
+        );
 
         // Cấu hình CORS - Cho phép tất cả các nguồn truy cập phục vụ chạy cục bộ/mobile
         http.cors(cors -> cors.configurationSource(request -> {

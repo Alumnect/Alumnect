@@ -41,6 +41,9 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
+        {/* Public profile view for sharing/guests */}
+        <Route path="/profile" element={<ProfilePage />} />
+
         {/* Authenticated member app */}
         <Route
           path="/app"

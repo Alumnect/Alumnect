@@ -31,6 +31,7 @@ export interface AdminUserDto {
   }
   cohort?: number
   headline?: string
+  socialLinks?: string[]
 }
 
 export interface AdminVerificationRequestDto {

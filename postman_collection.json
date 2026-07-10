@@ -1548,12 +1548,18 @@
 			"description": "Thư mục chứa các API quản lý thông tin cá nhân và thiết lập của người dùng. Các API này yêu cầu xác thực bằng JWT.",
 			"item": [
 				{
-					"name": "Lấy thông tin cá nhân hiện tại",
+					"name": "Lấy hồ sơ cá nhân hiện tại (Own Profile) - Thành công",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/users/me",
+							"raw": "{{baseUrl}}/api/v1/users/profile",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1561,10 +1567,76 @@
 								"api",
 								"v1",
 								"users",
-								"me"
+								"profile"
 							]
 						},
-						"description": "### API Lấy Thông Tin Cá Nhân\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu JWT Token ở header dưới dạng Bearer Token).\n* **Mục đích**: Trả về chi tiết trang cá nhân hiện tại bao gồm Họ tên, Ảnh đại diện, Chuyên ngành, Niên khóa."
+						"description": "### API Lấy Hồ Sơ Cá Nhân Hiện Tại\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu JWT Token ở header).\n* **Mục đích**: Trả về thông tin chi tiết hồ sơ cá nhân của người dùng hiện tại."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy hồ sơ người dùng khác (Other Profile) - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile",
+								"1"
+							]
+						},
+						"description": "### API Lấy Hồ Sơ Người Dùng Khác\n* **Quyền truy cập**: Công khai (Không cần Token).\n* **Mục đích**: Trả về thông tin chi tiết hồ sơ của người dùng khác qua ID khi tài khoản đó có trạng thái ACTIVE."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy hồ sơ người dùng khác - Thất bại do tài khoản bị khóa/chưa kích hoạt",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile",
+								"3"
+							]
+						},
+						"description": "### API Lấy Hồ Sơ Người Dùng Khác Thất Bại\n* **Quyền truy cập**: Công khai.\n* **Nghiệp vụ**: Trả về lỗi 400 Bad Request nếu tài khoản người dùng cần xem bị khóa hoặc chưa kích hoạt (status khác ACTIVE).\n* **Mong đợi**: 400 Bad Request, message \"Tài khoản người dùng này chưa được kích hoạt hoặc đã bị khóa.\""
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy hồ sơ người dùng khác - Thất bại do không tồn tại ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile/9999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile",
+								"9999"
+							]
+						},
+						"description": "### API Lấy Hồ Sơ Người Dùng Khác Thất Bại Do Không Tồn Tại\n* **Mong đợi**: 404 Not Found, message \"Không tìm thấy tài khoản người dùng với ID: 9999\""
 					},
 					"response": []
 				},
@@ -2455,6 +2527,16 @@
 		{
 			"key": "refreshToken",
 			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "studentOtpToken",
+			"value": "123456",
+			"type": "string"
+		},
+		{
+			"key": "alumniOtpToken",
+			"value": "123456",
 			"type": "string"
 		}
 	]
