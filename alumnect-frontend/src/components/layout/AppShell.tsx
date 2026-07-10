@@ -6,7 +6,6 @@ import { Search, Bell, Plus, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown 
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
-import { DEMO_USER } from '@/config/auth'
 import { useLogout } from '@/features/auth'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
@@ -70,9 +69,9 @@ export function AppShell() {
   const [sheet, setSheet] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const user = useAuthStore((s) => s.user) ?? DEMO_USER
+  const user = useAuthStore((s) => s.user)
   const logoutM = useLogout()
-  const roleLabel = user.role === 'ADMIN' ? 'Admin' : user.role === 'STUDENT' ? 'Student' : 'Alumni'
+  const roleLabel = user ? (user.role === 'ADMIN' ? 'Admin' : user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
 
   return (
     <div className="relative min-h-screen bg-cream-100 text-plum-600">

@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store/authStore'
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const http: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -64,7 +64,9 @@ http.interceptors.response.use(
     }
 
     const data = error.response.data as { message?: string } | undefined
-    return Promise.reject(new Error(data?.message ?? 'Đã có lỗi hệ thống xảy ra'))
+    const finalError = new Error(data?.message ?? 'Đã có lỗi hệ thống xảy ra') as any
+    finalError.data = error.response.data
+    return Promise.reject(finalError)
   },
 )
 

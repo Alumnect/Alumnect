@@ -1,35 +1,100 @@
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { AUTH_ENFORCED, DEMO_USER } from '@/config/auth'
+import { useGoogleLogin } from '../hooks/useAuthMutations'
 
-/** Google OAuth button. Demo mode creates a local session; real OAuth is TODO. */
+/** Nút đăng nhập Google OAuth. Tích hợp trực tiếp Google Identity Services SDK. */
 export function GoogleButton({ label }: { label: string }) {
   const navigate = useNavigate()
-  const login = useAuthStore((s) => s.login)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const googleLoginMutation = useGoogleLogin()
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const onClick = () => {
-    if (!AUTH_ENFORCED) {
-      login({ user: DEMO_USER, accessToken: 'demo-access', refreshToken: 'demo-refresh' })
-      navigate('/app')
-      return
+  const handleCredentialResponse = async (response: any) => {
+    const idToken = response.credential
+    try {
+      await googleLoginMutation.mutateAsync(idToken)
+    } catch (err: any) {
+      console.error('Google login failed:', err)
+      // Nếu lỗi 404 (Tài khoản chưa tồn tại), chuyển hướng sang trang đăng ký và điền sẵn thông tin
+      if (err.data?.error === 404) {
+        const metadata = err.data.data // { email, fullName, providerUserId }
+        navigate('/register', {
+          state: {
+            googleData: {
+              email: metadata.email,
+              fullName: metadata.fullName,
+              token: idToken
+            }
+          }
+        })
+      }
     }
-    // TODO: redirect to the backend Google OAuth 2.0 authorize endpoint.
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`
+  }
+
+  useEffect(() => {
+    if (isAuthenticated) return
+
+    const initializeGoogleSignIn = () => {
+      if (window.google && containerRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+          callback: handleCredentialResponse,
+        })
+        window.google.accounts.id.renderButton(containerRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: containerRef.current.clientWidth || 340,
+          text: label.toLowerCase().includes('đăng ký') ? 'signup_with' : 'signin_with',
+          shape: 'rectangular',
+        })
+      }
+    }
+
+    if (window.google) {
+      initializeGoogleSignIn()
+    } else {
+      const interval = setInterval(() => {
+        if (window.google) {
+          initializeGoogleSignIn()
+          clearInterval(interval)
+        }
+      }, 500)
+      return () => clearInterval(interval)
+    }
+  }, [isAuthenticated, label])
+
+  if (isAuthenticated) {
+    return null
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-plum-900/15 bg-white text-sm font-semibold text-plum-800 transition-colors hover:bg-cream-100"
-    >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
-        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
-        <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
-        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z" />
-      </svg>
-      {label}
-    </button>
+    <div className="w-full flex flex-col items-center gap-3">
+      <div className="w-full flex justify-center min-h-[48px] relative">
+        {/* Loading overlay hiển thị đè lên nút khi đang xử lý */}
+        {googleLoginMutation.isPending && (
+          <div className="absolute inset-0 z-10 flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-plum-900/15 bg-white text-sm font-semibold text-plum-800">
+            <svg className="animate-spin h-5 w-5 text-plum-500" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Đang kết nối với Google...
+          </div>
+        )}
+        
+        {/* Giữ container Google luôn được mount để tránh bị mất nút Google sau khi kết nối kết thúc */}
+        <div 
+          ref={containerRef} 
+          className={`w-full flex justify-center ${googleLoginMutation.isPending ? 'invisible pointer-events-none' : ''}`} 
+          id="google-signin-btn-container" 
+        />
+      </div>
+      {googleLoginMutation.isError && googleLoginMutation.error?.message && (
+        <p className="w-full rounded-xl bg-coral-50 border border-coral-200/50 px-3 py-2 text-xs font-medium text-coral-600 text-center animate-pop">
+          {googleLoginMutation.error.message}
+        </p>
+      )}
+    </div>
   )
 }
+

@@ -20,6 +20,7 @@ import { MessagesPage } from '@/pages/app/MessagesPage'
 import { NotificationsPage } from '@/pages/app/NotificationsPage'
 import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
+import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
 import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminSectionPage } from '@/pages/admin/AdminSectionPage'
@@ -40,6 +41,9 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
+        {/* Public profile view for sharing/guests */}
+        <Route path="/profile" element={<ProfilePage />} />
+
         {/* Authenticated member app */}
         <Route
           path="/app"
@@ -57,6 +61,7 @@ function App() {
           <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="change-password" element={<ChangePasswordPage />} />
         </Route>
 
         {/* Admin console */}

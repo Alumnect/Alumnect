@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,24 +8,27 @@ import {
   ArrowRight, BadgeCheck, Upload, Loader2, Sparkles, CheckCircle2, AlertCircle
 } from 'lucide-react'
 import { useMajors, useRegister, usePresignedUrl } from '../hooks/useAuth'
+import { useGoogleRegister } from '../hooks/useAuthMutations'
 import { Field } from './AuthScaffold'
 import { GoogleButton } from './GoogleButton'
-import { registerSchema } from '../model/authTypes'
-import type { RegisterFormValues } from '../model/authTypes'
+import { registerSchema, googleRegisterSchema } from '../model/schemas'
+import type { RegisterFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 
 interface RegisterFormProps {
+  googleData?: { email: string; fullName: string; token: string }
   onSuccess: (email: string, role: 'STUDENT' | 'ALUMNI') => void
 }
 
-export function RegisterForm({ onSuccess }: RegisterFormProps) {
+export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
   const { data: majors = [], isLoading: isLoadingMajors } = useMajors()
   const registerMutation = useRegister()
+  const googleRegisterMutation = useGoogleRegister()
   const presignedUrlMutation = usePresignedUrl()
 
   const {
@@ -34,16 +37,26 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema) as any,
+  } = useForm<RegisterFormValues & { token?: string }>({
+    resolver: zodResolver(googleData ? googleRegisterSchema : registerSchema) as any,
     defaultValues: {
       role: 'STUDENT',
-      fullName: '',
-      email: '',
+      fullName: googleData?.fullName || '',
+      email: googleData?.email || '',
       password: '',
+      token: googleData?.token || '',
       note: '',
     },
   })
+
+  // Cập nhật giá trị form khi googleData thay đổi (chuyển đổi sang đăng ký bằng Google)
+  useEffect(() => {
+    if (googleData) {
+      setValue('email', googleData.email, { shouldValidate: true, shouldDirty: true })
+      setValue('fullName', googleData.fullName, { shouldValidate: true, shouldDirty: true })
+      setValue('token', googleData.token)
+    }
+  }, [googleData, setValue])
 
   const currentRole = watch('role')
   const currentProofUrl = watch('proofUrl')
@@ -81,22 +94,35 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     }
   }
 
-  const onSubmit = async (data: RegisterFormValues) => {
+  const onSubmit = async (data: RegisterFormValues & { token?: string }) => {
     try {
-      await registerMutation.mutateAsync({
-        fullName: data.fullName,
-        email: data.email,
-        password: data.password,
-        role: data.role,
-        majorId: Number(data.majorId),
-        cohort: Number(data.cohort),
-        studentCode: data.studentCode,
-        graduationYear: data.graduationYear ? Number(data.graduationYear) : undefined,
-        proofUrl: data.proofUrl || undefined,
-        note: data.note || undefined,
-      })
-
-      onSuccess(data.email, data.role)
+      if (googleData) {
+        await googleRegisterMutation.mutateAsync({
+          token: googleData.token,
+          fullName: data.fullName,
+          role: data.role,
+          majorId: Number(data.majorId),
+          cohort: Number(data.cohort),
+          studentCode: data.studentCode,
+          graduationYear: data.graduationYear ? Number(data.graduationYear) : undefined,
+          proofUrl: data.proofUrl || undefined,
+          note: data.note || undefined,
+        })
+      } else {
+        await registerMutation.mutateAsync({
+          fullName: data.fullName,
+          email: data.email,
+          password: data.password,
+          role: data.role,
+          majorId: Number(data.majorId),
+          cohort: Number(data.cohort),
+          studentCode: data.studentCode,
+          graduationYear: data.graduationYear ? Number(data.graduationYear) : undefined,
+          proofUrl: data.proofUrl || undefined,
+          note: data.note || undefined,
+        })
+        onSuccess(data.email, data.role)
+      }
     } catch (err: any) {
       console.error(err)
     }
@@ -110,6 +136,18 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       </div>
       <h2 className="mt-1 text-3xl font-extrabold text-plum-900 tracking-tight">Đăng ký tài khoản</h2>
       <p className="mt-1 text-sm text-plum-500">Kết nối với cộng đồng sinh viên và cựu sinh viên FPTU.</p>
+
+      {googleData && (
+        <div className="mt-4 rounded-xl bg-brand-500/10 border border-brand-500/20 p-3 text-xs text-brand-700 flex items-start gap-2 animate-pop">
+          <Sparkles size={16} className="shrink-0 mt-0.5 text-brand-600 animate-pulse" />
+          <div>
+            <p className="font-bold">Đăng ký qua Google</p>
+            <p className="mt-0.5 text-plum-600">
+              Hệ thống đã nhận email xác thực <strong className="text-plum-900 font-semibold">{googleData.email}</strong>. Vui lòng điền nốt thông tin dưới đây để hoàn tất hồ sơ.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Chọn vai trò (Role Selector) */}
       <div className="mt-6 grid grid-cols-2 gap-3">
@@ -139,10 +177,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         })}
       </div>
 
-      {registerMutation.isError && (
+      {(registerMutation.isError || googleRegisterMutation.isError) && (
         <div className="mt-4 rounded-xl bg-coral-50 border border-coral-200/50 p-3 text-xs text-coral-600 flex items-start gap-2 animate-pop">
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
-          <span>{registerMutation.error.message}</span>
+          <span>{registerMutation.error?.message || googleRegisterMutation.error?.message}</span>
         </div>
       )}
 
@@ -162,27 +200,31 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           placeholder="you@fpt.edu.vn" 
           icon={<Mail size={16} />} 
           error={errors.email?.message}
+          disabled={!!googleData}
+          className={cn(googleData && 'bg-plum-900/[0.05] cursor-not-allowed')}
           {...register('email')}
         />
 
-        <Field
-          label="Mật khẩu"
-          type={showPassword ? 'text' : 'password'}
-          placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
-          icon={<Lock size={16} />}
-          error={errors.password?.message}
-          {...register('password')}
-          trailing={
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
-              aria-label="Ẩn/hiện mật khẩu"
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          }
-        />
+        {!googleData && (
+          <Field
+            label="Mật khẩu"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
+            icon={<Lock size={16} />}
+            error={errors.password?.message}
+            {...register('password')}
+            trailing={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+                aria-label="Ẩn/hiện mật khẩu"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            }
+          />
+        )}
 
         {/* Dropdown Chuyên ngành */}
         <label className="block">
@@ -299,20 +341,24 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           variant="primary" 
           size="lg" 
           className="w-full mt-4" 
-          disabled={registerMutation.isPending || isUploading}
-          rightIcon={registerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
+          disabled={registerMutation.isPending || googleRegisterMutation.isPending || isUploading}
+          rightIcon={registerMutation.isPending || googleRegisterMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
         >
-          {registerMutation.isPending ? 'Đang đăng ký...' : 'Đăng ký tài khoản'}
+          {registerMutation.isPending || googleRegisterMutation.isPending ? 'Đang đăng ký...' : 'Đăng ký tài khoản'}
         </Button>
       </form>
 
-      <div className="my-6 flex items-center gap-4">
-        <span className="h-px flex-1 bg-plum-900/[0.06]" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-plum-300">hoặc</span>
-        <span className="h-px flex-1 bg-plum-900/[0.06]" />
-      </div>
+      {!googleData && (
+        <>
+          <div className="my-6 flex items-center gap-4">
+            <span className="h-px flex-1 bg-plum-900/[0.06]" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-plum-300">hoặc</span>
+            <span className="h-px flex-1 bg-plum-900/[0.06]" />
+          </div>
 
-      <GoogleButton label="Đăng ký bằng Google" />
+          <GoogleButton label="Đăng ký bằng Google" />
+        </>
+      )}
 
       <p className="mt-8 text-center text-sm text-plum-500">
         Đã có tài khoản?{' '}

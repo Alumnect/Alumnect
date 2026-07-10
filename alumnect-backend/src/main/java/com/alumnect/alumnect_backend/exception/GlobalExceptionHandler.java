@@ -34,6 +34,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Xử lý ngoại lệ GoogleUserNotFoundException khi người dùng Google chưa đăng ký tài khoản.
+     * Trả về HTTP Status 404 (Not Found) kèm thông tin cơ bản để điền form đăng ký.
+     */
+    @ExceptionHandler(GoogleUserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleGoogleUserNotFoundException(GoogleUserNotFoundException ex) {
+        Map<String, String> data = new HashMap<>();
+        data.put("email", ex.getEmail());
+        data.put("fullName", ex.getFullName());
+        data.put("providerUserId", ex.getProviderUserId());
+
+        return new ResponseEntity<>(
+                ApiResponse.error(404, ex.getMessage(), data),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    /**
      * Xử lý ngoại lệ ConflictException khi tài nguyên bị xung đột (VD: email bị trùng).
      * Trả về HTTP Status 409 (Conflict).
      */
@@ -71,7 +88,7 @@ public class GlobalExceptionHandler {
         });
 
         return new ResponseEntity<>(
-                new ApiResponse<>(-1, "Dữ liệu gửi lên không hợp lệ", errors),
+                ApiResponse.error(-1, "Dữ liệu gửi lên không hợp lệ", errors),
                 HttpStatus.BAD_REQUEST
         );
     }
