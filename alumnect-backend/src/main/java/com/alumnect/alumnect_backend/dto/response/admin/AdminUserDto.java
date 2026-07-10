@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * DTO chứa thông tin hồ sơ chi tiết người dùng phục vụ cho danh sách và chi tiết của Admin.
@@ -72,18 +73,10 @@ public class AdminUserDto {
     /** Tiểu sử/Giới thiệu bản thân */
     private String biography;
 
-    /** Vị trí công việc hiện tại */
-    private String currentPosition;
-
-    /** Công ty làm việc hiện tại */
-    private String currentCompany;
 
     /** Thành phố sinh sống */
     private String city;
 
-    /** URL website cá nhân */
-    private String websiteUrl;
-
-    /** URL LinkedIn */
-    private String linkedinUrl;
+    /** Danh sách liên kết mạng xã hội/website */
+    private List<String> socialLinks;
 }

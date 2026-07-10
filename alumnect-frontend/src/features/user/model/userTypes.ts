@@ -9,7 +9,6 @@ export interface MajorResponse {
   code: string
   name: string
 }
-
 export interface ExperienceResponse {
   id: number
   title: string
