@@ -14,6 +14,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alumnect.alumnect_backend.dao.user.ExperienceRepository;
+import com.alumnect.alumnect_backend.dto.response.user.PrimaryExperienceResponse;
+import com.alumnect.alumnect_backend.entity.user.Experience;
+
 /**
  * Lớp triển khai dịch vụ (Service Implementation) quản lý thông tin tài khoản người dùng.
  * Thực thi interface {@link UserService}.
@@ -26,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final ExperienceRepository experienceRepository;
 
 
     /**
@@ -87,7 +92,9 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException("Không tìm thấy hồ sơ cá nhân cho tài khoản: " + email);
         }
 
-        return userProfileMapper.toResponse(user.getProfile());
+        UserProfileResponse response = userProfileMapper.toResponse(user.getProfile());
+        populatePrimaryExperience(user.getId(), response);
+        return response;
     }
 
     /**
@@ -113,7 +120,23 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Tài khoản người dùng này chưa được kích hoạt hoặc đã bị khóa.");
         }
 
-        return userProfileMapper.toResponse(targetUser.getProfile());
+        UserProfileResponse response = userProfileMapper.toResponse(targetUser.getProfile());
+        populatePrimaryExperience(targetUser.getId(), response);
+        return response;
+    }
+
+    private void populatePrimaryExperience(Long userId, UserProfileResponse response) {
+        experienceRepository.findByUserIdAndIsPrimaryTrue(userId).ifPresent(exp -> {
+            PrimaryExperienceResponse per = PrimaryExperienceResponse.builder()
+                    .id(exp.getId())
+                    .title(exp.getTitle())
+                    .company(exp.getCompany())
+                    .location(exp.getLocation())
+                    .latitude(exp.getLatitude())
+                    .longitude(exp.getLongitude())
+                    .build();
+            response.setPrimaryExperience(per);
+        });
     }
 }
 
