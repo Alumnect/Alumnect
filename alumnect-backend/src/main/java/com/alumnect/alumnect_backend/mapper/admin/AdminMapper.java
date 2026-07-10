@@ -39,10 +39,7 @@ public interface AdminMapper {
     @Mapping(target = "lastLoginAt", source = "user.lastLoginAt")
     @Mapping(target = "headline", source = "profile.headline")
     @Mapping(target = "biography", source = "profile.biography")
-    @Mapping(target = "currentPosition", source = "profile.currentPosition")
-    @Mapping(target = "currentCompany", source = "profile.currentCompany")
     @Mapping(target = "city", source = "profile.city")
-    @Mapping(target = "websiteUrl", source = "profile.websiteUrl")
-    @Mapping(target = "linkedinUrl", source = "profile.linkedinUrl")
+    @Mapping(target = "socialLinks", source = "profile.socialLinks")
     AdminUserDto toDto(User user, UserProfile profile);
 }
