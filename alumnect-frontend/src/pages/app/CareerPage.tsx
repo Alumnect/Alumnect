@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Route as RouteIcon,
   Search,
@@ -31,6 +32,16 @@ export function CareerPage() {
   const [cohort, setCohort] = useState<number | ''>('')
   const [majorId] = useState<number | ''>('')
   const [page, setPage] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const [debouncedFilters, setDebouncedFilters] = useState({
     search: '', title: '', company: '', location: '',
@@ -247,113 +258,129 @@ export function CareerPage() {
         </div>
       )}
 
-      {/* ===== PREMIUM SIDE DRAWER ===== */}
-      <AnimatePresence>
-        {selectedAlumni && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.22 }}
-              onClick={() => setSelectedAlumni(null)}
-              className="fixed inset-0 z-40 bg-plum-900/25 backdrop-blur-[2px]"
-            />
+      {mounted && createPortal(
+        <AnimatePresence>
+          {selectedAlumni && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                key="backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.22 }}
+                onClick={() => setSelectedAlumni(null)}
+                className="fixed inset-0 z-[100] bg-plum-900/25 backdrop-blur-[2px]"
+              />
 
-            {/* Side Drawer Panel */}
-            <motion.aside
-              key="drawer"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', stiffness: 360, damping: 40, mass: 0.85 }}
-              className="fixed top-0 right-0 z-50 h-full w-full max-w-[460px] flex flex-col bg-white"
-              style={{ boxShadow: '-20px 0 60px -16px rgb(50 44 63 / 0.22)', borderLeft: '1px solid rgb(50 44 63 / 0.07)' }}
-            >
-              {/* ── Gradient Header ── */}
-              <div
-                className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden"
-                style={{ background: 'linear-gradient(140deg, #f2f3ff 0%, #faf4ec 60%, #fff0f8 100%)', borderBottom: '1px solid rgb(50 44 63 / 0.06)' }}
+              {/* Side Drawer Panel */}
+              <motion.aside
+                key="drawer"
+                initial={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
+                animate={{ x: 0, y: 0 }}
+                exit={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 40, mass: 0.85 }}
+                className={`fixed z-[110] flex flex-col bg-white ${
+                  isMobile
+                    ? 'bottom-0 left-0 right-0 top-auto h-[85vh] w-full rounded-t-3xl border-t'
+                    : 'top-0 right-0 bottom-0 h-full w-full max-w-[460px] rounded-l-3xl border-l'
+                }`}
+                style={{
+                  boxShadow: isMobile
+                    ? '0 -10px 40px -12px rgb(50 44 63 / 0.16)'
+                    : '-20px 0 60px -16px rgb(50 44 63 / 0.22)',
+                  borderColor: 'rgb(50 44 63 / 0.07)'
+                }}
               >
-                {/* Decorative glow blobs */}
-                <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle, #bcc0fb, transparent 70%)' }} />
-                <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
-
-                {/* Close */}
-                <button
-                  onClick={() => setSelectedAlumni(null)}
-                  className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-plum-400 hover:text-plum-900 hover:bg-white/80 active:scale-90 transition-all duration-150 cursor-pointer"
+                {isMobile && (
+                  <div className="shrink-0 flex justify-center py-2 bg-gradient-to-b from-[#f2f3ff] to-transparent">
+                    <div className="w-10 h-1 rounded-full bg-plum-300/40" />
+                  </div>
+                )}
+                {/* ── Gradient Header ── */}
+                <div
+                  className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden"
+                  style={{ background: 'linear-gradient(140deg, #f2f3ff 0%, #faf4ec 60%, #fff0f8 100%)', borderBottom: '1px solid rgb(50 44 63 / 0.06)' }}
                 >
-                  <X size={16} strokeWidth={2.5} />
-                </button>
+                  {/* Decorative glow blobs */}
+                  <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle, #bcc0fb, transparent 70%)' }} />
+                  <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
 
-                {/* Avatar + Name */}
-                <div className="flex items-start gap-4 pr-8">
-                  <Avatar
-                    src={selectedAlumni.avatarUrl}
-                    name={selectedAlumni.fullName}
-                    size={66}
-                    verified={selectedAlumni.verifiedStatus}
-                    className="rounded-2xl"
-                    ring
-                  />
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    <h2 className="text-lg font-extrabold text-plum-900 leading-tight">{selectedAlumni.fullName}</h2>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
-                      <span className="inline-block text-[11px] font-bold text-brand-700 bg-brand-100 border border-brand-200/50 px-2.5 py-0.5 rounded-full">
-                        {selectedAlumni.major || 'Đại học FPT'}
-                      </span>
-                      {selectedAlumni.cohort && (
-                        <span className="text-[11px] text-plum-500 font-semibold">Khóa K{selectedAlumni.cohort}</span>
+                  {/* Close */}
+                  <button
+                    onClick={() => setSelectedAlumni(null)}
+                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-plum-400 hover:text-plum-900 hover:bg-white/80 active:scale-90 transition-all duration-150 cursor-pointer"
+                  >
+                    <X size={16} strokeWidth={2.5} />
+                  </button>
+
+                  {/* Avatar + Name */}
+                  <div className="flex items-start gap-4 pr-8">
+                    <Avatar
+                      src={selectedAlumni.avatarUrl}
+                      name={selectedAlumni.fullName}
+                      size={66}
+                      verified={selectedAlumni.verifiedStatus}
+                      className="rounded-2xl"
+                      ring
+                    />
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <h2 className="text-lg font-extrabold text-plum-900 leading-tight">{selectedAlumni.fullName}</h2>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
+                        <span className="inline-block text-[11px] font-bold text-brand-700 bg-brand-100 border border-brand-200/50 px-2.5 py-0.5 rounded-full">
+                          {selectedAlumni.major || 'Đại học FPT'}
+                        </span>
+                        {selectedAlumni.cohort && (
+                          <span className="text-[11px] text-plum-500 font-semibold">Khóa K{selectedAlumni.cohort}</span>
+                        )}
+                      </div>
+                      {(selectedAlumni.currentTitle || selectedAlumni.currentCompany) && (
+                        <div className="mt-2 flex items-start gap-1.5">
+                          <Briefcase size={11} className="text-brand-500 mt-0.5 shrink-0" />
+                          <p className="text-[11px] text-plum-600 leading-snug">
+                            <span className="font-bold text-plum-800">{selectedAlumni.currentTitle}</span>
+                            {selectedAlumni.currentCompany && <> · <span className="font-medium">{selectedAlumni.currentCompany}</span></>}
+                            {selectedAlumni.currentLocation && <span className="text-plum-400"> · {selectedAlumni.currentLocation}</span>}
+                          </p>
+                        </div>
                       )}
                     </div>
-                    {(selectedAlumni.currentTitle || selectedAlumni.currentCompany) && (
-                      <div className="mt-2 flex items-start gap-1.5">
-                        <Briefcase size={11} className="text-brand-500 mt-0.5 shrink-0" />
-                        <p className="text-[11px] text-plum-600 leading-snug">
-                          <span className="font-bold text-plum-800">{selectedAlumni.currentTitle}</span>
-                          {selectedAlumni.currentCompany && <> · <span className="font-medium">{selectedAlumni.currentCompany}</span></>}
-                          {selectedAlumni.currentLocation && <span className="text-plum-400"> · {selectedAlumni.currentLocation}</span>}
-                        </p>
+                  </div>
+
+                  {/* Stat chips */}
+                  <div className="flex items-center gap-2 mt-4">
+                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
+                      <Star size={11} className="text-gold-500" />
+                      <span className="text-[11px] font-bold text-plum-700">{selectedAlumni.totalExperiences} vai trò</span>
+                    </div>
+                    {selectedAlumni.cohort && (
+                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
+                        <Calendar size={11} className="text-brand-400" />
+                        <span className="text-[11px] font-bold text-plum-700">Khóa K{selectedAlumni.cohort}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Stat chips */}
-                <div className="flex items-center gap-2 mt-4">
-                  <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
-                    <Star size={11} className="text-gold-500" />
-                    <span className="text-[11px] font-bold text-plum-700">{selectedAlumni.totalExperiences} vai trò</span>
-                  </div>
-                  {selectedAlumni.cohort && (
-                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
-                      <Calendar size={11} className="text-brand-400" />
-                      <span className="text-[11px] font-bold text-plum-700">Khóa K{selectedAlumni.cohort}</span>
-                    </div>
-                  )}
+                {/* ── Scrollable Timeline ── */}
+                <div className="flex-1 overflow-y-auto px-6 py-5">
+                  <CareerDetailTimeline userId={selectedAlumni.userId} />
                 </div>
-              </div>
 
-              {/* ── Scrollable Timeline ── */}
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-                <CareerDetailTimeline userId={selectedAlumni.userId} />
-              </div>
-
-              {/* ── Footer CTA ── */}
-              <div
-                className="shrink-0 px-6 py-4 flex items-center justify-between gap-3"
-                style={{ borderTop: '1px solid rgb(50 44 63 / 0.06)', background: 'linear-gradient(to top, #fff 70%, transparent)' }}
-              >
-                <p className="text-[10px] text-plum-400 font-medium">Nhấn Esc để đóng</p>
-                <ViewProfileButton userId={selectedAlumni.userId} />
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+                {/* ── Footer CTA ── */}
+                <div
+                  className="shrink-0 px-6 py-4 flex items-center justify-between gap-3"
+                  style={{ borderTop: '1px solid rgb(50 44 63 / 0.06)', background: 'linear-gradient(to top, #fff 70%, transparent)' }}
+                >
+                  <p className="text-[10px] text-plum-400 font-medium">Nhấn Esc để đóng</p>
+                  <ViewProfileButton userId={selectedAlumni.userId} />
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }
