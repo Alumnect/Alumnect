@@ -1,17 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { alumniMapApi } from '../api/alumniMapApi'
+import type { AlumniMapFilters } from '../api/alumniMapApi'
 
 /**
  * Custom hook lấy danh sách vị trí địa lý của cựu sinh viên từ API Backend.
- * Dữ liệu được quản lý và cache bởi React Query với thời gian sống (staleTime) là 5 phút.
- *
- * @returns Đối tượng useQuery chứa trạng thái dữ liệu (data), tải (isLoading), lỗi (error)
  */
-export function useAlumniMap() {
+export function useAlumniMap(filters?: AlumniMapFilters) {
   return useQuery({
-    queryKey: ['alumniMap'],
+    queryKey: ['alumniMap', filters],
     queryFn: async () => {
-      const response = await alumniMapApi.getLocations()
+      const response = await alumniMapApi.getLocations(filters)
       return response.data
     },
     staleTime: 1000 * 60 * 5, // 5 phút cache

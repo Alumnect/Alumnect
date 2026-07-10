@@ -9,7 +9,7 @@
  *
  * Use cases: UC53, UC54, UC55
  */
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Map as MapIcon, Filter, Search, Building, Users, MapPin, Loader2 } from 'lucide-react'
 import { Badge, Card, EmptyState, Skeleton, Avatar } from '@/components/ui'
 import { Reveal } from '@/components/motion'
@@ -43,10 +43,10 @@ function toAlumniMapItem(r: AlumniMapResponse): AlumniMapItem {
     alumniId: String(r.userId),
     displayName: r.fullName,
     avatarUrl: r.avatarUrl,
-    currentTitle: r.currentPosition,
-    companyName: r.currentCompany,
-    cohort: r.cohort,
-    city: r.city,
+    currentTitle: r.title,
+    companyName: r.company,
+    cohort: r.cohort ?? undefined,
+    city: r.location,
     countryCode: isVN ? 'VN' : undefined, // Suy diễn từ tọa độ
     latitude: r.latitude,
     longitude: r.longitude,
@@ -63,6 +63,15 @@ export function MapPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedAlumni, setSelectedAlumni] = useState<AlumniMapItem | null>(null)
 
+  // Debounced search for database-level query optimization
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   // ── Map theme state ───────────────────────────────────────────────────────
   const [mapTheme, setMapTheme] = useState<MapTheme>('DEFAULT')
   const [switchingState, setSwitchingState] = useState<MapSwitchingState>('idle')
@@ -72,14 +81,16 @@ export function MapPage() {
   const mapStableKey = useRef('alumni-map-stable').current
 
   // ── Fetch dữ liệu ─────────────────────────────────────────────────────────
-  const { data: rawData = [], isLoading, error } = useAlumniMap()
+  const { data: rawData = [], isLoading, error } = useAlumniMap({
+    search: debouncedSearch.trim() || undefined
+  })
 
   const alumniList = useMemo(
     () => rawData.map(toAlumniMapItem),
     [rawData]
   )
 
-  // ── Lọc theo cohort ───────────────────────────────────────────────────────
+  // ── Lọc theo cohort (giữ nguyên client-side range check cho cohort groups) ───────
   const filteredAlumni = useMemo(() => {
     return alumniList.filter((a) => {
       if (selectedCohort === 'All cohorts') return true
@@ -92,17 +103,8 @@ export function MapPage() {
     })
   }, [alumniList, selectedCohort])
 
-  // ── Lọc theo search ───────────────────────────────────────────────────────
-  const searchedAlumni = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim()
-    if (!q) return filteredAlumni
-    return filteredAlumni.filter((a) =>
-      (a.displayName || '').toLowerCase().includes(q) ||
-      (a.currentTitle || '').toLowerCase().includes(q) ||
-      (a.companyName || '').toLowerCase().includes(q) ||
-      (a.city || '').toLowerCase().includes(q)
-    )
-  }, [filteredAlumni, searchQuery])
+  // ── Lọc danh sách hiển thị trên sidebar (không cần filter lại search nữa vì DB đã filter) ──
+  const searchedAlumni = filteredAlumni;
 
   // ── Top hubs ──────────────────────────────────────────────────────────────
   const topHubs = useMemo(() => {

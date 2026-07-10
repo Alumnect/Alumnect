@@ -100,7 +100,7 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
         {/* Action Buttons */}
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
           <Button
-            onClick={() => navigate('/app/profile')}
+            onClick={() => navigate('/app/profile?userId=' + alumni.userId)}
             variant="primary"
             size="sm"
             className="flex-1 justify-center rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold"

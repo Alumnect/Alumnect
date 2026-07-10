@@ -3,19 +3,21 @@ package com.alumnect.alumnect_backend.mapper.alumnemap;
 import com.alumnect.alumnect_backend.dto.response.alumnemap.AlumniMapResponse;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-/**
- * Lớp MapStruct Mapper chuyển đổi dữ liệu bản đồ cựu sinh viên.
- * Chuyển đổi từ Entity UserProfile sang DTO AlumniMapResponse để trả về Client.
- */
 @Mapper(componentModel = "spring")
 public interface AlumniMapMapper {
 
-    /**
-     * Chuyển đổi UserProfile Entity sang AlumniMapResponse DTO.
-     *
-     * @param userProfile Thực thể hồ sơ người dùng cần chuyển đổi
-     * @return DTO AlumniMapResponse chứa thông tin rút gọn
-     */
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "fullName", source = "fullName")
+    @Mapping(target = "avatarUrl", source = "avatarUrl")
+    @Mapping(target = "verifiedStatus", ignore = true)
+    @Mapping(target = "title", ignore = true)
+    @Mapping(target = "company", ignore = true)
+    @Mapping(target = "location", ignore = true)
+    @Mapping(target = "latitude", source = "latitude")
+    @Mapping(target = "longitude", source = "longitude")
+    @Mapping(target = "startDate", ignore = true)
+    @Mapping(target = "profileIdentifier", ignore = true)
     AlumniMapResponse toResponse(UserProfile userProfile);
 }
