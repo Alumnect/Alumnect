@@ -1,14 +1,22 @@
 package com.alumnect.alumnect_backend.service.user;
 
+import com.alumnect.alumnect_backend.common.enums.AccountStatus;
+import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.user.ChangePasswordRequest;
+import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.mapper.user.UserProfileMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.alumnect.alumnect_backend.dao.user.ExperienceRepository;
+import com.alumnect.alumnect_backend.dto.response.user.PrimaryExperienceResponse;
+import com.alumnect.alumnect_backend.entity.user.Experience;
 
 /**
  * Lớp triển khai dịch vụ (Service Implementation) quản lý thông tin tài khoản người dùng.
@@ -19,7 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final UserProfileMapper userProfileMapper;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final ExperienceRepository experienceRepository;
 
     /**
      * Thực hiện thay đổi mật khẩu tài khoản người dùng.
@@ -59,4 +70,72 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
+
+    /**
+     * Lấy thông tin hồ sơ cá nhân của tài khoản hiện tại qua email đăng nhập.
+     * Quy trình xử lý:
+     * 1. Tìm tài khoản người dùng theo email.
+     * 2. Kiểm tra hồ sơ cá nhân đính kèm.
+     * 3. Ánh xạ từ thực thể sang DTO phản hồi.
+     *
+     * @param email Địa chỉ email của người dùng đăng nhập hiện tại
+     * @return DTO chứa hồ sơ cá nhân chi tiết
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public UserProfileResponse getOwnProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+
+        if (user.getProfile() == null) {
+            throw new ResourceNotFoundException("Không tìm thấy hồ sơ cá nhân cho tài khoản: " + email);
+        }
+
+        UserProfileResponse response = userProfileMapper.toResponse(user.getProfile());
+        populatePrimaryExperience(user.getId(), response);
+        return response;
+    }
+
+    /**
+     * Lấy thông tin hồ sơ cá nhân của người dùng khác qua ID tài khoản.
+     * Hỗ trợ truy cập công khai không cần token:
+     * - Yêu cầu tài khoản cần xem bắt buộc phải ở trạng thái hoạt động (ACTIVE) đối với mọi đối tượng truy cập.
+     *
+     * @param userId ID của người dùng cần xem hồ sơ
+     * @return DTO chứa hồ sơ cá nhân chi tiết
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public UserProfileResponse getUserProfile(Long userId) {
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với ID: " + userId));
+
+        if (targetUser.getProfile() == null) {
+            throw new ResourceNotFoundException("Không tìm thấy hồ sơ cá nhân cho tài khoản với ID: " + userId);
+        }
+
+        // Yêu cầu tài khoản cần xem phải ở trạng thái hoạt động (ACTIVE)
+        if (targetUser.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new BadRequestException("Tài khoản người dùng này chưa được kích hoạt hoặc đã bị khóa.");
+        }
+
+        UserProfileResponse response = userProfileMapper.toResponse(targetUser.getProfile());
+        populatePrimaryExperience(targetUser.getId(), response);
+        return response;
+    }
+
+    private void populatePrimaryExperience(Long userId, UserProfileResponse response) {
+        experienceRepository.findByUserIdAndIsPrimaryTrue(userId).ifPresent(exp -> {
+            PrimaryExperienceResponse per = PrimaryExperienceResponse.builder()
+                    .id(exp.getId())
+                    .title(exp.getTitle())
+                    .company(exp.getCompany())
+                    .location(exp.getLocation())
+                    .latitude(exp.getLatitude())
+                    .longitude(exp.getLongitude())
+                    .build();
+            response.setPrimaryExperience(per);
+        });
+    }
 }
+

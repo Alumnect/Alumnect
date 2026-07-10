@@ -1,38 +1,99 @@
-import { z } from 'zod'
-
 export interface ChangePasswordPayload {
   oldPassword?: string
   newPassword?: string
   confirmNewPassword?: string
 }
 
-// Zod Schema Validate cho Form Đổi Mật Khẩu
-export const changePasswordSchema = z
-  .object({
-    oldPassword: z.string().min(1, 'Mật khẩu hiện tại không được để trống'),
-    newPassword: z
-      .string()
-      .min(1, 'Mật khẩu mới không được để trống')
-      .min(8, 'Mật khẩu mới phải có độ dài từ 8 đến 100 ký tự')
-      .max(100, 'Mật khẩu mới phải có độ dài từ 8 đến 100 ký tự')
-      .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, 'Mật khẩu mới phải chứa ít nhất 1 chữ cái và 1 chữ số'),
-    confirmNewPassword: z.string().min(1, 'Xác nhận mật khẩu mới không được để trống'),
-  })
-  .superRefine((data, ctx) => {
-    if (data.newPassword === data.oldPassword) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['newPassword'],
-        message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại',
-      })
-    }
-    if (data.newPassword !== data.confirmNewPassword) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['confirmNewPassword'],
-        message: 'Xác nhận mật khẩu mới không trùng khớp',
-      })
-    }
-  })
+export interface MajorResponse {
+  id: number
+  code: string
+  name: string
+}
 
-export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
+export interface ExperienceResponse {
+  id: number
+  title: string
+  company: string
+  location?: string | null
+  startDate: string
+  endDate?: string | null
+  isCurrent: boolean
+  isPrimary: boolean
+  latitude?: number | null
+  longitude?: number | null
+  placeId?: string | null
+  locationCity?: string | null
+  locationCountry?: string | null
+  locationCountryCode?: string | null
+  geocodingProvider?: string | null
+  description?: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface ExperienceRequest {
+  title: string
+  company: string
+  location?: string | null
+  startDate: string
+  endDate?: string | null
+  isCurrent: boolean
+  isPrimary: boolean
+  latitude?: number | null
+  longitude?: number | null
+  placeId?: string | null
+  locationCity?: string | null
+  locationCountry?: string | null
+  locationCountryCode?: string | null
+  geocodingProvider?: string | null
+  description?: string | null
+}
+
+export interface PromotionPayload {
+  newTitle: string
+  newStartDate: string
+  description?: string | null
+  reuseLocation: boolean
+}
+
+export interface PrimaryExperienceResponse {
+  id: number
+  title: string
+  company: string
+  location?: string | null
+  latitude?: number | null
+  longitude?: number | null
+}
+
+export interface UserSkillResponse {
+  id: number
+  groupName: string
+  skillName: string
+  sortOrder: number
+}
+
+export interface UserProfileResponse {
+  userId: number
+  email: string
+  role: string
+  fullName: string
+  avatarUrl: string
+  phone: string
+  major: MajorResponse | null
+  cohort: number | null
+  studentCode: string | null
+  headline: string | null
+  biography: string | null
+  city: string | null
+  latitude: number | null
+  longitude: number | null
+  socialLinks?: string[]
+  coverUrl?: string | null
+  createdAt: string
+  updatedAt: string
+  accountStatus: string
+  isAccountVerified: boolean
+  primaryExperience?: PrimaryExperienceResponse | null
+  experiences?: ExperienceResponse[]
+  skills?: UserSkillResponse[]
+}
