@@ -56,7 +56,6 @@ function App() {
           <Route path="forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
           <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
           <Route path="map" element={<MapPage />} />
-          <Route path="career" element={<CareerPage />} />
           <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
           <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />

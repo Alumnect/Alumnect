@@ -79,9 +79,6 @@ public class UserProfileResponse {
     /** Trạng thái xác thực hồ sơ */
     private Boolean isAccountVerified;
 
-    /** Thông tin kinh nghiệm làm việc chính hiện tại */
-    private PrimaryExperienceResponse primaryExperience;
-
     /** Danh sách kinh nghiệm làm việc của người dùng */
     private List<ExperienceResponse> experiences;
 

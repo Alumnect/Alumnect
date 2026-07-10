@@ -18,51 +18,7 @@ export interface ExperienceResponse {
   startDate: string
   endDate?: string | null
   isCurrent: boolean
-  isPrimary: boolean
-  latitude?: number | null
-  longitude?: number | null
-  placeId?: string | null
-  locationCity?: string | null
-  locationCountry?: string | null
-  locationCountryCode?: string | null
-  geocodingProvider?: string | null
   description?: string | null
-  createdAt?: string
-  updatedAt?: string
-}
-
-export interface ExperienceRequest {
-  title: string
-  company: string
-  location?: string | null
-  startDate: string
-  endDate?: string | null
-  isCurrent: boolean
-  isPrimary: boolean
-  latitude?: number | null
-  longitude?: number | null
-  placeId?: string | null
-  locationCity?: string | null
-  locationCountry?: string | null
-  locationCountryCode?: string | null
-  geocodingProvider?: string | null
-  description?: string | null
-}
-
-export interface PromotionPayload {
-  newTitle: string
-  newStartDate: string
-  description?: string | null
-  reuseLocation: boolean
-}
-
-export interface PrimaryExperienceResponse {
-  id: number
-  title: string
-  company: string
-  location?: string | null
-  latitude?: number | null
-  longitude?: number | null
 }
 
 export interface UserSkillResponse {
@@ -93,7 +49,7 @@ export interface UserProfileResponse {
   updatedAt: string
   accountStatus: string
   isAccountVerified: boolean
-  primaryExperience?: PrimaryExperienceResponse | null
   experiences?: ExperienceResponse[]
   skills?: UserSkillResponse[]
 }
+

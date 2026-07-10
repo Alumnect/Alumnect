@@ -23,6 +23,5 @@ public interface UserProfileMapper {
     @Mapping(target = "role", source = "user.role.name")
     @Mapping(target = "accountStatus", source = "user.accountStatus")
     @Mapping(target = "isAccountVerified", source = "user.accountVerified")
-    @Mapping(target = "primaryExperience", ignore = true)
     UserProfileResponse toResponse(UserProfile userProfile);
 }
