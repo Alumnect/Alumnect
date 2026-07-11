@@ -13,6 +13,7 @@ import { AlumniDirectoryPage } from '@/pages/app/AlumniDirectoryPage'
 import { JobsPage } from '@/pages/app/JobsPage'
 import { EventsPage } from '@/pages/app/EventsPage'
 import { ForumPage } from '@/pages/app/ForumPage'
+import { QuestionDetailPage } from '@/pages/app/QuestionDetailPage'
 import { SalaryPage } from '@/pages/app/SalaryPage'
 import { MapPage } from '@/pages/app/MapPage'
 import { CareerPage } from '@/pages/app/CareerPage'
@@ -54,6 +55,7 @@ function App() {
           <Route path="jobs" element={<JobsPage />} />
           <Route path="events" element={<EventsPage />} />
           <Route path="forum" element={<ForumPage />} />
+          <Route path="forum/:id" element={<QuestionDetailPage />} />
           <Route path="salary" element={<SalaryPage />} />
           <Route path="map" element={<MapPage />} />
           <Route path="career" element={<CareerPage />} />

@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.mapper.forum;
 
+import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
 import com.alumnect.alumnect_backend.entity.forum.ForumTopic;
@@ -57,6 +58,51 @@ public class QuestionMapper {
                 .votes(question.getVoteCount())
                 .answers(question.getAnswerCount())
                 .time(toRelativeTime(question.getCreatedAt()))
+                .build();
+    }
+
+    /**
+     * Chuyển đổi một câu hỏi (kèm tác giả và chủ đề) sang QuestionDetailResponse cho màn hình chi tiết
+     * (UC39 - View question detail). Khác {@link #toResponse}: giữ nguyên toàn bộ nội dung {@code body},
+     * bổ sung dòng tiêu đề tác giả (headline), ID chủ đề và mốc thời gian tuyệt đối.
+     *
+     * @param question      Entity câu hỏi (đã JOIN FETCH sẵn {@code author} và {@code topic})
+     * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu chưa tạo hồ sơ
+     * @return DTO chi tiết phẳng khớp schema Zod {@code questionDetailSchema} phía Frontend
+     */
+    public QuestionDetailResponse toDetailResponse(Question question, UserProfile authorProfile) {
+        User author = question.getAuthor();
+
+        // Tên hiển thị, avatar & headline: lấy từ UserProfile nếu có, fallback hợp lý khi hồ sơ chưa được tạo.
+        String authorName = authorProfile != null && authorProfile.getFullName() != null
+                ? authorProfile.getFullName()
+                : author.getEmail();
+        String avatarUrl = authorProfile != null && authorProfile.getAvatarUrl() != null
+                ? authorProfile.getAvatarUrl()
+                : "";
+        String headline = authorProfile != null && authorProfile.getHeadline() != null
+                ? authorProfile.getHeadline()
+                : "";
+
+        // Tên & ID chủ đề: rỗng/null nếu câu hỏi chưa được phân loại.
+        ForumTopic topic = question.getTopic();
+        String topicName = topic != null ? topic.getName() : "";
+        Long topicId = topic != null ? topic.getId() : null;
+
+        return QuestionDetailResponse.builder()
+                .id(String.valueOf(question.getId()))
+                .title(question.getTitle())
+                .body(question.getBody())
+                .topic(topicName)
+                .topicId(topicId)
+                .author(authorName)
+                .avatar(avatarUrl)
+                .authorHeadline(headline)
+                .verified(author.isAccountVerified())
+                .votes(question.getVoteCount())
+                .answers(question.getAnswerCount())
+                .time(toRelativeTime(question.getCreatedAt()))
+                .createdAt(question.getCreatedAt() != null ? question.getCreatedAt().toString() : "")
                 .build();
     }
 

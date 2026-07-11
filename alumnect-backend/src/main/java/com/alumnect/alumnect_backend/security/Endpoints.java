@@ -28,7 +28,8 @@ public class Endpoints {
         "/api/v1/auth/verify-email/**",
         "/api/v1/files/presigned-url", // Sinh link ký sẵn để tải file
         "/api/v1/questions",        // Xem danh sách câu hỏi diễn đàn Q&A (UC38 - Guest xem được)
-        "/api/v1/questions/topics"  // Lấy danh mục chủ đề để lọc câu hỏi (UC38)
+        "/api/v1/questions/topics", // Lấy danh mục chủ đề để lọc câu hỏi (UC38)
+        "/api/v1/questions/*"       // Xem chi tiết một câu hỏi theo id (UC39 - Guest xem được)
     };
 
     // Endpoint công khai — POST, không cần đăng nhập

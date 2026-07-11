@@ -20,6 +20,22 @@ export function useQuestions(sort: SortOption = 'recent', topicId: number | null
 }
 
 /**
+ * Hook lấy chi tiết một câu hỏi theo id (UC39 - View question detail).
+ * Bọc `useQuery`: tự cache theo id, quản lý loading/error. Không tự động thử lại khi 404
+ * (câu hỏi không tồn tại/bị ẩn) để hiển thị ngay trạng thái "không tìm thấy".
+ * @param id ID câu hỏi (undefined/null khi chưa có → không gọi API)
+ * @return Đối tượng query (data, isLoading, isError, error, refetch...)
+ */
+export function useQuestionDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: ['question', id],
+    queryFn: () => forumApi.getQuestionById(id as string),
+    enabled: !!id,
+    retry: false,
+  })
+}
+
+/**
  * Hook lấy danh mục chủ đề diễn đàn (cho bộ lọc). Dữ liệu ít thay đổi nên cache lâu.
  * @return Đối tượng query chứa danh sách chủ đề
  */

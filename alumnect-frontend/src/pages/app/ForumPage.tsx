@@ -9,6 +9,7 @@
  *  - Ai cũng xem được (Guest/Student/Alumni); nút "Đặt câu hỏi" chỉ hiện với thành viên.
  */
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   HelpCircle,
   ChevronUp,
@@ -53,7 +54,9 @@ function QuestionCard({ q }: { q: Question }) {
           {q.topic && (
             <Badge tone="violet" className="mb-2 px-2 py-0.5 text-[10px]">{q.topic}</Badge>
           )}
-          <h2 className="text-lg font-bold leading-snug text-plum-900 hover:text-brand-600">{q.title}</h2>
+          <Link to={`/app/forum/${q.id}`}>
+            <h2 className="text-lg font-bold leading-snug text-plum-900 transition-colors hover:text-brand-600">{q.title}</h2>
+          </Link>
           {q.excerpt && (
             <p className="mt-1.5 line-clamp-2 text-sm text-plum-500">{q.excerpt}</p>
           )}

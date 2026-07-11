@@ -4,11 +4,13 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dao.forum.ForumTopicRepository;
 import com.alumnect.alumnect_backend.dao.forum.QuestionRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
+import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
 import com.alumnect.alumnect_backend.entity.forum.Question;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
+import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.forum.QuestionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +95,28 @@ public class QuestionServiceImpl implements QuestionService {
                 .totalPages(questionsPage.getTotalPages())
                 .last(questionsPage.isLast())
                 .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng xử lý:
+     * <ol>
+     *   <li>Truy vấn câu hỏi ACTIVE theo ID qua {@link QuestionRepository#findActiveDetailById}
+     *       (đã JOIN FETCH tác giả + chủ đề). Nếu không tồn tại/không ACTIVE → ném lỗi 404.</li>
+     *   <li>Truy vấn hồ sơ {@link UserProfile} của tác giả để lấy họ tên/avatar/headline.</li>
+     *   <li>Map sang {@link QuestionDetailResponse} và trả về.</li>
+     * </ol>
+     */
+    @Override
+    public QuestionDetailResponse getQuestionDetail(Long id) {
+        Question question = questionRepository.findActiveDetailById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu hỏi với id: " + id));
+        log.info("Xem chi tiết câu hỏi: id={}, tác giả={}", id, question.getAuthor().getId());
+
+        // Hồ sơ tác giả có thể chưa được tạo (null) — mapper tự xử lý fallback.
+        UserProfile authorProfile = userProfileRepository.findById(question.getAuthor().getId()).orElse(null);
+        return questionMapper.toDetailResponse(question, authorProfile);
     }
 
     /**
