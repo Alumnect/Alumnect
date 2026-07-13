@@ -28,6 +28,29 @@ export const questionSchema = z.object({
 })
 export type Question = z.infer<typeof questionSchema>
 
+/**
+ * Schema Zod cho chi tiết một câu hỏi (UC39 - View question detail).
+ * Khác `questionSchema` (danh sách): mang toàn bộ nội dung `body`, thêm `topicId`,
+ * dòng tiêu đề tác giả `authorHeadline` và mốc thời gian tuyệt đối `createdAt`.
+ * Vẫn dùng `.default` để dữ liệu thiếu trường không làm sập màn hình chi tiết.
+ */
+export const questionDetailSchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(String),
+  title: z.string().default(''),
+  body: z.string().default(''),
+  topic: z.string().default(''),
+  topicId: z.union([z.string(), z.number()]).transform(Number).nullable().default(null),
+  author: z.string().default('Ẩn danh'),
+  avatar: z.string().default(''),
+  authorHeadline: z.string().default(''),
+  verified: z.boolean().default(false),
+  votes: z.number().default(0),
+  answers: z.number().default(0),
+  time: z.string().default(''),
+  createdAt: z.string().default(''),
+})
+export type QuestionDetail = z.infer<typeof questionDetailSchema>
+
 /** Schema Zod cho một chủ đề diễn đàn (dùng cho bộ lọc). */
 export const topicSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(Number),

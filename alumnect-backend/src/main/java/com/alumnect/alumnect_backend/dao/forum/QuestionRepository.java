@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * Repository quản lý các thao tác dữ liệu trên bảng questions (Câu hỏi diễn đàn Q&A).
  */
@@ -37,4 +39,21 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
             "WHERE q.status = com.alumnect.alumnect_backend.common.enums.QuestionStatus.ACTIVE " +
             "AND (:topicId IS NULL OR t.id = :topicId)")
     Page<Question> findActiveQuestions(@Param("topicId") Long topicId, Pageable pageable);
+
+    /**
+     * Lấy chi tiết một câu hỏi đang hiển thị theo ID (UC39 - View question detail), đã áp dụng:
+     * <ul>
+     *   <li>Chỉ lấy câu hỏi ở trạng thái ACTIVE — câu hỏi HIDDEN/DELETED coi như không tồn tại (BR-39-02).</li>
+     *   <li>JOIN FETCH tác giả và LEFT JOIN FETCH chủ đề để tránh N+1 query khi map sang DTO chi tiết.</li>
+     * </ul>
+     *
+     * @param id ID câu hỏi cần xem chi tiết
+     * @return {@link Optional} chứa câu hỏi (kèm sẵn tác giả và chủ đề) nếu tồn tại và đang ACTIVE, ngược lại rỗng
+     */
+    @Query("SELECT q FROM Question q " +
+            "JOIN FETCH q.author " +
+            "LEFT JOIN FETCH q.topic " +
+            "WHERE q.id = :id " +
+            "AND q.status = com.alumnect.alumnect_backend.common.enums.QuestionStatus.ACTIVE")
+    Optional<Question> findActiveDetailById(@Param("id") Long id);
 }

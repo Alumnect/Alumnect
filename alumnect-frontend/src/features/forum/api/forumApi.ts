@@ -1,6 +1,6 @@
 import http from '@/lib/http'
-import { questionSchema, topicSchema } from '../model/question'
-import type { Question, QuestionPageResult, SortOption, Topic } from '../model/question'
+import { questionDetailSchema, questionSchema, topicSchema } from '../model/question'
+import type { Question, QuestionDetail, QuestionPageResult, SortOption, Topic } from '../model/question'
 
 /**
  * Tầng gọi API cho UC38 - View question list.
@@ -73,6 +73,21 @@ export const forumApi = {
     const body = await http.get(`/questions?${query.toString()}`)
     const items = parseQuestions(extractRawItems(body))
     return { items, page, hasMore: inferHasMore(body, items.length) }
+  },
+
+  /**
+   * Lấy chi tiết một câu hỏi theo id (UC39 - View question detail).
+   * Gọi `GET /api/v1/questions/{id}`. Interceptor `http` đã bóc envelope, ở đây bóc thêm
+   * trường `data` (payload chi tiết) rồi xác thực bằng Zod để chuẩn hóa dữ liệu trước khi render.
+   * @param id ID câu hỏi cần xem
+   * @return Chi tiết câu hỏi đã chuẩn hóa
+   * @throws Error nếu dữ liệu trả về không hợp lệ (schema không khớp)
+   */
+  getQuestionById: async (id: string | number): Promise<QuestionDetail> => {
+    const body = await http.get(`/questions/${id}`)
+    const b = body as unknown as Record<string, unknown> | undefined
+    const payload = (b?.data ?? b) as unknown
+    return questionDetailSchema.parse(payload)
   },
 
   /**

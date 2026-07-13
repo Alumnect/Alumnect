@@ -2507,6 +2507,114 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "05. Q&A Forum (UC39 - View Question Detail)",
+			"description": "Thư mục chứa API công khai của Module 4 (Q&A Forum) cho UC39 - Xem chi tiết câu hỏi. Guest/Student/Alumni đều xem được, không cần đăng nhập. Chỉ trả về câu hỏi ở trạng thái ACTIVE; câu hỏi không tồn tại hoặc bị ẩn/xóa trả về 404.",
+			"item": [
+				{
+					"name": "Xem chi tiết câu hỏi - Thành công",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions",
+								"1"
+							]
+						},
+						"description": "### API Xem Chi Tiết Câu Hỏi\n* **Quyền truy cập**: Public (Guest/Student/Alumni).\n* **Tham số**: `id` (trên đường dẫn URL).\n* **Nghiệp vụ**: Chỉ trả về câu hỏi trạng thái `ACTIVE`. Trả về toàn bộ nội dung `body`, thông tin tác giả (headline, avatar) và mốc thời gian.\n* **Phản hồi (200 OK)**: `data` là `QuestionDetailResponse` gồm `id`, `title`, `body`, `topic`, `topicId`, `author`, `avatar`, `authorHeadline`, `verified`, `votes`, `answers`, `time`, `createdAt`.\n\n> Lưu ý: đổi `1` thành id câu hỏi có thật trong DB (lấy từ API danh sách UC38)."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết thất bại - Không tìm thấy (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions",
+								"999999"
+							]
+						},
+						"description": "### Lỗi Không Tìm Thấy\n* `id` không tồn tại hoặc câu hỏi đang ở trạng thái `HIDDEN`/`DELETED` -> Backend ném `ResourceNotFoundException`.\n* **Phản hồi mong đợi (404 Not Found)**: \"Không tìm thấy câu hỏi với id: 999999\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết thất bại - id sai định dạng (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions/abc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions",
+								"abc"
+							]
+						},
+						"description": "### Lỗi Sai Định Dạng id\n* `id` không phải số nguyên -> Spring không ép được về kiểu Long.\n* **Phản hồi mong đợi (400 Bad Request)**."
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"auth": {
