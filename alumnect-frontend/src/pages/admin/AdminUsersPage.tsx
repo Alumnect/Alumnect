@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Search, Lock, Unlock, Users, Mail, Phone, BookOpen, User, X, Loader2 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -16,7 +15,6 @@ const TABS = [
 ]
 
 export function AdminUsersPage() {
-  const navigate = useNavigate()
   const [tab, setTab] = useState('ALL')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
@@ -279,13 +277,7 @@ export function AdminUsersPage() {
                 </div>
               ) : userDetail ? (
                 <div className="flex items-center gap-4">
-                  <div
-                    onClick={() => navigate(`/app/profile?userId=${userDetail.id}`)}
-                    className="cursor-pointer hover:opacity-85 active:scale-95 transition-all"
-                    title="Xem trang cá nhân chi tiết"
-                  >
-                    <Avatar name={userDetail.fullName} size={64} ring verified={userDetail.isAccountVerified} />
-                  </div>
+                  <Avatar name={userDetail.fullName} size={64} ring verified={userDetail.isAccountVerified} />
                   <div>
                     <h3 className="text-xl font-bold">{userDetail.fullName}</h3>
                     <p className="text-white/80 text-sm mt-0.5">
