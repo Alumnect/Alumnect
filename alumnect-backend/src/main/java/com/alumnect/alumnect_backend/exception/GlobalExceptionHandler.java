@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +54,30 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleBadRequestException(BadRequestException ex) {
         return new ResponseEntity<>(
                 ApiResponse.error(400, ex.getMessage()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    /**
+     * Xử lý ngoại lệ ForbiddenException khi người dùng không có quyền truy cập tài nguyên.
+     * Trả về HTTP Status 403 (Forbidden) — VD: Guest xem chi tiết bài viết MEMBERS (BR-12, UC16).
+     */
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbiddenException(ForbiddenException ex) {
+        return new ResponseEntity<>(
+                ApiResponse.error(403, ex.getMessage()),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    /**
+     * Xử lý ngoại lệ MethodArgumentTypeMismatchException khi tham số đường dẫn/truy vấn sai kiểu
+     * (VD: gọi GET /posts/abc trong khi {@code id} phải là số) → trả về HTTP 400 thay vì 500.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return new ResponseEntity<>(
+                ApiResponse.error(400, "Tham số '" + ex.getName() + "' không hợp lệ"),
                 HttpStatus.BAD_REQUEST
         );
     }

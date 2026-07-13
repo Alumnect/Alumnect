@@ -9,6 +9,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { FeedPage } from '@/pages/app/FeedPage'
+import { PostDetailPage } from '@/pages/app/PostDetailPage'
 import { AlumniDirectoryPage } from '@/pages/app/AlumniDirectoryPage'
 import { JobsPage } from '@/pages/app/JobsPage'
 import { EventsPage } from '@/pages/app/EventsPage'
@@ -44,6 +45,8 @@ function App() {
             các trang con còn lại vẫn yêu cầu đăng nhập */}
         <Route path="/app" element={<AppShell />}>
           <Route index element={<FeedPage />} />
+          {/* Chi tiết bài viết (UC16) — mở cho cả Guest theo BR-12 (bài MEMBERS trả 403 ở API) */}
+          <Route path="posts/:id" element={<PostDetailPage />} />
           <Route element={<ProtectedOutlet />}>
             <Route path="alumni" element={<AlumniDirectoryPage />} />
             <Route path="jobs" element={<JobsPage />} />

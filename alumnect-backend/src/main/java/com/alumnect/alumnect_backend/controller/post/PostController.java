@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.controller.post;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.service.post.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller xử lý các yêu cầu liên quan đến bảng tin cộng đồng (UC15 - View community Feed).
+ * Controller xử lý các yêu cầu liên quan đến bài viết cộng đồng
+ * (UC15 - View community Feed, UC16 - View Post Detail).
  * Được map tự động với prefix global /api/v1/posts.
  * <p>
  * Endpoint được khai báo công khai (xem {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET}) để
@@ -50,11 +53,57 @@ public class PostController {
             @RequestParam(required = false) String type,
             Authentication authentication) {
 
-        boolean isAuthenticated = authentication != null
+        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, isAuthenticated(authentication));
+        return ResponseEntity.ok(ApiResponse.success("Lấy bảng tin thành công", feed));
+    }
+
+    /**
+     * API lấy chi tiết một bài viết theo ID (UC16 - View Post Detail).
+     * Guest chỉ xem được bài PUBLIC (bài MEMBERS trả 403); bài đã ẩn/không tồn tại trả 404.
+     *
+     * @param id             ID bài viết cần xem chi tiết
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — null/Anonymous nếu là Guest
+     * @return Chi tiết bài viết {@link PostResponse} bọc trong {@link ApiResponse}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostResponse>> getPostDetail(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        PostResponse post = postService.getPostDetail(id, isAuthenticated(authentication));
+        return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết bài viết thành công", post));
+    }
+
+    /**
+     * API lấy một trang bình luận (chỉ đọc) của một bài viết (UC16 - View Post Detail).
+     * Áp dụng cùng quy tắc quyền xem như xem chi tiết bài viết.
+     *
+     * @param id             ID bài viết cần lấy bình luận
+     * @param page           Số thứ tự trang cần lấy (0-based), mặc định 0
+     * @param size           Kích thước trang, mặc định 10
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — null/Anonymous nếu là Guest
+     * @return Trang bình luận {@link CommentResponse} bọc trong {@link ApiResponse}
+     */
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<ApiResponse<PageResponse<CommentResponse>>> getPostComments(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
+
+        PageResponse<CommentResponse> comments = postService.getPostComments(id, page, size, isAuthenticated(authentication));
+        return ResponseEntity.ok(ApiResponse.success("Lấy bình luận thành công", comments));
+    }
+
+    /**
+     * Xác định người gọi đã đăng nhập hay là Guest dựa trên {@link Authentication} do Spring Security cung cấp.
+     *
+     * @param authentication Đối tượng xác thực — null hoặc {@link AnonymousAuthenticationToken} nếu là Guest
+     * @return true nếu đã đăng nhập (có JWT hợp lệ), false nếu là Guest
+     */
+    private boolean isAuthenticated(Authentication authentication) {
+        return authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
-
-        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, isAuthenticated);
-        return ResponseEntity.ok(ApiResponse.success("Lấy bảng tin thành công", feed));
     }
 }
