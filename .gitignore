@@ -3,6 +3,8 @@
 **/dist/
 **/build/
 **/.env
+**/.env.local
+**/.env.*.local
 
 # Java Spring Boot rác
 **/target/

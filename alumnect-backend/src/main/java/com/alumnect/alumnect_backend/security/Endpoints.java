@@ -27,6 +27,8 @@ public class Endpoints {
         "/api/v1/auth/verify-email",    // Xác nhận email qua mã OTP (click link hoặc nhập mã)
         "/api/v1/auth/verify-email/**",
         "/api/v1/files/presigned-url", // Sinh link ký sẵn để tải file
+        "/api/v1/posts",            // Xem bảng tin cộng đồng (UC15) — Guest chỉ đọc, xem BR-12
+        "/api/v1/posts/**",         // Xem chi tiết bài viết + bình luận (UC16) — Guest xem bài PUBLIC
         "/api/v1/alumni-map",          // Bản đồ vị trí cựu sinh viên công khai cho khách
         "/api/v1/questions",        // Xem danh sách câu hỏi diễn đàn Q&A (UC38 - Guest xem được)
         "/api/v1/questions/topics", // Lấy danh mục chủ đề để lọc câu hỏi (UC38)

@@ -1,9 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
 import { ProtectedRoute, RoleRoute } from '@/components/routing/guards'
-import { MarketingLayout, AppShell, AdminShell, ScrollToTop } from '@/components/layout'
-import { LandingPage } from '@/pages/LandingPage'
+import { AppShell, AdminShell, ScrollToTop } from '@/components/layout'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
@@ -32,10 +31,8 @@ function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
-          {/* Public marketing site */}
-          <Route element={<MarketingLayout />}>
-            <Route path="/" element={<LandingPage />} />
-          </Route>
+          {/* Trang chủ mở thẳng vào app ở chế độ khách (đã bỏ landing page) */}
+          <Route path="/" element={<Navigate to="/app" replace />} />
 
           {/* Auth (full-screen, own scaffold) */}
           <Route path="/login" element={<LoginPage />} />
@@ -46,12 +43,13 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="map" element={<MapPage />} />
           <Route path="career" element={<CareerPage />} />
-          {/* Authenticated member app */}
+          {/* Member app — bảng tin (index) mở cho cả Guest theo UC15/BR-12;
+              các trang con còn lại vẫn yêu cầu đăng nhập */}
           <Route
             path="/app"
             element={<AppShell />}
           >
-            <Route index element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
+            <Route index element={<FeedPage />} />
             <Route path="alumni" element={<ProtectedRoute><AlumniDirectoryPage /></ProtectedRoute>} />
             <Route path="jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
             <Route path="events" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
