@@ -20,13 +20,10 @@ import {
   Bookmark,
   MoreHorizontal,
   TrendingUp,
-  Sparkles,
-  ArrowRight,
   Flag,
   Loader2,
   AlertTriangle,
   Inbox,
-  Lock,
 } from 'lucide-react'
 import { Avatar, Badge, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -35,6 +32,7 @@ import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
+import { useLoginPrompt } from '@/store/loginPrompt'
 import { useFeed } from '@/features/feed'
 import type { FeedFilter, Post } from '@/features/feed'
 
@@ -56,7 +54,8 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
 
 /**
  * Ô soạn bài viết ở đầu bảng tin — chỉ hiển thị cho thành viên đã đăng nhập
- * (Student/Alumni). Guest sẽ thấy `GuestPrompt` thay thế (BR-12).
+ * (Student/Alumni). Guest/Admin không thấy khối này; Guest tương tác sẽ được mời
+ * đăng nhập qua popup (BR-12).
  * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
  */
 function Composer({ viewer }: { viewer: AuthUser }) {
@@ -90,32 +89,6 @@ function Composer({ viewer }: { viewer: AuthUser }) {
 }
 
 /**
- * Trạng thái phân quyền cho Guest: bảng tin ở chế độ chỉ đọc, mời đăng nhập
- * để có thể đăng bài và tương tác (BR-12 / MSG28).
- */
-function GuestPrompt() {
-  return (
-    <Card hover={false} className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-500/10 text-brand-600">
-          <Lock size={20} />
-        </span>
-        <div>
-          <p className="font-bold text-plum-900">Bạn đang xem ở chế độ khách</p>
-          <p className="text-sm text-plum-500">Đăng nhập để đăng bài, thích và bình luận với cộng đồng đã xác thực.</p>
-        </div>
-      </div>
-      <Link
-        to="/login"
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
-      >
-        Đăng nhập <ArrowRight size={15} />
-      </Link>
-    </Card>
-  )
-}
-
-/**
  * Thẻ hiển thị một bài viết trên bảng tin.
  * @param post Dữ liệu bài viết
  * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
@@ -124,8 +97,8 @@ function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
   const [liked, setLiked] = useState(post.liked)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
 
-  // Vô hiệu hóa nút tương tác đối với Guest, kèm gợi ý đăng nhập.
-  const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
+  // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
+  const promptLogin = useLoginPrompt((s) => s.open)
 
   return (
     <Card hover={false} className="overflow-hidden">
@@ -156,44 +129,42 @@ function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
       )}
 
       {/* --- Phần 4: Thanh hành động — Thích / Bình luận / Đăng lại / Báo cáo / Lưu.
-          Toàn bộ bị vô hiệu hóa (disabled) với Guest theo BR-12 --- */}
+          Guest bấm bất kỳ nút nào sẽ mở popup mời đăng nhập (kiểu Facebook) theo BR-12 --- */}
       <div className="flex items-center gap-1 p-3">
-        {/* Nút Thích: cập nhật lạc quan tại chỗ (optimistic) cho người đã đăng nhập */}
+        {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
         <button
-          onClick={() => canInteract && setLiked((v) => !v)}
-          disabled={!canInteract}
-          title={guardTitle}
+          onClick={() => (canInteract ? setLiked((v) => !v) : promptLogin('Đăng nhập để thích và tương tác với bài viết.'))}
           className={cn(
-            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-            !canInteract && 'cursor-not-allowed opacity-60',
-            liked ? 'text-rose-500' : 'text-plum-500 enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900',
+            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-plum-900/[0.04]',
+            liked ? 'text-rose-500' : 'text-plum-500 hover:text-plum-900',
           )}
         >
           <Heart size={18} className={liked ? 'fill-rose-400' : ''} />
           {compact(post.likes + (liked ? 1 : 0))}
         </button>
         <button
-          disabled={!canInteract}
-          title={guardTitle}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để bình luận về bài viết.') }}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
         >
           <MessageCircle size={18} /> {compact(post.comments)}
         </button>
         <button
-          disabled={!canInteract}
-          title={guardTitle}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để đăng lại bài viết.') }}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
         <button
-          disabled={!canInteract}
-          title={guardTitle}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để báo cáo bài viết.') }}
+          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
         >
           <Flag size={17} />
         </button>
-        <button aria-label="Lưu bài viết" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900">
+        <button
+          aria-label="Lưu bài viết"
+          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để lưu bài viết.') }}
+          className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900"
+        >
           <Bookmark size={18} />
         </button>
       </div>
@@ -313,17 +284,13 @@ export function FeedPage() {
     <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1fr_320px]">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
       <div className="space-y-5">
-        {/* Khối A: Ô soạn bài (chỉ Student/Alumni) hoặc lời mời đăng nhập (chỉ Guest).
-            Admin đã đăng nhập không thấy cả hai — xem bảng tin như một thành viên thường. */}
-        {canPost && viewer ? (
+        {/* Khối A: Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy gì ở đây —
+            Guest khi tương tác sẽ được mời đăng nhập qua popup (kiểu Facebook). */}
+        {canPost && viewer && (
           <Reveal>
             <Composer viewer={viewer} />
           </Reveal>
-        ) : isGuest ? (
-          <Reveal>
-            <GuestPrompt />
-          </Reveal>
-        ) : null}
+        )}
 
         {/* Khối B: Tabs lọc theo loại bài viết (All / Achievements / Hiring / Events) */}
         <div className="flex flex-wrap gap-2">
@@ -450,18 +417,6 @@ export function FeedPage() {
               ))}
             </ul>
           </SidebarCard>
-        </Reveal>
-
-        {/* Mục 4: CTA mời xác thực để nhận huy hiệu Verified Alumni */}
-        <Reveal direction="left" delay={0.3}>
-          <div className="ring-gradient relative overflow-hidden rounded-2xl card-surface p-5">
-            <Sparkles className="text-gold-600" size={22} />
-            <p className="mt-3 font-bold text-plum-900">Get the verified badge</p>
-            <p className="mt-1 text-sm text-plum-500">Submit your FPTU proof to unlock full alumni privileges.</p>
-            <Button size="sm" variant="gold" className="mt-4 w-full" rightIcon={<ArrowRight size={15} />}>
-              Verify now
-            </Button>
-          </div>
         </Reveal>
       </aside>
     </div>

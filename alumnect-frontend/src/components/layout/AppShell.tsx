@@ -10,6 +10,7 @@ import { useLogout } from '@/features/auth'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
+import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
 
 /* ----------------------------- small popover ----------------------------- */
 function Popover({ button, panelClass, children }: { button: ReactNode; panelClass?: string; children: ReactNode }) {
@@ -379,6 +380,9 @@ export function AppShell() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Popup mời đăng nhập (kiểu Facebook) — hiện khi Guest cố tương tác */}
+      <LoginPromptModal />
     </div>
   )
 }
