@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * Repository quản lý các thao tác dữ liệu trên bảng posts (Bài viết bảng tin cộng đồng).
  */
@@ -35,4 +37,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "AND (:type IS NULL OR p.type = :type) " +
             "ORDER BY p.createdAt DESC")
     Page<Post> findFeed(@Param("guestMode") boolean guestMode, @Param("type") PostType type, Pageable pageable);
+
+    /**
+     * Lấy một bài viết theo ID cho màn hình chi tiết (UC16 - View Post Detail),
+     * đã JOIN FETCH sẵn tác giả (User) để tránh N+1 query khi map sang response.
+     * Không lọc {@code isHidden}/{@code visibility} ở tầng truy vấn — việc kiểm tra
+     * quyền xem (BR-08/BR-11/BR-12) do tầng Service xử lý để trả đúng mã lỗi 404/403.
+     *
+     * @param id ID bài viết cần lấy
+     * @return {@link Optional} chứa bài viết (kèm tác giả) nếu tồn tại
+     */
+    @Query("SELECT p FROM Post p JOIN FETCH p.user u WHERE p.id = :id")
+    Optional<Post> findDetailById(@Param("id") Long id);
 }

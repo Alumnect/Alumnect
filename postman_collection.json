@@ -2777,6 +2777,41 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "04.2. Xem chi tiết bài viết (View Post Detail)",
+					"item": [
+						{
+							"name": "Guest xem chi tiết bài viết PUBLIC - Thành công",
+							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/1", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","1"] }, "description": "### API Xem Chi Tiết Bài Viết (UC16)\n* Quyen: Public (Guest xem bai PUBLIC - BR-12).\n* Phan hoi (200 OK): message 'Lấy chi tiết bài viết thành công', data la 1 PostResponse.", "auth": { "type": "noauth" } },
+							"response": []
+						},
+						{
+							"name": "Xem chi tiết thất bại - Bài không tồn tại hoặc đã bị ẩn",
+							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/999999", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","999999"] }, "description": "### Kich ban 404 (BR-08/BR-11)\n* Bai khong ton tai hoac is_hidden=true.\n* Phan hoi (404): { error: 404, message: 'Bài viết này không còn khả dụng' }.", "auth": { "type": "noauth" } },
+							"response": []
+						},
+						{
+							"name": "Xem chi tiết thất bại - id không hợp lệ (không phải số)",
+							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/abc", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","abc"] }, "description": "### Kich ban 400\n* id sai kieu bi chan boi handler MethodArgumentTypeMismatch.\n* Phan hoi (400): message \"Tham số 'id' không hợp lệ\".", "auth": { "type": "noauth" } },
+							"response": []
+						},
+						{
+							"name": "Guest xem bài MEMBERS - Bị chặn 403",
+							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/2", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","2"] }, "description": "### Kich ban 403 (BR-12)\n* Guest co xem bai visibility=MEMBERS (id=2 gia dinh la bai MEMBERS).\n* Phan hoi (403): { error: 403, message: 'Đăng nhập để xem bài viết này' }.", "auth": { "type": "noauth" } },
+							"response": []
+						},
+						{
+							"name": "Xem bình luận của bài viết - Thành công",
+							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/1/comments?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","1","comments"], "query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ] }, "description": "### API Xem Luong Binh Luan (UC16)\n* Quyen: Public (theo quyen xem cua bai viet chua binh luan).\n* Phan hoi (200): PageResponse<CommentResponse>, chi status=ACTIVE, sap created_at ASC (BR-15).", "auth": { "type": "noauth" } },
+							"response": []
+						},
+						{
+							"name": "Thành viên xem chi tiết bài MEMBERS - Thành công",
+							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/2", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","2"] }, "description": "### Xem chi tiet voi vai tro thanh vien\n* Quyen: Bearer Token ({{jwtToken}}).\n* Thanh vien xem duoc ca bai MEMBERS (BR-12)." },
+							"response": []
+						}
+					]
 				}
 			]
 		}

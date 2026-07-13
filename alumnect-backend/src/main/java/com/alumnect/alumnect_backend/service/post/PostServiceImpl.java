@@ -2,12 +2,19 @@ package com.alumnect.alumnect_backend.service.post;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.PostType;
+import com.alumnect.alumnect_backend.common.enums.PostVisibility;
+import com.alumnect.alumnect_backend.dao.post.CommentRepository;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
+import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
+import com.alumnect.alumnect_backend.entity.post.Comment;
 import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
+import com.alumnect.alumnect_backend.exception.ForbiddenException;
+import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.mapper.post.CommentMapper;
 import com.alumnect.alumnect_backend.mapper.post.PostMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +45,12 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private PostMapper postMapper;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private CommentMapper commentMapper;
 
     /**
      * {@inheritDoc}
@@ -89,6 +102,97 @@ public class PostServiceImpl implements PostService {
                 .totalPages(postsPage.getTotalPages())
                 .last(postsPage.isLast())
                 .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng xử lý: nạp bài viết có kiểm tra quyền xem (xem {@link #loadViewablePost}),
+     * nạp hồ sơ tác giả, rồi map sang {@link PostResponse}.
+     */
+    @Override
+    public PostResponse getPostDetail(Long id, boolean isAuthenticated) {
+        Post post = loadViewablePost(id, isAuthenticated);
+        UserProfile profile = userProfileRepository.findById(post.getUser().getId()).orElse(null);
+        log.info("Xem chi tiết bài viết: id={}, guestMode={}", id, !isAuthenticated);
+        return postMapper.toResponse(post, profile);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng xử lý:
+     * <ol>
+     *   <li>Kiểm tra quyền xem bài viết chứa bình luận (tránh Guest đọc bình luận của bài MEMBERS).</li>
+     *   <li>Kiểm tra tham số phân trang ({@code page} ≥ 0, {@code size} ≥ 1).</li>
+     *   <li>Truy vấn trang bình luận ACTIVE (JOIN FETCH tác giả), batch-fetch hồ sơ tác giả (tránh N+1).</li>
+     *   <li>Map từng bình luận sang {@link CommentResponse} rồi đóng gói vào {@link PageResponse}.</li>
+     * </ol>
+     */
+    @Override
+    public PageResponse<CommentResponse> getPostComments(Long postId, int page, int size, boolean isAuthenticated) {
+        // Áp dụng cùng quy tắc quyền xem như xem chi tiết bài viết.
+        loadViewablePost(postId, isAuthenticated);
+
+        if (page < 0) {
+            throw new BadRequestException("Tham số page phải là số nguyên không âm");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("Tham số size phải là số nguyên dương");
+        }
+
+        Page<Comment> commentsPage = commentRepository.findActiveByPostId(postId, PageRequest.of(page, size));
+        log.info("Lấy bình luận: postId={}, page={}, size={}, tổng kết quả={}",
+                postId, page, size, commentsPage.getTotalElements());
+
+        // Gộp truy vấn hồ sơ tác giả theo lô (batch) thay vì truy vấn riêng lẻ cho từng bình luận.
+        List<Long> authorIds = commentsPage.getContent().stream()
+                .map(c -> c.getUser().getId())
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
+                .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+        List<CommentResponse> content = commentsPage.getContent().stream()
+                .map(comment -> commentMapper.toResponse(comment, profileByUserId.get(comment.getUser().getId())))
+                .collect(Collectors.toList());
+
+        return PageResponse.<CommentResponse>builder()
+                .content(content)
+                .pageNumber(commentsPage.getNumber())
+                .pageSize(commentsPage.getSize())
+                .totalElements(commentsPage.getTotalElements())
+                .totalPages(commentsPage.getTotalPages())
+                .last(commentsPage.isLast())
+                .build();
+    }
+
+    /**
+     * Nạp một bài viết theo ID và kiểm tra quyền xem, dùng chung cho cả xem chi tiết và xem bình luận:
+     * <ul>
+     *   <li>Không tồn tại hoặc đã bị ẩn (isHidden = true) → {@link ResourceNotFoundException} (404) — BR-08/BR-11.</li>
+     *   <li>Guest (chưa đăng nhập) xem bài {@code MEMBERS} → {@link ForbiddenException} (403) — BR-12.</li>
+     * </ul>
+     *
+     * @param id              ID bài viết cần nạp
+     * @param isAuthenticated true nếu người xem đã đăng nhập, false nếu là Guest
+     * @return Bài viết hợp lệ để xem (đã JOIN FETCH tác giả)
+     */
+    private Post loadViewablePost(Long id, boolean isAuthenticated) {
+        Post post = postRepository.findDetailById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Bài viết này không còn khả dụng"));
+
+        // BR-08/BR-11: bài đã bị Admin ẩn coi như không còn khả dụng (không tiết lộ là do bị ẩn).
+        if (post.isHidden()) {
+            throw new ResourceNotFoundException("Bài viết này không còn khả dụng");
+        }
+
+        // BR-12: Guest chỉ xem được bài PUBLIC; bài MEMBERS yêu cầu đăng nhập.
+        if (!isAuthenticated && post.getVisibility() != PostVisibility.PUBLIC) {
+            throw new ForbiddenException("Đăng nhập để xem bài viết này");
+        }
+
+        return post;
     }
 
     /**

@@ -106,21 +106,24 @@ function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
         {/* --- Phần 1: Header — avatar, tên tác giả, badge loại bài, thời gian, menu "..." --- */}
         <div className="flex items-center gap-3">
           <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
-          <div className="min-w-0 flex-1">
+          {/* Tên tác giả + badge/thời gian: bấm vào mở trang chi tiết bài viết (UC16) */}
+          <Link to={`/app/posts/${post.id}`} className="min-w-0 flex-1">
             <p className="flex items-center gap-2 font-bold text-plum-900">
-              <span className="truncate">{post.author}</span>
+              <span className="truncate hover:underline">{post.author}</span>
               <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
             </p>
             <p className="truncate text-xs text-plum-400">{post.role} · {post.time}</p>
-          </div>
+          </Link>
           {/* Menu tác giả (Edit/Delete) — thuộc UC khác, ở đây chỉ hiển thị icon */}
           <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
             <MoreHorizontal size={18} />
           </button>
         </div>
 
-        {/* --- Phần 2: Nội dung văn bản của bài viết --- */}
-        <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-plum-800">{post.text}</p>
+        {/* --- Phần 2: Nội dung văn bản — bấm vào mở trang chi tiết bài viết (UC16) --- */}
+        <Link to={`/app/posts/${post.id}`} className="mt-4 block">
+          <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">{post.text}</p>
+        </Link>
       </div>
 
       {/* --- Phần 3: Ảnh đính kèm (nếu có), lazy-load để tối ưu hiệu năng --- */}
