@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Entity ánh xạ bảng user_profiles — hồ sơ công khai hiển thị của người dùng.
@@ -62,13 +65,6 @@ public class UserProfile {
     /** Giới thiệu bản thân chi tiết (không giới hạn ký tự) */
     private String biography;
 
-    /** Chức danh công việc hiện tại (VD: "Backend Developer") */
-    @Column(name = "current_position", length = 120)
-    private String currentPosition;
-
-    /** Tên công ty/tổ chức đang làm việc hiện tại */
-    @Column(name = "current_company", length = 150)
-    private String currentCompany;
 
     /** Thành phố đang sinh sống hoặc làm việc */
     @Column(length = 120)
@@ -80,13 +76,26 @@ public class UserProfile {
     /** Kinh độ địa lý — dùng cho tính năng bản đồ cựu sinh viên */
     private BigDecimal longitude;
 
-    /** URL trang web cá nhân hoặc portfolio */
-    @Column(name = "website_url", length = 255)
-    private String websiteUrl;
+    /** Danh sách liên kết mạng xã hội/website của người dùng */
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "social_links", columnDefinition = "varchar(500)[]")
+    private List<String> socialLinks;
 
-    /** URL trang LinkedIn của người dùng */
-    @Column(name = "linkedin_url", length = 255)
-    private String linkedinUrl;
+    /** URL ảnh bìa hồ sơ (không bắt buộc) */
+    @Column(name = "cover_url", length = 500)
+    private String coverUrl;
+
+    /** Danh sách kinh nghiệm làm việc của người dùng */
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @OrderBy("startDate DESC")
+    private List<Experience> experiences;
+
+    /** Danh sách kỹ năng của người dùng */
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @OrderBy("sortOrder ASC, skillName ASC")
+    private List<UserSkill> skills;
 
     /** Thời điểm tạo hồ sơ, không thể cập nhật sau khi tạo */
     @Column(name = "created_at", nullable = false, updatable = false)

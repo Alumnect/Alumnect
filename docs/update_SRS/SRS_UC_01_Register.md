@@ -109,7 +109,7 @@ stateDiagram-v2
     *   `proofUrl` (String, tối đa 500 ký tự, chứa URL ảnh minh chứng tốt nghiệp, bắt buộc với ALUMNI)
     *   `note` (String, tối đa 500 ký tự, tùy chọn cho ALUMNI)
 *   **Validation**: 
-    *   Phía Client: Zod schema kiểm tra bắt buộc các trường, định dạng email hợp lệ (không giới hạn đuôi @fpt.edu.vn), độ phức tạp mật khẩu, các trường ALUMNI khi vai trò là ALUMNI được chọn.
+    *   Phía Client: Zod schema kiểm tra bắt buộc các trường, định dạng email hợp lệ, độ phức tạp mật khẩu, các trường ALUMNI khi vai trò là ALUMNI được chọn. Đồng thời kiểm tra dung lượng tệp tin minh chứng tối đa 100MB trước khi upload lên Cloudflare R2 (phục vụ BR-REG-06).
     *   Phía Server: Sử dụng JSR-380 (`@NotBlank`, `@Email`, `@Size`, `@Pattern`) trên `RegisterRequest` DTO.
 *   **Business rules**:
     *   **Quy tắc trùng lặp:** Không cho phép trùng email với các tài khoản đang hoạt động (`ACTIVE`), đang chờ duyệt (`WAITING_APPROVAL`), hoặc bị khóa (`LOCKED`). Cho phép ghi đè và gửi lại OTP nếu email trùng ở trạng thái `PENDING`.
@@ -137,7 +137,7 @@ stateDiagram-v2
 | BR-REG-03 | Thời hạn hiệu lực của mã OTP xác thực email là 5 phút (300 giây). |
 | BR-REG-04 | Giới hạn số lần nhập sai OTP tối đa cho một token là 5 lần. Vượt quá giới hạn, token sẽ bị vô hiệu hóa lập tức. |
 | BR-REG-05 | Giới hạn thời gian tối thiểu giữa 2 lần yêu cầu gửi lại OTP là 5 phút. Bỏ qua giới hạn này nếu token trước đó đã bị khóa do nhập sai quá 5 lần. |
-| BR-REG-06 | Chỉ cho phép tải lên các tệp tin ảnh minh chứng ở định dạng JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF hoặc tài liệu PDF với dung lượng tối đa 100MB. |
+| BR-REG-06 | Cho phép tải lên các tệp tin minh chứng ở nhiều định dạng khác nhau (ảnh, tài liệu PDF, tài liệu Word doc/docx, text, markdown, video...) với dung lượng tối đa 100MB. |
 | BR-REG-07 | Mã số sinh viên (studentCode) là trường bắt buộc đối với tất cả người dùng (Sinh viên và Cựu sinh viên) và phải là duy nhất trên toàn hệ thống (không trùng lặp). |
 | BR-REG-08 | Năm tốt nghiệp (graduationYear) của Cựu sinh viên không được lớn hơn năm hiện tại. |
 | BR-REG-09 | Khi tài khoản PENDING đổi vai trò từ ALUMNI sang STUDENT khi đăng ký lại, phiếu yêu cầu xác minh (`VerificationRequest`) cũ (nếu có) sẽ tự động bị xóa. |
@@ -365,9 +365,9 @@ classDiagram
 
 ###### Mô tả chi tiết cấu trúc các lớp (Class Design Description):
 * **Lớp Controller (`AuthController`, `MajorController`, `FileController`)**:
-  * `AuthController` tiếp nhận các HTTP requests liên quan đến đăng ký tài khoản mới (`/auth/register`), xác minh mã OTP gửi từ email (`/auth/verify-email`), và gửi lại mã OTP mới (`/auth/resend-otp`).
-  * `MajorController` tiếp nhận yêu cầu lấy danh sách chuyên ngành học (`/majors`) để hiển thị ra dropdown của Frontend.
-  * `FileController` tiếp nhận yêu cầu sinh link ký sẵn (`/files/presigned-url`) hỗ trợ cựu sinh viên upload ảnh tốt nghiệp trực tiếp lên Cloudflare R2.
+  * `AuthController` tiếp nhận các HTTP requests liên quan đến đăng ký tài khoản mới (`/api/v1/auth/register`), xác minh mã OTP gửi từ email (`/api/v1/auth/verify-email`), và gửi lại mã OTP mới (`/api/v1/auth/resend-otp`).
+  * `MajorController` tiếp nhận yêu cầu lấy danh sách chuyên ngành học (`/api/v1/majors`) để hiển thị ra dropdown của Frontend.
+  * `FileController` tiếp nhận yêu cầu sinh link ký sẵn (`/api/v1/files/presigned-url`) hỗ trợ cựu sinh viên upload ảnh tốt nghiệp trực tiếp lên Cloudflare R2.
 * **Lớp DTO (`RegisterRequest`, `MajorResponse`, `PresignedUrlResponse`)**:
   * `RegisterRequest` đóng gói toàn bộ dữ liệu người dùng điền trên form đăng ký. Đồng thời áp dụng kiểm tra dữ liệu đầu vào (JSR-380 validation) với các thông báo lỗi bằng Tiếng Việt.
   * `MajorResponse` trả thông tin chuyên ngành đã chọn lọc về Client.

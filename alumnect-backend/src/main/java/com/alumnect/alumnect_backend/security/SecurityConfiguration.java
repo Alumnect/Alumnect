@@ -15,6 +15,9 @@ import com.alumnect.alumnect_backend.security.filter.JwtFilter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import jakarta.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import java.util.Arrays;
 
 /**
@@ -26,9 +29,6 @@ public class SecurityConfiguration {
 
     @Autowired
     private JwtFilter jwtFilter;
-
-    @Autowired
-    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     /**
      * Bean cung cấp thuật toán mã hóa mật khẩu BCrypt.
@@ -67,6 +67,26 @@ public class SecurityConfiguration {
                 // Mọi request còn lại đều phải được xác thực bằng JWT
                 .anyRequest().authenticated());
 
+        // Cấu hình Exception Handling để trả về JSON chuẩn cho lỗi 401 và 403
+        http.exceptionHandling(exception -> exception
+                // Lỗi 401: Chưa xác thực (chưa đăng nhập hoặc token hết hạn/không hợp lệ)
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                    response.setContentType("application/json;charset=UTF-8");
+                    ApiResponse<Void> apiResponse = ApiResponse.error(401, "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.");
+                    response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+                    response.getWriter().flush();
+                })
+                // Lỗi 403: Đã xác thực nhưng thiếu quyền truy cập (ví dụ STUDENT truy cập ADMIN API)
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+                    response.setContentType("application/json;charset=UTF-8");
+                    ApiResponse<Void> apiResponse = ApiResponse.error(403, "Bạn không có quyền thực hiện chức năng này.");
+                    response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+                    response.getWriter().flush();
+                })
+        );
+
         // Cấu hình CORS - Cho phép tất cả các nguồn truy cập phục vụ chạy cục bộ/mobile
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration corsConfig = new CorsConfiguration();
@@ -75,10 +95,6 @@ public class SecurityConfiguration {
             corsConfig.addAllowedHeader("*");
             return corsConfig;
         }));
-
-        // Trả về 401 JSON (thay vì 403 mặc định) khi request chưa xác thực/token hết hạn —
-        // Frontend dựa vào mã 401 này để kích hoạt cơ chế tự làm mới Access Token
-        http.exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint));
 
         // Sử dụng phiên làm việc không trạng thái (Stateless Session) vì dùng token JWT
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

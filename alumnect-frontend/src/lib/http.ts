@@ -64,10 +64,12 @@ http.interceptors.response.use(
     }
 
     const data = error.response.data as { message?: string } | undefined
-    // Đính kèm HTTP status vào Error (thuần cộng thêm) để tầng UI phân biệt được
-    // các trạng thái như 404 (không tồn tại) vs 403 (không có quyền) — dùng ở UC16.
-    const err = new Error(data?.message ?? 'Đã có lỗi hệ thống xảy ra') as Error & { status?: number }
+    // Đính kèm HTTP status + payload gốc vào Error (thuần cộng thêm):
+    //  - `status`: để UI phân biệt 404 (không tồn tại) vs 403 (không có quyền) — dùng ở UC16.
+    //  - `data`: để đọc chi tiết lỗi từ backend (vd luồng đăng ký Google trả 404 kèm thông tin).
+    const err = new Error(data?.message ?? 'Đã có lỗi hệ thống xảy ra') as Error & { status?: number; data?: unknown }
     err.status = error.response.status
+    err.data = error.response.data
     return Promise.reject(err)
   },
 )

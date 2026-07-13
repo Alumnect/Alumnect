@@ -37,17 +37,12 @@ public class CommentMapper {
                 : author.getEmail();
         String avatarUrl = authorProfile != null ? authorProfile.getAvatarUrl() : null;
 
-        // "role" hiển thị dưới tên: ưu tiên headline, fallback ghép "chức danh @ công ty", cuối cùng là chuỗi rỗng.
-        String role = "";
-        if (authorProfile != null) {
-            if (authorProfile.getHeadline() != null && !authorProfile.getHeadline().isBlank()) {
-                role = authorProfile.getHeadline();
-            } else if (authorProfile.getCurrentPosition() != null && !authorProfile.getCurrentPosition().isBlank()) {
-                role = authorProfile.getCurrentCompany() != null && !authorProfile.getCurrentCompany().isBlank()
-                        ? authorProfile.getCurrentPosition() + " @ " + authorProfile.getCurrentCompany()
-                        : authorProfile.getCurrentPosition();
-            }
-        }
+        // "role" hiển thị dưới tên: lấy từ headline của hồ sơ, mặc định chuỗi rỗng.
+        // (Sau khi merge dev, UserProfile không còn currentPosition/currentCompany —
+        //  chức danh/công ty nay thuộc bảng experiences; tránh truy cập LAZY gây N+1.)
+        String role = authorProfile != null && authorProfile.getHeadline() != null
+                ? authorProfile.getHeadline()
+                : "";
 
         return CommentResponse.builder()
                 .id(String.valueOf(comment.getId()))

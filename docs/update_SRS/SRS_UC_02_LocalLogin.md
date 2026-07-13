@@ -259,7 +259,7 @@ classDiagram
 ```
 
 ###### Mô tả chi tiết cấu trúc các lớp (Class Design Description):
-- **AuthController**: Tiếp nhận các request HTTP POST gửi tới `/auth/login` và `/auth/refresh`, trích xuất `User-Agent` và `IP Address` từ đối tượng `HttpServletRequest` của Tomcat để truyền xuống Service Layer.
+- **AuthController**: Tiếp nhận các request HTTP POST gửi tới `/api/v1/auth/login` và `/api/v1/auth/refresh`, trích xuất `User-Agent` và `IP Address` từ đối tượng `HttpServletRequest` của Tomcat để truyền xuống Service Layer.
 - **LoginRequest & RefreshRequest**: Các lớp DTO chứa các ràng buộc JSR-380 validation dữ liệu đầu vào.
 - **LoginResponse**: DTO chứa dữ liệu trả về sau khi xác thực thành công, gồm cặp tokens và thông tin profile.
 - **AuthService & AuthServiceImpl**: Xử lý toàn bộ logic nghiệp vụ (so khớp mật khẩu, kiểm tra trạng thái hoạt động của tài khoản, sinh JWT, băm SHA-256 lưu trữ refresh token, thực hiện xoay vòng token và xử lý cảnh báo Replay Attack).
@@ -283,7 +283,7 @@ sequenceDiagram
     participant Repo as RefreshTokenRepository
     participant DB as PostgreSQL
 
-    Client->>Controller: HTTP POST /auth/login (LoginRequest)
+    Client->>Controller: HTTP POST /api/v1/auth/login (LoginRequest)
     
     alt Kịch bản 1: Validate đầu vào thất bại (JSR-380)
         Note over Controller: Email trống hoặc sai định dạng...
@@ -310,7 +310,7 @@ sequenceDiagram
     end
 
     Note over Client: Thời gian trôi qua, Access Token hết hạn (HTTP 401)<br/>Frontend tự động gọi API Refresh
-    Client->>Controller: HTTP POST /auth/refresh (RefreshRequest)
+    Client->>Controller: HTTP POST /api/v1/auth/refresh (RefreshRequest)
     Controller->>Service: Gọi refresh(RefreshRequest, userAgent, ipAddress)
     Service->>Jwt: Giải mã email từ Refresh Token
     Jwt-->>Service: Trả về email
