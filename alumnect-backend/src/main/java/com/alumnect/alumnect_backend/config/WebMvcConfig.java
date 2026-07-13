@@ -1,7 +1,9 @@
 package com.alumnect.alumnect_backend.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.HandlerTypePredicate;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -12,6 +14,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+
+    /**
+     * Tạo RestTemplate Bean dùng chung cho toàn bộ dự án để tối ưu hóa connection pool.
+     */
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 
     /**
      * Cấu hình khớp đường dẫn (Path Match) để thêm prefix "/api/v1" vào trước endpoint của các RestController.

@@ -64,7 +64,9 @@ http.interceptors.response.use(
     }
 
     const data = error.response.data as { message?: string } | undefined
-    return Promise.reject(new Error(data?.message ?? 'Đã có lỗi hệ thống xảy ra'))
+    const finalError = new Error(data?.message ?? 'Đã có lỗi hệ thống xảy ra') as any
+    finalError.data = error.response.data
+    return Promise.reject(finalError)
   },
 )
 

@@ -1213,6 +1213,68 @@
 								"description": "### Thử làm mới token bằng Refresh Token đã hết hạn hoặc không hợp lệ\n* **Mong đợi**: 400 Bad Request, báo lỗi phiên đăng nhập đã hết hạn hoặc bị thu hồi."
 							},
 							"response": []
+						},
+						{
+							"name": "Đăng xuất hệ thống - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/logout",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"logout"
+									]
+								},
+								"description": "### API Đăng xuất hệ thống - Thành công\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu JWT Token ở header và Refresh Token trong body).\n* **Mục đích**: Thu hồi và xóa phiên đăng nhập trong cơ sở dữ liệu."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng xuất hệ thống thất bại - Token không hợp lệ hoặc đã hết hạn",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refreshToken\": \"invalid_or_expired_refresh_token_for_logout\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/logout",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"logout"
+									]
+								},
+								"description": "### API Đăng xuất hệ thống - Thất bại do Token không tồn tại\n* **Mong đợi**: 400 Bad Request, báo lỗi phiên đăng nhập không tồn tại hoặc đã hết hạn."
+							},
+							"response": []
 						}
 					]
 				},
@@ -1313,6 +1375,171 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "01.7. Đăng nhập bằng Google (Google OAuth2)",
+					"item": [
+						{
+							"name": "Đăng nhập Google - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.data && jsonData.data.accessToken) {",
+											"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+											"}",
+											"if (jsonData.data && jsonData.data.refreshToken) {",
+											"    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_here\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google"
+									]
+								},
+								"description": "### API Đăng nhập bằng Google OAuth2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Gửi ID Token của Google để xác thực và nhận access/refresh tokens của hệ thống."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng nhập Google thất bại - Tài khoản chưa đăng ký (404)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_not_registered\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google"
+									]
+								},
+								"description": "### Đăng nhập bằng tài khoản Google chưa đăng ký\n* **Kết quả mong đợi**: 404 Not Found kèm theo thông tin email và name trong thuộc tính data để điền sẵn vào form đăng ký."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký sinh viên (STUDENT) bằng Google - Thành công (Có Token)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.data && jsonData.data.accessToken) {",
+											"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+											"}",
+											"if (jsonData.data && jsonData.data.refreshToken) {",
+											"    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_here\",\n  \"fullName\": \"Jane Google User\",\n  \"role\": \"STUDENT\",\n  \"majorId\": 1,\n  \"cohort\": 18,\n  \"studentCode\": \"HE189999\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google",
+										"register"
+									]
+								},
+								"description": "### API Đăng ký tài khoản Sinh viên mới qua Google OAuth2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lưu tài khoản mới sử dụng Google ID Token và các thông tin trường học bắt buộc. Trả về cặp tokens và đăng nhập trực tiếp."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng ký cựu sinh viên (ALUMNI) bằng Google - Thành công (Chờ duyệt, không Token)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"your_google_id_token_here\",\n  \"fullName\": \"Jane Google Alumni\",\n  \"role\": \"ALUMNI\",\n  \"majorId\": 1,\n  \"cohort\": 14,\n  \"studentCode\": \"HE149999\",\n  \"graduationYear\": 2022,\n  \"proofUrl\": \"https://example.com/proof.png\",\n  \"note\": \"Tôi đăng ký bằng tài khoản Google\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/google/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"google",
+										"register"
+									]
+								},
+								"description": "### API Đăng ký tài khoản cựu sinh viên qua Google OAuth2\n* **Quyền truy cập**: Public.\n* **Mục đích**: Lưu tài khoản mới sử dụng Google ID Token và thông tin cựu sinh viên bắt buộc. Trả về thông tin đăng ký thành công nhưng không kèm token đăng nhập (chờ duyệt)."
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},
@@ -1321,12 +1548,18 @@
 			"description": "Thư mục chứa các API quản lý thông tin cá nhân và thiết lập của người dùng. Các API này yêu cầu xác thực bằng JWT.",
 			"item": [
 				{
-					"name": "Lấy thông tin cá nhân hiện tại",
+					"name": "Lấy hồ sơ cá nhân hiện tại (Own Profile) - Thành công",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/users/me",
+							"raw": "{{baseUrl}}/api/v1/users/profile",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1334,10 +1567,76 @@
 								"api",
 								"v1",
 								"users",
-								"me"
+								"profile"
 							]
 						},
-						"description": "### API Lấy Thông Tin Cá Nhân\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu JWT Token ở header dưới dạng Bearer Token).\n* **Mục đích**: Trả về chi tiết trang cá nhân hiện tại bao gồm Họ tên, Ảnh đại diện, Chuyên ngành, Niên khóa."
+						"description": "### API Lấy Hồ Sơ Cá Nhân Hiện Tại\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu JWT Token ở header).\n* **Mục đích**: Trả về thông tin chi tiết hồ sơ cá nhân của người dùng hiện tại."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy hồ sơ người dùng khác (Other Profile) - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile",
+								"1"
+							]
+						},
+						"description": "### API Lấy Hồ Sơ Người Dùng Khác\n* **Quyền truy cập**: Công khai (Không cần Token).\n* **Mục đích**: Trả về thông tin chi tiết hồ sơ của người dùng khác qua ID khi tài khoản đó có trạng thái ACTIVE."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy hồ sơ người dùng khác - Thất bại do tài khoản bị khóa/chưa kích hoạt",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile",
+								"3"
+							]
+						},
+						"description": "### API Lấy Hồ Sơ Người Dùng Khác Thất Bại\n* **Quyền truy cập**: Công khai.\n* **Nghiệp vụ**: Trả về lỗi 400 Bad Request nếu tài khoản người dùng cần xem bị khóa hoặc chưa kích hoạt (status khác ACTIVE).\n* **Mong đợi**: 400 Bad Request, message \"Tài khoản người dùng này chưa được kích hoạt hoặc đã bị khóa.\""
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy hồ sơ người dùng khác - Thất bại do không tồn tại ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile/9999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile",
+								"9999"
+							]
+						},
+						"description": "### API Lấy Hồ Sơ Người Dùng Khác Thất Bại Do Không Tồn Tại\n* **Mong đợi**: 404 Not Found, message \"Không tìm thấy tài khoản người dùng với ID: 9999\""
 					},
 					"response": []
 				},
@@ -1371,6 +1670,215 @@
 						"description": "### API Cập Nhật Thiết Lập Cài Đặt\n* **Quyền truy cập**: Đã đăng nhập.\n* **Mục đích**: Cập nhật tùy chọn màu nền (LIGHT/DARK/SYSTEM) và ngôn ngữ hiển thị (vi/en) của tài khoản."
 					},
 					"response": []
+				},
+				{
+					"name": "02.3. Đổi mật khẩu (Change Password)",
+					"item": [
+						{
+							"name": "Đổi mật khẩu - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmNewPassword\": \"NewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thành công\n* **Quyền truy cập**: Đã đăng nhập (Bearer Token).\n* **Nghiệp vụ**: Đổi mật khẩu thành công. Sau khi thành công, Frontend sẽ hiển thị Modal hỏi người dùng có muốn đăng xuất khỏi tất cả thiết bị không (gọi API /logout-all riêng).\n* **Kết quả**: 200 OK."
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Sai mật khẩu hiện tại",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"WrongPassword!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmNewPassword\": \"NewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do sai mật khẩu hiện tại\n* **Kết quả**: 400 Bad Request.\n* **Thông báo**: \"Mật khẩu hiện tại không chính xác.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Mật khẩu mới trùng mật khẩu cũ",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"Password123!\",\n  \"confirmNewPassword\": \"Password123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do mật khẩu mới trùng mật khẩu cũ\n* **Kết quả**: 400 Bad Request.\n* **Thông báo**: \"Mật khẩu mới không được trùng với mật khẩu hiện tại.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Xác nhận mật khẩu không khớp",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmNewPassword\": \"DifferentNewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do xác nhận mật khẩu không khớp\n* **Kết quả**: 400 Bad Request.\n* **Thông báo**: \"Xác nhận mật khẩu mới không trùng khớp.\""
+							},
+							"response": []
+						},
+						{
+							"name": "Đổi mật khẩu thất bại - Mật khẩu mới quá yếu (Validation)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"123\",\n  \"confirmNewPassword\": \"123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/users/change-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"users",
+										"change-password"
+									]
+								},
+								"description": "### Đổi mật khẩu thất bại do mật khẩu mới quá ngắn hoặc thiếu chữ số\n* **Kết quả**: 400 Bad Request (Validation failure)."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng xuất tất cả thiết bị - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwtToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/logout-all",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"logout-all"
+									]
+								},
+								"description": "### Đăng xuất tài khoản khỏi tất cả các thiết bị\n* **Quyền truy cập**: Đã đăng nhập (Bearer Token).\n* **Nghiệp vụ**: Xóa sạch toàn bộ refresh tokens của người dùng này khỏi CSDL, buộc đăng nhập lại từ mọi thiết bị."
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},
@@ -1378,6 +1886,212 @@
 			"name": "03. Admin Operations",
 			"description": "Thư mục chứa các API kiểm duyệt và hệ thống chỉ dành cho vai trò Quản trị viên (ADMIN). Yêu cầu Token JWT của ADMIN.",
 			"item": [
+				{
+					"name": "Đăng nhập ADMIN - Thành công",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.accessToken) {",
+									"    pm.collectionVariables.set(\"jwtToken\", jsonData.data.accessToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@fpt.edu.vn\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "### Đăng nhập với quyền ADMIN\n* **Mục đích**: Lấy JWT token của ADMIN và lưu vào biến `jwtToken` phục vụ các API ADMIN tiếp theo."
+					},
+					"response": []
+				},
+				{
+					"name": "Thống kê tổng quan dashboard - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/dashboard/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"dashboard",
+								"summary"
+							]
+						},
+						"description": "### API Thống Kê Tổng Quan Dashboard\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy số liệu thống kê KPIs hệ thống và biểu đồ số lượng đăng ký 7 ngày qua."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem danh sách người dùng - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users?query=&role=&status=&majorId=&cohort=&page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": ""
+								},
+								{
+									"key": "role",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "majorId",
+									"value": ""
+								},
+								{
+									"key": "cohort",
+									"value": ""
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "### API Xem Danh Sách Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Tìm kiếm, phân trang và lọc người dùng."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết người dùng - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"1"
+							]
+						},
+						"description": "### API Xem Chi Tiết Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy thông tin hồ sơ chi tiết của người dùng bằng ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Khóa tài khoản người dùng - Thành công",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"LOCKED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users/1/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"1",
+								"status"
+							]
+						},
+						"description": "### API Khóa Tài Khoản Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Đổi trạng thái tài khoản thành LOCKED."
+					},
+					"response": []
+				},
+				{
+					"name": "Mở khóa tài khoản người dùng - Thành công",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/users/1/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"users",
+								"1",
+								"status"
+							]
+						},
+						"description": "### API Mở Khóa Tài Khoản Người Dùng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Đổi trạng thái tài khoản thành ACTIVE."
+					},
+					"response": []
+				},
 				{
 					"name": "Xem danh sách yêu cầu xác thực tốt nghiệp PENDING",
 					"request": {
@@ -1416,7 +2130,7 @@
 				{
 					"name": "Phê duyệt / Từ chối yêu cầu xác thực tốt nghiệp",
 					"request": {
-						"method": "POST",
+						"method": "PUT",
 						"header": [
 							{
 								"key": "Content-Type",
@@ -1449,7 +2163,461 @@
 			]
 		},
 		{
-			"name": "04. Community Feed",
+			"name": "04. Alumni Map",
+			"description": "Thư mục chứa các API bản đồ cựu sinh viên (UC55). API công khai (Public API), không yêu cầu Token JWT.",
+			"item": [
+				{
+					"name": "Xem Bản đồ cựu sinh viên",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alumni-map",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alumni-map"
+							]
+						},
+						"description": "### API Lấy Danh Sách Vị Trí Cựu Sinh Viên\n* **Quyền truy cập**: Công khai (Không yêu cầu đăng nhập / JWT Token).\n* **Mục đích**: Trả về danh sách vị trí tọa độ địa lý và thông tin hiển thị tóm tắt của các cựu sinh viên hoạt động."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "05. Q&A Forum (UC38 - View Question List)",
+			"description": "Thư mục chứa các API công khai của Module 4 (Q&A Forum) cho UC38 - Xem danh sách câu hỏi. Guest/Student/Alumni đều xem được, không cần đăng nhập. Hỗ trợ phân trang, sắp xếp (recent/votes/answers) và lọc theo chủ đề.",
+			"item": [
+				{
+					"name": "04.1. Danh sách câu hỏi (Questions)",
+					"item": [
+						{
+							"name": "Lấy danh sách câu hỏi (mới nhất) - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=0&size=10&sort=recent",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										},
+										{
+											"key": "sort",
+											"value": "recent"
+										}
+									]
+								},
+								"description": "### API Xem Danh Sách Câu Hỏi\n* **Quyền truy cập**: Public (Guest/Student/Alumni).\n* **Tham số**: `page` (0-based, mặc định 0), `size` (mặc định 10), `sort` (`recent`|`votes`|`answers`), `topicId` (tùy chọn).\n* **Nghiệp vụ**: Chỉ trả về câu hỏi trạng thái `ACTIVE` (ẩn HIDDEN/DELETED), sắp xếp mới nhất trước.\n* **Phản hồi (200 OK)**: `data` là `PageResponse` gồm `content[]`, `pageNumber`, `pageSize`, `totalElements`, `totalPages`, `last`."
+							},
+							"response": []
+						},
+						{
+							"name": "Sắp xếp theo lượt vote - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=0&size=5&sort=votes",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "5"
+										},
+										{
+											"key": "sort",
+											"value": "votes"
+										}
+									]
+								},
+								"description": "### Sắp Xếp Theo Vote\n* Trả về câu hỏi có nhiều lượt vote nhất trước (`sort=votes`)."
+							},
+							"response": []
+						},
+						{
+							"name": "Sắp xếp theo số câu trả lời - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=0&size=5&sort=answers",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "5"
+										},
+										{
+											"key": "sort",
+											"value": "answers"
+										}
+									]
+								},
+								"description": "### Sắp Xếp Theo Số Trả Lời\n* Trả về câu hỏi có nhiều câu trả lời nhất trước (`sort=answers`)."
+							},
+							"response": []
+						},
+						{
+							"name": "Lọc câu hỏi theo chủ đề - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?topicId=1&page=0&size=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "topicId",
+											"value": "1"
+										},
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								},
+								"description": "### Lọc Theo Chủ Đề\n* Chỉ trả về câu hỏi thuộc `topicId` chỉ định (lấy id từ API `/questions/topics`)."
+							},
+							"response": []
+						},
+						{
+							"name": "Lấy câu hỏi thất bại - Tham số page âm (400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?page=-1&size=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "-1"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								},
+								"description": "### Lỗi Validation Phân Trang\n* `page` âm -> Backend ném `BadRequestException`.\n* **Phản hồi mong đợi (400 Bad Request)**: \"Tham số page phải là số nguyên không âm\"."
+							},
+							"response": []
+						},
+						{
+							"name": "Lấy câu hỏi thất bại - Sắp xếp không hợp lệ (400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions?sort=khong_hop_le",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions"
+									],
+									"query": [
+										{
+											"key": "sort",
+											"value": "khong_hop_le"
+										}
+									]
+								},
+								"description": "### Lỗi Tiêu Chí Sắp Xếp\n* `sort` không thuộc {recent, votes, answers} -> Backend ném `BadRequestException`.\n* **Phản hồi mong đợi (400 Bad Request)**: \"Tiêu chí sắp xếp không hợp lệ: ...\"."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "04.2. Chủ đề diễn đàn (Topics)",
+					"item": [
+						{
+							"name": "Lấy danh mục chủ đề diễn đàn - Thành công",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/questions/topics",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"questions",
+										"topics"
+									]
+								},
+								"description": "### API Lấy Danh Mục Chủ Đề Diễn Đàn\n* **Quyền truy cập**: Public (Guest xem được).\n* **Mục đích**: Trả về danh sách chủ đề (id + name) để đổ vào bộ lọc câu hỏi ở Frontend.\n* **Phản hồi (200 OK)**: `data` là mảng `{ id, name }`."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "05. Q&A Forum (UC39 - View Question Detail)",
+			"description": "Thư mục chứa API công khai của Module 4 (Q&A Forum) cho UC39 - Xem chi tiết câu hỏi. Guest/Student/Alumni đều xem được, không cần đăng nhập. Chỉ trả về câu hỏi ở trạng thái ACTIVE; câu hỏi không tồn tại hoặc bị ẩn/xóa trả về 404.",
+			"item": [
+				{
+					"name": "Xem chi tiết câu hỏi - Thành công",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions",
+								"1"
+							]
+						},
+						"description": "### API Xem Chi Tiết Câu Hỏi\n* **Quyền truy cập**: Public (Guest/Student/Alumni).\n* **Tham số**: `id` (trên đường dẫn URL).\n* **Nghiệp vụ**: Chỉ trả về câu hỏi trạng thái `ACTIVE`. Trả về toàn bộ nội dung `body`, thông tin tác giả (headline, avatar) và mốc thời gian.\n* **Phản hồi (200 OK)**: `data` là `QuestionDetailResponse` gồm `id`, `title`, `body`, `topic`, `topicId`, `author`, `avatar`, `authorHeadline`, `verified`, `votes`, `answers`, `time`, `createdAt`.\n\n> Lưu ý: đổi `1` thành id câu hỏi có thật trong DB (lấy từ API danh sách UC38)."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết thất bại - Không tìm thấy (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions",
+								"999999"
+							]
+						},
+						"description": "### Lỗi Không Tìm Thấy\n* `id` không tồn tại hoặc câu hỏi đang ở trạng thái `HIDDEN`/`DELETED` -> Backend ném `ResourceNotFoundException`.\n* **Phản hồi mong đợi (404 Not Found)**: \"Không tìm thấy câu hỏi với id: 999999\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết thất bại - id sai định dạng (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions/abc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions",
+								"abc"
+							]
+						},
+						"description": "### Lỗi Sai Định Dạng id\n* `id` không phải số nguyên -> Spring không ép được về kiểu Long.\n* **Phản hồi mong đợi (400 Bad Request)**."
+					},
+					"response": []
+				}
+			]
+		},
+{
+			"name": "06. Community Feed",
 			"item": [
 				{
 					"name": "04.1. Xem bảng tin cộng đồng (View Feed)",
@@ -1612,7 +2780,7 @@
 				}
 			]
 		}
-	],
+		],
 	"auth": {
 		"type": "bearer",
 		"bearer": [
@@ -1657,6 +2825,16 @@
 		{
 			"key": "refreshToken",
 			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "studentOtpToken",
+			"value": "123456",
+			"type": "string"
+		},
+		{
+			"key": "alumniOtpToken",
+			"value": "123456",
 			"type": "string"
 		}
 	]

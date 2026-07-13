@@ -48,6 +48,8 @@ services:
       - R2_SECRET_KEY=${R2_SECRET_KEY:-}
       - R2_BUCKET_NAME=${R2_BUCKET_NAME:-}
       - R2_PUBLIC_URL=${R2_PUBLIC_URL:-}
+      # Biến cấu hình Google OAuth2 Client ID
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     depends_on:
       postgres-db:
         condition: service_healthy

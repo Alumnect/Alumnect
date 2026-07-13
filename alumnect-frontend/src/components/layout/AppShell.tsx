@@ -68,6 +68,7 @@ export function AppShell() {
   const location = useLocation()
   const [sheet, setSheet] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
   const logoutM = useLogout()
   const roleLabel = user ? (user.role === 'ADMIN' ? 'Admin' : user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
@@ -134,9 +135,11 @@ export function AppShell() {
 
           {/* right actions */}
           <div className="ml-auto flex items-center gap-1 lg:ml-0">
-            <Button size="sm" variant="primary" leftIcon={<Plus size={16} />} className="hidden sm:inline-flex">
-              Create
-            </Button>
+            {isAuthenticated && (
+              <Button size="sm" variant="primary" leftIcon={<Plus size={16} />} className="hidden sm:inline-flex">
+                Create
+              </Button>
+            )}
 
             {/* mobile search toggle */}
             <button
@@ -147,83 +150,91 @@ export function AppShell() {
               <Search size={19} />
             </button>
 
-            <IconLink to="/app/messages" label="Messages" icon={<MessagesSquare size={19} />} badge={3} />
-            <IconLink to="/app/notifications" label="Notifications" icon={<Bell size={19} />} dot />
+            {isAuthenticated ? (
+              <>
+                <IconLink to="/app/messages" label="Messages" icon={<MessagesSquare size={19} />} badge={3} />
+                <IconLink to="/app/notifications" label="Notifications" icon={<Bell size={19} />} dot />
 
-            {/* More apps (desktop) */}
-            <div className="hidden lg:block">
-              <Popover
-                panelClass="w-72"
-                button={
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
-                    <LayoutGrid size={19} />
-                  </span>
-                }
-              >
-                <p className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-plum-400">Explore more</p>
-                <div className="grid grid-cols-3 gap-1">
-                  {APP_MORE_NAV.map((item) => {
+                {/* More apps (desktop) */}
+                <div className="hidden lg:block">
+                  <Popover
+                    panelClass="w-72"
+                    button={
+                      <span className="grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
+                        <LayoutGrid size={19} />
+                      </span>
+                    }
+                  >
+                    <p className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-plum-400">Explore more</p>
+                    <div className="grid grid-cols-3 gap-1">
+                      {APP_MORE_NAV.map((item) => {
+                        const Icon = item.icon
+                        return (
+                          <Link
+                            key={item.to}
+                            to={item.to}
+                            className="flex flex-col items-center gap-1.5 rounded-xl p-3 text-center text-xs font-semibold text-plum-600 transition-colors hover:bg-brand-50"
+                          >
+                            {Icon && (
+                              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100 text-brand-600">
+                                <Icon size={18} />
+                              </span>
+                            )}
+                            {item.label}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </Popover>
+                </div>
+
+                {/* account */}
+                <Popover
+                  panelClass="w-64"
+                  button={
+                    <span className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-plum-900/[0.05]">
+                      <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={36} ring />
+                      <ChevronDown size={15} className="hidden text-plum-400 sm:block" />
+                    </span>
+                  }
+                >
+                  <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-brand-50">
+                    <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={42} verified={user?.verified} />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-plum-900">{user?.name}</p>
+                      <p className="truncate text-xs text-brand-600">{user?.verified ? 'Verified ' : ''}{roleLabel}</p>
+                    </div>
+                  </Link>
+                  <div className="my-1 h-px bg-plum-900/[0.07]" />
+                  {APP_ACCOUNT_NAV.map((item) => {
                     const Icon = item.icon
                     return (
                       <Link
                         key={item.to}
                         to={item.to}
-                        className="flex flex-col items-center gap-1.5 rounded-xl p-3 text-center text-xs font-semibold text-plum-600 transition-colors hover:bg-brand-50"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
                       >
-                        {Icon && (
-                          <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100 text-brand-600">
-                            <Icon size={18} />
-                          </span>
-                        )}
+                        {Icon && <Icon size={16} className="text-plum-400" />}
                         {item.label}
                       </Link>
                     )
                   })}
-                </div>
-              </Popover>
-            </div>
-
-            {/* account */}
-            {user && (
-              <Popover
-                panelClass="w-64"
-                button={
-                  <span className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-plum-900/[0.05]">
-                    <Avatar src={user.avatarUrl} name={user.name} size={36} ring />
-                    <ChevronDown size={15} className="hidden text-plum-400 sm:block" />
-                  </span>
-                }
-              >
-                <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-brand-50">
-                  <Avatar src={user.avatarUrl} name={user.name} size={42} verified={user.verified} />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-plum-900">{user.name}</p>
-                    <p className="truncate text-xs text-brand-600">{user.verified ? 'Verified ' : ''}{roleLabel}</p>
-                  </div>
-                </Link>
-                <div className="my-1 h-px bg-plum-900/[0.07]" />
-                {APP_ACCOUNT_NAV.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-                    >
-                      {Icon && <Icon size={16} className="text-plum-400" />}
-                      {item.label}
-                    </Link>
-                  )
-                })}
-                <div className="my-1 h-px bg-plum-900/[0.07]" />
-                <button
-                  type="button"
-                  onClick={() => logoutM.mutate()}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-coral-600 transition-colors hover:bg-coral-300/25"
-                >
-                  <LogOut size={16} /> Sign out
-                </button>
-              </Popover>
+                  <div className="my-1 h-px bg-plum-900/[0.07]" />
+                  <button
+                    type="button"
+                    onClick={() => logoutM.mutate()}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-coral-600 transition-colors hover:bg-coral-300/25"
+                  >
+                    <LogOut size={16} /> Sign out
+                  </button>
+                </Popover>
+              </>
+            ) : (
+              <Link to="/login" className="ml-2">
+                <Button size="sm" variant="primary" className="rounded-xl font-bold bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm">
+                  Đăng nhập
+                </Button>
+              </Link>
             )}
           </div>
         </div>
@@ -251,7 +262,12 @@ export function AppShell() {
       </header>
 
       {/* ===== main ===== */}
-      <main className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10">
+      <main className={cn(
+        "mx-auto w-full",
+        location.pathname === '/app/map'
+          ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
+          : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
+      )}>
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0, y: 12, filter: 'blur(5px)' }}
@@ -331,7 +347,10 @@ export function AppShell() {
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-3" onClick={() => setSheet(false)}>
-                {[...APP_MORE_NAV, { label: 'Messages', to: '/app/messages', icon: MessagesSquare }, { label: 'Subscription', to: '/app/subscription', icon: APP_ACCOUNT_NAV[1].icon }].map((item) => {
+                {(isAuthenticated 
+                  ? [...APP_MORE_NAV, { label: 'Messages', to: '/app/messages', icon: MessagesSquare }, { label: 'Subscription', to: '/app/subscription', icon: APP_ACCOUNT_NAV[1].icon }]
+                  : APP_MORE_NAV.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')
+                ).map((item) => {
                   const Icon = item.icon
                   return (
                     <Link key={item.to} to={item.to} className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center text-xs font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">
@@ -346,9 +365,15 @@ export function AppShell() {
                 })}
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
-                <Link to="/app/profile" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">My Profile</Link>
-                <Link to="/admin" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">Admin</Link>
-                <Link to="/login" className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500">Sign out</Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/app/profile" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">My Profile</Link>
+                    <Link to="/admin" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">Admin</Link>
+                    <button onClick={() => logoutM.mutate()} className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500">Sign out</button>
+                  </>
+                ) : (
+                  <Link to="/login" className="col-span-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm">Sign in</Link>
+                )}
               </div>
             </motion.div>
           </>
