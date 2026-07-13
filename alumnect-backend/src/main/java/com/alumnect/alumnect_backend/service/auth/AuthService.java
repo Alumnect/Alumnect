@@ -3,6 +3,9 @@ package com.alumnect.alumnect_backend.service.auth;
 import com.alumnect.alumnect_backend.dto.request.auth.LoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.LogoutRequest;
 import com.alumnect.alumnect_backend.dto.response.auth.LoginResponse;
 
 /**
@@ -54,4 +57,41 @@ public interface AuthService {
      * @return DTO chứa cặp tokens mới
      */
     LoginResponse refresh(RefreshRequest request, String userAgent, String ipAddress);
+
+    /**
+     * Đăng nhập vào hệ thống sử dụng tài khoản Google.
+     * Xác thực Google ID Token, kiểm tra tài khoản liên kết, và trả về cặp tokens.
+     *
+     * @param request DTO chứa Google ID token
+     * @param userAgent Thông tin trình duyệt/thiết bị của client
+     * @param ipAddress Địa chỉ IP của client
+     * @return DTO chứa cặp tokens và thông tin tài khoản cơ bản
+     */
+    LoginResponse loginWithGoogle(GoogleLoginRequest request, String userAgent, String ipAddress);
+
+    /**
+     * Đăng ký tài khoản người dùng mới sử dụng tài khoản Google.
+     * Xác thực token, lấy email từ Google, kiểm tra thông tin bổ sung và lưu vào DB.
+     *
+     * @param request DTO chứa Google ID token cùng các thông tin hồ sơ bổ sung
+     * @param userAgent Thông tin trình duyệt/thiết bị của client
+     * @param ipAddress Địa chỉ IP của client
+     * @return DTO chứa cặp tokens và thông tin tài khoản cơ bản sau khi đăng ký
+     */
+    LoginResponse registerWithGoogle(GoogleRegisterRequest request, String userAgent, String ipAddress);
+
+    /**
+     * Đăng xuất khỏi hệ thống.
+     * Thu hồi và xóa bỏ Refresh Token khỏi CSDL.
+     *
+     * @param request DTO chứa mã refresh token cần hủy
+     */
+    void logout(LogoutRequest request);
+
+    /**
+     * Đăng xuất người dùng khỏi tất cả các thiết bị bằng cách thu hồi toàn bộ refresh token.
+     *
+     * @param email Địa chỉ email của người dùng
+     */
+    void logoutAllDevices(String email);
 }

@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nameVi": "Quần đảo Hoàng Sa\n(Đà Nẵng, Việt Nam)",
+        "nameEn": "Paracel Islands (Vietnam)",
+        "type": "archipelago"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.33, 16.53]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nameVi": "Quần đảo Trường Sa\n(Khánh Hòa, Việt Nam)",
+        "nameEn": "Spratly Islands (Vietnam)",
+        "type": "archipelago"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [114.35, 8.88]
+      }
+    }
+  ]
+}

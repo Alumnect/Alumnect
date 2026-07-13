@@ -69,6 +69,10 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /** Thông tin hồ sơ cá nhân của người dùng (quan hệ 1-1 hai chiều) */
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private UserProfile profile;
+
     /** Tự động gán thời gian tạo và giá trị mặc định khi lần đầu lưu vào DB */
     @PrePersist
     protected void onCreate() {

@@ -389,3 +389,20 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Custom map popup styles */
+.vietmapgl-popup, .mapboxgl-popup {
+  max-width: 400px !important;
+  z-index: 100 !important;
+}
+.vietmapgl-popup-content, .mapboxgl-popup-content {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 2.1rem !important;
+}
+.vietmapgl-popup-tip, .mapboxgl-popup-tip {
+  border-top-color: white !important;
+  border-bottom-color: white !important;
+}
+
