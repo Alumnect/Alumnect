@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, Link, useLocation, Navigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Bell, Plus, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -71,6 +71,10 @@ export function AppShell() {
   const [searchOpen, setSearchOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
+
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />
+  }
   const logoutM = useLogout()
   const roleLabel = user ? (user.role === 'ADMIN' ? 'Admin' : user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
 
@@ -207,19 +211,21 @@ export function AppShell() {
                     </div>
                   </Link>
                   <div className="my-1 h-px bg-plum-900/[0.07]" />
-                  {APP_ACCOUNT_NAV.map((item) => {
-                    const Icon = item.icon
-                    return (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-                      >
-                        {Icon && <Icon size={16} className="text-plum-400" />}
-                        {item.label}
-                      </Link>
-                    )
-                  })}
+                  {APP_ACCOUNT_NAV
+                    .filter((item) => item.to !== '/admin' || user?.role === 'ADMIN')
+                    .map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+                        >
+                          {Icon && <Icon size={16} className="text-plum-400" />}
+                          {item.label}
+                        </Link>
+                      )
+                    })}
                   <div className="my-1 h-px bg-plum-900/[0.07]" />
                   <button
                     type="button"
@@ -368,8 +374,18 @@ export function AppShell() {
               <div className="mt-4 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 {isAuthenticated ? (
                   <>
-                    <Link to="/app/profile" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">My Profile</Link>
-                    <Link to="/admin" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">Admin</Link>
+                    <Link
+                      to="/app/profile"
+                      className={cn(
+                        "rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]",
+                        user?.role !== 'ADMIN' && "col-span-2"
+                      )}
+                    >
+                      My Profile
+                    </Link>
+                    {user?.role === 'ADMIN' && (
+                      <Link to="/admin" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">Admin</Link>
+                    )}
                     <button onClick={() => logoutM.mutate()} className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500">Sign out</button>
                   </>
                 ) : (

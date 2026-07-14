@@ -14,7 +14,11 @@ export function useLogin() {
     mutationFn: (input: LoginInput): Promise<AuthResponse> => authApi.login(input),
     onSuccess: (data) => {
       login(data)
-      navigate('/app')
+      if (data.user.role === 'ADMIN') {
+        navigate('/admin')
+      } else {
+        navigate('/app')
+      }
     },
   })
 }
@@ -51,7 +55,11 @@ export function useGoogleLogin() {
     mutationFn: (token: string): Promise<AuthResponse> => authApi.loginWithGoogle(token),
     onSuccess: (data) => {
       login(data)
-      navigate('/app')
+      if (data.user.role === 'ADMIN') {
+        navigate('/admin')
+      } else {
+        navigate('/app')
+      }
     },
   })
 }

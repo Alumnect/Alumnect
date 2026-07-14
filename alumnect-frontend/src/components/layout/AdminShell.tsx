@@ -1,12 +1,14 @@
-import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
+import { ShieldCheck, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ADMIN_NAV } from '@/lib/constants'
 import { Avatar, Badge } from '@/components/ui/primitives'
+import { useLogout } from '@/features/auth'
 
 export function AdminShell() {
   const location = useLocation()
+  const logoutM = useLogout()
   return (
     <div className="relative min-h-screen bg-cream-100 text-plum-600">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-grid mask-fade-b opacity-50" />
@@ -56,12 +58,13 @@ export function AdminShell() {
           })}
         </nav>
 
-        <Link
-          to="/app"
-          className="m-3 flex items-center gap-2 rounded-2xl bg-cream-100 px-3.5 py-2.5 text-sm font-semibold text-plum-500 ring-1 ring-inset ring-plum-900/[0.06] hover:text-plum-900"
+        <button
+          type="button"
+          onClick={() => logoutM.mutate()}
+          className="m-3 flex items-center justify-center gap-2 rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-500/20"
         >
-          <ArrowLeft size={16} /> Back to app
-        </Link>
+          <LogOut size={16} /> Sign out
+        </button>
       </aside>
 
       <div className="lg:pl-64">

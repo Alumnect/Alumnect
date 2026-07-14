@@ -40,30 +40,28 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* Public profile view for sharing/guests */}
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="map" element={<MapPage />} />
-          <Route path="career" element={<CareerPage />} />
-          {/* Member app — bảng tin (index) mở cho cả Guest theo UC15/BR-12;
-              các trang con còn lại vẫn yêu cầu đăng nhập */}
+
           <Route
             path="/app"
             element={<AppShell />}
           >
+            {/* --- PUBLIC ROUTES (No login required) --- */}
             <Route index element={<FeedPage />} />
-            {/* Chi tiết bài viết (UC16) — mở cho cả Guest theo BR-12 (bài MEMBERS trả 403 ở API) */}
+            <Route path="profile" element={<ProfilePage />} />
             <Route path="posts/:id" element={<PostDetailPage />} />
-            <Route path="alumni" element={<ProtectedRoute><AlumniDirectoryPage /></ProtectedRoute>} />
-            <Route path="jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
-            <Route path="events" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-            <Route path="forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
-            <Route path="forum/:id" element={<ProtectedRoute><QuestionDetailPage /></ProtectedRoute>} />
+            <Route path="jobs" element={<JobsPage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="forum" element={<ForumPage />} />
+            <Route path="forum/:id" element={<QuestionDetailPage />} />
+            <Route path="alumni" element={<AlumniDirectoryPage />} />
+
+            {/* --- PROTECTED ROUTES (Login required) --- */}
             <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
             <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
             <Route path="subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="career" element={<CareerPage />} />
+            <Route path="map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
+            <Route path="career" element={<ProtectedRoute><CareerPage /></ProtectedRoute>} />
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           </Route>
 
