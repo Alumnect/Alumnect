@@ -3,14 +3,25 @@
 **/dist/
 **/build/
 **/.env
+**/.env.local
+**/.env.*.local
 
 # Java Spring Boot rác
 **/target/
 **/.gradle/
 .idea/
+.vscode/
 *.iml
 *.class
+
+# Cấu hình cục bộ chứa mật khẩu (Spring Boot đọc ./config/) — không commit
+/alumnect-backend/config/
 
 # Hệ điều hành rác
 .DS_Store
 Thumbs.db
+
+# Tài liệu Review tính năng cục bộ (không push lên git)
+/Review_Backend*.md
+/Review_Frontend*.md
+/Review_SRS_vs_Code*.md
