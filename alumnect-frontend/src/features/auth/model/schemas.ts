@@ -12,6 +12,25 @@ export const forgotSchema = z.object({
 })
 export type ForgotInput = z.infer<typeof forgotSchema>
 
+export const otpFormSchema = z.object({
+  otp: z.string().min(1, 'Mã OTP không được để trống').length(6, 'Mã OTP phải có đúng 6 chữ số'),
+})
+export type OtpFormInput = z.infer<typeof otpFormSchema>
+
+export const passwordFormSchema = z.object({
+  newPassword: z
+    .string()
+    .min(1, 'Mật khẩu mới không được để trống')
+    .min(8, 'Mật khẩu phải có độ dài từ 8 đến 100 ký tự')
+    .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, 'Mật khẩu phải chứa ít nhất 1 chữ cái và 1 chữ số'),
+  confirmPassword: z.string().min(1, 'Xác nhận mật khẩu không được để trống'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Mật khẩu xác nhận không trùng khớp',
+  path: ['confirmPassword'],
+})
+export type PasswordFormInput = z.infer<typeof passwordFormSchema>
+
+
 // Zod Schema Validate cho Form Đăng Ký
 export const registerSchema = z.object({
   fullName: z

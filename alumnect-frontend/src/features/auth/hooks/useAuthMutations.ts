@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { authApi } from '../api/authApi'
 import type { AuthResponse } from '../api/authApi'
-import type { GoogleRegisterPayload } from '../model/authTypes'
+import type { GoogleRegisterPayload, ResetPasswordPayload, VerifyResetOtpPayload } from '../model/authTypes'
 import type { LoginInput, ForgotInput } from '../model/schemas'
 
 /** Đăng nhập — gọi API Spring Boot thực tế. */
@@ -26,6 +26,18 @@ export function useLogin() {
 export function useForgotPassword() {
   return useMutation({
     mutationFn: (input: ForgotInput) => authApi.forgotPassword(input),
+  })
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (payload: ResetPasswordPayload) => authApi.resetPassword(payload),
+  })
+}
+
+export function useVerifyResetOtp() {
+  return useMutation({
+    mutationFn: (payload: VerifyResetOtpPayload) => authApi.verifyResetOtp(payload),
   })
 }
 

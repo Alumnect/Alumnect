@@ -40,16 +40,12 @@ export function OtpVerification({ email, role, onBack }: OtpVerificationProps) {
     setVerifySuccess(null)
 
     try {
-      await verifyEmailMutation.mutateAsync({
+      const res = await verifyEmailMutation.mutateAsync({
         email: email,
         token: otpToken.trim(),
       })
 
-      if (role === 'ALUMNI') {
-        setVerifySuccess('Xác thực email thành công! Tài khoản cựu sinh viên của bạn đang chờ phê duyệt từ quản trị viên.')
-      } else {
-        setVerifySuccess('Xác thực email thành công! Tài khoản của bạn đã được kích hoạt.')
-      }
+      setVerifySuccess(res.message)
 
       // Đợi 3 giây rồi điều hướng về trang đăng nhập
       setTimeout(() => {
@@ -70,8 +66,8 @@ export function OtpVerification({ email, role, onBack }: OtpVerificationProps) {
     setVerifySuccess(null)
 
     try {
-      await resendOtpMutation.mutateAsync(email)
-      setVerifySuccess('Đã gửi lại mã OTP mới. Vui lòng kiểm tra email của bạn.')
+      const res = await resendOtpMutation.mutateAsync(email)
+      setVerifySuccess(res.message)
       setCooldown(300) // Reset cooldown 5 phút
     } catch (err: any) {
       setVerifyError(err.message || 'Không thể gửi lại mã OTP. Vui lòng thử lại sau.')
