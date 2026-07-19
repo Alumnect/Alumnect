@@ -46,7 +46,10 @@ public class Endpoints {
         "/api/v1/auth/google",   // Đăng nhập bằng Google OAuth2
         "/api/v1/auth/google/register", // Đăng ký bằng Google OAuth2
         "/api/v1/auth/resend-otp", // Gửi lại mã OTP xác thực
-        "/api/v1/auth/refresh"   // Làm mới access token bằng refresh token
+        "/api/v1/auth/refresh",   // Làm mới access token bằng refresh token
+        "/api/v1/auth/forgot-password", // Yêu cầu gửi mã OTP quên mật khẩu
+        "/api/v1/auth/reset-password",   // Đặt lại mật khẩu mới bằng OTP
+        "/api/v1/auth/verify-reset-otp"  // Xác minh OTP khôi phục mật khẩu
     };
 
     // Endpoint dành riêng cho Admin

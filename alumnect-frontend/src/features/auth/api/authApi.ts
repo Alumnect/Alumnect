@@ -1,7 +1,7 @@
 import http from '@/lib/http'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser, Role } from '@/store/authStore'
-import type { Major, RegisterPayload, PresignedUrlResponse, GoogleRegisterPayload } from '../model/authTypes'
+import type { Major, RegisterPayload, PresignedUrlResponse, GoogleRegisterPayload, ResetPasswordPayload, VerifyResetOtpPayload } from '../model/authTypes'
 import type { LoginInput, ForgotInput } from '../model/schemas'
 
 export interface LoginResponse {
@@ -77,10 +77,22 @@ export const authApi = {
   },
 
   /**
-   * Yêu cầu khôi phục mật khẩu
+   * Yêu cầu khôi phục mật khẩu (gửi mã OTP)
    */
-  forgotPassword: async (input: ForgotInput) =>
-    (await http.post('/auth/forgot-password', input)) as unknown as { message: string },
+  forgotPassword: (input: ForgotInput) =>
+    http.post<any, ApiResponse<void>>('/auth/forgot-password', input),
+
+  /**
+   * Đặt lại mật khẩu mới bằng mã OTP xác thực
+   */
+  resetPassword: (payload: ResetPasswordPayload) =>
+    http.post<any, ApiResponse<void>>('/auth/reset-password', payload),
+
+  /**
+   * Xác minh mã OTP quên mật khẩu (không thay đổi mật khẩu)
+   */
+  verifyResetOtp: (payload: VerifyResetOtpPayload) =>
+    http.post<any, ApiResponse<void>>('/auth/verify-reset-otp', payload),
 
   /**
    * Đăng xuất hệ thống

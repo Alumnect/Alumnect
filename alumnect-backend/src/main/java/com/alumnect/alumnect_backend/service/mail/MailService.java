@@ -13,4 +13,13 @@ public interface MailService {
      * @param fullName Họ tên đầy đủ của người nhận
      */
     void sendVerificationEmail(String toEmail, String token, String fullName);
+
+    /**
+     * Gửi email chứa mã OTP xác nhận yêu cầu đặt lại mật khẩu cho người dùng.
+     *
+     * @param toEmail Địa chỉ email nhận
+     * @param token Chuỗi mã OTP 6 số dùng để đặt lại mật khẩu
+     * @param fullName Họ tên đầy đủ của người nhận
+     */
+    void sendPasswordResetEmail(String toEmail, String token, String fullName);
 }

@@ -24,6 +24,7 @@ export function ChangePasswordForm() {
   
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [backendSuccessMessage, setBackendSuccessMessage] = useState('')
   
   // Trạng thái hiển thị modal hỏi đăng xuất
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -49,13 +50,14 @@ export function ChangePasswordForm() {
     
     try {
       // 1. Gọi API đổi mật khẩu thành công trước
-      await changePasswordMutation.mutateAsync({
+      const res = await changePasswordMutation.mutateAsync({
         oldPassword: values.oldPassword,
         newPassword: values.newPassword,
         confirmNewPassword: values.confirmNewPassword,
       })
 
       // 2. Đổi mật khẩu thành công: Mở modal xác nhận hỏi đăng xuất
+      setBackendSuccessMessage(res.message || 'Đổi mật khẩu thành công!')
       setShowConfirmModal(true)
       reset() // Clear form nhập liệu ngay lập tức
     } catch (err: any) {
@@ -81,13 +83,13 @@ export function ChangePasswordForm() {
       logout()
       navigate('/login', {
         state: {
-          successMessage: 'Đổi mật khẩu thành công! Bạn đã được đăng xuất khỏi tất cả các thiết bị.',
+          successMessage: backendSuccessMessage ? `${backendSuccessMessage} Bạn đã được đăng xuất khỏi tất cả các thiết bị.` : 'Đổi mật khẩu thành công! Bạn đã được đăng xuất khỏi tất cả các thiết bị.',
         },
         replace: true,
       })
     } else {
       // Giữ đăng nhập: Chỉ hiển thị thông báo thành công tại chỗ
-      setSuccessMessage('Đổi mật khẩu thành công!')
+      setSuccessMessage(backendSuccessMessage || 'Đổi mật khẩu thành công!')
     }
   }
 

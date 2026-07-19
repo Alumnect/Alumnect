@@ -1540,6 +1540,197 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "01.8. Quên & đặt lại mật khẩu (Forgot & Reset Password)",
+					"item": [
+						{
+							"name": "Yêu cầu gửi OTP đặt lại mật khẩu - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"forgot-password"
+									]
+								},
+								"description": "### API Gửi OTP quên mật khẩu\n* **Quyền truy cập**: Public.\n* **Mục đích**: Gửi mã OTP 6 số đến email đăng ký để xác minh danh tính và đặt lại mật khẩu."
+							},
+							"response": []
+						},
+						{
+							"name": "Yêu cầu gửi OTP thất bại - Email không tồn tại",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sai_email@fpt.edu.vn\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"forgot-password"
+									]
+								},
+								"description": "### Yêu cầu gửi OTP cho email không tồn tại\n* **Mong đợi**: 404 Not Found"
+							},
+							"response": []
+						},
+						{
+							"name": "Đặt lại mật khẩu mới - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"token\": \"123456\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/reset-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"reset-password"
+									]
+								},
+								"description": "### API Đặt lại mật khẩu mới bằng OTP\n* **Quyền truy cập**: Public.\n* **Mục đích**: Đặt mật khẩu mới sau khi xác thực OTP thành công."
+							},
+							"response": []
+						},
+						{
+							"name": "Đặt lại mật khẩu thất bại - Sai mã OTP",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"token\": \"111111\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/reset-password",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"reset-password"
+									]
+								},
+								"description": "### Đặt lại mật khẩu thất bại do sai mã OTP\n* **Mong đợi**: 400 Bad Request, báo số lần còn lại."
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh mã OTP quên mật khẩu - Thành công",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"token\": \"123456\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-reset-otp",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-reset-otp"
+									]
+								},
+								"description": "### API Xác minh mã OTP khôi phục mật khẩu\n* **Quyền truy cập**: Public.\n* **Mục đích**: Kiểm tra OTP trước khi cho phép người dùng nhập mật khẩu mới."
+							},
+							"response": []
+						},
+						{
+							"name": "Xác minh mã OTP quên mật khẩu - Thất bại",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"sinhvien@fpt.edu.vn\",\n  \"token\": \"111111\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/auth/verify-reset-otp",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"verify-reset-otp"
+									]
+								},
+								"description": "### API Xác minh mã OTP thất bại do sai mã\n* **Mong đợi**: 400 Bad Request"
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},
