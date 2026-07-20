@@ -2,15 +2,20 @@ package com.alumnect.alumnect_backend.controller.post;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.service.post.PostService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +60,25 @@ public class PostController {
 
         PageResponse<PostResponse> feed = postService.getFeed(page, size, type, isAuthenticated(authentication));
         return ResponseEntity.ok(ApiResponse.success("Lấy bảng tin thành công", feed));
+    }
+
+    /**
+     * API tạo một bài viết mới trên bảng tin cộng đồng (UC14 - Create a post on the Feed).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được đăng bài — Admin/vai trò khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param request        DTO chứa nội dung, loại, ảnh và phạm vi hiển thị của bài viết
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return Bài viết vừa tạo {@link PostResponse} bọc trong {@link ApiResponse}, HTTP 201 Created
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(
+            @Valid @RequestBody CreatePostRequest request,
+            Authentication authentication) {
+
+        PostResponse created = postService.createPost(authentication.getName(), request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng bài viết thành công", created));
     }
 
     /**
