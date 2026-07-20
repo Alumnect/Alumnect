@@ -4,12 +4,17 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.PostType;
 import com.alumnect.alumnect_backend.common.enums.PostVisibility;
 import com.alumnect.alumnect_backend.dao.post.CommentRepository;
+import com.alumnect.alumnect_backend.dao.post.PostLikeRepository;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
+import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.entity.post.Comment;
 import com.alumnect.alumnect_backend.entity.post.Post;
+import com.alumnect.alumnect_backend.entity.post.PostLike;
+import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
@@ -22,9 +27,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,6 +60,12 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private CommentMapper commentMapper;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PostLikeRepository postLikeRepository;
+
     /**
      * {@inheritDoc}
      * <p>
@@ -65,7 +79,7 @@ public class PostServiceImpl implements PostService {
      * </ol>
      */
     @Override
-    public PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated) {
+    public PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated, String viewerEmail) {
         // Validate tham số phân trang trước khi tạo PageRequest — nếu không, PageRequest.of()
         // sẽ ném IllegalArgumentException và bị trả về nhầm HTTP 500 thay vì 400.
         if (page < 0) {
@@ -90,8 +104,13 @@ public class PostServiceImpl implements PostService {
         Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
 
+        // Tính cờ liked theo người xem hiện tại: batch-fetch các bài đã thích (tránh N+1 query).
+        List<Long> postIds = postsPage.getContent().stream().map(Post::getId).collect(Collectors.toList());
+        Set<Long> likedPostIds = computeLikedPostIds(viewerEmail, postIds);
+
         List<PostResponse> content = postsPage.getContent().stream()
-                .map(post -> postMapper.toResponse(post, profileByUserId.get(post.getUser().getId())))
+                .map(post -> postMapper.toResponse(post, profileByUserId.get(post.getUser().getId()),
+                        likedPostIds.contains(post.getId())))
                 .collect(Collectors.toList());
 
         return PageResponse.<PostResponse>builder()
@@ -111,11 +130,12 @@ public class PostServiceImpl implements PostService {
      * nạp hồ sơ tác giả, rồi map sang {@link PostResponse}.
      */
     @Override
-    public PostResponse getPostDetail(Long id, boolean isAuthenticated) {
+    public PostResponse getPostDetail(Long id, boolean isAuthenticated, String viewerEmail) {
         Post post = loadViewablePost(id, isAuthenticated);
         UserProfile profile = userProfileRepository.findById(post.getUser().getId()).orElse(null);
+        boolean liked = !computeLikedPostIds(viewerEmail, List.of(post.getId())).isEmpty();
         log.info("Xem chi tiết bài viết: id={}, guestMode={}", id, !isAuthenticated);
-        return postMapper.toResponse(post, profile);
+        return postMapper.toResponse(post, profile, liked);
     }
 
     /**
@@ -165,6 +185,80 @@ public class PostServiceImpl implements PostService {
                 .totalPages(commentsPage.getTotalPages())
                 .last(commentsPage.isLast())
                 .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Chỉ STUDENT/ALUMNI được thích (else 403); bài ẩn/không tồn tại → 404 (qua {@link #loadViewablePost}).
+     * Lũy đẳng: nếu đã thích rồi thì không thêm nữa. Cập nhật bộ đếm like_count của bài viết.
+     */
+    @Override
+    @Transactional
+    public LikeResponse likePost(String email, Long postId) {
+        User user = resolveMemberOrThrow(email);
+        Post post = loadViewablePost(postId, true);
+        if (!postLikeRepository.existsByPostIdAndUserId(postId, user.getId())) {
+            postLikeRepository.save(PostLike.builder().post(post).user(user).build());
+            post.setLikeCount(post.getLikeCount() + 1);
+            postRepository.save(post);
+            log.info("Thích bài viết: postId={}, userId={}, likeCount={}", postId, user.getId(), post.getLikeCount());
+        }
+        return LikeResponse.builder().liked(true).likeCount(post.getLikeCount()).build();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Chỉ STUDENT/ALUMNI được bỏ thích (else 403); bài ẩn/không tồn tại → 404.
+     * Lũy đẳng: nếu chưa thích thì không thay đổi. Cập nhật bộ đếm like_count của bài viết.
+     */
+    @Override
+    @Transactional
+    public LikeResponse unlikePost(String email, Long postId) {
+        User user = resolveMemberOrThrow(email);
+        Post post = loadViewablePost(postId, true);
+        if (postLikeRepository.existsByPostIdAndUserId(postId, user.getId())) {
+            postLikeRepository.deleteByPostIdAndUserId(postId, user.getId());
+            post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
+            postRepository.save(post);
+            log.info("Bỏ thích bài viết: postId={}, userId={}, likeCount={}", postId, user.getId(), post.getLikeCount());
+        }
+        return LikeResponse.builder().liked(false).likeCount(post.getLikeCount()).build();
+    }
+
+    /**
+     * Nạp tài khoản đang đăng nhập theo email và kiểm tra quyền thích/bỏ thích (UC17):
+     * chỉ STUDENT/ALUMNI được phép, vai trò khác (VD Admin) bị từ chối với lỗi 403.
+     *
+     * @param email Email người dùng (từ JWT)
+     * @return User hợp lệ để thao tác like
+     */
+    private User resolveMemberOrThrow(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+        String role = user.getRole() != null ? user.getRole().getName().toUpperCase() : "";
+        if (!role.equals("STUDENT") && !role.equals("ALUMNI")) {
+            throw new ForbiddenException("Chỉ sinh viên và cựu sinh viên mới được thích bài viết");
+        }
+        return user;
+    }
+
+    /**
+     * Tính tập ID bài viết (trong danh sách cho trước) mà người xem hiện tại đã thích.
+     * Trả về tập rỗng nếu là Guest ({@code viewerEmail} null) hoặc danh sách rỗng.
+     *
+     * @param viewerEmail Email người xem đã đăng nhập, hoặc null nếu là Guest
+     * @param postIds     Tập ID bài viết cần kiểm tra
+     * @return Tập ID bài viết mà người xem đã thích
+     */
+    private Set<Long> computeLikedPostIds(String viewerEmail, List<Long> postIds) {
+        if (viewerEmail == null || postIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return userRepository.findByEmail(viewerEmail)
+                .<Set<Long>>map(u -> new HashSet<>(postLikeRepository.findLikedPostIds(u.getId(), postIds)))
+                .orElseGet(HashSet::new);
     }
 
     /**

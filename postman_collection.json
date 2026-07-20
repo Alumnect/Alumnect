@@ -3003,6 +3003,146 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "04.4. Thích bài viết (Like / Unlike) — UC17",
+					"item": [
+						{
+							"name": "Thích bài viết - Thành công (200)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/like",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"like"
+									]
+								},
+								"description": "### API Thích Bài Viết (UC17 - Like a post)\n* Quyen: Bearer Token ({{jwtToken}}) — chi STUDENT/ALUMNI.\n* Thao tac luy dang: thich lai bai da thich khong doi.\n* Phan hoi (200): message \"Đã thích bài viết\", data { liked: true, likeCount: N }."
+							},
+							"response": []
+						},
+						{
+							"name": "Bỏ thích bài viết - Thành công (200)",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/like",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"like"
+									]
+								},
+								"description": "### API Bo Thich Bai Viet (UC17)\n* Quyen: Bearer Token ({{jwtToken}}).\n* Thao tac luy dang: bo thich bai chua thich khong doi.\n* Phan hoi (200): message \"Đã bỏ thích bài viết\", data { liked: false, likeCount: N }."
+							},
+							"response": []
+						},
+						{
+							"name": "Thích lại (idempotent) - Thành công (200)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/like",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"like"
+									]
+								},
+								"description": "### Kich ban luy dang\n* Goi POST /like lan 2 khi da thich -> khong tang them, van tra liked=true + likeCount khong doi."
+							},
+							"response": []
+						},
+						{
+							"name": "Thích thất bại - Guest chưa đăng nhập (401)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/like",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"like"
+									]
+								},
+								"description": "### Kich ban 401\n* POST /posts/{id}/like KHONG public -> Guest bi Spring Security chan.\n* Phan hoi (401): { error: 401, message: \"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\" }.",
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thích thất bại - Bài không tồn tại (404)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/999999/like",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"999999",
+										"like"
+									]
+								},
+								"description": "### Kich ban 404\n* Bai khong ton tai hoac da bi an (is_hidden=true).\n* Phan hoi (404): { error: 404, message: \"Bài viết này không còn khả dụng\" }."
+							},
+							"response": []
+						},
+						{
+							"name": "Thích thất bại - Admin không được thích (403)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/like",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"like"
+									]
+								},
+								"description": "### Kich ban 403 (RBAC UC17)\n* Chay SAU khi dang nhap ADMIN de {{jwtToken}} la token Admin.\n* Chi STUDENT/ALUMNI moi duoc thich -> Admin bi tu choi.\n* Phan hoi (403): { error: 403, message: \"Chỉ sinh viên và cựu sinh viên mới được thích bài viết\" }."
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}

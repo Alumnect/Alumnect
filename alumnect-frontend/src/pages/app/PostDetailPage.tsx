@@ -8,6 +8,7 @@
  *    / lỗi hệ thống (retry) / thành công.
  *  - Đăng bình luận thuộc UC18 nên ô nhập chỉ hiển thị ở trạng thái chờ (chưa mở).
  */
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Heart,
@@ -31,6 +32,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { usePostDetail, useComments } from '@/features/post'
 import type { Comment } from '@/features/post'
+import { useToggleLike } from '@/features/feed'
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
@@ -145,6 +147,35 @@ function PostDetailCard({
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
   const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
 
+  // Trạng thái thích cục bộ (UC17) — khởi tạo từ dữ liệu bài viết đã tải.
+  const [liked, setLiked] = useState(post.liked)
+  const [likeCount, setLikeCount] = useState(post.likes)
+  const toggleLike = useToggleLike()
+
+  /**
+   * Thích/bỏ thích bài viết (UC17): cập nhật lạc quan, đồng bộ theo phản hồi backend,
+   * hoàn tác khi lỗi. Guest đã bị chặn ở lớp `disabled` nên chỉ chạy khi có quyền.
+   */
+  const handleLike = () => {
+    if (!canInteract) return
+    const next = !liked
+    setLiked(next)
+    setLikeCount((c) => c + (next ? 1 : -1))
+    toggleLike.mutate(
+      { postId: post.id, like: next },
+      {
+        onSuccess: (data) => {
+          setLiked(data.liked)
+          setLikeCount(data.likeCount)
+        },
+        onError: () => {
+          setLiked(!next)
+          setLikeCount((c) => c + (next ? -1 : 1))
+        },
+      },
+    )
+  }
+
   return (
     <Card hover={false} className="overflow-hidden">
       <div className="p-6">
@@ -181,10 +212,15 @@ function PostDetailCard({
       <div className="flex items-center gap-1 border-t border-plum-900/[0.06] p-3">
         <button
           disabled={!canInteract}
+          onClick={handleLike}
+          aria-pressed={liked}
           title={guardTitle}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          className={cn(
+            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors enabled:hover:bg-plum-900/[0.04] disabled:cursor-not-allowed disabled:opacity-60',
+            liked ? 'text-rose-500 enabled:hover:text-rose-600' : 'text-plum-500 enabled:hover:text-plum-900',
+          )}
         >
-          <Heart size={18} /> {compact(post.likes)}
+          <Heart size={18} className={liked ? 'fill-rose-400' : ''} /> {compact(likeCount)}
         </button>
         <button
           disabled={!canInteract}

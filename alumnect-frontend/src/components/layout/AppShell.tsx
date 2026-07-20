@@ -76,7 +76,8 @@ export function AppShell() {
     return <Navigate to="/admin" replace />
   }
   const logoutM = useLogout()
-  const roleLabel = user ? (user.role === 'ADMIN' ? 'Admin' : user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
+  // Sau redirect ADMIN ở trên, user (nếu có) chỉ còn STUDENT/ALUMNI.
+  const roleLabel = user ? (user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
 
   return (
     <div className="relative min-h-screen bg-cream-100 text-plum-600">
@@ -374,18 +375,13 @@ export function AppShell() {
               <div className="mt-4 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 {isAuthenticated ? (
                   <>
+                    {/* Sau redirect ADMIN (đầu AppShell), user chỉ còn STUDENT/ALUMNI → My Profile luôn chiếm cả 2 cột */}
                     <Link
                       to="/app/profile"
-                      className={cn(
-                        "rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]",
-                        user?.role !== 'ADMIN' && "col-span-2"
-                      )}
+                      className="col-span-2 rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]"
                     >
                       My Profile
                     </Link>
-                    {user?.role === 'ADMIN' && (
-                      <Link to="/admin" className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">Admin</Link>
-                    )}
                     <button onClick={() => logoutM.mutate()} className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500">Sign out</button>
                   </>
                 ) : (
