@@ -1,4 +1,8 @@
 export { useFeed } from './hooks/useFeed'
+export { useCreatePost } from './hooks/useCreatePost'
 export { feedApi, PAGE_SIZE } from './api/feedApi'
 export { postSchema, POST_TYPES } from './model/post'
 export type { Post, PostType, FeedFilter, FeedPageResult } from './model/post'
+export { CreatePostModal } from './components/CreatePostModal'
+export { createPostSchema, POST_TYPE_LABELS, POST_VISIBILITIES } from './model/createPost'
+export type { CreatePostInput, PostVisibility } from './model/createPost'
