@@ -1,8 +1,10 @@
+import axios from 'axios'
 import http from '@/lib/http'
 import { AUTH_ENFORCED } from '@/config/auth'
 import { FEED_POSTS } from '@/lib/constants'
 import { postSchema } from '../model/post'
 import type { FeedFilter, FeedPageResult, Post } from '../model/post'
+import type { CreatePostInput } from '../model/createPost'
 
 /**
  * Tầng gọi API cho UC15 - View community Feed.
@@ -142,5 +144,34 @@ export const feedApi = {
   unlikePost: async (postId: string): Promise<LikeResult> => {
     const body = await http.delete(`/posts/${postId}/like`)
     return normalizeLike(body)
+  },
+
+  /**
+   * Tạo một bài viết mới trên bảng tin cộng đồng (UC14 - Create a post on the Feed).
+   * Gọi `POST /api/v1/posts` (token Bearer do interceptor tự đính); trả về bài viết
+   * vừa tạo đã chuẩn hóa qua `postSchema` để Frontend chèn ngay vào đầu bảng tin.
+   * @param input Dữ liệu bài viết đã hợp lệ (content, type, visibility, imageUrl tùy chọn)
+   * @return Bài viết mới đã chuẩn hóa
+   */
+  createPost: async (input: CreatePostInput): Promise<Post> => {
+    const body = await http.post('/posts', input)
+    const raw = (body as { data?: unknown })?.data ?? body
+    return postSchema.parse(raw)
+  },
+
+  /**
+   * Tải ảnh đính kèm bài viết lên Cloudflare R2 qua link ký sẵn (presigned URL),
+   * theo đúng cơ chế đã dùng ở luồng đăng ký: xin link PUT tạm thời rồi tải trực tiếp
+   * từ client lên R2, trả về URL công khai để gán vào `imageUrl` khi tạo bài.
+   * @param file Tệp ảnh người dùng chọn
+   * @return URL công khai của ảnh sau khi tải lên thành công
+   */
+  uploadPostImage: async (file: File): Promise<string> => {
+    const res = await http.get<unknown, { data: { uploadUrl: string; publicUrl: string } }>(
+      `/files/presigned-url?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}&folder=posts`,
+    )
+    const { uploadUrl, publicUrl } = res.data
+    await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
+    return publicUrl
   },
 }

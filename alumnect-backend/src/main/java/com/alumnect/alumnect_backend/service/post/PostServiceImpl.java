@@ -8,6 +8,7 @@ import com.alumnect.alumnect_backend.dao.post.PostLikeRepository;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -52,6 +53,9 @@ public class PostServiceImpl implements PostService {
     private UserProfileRepository userProfileRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private PostMapper postMapper;
 
     @Autowired
@@ -61,10 +65,68 @@ public class PostServiceImpl implements PostService {
     private CommentMapper commentMapper;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private PostLikeRepository postLikeRepository;
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng xử lý:
+     * <ol>
+     *   <li>Nạp tài khoản đang đăng nhập theo email (lấy từ JWT).</li>
+     *   <li>RBAC: chỉ STUDENT/ALUMNI được đăng bài, vai trò khác (VD Admin) bị từ chối với lỗi 403.</li>
+     *   <li>Chuẩn hóa loại bài viết & phạm vi hiển thị (mặc định NORMAL/PUBLIC), ném 400 nếu giá trị không hợp lệ.</li>
+     *   <li>Lưu bài viết mới (các bộ đếm like/comment/repost = 0, isHidden = false).</li>
+     *   <li>Map sang {@link PostResponse} kèm hồ sơ tác giả để Frontend chèn ngay vào đầu bảng tin.</li>
+     * </ol>
+     */
+    @Override
+    @Transactional
+    public PostResponse createPost(String email, CreatePostRequest request) {
+        User author = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        // RBAC (UC14): chỉ Sinh viên và Cựu sinh viên mới được đăng bài; Admin/khác bị từ chối 403.
+        String roleName = author.getRole() != null ? author.getRole().getName().toUpperCase() : "";
+        if (!roleName.equals("STUDENT") && !roleName.equals("ALUMNI")) {
+            throw new ForbiddenException("Chỉ sinh viên và cựu sinh viên mới được đăng bài viết");
+        }
+
+        // Chuẩn hóa loại bài & phạm vi hiển thị (tái sử dụng cùng cách parse như luồng xem bảng tin).
+        PostType type = parsePostType(request.getType());
+        PostVisibility visibility = parsePostVisibility(request.getVisibility());
+
+        // Ảnh đính kèm là tùy chọn: chuỗi rỗng coi như không có ảnh.
+        String imageUrl = request.getImageUrl() != null && !request.getImageUrl().isBlank()
+                ? request.getImageUrl().trim()
+                : null;
+
+        Post post = Post.builder()
+                .user(author)
+                .type(type != null ? type : PostType.NORMAL)
+                .content(request.getContent().trim())
+                .imageUrl(imageUrl)
+                .visibility(visibility != null ? visibility : PostVisibility.PUBLIC)
+                .likeCount(0)
+                .commentCount(0)
+                .repostCount(0)
+                .isHidden(false)
+                .build();
+
+        Post saved;
+        try {
+            saved = postRepository.save(post);
+        } catch (Exception ex) {
+            log.error("Lỗi khi lưu bài viết mới của user {}: ", email, ex);
+            throw new RuntimeException("Lỗi hệ thống: Không thể tạo bài viết");
+        }
+        log.info("Tạo bài viết mới: id={}, tác giả={}, loại={}, visibility={}",
+                saved.getId(), email, saved.getType(), saved.getVisibility());
+
+        // Nạp hồ sơ tác giả để trả về response đầy đủ (tên/avatar/headline) cho Frontend.
+        // Bài vừa tạo chưa ai thích nên cờ liked = false (UC17).
+        UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        return postMapper.toResponse(saved, profile, false);
+    }
 
     /**
      * {@inheritDoc}
@@ -305,6 +367,25 @@ public class PostServiceImpl implements PostService {
             return PostType.valueOf(type.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException("Loại bài viết không hợp lệ: " + type);
+        }
+    }
+
+    /**
+     * Chuyển chuỗi phạm vi hiển thị (không phân biệt hoa/thường, Frontend gửi chữ thường)
+     * sang enum {@link PostVisibility}.
+     *
+     * @param visibility Chuỗi "public"/"members", hoặc null/rỗng nếu dùng mặc định
+     * @return Enum tương ứng, hoặc null nếu để trống (Service dùng mặc định PUBLIC)
+     * @throws BadRequestException nếu chuỗi truyền vào không khớp bất kỳ phạm vi hợp lệ nào
+     */
+    private PostVisibility parsePostVisibility(String visibility) {
+        if (visibility == null || visibility.isBlank()) {
+            return null;
+        }
+        try {
+            return PostVisibility.valueOf(visibility.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Phạm vi hiển thị không hợp lệ: " + visibility);
         }
     }
 }

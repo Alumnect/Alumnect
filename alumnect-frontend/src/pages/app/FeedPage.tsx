@@ -33,7 +33,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike } from '@/features/feed'
+import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
 import type { FeedFilter, Post } from '@/features/feed'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
@@ -58,12 +58,16 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
  * đăng nhập qua popup (BR-12).
  * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
  */
-function Composer({ viewer }: { viewer: AuthUser }) {
+function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: () => void }) {
   return (
     <Card hover={false} className="p-4">
       <div className="flex gap-3">
         <Avatar src={viewer.avatarUrl ?? 'https://i.pravatar.cc/120?img=12'} name={viewer.name} size={44} verified={viewer.verified} />
-        <button className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]"
+        >
           Share an achievement, ask, or post a job…
         </button>
       </div>
@@ -76,13 +80,15 @@ function Composer({ viewer }: { viewer: AuthUser }) {
         ].map((a) => (
           <button
             key={a.label}
+            type="button"
+            onClick={onOpen}
             className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04]"
           >
             <a.icon size={17} className={a.tone} />
             <span className="hidden sm:inline">{a.label}</span>
           </button>
         ))}
-        <Button size="sm" className="ml-auto">Post</Button>
+        <Button size="sm" className="ml-auto" onClick={onOpen}>Post</Button>
       </div>
     </Card>
   )
@@ -287,8 +293,9 @@ function SidebarCard({ title, action, children }: { title: string; action?: stri
  * trạng thái loading / empty / error / permission.
  */
 export function FeedPage() {
-  // === Bước 1: State cục bộ — bộ lọc loại bài viết đang chọn ===
+  // === Bước 1: State cục bộ — bộ lọc loại bài viết & mở/đóng modal soạn bài (UC14) ===
   const [filter, setFilter] = useState<FeedFilter>('all')
+  const [composerOpen, setComposerOpen] = useState(false)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -321,9 +328,13 @@ export function FeedPage() {
         {/* Khối A: Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy gì ở đây —
             Guest khi tương tác sẽ được mời đăng nhập qua popup (kiểu Facebook). */}
         {canPost && viewer && (
-          <Reveal>
-            <Composer viewer={viewer} />
-          </Reveal>
+          <>
+            <Reveal>
+              <Composer viewer={viewer} onOpen={() => setComposerOpen(true)} />
+            </Reveal>
+            {/* Modal soạn & đăng bài viết (UC14 - Create a post on the Feed) */}
+            <CreatePostModal open={composerOpen} onClose={() => setComposerOpen(false)} viewer={viewer} />
+          </>
         )}
 
         {/* Khối B: Tabs lọc theo loại bài viết (All / Achievements / Hiring / Events) */}

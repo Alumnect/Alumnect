@@ -2807,7 +2807,7 @@
 				}
 			]
 		},
-{
+		{
 			"name": "06. Community Feed",
 			"item": [
 				{
@@ -2974,32 +2974,365 @@
 					"item": [
 						{
 							"name": "Guest xem chi tiết bài viết PUBLIC - Thành công",
-							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/1", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","1"] }, "description": "### API Xem Chi Tiết Bài Viết (UC16)\n* Quyen: Public (Guest xem bai PUBLIC - BR-12).\n* Phan hoi (200 OK): message 'Lấy chi tiết bài viết thành công', data la 1 PostResponse.", "auth": { "type": "noauth" } },
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1"
+									]
+								},
+								"description": "### API Xem Chi Tiết Bài Viết (UC16)\n* Quyen: Public (Guest xem bai PUBLIC - BR-12).\n* Phan hoi (200 OK): message 'Lấy chi tiết bài viết thành công', data la 1 PostResponse.",
+								"auth": {
+									"type": "noauth"
+								}
+							},
 							"response": []
 						},
 						{
 							"name": "Xem chi tiết thất bại - Bài không tồn tại hoặc đã bị ẩn",
-							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/999999", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","999999"] }, "description": "### Kich ban 404 (BR-08/BR-11)\n* Bai khong ton tai hoac is_hidden=true.\n* Phan hoi (404): { error: 404, message: 'Bài viết này không còn khả dụng' }.", "auth": { "type": "noauth" } },
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/999999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"999999"
+									]
+								},
+								"description": "### Kich ban 404 (BR-08/BR-11)\n* Bai khong ton tai hoac is_hidden=true.\n* Phan hoi (404): { error: 404, message: 'Bài viết này không còn khả dụng' }.",
+								"auth": {
+									"type": "noauth"
+								}
+							},
 							"response": []
 						},
 						{
 							"name": "Xem chi tiết thất bại - id không hợp lệ (không phải số)",
-							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/abc", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","abc"] }, "description": "### Kich ban 400\n* id sai kieu bi chan boi handler MethodArgumentTypeMismatch.\n* Phan hoi (400): message \"Tham số 'id' không hợp lệ\".", "auth": { "type": "noauth" } },
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/abc",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"abc"
+									]
+								},
+								"description": "### Kich ban 400\n* id sai kieu bi chan boi handler MethodArgumentTypeMismatch.\n* Phan hoi (400): message \"Tham số 'id' không hợp lệ\".",
+								"auth": {
+									"type": "noauth"
+								}
+							},
 							"response": []
 						},
 						{
 							"name": "Guest xem bài MEMBERS - Bị chặn 403",
-							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/2", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","2"] }, "description": "### Kich ban 403 (BR-12)\n* Guest co xem bai visibility=MEMBERS (id=2 gia dinh la bai MEMBERS).\n* Phan hoi (403): { error: 403, message: 'Đăng nhập để xem bài viết này' }.", "auth": { "type": "noauth" } },
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/2",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"2"
+									]
+								},
+								"description": "### Kich ban 403 (BR-12)\n* Guest co xem bai visibility=MEMBERS (id=2 gia dinh la bai MEMBERS).\n* Phan hoi (403): { error: 403, message: 'Đăng nhập để xem bài viết này' }.",
+								"auth": {
+									"type": "noauth"
+								}
+							},
 							"response": []
 						},
 						{
 							"name": "Xem bình luận của bài viết - Thành công",
-							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/1/comments?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","1","comments"], "query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ] }, "description": "### API Xem Luong Binh Luan (UC16)\n* Quyen: Public (theo quyen xem cua bai viet chua binh luan).\n* Phan hoi (200): PageResponse<CommentResponse>, chi status=ACTIVE, sap created_at ASC (BR-15).", "auth": { "type": "noauth" } },
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/comments?page=0&size=10",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"comments"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										}
+									]
+								},
+								"description": "### API Xem Luong Binh Luan (UC16)\n* Quyen: Public (theo quyen xem cua bai viet chua binh luan).\n* Phan hoi (200): PageResponse<CommentResponse>, chi status=ACTIVE, sap created_at ASC (BR-15).",
+								"auth": {
+									"type": "noauth"
+								}
+							},
 							"response": []
 						},
 						{
 							"name": "Thành viên xem chi tiết bài MEMBERS - Thành công",
-							"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/posts/2", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","2"] }, "description": "### Xem chi tiet voi vai tro thanh vien\n* Quyen: Bearer Token ({{jwtToken}}).\n* Thanh vien xem duoc ca bai MEMBERS (BR-12)." },
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/2",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"2"
+									]
+								},
+								"description": "### Xem chi tiet voi vai tro thanh vien\n* Quyen: Bearer Token ({{jwtToken}}).\n* Thanh vien xem duoc ca bai MEMBERS (BR-12)."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "04.3. Tạo bài viết (Create Post) — UC14",
+					"item": [
+						{
+							"name": "Đăng bài viết văn bản - Thành công (201)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Mình vừa hoàn thành khóa thực tập tại FPT Software, rất nhiều điều bổ ích cho các bạn khóa sau!\",\n  \"type\": \"normal\",\n  \"visibility\": \"public\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									]
+								},
+								"description": "### API Tạo Bài Viết (UC14 - Create a post on the Feed)\n* Quyen: Bearer Token ({{jwtToken}}) — chi STUDENT/ALUMNI moi duoc dang bai.\n* Body: content (bat buoc, <=5000 ky tu), type (normal/achievement/recruitment/event, mac dinh normal), imageUrl (tuy chon <=500), visibility (public/members, mac dinh public).\n* Phan hoi (201 Created): message \"Đăng bài viết thành công\", data la PostResponse vua tao (id, type, author, role, likes=0, comments=0, reposts=0, liked=false)."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng bài Achievement kèm ảnh, phạm vi MEMBERS - Thành công (201)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Tự hào nhận giải Nhất cuộc thi ACCP 2024 cùng team!\",\n  \"type\": \"achievement\",\n  \"imageUrl\": \"https://example.com/anh-giai-thuong.jpg\",\n  \"visibility\": \"members\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									]
+								},
+								"description": "### Tao bai Achievement co anh, chi thanh vien xem\n* type=achievement, visibility=members (Guest se KHONG thay bai nay tren feed — BR-12).\n* Phan hoi (201 Created): PostResponse voi type=\"achievement\", image != null."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng bài thất bại - Guest chưa đăng nhập (401)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Guest thu dang bai\",\n  \"type\": \"normal\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									]
+								},
+								"description": "### Kich ban 401\n* POST /posts KHONG nam trong PUBLIC_GET (chi GET moi cong khai) -> Guest bi Spring Security chan truoc khi vao Controller.\n* Phan hoi (401): { error: 401, message: \"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\" }.",
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng bài thất bại - Nội dung để trống (400)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"\",\n  \"type\": \"normal\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									]
+								},
+								"description": "### Kich ban 400 (validation JSR-380)\n* content vi pham @NotBlank.\n* Phan hoi (400): message \"Dữ liệu gửi lên không hợp lệ\", data.content = \"Nội dung bài viết không được để trống\"."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng bài thất bại - Loại bài viết không hợp lệ (400)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Bai viet test\",\n  \"type\": \"invalidtype\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									]
+								},
+								"description": "### Kich ban 400 (business)\n* type khong thuoc {normal, achievement, recruitment, event}.\n* Phan hoi (400): message \"Loại bài viết không hợp lệ: invalidtype\"."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng bài thất bại - Phạm vi hiển thị không hợp lệ (400)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Bai viet test\",\n  \"visibility\": \"friends\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									]
+								},
+								"description": "### Kich ban 400 (business)\n* visibility khong thuoc {public, members}.\n* Phan hoi (400): message \"Phạm vi hiển thị không hợp lệ: friends\"."
+							},
+							"response": []
+						},
+						{
+							"name": "Đăng bài thất bại - Admin không được đăng (403)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Admin thu dang bai\",\n  \"type\": \"normal\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts"
+									]
+								},
+								"description": "### Kich ban 403 (RBAC UC14)\n* Chay request nay SAU khi dang nhap bang tai khoan ADMIN de {{jwtToken}} la token Admin.\n* Chi STUDENT/ALUMNI moi duoc dang bai -> Admin bi tu choi tai tang Service (ForbiddenException).\n* Phan hoi (403): { error: 403, message: \"Chỉ sinh viên và cựu sinh viên mới được đăng bài viết\" }."
+							},
 							"response": []
 						}
 					]
@@ -3146,7 +3479,7 @@
 				}
 			]
 		}
-		],
+	],
 	"auth": {
 		"type": "bearer",
 		"bearer": [

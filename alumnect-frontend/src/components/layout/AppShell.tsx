@@ -76,7 +76,7 @@ export function AppShell() {
     return <Navigate to="/admin" replace />
   }
   const logoutM = useLogout()
-  // Sau redirect ADMIN ở trên, user (nếu có) chỉ còn STUDENT/ALUMNI.
+  // ADMIN đã được điều hướng về /admin ở trên, nên tại đây role chỉ còn STUDENT/ALUMNI.
   const roleLabel = user ? (user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
 
   return (
