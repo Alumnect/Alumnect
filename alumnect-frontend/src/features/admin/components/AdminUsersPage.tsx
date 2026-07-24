@@ -4,7 +4,7 @@ import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/compone
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
-import { useAdminUsers, useAdminUserDetail, useUpdateUserStatus } from './useAdmin'
+import { useAdminUsers, useAdminUserDetail, useUpdateUserStatus } from '../hooks/useAdmin'
 
 const TABS = [
   { name: 'Tất cả', value: 'ALL' },
@@ -150,7 +150,7 @@ export function AdminUsersPage() {
                           className="flex items-center gap-3 cursor-pointer group/user"
                           onClick={() => setSelectedUserId(u.id)}
                         >
-                          <Avatar name={u.fullName} size={38} verified={u.isAccountVerified} />
+                          <Avatar src={u.avatarUrl} name={u.fullName} size={38} verified={u.isAccountVerified} />
                           <div>
                             <p className="font-semibold text-plum-900 group-hover/user:text-gold-600 transition-colors">
                               {u.fullName}
@@ -277,7 +277,7 @@ export function AdminUsersPage() {
                 </div>
               ) : userDetail ? (
                 <div className="flex items-center gap-4">
-                  <Avatar name={userDetail.fullName} size={64} ring verified={userDetail.isAccountVerified} />
+                  <Avatar src={userDetail.avatarUrl} name={userDetail.fullName} size={64} ring verified={userDetail.isAccountVerified} />
                   <div>
                     <h3 className="text-xl font-bold">{userDetail.fullName}</h3>
                     <p className="text-white/80 text-sm mt-0.5">

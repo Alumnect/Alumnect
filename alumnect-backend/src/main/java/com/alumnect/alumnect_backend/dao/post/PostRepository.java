@@ -15,7 +15,7 @@ import java.util.Optional;
  * Repository quản lý các thao tác dữ liệu trên bảng posts (Bài viết bảng tin cộng đồng).
  */
 @Repository
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Post> {
 
     /**
      * Lấy một trang bài viết cho bảng tin cộng đồng (UC15 - View community Feed), đã áp dụng:

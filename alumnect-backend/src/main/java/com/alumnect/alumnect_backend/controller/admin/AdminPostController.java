@@ -1,0 +1,61 @@
+package com.alumnect.alumnect_backend.controller.admin;
+
+import com.alumnect.alumnect_backend.common.api.ApiResponse;
+import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.request.admin.AdminPostUpdateStatusDto;
+import com.alumnect.alumnect_backend.dto.response.admin.AdminPostResponse;
+import com.alumnect.alumnect_backend.service.admin.AdminPostService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * Controller xử lý các yêu cầu quản lý và kiểm duyệt bài viết dành cho Quản trị viên (Admin).
+ */
+@RestController
+@RequestMapping("/admin/posts")
+@RequiredArgsConstructor
+public class AdminPostController {
+
+    private final AdminPostService adminPostService;
+
+    /**
+     * Lấy danh sách toàn bộ bài viết phân trang và hỗ trợ lọc động (UC65 & UC66).
+     *
+     * @param query Từ khóa tìm kiếm nội dung bài viết (tùy chọn)
+     * @param author Từ khóa tìm kiếm theo tên hoặc email tác giả (tùy chọn)
+     * @param status Trạng thái ẩn bài viết: VISIBLE, HIDDEN, hoặc ALL (tùy chọn)
+     * @param page Số trang hiển thị, mặc định 0
+     * @param size Số lượng phần tử mỗi trang, mặc định 10
+     * @return Trang danh sách bài viết bọc trong ApiResponse
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponse<AdminPostResponse>>> getPosts(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PageResponse<AdminPostResponse> posts = adminPostService.getPosts(query, author, status, page, size);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bài viết thành công", posts));
+    }
+
+    /**
+     * Ẩn hoặc hiển thị lại bài viết vi phạm trên bảng tin cộng đồng (UC68).
+     *
+     * @param id ID bài viết cần cập nhật
+     * @param request DTO chứa trạng thái ẩn mong muốn
+     * @return Kết quả thành công bọc trong ApiResponse
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> togglePostHidden(
+            @PathVariable Long id,
+            @Valid @RequestBody AdminPostUpdateStatusDto request) {
+
+        adminPostService.togglePostHidden(id, request.getHidden());
+        String msg = request.getHidden() ? "Ẩn bài viết thành công" : "Mở ẩn bài viết thành công";
+        return ResponseEntity.ok(ApiResponse.success(msg, null));
+    }
+}

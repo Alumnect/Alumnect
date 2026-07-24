@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { ADMIN_SECTIONS } from './adminSectionsData'
-import { useAdminVerifications, useReviewVerification } from './useAdmin'
+import { useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
 
 export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
   const s = ADMIN_SECTIONS[sectionKey]

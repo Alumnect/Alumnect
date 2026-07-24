@@ -2350,6 +2350,50 @@
 						"description": "### API Phê Duyệt Minh Chứng Tốt Nghiệp\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Chấp thuận (APPROVED) hoặc Từ chối (REJECTED) yêu cầu của Alumni.\n* **Kết quả của APPROVED**: \n  * Cập nhật trạng thái `verification_requests` = `APPROVED`.\n  * Cập nhật `users.is_account_verified` = `true` cho cựu sinh viên đó."
 					},
 					"response": []
+				},
+				{
+					"name": "Xem toàn bộ bài viết (Feed Posts) - Thành công",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/posts?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"posts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "### API Xem Toàn Bộ Bài Viết Cộng Đồng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy danh sách toàn bộ bài viết trên feed cộng đồng có phân trang (UC65)."
+					},
+					"response": []
 				}
 			]
 		},
