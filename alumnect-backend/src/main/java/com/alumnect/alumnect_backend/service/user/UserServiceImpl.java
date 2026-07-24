@@ -18,6 +18,15 @@ import com.alumnect.alumnect_backend.dao.user.ExperienceRepository;
 import com.alumnect.alumnect_backend.dto.response.user.PrimaryExperienceResponse;
 import com.alumnect.alumnect_backend.entity.user.Experience;
 
+import com.alumnect.alumnect_backend.dao.user.MajorRepository;
+import com.alumnect.alumnect_backend.dao.user.UserSkillRepository;
+import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
+import com.alumnect.alumnect_backend.entity.user.Major;
+import com.alumnect.alumnect_backend.entity.user.UserProfile;
+import com.alumnect.alumnect_backend.entity.user.UserSkill;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Lớp triển khai dịch vụ (Service Implementation) quản lý thông tin tài khoản người dùng.
  * Thực thi interface {@link UserService}.
@@ -31,7 +40,8 @@ public class UserServiceImpl implements UserService {
     private final UserProfileMapper userProfileMapper;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ExperienceRepository experienceRepository;
-
+    private final MajorRepository majorRepository;
+    private final UserSkillRepository userSkillRepository;
 
     /**
      * Thực hiện thay đổi mật khẩu tài khoản người dùng.
@@ -125,6 +135,70 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
+    /**
+     * Cập nhật thông tin hồ sơ cá nhân của người dùng đăng nhập hiện tại.
+     *
+     * @param email Địa chỉ email người dùng
+     * @param request DTO dữ liệu hồ sơ cá nhân
+     * @return UserProfileResponse thông tin hồ sơ sau cập nhật
+     */
+    @Override
+    @Transactional
+    public UserProfileResponse updateOwnProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+
+        UserProfile profile = user.getProfile();
+        if (profile == null) {
+            profile = new UserProfile();
+            profile.setUser(user);
+            profile.setUserId(user.getId());
+        }
+
+        // Map các trường cơ bản từ Request DTO vào Entity
+        userProfileMapper.updateEntityFromRequest(request, profile);
+
+        // Cập nhật Major nếu được chỉ định
+        if (request.getMajorId() != null) {
+            Major major = majorRepository.findById(request.getMajorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chuyên ngành với ID: " + request.getMajorId()));
+            profile.setMajor(major);
+        } else {
+            profile.setMajor(null);
+        }
+
+        // Lưu thông tin hồ sơ cá nhân
+        UserProfile savedProfile = userProfileRepository.save(profile);
+
+        // Cập nhật danh sách kỹ năng của người dùng nếu danh sách không null
+        if (request.getSkills() != null) {
+            userSkillRepository.deleteByUserId(user.getId());
+            userSkillRepository.flush(); // Bắt buộc flush DELETE SQL xuống PostgreSQL trước khi chèn danh sách kỹ năng mới
+            if (!request.getSkills().isEmpty()) {
+
+                List<UserSkill> newSkills = new ArrayList<>();
+                for (var skillReq : request.getSkills()) {
+                    UserSkill us = UserSkill.builder()
+                            .user(user)
+                            .groupName(skillReq.getGroupName())
+                            .skillName(skillReq.getSkillName())
+                            .sortOrder(skillReq.getSortOrder())
+                            .build();
+                    newSkills.add(us);
+                }
+                userSkillRepository.saveAll(newSkills);
+            }
+        }
+
+        // Nạp dữ liệu hoàn chỉnh để trả về
+        UserProfile updatedProfile = userProfileRepository.findById(user.getId())
+                .orElse(savedProfile);
+
+        UserProfileResponse response = userProfileMapper.toResponse(updatedProfile);
+        populatePrimaryExperience(user.getId(), response);
+        return response;
+    }
+
     private void populatePrimaryExperience(Long userId, UserProfileResponse response) {
         experienceRepository.findByUserIdAndIsPrimaryTrue(userId).ifPresent(exp -> {
             PrimaryExperienceResponse per = PrimaryExperienceResponse.builder()
@@ -139,4 +213,5 @@ public class UserServiceImpl implements UserService {
         });
     }
 }
+
 

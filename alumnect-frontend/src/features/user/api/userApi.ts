@@ -20,4 +20,11 @@ export const userApi = {
    */
   getUserProfile: (userId: number) =>
     http.get<any, ApiResponse<UserProfileResponse>>(`/users/profile/${userId}`),
+
+  /**
+   * Cập nhật thông tin hồ sơ cá nhân của mình
+   */
+  updateOwnProfile: (payload: import('../model/userTypes').UpdateProfileRequest) =>
+    http.put<any, ApiResponse<UserProfileResponse>>('/users/profile', payload),
 }
+

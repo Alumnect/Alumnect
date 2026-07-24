@@ -1,12 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import { userApi } from '../api/userApi'
 
+export const userKeys = {
+  all: ['user-profile'] as const,
+  ownProfile: () => ['user-profile', 'own'] as const,
+  userProfile: (id: number | null) => ['user-profile', id] as const,
+}
+
 /**
  * Hook truy vấn thông tin hồ sơ của chính mình (Own Profile)
  */
 export function useOwnProfile(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ['user-profile', 'own'],
+    queryKey: userKeys.ownProfile(),
     queryFn: async () => {
       const response = await userApi.getOwnProfile()
       return response.data
@@ -14,6 +20,7 @@ export function useOwnProfile(options?: { enabled?: boolean }) {
     ...options,
   })
 }
+
 
 /**
  * Hook truy vấn thông tin hồ sơ của người dùng khác bằng userId (Other User Profile)

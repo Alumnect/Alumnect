@@ -24,7 +24,19 @@ import type { CareerPathSummaryResponse, ExperienceTimelineResponse } from '@/fe
 import { formatPeriodDate } from '@/utils/date'
 import { AnimatePresence, motion } from 'framer-motion'
 
+const formatLocationCityOnly = (location?: string | null): string => {
+  if (!location || !location.trim()) return ''
+  const parts = location.split(',').map((p) => p.trim()).filter(Boolean)
+  if (parts.length === 0) return location
+  let target = parts[parts.length - 1]
+  if (parts.length >= 2 && ['việt nam', 'vietnam', 'japan', 'usa', 'united states'].includes(target.toLowerCase())) {
+    target = parts[parts.length - 2]
+  }
+  return target
+}
+
 export function CareerPage() {
+
   const [search, setSearch] = useState('')
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
@@ -183,7 +195,7 @@ export function CareerPage() {
                   >
                     <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       {/* Left: Avatar + Info */}
-                      <div className="flex items-center gap-3.5">
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <Avatar
                           src={alumni.avatarUrl}
                           name={alumni.fullName}
@@ -191,19 +203,19 @@ export function CareerPage() {
                           verified={alumni.verifiedStatus}
                           className="rounded-xl shrink-0"
                         />
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-bold text-plum-900 truncate">{alumni.fullName}</h3>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-plum-400 mt-0.5">
                             <span className="font-medium text-plum-500">{alumni.major || 'Đại học FPT'}</span>
                             {alumni.cohort && (<><span className="opacity-40">·</span><span>K{alumni.cohort}</span></>)}
                           </div>
                           {(alumni.currentTitle || alumni.currentCompany) && (
-                            <p className="text-[11px] text-plum-500 mt-1.5 flex items-center gap-1.5">
+                            <p className="text-[11px] text-plum-500 mt-1.5 flex items-center gap-1.5 min-w-0">
                               <Briefcase size={11} className="text-brand-400 shrink-0" />
                               <span className="truncate">
                                 <span className="font-semibold text-plum-700">{alumni.currentTitle}</span>
                                 {alumni.currentCompany && <> tại <span className="font-semibold text-plum-800">{alumni.currentCompany}</span></>}
-                                {alumni.currentLocation && <span className="text-plum-400"> · {alumni.currentLocation}</span>}
+                                {alumni.currentLocation && <span className="text-plum-400 font-normal"> · {formatLocationCityOnly(alumni.currentLocation)}</span>}
                               </span>
                             </p>
                           )}
@@ -211,26 +223,26 @@ export function CareerPage() {
                       </div>
 
                       {/* Right: Career preview + CTA */}
-                      <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="flex flex-col items-end gap-2 shrink-0 max-w-[240px] sm:max-w-[300px]">
                         {alumni.careerPreview && alumni.careerPreview.length > 0 && (
-                          <div className="flex items-center gap-1 flex-wrap justify-end max-w-[280px]">
-                            {alumni.careerPreview.slice(0, 4).map((step, idx) => (
+                          <div className="flex items-center gap-1 flex-wrap justify-end">
+                            {alumni.careerPreview.slice(0, 3).map((step, idx) => (
                               <React.Fragment key={step.experienceId}>
                                 <span
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-medium truncate max-w-[90px] ${
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-medium truncate max-w-[85px] ${
                                     step.isCurrent ? 'bg-brand-100 text-brand-700 font-semibold' : 'bg-plum-50 text-plum-500'
                                   }`}
                                   title={`${step.title} @ ${step.company}`}
                                 >
                                   {step.title}
                                 </span>
-                                {idx < alumni.careerPreview.slice(0, 4).length - 1 && (
+                                {idx < alumni.careerPreview.slice(0, 3).length - 1 && (
                                   <ArrowRight size={9} className="text-plum-300 shrink-0" />
                                 )}
                               </React.Fragment>
                             ))}
-                            {alumni.careerPreview.length > 4 && (
-                              <span className="text-[10px] text-plum-400 font-medium">+{alumni.careerPreview.length - 4}</span>
+                            {alumni.careerPreview.length > 3 && (
+                              <span className="text-[10px] text-plum-400 font-medium">+{alumni.careerPreview.length - 3}</span>
                             )}
                           </div>
                         )}
@@ -241,6 +253,7 @@ export function CareerPage() {
                           <ChevronRight size={13} className={`transition-transform duration-200 ${isActive ? 'rotate-90 text-brand-500' : 'group-hover:translate-x-0.5'}`} />
                         </div>
                       </div>
+
                     </div>
                   </motion.div>
                 </StaggerItem>

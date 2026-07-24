@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.dto.request.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -32,9 +33,12 @@ public class ExperienceRequest {
 
     private LocalDate endDate;
 
+    @JsonProperty("isCurrent")
     private boolean isCurrent;
 
+    @JsonProperty("isPrimary")
     private boolean isPrimary;
+
 
     private BigDecimal latitude;
 

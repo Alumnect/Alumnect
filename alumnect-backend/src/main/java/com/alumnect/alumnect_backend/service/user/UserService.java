@@ -34,5 +34,16 @@ public interface UserService {
      * @return DTO chứa thông tin hồ sơ chi tiết của người dùng đó
      */
     UserProfileResponse getUserProfile(Long userId);
+
+    /**
+     * Cập nhật thông tin hồ sơ cá nhân của tài khoản đăng nhập hiện tại.
+     * Cập nhật thông tin cơ bản, học tập, giới thiệu, kỹ năng và các liên kết cá nhân.
+     *
+     * @param email Địa chỉ email của người dùng đăng nhập hiện tại
+     * @param request DTO chứa dữ liệu hồ sơ cá nhân cần cập nhật
+     * @return DTO chứa thông tin hồ sơ chi tiết sau khi cập nhật
+     */
+    UserProfileResponse updateOwnProfile(String email, com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest request);
+
 }
 

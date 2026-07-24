@@ -18,4 +18,6 @@ public class AlumnectBackendApplication {
 		SpringApplication.run(AlumnectBackendApplication.class, args);
 	}
 
+
+
 }
