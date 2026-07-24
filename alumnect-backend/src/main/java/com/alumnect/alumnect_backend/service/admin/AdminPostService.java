@@ -14,11 +14,12 @@ public interface AdminPostService {
      * @param query Từ khóa tìm kiếm trong nội dung
      * @param author Từ khóa tìm kiếm theo tên/email tác giả
      * @param status Trạng thái ẩn (VISIBLE, HIDDEN, hoặc ALL)
+     * @param type Loại bài viết (NORMAL, EVENT, RECRUITMENT, ACHIEVEMENT)
      * @param page Số trang hiển thị (0-based)
      * @param size Số lượng phần tử mỗi trang
      * @return Phân trang danh sách bài viết dạng DTO
      */
-    PageResponse<AdminPostResponse> getPosts(String query, String author, String status, int page, int size);
+    PageResponse<AdminPostResponse> getPosts(String query, String author, String status, String type, int page, int size);
 
     /**
      * Thay đổi trạng thái ẩn (Hide / Unhide) của bài viết vi phạm (UC68).

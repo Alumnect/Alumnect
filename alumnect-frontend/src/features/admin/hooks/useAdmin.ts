@@ -121,6 +121,7 @@ export function useAdminPosts(filters: {
   query?: string
   author?: string
   status?: string
+  type?: string
   page: number
   size: number
 }) {

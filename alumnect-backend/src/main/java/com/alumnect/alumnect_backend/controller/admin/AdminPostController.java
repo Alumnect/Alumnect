@@ -26,6 +26,7 @@ public class AdminPostController {
      * @param query Từ khóa tìm kiếm nội dung bài viết (tùy chọn)
      * @param author Từ khóa tìm kiếm theo tên hoặc email tác giả (tùy chọn)
      * @param status Trạng thái ẩn bài viết: VISIBLE, HIDDEN, hoặc ALL (tùy chọn)
+     * @param type   Loại bài viết: NORMAL, EVENT, RECRUITMENT, ACHIEVEMENT hoặc ALL (tùy chọn)
      * @param page Số trang hiển thị, mặc định 0
      * @param size Số lượng phần tử mỗi trang, mặc định 10
      * @return Trang danh sách bài viết bọc trong ApiResponse
@@ -35,10 +36,11 @@ public class AdminPostController {
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String author,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        PageResponse<AdminPostResponse> posts = adminPostService.getPosts(query, author, status, page, size);
+        PageResponse<AdminPostResponse> posts = adminPostService.getPosts(query, author, status, type, page, size);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bài viết thành công", posts));
     }
 

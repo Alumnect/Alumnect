@@ -3,13 +3,36 @@ import { FileText, Search, User, Newspaper, Clock, Eye, EyeOff, ThumbsUp, Messag
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
+import { cn } from '@/lib/utils'
 import { useAdminPosts } from '../hooks/useAdmin'
 
+const STATUS_TABS = [
+  { name: 'Tất cả', value: 'ALL' },
+  { name: 'Đang hiển thị', value: 'VISIBLE' },
+  { name: 'Đã ẩn', value: 'HIDDEN' },
+]
+
+const POST_TYPES = [
+  { name: 'Tất cả loại', value: 'ALL' },
+  { name: 'Bình thường', value: 'NORMAL' },
+  { name: 'Thành tựu', value: 'ACHIEVEMENT' },
+  { name: 'Tuyển dụng', value: 'RECRUITMENT' },
+  { name: 'Sự kiện', value: 'EVENT' },
+]
+
 export function AdminPostsPage() {
+  const [status, setStatus] = useState('ALL')
+  const [type, setType] = useState('ALL')
+  const [query, setQuery] = useState('')
+  const [author, setAuthor] = useState('')
   const [page, setPage] = useState(0)
 
   // Fetch all posts via useAdminPosts hook
   const { data, isLoading, error } = useAdminPosts({
+    query: query || undefined,
+    author: author || undefined,
+    status: status === 'ALL' ? undefined : status,
+    type: type === 'ALL' ? undefined : type,
     page,
     size: 10,
   })
@@ -23,6 +46,73 @@ export function AdminPostsPage() {
         title="Quản lý bài viết"
         subtitle="Duyệt tất cả bài viết trên bảng tin cộng đồng (Feed posts) trong toàn hệ thống."
       />
+
+      {/* Tabs and search bar */}
+      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => {
+                setStatus(t.value)
+                setPage(0)
+              }}
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all',
+                status === t.value
+                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-900'
+                  : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]'
+              )}
+            >
+              {t.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          {/* Post Type Selector */}
+          <select
+            value={type}
+            onChange={(e) => {
+              setType(e.target.value)
+              setPage(0)
+            }}
+            className="h-10 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-3.5 text-sm font-semibold text-plum-700 focus:border-gold-400/50 focus:outline-none cursor-pointer"
+          >
+            {POST_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+
+          <div className="relative flex items-center sm:w-52">
+            <Search size={16} className="pointer-events-none absolute left-3 text-plum-400" />
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setPage(0)
+              }}
+              placeholder="Tìm theo nội dung..."
+              className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-9 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-gold-400/50 focus:outline-none"
+            />
+          </div>
+
+          <div className="relative flex items-center sm:w-52">
+            <User size={16} className="pointer-events-none absolute left-3 text-plum-400" />
+            <input
+              value={author}
+              onChange={(e) => {
+                setAuthor(e.target.value)
+                setPage(0)
+              }}
+              placeholder="Tìm theo tác giả, email..."
+              className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-9 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-gold-400/50 focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
 
       <Reveal>
         {isLoading ? (

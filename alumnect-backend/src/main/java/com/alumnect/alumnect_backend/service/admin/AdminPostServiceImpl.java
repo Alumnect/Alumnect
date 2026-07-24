@@ -29,9 +29,9 @@ public class AdminPostServiceImpl implements AdminPostService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AdminPostResponse> getPosts(String query, String author, String status, int page, int size) {
+    public PageResponse<AdminPostResponse> getPosts(String query, String author, String status, String type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Specification<Post> spec = PostSpecification.filterPosts(query, author, status);
+        Specification<Post> spec = PostSpecification.filterPosts(query, author, status, type);
         
         Page<Post> postPage = postRepository.findAll(spec, pageable);
         

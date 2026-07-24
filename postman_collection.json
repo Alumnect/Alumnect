@@ -2370,7 +2370,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/admin/posts?page=0&size=10",
+							"raw": "{{baseUrl}}/api/v1/admin/posts?type={{type}}&status={{status}}&query={{query}}&author={{author}}&page={{page}}&size={{size}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -2382,12 +2382,32 @@
 							],
 							"query": [
 								{
+									"key": "type",
+									"value": "{{type}}",
+									"description": "Loài bài vịe (NORMAL, EVENT, RECRUITMENT, ACHIEVEMENT)"
+								},
+								{
+									"key": "status",
+									"value": "{{status}}",
+									"description": "Tráng thái ăn (VISIBLE, HIDDEN)"
+								},
+								{
+									"key": "query",
+									"value": "{{query}}",
+									"description": "Tù khoả nôi dung"
+								},
+								{
+									"key": "author",
+									"value": "{{author}}",
+									"description": "Tù khoả tac giá"
+								},
+								{
 									"key": "page",
-									"value": "0"
+									"value": "{{page}}"
 								},
 								{
 									"key": "size",
-									"value": "10"
+									"value": "{{size}}"
 								}
 							]
 						},
