@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.service.post;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
@@ -8,7 +9,8 @@ import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 
 /**
  * Interface định nghĩa các dịch vụ liên quan tới bài viết cộng đồng
- * (UC14 - Create a post, UC15 - View community Feed, UC16 - View Post Detail, UC17 - Like a post).
+ * (UC14 - Create a post, UC15 - View community Feed, UC16 - View Post Detail, UC17 - Like a post,
+ * UC18 - Comment on a post).
  */
 public interface PostService {
 
@@ -62,6 +64,18 @@ public interface PostService {
      * @return Trang kết quả bình luận đã được chuẩn hóa
      */
     PageResponse<CommentResponse> getPostComments(Long postId, int page, int size, boolean isAuthenticated);
+
+    /**
+     * Đăng một bình luận mới trên bài viết (UC18 - Comment on a post).
+     * Chỉ STUDENT/ALUMNI đã đăng nhập được bình luận (vai trò khác → 403);
+     * bài đã ẩn/không tồn tại → 404. Cập nhật đồng thời bộ đếm {@code comment_count} của bài viết.
+     *
+     * @param email   Email người dùng đang đăng nhập (từ JWT) — tác giả bình luận
+     * @param postId  ID bài viết được bình luận
+     * @param request Dữ liệu bình luận (nội dung, và {@code parentId} nếu là trả lời)
+     * @return Bình luận vừa tạo đã được chuẩn hóa thành {@link CommentResponse}
+     */
+    CommentResponse createComment(String email, Long postId, CreateCommentRequest request);
 
     /**
      * Thích một bài viết (UC17 - Like a post). Chỉ STUDENT/ALUMNI đã đăng nhập được thích;
