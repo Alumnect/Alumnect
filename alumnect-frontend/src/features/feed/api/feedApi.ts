@@ -58,6 +58,15 @@ function parsePosts(raw: unknown[]): Post[] {
   return out
 }
 
+/** Kết quả trả về sau khi thích/bỏ thích một bài viết (UC17 - Like a post). */
+export type LikeResult = { liked: boolean; likeCount: number }
+
+/** Chuẩn hóa phản hồi thích/bỏ thích từ nhiều biến thể phong bì (envelope) thành LikeResult. */
+function normalizeLike(body: unknown): LikeResult {
+  const d = ((body as { data?: unknown })?.data ?? body) as { liked?: boolean; likeCount?: number } | undefined
+  return { liked: !!d?.liked, likeCount: Number(d?.likeCount ?? 0) }
+}
+
 /* ------------------------------------------------------------------ */
 /* Dữ liệu mock cho chế độ demo (khi chưa bật backend)                 */
 /* ------------------------------------------------------------------ */
@@ -112,6 +121,29 @@ export const feedApi = {
     // B4: Trích + xác thực dữ liệu bằng Zod, rồi suy ra cờ còn trang tiếp theo.
     const items = parsePosts(extractRawItems(body))
     return { items, page, hasMore: inferHasMore(body, items.length) }
+  },
+
+  /**
+   * Thích một bài viết (UC17 - Like a post).
+   * Gọi `POST /api/v1/posts/{id}/like` (token Bearer do interceptor `http` tự đính kèm).
+   * Thao tác lũy đẳng phía backend — thích lại bài đã thích không làm tăng số đếm.
+   * @param postId ID bài viết cần thích
+   * @return Trạng thái like mới + tổng số lượt thích ({ liked: true, likeCount })
+   */
+  likePost: async (postId: string): Promise<LikeResult> => {
+    const body = await http.post(`/posts/${postId}/like`)
+    return normalizeLike(body)
+  },
+
+  /**
+   * Bỏ thích một bài viết (UC17 - Like a post).
+   * Gọi `DELETE /api/v1/posts/{id}/like`. Thao tác lũy đẳng — bỏ thích bài chưa thích không đổi.
+   * @param postId ID bài viết cần bỏ thích
+   * @return Trạng thái like mới + tổng số lượt thích ({ liked: false, likeCount })
+   */
+  unlikePost: async (postId: string): Promise<LikeResult> => {
+    const body = await http.delete(`/posts/${postId}/like`)
+    return normalizeLike(body)
   },
 
   /**

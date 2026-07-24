@@ -10,7 +10,7 @@ interface OtpVerificationProps {
   onBack: () => void
 }
 
-export function OtpVerification({ email, role: _role, onBack }: OtpVerificationProps) {
+export function OtpVerification({ email, onBack }: OtpVerificationProps) {
   const [otpToken, setOtpToken] = useState('')
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const [verifySuccess, setVerifySuccess] = useState<string | null>(null)

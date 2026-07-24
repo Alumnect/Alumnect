@@ -375,6 +375,7 @@ export function AppShell() {
               <div className="mt-4 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 {isAuthenticated ? (
                   <>
+                    {/* Sau redirect ADMIN (đầu AppShell), user chỉ còn STUDENT/ALUMNI → My Profile luôn chiếm cả 2 cột */}
                     <Link
                       to="/app/profile"
                       className="col-span-2 rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]"

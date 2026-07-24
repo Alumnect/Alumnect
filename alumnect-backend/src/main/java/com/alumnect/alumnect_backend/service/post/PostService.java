@@ -3,11 +3,12 @@ package com.alumnect.alumnect_backend.service.post;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
+import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 
 /**
  * Interface định nghĩa các dịch vụ liên quan tới bài viết cộng đồng
- * (UC14 - Create a post, UC15 - View community Feed, UC16 - View Post Detail).
+ * (UC14 - Create a post, UC15 - View community Feed, UC16 - View Post Detail, UC17 - Like a post).
  */
 public interface PostService {
 
@@ -25,26 +26,29 @@ public interface PostService {
     /**
      * Lấy một trang bài viết cho bảng tin cộng đồng, áp dụng phân quyền theo vai trò người xem:
      * Guest (chưa đăng nhập) chỉ thấy bài viết PUBLIC, thành viên đã đăng nhập thấy toàn bộ
-     * bài viết chưa bị ẩn (BR-12).
+     * bài viết chưa bị ẩn (BR-12). Cờ {@code liked} của mỗi bài được tính theo người xem hiện tại (UC17).
      *
      * @param page            Số thứ tự trang cần lấy (0-based)
      * @param size            Kích thước trang (số bài viết mỗi trang)
      * @param type            Loại bài viết cần lọc ("normal"/"achievement"/"recruitment"/"event"),
      *                        hoặc null/rỗng nếu không lọc theo loại
      * @param isAuthenticated true nếu người xem đã đăng nhập, false nếu là Guest
+     * @param viewerEmail     Email người xem đã đăng nhập (để tính cờ liked); null nếu là Guest
      * @return Trang kết quả bài viết đã được chuẩn hóa, sẵn sàng trả về Client
      */
-    PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated);
+    PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated, String viewerEmail);
 
     /**
      * Lấy chi tiết một bài viết theo ID (UC16 - View Post Detail), áp dụng quy tắc quyền xem:
      * bài đã ẩn/không tồn tại → 404 (BR-08/BR-11); Guest xem bài MEMBERS → 403 (BR-12).
+     * Cờ {@code liked} được tính theo người xem hiện tại (UC17).
      *
      * @param id              ID bài viết cần xem chi tiết
      * @param isAuthenticated true nếu người xem đã đăng nhập, false nếu là Guest
+     * @param viewerEmail     Email người xem đã đăng nhập (để tính cờ liked); null nếu là Guest
      * @return Chi tiết bài viết đã được chuẩn hóa
      */
-    PostResponse getPostDetail(Long id, boolean isAuthenticated);
+    PostResponse getPostDetail(Long id, boolean isAuthenticated, String viewerEmail);
 
     /**
      * Lấy một trang bình luận (chỉ đọc) của một bài viết (UC16 - View Post Detail).
@@ -58,4 +62,24 @@ public interface PostService {
      * @return Trang kết quả bình luận đã được chuẩn hóa
      */
     PageResponse<CommentResponse> getPostComments(Long postId, int page, int size, boolean isAuthenticated);
+
+    /**
+     * Thích một bài viết (UC17 - Like a post). Chỉ STUDENT/ALUMNI đã đăng nhập được thích;
+     * thao tác có tính lũy đẳng (đã thích rồi thì không thay đổi). Bài đã ẩn/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần thích
+     * @return Trạng thái like mới ({@code liked=true}) và số lượt thích hiện tại
+     */
+    LikeResponse likePost(String email, Long postId);
+
+    /**
+     * Bỏ thích một bài viết (UC17 - Like a post). Chỉ STUDENT/ALUMNI đã đăng nhập được bỏ thích;
+     * thao tác có tính lũy đẳng (chưa thích thì không thay đổi). Bài đã ẩn/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần bỏ thích
+     * @return Trạng thái like mới ({@code liked=false}) và số lượt thích hiện tại
+     */
+    LikeResponse unlikePost(String email, Long postId);
 }
