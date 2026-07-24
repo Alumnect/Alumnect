@@ -27,9 +27,10 @@ public class PostMapper {
      *
      * @param post          Entity bài viết (đã JOIN FETCH sẵn {@code user})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu hồ sơ chưa được tạo
+     * @param liked         true nếu người xem hiện tại đã thích bài viết này (UC17 - Like a post)
      * @return DTO phẳng khớp schema Zod {@code postSchema} phía Frontend
      */
-    public PostResponse toResponse(Post post, UserProfile authorProfile) {
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked) {
         User author = post.getUser();
 
         // Tên hiển thị & avatar: lấy từ UserProfile nếu có, fallback về email khi hồ sơ chưa được tạo.
@@ -58,8 +59,8 @@ public class PostMapper {
                 .likes(post.getLikeCount())
                 .comments(post.getCommentCount())
                 .reposts(post.getRepostCount())
-                // UC15 chỉ triển khai phần xem bảng tin, chưa lưu trạng thái "ai đã thích bài nào".
-                .liked(false)
+                // UC17: cờ liked phản ánh người xem hiện tại đã thích bài này hay chưa.
+                .liked(liked)
                 .build();
     }
 

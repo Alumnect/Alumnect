@@ -33,7 +33,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, CreatePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
 import type { FeedFilter, Post } from '@/features/feed'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
@@ -100,11 +100,41 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: () => void }) 
  * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
  */
 function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
+  // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
+  const [likeCount, setLikeCount] = useState(post.likes)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
 
   // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
   const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleLike = useToggleLike()
+
+  /**
+   * Xử lý bấm nút Thích (UC17): cập nhật lạc quan (đổi UI ngay), đồng bộ theo phản hồi
+   * backend khi thành công, hoàn tác (rollback) khi lỗi. Guest → popup mời đăng nhập (BR-12).
+   */
+  const handleLike = () => {
+    if (!canInteract) {
+      promptLogin('Đăng nhập để thích và tương tác với bài viết.')
+      return
+    }
+    const next = !liked
+    setLiked(next)
+    setLikeCount((c) => c + (next ? 1 : -1))
+    toggleLike.mutate(
+      { postId: post.id, like: next },
+      {
+        onSuccess: (data) => {
+          setLiked(data.liked)
+          setLikeCount(data.likeCount)
+        },
+        onError: () => {
+          setLiked(!next)
+          setLikeCount((c) => c + (next ? -1 : 1))
+        },
+      },
+    )
+  }
 
   return (
     <Card hover={false} className="overflow-hidden">
@@ -142,14 +172,15 @@ function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
       <div className="flex items-center gap-1 p-3">
         {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
         <button
-          onClick={() => (canInteract ? setLiked((v) => !v) : promptLogin('Đăng nhập để thích và tương tác với bài viết.'))}
+          onClick={handleLike}
+          aria-pressed={liked}
           className={cn(
             'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-plum-900/[0.04]',
             liked ? 'text-rose-500' : 'text-plum-500 hover:text-plum-900',
           )}
         >
           <Heart size={18} className={liked ? 'fill-rose-400' : ''} />
-          {compact(post.likes + (liked ? 1 : 0))}
+          {compact(likeCount)}
         </button>
         <button
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để bình luận về bài viết.') }}

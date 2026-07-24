@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
+import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.service.post.PostService;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,7 +60,9 @@ public class PostController {
             @RequestParam(required = false) String type,
             Authentication authentication) {
 
-        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, isAuthenticated(authentication));
+        boolean authenticated = isAuthenticated(authentication);
+        String viewerEmail = authenticated ? authentication.getName() : null;
+        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, authenticated, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy bảng tin thành công", feed));
     }
 
@@ -94,7 +98,9 @@ public class PostController {
             @PathVariable Long id,
             Authentication authentication) {
 
-        PostResponse post = postService.getPostDetail(id, isAuthenticated(authentication));
+        boolean authenticated = isAuthenticated(authentication);
+        String viewerEmail = authenticated ? authentication.getName() : null;
+        PostResponse post = postService.getPostDetail(id, authenticated, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết bài viết thành công", post));
     }
 
@@ -117,6 +123,40 @@ public class PostController {
 
         PageResponse<CommentResponse> comments = postService.getPostComments(id, page, size, isAuthenticated(authentication));
         return ResponseEntity.ok(ApiResponse.success("Lấy bình luận thành công", comments));
+    }
+
+    /**
+     * API thích một bài viết (UC17 - Like a post). Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI được thích
+     * (Admin/vai trò khác nhận 403). Bài đã ẩn/không tồn tại trả 404. Thao tác lũy đẳng.
+     *
+     * @param id             ID bài viết cần thích
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
+     * @return Trạng thái like mới + số lượt thích {@link LikeResponse} bọc trong {@link ApiResponse}
+     */
+    @PostMapping("/{id}/like")
+    public ResponseEntity<ApiResponse<LikeResponse>> likePost(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        LikeResponse result = postService.likePost(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Đã thích bài viết", result));
+    }
+
+    /**
+     * API bỏ thích một bài viết (UC17 - Like a post). Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI.
+     * Bài đã ẩn/không tồn tại trả 404. Thao tác lũy đẳng.
+     *
+     * @param id             ID bài viết cần bỏ thích
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
+     * @return Trạng thái like mới + số lượt thích {@link LikeResponse} bọc trong {@link ApiResponse}
+     */
+    @DeleteMapping("/{id}/like")
+    public ResponseEntity<ApiResponse<LikeResponse>> unlikePost(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        LikeResponse result = postService.unlikePost(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Đã bỏ thích bài viết", result));
     }
 
     /**
