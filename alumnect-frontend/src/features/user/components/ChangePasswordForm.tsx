@@ -10,6 +10,7 @@ import { useChangePassword } from '../hooks/useUserMutations'
 import { changePasswordSchema } from '../model/schemas'
 import type { ChangePasswordFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui'
 import { Field, useLogoutAllDevices } from '@/features/auth'
 
 export function ChangePasswordForm() {
@@ -191,43 +192,38 @@ export function ChangePasswordForm() {
       </form>
 
       {/* CONFIRMATION MODAL - HỎI ĐĂNG XUẤT */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-xl border border-plum-900/5 animate-pop">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600">
-                <LogOut size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-plum-900">Xác nhận đổi mật khẩu</h3>
-            </div>
-            
-            <p className="mt-4 text-sm leading-relaxed text-plum-600">
-              Bạn có muốn đăng xuất khỏi tài khoản trên tất cả các thiết bị sau khi đổi mật khẩu thành công không?
-            </p>
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Xác nhận đổi mật khẩu"
+        icon={<LogOut size={18} />}
+        maxWidthClassName="max-w-md"
+      >
+        <p className="text-sm leading-relaxed text-plum-600">
+          Bạn có muốn đăng xuất khỏi tài khoản trên tất cả các thiết bị sau khi đổi mật khẩu thành công không?
+        </p>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              {/* Nút đăng xuất tất cả */}
-              <button
-                type="button"
-                onClick={() => handleLogoutDecision(true)}
-                disabled={logoutAllDevicesMutation.isPending}
-                className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 active:bg-brand-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {logoutAllDevicesMutation.isPending ? 'Đang đăng xuất...' : 'Đăng xuất mọi thiết bị'}
-              </button>
-              
-              {/* Nút duy trì đăng nhập */}
-              <button
-                type="button"
-                onClick={() => handleLogoutDecision(false)}
-                className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] transition-colors cursor-pointer"
-              >
-                Duy trì đăng nhập
-              </button>
-            </div>
-          </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          {/* Nút đăng xuất tất cả */}
+          <button
+            type="button"
+            onClick={() => handleLogoutDecision(true)}
+            disabled={logoutAllDevicesMutation.isPending}
+            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 active:bg-brand-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {logoutAllDevicesMutation.isPending ? 'Đang đăng xuất...' : 'Đăng xuất mọi thiết bị'}
+          </button>
+          
+          {/* Nút duy trì đăng nhập */}
+          <button
+            type="button"
+            onClick={() => handleLogoutDecision(false)}
+            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] transition-colors cursor-pointer"
+          >
+            Duy trì đăng nhập
+          </button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

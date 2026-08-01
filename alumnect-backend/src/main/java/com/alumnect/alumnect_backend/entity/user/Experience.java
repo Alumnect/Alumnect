@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Instant;
 
@@ -49,10 +50,10 @@ public class Experience {
     private boolean isPrimary;
 
     @Column(precision = 9, scale = 6)
-    private java.math.BigDecimal latitude;
+    private BigDecimal latitude;
 
     @Column(precision = 9, scale = 6)
-    private java.math.BigDecimal longitude;
+    private BigDecimal longitude;
 
     @Column(name = "place_id", length = 255)
     private String placeId;

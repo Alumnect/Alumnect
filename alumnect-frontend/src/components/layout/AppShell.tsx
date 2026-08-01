@@ -12,6 +12,8 @@ import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
 
+import { createPortal } from 'react-dom'
+
 /* ----------------------------- small popover ----------------------------- */
 function Popover({ button, panelClass, children }: { button: ReactNode; panelClass?: string; children: ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -23,7 +25,10 @@ function Popover({ button, panelClass, children }: { button: ReactNode; panelCla
       <AnimatePresence>
         {open && (
           <>
-            <button aria-hidden className="fixed inset-0 z-40 cursor-default" onClick={() => setOpen(false)} />
+            {createPortal(
+              <button aria-hidden className="fixed inset-0 z-20 cursor-default bg-transparent" onClick={() => setOpen(false)} />,
+              document.body
+            )}
             <motion.div
               initial={{ opacity: 0, y: 8, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}

@@ -9,7 +9,7 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface ExperienceMapper {
-    
+
     @Mapping(target = "isCurrent", source = "current")
     ExperienceResponse toResponse(Experience experience);
 
