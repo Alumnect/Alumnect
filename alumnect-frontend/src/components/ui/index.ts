@@ -5,3 +5,4 @@ export { Container, Badge, SectionHeading, Card, Avatar, Skeleton, EmptyState } 
 export { Logo } from './Logo'
 export { PageHeader } from './PageHeader'
 export { SmartImage } from './SmartImage'
+export { Modal } from './Modal'

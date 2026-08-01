@@ -87,4 +87,13 @@ public class UserProfileResponse {
 
     /** Danh sách kỹ năng của người dùng */
     private List<UserSkillResponse> skills;
+
+    /** Số lượng người theo dõi hồ sơ này */
+    private Long followersCount;
+
+    /** Số lượng người mà hồ sơ này đang theo dõi */
+    private Long followingCount;
+
+    /** true nếu người dùng đang đăng nhập hiện tại có theo dõi hồ sơ này không */
+    private Boolean isFollowing;
 }
