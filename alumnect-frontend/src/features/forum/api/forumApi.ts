@@ -1,6 +1,6 @@
 import http from '@/lib/http'
 import { questionDetailSchema, questionSchema, topicSchema } from '../model/question'
-import type { Question, QuestionDetail, QuestionPageResult, SortOption, Topic } from '../model/question'
+import type { CreateQuestionInput, Question, QuestionDetail, QuestionPageResult, Topic } from '../model/question'
 
 /**
  * Tầng gọi API cho UC38 - View question list.
@@ -58,21 +58,35 @@ export const forumApi = {
    * Lấy một trang danh sách câu hỏi trên diễn đàn Q&A.
    * Gọi `GET /api/v1/questions?page={n}&size={m}&sort={s}[&topicId={id}]`.
    * @param page Chỉ số trang cần lấy (0-based)
-   * @param sort Tiêu chí sắp xếp ('recent' | 'votes' | 'answers')
-   * @param topicId ID chủ đề để lọc, hoặc null = không lọc
+   * @param sort Tiêu chí sắp xếp ('recent' | 'votes' | 'answers'), có thể ghép nhiều bằng dấu phẩy
+   * @param topicIds Danh sách ID chủ đề để lọc (tick nhiều), rỗng = không lọc
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
    */
   getQuestions: async ({
     page = 0,
-    sort = 'recent' as SortOption,
-    topicId = null as number | null,
-  } = {}): Promise<QuestionPageResult> => {
+    sort = 'recent',
+    topicIds = [],
+  }: { page?: number; sort?: string; topicIds?: number[] } = {}): Promise<QuestionPageResult> => {
     const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE), sort })
-    if (topicId != null) query.set('topicId', String(topicId))
+    // Gửi nhiều id chủ đề dạng CSV: topicId=3,7,9 — backend nhận List<Long>.
+    if (topicIds.length > 0) query.set('topicId', topicIds.join(','))
 
     const body = await http.get(`/questions?${query.toString()}`)
     const items = parseQuestions(extractRawItems(body))
     return { items, page, hasMore: inferHasMore(body, items.length) }
+  },
+
+  /**
+   * Đặt một câu hỏi mới (UC40 - Ask a question).
+   * Gọi `POST /api/v1/questions`; interceptor `http` tự đính Bearer token của người dùng.
+   * @param input Tiêu đề, nội dung và chủ đề (tùy chọn)
+   * @return Chi tiết câu hỏi vừa tạo đã chuẩn hóa (để điều hướng sang trang chi tiết)
+   */
+  createQuestion: async (input: CreateQuestionInput): Promise<QuestionDetail> => {
+    const body = await http.post('/questions', input)
+    const b = body as unknown as Record<string, unknown> | undefined
+    const payload = (b?.data ?? b) as unknown
+    return questionDetailSchema.parse(payload)
   },
 
   /**

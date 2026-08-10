@@ -20,4 +20,10 @@ public class TopicResponse {
 
     /** Tên chủ đề hiển thị */
     private String name;
+
+    /**
+     * ID chủ đề cha — null nếu là ngành lớn/chủ đề cấp 1, có giá trị nếu là chủ đề con.
+     * Frontend dùng trường này để dựng cây phân cấp (ngành lớn -> chủ đề con) cho bộ lọc.
+     */
+    private Long parentId;
 }

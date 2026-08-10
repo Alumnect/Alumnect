@@ -51,12 +51,39 @@ export const questionDetailSchema = z.object({
 })
 export type QuestionDetail = z.infer<typeof questionDetailSchema>
 
-/** Schema Zod cho một chủ đề diễn đàn (dùng cho bộ lọc). */
+/**
+ * Schema Zod cho một chủ đề diễn đàn (dùng cho bộ lọc).
+ * `parentId` tạo hệ phân cấp 2 cấp: null = ngành lớn (cấp 1), có giá trị = chủ đề con.
+ */
 export const topicSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(Number),
   name: z.string().default(''),
+  parentId: z
+    .union([z.string(), z.number()])
+    .transform(Number)
+    .nullable()
+    .default(null),
 })
 export type Topic = z.infer<typeof topicSchema>
+
+/**
+ * Schema Zod cho form đặt câu hỏi mới (UC40 - Ask a question).
+ * Thông điệp lỗi khớp 100% với validation phía Backend (CreateQuestionRequest).
+ */
+export const createQuestionSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Tiêu đề câu hỏi không được để trống')
+    .max(250, 'Tiêu đề câu hỏi không được vượt quá 250 ký tự'),
+  body: z
+    .string()
+    .trim()
+    .min(1, 'Nội dung câu hỏi không được để trống')
+    .max(10000, 'Nội dung câu hỏi không được vượt quá 10000 ký tự'),
+  topicId: z.number().nullable(),
+})
+export type CreateQuestionInput = z.infer<typeof createQuestionSchema>
 
 /**
  * Một trang kết quả danh sách câu hỏi đã chuẩn hóa cho phân trang / infinite scroll.
