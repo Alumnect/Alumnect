@@ -24,5 +24,8 @@ public interface UserProfileMapper {
     @Mapping(target = "accountStatus", source = "user.accountStatus")
     @Mapping(target = "isAccountVerified", source = "user.accountVerified")
     @Mapping(target = "primaryExperience", ignore = true)
+    @Mapping(target = "followersCount", ignore = true)
+    @Mapping(target = "followingCount", ignore = true)
+    @Mapping(target = "isFollowing", ignore = true)
     UserProfileResponse toResponse(UserProfile userProfile);
 }

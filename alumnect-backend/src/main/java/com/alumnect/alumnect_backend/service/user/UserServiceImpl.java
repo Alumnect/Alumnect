@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alumnect.alumnect_backend.dao.user.ExperienceRepository;
+import com.alumnect.alumnect_backend.dao.user.FollowRepository;
 import com.alumnect.alumnect_backend.dto.response.user.PrimaryExperienceResponse;
 import com.alumnect.alumnect_backend.entity.user.Experience;
 
@@ -31,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final UserProfileMapper userProfileMapper;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ExperienceRepository experienceRepository;
+    private final FollowRepository followRepository;
 
 
     /**
@@ -94,6 +96,14 @@ public class UserServiceImpl implements UserService {
 
         UserProfileResponse response = userProfileMapper.toResponse(user.getProfile());
         populatePrimaryExperience(user.getId(), response);
+
+        // Bổ sung thống kê theo dõi cho tài khoản cá nhân
+        long followersCount = followRepository.countByFollowingId(user.getId());
+        long followingCount = followRepository.countByFollowerId(user.getId());
+        response.setFollowersCount(followersCount);
+        response.setFollowingCount(followingCount);
+        response.setIsFollowing(false); // Bản thân không tự theo dõi mình
+
         return response;
     }
 
@@ -122,6 +132,24 @@ public class UserServiceImpl implements UserService {
 
         UserProfileResponse response = userProfileMapper.toResponse(targetUser.getProfile());
         populatePrimaryExperience(targetUser.getId(), response);
+
+        // Bổ sung thống kê theo dõi cho tài khoản người dùng khác
+        long followersCount = followRepository.countByFollowingId(targetUser.getId());
+        long followingCount = followRepository.countByFollowerId(targetUser.getId());
+        response.setFollowersCount(followersCount);
+        response.setFollowingCount(followingCount);
+
+        // Kiểm tra xem người đang xem hiện tại có đang theo dõi người này không
+        String currentViewerEmail = getAuthenticatedUserEmailOrNull();
+        if (currentViewerEmail != null) {
+            userRepository.findByEmail(currentViewerEmail).ifPresent(viewer -> {
+                boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(viewer.getId(), targetUser.getId());
+                response.setIsFollowing(isFollowing);
+            });
+        } else {
+            response.setIsFollowing(false);
+        }
+
         return response;
     }
 
@@ -137,6 +165,18 @@ public class UserServiceImpl implements UserService {
                     .build();
             response.setPrimaryExperience(per);
         });
+    }
+
+    /**
+     * Lấy email của người dùng đã xác thực hiện tại, trả về null nếu truy cập ẩn danh.
+     */
+    private String getAuthenticatedUserEmailOrNull() {
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+                !"anonymousUser".equals(authentication.getName())) {
+            return authentication.getName();
+        }
+        return null;
     }
 }
 

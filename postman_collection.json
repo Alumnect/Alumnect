@@ -2068,8 +2068,159 @@
 								"description": "### Đăng xuất tài khoản khỏi tất cả các thiết bị\n* **Quyền truy cập**: Đã đăng nhập (Bearer Token).\n* **Nghiệp vụ**: Xóa sạch toàn bộ refresh tokens của người dùng này khỏi CSDL, buộc đăng nhập lại từ mọi thiết bị."
 							},
 							"response": []
-						}
-					]
+				}
+			]
+		},
+		{
+			"name": "02.4. Theo dõi người dùng (Follow)",
+			"item": [
+				{
+					"name": "Theo dõi người dùng - Thành công",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/2/follow",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"2",
+								"follow"
+							]
+						},
+						"description": "### API Theo dõi người dùng khác\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu Token).\n* **Mục đích**: Thiết lập mối quan hệ theo dõi giữa tài khoản đăng nhập hiện tại và tài khoản có ID 2."
+					},
+					"response": []
+				},
+				{
+					"name": "Theo dõi người dùng - Thất bại do tự theo dõi chính mình",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/1/follow",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"1",
+								"follow"
+							]
+						},
+						"description": "### API Theo dõi chính mình\n* **Mục đích**: Nhận mã lỗi 400 Bad Request kèm thông báo không được tự theo dõi."
+					},
+					"response": []
+				},
+				{
+					"name": "Hủy theo dõi người dùng - Thành công",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/2/follow",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"2",
+								"follow"
+							]
+						},
+						"description": "### API Hủy theo dõi người dùng khác\n* **Quyền truy cập**: Đã đăng nhập (Yêu cầu Token).\n* **Mục đích**: Hủy bỏ mối quan hệ theo dõi đối với tài khoản có ID 2."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy danh sách người theo dõi (Followers) - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/2/followers?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"2",
+								"followers"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "### API Lấy danh sách người theo dõi\n* **Quyền truy cập**: Công khai (Public GET).\n* **Mục đích**: Lấy danh sách những người đang theo dõi tài khoản có ID 2."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy danh sách người đang theo dõi (Following) - Thành công",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/2/following?page=0&size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"2",
+								"following"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "### API Lấy danh sách người đang theo dõi\n* **Quyền truy cập**: Công khai (Public GET).\n* **Mục đích**: Lấy danh sách những người mà tài khoản có ID 2 đang theo dõi."
+					},
+					"response": []
 				}
 			]
 		},

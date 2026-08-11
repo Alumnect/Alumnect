@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
+import { Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PlaceAutocomplete } from './PlaceAutocomplete'
 import {
@@ -8,6 +8,7 @@ import {
   usePromoteExperience,
 } from '../hooks/useExperienceMutations'
 import type { ExperienceResponse, ExperienceRequest } from '../model/userTypes'
+import { Avatar, Skeleton, EmptyState, Modal } from '@/components/ui'
 
 interface ExperienceFormModalProps {
   isOpen: boolean
@@ -16,6 +17,10 @@ interface ExperienceFormModalProps {
   experience?: ExperienceResponse | null // Used for edit or promote source
 }
 
+/**
+ * Modal thêm/sửa kinh nghiệm làm việc của người dùng.
+ * Sử dụng component Modal dùng chung để tự động kế thừa Portal (hiển thị tràn màn hình) và AnimatePresence.
+ */
 export function ExperienceFormModal({
   isOpen,
   onClose,
@@ -107,61 +112,40 @@ export function ExperienceFormModal({
     }
   }, [isOpen, mode, experience])
 
-  if (!isOpen) return null
-
-  const handlePlaceSelect = (place: any) => {
-    if (place) {
-      setLocation(place.location)
-      setLatitude(place.latitude)
-      setLongitude(place.longitude)
-      setPlaceId(place.placeId)
-      setLocationCity(place.locationCity)
-      setLocationCountry(place.locationCountry)
-      setLocationCountryCode(place.locationCountryCode)
-      setGeocodingProvider(place.geocodingProvider)
-    } else {
-      setLocation('')
-      setLatitude(undefined)
-      setLongitude(undefined)
-      setPlaceId(undefined)
-      setLocationCity(undefined)
-      setLocationCountry(undefined)
-      setLocationCountryCode(undefined)
-      setGeocodingProvider(undefined)
-    }
+  const handlePlaceSelect = (data: any) => {
+    setLocation(data.formattedAddress)
+    setLatitude(data.latitude)
+    setLongitude(data.longitude)
+    setPlaceId(data.placeId)
+    setLocationCity(data.city)
+    setLocationCountry(data.country)
+    setLocationCountryCode(data.countryCode)
+    setGeocodingProvider(data.provider)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setValidationError(null)
 
-    // Validations
     if (!title.trim()) {
-      setValidationError('Chức danh (Title) không được để trống')
+      setValidationError('Vui lòng nhập chức danh / vai trò')
       return
     }
     if (!company.trim()) {
-      setValidationError('Tên công ty / tổ chức không được để trống')
+      setValidationError('Vui lòng nhập tên công ty / tổ chức')
       return
     }
     if (!startDate) {
-      setValidationError('Ngày bắt đầu không được để trống')
+      setValidationError('Vui lòng nhập ngày bắt đầu')
       return
     }
     if (!isCurrent && !endDate) {
-      setValidationError('Ngày kết thúc là bắt buộc khi đã kết thúc công việc')
+      setValidationError('Vui lòng nhập ngày kết thúc')
       return
     }
-    if (!isCurrent && endDate && new Date(endDate) < new Date(startDate)) {
-      setValidationError('Ngày kết thúc không được trước ngày bắt đầu')
+    if (!isCurrent && startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      setValidationError('Ngày bắt đầu không được lớn hơn ngày kết thúc')
       return
-    }
-
-    if (mode === 'promote' && experience) {
-      if (new Date(startDate) <= new Date(experience.startDate)) {
-        setValidationError(`Ngày bắt đầu vai trò mới phải sau ngày bắt đầu vai trò cũ (${experience.startDate})`)
-        return
-      }
     }
 
     const requestPayload: ExperienceRequest = {
@@ -169,9 +153,9 @@ export function ExperienceFormModal({
       company: company.trim(),
       location: location.trim() || null,
       startDate,
-      endDate: isCurrent ? null : endDate || null,
+      endDate: isCurrent ? null : endDate,
       isCurrent,
-      isPrimary: isCurrent ? isPrimary : false,
+      isPrimary,
       latitude: latitude ?? null,
       longitude: longitude ?? null,
       placeId: placeId ?? null,
@@ -211,209 +195,195 @@ export function ExperienceFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-xl bg-white rounded-3xl border border-plum-900/5 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4.5 border-b border-plum-900/5">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
-              <Briefcase size={18} />
-            </span>
-            <h3 className="text-lg font-bold text-plum-900">{getTitleText()}</h3>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={getTitleText()}
+      icon={<Briefcase size={18} />}
+      maxWidthClassName="max-w-xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 text-left">
+        {validationError && (
+          <div className="flex items-start gap-2.5 rounded-2xl bg-coral-50 border border-coral-200/40 p-3.5 text-xs font-semibold text-coral-700">
+            <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+            <span>{validationError}</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04] transition-all"
+        )}
+
+        {mode === 'promote' && experience && (
+          <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
+            <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
+            <span>
+              Thăng chức tại <strong>{experience.company}</strong>. Vai trò cũ{' '}
+              <strong>{experience.title}</strong> sẽ được kết thúc vào ngày trước ngày bắt đầu vai trò mới.
+            </span>
+          </div>
+        )}
+
+        {/* Title */}
+        <div>
+          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+            Chức danh / Vai trò <span className="text-coral-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="VD: Senior Frontend Developer, Core Member..."
+            required
             disabled={loading}
-          >
-            <X size={18} />
-          </button>
+            className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-left">
-          {validationError && (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-coral-50 border border-coral-200/40 p-3.5 text-xs font-semibold text-coral-700">
-              <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-              <span>{validationError}</span>
-            </div>
-          )}
+        {/* Company */}
+        <div>
+          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+            Công ty / Tổ chức / Câu lạc bộ <span className="text-coral-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder="VD: FPT Software, FPT Developer Club..."
+            required
+            disabled={loading || mode === 'promote'}
+            className="w-full rounded-2xl border border-plum-900/10 bg-plum-50/30 disabled:bg-plum-900/[0.03] disabled:text-plum-400 py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
 
-          {mode === 'promote' && experience && (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
-              <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
-              <span>
-                Thăng chức tại <strong>{experience.company}</strong>. Vai trò cũ{' '}
-                <strong>{experience.title}</strong> sẽ được kết thúc vào ngày trước ngày bắt đầu vai trò mới.
-              </span>
-            </div>
-          )}
-
-          {/* Title */}
-          <div>
-            <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-              Chức danh / Vai trò <span className="text-coral-500">*</span>
-            </label>
+        {/* Location Autocomplete */}
+        <div>
+          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+            Vị trí / Địa điểm (Geocoded)
+          </label>
+          {mode === 'promote' ? (
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="VD: Senior Frontend Developer, Core Member..."
-              required
-              disabled={loading}
-              className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              value={location}
+              disabled
+              className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] py-3 px-4 text-sm text-plum-400"
             />
-          </div>
+          ) : (
+            <PlaceAutocomplete
+              value={location}
+              onChange={setLocation}
+              onSelect={handlePlaceSelect}
+              placeholder="Tìm thành phố, quốc gia..."
+            />
+          )}
+        </div>
 
-          {/* Company */}
+        {/* Dates */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-              Công ty / Tổ chức / Câu lạc bộ <span className="text-coral-500">*</span>
+              Ngày bắt đầu <span className="text-coral-500">*</span>
             </label>
-            <input
-              type="text"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="VD: FPT Software, FPT Developer Club..."
-              required
-              disabled={loading || mode === 'promote'}
-              className="w-full rounded-2xl border border-plum-900/10 bg-plum-50/30 disabled:bg-plum-900/[0.03] disabled:text-plum-400 py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-          </div>
-
-          {/* Location Autocomplete */}
-          <div>
-            <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-              Vị trí / Địa điểm (Geocoded)
-            </label>
-            {mode === 'promote' ? (
+            <div className="relative">
               <input
-                type="text"
-                value={location}
-                disabled
-                className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] py-3 px-4 text-sm text-plum-400"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+                disabled={loading}
+                className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
-            ) : (
-              <PlaceAutocomplete
-                value={location}
-                onChange={setLocation}
-                onSelect={handlePlaceSelect}
-                placeholder="Tìm thành phố, quốc gia..."
-              />
-            )}
+            </div>
           </div>
 
-          {/* Dates */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {!isCurrent && (
             <div>
               <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                Ngày bắt đầu <span className="text-coral-500">*</span>
+                Ngày kết thúc <span className="text-coral-500">*</span>
               </label>
               <div className="relative">
                 <input
                   type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  required
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required={!isCurrent}
                   disabled={loading}
                   className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
             </div>
+          )}
+        </div>
 
-            {!isCurrent && (
-              <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Ngày kết thúc <span className="text-coral-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required={!isCurrent}
-                    disabled={loading}
-                    className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Checkboxes */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
-            {mode !== 'promote' && (
-              <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isCurrent}
-                  onChange={(e) => {
-                    setIsCurrent(e.target.checked)
-                    if (!e.target.checked) {
-                      setIsPrimary(false)
-                    }
-                  }}
-                  disabled={loading}
-                  className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
-                />
-                <span className="text-sm font-semibold text-plum-700">Công việc hiện tại</span>
-              </label>
-            )}
-
-            {isCurrent && (
-              <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isPrimary}
-                  onChange={(e) => setIsPrimary(e.target.checked)}
-                  disabled={loading}
-                  className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
-                />
-                <span className="text-sm font-semibold text-plum-700">Kinh nghiệm chính (Primary)</span>
-              </label>
-            )}
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-              Mô tả chi tiết
+        {/* Checkboxes */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
+          {mode !== 'promote' && (
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isCurrent}
+                onChange={(e) => {
+                  setIsCurrent(e.target.checked)
+                  if (!e.target.checked) {
+                    setIsPrimary(false)
+                  }
+                }}
+                disabled={loading}
+                className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="text-sm font-semibold text-plum-700">Công việc hiện tại</span>
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Mô tả công việc, dự án đã tham gia..."
-              rows={3}
-              disabled={loading}
-              className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-          </div>
+          )}
 
-          {/* Footer Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-plum-900/5 mt-6">
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              onClick={onClose}
-              disabled={loading}
-              className="rounded-xl border border-plum-900/10 text-plum-700 font-semibold"
-            >
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              disabled={loading}
-              className="rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold px-6 flex items-center gap-1.5"
-            >
-              {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>Lưu lại</span>
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+          {isCurrent && (
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isPrimary}
+                onChange={(e) => setIsPrimary(e.target.checked)}
+                disabled={loading}
+                className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="text-sm font-semibold text-plum-700">Kinh nghiệm chính (Primary)</span>
+            </label>
+          )}
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+            Mô tả chi tiết
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Mô tả công việc, dự án đã tham gia..."
+            rows={3}
+            disabled={loading}
+            className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="pt-4 flex items-center justify-end gap-3 border-t border-plum-900/5 mt-6">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            onClick={onClose}
+            disabled={loading}
+            className="rounded-xl border border-plum-900/10 text-plum-700 font-semibold"
+          >
+            Hủy
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            disabled={loading}
+            className="rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold px-6 flex items-center gap-1.5"
+          >
+            {loading && <Loader2 size={14} className="animate-spin" />}
+            <span>Lưu lại</span>
+          </Button>
+        </div>
+      </form>
+    </Modal>
   )
 }
