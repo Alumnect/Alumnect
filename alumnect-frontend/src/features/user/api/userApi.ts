@@ -22,6 +22,12 @@ export const userApi = {
     http.get<any, ApiResponse<UserProfileResponse>>(`/users/profile/${userId}`),
 
   /**
+   * Cập nhật thông tin hồ sơ cá nhân của mình
+   */
+  updateOwnProfile: (payload: import('../model/userTypes').UpdateProfileRequest) =>
+    http.put<any, ApiResponse<UserProfileResponse>>('/users/profile', payload),
+
+  /**
    * Theo dõi một người dùng khác (Yêu cầu Token)
    * POST /users/{userId}/follow
    */
@@ -61,3 +67,4 @@ export const userApi = {
       last: boolean
     }>>(`/users/${userId}/following`, { params: { page, size } }),
 }
+

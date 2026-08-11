@@ -1766,6 +1766,79 @@
 					"response": []
 				},
 				{
+					"name": "Cập nhật hồ sơ cá nhân (Update Profile) - Thành công",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Nguyễn Trí Tuệ (Updated)\",\n  \"avatarUrl\": \"https://images.unsplash.com/photo-1535713875002-d1d0cf377fde\",\n  \"coverUrl\": \"https://images.unsplash.com/photo-1579546929518-9e396f3cc809\",\n  \"phone\": \"0905123456\",\n  \"headline\": \"Senior Software Engineer | AI & Cloud Explorer\",\n  \"biography\": \"Cựu sinh viên K15 Đại học FPT Đà Nẵng, có 5 năm kinh nghiệm lập trình Spring Boot và React.\",\n  \"campus\": \"FPT University Đà Nẵng\",\n  \"cohort\": 15,\n  \"majorId\": 1,\n  \"graduationYear\": 2023,\n  \"city\": \"Đà Nẵng\",\n  \"socialLinks\": [\n    \"https://linkedin.com/in/nguyentritue\",\n    \"https://github.com/tritue\"\n  ],\n  \"skills\": [\n    { \"groupName\": \"Backend\", \"skillName\": \"Java Spring Boot\", \"sortOrder\": 1 },\n    { \"groupName\": \"Frontend\", \"skillName\": \"ReactJS / TypeScript\", \"sortOrder\": 2 }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile"
+							]
+						},
+						"description": "### API Cập Nhật Hồ Sơ Cá Nhân (UC07)\n* **Quyền truy cập**: Đã đăng nhập (Bearer Token).\n* **Mục đích**: Cập nhật các thông tin cơ bản, học tập tại FPTU, tiểu sử, thông tin liên hệ và danh sách kỹ năng cá nhân."
+					},
+					"response": []
+				},
+				{
+					"name": "Cập nhật hồ sơ cá nhân thất bại - Thiếu họ và tên (Validation)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"\",\n  \"headline\": \"Senior Developer\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile"
+							]
+						},
+						"description": "### API Cập Nhật Hồ Sơ Cá Nhân Thất Bại\n* **Nghiệp vụ**: Báo lỗi validation khi trường `fullName` rỗng.\n* **Mong đợi**: 400 Bad Request, message \"Họ và tên không được để trống\""
+					},
+					"response": []
+				},
+
+				{
 					"name": "Lấy hồ sơ người dùng khác (Other Profile) - Thành công",
 					"request": {
 						"method": "GET",

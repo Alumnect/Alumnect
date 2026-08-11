@@ -4,4 +4,12 @@ export * from './api/userApi'
 export * from './hooks/useUserMutations'
 export * from './hooks/useUserQueries'
 export { ChangePasswordForm } from './components/ChangePasswordForm'
+export { EditProfileModal } from './components/EditProfileModal'
+export { EditProfileView } from './components/EditProfileView'
+
+export { ExperienceFormModal } from './components/ExperienceFormModal'
+export { PlaceAutocomplete } from './components/PlaceAutocomplete'
+export * from './hooks/useExperienceMutations'
+export * from './hooks/useExperienceQueries'
+
 export { FollowListModal } from './components/FollowListModal'

@@ -51,6 +51,12 @@ public class UserProfileResponse {
     /** Tiểu sử/Giới thiệu bản thân */
     private String biography;
 
+    /** Cơ sở đào tạo của FPT University */
+    private String campus;
+
+    /** Năm tốt nghiệp hoặc dự kiến tốt nghiệp */
+    private Integer graduationYear;
+
 
     /** Thành phố sinh sống hoặc làm việc */
     private String city;

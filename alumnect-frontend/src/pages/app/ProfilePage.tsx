@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   MapPin,
@@ -9,26 +9,69 @@ import {
   Mail,
   Phone,
   ArrowLeft,
+  Edit3,
+  Plus,
+  Trash2,
+  TrendingUp,
+  Star,
+  Building,
+  AlertTriangle,
+  Loader2,
+  Camera,
+  User,
+  Sparkles,
   UserPlus,
   UserMinus,
-  Loader2,
-  User,
-  FileText,
-  Repeat,
 } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
+import axios from 'axios'
 import { Avatar, Card, Skeleton, EmptyState, SmartImage } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
-import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { useOwnProfile, useUserProfile, useFollowUser, useUnfollowUser, FollowListModal } from '@/features/user'
+import { usePresignedUrl } from '@/features/auth/hooks/useAuth'
+import {
+  useOwnProfile,
+  useUserProfile,
+  useUpdateOwnProfile,
+  EditProfileView,
+  ExperienceFormModal,
+  useDeleteExperience,
+  useUpdateExperience,
+  useFollowUser,
+  useUnfollowUser,
+  FollowListModal,
+} from '@/features/user'
+
+import type { ExperienceResponse } from '@/features/user'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { formatPeriodDate } from '@/utils/date'
 import { getSocialPlatform } from '@/utils/social'
 import { groupSkills } from '@/utils/profile'
 
+const formatLocationCityOnly = (location?: string | null, locationCity?: string | null): string => {
+
+  if (locationCity && locationCity.trim()) {
+    const city = locationCity.trim()
+    return city.toLowerCase().includes('thành phố') || city.toLowerCase().includes('làm việc')
+      ? city
+      : `Làm việc tại ${city}`
+  }
+  if (!location || !location.trim()) return ''
+  const parts = location.split(',').map((p) => p.trim()).filter(Boolean)
+  if (parts.length === 0) return location
+  
+  let target = parts[parts.length - 1]
+  if (parts.length >= 2 && ['việt nam', 'vietnam', 'japan', 'usa', 'united states'].includes(target.toLowerCase())) {
+    target = parts[parts.length - 2]
+  }
+  
+  return target.toLowerCase().includes('thành phố') || target.toLowerCase().includes('làm việc')
+    ? target
+    : `Làm việc tại ${target}`
+}
+
 export function ProfilePage() {
+
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const userId = (() => {
@@ -38,15 +81,33 @@ export function ProfilePage() {
     return isNaN(parsed) ? null : parsed
   })()
 
-  const [followModalOpen, setFollowModalOpen] = useState(false)
-  const [followModalType, setFollowModalType] = useState<'followers' | 'following'>('followers')
-  const [activeTab, setActiveTab] = useState<'profile' | 'posts' | 'reposts'>('profile')
-  const [followError, setFollowError] = useState<string | null>(null)
-
   // Lấy thông tin tài khoản đang đăng nhập
   const currentUserId = useAuthStore((s) => s.user?.id)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isOwnProfile = !userId || String(userId) === currentUserId
+
+  // State quản lý chế độ chỉnh sửa in-page (Facebook style)
+  const [isEditingInPage, setIsEditingInPage] = useState(searchParams.get('edit') === 'true')
+  const [isExpModalOpen, setIsExpModalOpen] = useState(false)
+  const [expModalMode, setExpModalMode] = useState<'create' | 'edit' | 'promote'>('create')
+  const [selectedExp, setSelectedExp] = useState<ExperienceResponse | null>(null)
+  const [deleteExpId, setDeleteExpId] = useState<number | null>(null)
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false)
+
+  const [followModalOpen, setFollowModalOpen] = useState(false)
+  const [followModalType, setFollowModalType] = useState<'followers' | 'following'>('followers')
+  const [followError, setFollowError] = useState<string | null>(null)
+
+  const followMutation = useFollowUser()
+  const unfollowMutation = useUnfollowUser()
+  const triggerLoginPrompt = useLoginPrompt((s) => s.open)
+
+  const followPending = followMutation.isPending || unfollowMutation.isPending
+
+  const presignedUrlMutation = usePresignedUrl()
+  const updateProfileMutation = useUpdateOwnProfile()
+  const deleteExpMutation = useDeleteExperience()
+  const updateExpMutation = useUpdateExperience()
 
   // Tự động chuyển hướng về /login nếu cố tình xem hồ sơ bản thân khi chưa đăng nhập
   useEffect(() => {
@@ -55,13 +116,6 @@ export function ProfilePage() {
     }
   }, [isOwnProfile, isAuthenticated, navigate])
 
-  // Tự động chuẩn hóa URL: Nếu xem hồ sơ của chính mình mà URL có ?userId=... -> Tự động làm sạch về /app/profile
-  useEffect(() => {
-    if (userId && currentUserId && String(userId) === String(currentUserId)) {
-      navigate('/app/profile', { replace: true })
-    }
-  }, [userId, currentUserId, navigate])
-
   // Gọi API lấy dữ liệu hồ sơ
   const ownProfileQuery = useOwnProfile({ enabled: isOwnProfile && isAuthenticated })
   const userProfileQuery = useUserProfile(userId, { enabled: !isOwnProfile })
@@ -69,12 +123,55 @@ export function ProfilePage() {
   const activeQuery = isOwnProfile ? ownProfileQuery : userProfileQuery
   const { data: profile, isLoading, error } = activeQuery
 
-  // Mutations
-  const followMutation = useFollowUser()
-  const unfollowMutation = useUnfollowUser()
-  const triggerLoginPrompt = useLoginPrompt((s) => s.open)
+  // Trực tiếp tải và đổi ảnh đại diện (Avatar) trên Header Facebook
+  const handleAvatarUploadDirect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+    setIsUploadingMedia(true)
+    try {
+      const presignedRes = await presignedUrlMutation.mutateAsync({
+        fileName: file.name,
+        contentType: file.type,
+        folder: 'avatars',
+      })
+      const { uploadUrl, publicUrl } = presignedRes.data
+      await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
+      await updateProfileMutation.mutateAsync({
+        fullName: profile.fullName,
+        avatarUrl: publicUrl,
+        coverUrl: profile.coverUrl,
+      })
+    } catch (err) {
+      console.error('Lỗi đổi ảnh đại diện:', err)
+    } finally {
+      setIsUploadingMedia(false)
+    }
+  }
 
-  const followPending = followMutation.isPending || unfollowMutation.isPending
+  // Trực tiếp tải và đổi ảnh bìa (Cover Photo) trên Header Facebook
+  const handleCoverUploadDirect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+    setIsUploadingMedia(true)
+    try {
+      const presignedRes = await presignedUrlMutation.mutateAsync({
+        fileName: file.name,
+        contentType: file.type,
+        folder: 'covers',
+      })
+      const { uploadUrl, publicUrl } = presignedRes.data
+      await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
+      await updateProfileMutation.mutateAsync({
+        fullName: profile.fullName,
+        avatarUrl: profile.avatarUrl,
+        coverUrl: publicUrl,
+      })
+    } catch (err) {
+      console.error('Lỗi đổi ảnh bìa:', err)
+    } finally {
+      setIsUploadingMedia(false)
+    }
+  }
 
   const handleFollowToggle = async () => {
     if (!isAuthenticated) {
@@ -91,7 +188,6 @@ export function ProfilePage() {
         await followMutation.mutateAsync(profile.userId)
       }
     } catch (err: any) {
-      // [MSG_FOLLOW_04] Hiển thị lỗi inline từ Backend (tài khoản bị khóa, đã follow, v.v.)
       const msg = err?.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.'
       setFollowError(msg)
     }
@@ -139,7 +235,6 @@ export function ProfilePage() {
 
   // Dữ liệu dẫn xuất
   const isAlumni = profile.role === 'ALUMNI'
-  const isStudent = profile.role === 'STUDENT'
 
   // Sắp xếp các kinh nghiệm làm việc theo thời gian bắt đầu giảm dần (mới nhất lên đầu)
   const sortedExps = profile.experiences
@@ -152,11 +247,60 @@ export function ProfilePage() {
 
   const skillGroups = profile.skills?.length ? groupSkills(profile.skills) : {}
 
+  const handleOpenCreateExp = () => {
+    setExpModalMode('create')
+    setSelectedExp(null)
+    setIsExpModalOpen(true)
+  }
+
+  const handleOpenEditExp = (exp: ExperienceResponse) => {
+    setExpModalMode('edit')
+    setSelectedExp(exp)
+    setIsExpModalOpen(true)
+  }
+
+  const handleOpenPromoteExp = (exp: ExperienceResponse) => {
+    setExpModalMode('promote')
+    setSelectedExp(exp)
+    setIsExpModalOpen(true)
+  }
+
+  const handleConfirmDeleteExp = async () => {
+    if (deleteExpId) {
+      await deleteExpMutation.mutateAsync(deleteExpId)
+      setDeleteExpId(null)
+    }
+  }
+
+  const handleSetPrimaryExp = async (exp: ExperienceResponse) => {
+    if (exp.isPrimary) return
+    await updateExpMutation.mutateAsync({
+      id: exp.id,
+      payload: {
+        title: exp.title,
+        company: exp.company,
+        location: exp.location,
+        startDate: exp.startDate,
+        endDate: exp.endDate,
+        isCurrent: exp.isCurrent,
+        isPrimary: true,
+        latitude: exp.latitude,
+        longitude: exp.longitude,
+        placeId: exp.placeId,
+        locationCity: exp.locationCity,
+        locationCountry: exp.locationCountry,
+        locationCountryCode: exp.locationCountryCode,
+        geocodingProvider: exp.geocodingProvider,
+        description: exp.description,
+      },
+    })
+  }
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 space-y-6">
       {/* Nút quay lại (chỉ hiển thị khi xem hồ sơ người khác) */}
       {!isOwnProfile && (
-        <div className="mb-4">
+        <div className="mb-2">
           <Button
             variant="secondary"
             size="sm"
@@ -168,398 +312,488 @@ export function ProfilePage() {
         </div>
       )}
 
-      {/* Ảnh bìa */}
+      {/* TOP FACEBOOK PROFILE HEADER CARD (Đồng nhất cho cả View & Edit mode) */}
       <Reveal>
-        <SmartImage
-          src={profile.coverUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1200'}
-          alt="Profile cover"
-          className="h-48 rounded-3xl sm:h-60 border border-plum-900/5"
-          imgClassName="object-cover"
-        />
+        <div className="bg-white rounded-3xl border border-plum-900/5 shadow-sm overflow-hidden text-left">
+          {/* 1. Ảnh Bìa với Nút camera đổi ảnh bìa kiểu Facebook */}
+          <div className="relative h-52 sm:h-72 w-full bg-slate-100">
+            <SmartImage
+              src={profile.coverUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1200'}
+              alt="Profile cover"
+              className="h-full w-full"
+              imgClassName="object-cover"
+            />
+            {isOwnProfile && (
+              <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-plum-900 bg-white/90 hover:bg-white backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95">
+                {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
+                <span>Chỉnh sửa ảnh bìa</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverUploadDirect}
+                  disabled={isUploadingMedia}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+
+          {/* 2. Ảnh Đại Diện & Thông Tin Chính */}
+          <div className="px-6 pb-4 pt-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-16 sm:-mt-20 mb-4">
+              {/* Avatar lồng lên ảnh bìa với Nút camera kiểu Facebook */}
+              <div className="relative z-10 shrink-0">
+                <Avatar
+                  src={profile.avatarUrl}
+                  name={profile.fullName}
+                  size={140}
+                  ring
+                  className="bg-white shadow-xl rounded-full border-4 border-white"
+                />
+                {isOwnProfile && (
+                  <label className="absolute bottom-2 right-2 p-2 rounded-full bg-plum-100 hover:bg-plum-200 text-plum-800 shadow-md cursor-pointer transition-all border-2 border-white hover:scale-110 active:scale-90">
+                    {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={16} />}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUploadDirect}
+                      disabled={isUploadingMedia}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Action Button bên phải */}
+              <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto mb-2">
+                {isOwnProfile ? (
+                  <Button
+                    variant={isEditingInPage ? 'primary' : 'secondary'}
+                    size="sm"
+                    leftIcon={isEditingInPage ? <User size={15} /> : <Edit3 size={15} />}
+                    onClick={() => setIsEditingInPage(!isEditingInPage)}
+                    className="rounded-2xl font-bold px-5 border border-plum-900/10 shadow-sm"
+                  >
+                    {isEditingInPage ? 'Xem trang cá nhân' : 'Chỉnh sửa hồ sơ'}
+                  </Button>
+                ) : (
+                  <div className="flex flex-col items-end gap-1">
+                    <Button
+                      variant={profile.isFollowing ? 'secondary' : 'primary'}
+                      onClick={handleFollowToggle}
+                      disabled={followPending}
+                      className="rounded-2xl font-bold px-5 shadow-sm text-sm"
+                      leftIcon={
+                        followPending ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : profile.isFollowing ? (
+                          <UserMinus size={16} />
+                        ) : (
+                          <UserPlus size={16} />
+                        )
+                      }
+                    >
+                      {profile.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
+                    </Button>
+                    {followError && (
+                      <p className="text-xs text-rose-500 font-medium max-w-[200px] text-right">
+                        {followError}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Thông tin tên & giới thiệu ngắn */}
+            <div className="space-y-1.5 pb-4">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-plum-900 tracking-tight">
+                  {profile.fullName}
+                </h1>
+                {profile.isAccountVerified && (
+                  <BadgeCheck className="text-brand-500 fill-brand-100" size={24} />
+                )}
+              </div>
+
+              <p className="text-sm sm:text-base font-medium text-plum-600">
+                {profile.primaryExperience?.title ? (
+                  <span>
+                    {profile.primaryExperience.title} tại{' '}
+                    <strong className="font-semibold text-plum-800">
+                      {profile.primaryExperience.company}
+                    </strong>
+                  </span>
+                ) : (
+                  profile.headline || (isAlumni ? 'Cựu sinh viên FPTU' : 'Sinh viên FPTU')
+                )}
+              </p>
+
+              <div className="flex items-center gap-4 text-sm text-plum-500 font-medium pt-1 pb-1">
+                <button
+                  onClick={() => handleOpenFollowModal('followers')}
+                  className="hover:text-brand-600 transition-colors"
+                >
+                  <strong className="font-bold text-plum-900">{profile.followersCount || 0}</strong> người theo dõi
+                </button>
+                <span className="text-plum-300">•</span>
+                <button
+                  onClick={() => handleOpenFollowModal('following')}
+                  className="hover:text-brand-600 transition-colors"
+                >
+                  Đang theo dõi <strong className="font-bold text-plum-900">{profile.followingCount || 0}</strong> người
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 text-xs sm:text-sm text-plum-500">
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <MapPin size={15} className="text-plum-400" />{' '}
+                  {profile.city ||
+                    formatLocationCityOnly(profile.primaryExperience?.location, profile.primaryExperience?.locationCity) ||
+                    'Đại học FPT'}
+                </span>
+
+
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <GraduationCap size={15} className="text-plum-400" />
+                  {profile.major ? `${profile.major.name} (${profile.major.code})` : 'N/A'}
+                  {profile.cohort ? ` · Khóa ${profile.cohort}` : ''}
+                </span>
+                {profile.campus && (
+                  <span className="inline-flex items-center gap-1.5 font-medium">
+                    <Building size={15} className="text-plum-400" />
+                    {profile.campus}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <Calendar size={15} className="text-plum-400" />
+                  Tham gia {new Date(profile.createdAt).toLocaleDateString('vi-VN')}
+                </span>
+              </div>
+            </div>
+
+            {/* Navigation Tabs Bar phong cách Facebook */}
+            <div className="flex border-t border-plum-900/5 pt-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setIsEditingInPage(false)}
+                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${
+                  !isEditingInPage
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-plum-500 hover:text-plum-800'
+                }`}
+              >
+                Tất cả hồ sơ
+              </button>
+              {isOwnProfile && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingInPage(true)}
+                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${
+                    isEditingInPage
+                      ? 'border-brand-500 text-brand-600'
+                      : 'border-transparent text-plum-500 hover:text-plum-800'
+                  }`}
+                >
+                  Giới thiệu & Chỉnh sửa
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </Reveal>
 
-      {/* Header hồ sơ */}
-      <div className="relative p-6 bg-white rounded-3xl border border-plum-900/5 shadow-sm mt-6">
-        <div className="relative -mt-20 sm:-mt-24 z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div className="flex justify-start">
-            <Avatar
-              src={profile.avatarUrl}
-              name={profile.fullName}
-              size={140}
-              ring
-              className="bg-cream-50 shadow-md rounded-full"
-            />
-          </div>
+      {/* MAIN BODY CONTAINER */}
+      {isOwnProfile && isEditingInPage ? (
+        /* Chế độ Chỉnh sửa Hồ sơ dạng Facebook */
+        <EditProfileView
+          profile={profile}
+          onCancel={() => setIsEditingInPage(false)}
+          onSuccess={() => setIsEditingInPage(false)}
+        />
+      ) : (
+        /* Chế độ Xem Trang Hồ sơ bình thường */
+        <div className="space-y-6">
+          {/* Thông tin liên hệ */}
+          <Reveal>
+            <Card hover={false} className="p-6 text-left">
+              <h2 className="text-lg font-bold text-plum-900">Thông tin liên hệ</h2>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center gap-3 text-sm text-plum-700">
+                  <Mail size={16} className="text-plum-400" />
+                  <span>{profile.email}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-plum-700">
+                  <Phone size={16} className="text-plum-400" />
+                  <span>{profile.phone || 'Chưa cập nhật số điện thoại'}</span>
+                </div>
 
-          {!isOwnProfile && (
-            <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0 pb-2">
-              <Button
-                variant={profile.isFollowing ? 'secondary' : 'primary'}
-                onClick={handleFollowToggle}
-                disabled={followPending}
-                className="rounded-xl shadow-sm text-sm font-semibold min-w-[120px]"
-                leftIcon={
-                  followPending ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : profile.isFollowing ? (
-                    <UserMinus size={16} />
-                  ) : (
-                    <UserPlus size={16} />
-                  )
-                }
-              >
-                {profile.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
-              </Button>
-              {/* [MSG_FOLLOW_04] Inline error hiển thị đúng dưới nút khi API trả về lỗi */}
-              {followError && (
-                <p className="text-xs text-rose-500 font-medium max-w-[200px] text-right">
-                  {followError}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-5 space-y-3.5 text-left">
-          {/* Tên & Trạng thái xác minh */}
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-plum-900 tracking-tight">
-              {profile.fullName}
-            </h1>
-            {profile.isAccountVerified && (
-              <BadgeCheck className="text-brand-500 fill-brand-100" size={24} />
-            )}
-          </div>
-
-          {/* Chức danh / Vai trò hiện tại */}
-          <p className="text-base sm:text-lg font-semibold text-plum-700">
-            {profile.primaryExperience?.title ? (
-              <span>
-                {profile.primaryExperience.title} tại{' '}
-                <strong className="font-bold text-plum-900">
-                  {profile.primaryExperience.company}
-                </strong>
-              </span>
-            ) : (
-              profile.headline || (isAlumni ? 'Cựu sinh viên FPTU' : 'Sinh viên FPTU')
-            )}
-          </p>
-
-          {/* Chỉ số Follower & Following (Instagram / Twitter style) */}
-          <div className="flex items-center gap-4 text-sm text-plum-500 font-medium pt-0.5">
-            <button
-              onClick={() => handleOpenFollowModal('followers')}
-              className="hover:text-brand-600 transition-colors"
-            >
-              <strong className="font-bold text-plum-900">{profile.followersCount || 0}</strong> người theo dõi
-            </button>
-            <span className="text-plum-300">•</span>
-            <button
-              onClick={() => handleOpenFollowModal('following')}
-              className="hover:text-brand-600 transition-colors"
-            >
-              Đang theo dõi <strong className="font-bold text-plum-900">{profile.followingCount || 0}</strong> người
-            </button>
-          </div>
-
-          {/* Thông tin Meta: Vị trí, Ngành học, Ngày tham gia (Twitter style - Dọc gọn gàng) */}
-          <div className="space-y-1.5 pt-1 text-xs sm:text-sm text-plum-500">
-            <div className="flex items-center gap-2.5">
-              <MapPin size={14} className="text-plum-400 shrink-0" />
-              <span>{profile.primaryExperience?.location || profile.city || 'Đại học FPT'}</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <GraduationCap size={14} className="text-plum-400 shrink-0" />
-              <span>
-                {profile.major ? `${profile.major.name} (${profile.major.code})` : 'N/A'}
-                {profile.cohort ? ` · Khóa K${profile.cohort}` : ''}
-              </span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <Calendar size={14} className="text-plum-400 shrink-0" />
-              <span>Đã tham gia vào {new Date(profile.createdAt).toLocaleDateString('vi-VN')}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Điều hướng kiểu Instagram - Tab Bar */}
-      <div className="flex border-b border-plum-900/5 mt-8 justify-center gap-8 sm:gap-12 shrink-0">
-        {[
-          { id: 'profile', label: 'Hồ sơ', icon: User },
-          { id: 'posts', label: 'Bài viết', icon: FileText },
-          { id: 'reposts', label: 'Chia sẻ', icon: Repeat },
-        ].map((tab) => {
-          const Icon = tab.icon
-          const isActive = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={cn(
-                "flex items-center gap-2 py-3 border-b-2 font-bold text-sm transition-all focus:outline-none cursor-pointer",
-                isActive
-                  ? "border-brand-500 text-brand-600"
-                  : "border-transparent text-plum-400 hover:text-plum-700"
-              )}
-            >
-              <Icon size={16} />
-              <span>{tab.label}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Nội dung chi tiết - Hiển thị theo Tab được chọn */}
-      <div className="mt-6 min-h-[300px]">
-        <AnimatePresence mode="wait">
-          {activeTab === 'profile' && (
-            <motion.div
-              key="profile-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-6"
-            >
-              {/* Giới thiệu */}
-              <Reveal>
-                <Card hover={false} className="p-6">
-                  <h2 className="text-lg font-bold text-plum-900">Giới thiệu</h2>
-                  <p className="mt-3 text-sm leading-relaxed text-plum-600 whitespace-pre-line text-left">
-                    {profile.biography || 'Thành viên này chưa cập nhật phần tự giới thiệu bản thân.'}
+                <div className="pt-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-plum-400 mb-2.5">
+                    Liên kết mạng xã hội & Website
                   </p>
-                </Card>
-              </Reveal>
-
-              {/* Thông tin liên hệ */}
-              <Reveal>
-                <Card hover={false} className="p-6">
-                  <h2 className="text-lg font-bold text-plum-900">Thông tin liên hệ</h2>
-                  <div className="mt-4 space-y-4 text-left">
-                    <div className="flex items-center gap-3 text-sm text-plum-700">
-                      <Mail size={16} className="text-plum-400" />
-                      <span>{profile.email}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-plum-700">
-                      <Phone size={16} className="text-plum-400" />
-                      <span>{profile.phone || 'Chưa cập nhật số điện thoại'}</span>
-                    </div>
-
-                    <div className="pt-2">
-                      <p className="text-xs font-bold uppercase tracking-wider text-plum-400 mb-2.5">
-                        Liên kết mạng xã hội & Website
-                      </p>
-                      {profile.socialLinks && profile.socialLinks.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {profile.socialLinks.map((url, index) => {
-                            const platform = getSocialPlatform(url)
-                            return (
-                              <a
-                                key={index}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-plum-600 bg-plum-50/50 border border-plum-900/5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm ${platform.color}`}
-                              >
-                                {platform.icon}
-                                <span>{platform.name}</span>
-                              </a>
-                            )
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-plum-400 italic">
-                          Thành viên này chưa cập nhật liên kết mạng xã hội nào.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              </Reveal>
-
-              {/* Hành trình & Sự nghiệp */}
-              <Reveal>
-                <Card hover={false} className="p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg font-bold text-plum-900">Hành trình & Sự nghiệp</h2>
-                  </div>
-
-                  {sortedExps.length === 0 && !profile.major ? (
-                    <EmptyState
-                      icon={<Briefcase size={22} />}
-                      title="Chưa cập nhật hành trình sự nghiệp"
-                      description="Hãy thêm các kinh nghiệm làm việc hoặc hoạt động của bạn."
-                    />
-                  ) : (
-                    <ol className="space-y-0 text-left">
-                      {/* Render Work/Club/Volunteer Experiences */}
-                      {sortedExps.map((exp, i) => {
-                        const start = exp.startDate ? formatPeriodDate(exp.startDate) : ''
-                        const end = exp.isCurrent ? 'Hiện tại' : exp.endDate ? formatPeriodDate(exp.endDate) : ''
-
+                  {profile.socialLinks && profile.socialLinks.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.socialLinks.map((url, index) => {
+                        const platform = getSocialPlatform(url)
                         return (
-                          <li key={exp.id} className="relative flex gap-4 pb-6 last:pb-0">
-                            <div className="flex flex-col items-center">
-                              <span
-                                className={`grid h-9 w-9 place-items-center rounded-full ${
-                                  exp.isCurrent
-                                    ? 'bg-gradient-to-br from-brand-500 to-violet-600 text-white'
-                                    : 'bg-plum-900/[0.05] text-plum-400'
-                                }`}
-                              >
-                                <Briefcase size={15} />
-                              </span>
-                              {/* Line connector */}
-                              {(i < sortedExps.length - 1 || profile.major) && (
-                                <span className="mt-1 w-px flex-1 bg-plum-900/[0.07]" />
-                              )}
-                            </div>
-                            <div className="pb-1 flex-1">
-                              <div className="flex items-start justify-between gap-4">
-                                <div>
-                                  <p className="font-bold text-plum-900">
-                                    {exp.title}
-                                    {exp.isPrimary && (
-                                      <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-600 ml-2 border border-brand-200/20">
-                                        Chính
-                                      </span>
-                                    )}
-                                  </p>
-                                  <p className="text-sm text-plum-500">
-                                    {exp.company}
-                                    {exp.location ? ` · ${exp.location}` : ''}
-                                  </p>
-                                  <p className="text-xs text-plum-400">
-                                    {start} – {end}
-                                  </p>
-                                  {exp.location && exp.latitude && (
-                                    <span className="text-[10px] text-plum-400 block mt-0.5">
-                                      Geocoded ({exp.latitude.toFixed(4)}, {exp.longitude?.toFixed(4)})
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {exp.description && (
-                                <p className="mt-2.5 text-xs text-plum-600 leading-relaxed bg-plum-50/50 p-2.5 rounded-xl border border-plum-900/[0.03] whitespace-pre-line">
-                                  {exp.description}
-                                </p>
-                              )}
-                            </div>
-                          </li>
+                          <a
+                            key={index}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-plum-600 bg-plum-50/50 border border-plum-900/5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm ${platform.color}`}
+                          >
+                            {platform.icon}
+                            <span>{platform.name}</span>
+                          </a>
                         )
                       })}
-
-                      {/* Render Education step at the bottom */}
-                      {profile.major && (
-                        <li className="relative flex gap-4 pb-0">
-                          <div className="flex flex-col items-center">
-                            <span
-                              className={`grid h-9 w-9 place-items-center rounded-full ${
-                                isStudent
-                                  ? 'bg-gradient-to-br from-brand-500 to-violet-600 text-white'
-                                  : 'bg-plum-900/[0.05] text-plum-400'
-                              }`}
-                            >
-                              <GraduationCap size={16} />
-                            </span>
-                          </div>
-                          <div className="pb-1 flex-1">
-                            <p className="font-bold text-plum-900">
-                              {isAlumni
-                                ? `Cựu sinh viên ngành ${profile.major.name}`
-                                : `Sinh viên ngành ${profile.major.name}`}
-                            </p>
-                            <p className="text-sm text-plum-500">Đại học FPT</p>
-                            <p className="text-xs text-plum-400">
-                              {isAlumni
-                                ? profile.cohort
-                                  ? `Đã tốt nghiệp (Khóa K${profile.cohort})`
-                                  : 'Đã tốt nghiệp'
-                                : profile.cohort
-                                  ? `Đang học (Khóa K${profile.cohort})`
-                                  : 'Đang học'}
-                            </p>
-                          </div>
-                        </li>
-                      )}
-                    </ol>
-                  )}
-                </Card>
-              </Reveal>
-
-              {/* Kỹ năng nổi bật */}
-              {Object.keys(skillGroups).length > 0 && (
-                <Reveal>
-                  <Card hover={false} className="p-6">
-                    <h2 className="text-lg font-bold text-plum-900 text-left">Kỹ năng nổi bật</h2>
-                    <div className="mt-4 space-y-4 text-left">
-                      {Object.entries(skillGroups).map(([group, skills]) => (
-                        <div key={group} className="space-y-2">
-                          <h3 className="text-xs font-semibold text-plum-500 uppercase tracking-wider">
-                            {group}
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {skills.map((skill) => (
-                              <span
-                                key={skill.id}
-                                className="inline-flex items-center rounded-xl bg-plum-50 px-3 py-1 text-xs font-semibold text-plum-700 border border-plum-900/5 hover:bg-brand-50 hover:text-brand-700 transition-colors"
-                              >
-                                {skill.skillName}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
                     </div>
-                  </Card>
-                </Reveal>
+                  ) : (
+                    <p className="text-xs text-plum-400 italic">
+                      Thành viên này chưa cập nhật liên kết mạng xã hội nào.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+
+          {/* Giới thiệu */}
+          <Reveal delay={0.1}>
+            <Card hover={false} className="p-6 text-left">
+              <h2 className="text-lg font-bold text-plum-900">Giới thiệu</h2>
+              <p className="mt-3 text-sm leading-relaxed text-plum-600 whitespace-pre-line">
+                {profile.biography || 'Thành viên này chưa cập nhật phần tự giới thiệu bản thân.'}
+              </p>
+            </Card>
+          </Reveal>
+
+          {/* Hành trình & Sự nghiệp (Career Timeline) */}
+          <Reveal delay={0.2}>
+            <Card hover={false} className="p-6 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Briefcase size={20} className="text-brand-500" />
+                  <h2 className="text-lg font-bold text-plum-900">Hành trình & Sự nghiệp</h2>
+                </div>
+                {isOwnProfile && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<Plus size={15} />}
+                    onClick={handleOpenCreateExp}
+                    className="rounded-xl border border-plum-900/10 font-semibold"
+                  >
+                    Thêm vị trí
+                  </Button>
+                )}
+              </div>
+
+              {sortedExps.length > 0 ? (
+                <div className="relative mt-6 pl-4 sm:pl-6 space-y-6 before:absolute before:left-2 sm:before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-plum-900/10">
+                  {sortedExps.map((exp) => (
+                    <div key={exp.id} className="relative group">
+                      {/* Biểu tượng trên Timeline */}
+                      <span
+                        className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition-all ${
+                          exp.isPrimary
+                            ? 'bg-amber-400 ring-amber-300'
+                            : exp.isCurrent
+                            ? 'bg-brand-500 ring-brand-200'
+                            : 'bg-plum-300 ring-plum-100'
+                        }`}
+                      />
+
+                      <div className="rounded-2xl p-4 transition-all duration-200 hover:bg-plum-50/50 border border-transparent hover:border-plum-900/5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-base font-extrabold text-plum-900">{exp.title}</h3>
+                              {exp.isPrimary && (
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200/50">
+                                  <Star size={11} className="fill-amber-500 text-amber-500" /> Vai trò chính
+                                </span>
+                              )}
+                              {exp.isCurrent && !exp.isPrimary && (
+                                <span className="inline-flex items-center rounded-lg bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 border border-brand-200/50">
+                                  Hiện tại
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-sm font-bold text-plum-700 mt-0.5 flex items-center gap-1.5">
+                              <Building size={14} className="text-plum-400" />
+                              {exp.company}
+                            </p>
+                          </div>
+
+                          {/* Bộ công cụ quản lý vị trí (Chỉ hiển thị cho chủ sở hữu) */}
+                          {isOwnProfile && (
+                            <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                              {!exp.isPrimary && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetPrimaryExp(exp)}
+                                  title="Đặt làm Vai trò chính"
+                                  className="p-1.5 rounded-xl text-plum-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
+                                >
+                                  <Star size={15} />
+                                </button>
+                              )}
+                              {exp.isCurrent && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPromoteExp(exp)}
+                                  title="Thăng chức / Đổi vai trò mới tại công ty"
+                                  className="p-1.5 rounded-xl text-plum-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
+                                >
+                                  <TrendingUp size={15} />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditExp(exp)}
+                                title="Chỉnh sửa vị trí"
+                                className="p-1.5 rounded-xl text-plum-400 hover:text-plum-900 hover:bg-plum-100/50 transition-all"
+                              >
+                                <Edit3 size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteExpId(exp.id)}
+                                title="Xóa vị trí"
+                                className="p-1.5 rounded-xl text-plum-400 hover:text-coral-600 hover:bg-coral-50 transition-all"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-plum-500">
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar size={13} className="text-plum-400" />
+                            {exp.startDate ? formatPeriodDate(exp.startDate) : ''} - {exp.isCurrent ? 'Hiện tại' : (exp.endDate ? formatPeriodDate(exp.endDate) : '')}
+
+                          </span>
+                          {(exp.locationCity || exp.location) && (
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin size={13} className="text-plum-400" />
+                              {formatLocationCityOnly(exp.location, exp.locationCity)}
+                            </span>
+                          )}
+
+                        </div>
+
+                        {exp.description && (
+                          <p className="mt-2.5 text-xs leading-relaxed text-plum-600 whitespace-pre-line border-t border-plum-900/5 pt-2">
+                            {exp.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-xs text-plum-400 italic">
+                  Thành viên này chưa thêm lịch sử làm việc nào.
+                </p>
               )}
-            </motion.div>
-          )}
+            </Card>
+          </Reveal>
 
-          {activeTab === 'posts' && (
-            <motion.div
-              key="posts-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <EmptyState
-                icon={<FileText size={22} />}
-                title="Chưa có bài viết nào"
-                description="Các bài viết do thành viên này đăng tải sẽ xuất hiện tại đây."
-              />
-            </motion.div>
+          {/* Kỹ năng chuyên môn */}
+          {Object.keys(skillGroups).length > 0 && (
+            <Reveal delay={0.3}>
+              <Card hover={false} className="p-6 text-left">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles size={20} className="text-brand-500" />
+                  <h2 className="text-lg font-bold text-plum-900">Kỹ năng chuyên môn</h2>
+                </div>
+                <div className="space-y-4">
+                  {Object.entries(skillGroups).map(([groupName, skills]) => (
+                    <div key={groupName}>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 mb-2">
+                        {groupName}
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {skills.map((skill) => (
+                          <span
+                            key={skill.id}
+                            className="inline-flex items-center rounded-xl bg-plum-50/70 px-3.5 py-1.5 text-xs font-semibold text-plum-700 border border-plum-900/5 shadow-2xs"
+                          >
+                            {skill.skillName}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </Reveal>
           )}
+        </div>
+      )}
 
-          {activeTab === 'reposts' && (
-            <motion.div
-              key="reposts-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <EmptyState
-                icon={<Repeat size={22} />}
-                title="Chưa có bài chia sẻ nào"
-                description="Các bài viết được thành viên này chia sẻ lại sẽ xuất hiện tại đây."
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Modal Quản lý Kinh nghiệm (Thêm / Sửa / Thăng chức) */}
+      {isOwnProfile && (
+        <ExperienceFormModal
+          isOpen={isExpModalOpen}
+          onClose={() => setIsExpModalOpen(false)}
+          mode={expModalMode}
+          experience={selectedExp}
+        />
+      )}
+
+      {/* Modal Xác nhận xóa Kinh nghiệm */}
+      {deleteExpId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-plum-900/5 shadow-2xl p-6 text-left space-y-4">
+            <div className="flex items-center gap-3 text-coral-600">
+              <span className="p-2 rounded-2xl bg-coral-50 border border-coral-200/40">
+                <AlertTriangle size={20} />
+              </span>
+              <h3 className="text-lg font-bold text-plum-900">Xác nhận xóa kinh nghiệm</h3>
+            </div>
+            <p className="text-sm text-plum-600">
+              Bạn có chắc chắn muốn xóa kinh nghiệm làm việc này không? Thao tác này không thể hoàn tác.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setDeleteExpId(null)}
+                disabled={deleteExpMutation.isPending}
+                className="rounded-xl"
+              >
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleConfirmDeleteExp}
+                disabled={deleteExpMutation.isPending}
+                className="rounded-xl bg-coral-500 hover:bg-coral-600 text-white"
+              >
+                {deleteExpMutation.isPending && <Loader2 size={14} className="animate-spin mr-1" />}
+                Xóa ngay
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal danh sách Follower / Following */}
-      <FollowListModal
-        isOpen={followModalOpen}
-        onClose={() => setFollowModalOpen(false)}
-        userId={profile.userId}
-        type={followModalType}
-      />
+      {profile && (
+        <FollowListModal
+          isOpen={followModalOpen}
+          onClose={() => setFollowModalOpen(false)}
+          userId={profile.userId}
+          type={followModalType}
+        />
+      )}
     </div>
   )
 }

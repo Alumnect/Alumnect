@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { X, Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { PlaceAutocomplete } from './PlaceAutocomplete'
+import { MonthYearPicker } from './MonthYearPicker'
+
 import {
   useCreateExperience,
   useUpdateExperience,
@@ -31,8 +34,12 @@ export function ExperienceFormModal({
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [location, setLocation] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  // Month and Year states
+  const [startMonth, setStartMonth] = useState('')
+  const [startYear, setStartYear] = useState('')
+  const [endMonth, setEndMonth] = useState('')
+  const [endYear, setEndYear] = useState('')
+
   const [isCurrent, setIsCurrent] = useState(false)
   const [isPrimary, setIsPrimary] = useState(false)
   const [description, setDescription] = useState('')
@@ -48,12 +55,44 @@ export function ExperienceFormModal({
 
   const [validationError, setValidationError] = useState<string | null>(null)
 
+  // Current date constraints
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonthNum = now.getMonth() + 1
+  const currentMonthStr = String(currentMonthNum).padStart(2, '0')
+  const currentISOStr = `${currentYear}-${currentMonthStr}-01`
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   // Mutations
   const createMutation = useCreateExperience()
   const updateMutation = useUpdateExperience()
   const promoteMutation = usePromoteExperience()
 
   const loading = createMutation.isPending || updateMutation.isPending || promoteMutation.isPending
+
+  // Helper parsing ISO YYYY-MM-DD to month and year
+  const parseYearMonth = (dateStr?: string | null) => {
+    if (!dateStr) return { month: '', year: '' }
+    const parts = dateStr.split('-')
+    if (parts.length >= 2) {
+      return {
+        year: parts[0],
+        month: String(parseInt(parts[1], 10)).padStart(2, '0'),
+      }
+    }
+    return { month: '', year: '' }
+  }
 
   // Initialize fields on open or change
   useEffect(() => {
@@ -63,8 +102,15 @@ export function ExperienceFormModal({
         setTitle(experience.title)
         setCompany(experience.company)
         setLocation(experience.location ?? '')
-        setStartDate(experience.startDate)
-        setEndDate(experience.endDate ?? '')
+
+        const startP = parseYearMonth(experience.startDate)
+        setStartMonth(startP.month)
+        setStartYear(startP.year)
+
+        const endP = parseYearMonth(experience.endDate)
+        setEndMonth(endP.month)
+        setEndYear(endP.year)
+
         setIsCurrent(experience.isCurrent)
         setIsPrimary(experience.isPrimary)
         setDescription(experience.description ?? '')
@@ -79,8 +125,10 @@ export function ExperienceFormModal({
         setTitle('')
         setCompany(experience.company)
         setLocation(experience.location ?? '')
-        setStartDate('')
-        setEndDate('')
+        setStartMonth('')
+        setStartYear('')
+        setEndMonth('')
+        setEndYear('')
         setIsCurrent(true)
         setIsPrimary(experience.isPrimary)
         setDescription('')
@@ -96,8 +144,10 @@ export function ExperienceFormModal({
         setTitle('')
         setCompany('')
         setLocation('')
-        setStartDate('')
-        setEndDate('')
+        setStartMonth('')
+        setStartYear('')
+        setEndMonth('')
+        setEndYear('')
         setIsCurrent(true)
         setIsPrimary(false)
         setDescription('')
@@ -127,6 +177,10 @@ export function ExperienceFormModal({
     e.preventDefault()
     setValidationError(null)
 
+    const formattedStartDate = startMonth && startYear ? `${startYear}-${startMonth}-01` : ''
+    const formattedEndDate = !isCurrent && endMonth && endYear ? `${endYear}-${endMonth}-01` : null
+
+    // Validations
     if (!title.trim()) {
       setValidationError('Vui lòng nhập chức danh / vai trò')
       return
@@ -135,25 +189,40 @@ export function ExperienceFormModal({
       setValidationError('Vui lòng nhập tên công ty / tổ chức')
       return
     }
-    if (!startDate) {
-      setValidationError('Vui lòng nhập ngày bắt đầu')
+    if (!startMonth || !startYear) {
+      setValidationError('Vui lòng chọn cả Tháng và Năm bắt đầu')
       return
     }
-    if (!isCurrent && !endDate) {
-      setValidationError('Vui lòng nhập ngày kết thúc')
+    if (formattedStartDate > currentISOStr) {
+      setValidationError(`Tháng/năm bắt đầu không được vượt quá thời gian hiện tại (sau tháng ${currentMonthStr}/${currentYear})`)
       return
     }
-    if (!isCurrent && startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      setValidationError('Ngày bắt đầu không được lớn hơn ngày kết thúc')
+    if (!isCurrent && (!endMonth || !endYear)) {
+      setValidationError('Vui lòng chọn cả Tháng và Năm kết thúc khi đã kết thúc công việc')
+      return
+    }
+    if (!isCurrent && formattedEndDate && formattedEndDate > currentISOStr) {
+      setValidationError(`Tháng/năm kết thúc không được vượt quá thời gian hiện tại (sau tháng ${currentMonthStr}/${currentYear})`)
+      return
+    }
+    if (!isCurrent && formattedEndDate && formattedStartDate && formattedEndDate < formattedStartDate) {
+      setValidationError('Tháng/Năm kết thúc không được trước tháng/năm bắt đầu')
       return
     }
 
+    if (mode === 'promote' && experience) {
+      const oldStartDate = experience.startDate
+      if (formattedStartDate <= oldStartDate) {
+        setValidationError(`Tháng bắt đầu vai trò mới phải sau tháng bắt đầu vai trò cũ (${oldStartDate.slice(0, 7)})`)
+        return
+      }
+    }
     const requestPayload: ExperienceRequest = {
       title: title.trim(),
       company: company.trim(),
       location: location.trim() || null,
-      startDate,
-      endDate: isCurrent ? null : endDate,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
       isCurrent,
       isPrimary,
       latitude: latitude ?? null,
@@ -176,7 +245,7 @@ export function ExperienceFormModal({
           id: experience.id,
           payload: {
             newTitle: title.trim(),
-            newStartDate: startDate,
+            newStartDate: formattedStartDate,
             description: description.trim() || null,
             reuseLocation: true,
           },
@@ -184,206 +253,222 @@ export function ExperienceFormModal({
       }
       onClose()
     } catch (err: any) {
-      setValidationError(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi lưu dữ liệu')
+      console.error('Lỗi khi lưu kinh nghiệm:', err)
+      setValidationError(
+        err.response?.data?.message || err.message || 'Có lỗi xảy ra khi lưu thông tin kinh nghiệm'
+      )
     }
   }
 
-  const getTitleText = () => {
-    if (mode === 'create') return 'Thêm kinh nghiệm làm việc'
-    if (mode === 'edit') return 'Chỉnh sửa kinh nghiệm làm việc'
-    return 'Thăng chức / Đổi vai trò cùng công ty'
-  }
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={getTitleText()}
-      icon={<Briefcase size={18} />}
-      maxWidthClassName="max-w-xl"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4 text-left">
-        {validationError && (
-          <div className="flex items-start gap-2.5 rounded-2xl bg-coral-50 border border-coral-200/40 p-3.5 text-xs font-semibold text-coral-700">
-            <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-            <span>{validationError}</span>
-          </div>
-        )}
-
-        {mode === 'promote' && experience && (
-          <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
-            <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
-            <span>
-              Thăng chức tại <strong>{experience.company}</strong>. Vai trò cũ{' '}
-              <strong>{experience.title}</strong> sẽ được kết thúc vào ngày trước ngày bắt đầu vai trò mới.
-            </span>
-          </div>
-        )}
-
-        {/* Title */}
-        <div>
-          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-            Chức danh / Vai trò <span className="text-coral-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="VD: Senior Frontend Developer, Core Member..."
-            required
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-plum-950/50 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl overflow-hidden flex flex-col min-h-[580px] max-h-[90vh] animate-scale-up">
+        {/* Header (Fixed) */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-plum-900/5 bg-plum-50/50 shrink-0">
+          <h2 className="text-base font-extrabold text-plum-900 flex items-center gap-2">
+            <Briefcase size={18} className="text-brand-500" />
+            {mode === 'create' && 'Thêm kinh nghiệm làm việc'}
+            {mode === 'edit' && 'Chỉnh sửa kinh nghiệm'}
+            {mode === 'promote' && 'Thăng chức / Vai trò mới'}
+          </h2>
+          <button
+            onClick={onClose}
             disabled={loading}
-            className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          />
+            className="p-1.5 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04] transition-colors"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Company */}
-        <div>
-          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-            Công ty / Tổ chức / Câu lạc bộ <span className="text-coral-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder="VD: FPT Software, FPT Developer Club..."
-            required
-            disabled={loading || mode === 'promote'}
-            className="w-full rounded-2xl border border-plum-900/10 bg-plum-50/30 disabled:bg-plum-900/[0.03] disabled:text-plum-400 py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          />
-        </div>
+        {/* Form Container */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between overflow-hidden">
+          {/* Form Scrollable Body */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 text-left">
+            {validationError && (
+              <div className="flex items-start gap-2.5 rounded-2xl bg-coral-50 border border-coral-200/40 p-3.5 text-xs text-coral-700 font-semibold">
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                <span>{validationError}</span>
+              </div>
+            )}
 
-        {/* Location Autocomplete */}
-        <div>
-          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-            Vị trí / Địa điểm (Geocoded)
-          </label>
-          {mode === 'promote' ? (
-            <input
-              type="text"
-              value={location}
-              disabled
-              className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] py-3 px-4 text-sm text-plum-400"
-            />
-          ) : (
-            <PlaceAutocomplete
-              value={location}
-              onChange={setLocation}
-              onSelect={handlePlaceSelect}
-              placeholder="Tìm thành phố, quốc gia..."
-            />
-          )}
-        </div>
+            {mode === 'promote' && experience && (
+              <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
+                <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
+                <span>
+                  Thăng chức tại <strong>{experience.company}</strong>. Vai trò cũ{' '}
+                  <strong>{experience.title}</strong> sẽ được kết thúc vào ngày trước tháng bắt đầu vai trò mới.
+                </span>
+              </div>
+            )}
 
-        {/* Dates */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-              Ngày bắt đầu <span className="text-coral-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                disabled={loading}
-                className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-              />
-            </div>
-          </div>
-
-          {!isCurrent && (
-            <div>
-              <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                Ngày kết thúc <span className="text-coral-500">*</span>
-              </label>
-              <div className="relative">
+            {/* Row 1: Title & Company side by side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+                  Chức danh / Vai trò <span className="text-coral-500">*</span>
+                </label>
                 <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  required={!isCurrent}
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="VD: Senior Frontend Developer..."
+                  required
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-2.5 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+
+              {/* Company */}
+              <div>
+                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+                  Công ty / Tổ chức / CLB <span className="text-coral-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="VD: FPT Software..."
+                  required
+                  disabled={loading || mode === 'promote'}
+                  className="w-full rounded-2xl border border-plum-900/10 bg-plum-50/30 disabled:bg-plum-900/[0.03] disabled:text-plum-400 py-2.5 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Checkboxes */}
-        <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
-          {mode !== 'promote' && (
-            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={isCurrent}
-                onChange={(e) => {
-                  setIsCurrent(e.target.checked)
-                  if (!e.target.checked) {
-                    setIsPrimary(false)
-                  }
+            {/* Row 2: Location Autocomplete */}
+            <div>
+              <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+                Vị trí / Địa điểm (Geocoded)
+              </label>
+              {mode === 'promote' ? (
+                <input
+                  type="text"
+                  value={location}
+                  disabled
+                  className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] py-2.5 px-4 text-sm text-plum-400"
+                />
+              ) : (
+                <PlaceAutocomplete
+                  value={location}
+                  onChange={setLocation}
+                  onSelect={handlePlaceSelect}
+                  placeholder="Tìm thành phố, quốc gia..."
+                />
+              )}
+            </div>
+
+            {/* Row 3: Dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Start Date */}
+              <MonthYearPicker
+                label="Tháng / Năm bắt đầu"
+                required
+                disabled={loading}
+                monthValue={startMonth}
+                yearValue={startYear}
+                onChange={(m, y) => {
+                  setStartMonth(m)
+                  setStartYear(y)
                 }}
-                disabled={loading}
-                className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
               />
-              <span className="text-sm font-semibold text-plum-700">Công việc hiện tại</span>
-            </label>
-          )}
 
-          {isCurrent && (
-            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={isPrimary}
-                onChange={(e) => setIsPrimary(e.target.checked)}
+              {/* End Date */}
+              {!isCurrent && (
+                <MonthYearPicker
+                  label="Tháng / Năm kết thúc"
+                  required
+                  disabled={loading}
+                  monthValue={endMonth}
+                  yearValue={endYear}
+                  onChange={(m, y) => {
+                    setEndMonth(m)
+                    setEndYear(y)
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Row 4: Checkboxes */}
+            <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
+              {mode !== 'promote' && (
+                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isCurrent}
+                    onChange={(e) => {
+                      setIsCurrent(e.target.checked)
+                      if (!e.target.checked) {
+                        setIsPrimary(false)
+                      }
+                    }}
+                    disabled={loading}
+                    className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+                  />
+                  <span className="text-sm font-semibold text-plum-700">Công việc hiện tại</span>
+                </label>
+              )}
+
+              {isCurrent && (
+                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isPrimary}
+                    onChange={(e) => setIsPrimary(e.target.checked)}
+                    disabled={loading}
+                    className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+                  />
+                  <span className="text-sm font-semibold text-plum-700">Kinh nghiệm chính (Primary)</span>
+                </label>
+              )}
+            </div>
+
+            {/* Row 5: Description */}
+            <div>
+              <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-1.5">
+                Mô tả chi tiết
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Mô tả công việc, dự án đã tham gia..."
+                rows={5}
                 disabled={loading}
-                className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+                className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 min-h-[120px]"
               />
-              <span className="text-sm font-semibold text-plum-700">Kinh nghiệm chính (Primary)</span>
-            </label>
-          )}
-        </div>
+            </div>
+          </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-            Mô tả chi tiết
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Mô tả công việc, dự án đã tham gia..."
-            rows={3}
-            disabled={loading}
-            className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          />
-        </div>
 
-        {/* Footer Buttons */}
-        <div className="pt-4 flex items-center justify-end gap-3 border-t border-plum-900/5 mt-6">
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            onClick={onClose}
-            disabled={loading}
-            className="rounded-xl border border-plum-900/10 text-plum-700 font-semibold"
-          >
-            Hủy
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            disabled={loading}
-            className="rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold px-6 flex items-center gap-1.5"
-          >
-            {loading && <Loader2 size={14} className="animate-spin" />}
-            <span>Lưu lại</span>
-          </Button>
-        </div>
-      </form>
-    </Modal>
+          {/* Footer Actions (Fixed at bottom) */}
+          <div className="px-6 py-4 border-t border-plum-900/5 bg-plum-50/30 flex items-center justify-end gap-3 shrink-0">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={onClose}
+              disabled={loading}
+              className="rounded-xl border border-plum-900/10 text-plum-700 font-semibold"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={loading}
+              className="rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold px-6 flex items-center gap-1.5"
+            >
+              {loading && <Loader2 size={14} className="animate-spin" />}
+              <span>Lưu lại</span>
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
   )
 }
+
+
+
