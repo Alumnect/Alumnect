@@ -147,7 +147,7 @@ public class ExperienceServiceImpl implements ExperienceService {
         oldExp.setCurrent(false);
         oldExp.setPrimary(false);
         oldExp.setEndDate(request.getNewStartDate().minusDays(1));
-        experienceRepository.save(oldExp);
+        experienceRepository.saveAndFlush(oldExp);
 
         // Create new experience
         Experience newExp = new Experience();
@@ -191,9 +191,10 @@ public class ExperienceServiceImpl implements ExperienceService {
         if (oldPrimary.isPresent()) {
             Experience op = oldPrimary.get();
             op.setPrimary(false);
-            experienceRepository.save(op);
+            experienceRepository.saveAndFlush(op);
         }
     }
+
 
     private void autoPromoteLatestCurrentExperience(Long userId) {
         Optional<Experience> primary = experienceRepository.findByUserIdAndIsPrimaryTrue(userId);

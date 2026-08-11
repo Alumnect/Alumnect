@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.dto.response.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,8 +20,13 @@ public class ExperienceResponse {
     private String location;
     private LocalDate startDate;
     private LocalDate endDate;
+
+    @JsonProperty("isCurrent")
     private boolean isCurrent;
+
+    @JsonProperty("isPrimary")
     private boolean isPrimary;
+
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String placeId;

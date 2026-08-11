@@ -1,15 +1,21 @@
 package com.alumnect.alumnect_backend.service.forum;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.enums.QuestionStatus;
 import com.alumnect.alumnect_backend.dao.forum.ForumTopicRepository;
 import com.alumnect.alumnect_backend.dao.forum.QuestionRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.forum.CreateQuestionRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
+import com.alumnect.alumnect_backend.entity.forum.ForumTopic;
 import com.alumnect.alumnect_backend.entity.forum.Question;
+import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
+import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.forum.QuestionMapper;
 import org.slf4j.Logger;
@@ -20,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -46,6 +53,9 @@ public class QuestionServiceImpl implements QuestionService {
     @Autowired
     private QuestionMapper questionMapper;
 
+    @Autowired
+    private UserRepository userRepository;
+
     /**
      * {@inheritDoc}
      * <p>
@@ -60,7 +70,7 @@ public class QuestionServiceImpl implements QuestionService {
      * </ol>
      */
     @Override
-    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, Long topicId) {
+    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds) {
         // Validate tham số phân trang trước khi tạo PageRequest — nếu không, PageRequest.of()
         // sẽ ném IllegalArgumentException và bị trả về nhầm HTTP 500 thay vì 400.
         if (page < 0) {
@@ -70,10 +80,16 @@ public class QuestionServiceImpl implements QuestionService {
             throw new BadRequestException("Tham số size phải là số nguyên dương");
         }
 
+        // Lọc theo nhiều chủ đề (tick chọn ở Frontend). Khi không lọc, truyền danh sách giữ chỗ
+        // không rỗng để tránh mệnh đề IN () không hợp lệ; điều kiện IN bị vô hiệu bởi filterByTopic=false.
+        boolean filterByTopic = topicIds != null && !topicIds.isEmpty();
+        List<Long> effectiveTopicIds = filterByTopic ? topicIds : List.of(-1L);
+
         Sort sortSpec = resolveSort(sort);
-        Page<Question> questionsPage = questionRepository.findActiveQuestions(topicId, PageRequest.of(page, size, sortSpec));
-        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, topicId={}, tổng kết quả={}",
-                page, size, sort, topicId, questionsPage.getTotalElements());
+        Page<Question> questionsPage = questionRepository.findActiveQuestions(
+                filterByTopic, effectiveTopicIds, PageRequest.of(page, size, sortSpec));
+        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, topicIds={}, tổng kết quả={}",
+                page, size, sort, filterByTopic ? topicIds : null, questionsPage.getTotalElements());
 
         // Gộp truy vấn hồ sơ tác giả theo lô (batch) thay vì truy vấn riêng lẻ cho từng câu hỏi.
         List<Long> authorIds = questionsPage.getContent().stream()
@@ -121,29 +137,92 @@ public class QuestionServiceImpl implements QuestionService {
 
     /**
      * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404 nếu không có) → kiểm tra vai trò Student/Alumni (403 nếu khác)
+     * → nếu có topicId thì kiểm tra chủ đề tồn tại (400 nếu không) → tạo Question trạng thái ACTIVE,
+     * số vote/trả lời = 0 → lưu → map sang chi tiết trả về.
+     */
+    @Override
+    public QuestionDetailResponse createQuestion(String email, CreateQuestionRequest request) {
+        User author = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        // RBAC (UC40): chỉ Sinh viên và Cựu sinh viên mới được đặt câu hỏi; Admin/khác bị từ chối 403.
+        String roleName = author.getRole() != null ? author.getRole().getName().toUpperCase() : "";
+        if (!roleName.equals("STUDENT") && !roleName.equals("ALUMNI")) {
+            throw new ForbiddenException("Chỉ sinh viên và cựu sinh viên mới được đặt câu hỏi");
+        }
+
+        // Chủ đề là tùy chọn: nếu có topicId thì phải tồn tại, ngược lại để null (chưa phân loại).
+        ForumTopic topic = null;
+        if (request.getTopicId() != null) {
+            topic = forumTopicRepository.findById(request.getTopicId())
+                    .orElseThrow(() -> new BadRequestException("Chủ đề không tồn tại"));
+        }
+
+        Question question = Question.builder()
+                .author(author)
+                .topic(topic)
+                .title(request.getTitle().trim())
+                .body(request.getBody().trim())
+                .status(QuestionStatus.ACTIVE)
+                .voteCount(0)
+                .answerCount(0)
+                .build();
+
+        Question saved;
+        try {
+            saved = questionRepository.save(question);
+        } catch (Exception ex) {
+            log.error("Lỗi khi lưu câu hỏi mới của user {}: ", email, ex);
+            throw new RuntimeException("Lỗi hệ thống: Không thể tạo câu hỏi");
+        }
+        log.info("Tạo câu hỏi mới: id={}, tác giả={}, topicId={}", saved.getId(), email, request.getTopicId());
+
+        // Nạp hồ sơ tác giả để trả về chi tiết đầy đủ (tên/avatar/headline) cho Frontend.
+        UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        return questionMapper.toDetailResponse(saved, profile);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public List<TopicResponse> getTopics() {
-        return forumTopicRepository.findAllByOrderByNameAsc().stream()
+        return forumTopicRepository.findAllByOrderByIdAsc().stream()
                 .map(questionMapper::toTopicResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Chuyển tham số sắp xếp (không phân biệt hoa/thường) thành đối tượng {@link Sort}.
-     * Mọi tiêu chí đều thêm createdAt DESC làm điều kiện phụ để kết quả ổn định khi trùng giá trị.
+     * Chuyển tham số sắp xếp thành đối tượng {@link Sort} hỗ trợ NHIỀU tiêu chí ưu tiên.
+     * Tham số là chuỗi các key cách nhau bởi dấu phẩy (VD "votes,answers"): sắp theo tiêu chí đầu,
+     * hòa thì theo tiêu chí kế; luôn thêm createdAt DESC cuối cùng để kết quả ổn định.
      *
-     * @param sort Chuỗi tiêu chí: "recent" (mặc định), "votes", "answers"
-     * @return Đối tượng Sort tương ứng
-     * @throws BadRequestException nếu giá trị sort không hợp lệ
+     * @param sort Chuỗi tiêu chí cách nhau bởi dấu phẩy: "recent", "votes", "answers"
+     * @return Đối tượng Sort theo đúng thứ tự ưu tiên
+     * @throws BadRequestException nếu có tiêu chí không hợp lệ
      */
     private Sort resolveSort(String sort) {
-        String key = (sort == null || sort.isBlank()) ? "recent" : sort.trim().toLowerCase();
-        return switch (key) {
-            case "recent" -> Sort.by(Sort.Direction.DESC, "createdAt");
-            case "votes" -> Sort.by(Sort.Direction.DESC, "voteCount").and(Sort.by(Sort.Direction.DESC, "createdAt"));
-            case "answers" -> Sort.by(Sort.Direction.DESC, "answerCount").and(Sort.by(Sort.Direction.DESC, "createdAt"));
-            default -> throw new BadRequestException("Tiêu chí sắp xếp không hợp lệ: " + sort);
-        };
+        String raw = (sort == null || sort.isBlank()) ? "recent" : sort.trim().toLowerCase();
+        List<Sort.Order> orders = new ArrayList<>();
+        for (String part : raw.split(",")) {
+            String key = part.trim();
+            if (key.isEmpty()) {
+                continue;
+            }
+            switch (key) {
+                case "recent" -> orders.add(new Sort.Order(Sort.Direction.DESC, "createdAt"));
+                case "votes" -> orders.add(new Sort.Order(Sort.Direction.DESC, "voteCount"));
+                case "answers" -> orders.add(new Sort.Order(Sort.Direction.DESC, "answerCount"));
+                default -> throw new BadRequestException("Tiêu chí sắp xếp không hợp lệ: " + key);
+            }
+        }
+        // Thêm createdAt DESC làm điều kiện phụ cuối cùng nếu chưa có, đảm bảo thứ tự ổn định.
+        boolean hasCreatedAt = orders.stream().anyMatch(o -> "createdAt".equals(o.getProperty()));
+        if (!hasCreatedAt) {
+            orders.add(new Sort.Order(Sort.Direction.DESC, "createdAt"));
+        }
+        return Sort.by(orders);
     }
 }

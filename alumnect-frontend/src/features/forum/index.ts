@@ -1,4 +1,5 @@
-export { useQuestions, useQuestionDetail, useTopics } from './hooks/useQuestions'
+export { useQuestions, useQuestionDetail, useTopics, useCreateQuestion } from './hooks/useQuestions'
 export { forumApi, PAGE_SIZE } from './api/forumApi'
-export { questionSchema, questionDetailSchema, topicSchema, SORT_OPTIONS } from './model/question'
-export type { Question, QuestionDetail, Topic, SortOption, QuestionPageResult } from './model/question'
+export { questionSchema, questionDetailSchema, topicSchema, createQuestionSchema, SORT_OPTIONS } from './model/question'
+export type { Question, QuestionDetail, Topic, SortOption, QuestionPageResult, CreateQuestionInput } from './model/question'
+export { AskQuestionModal } from './components/AskQuestionModal'

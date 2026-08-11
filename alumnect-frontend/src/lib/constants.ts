@@ -18,6 +18,7 @@ import {
   Megaphone,
   UserCog,
   Lock,
+  FileText,
 } from 'lucide-react'
 
 export const BRAND = {
@@ -83,6 +84,7 @@ export const APP_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Overview', to: '/admin', icon: LayoutDashboard },
   { label: 'Users', to: '/admin/users', icon: UserCog },
+  { label: 'Posts', to: '/admin/posts', icon: FileText },
   { label: 'Verifications', to: '/admin/verifications', icon: BadgeCheck },
   { label: 'Reports', to: '/admin/reports', icon: Flag },
   { label: 'Revenue', to: '/admin/revenue', icon: CreditCard },

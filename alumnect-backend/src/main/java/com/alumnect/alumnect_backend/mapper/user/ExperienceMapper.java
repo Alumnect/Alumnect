@@ -11,17 +11,25 @@ import org.mapstruct.MappingTarget;
 public interface ExperienceMapper {
 
     @Mapping(target = "isCurrent", source = "current")
+    @Mapping(target = "isPrimary", source = "primary")
     ExperienceResponse toResponse(Experience experience);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "isCurrent", source = "current")
+    @Mapping(target = "isPrimary", source = "primary")
     Experience toEntity(ExperienceRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "current", source = "current")
+    @Mapping(target = "primary", source = "primary")
     void updateEntityFromRequest(ExperienceRequest request, @MappingTarget Experience experience);
 }
+
+
+
