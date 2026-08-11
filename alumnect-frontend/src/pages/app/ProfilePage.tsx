@@ -8,7 +8,6 @@ import {
   Calendar,
   Mail,
   Phone,
-  ArrowLeft,
   Edit3,
   Plus,
   Trash2,
@@ -22,6 +21,7 @@ import {
   Sparkles,
   UserPlus,
   UserMinus,
+  PlusSquare,
 } from 'lucide-react'
 import axios from 'axios'
 import { Avatar, Card, Skeleton, EmptyState, SmartImage } from '@/components/ui'
@@ -59,12 +59,12 @@ const formatLocationCityOnly = (location?: string | null, locationCity?: string 
   if (!location || !location.trim()) return ''
   const parts = location.split(',').map((p) => p.trim()).filter(Boolean)
   if (parts.length === 0) return location
-  
+
   let target = parts[parts.length - 1]
   if (parts.length >= 2 && ['việt nam', 'vietnam', 'japan', 'usa', 'united states'].includes(target.toLowerCase())) {
     target = parts[parts.length - 2]
   }
-  
+
   return target.toLowerCase().includes('thành phố') || target.toLowerCase().includes('làm việc')
     ? target
     : `Làm việc tại ${target}`
@@ -89,8 +89,8 @@ export function ProfilePage() {
   // State quản lý chế độ chỉnh sửa in-page (Facebook style)
   const [isEditingInPage, setIsEditingInPage] = useState(searchParams.get('edit') === 'true')
   const [isExpModalOpen, setIsExpModalOpen] = useState(false)
-  const [expModalMode, setExpModalMode] = useState<'create' | 'edit' | 'promote'>('create')
-  const [selectedExp, setSelectedExp] = useState<ExperienceResponse | null>(null)
+  const [formMode, setFormMode] = useState<'create' | 'edit' | 'promote' | 'rejoin'>('create')
+  const [expToEdit, setExpToEdit] = useState<ExperienceResponse | null>(null)
   const [deleteExpId, setDeleteExpId] = useState<number | null>(null)
   const [isUploadingMedia, setIsUploadingMedia] = useState(false)
 
@@ -239,29 +239,35 @@ export function ProfilePage() {
   // Sắp xếp các kinh nghiệm làm việc theo thời gian bắt đầu giảm dần (mới nhất lên đầu)
   const sortedExps = profile.experiences
     ? [...profile.experiences].sort((a, b) => {
-        const dateA = a.startDate ? new Date(a.startDate).getTime() : 0
-        const dateB = b.startDate ? new Date(b.startDate).getTime() : 0
-        return dateB - dateA
-      })
+      const dateA = a.startDate ? new Date(a.startDate).getTime() : 0
+      const dateB = b.startDate ? new Date(b.startDate).getTime() : 0
+      return dateB - dateA
+    })
     : []
 
   const skillGroups = profile.skills?.length ? groupSkills(profile.skills) : {}
 
   const handleOpenCreateExp = () => {
-    setExpModalMode('create')
-    setSelectedExp(null)
+    setFormMode('create')
+    setExpToEdit(null)
     setIsExpModalOpen(true)
   }
 
   const handleOpenEditExp = (exp: ExperienceResponse) => {
-    setExpModalMode('edit')
-    setSelectedExp(exp)
+    setFormMode('edit')
+    setExpToEdit(exp)
     setIsExpModalOpen(true)
   }
 
   const handleOpenPromoteExp = (exp: ExperienceResponse) => {
-    setExpModalMode('promote')
-    setSelectedExp(exp)
+    setExpToEdit(exp)
+    setFormMode('promote')
+    setIsExpModalOpen(true)
+  }
+
+  const handleOpenRejoinExp = (exp: ExperienceResponse) => {
+    setExpToEdit(exp)
+    setFormMode('rejoin')
     setIsExpModalOpen(true)
   }
 
@@ -298,20 +304,6 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 space-y-6">
-      {/* Nút quay lại (chỉ hiển thị khi xem hồ sơ người khác) */}
-      {!isOwnProfile && (
-        <div className="mb-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            leftIcon={<ArrowLeft size={15} />}
-            onClick={() => navigate(-1)}
-          >
-            Quay lại
-          </Button>
-        </div>
-      )}
-
       {/* TOP FACEBOOK PROFILE HEADER CARD (Đồng nhất cho cả View & Edit mode) */}
       <Reveal>
         <div className="bg-white rounded-3xl border border-plum-900/5 shadow-sm overflow-hidden text-left">
@@ -407,12 +399,17 @@ export function ProfilePage() {
 
             {/* Thông tin tên & giới thiệu ngắn */}
             <div className="space-y-1.5 pb-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-plum-900 tracking-tight">
                   {profile.fullName}
                 </h1>
                 {profile.isAccountVerified && (
                   <BadgeCheck className="text-brand-500 fill-brand-100" size={24} />
+                )}
+                {profile.studentCode && (
+                  <span className="text-xs sm:text-sm font-semibold text-plum-500 bg-plum-900/[0.04] px-2.5 py-0.5 rounded-full border border-plum-900/10 self-center">
+                    ({profile.studentCode})
+                  </span>
                 )}
               </div>
 
@@ -457,7 +454,8 @@ export function ProfilePage() {
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <GraduationCap size={15} className="text-plum-400" />
                   {profile.major ? `${profile.major.name} (${profile.major.code})` : 'N/A'}
-                  {profile.cohort ? ` · Khóa ${profile.cohort}` : ''}
+                  {profile.cohort ? ` · K${profile.cohort}` : ''}
+                  {profile.graduationYear ? ` · TN ${profile.graduationYear}` : ''}
                 </span>
                 {profile.campus && (
                   <span className="inline-flex items-center gap-1.5 font-medium">
@@ -477,11 +475,10 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsEditingInPage(false)}
-                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${
-                  !isEditingInPage
-                    ? 'border-brand-500 text-brand-600'
-                    : 'border-transparent text-plum-500 hover:text-plum-800'
-                }`}
+                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${!isEditingInPage
+                  ? 'border-brand-500 text-brand-600'
+                  : 'border-transparent text-plum-500 hover:text-plum-800'
+                  }`}
               >
                 Tất cả hồ sơ
               </button>
@@ -489,13 +486,12 @@ export function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditingInPage(true)}
-                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${
-                    isEditingInPage
-                      ? 'border-brand-500 text-brand-600'
-                      : 'border-transparent text-plum-500 hover:text-plum-800'
-                  }`}
+                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${isEditingInPage
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-plum-500 hover:text-plum-800'
+                    }`}
                 >
-                  Giới thiệu & Chỉnh sửa
+                  Giới thiệu
                 </button>
               )}
             </div>
@@ -597,13 +593,12 @@ export function ProfilePage() {
                     <div key={exp.id} className="relative group">
                       {/* Biểu tượng trên Timeline */}
                       <span
-                        className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition-all ${
-                          exp.isPrimary
-                            ? 'bg-amber-400 ring-amber-300'
-                            : exp.isCurrent
+                        className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition-all ${exp.isPrimary
+                          ? 'bg-amber-400 ring-amber-300'
+                          : exp.isCurrent
                             ? 'bg-brand-500 ring-brand-200'
                             : 'bg-plum-300 ring-plum-100'
-                        }`}
+                          }`}
                       />
 
                       <div className="rounded-2xl p-4 transition-all duration-200 hover:bg-plum-50/50 border border-transparent hover:border-plum-900/5">
@@ -632,16 +627,7 @@ export function ProfilePage() {
                           {/* Bộ công cụ quản lý vị trí (Chỉ hiển thị cho chủ sở hữu) */}
                           {isOwnProfile && (
                             <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                              {!exp.isPrimary && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSetPrimaryExp(exp)}
-                                  title="Đặt làm Vai trò chính"
-                                  className="p-1.5 rounded-xl text-plum-400 hover:text-amber-600 hover:bg-amber-50 transition-all"
-                                >
-                                  <Star size={15} />
-                                </button>
-                              )}
+
                               {exp.isCurrent && (
                                 <button
                                   type="button"
@@ -650,6 +636,16 @@ export function ProfilePage() {
                                   className="p-1.5 rounded-xl text-plum-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
                                 >
                                   <TrendingUp size={15} />
+                                </button>
+                              )}
+                              {!exp.isCurrent && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenRejoinExp(exp)}
+                                  title="Thêm kinh nghiệm khác tại công ty này (Hiện tại hoặc Quá khứ)"
+                                  className="p-1.5 rounded-xl text-plum-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
+                                >
+                                  <PlusSquare size={15} />
                                 </button>
                               )}
                               <button
@@ -742,8 +738,8 @@ export function ProfilePage() {
         <ExperienceFormModal
           isOpen={isExpModalOpen}
           onClose={() => setIsExpModalOpen(false)}
-          mode={expModalMode}
-          experience={selectedExp}
+          mode={formMode}
+          experience={expToEdit}
         />
       )}
 

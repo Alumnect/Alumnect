@@ -112,6 +112,7 @@ export interface FollowUserResponse {
   headline: string | null
   isAccountVerified: boolean
   isFollowing: boolean
+  studentCode?: string | null
 }
 
 export interface UserSkillRequest {
