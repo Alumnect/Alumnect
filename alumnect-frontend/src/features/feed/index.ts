@@ -1,6 +1,7 @@
 export { useFeed } from './hooks/useFeed'
 export { useToggleLike } from './hooks/useToggleLike'
 export { useCreatePost } from './hooks/useCreatePost'
+export { useEditPost } from './hooks/useEditPost'
 export { feedApi, PAGE_SIZE } from './api/feedApi'
 export type { LikeResult } from './api/feedApi'
 export { postSchema, POST_TYPES } from './model/post'

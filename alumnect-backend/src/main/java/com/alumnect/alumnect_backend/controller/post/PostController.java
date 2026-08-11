@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -84,6 +86,27 @@ public class PostController {
         PostResponse created = postService.createPost(authentication.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng bài viết thành công", created));
+    }
+
+    /**
+     * API chỉnh sửa bài viết đã đăng (UC22 - Edit a post).
+     * Yêu cầu đăng nhập (JWT); chỉ tác giả (Sinh viên/Cựu sinh viên) mới được sửa bài
+     * của chính mình — người khác hoặc Admin nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param id             ID bài viết cần chỉnh sửa
+     * @param request        DTO chứa nội dung mới, loại, ảnh và phạm vi hiển thị
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return Bài viết đã được cập nhật {@link PostResponse} bọc trong {@link ApiResponse}, HTTP 200 OK
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostResponse>> editPost(
+            @PathVariable Long id,
+            @Valid @RequestBody EditPostRequest request,
+            Authentication authentication) {
+
+        PostResponse updated = postService.editPost(authentication.getName(), id, request);
+        return ResponseEntity.ok(ApiResponse.success("Chỉnh sửa bài viết thành công", updated));
     }
 
     /**

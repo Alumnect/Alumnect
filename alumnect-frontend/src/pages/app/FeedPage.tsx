@@ -19,6 +19,7 @@ import {
   Repeat2,
   Bookmark,
   MoreHorizontal,
+  Pencil,
   TrendingUp,
   Flag,
   Loader2,
@@ -99,7 +100,17 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: () => void }) 
  * @param post Dữ liệu bài viết
  * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
  */
-function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
+function PostCard({
+  post,
+  canInteract,
+  currentUserName,
+  onEdit,
+}: {
+  post: Post
+  canInteract: boolean
+  currentUserName?: string
+  onEdit?: (post: Post) => void
+}) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState(post.likes)
@@ -136,6 +147,8 @@ function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
     )
   }
 
+  const isAuthor = !!currentUserName && post.author === currentUserName
+
   return (
     <Card hover={false} className="overflow-hidden">
       <div className="p-5">
@@ -150,10 +163,22 @@ function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
             </p>
             <p className="truncate text-xs text-plum-400">{post.role} · {post.time}</p>
           </Link>
-          {/* Menu tác giả (Edit/Delete) — thuộc UC khác, ở đây chỉ hiển thị icon */}
-          <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
-            <MoreHorizontal size={18} />
-          </button>
+          {/* Nút Chỉnh sửa (UC22) chỉ hiển thị cho chính tác giả bài viết */}
+          {isAuthor && onEdit ? (
+            <button
+              type="button"
+              onClick={() => onEdit(post)}
+              aria-label="Chỉnh sửa bài viết"
+              title="Chỉnh sửa bài viết"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+            >
+              <Pencil size={13} /> Sửa
+            </button>
+          ) : (
+            <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
+              <MoreHorizontal size={18} />
+            </button>
+          )}
         </div>
 
         {/* --- Phần 2: Nội dung văn bản — bấm vào mở trang chi tiết bài viết (UC16) --- */}
@@ -293,9 +318,10 @@ function SidebarCard({ title, action, children }: { title: string; action?: stri
  * trạng thái loading / empty / error / permission.
  */
 export function FeedPage() {
-  // === Bước 1: State cục bộ — bộ lọc loại bài viết & mở/đóng modal soạn bài (UC14) ===
+  // === Bước 1: State cục bộ — bộ lọc loại bài viết, mở/đóng modal & bài viết đang sửa (UC14/UC22) ===
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [composerOpen, setComposerOpen] = useState(false)
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -304,6 +330,16 @@ export function FeedPage() {
   const isGuest = !viewer
   // Chỉ Student/Alumni mới được đăng bài & tương tác (Admin không phải người đăng).
   const canPost = !!viewer && (viewer.role === 'STUDENT' || viewer.role === 'ALUMNI')
+
+  const handleStartEdit = (p: Post) => {
+    setEditingPost(p)
+    setComposerOpen(true)
+  }
+
+  const handleCloseComposer = () => {
+    setComposerOpen(false)
+    setEditingPost(null)
+  }
 
   // === Bước 3: Gọi dữ liệu bảng tin qua hook infinite-query ===
   const {
@@ -332,8 +368,13 @@ export function FeedPage() {
             <Reveal>
               <Composer viewer={viewer} onOpen={() => setComposerOpen(true)} />
             </Reveal>
-            {/* Modal soạn & đăng bài viết (UC14 - Create a post on the Feed) */}
-            <CreatePostModal open={composerOpen} onClose={() => setComposerOpen(false)} viewer={viewer} />
+            {/* Modal soạn & đăng / chỉnh sửa bài viết (UC14 / UC22) */}
+            <CreatePostModal
+              open={composerOpen}
+              onClose={handleCloseComposer}
+              viewer={viewer}
+              editPost={editingPost ?? undefined}
+            />
           </>
         )}
 
@@ -379,7 +420,12 @@ export function FeedPage() {
             <Stagger className="space-y-5" gap={0.08}>
               {posts.map((p) => (
                 <StaggerItem key={p.id}>
-                  <PostCard post={p} canInteract={!isGuest} />
+                  <PostCard
+                    post={p}
+                    canInteract={!isGuest}
+                    currentUserName={viewer?.name}
+                    onEdit={handleStartEdit}
+                  />
                 </StaggerItem>
               ))}
             </Stagger>

@@ -160,6 +160,20 @@ export const feedApi = {
   },
 
   /**
+   * Chỉnh sửa bài viết đã đăng (UC22 - Edit a post).
+   * Gọi `PUT /api/v1/posts/${postId}` (token Bearer do interceptor tự đính);
+   * trả về bài viết đã cập nhật qua `postSchema` để Frontend đồng bộ UI tức thì.
+   * @param postId ID bài viết cần chỉnh sửa
+   * @param input Dữ liệu cập nhật (content, type, visibility, imageUrl tùy chọn)
+   * @return Bài viết đã cập nhật, đã chuẩn hóa
+   */
+  editPost: async (postId: string, input: CreatePostInput): Promise<Post> => {
+    const body = await http.put(`/posts/${encodeURIComponent(postId)}`, input)
+    const raw = (body as { data?: unknown })?.data ?? body
+    return postSchema.parse(raw)
+  },
+
+  /**
    * Tải ảnh đính kèm bài viết lên Cloudflare R2 qua link ký sẵn (presigned URL),
    * theo đúng cơ chế đã dùng ở luồng đăng ký: xin link PUT tạm thời rồi tải trực tiếp
    * từ client lên R2, trả về URL công khai để gán vào `imageUrl` khi tạo bài.
