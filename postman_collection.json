@@ -3096,6 +3096,247 @@
 			]
 		},
 		{
+			"name": "05. Q&A Forum (UC40 - Ask a Question)",
+			"description": "Thư mục kiểm thử API đặt câu hỏi mới (UC40 - Ask a question) của Module 4 (Q&A Forum). POST /api/v1/questions yêu cầu đăng nhập (Bearer {{jwtToken}}); chỉ STUDENT/ALUMNI được đặt câu hỏi — Guest bị chặn 401, Admin/vai trò khác bị từ chối 403. Chủ đề (topicId) là tùy chọn.",
+			"item": [
+				{
+					"name": "Đặt câu hỏi (không kèm chủ đề) - Thành công (201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Lộ trình học Spring Boot cho người mới ra trường?\",\n  \"body\": \"Mình mới tốt nghiệp, muốn xin lộ trình học Spring Boot và dự án thực hành từ cơ bản để đi làm backend.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### API Đặt Câu Hỏi (UC40 - Ask a question)\n* Quyền: Bearer Token ({{jwtToken}}) — chỉ STUDENT/ALUMNI mới được đặt câu hỏi.\n* Body: title (bắt buộc, <=250 ký tự), body (bắt buộc, <=10000 ký tự), topicId (tùy chọn — bỏ trống là chưa phân loại).\n* Phản hồi (201 Created): message \"Đặt câu hỏi thành công\", data là QuestionDetailResponse vừa tạo (id, title, body, votes=0, answers=0, topic rỗng)."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi (kèm chủ đề) - Thành công (201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Kinh nghiệm phỏng vấn Backend Java tại công ty outsourcing?\",\n  \"body\": \"Sắp phỏng vấn vị trí Backend Java, nên ôn những chủ đề gì (OOP, Spring, SQL, thuật toán) và các câu hỏi thường gặp?\",\n  \"topicId\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Đặt câu hỏi có gắn chủ đề\n* topicId=3 (Software Engineering — chủ đề seed sẵn ở V5/V16). Có thể thay bằng id chủ đề con bất kỳ.\n* Phản hồi (201 Created): QuestionDetailResponse với topicId=3, topic=\"Software Engineering\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Guest chưa đăng nhập (401)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Guest thử đặt câu hỏi\",\n  \"body\": \"Nội dung thử của guest chưa đăng nhập.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 401\n* POST /questions KHÔNG nằm trong PUBLIC_GET (chỉ GET câu hỏi mới công khai) -> Guest bị Spring Security chặn trước khi vào Controller.\n* Phản hồi (401): { error: 401, message: \"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\" }.",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Tiêu đề để trống (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"\",\n  \"body\": \"Nội dung hợp lệ nhưng thiếu tiêu đề.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (validation JSR-380)\n* title vi phạm @NotBlank.\n* Phản hồi (400): message \"Dữ liệu gửi lên không hợp lệ\", data.title = \"Tiêu đề câu hỏi không được để trống\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Nội dung để trống (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Tiêu đề hợp lệ nhưng thiếu nội dung\",\n  \"body\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (validation JSR-380)\n* body vi phạm @NotBlank.\n* Phản hồi (400): message \"Dữ liệu gửi lên không hợp lệ\", data.body = \"Nội dung câu hỏi không được để trống\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Tiêu đề quá 250 ký tự (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n  \"body\": \"Nội dung hợp lệ, nhưng tiêu đề vượt quá 250 ký tự.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (validation JSR-380)\n* title vượt quá 250 ký tự (@Size max=250).\n* Phản hồi (400): message \"Dữ liệu gửi lên không hợp lệ\", data.title = \"Tiêu đề câu hỏi không được vượt quá 250 ký tự\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Chủ đề không tồn tại (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Câu hỏi gắn chủ đề không tồn tại\",\n  \"body\": \"Nội dung hợp lệ, nhưng topicId không có trong hệ thống.\",\n  \"topicId\": 999999\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (business)\n* topicId không tồn tại trong bảng forum_topics -> Service ném BadRequestException.\n* Phản hồi (400): message \"Chủ đề không tồn tại\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Admin không được đặt (403)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Admin thử đặt câu hỏi\",\n  \"body\": \"Nội dung thử của Admin (không được phép).\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 403 (RBAC UC40)\n* Chạy request này SAU khi đăng nhập bằng tài khoản ADMIN để {{jwtToken}} là token Admin.\n* Chỉ STUDENT/ALUMNI mới được đặt câu hỏi -> Admin bị từ chối tại tầng Service (ForbiddenException).\n* Phản hồi (403): { error: 403, message: \"Chỉ sinh viên và cựu sinh viên mới được đặt câu hỏi\" }."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "06. Community Feed",
 			"item": [
 				{

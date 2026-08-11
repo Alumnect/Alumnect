@@ -12,9 +12,11 @@ import java.util.List;
 public interface ForumTopicRepository extends JpaRepository<ForumTopic, Long> {
 
     /**
-     * Lấy toàn bộ chủ đề diễn đàn, sắp xếp theo tên tăng dần (A→Z) để đổ vào bộ lọc phía Frontend.
+     * Lấy toàn bộ chủ đề diễn đàn, sắp xếp theo id tăng dần để đổ vào bộ lọc phía Frontend.
+     * Sắp theo id (thứ tự tạo) giữ đúng trật tự: các ngành lớn trước, rồi tới chủ đề con theo
+     * đúng thứ tự đã seed (Frontend dựng cây cha–con từ danh sách phẳng này).
      *
-     * @return Danh sách chủ đề đã sắp xếp theo tên
+     * @return Danh sách chủ đề đã sắp xếp theo id
      */
-    List<ForumTopic> findAllByOrderByNameAsc();
+    List<ForumTopic> findAllByOrderByIdAsc();
 }
