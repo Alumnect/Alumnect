@@ -4,7 +4,7 @@ import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/compone
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
 import { cn } from '@/lib/utils'
-import { useAdminOverview, useAdminVerifications, useReviewVerification } from './useAdmin'
+import { useAdminOverview, useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
 
 export function AdminOverviewPage() {
   const { data: summary, isLoading: isLoadingKpis, error: kpisError } = useAdminOverview()

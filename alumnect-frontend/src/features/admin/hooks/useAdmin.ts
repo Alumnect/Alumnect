@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi } from './adminApi'
+import { adminApi } from '../api/adminApi'
 
 /**
  * Hook lấy dữ liệu dashboard KPIs và thống kê đăng ký
@@ -110,6 +110,43 @@ export function useReviewVerification() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'verifications'] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
+/**
+ * Hook lấy danh sách toàn bộ bài viết phân trang và lọc động (UC65 & UC66)
+ */
+export function useAdminPosts(filters: {
+  query?: string
+  author?: string
+  status?: string
+  type?: string
+  page: number
+  size: number
+}) {
+  return useQuery({
+    queryKey: ['admin', 'posts', filters],
+    queryFn: async () => {
+      const response = await adminApi.getPosts(filters)
+      return response.data
+    },
+  })
+}
+
+/**
+ * Hook thay đổi trạng thái ẩn/hiện của bài viết (UC68)
+ */
+export function useTogglePostHidden() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, hidden }: { id: number; hidden: boolean }) => {
+      const response = await adminApi.togglePostHidden(id, hidden)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'posts'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
     },
   })
 }

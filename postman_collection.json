@@ -1766,6 +1766,79 @@
 					"response": []
 				},
 				{
+					"name": "Cập nhật hồ sơ cá nhân (Update Profile) - Thành công",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Nguyễn Trí Tuệ (Updated)\",\n  \"avatarUrl\": \"https://images.unsplash.com/photo-1535713875002-d1d0cf377fde\",\n  \"coverUrl\": \"https://images.unsplash.com/photo-1579546929518-9e396f3cc809\",\n  \"phone\": \"0905123456\",\n  \"headline\": \"Senior Software Engineer | AI & Cloud Explorer\",\n  \"biography\": \"Cựu sinh viên K15 Đại học FPT Đà Nẵng, có 5 năm kinh nghiệm lập trình Spring Boot và React.\",\n  \"campus\": \"FPT University Đà Nẵng\",\n  \"cohort\": 15,\n  \"majorId\": 1,\n  \"graduationYear\": 2023,\n  \"city\": \"Đà Nẵng\",\n  \"socialLinks\": [\n    \"https://linkedin.com/in/nguyentritue\",\n    \"https://github.com/tritue\"\n  ],\n  \"skills\": [\n    { \"groupName\": \"Backend\", \"skillName\": \"Java Spring Boot\", \"sortOrder\": 1 },\n    { \"groupName\": \"Frontend\", \"skillName\": \"ReactJS / TypeScript\", \"sortOrder\": 2 }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile"
+							]
+						},
+						"description": "### API Cập Nhật Hồ Sơ Cá Nhân (UC07)\n* **Quyền truy cập**: Đã đăng nhập (Bearer Token).\n* **Mục đích**: Cập nhật các thông tin cơ bản, học tập tại FPTU, tiểu sử, thông tin liên hệ và danh sách kỹ năng cá nhân."
+					},
+					"response": []
+				},
+				{
+					"name": "Cập nhật hồ sơ cá nhân thất bại - Thiếu họ và tên (Validation)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"\",\n  \"headline\": \"Senior Developer\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"profile"
+							]
+						},
+						"description": "### API Cập Nhật Hồ Sơ Cá Nhân Thất Bại\n* **Nghiệp vụ**: Báo lỗi validation khi trường `fullName` rỗng.\n* **Mong đợi**: 400 Bad Request, message \"Họ và tên không được để trống\""
+					},
+					"response": []
+				},
+
+				{
 					"name": "Lấy hồ sơ người dùng khác (Other Profile) - Thành công",
 					"request": {
 						"method": "GET",
@@ -2501,6 +2574,70 @@
 						"description": "### API Phê Duyệt Minh Chứng Tốt Nghiệp\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Chấp thuận (APPROVED) hoặc Từ chối (REJECTED) yêu cầu của Alumni.\n* **Kết quả của APPROVED**: \n  * Cập nhật trạng thái `verification_requests` = `APPROVED`.\n  * Cập nhật `users.is_account_verified` = `true` cho cựu sinh viên đó."
 					},
 					"response": []
+				},
+				{
+					"name": "Xem toàn bộ bài viết (Feed Posts) - Thành công",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/posts?type={{type}}&status={{status}}&query={{query}}&author={{author}}&page={{page}}&size={{size}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"posts"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "{{type}}",
+									"description": "Loài bài vịe (NORMAL, EVENT, RECRUITMENT, ACHIEVEMENT)"
+								},
+								{
+									"key": "status",
+									"value": "{{status}}",
+									"description": "Tráng thái ăn (VISIBLE, HIDDEN)"
+								},
+								{
+									"key": "query",
+									"value": "{{query}}",
+									"description": "Tù khoả nôi dung"
+								},
+								{
+									"key": "author",
+									"value": "{{author}}",
+									"description": "Tù khoả tac giá"
+								},
+								{
+									"key": "page",
+									"value": "{{page}}"
+								},
+								{
+									"key": "size",
+									"value": "{{size}}"
+								}
+							]
+						},
+						"description": "### API Xem Toàn Bộ Bài Viết Cộng Đồng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy danh sách toàn bộ bài viết trên feed cộng đồng có phân trang (UC65)."
+					},
+					"response": []
 				}
 			]
 		},
@@ -2953,6 +3090,247 @@
 							]
 						},
 						"description": "### Lỗi Sai Định Dạng id\n* `id` không phải số nguyên -> Spring không ép được về kiểu Long.\n* **Phản hồi mong đợi (400 Bad Request)**."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "05. Q&A Forum (UC40 - Ask a Question)",
+			"description": "Thư mục kiểm thử API đặt câu hỏi mới (UC40 - Ask a question) của Module 4 (Q&A Forum). POST /api/v1/questions yêu cầu đăng nhập (Bearer {{jwtToken}}); chỉ STUDENT/ALUMNI được đặt câu hỏi — Guest bị chặn 401, Admin/vai trò khác bị từ chối 403. Chủ đề (topicId) là tùy chọn.",
+			"item": [
+				{
+					"name": "Đặt câu hỏi (không kèm chủ đề) - Thành công (201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Lộ trình học Spring Boot cho người mới ra trường?\",\n  \"body\": \"Mình mới tốt nghiệp, muốn xin lộ trình học Spring Boot và dự án thực hành từ cơ bản để đi làm backend.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### API Đặt Câu Hỏi (UC40 - Ask a question)\n* Quyền: Bearer Token ({{jwtToken}}) — chỉ STUDENT/ALUMNI mới được đặt câu hỏi.\n* Body: title (bắt buộc, <=250 ký tự), body (bắt buộc, <=10000 ký tự), topicId (tùy chọn — bỏ trống là chưa phân loại).\n* Phản hồi (201 Created): message \"Đặt câu hỏi thành công\", data là QuestionDetailResponse vừa tạo (id, title, body, votes=0, answers=0, topic rỗng)."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi (kèm chủ đề) - Thành công (201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Kinh nghiệm phỏng vấn Backend Java tại công ty outsourcing?\",\n  \"body\": \"Sắp phỏng vấn vị trí Backend Java, nên ôn những chủ đề gì (OOP, Spring, SQL, thuật toán) và các câu hỏi thường gặp?\",\n  \"topicId\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Đặt câu hỏi có gắn chủ đề\n* topicId=3 (Software Engineering — chủ đề seed sẵn ở V5/V16). Có thể thay bằng id chủ đề con bất kỳ.\n* Phản hồi (201 Created): QuestionDetailResponse với topicId=3, topic=\"Software Engineering\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Guest chưa đăng nhập (401)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Guest thử đặt câu hỏi\",\n  \"body\": \"Nội dung thử của guest chưa đăng nhập.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 401\n* POST /questions KHÔNG nằm trong PUBLIC_GET (chỉ GET câu hỏi mới công khai) -> Guest bị Spring Security chặn trước khi vào Controller.\n* Phản hồi (401): { error: 401, message: \"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\" }.",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Tiêu đề để trống (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"\",\n  \"body\": \"Nội dung hợp lệ nhưng thiếu tiêu đề.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (validation JSR-380)\n* title vi phạm @NotBlank.\n* Phản hồi (400): message \"Dữ liệu gửi lên không hợp lệ\", data.title = \"Tiêu đề câu hỏi không được để trống\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Nội dung để trống (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Tiêu đề hợp lệ nhưng thiếu nội dung\",\n  \"body\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (validation JSR-380)\n* body vi phạm @NotBlank.\n* Phản hồi (400): message \"Dữ liệu gửi lên không hợp lệ\", data.body = \"Nội dung câu hỏi không được để trống\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Tiêu đề quá 250 ký tự (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\n  \"body\": \"Nội dung hợp lệ, nhưng tiêu đề vượt quá 250 ký tự.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (validation JSR-380)\n* title vượt quá 250 ký tự (@Size max=250).\n* Phản hồi (400): message \"Dữ liệu gửi lên không hợp lệ\", data.title = \"Tiêu đề câu hỏi không được vượt quá 250 ký tự\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Chủ đề không tồn tại (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Câu hỏi gắn chủ đề không tồn tại\",\n  \"body\": \"Nội dung hợp lệ, nhưng topicId không có trong hệ thống.\",\n  \"topicId\": 999999\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 400 (business)\n* topicId không tồn tại trong bảng forum_topics -> Service ném BadRequestException.\n* Phản hồi (400): message \"Chủ đề không tồn tại\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Đặt câu hỏi thất bại - Admin không được đặt (403)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Admin thử đặt câu hỏi\",\n  \"body\": \"Nội dung thử của Admin (không được phép).\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/questions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"questions"
+							]
+						},
+						"description": "### Kịch bản 403 (RBAC UC40)\n* Chạy request này SAU khi đăng nhập bằng tài khoản ADMIN để {{jwtToken}} là token Admin.\n* Chỉ STUDENT/ALUMNI mới được đặt câu hỏi -> Admin bị từ chối tại tầng Service (ForbiddenException).\n* Phản hồi (403): { error: 403, message: \"Chỉ sinh viên và cựu sinh viên mới được đặt câu hỏi\" }."
 					},
 					"response": []
 				}

@@ -33,6 +33,14 @@ public class ForumTopic {
     private String description;
 
     /**
+     * ID chủ đề cha (tự tham chiếu forum_topics.id) — tạo hệ phân cấp 2 cấp:
+     * null = chủ đề cấp 1 (ngành lớn / chủ đề đứng riêng); có giá trị = chủ đề con thuộc ngành lớn đó.
+     * Lưu dạng khóa đơn giản (không map sang đối tượng) vì Frontend tự dựng cây từ danh sách phẳng.
+     */
+    @Column(name = "parent_id")
+    private Long parentId;
+
+    /**
      * ID người tạo chủ đề (tham chiếu users.id). Null với các chủ đề mặc định của hệ thống.
      * UC38 chỉ hiển thị danh sách nên lưu dạng khóa đơn giản, chưa cần map sang đối tượng User.
      */

@@ -28,4 +28,22 @@ public interface UserProfileMapper {
     @Mapping(target = "followingCount", ignore = true)
     @Mapping(target = "isFollowing", ignore = true)
     UserProfileResponse toResponse(UserProfile userProfile);
+
+    /**
+     * Cập nhật thực thể UserProfile từ DTO UpdateProfileRequest.
+     * Bỏ qua các thuộc tính không được trực tiếp map như user, major, skills, experiences, createdAt, updatedAt.
+     *
+     * @param request DTO chứa dữ liệu cập nhật
+     * @param profile Thực thể UserProfile cần cập nhật
+     */
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "studentCode", ignore = true)
+    @Mapping(target = "major", ignore = true)
+    @Mapping(target = "experiences", ignore = true)
+    @Mapping(target = "skills", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    void updateEntityFromRequest(com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest request, @org.mapstruct.MappingTarget UserProfile profile);
+
 }

@@ -116,6 +116,7 @@ public class QuestionMapper {
         return TopicResponse.builder()
                 .id(topic.getId())
                 .name(topic.getName())
+                .parentId(topic.getParentId())
                 .build();
     }
 
