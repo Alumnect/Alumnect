@@ -25,10 +25,13 @@ import {
   Inbox,
   Send,
   AlertCircle,
+  Clock,
+  MapPin,
+  Users,
+  ExternalLink,
 } from 'lucide-react'
-import { Avatar, Badge, Card, Skeleton, EmptyState } from '@/components/ui'
+import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
-import { SmartImage } from '@/components/ui/SmartImage'
 import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -213,16 +216,84 @@ function PostDetailCard({
         <p className="mt-5 whitespace-pre-line text-[15px] leading-relaxed text-plum-800">{post.text}</p>
       </div>
 
-      {/* Ảnh đính kèm (nếu có) — bọc SmartImage trong container cao cố định để xử lý
-          shimmer khi tải & ảnh fallback khi link lỗi (theo chuẩn Design System). */}
-      {post.image && (
-        <div className="h-72 w-full sm:h-96">
-          <SmartImage
-            src={post.image}
-            alt={`Ảnh đính kèm bài viết của ${post.author}`}
-            className="h-full w-full"
-          />
+      {/* --- Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
+      {post.type === 'recruitment' && post.job && (
+        <div className="mx-6 mb-4 rounded-xl border border-aqua-200 bg-aqua-50/60 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-plum-900 truncate">{post.job.title}</p>
+              <p className="text-sm text-plum-600 font-medium">{post.job.company}</p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-plum-500">
+                {post.job.employmentType && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-aqua-100 px-2 py-0.5 font-semibold text-aqua-700">
+                    {post.job.employmentType.replace('_', ' ')}
+                  </span>
+                )}
+                {post.job.location && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin size={12} /> {post.job.location}
+                  </span>
+                )}
+                {(post.job.salaryMin || post.job.salaryMax) && (
+                  <span className="inline-flex items-center gap-1">
+                    {post.job.salaryMin ? post.job.salaryMin.toLocaleString('vi-VN') : '?'}
+                    {' — '}
+                    {post.job.salaryMax ? post.job.salaryMax.toLocaleString('vi-VN') : '?'}
+                    {' ₫'}
+                  </span>
+                )}
+              </div>
+            </div>
+            {post.job.applyUrl && (
+              <a
+                href={post.job.applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-3 py-2 text-xs font-bold text-white hover:bg-[#d96010] transition-colors"
+              >
+                Ứng tuyển <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
+          {post.job.contactEmail && (
+            <p className="mt-2 text-xs text-plum-400">Liên hệ: {post.job.contactEmail}</p>
+          )}
         </div>
+      )}
+
+      {/* --- Thẻ thông tin Sự kiện (nếu là bài event) --- */}
+      {post.type === 'event' && post.event && (
+        <div className="mx-6 mb-4 rounded-xl border border-violet-200 bg-violet-50/60 p-4">
+          <p className="font-bold text-plum-900">{post.event.title}</p>
+          <div className="mt-2 flex flex-wrap gap-3 text-xs text-plum-500">
+            {post.event.startTime && (
+              <span className="inline-flex items-center gap-1">
+                <Clock size={12} />
+                {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })}
+                {' '}
+                {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            {post.event.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={12} /> {post.event.location}
+              </span>
+            )}
+            {post.event.capacity && (
+              <span className="inline-flex items-center gap-1">
+                <Users size={12} /> Tối đa {post.event.capacity} người
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Danh sách ảnh đính kèm (nếu có) — dùng ImageCarousel */}
+      {post.images && post.images.length > 0 && (
+        <ImageCarousel 
+          images={post.images} 
+          altPrefix={`Ảnh đính kèm bài viết của ${post.author}`}
+        />
       )}
 
       {/* Thanh hành động — số liệu tương tác. Đăng like/comment/repost thuộc UC17/18/21,

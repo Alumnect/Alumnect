@@ -59,7 +59,15 @@ export const createPostSchema = z.object({
   }
   if (data.type === 'event') {
     if (!data.event?.title) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Bắt buộc nhập tên sự kiện', path: ['event', 'title'] })
-    if (!data.event?.startTime) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Bắt buộc nhập thời gian bắt đầu', path: ['event', 'startTime'] })
+    if (!data.event?.startTime) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Bắt buộc nhập thời gian bắt đầu', path: ['event', 'startTime'] })
+    } else if (data.event?.endTime) {
+      const start = new Date(data.event.startTime).getTime()
+      const end = new Date(data.event.endTime).getTime()
+      if (end <= start) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Ngày kết thúc phải sau ngày bắt đầu', path: ['event', 'endTime'] })
+      }
+    }
   }
   if (data.type === 'normal' && data.content.length === 0) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Nội dung bài viết không được để trống', path: ['content'] })

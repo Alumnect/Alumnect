@@ -1,9 +1,11 @@
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import {
-  X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2,
+  X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2, MapPin, Users, DollarSign, Link, Mail, Clock
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Avatar, ImageCarousel } from '@/components/ui'
@@ -63,6 +65,7 @@ export function CreatePostModal({
     watch,
     setValue,
     reset,
+    control,
     formState: { errors },
   } = useForm<CreatePostInput>({
     resolver: zodResolver(createPostSchema) as any,
@@ -94,13 +97,9 @@ export function CreatePostModal({
           event: editPost.event ? {
             title: editPost.event.title ?? '',
             location: editPost.event.location ?? '',
-            // Convert ISO string to datetime-local format (YYYY-MM-DDTHH:mm)
-            startTime: editPost.event.startTime
-              ? new Date(editPost.event.startTime).toISOString().slice(0, 16)
-              : undefined,
-            endTime: editPost.event.endTime
-              ? new Date(editPost.event.endTime).toISOString().slice(0, 16)
-              : undefined,
+            // Keep the ISO string format as it is; react-datepicker will handle it.
+            startTime: editPost.event.startTime ?? undefined,
+            endTime: editPost.event.endTime ?? undefined,
             capacity: editPost.event.capacity ?? undefined,
           } : undefined,
         })
@@ -262,12 +261,13 @@ export function CreatePostModal({
                 <button
                   key={t}
                   type="button"
+                  disabled={!!editPost}
                   onClick={() => setValue('type', t)}
                   className={cn(
-                    'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all',
+                    'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed',
                     type === t
-                      ? 'bg-brand-600 text-white shadow-sm hover:bg-brand-700'
-                      : 'bg-white text-slate-600 border border-slate-200 hover:border-brand-300 hover:text-brand-600'
+                      ? 'bg-brand-600 text-white shadow-sm enabled:hover:bg-brand-700'
+                      : 'bg-white text-slate-600 border border-slate-200 enabled:hover:border-brand-300 enabled:hover:text-brand-600'
                   )}
                 >
                   <Icon size={15} /> {POST_TYPE_LABELS[t]}
@@ -278,85 +278,219 @@ export function CreatePostModal({
 
           {/* Form Tuyển dụng */}
           {type === 'recruitment' && (
-            <div className="space-y-4 rounded-xl border border-plum-900/10 bg-plum-900/[0.02] p-4 animate-fade-in">
+            <div className="space-y-4 rounded-xl border border-brand-500/10 bg-brand-50/40 p-4 animate-fade-in">
+              <h4 className="flex items-center gap-2 text-sm font-bold text-brand-700">
+                <Briefcase size={16} /> Thông tin Tuyển dụng
+              </h4>
+              {/* Chức danh + Công ty */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Chức danh *</label>
-                  <input {...register('job.title')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="VD: Senior Frontend Developer" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    Chức danh <span className="text-coral-500">*</span>
+                  </label>
+                  <input
+                    {...register('job.title')}
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="VD: Frontend Developer"
+                  />
                   {errors.job?.title && <p className="mt-1 text-xs text-coral-500">{errors.job.title.message}</p>}
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Công ty *</label>
-                  <input {...register('job.company')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="VD: FPT Software" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    Công ty <span className="text-coral-500">*</span>
+                  </label>
+                  <input
+                    {...register('job.company')}
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="VD: FPT Software"
+                  />
                   {errors.job?.company && <p className="mt-1 text-xs text-coral-500">{errors.job.company.message}</p>}
                 </div>
               </div>
+
+              {/* Loại hình + Địa điểm */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Loại hình</label>
-                  <select {...register('job.employmentType')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none bg-white">
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    Loại hình
+                  </label>
+                  <select
+                    {...register('job.employmentType')}
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                  >
                     <option value="FULL_TIME">Full-time</option>
                     <option value="PART_TIME">Part-time</option>
                     <option value="INTERNSHIP">Internship</option>
-                    <option value="CONTRACT">Contract</option>
+                    <option value="CONTRACT">Hợp đồng</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Địa điểm</label>
-                  <input {...register('job.location')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="VD: Hà Nội, Remote" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <MapPin size={13} /> Địa điểm
+                  </label>
+                  <input
+                    {...register('job.location')}
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="Hà Nội, Remote..."
+                  />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Mức lương tối thiểu (VND)</label>
-                  <input type="number" {...register('job.salaryMin', { valueAsNumber: true })} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="VD: 10000000" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Mức lương tối đa (VND)</label>
-                  <input type="number" {...register('job.salaryMax', { valueAsNumber: true })} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="VD: 20000000" />
+
+              {/* Mức lương */}
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                  <DollarSign size={13} /> Mức lương (VNĐ) <span className="font-normal text-plum-400">— Để trống nếu thỏa thuận</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={500000}
+                      {...register('job.salaryMin', { valueAsNumber: true })}
+                      className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                      placeholder="Tối thiểu"
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VNĐ</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={500000}
+                      {...register('job.salaryMax', { valueAsNumber: true })}
+                      className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                      placeholder="Tối đa"
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VNĐ</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Email + Link */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Email liên hệ</label>
-                  <input {...register('job.contactEmail')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="hr@company.com" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <Mail size={13} /> Email liên hệ
+                  </label>
+                  <input
+                    {...register('job.contactEmail')}
+                    type="email"
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="hr@company.com"
+                  />
                   {errors.job?.contactEmail && <p className="mt-1 text-xs text-coral-500">{errors.job.contactEmail.message}</p>}
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Link ứng tuyển</label>
-                  <input {...register('job.applyUrl')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="https://" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <Link size={13} /> Link ứng tuyển
+                  </label>
+                  <input
+                    {...register('job.applyUrl')}
+                    type="url"
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="https://..."
+                  />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Form Sự kiện */}
           {type === 'event' && (
-            <div className="space-y-4 rounded-xl border border-plum-900/10 bg-plum-900/[0.02] p-4 animate-fade-in">
+            <div className="space-y-4 rounded-xl border border-violet-500/10 bg-violet-50/40 p-4 animate-fade-in">
+              <h4 className="flex items-center gap-2 text-sm font-bold text-violet-700">
+                <CalendarPlus size={16} /> Thông tin Sự kiện
+              </h4>
+              {/* Tên sự kiện */}
               <div>
-                <label className="mb-1 block text-xs font-semibold text-plum-900">Tên sự kiện *</label>
-                <input {...register('event.title')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="VD: Hội thảo công nghệ 2024" />
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                  Tên sự kiện <span className="text-coral-500">*</span>
+                </label>
+                <input
+                  {...register('event.title')}
+                  className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                  placeholder="VD: Hội thảo công nghệ 2024"
+                />
                 {errors.event?.title && <p className="mt-1 text-xs text-coral-500">{errors.event.title.message}</p>}
               </div>
+
+              {/* Thời gian */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Thời gian bắt đầu *</label>
-                  <input type="datetime-local" {...register('event.startTime')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none bg-white" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <Clock size={13} /> Bắt đầu <span className="text-coral-500">*</span>
+                  </label>
+                  <Controller
+                    control={control}
+                    name="event.startTime"
+                    render={({ field }) => (
+                      <DatePicker
+                        selected={field.value ? new Date(field.value) : null}
+                        onChange={(date) => field.onChange(date ? date.toISOString() : undefined)}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="dd/MM/yyyy h:mm aa"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
+                        placeholderText="Chọn ngày giờ"
+                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                      />
+                    )}
+                  />
                   {errors.event?.startTime && <p className="mt-1 text-xs text-coral-500">{errors.event.startTime.message}</p>}
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Thời gian kết thúc</label>
-                  <input type="datetime-local" {...register('event.endTime')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none bg-white" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <Clock size={13} /> Kết thúc
+                  </label>
+                  <Controller
+                    control={control}
+                    name="event.endTime"
+                    render={({ field }) => (
+                      <DatePicker
+                        selected={field.value ? new Date(field.value) : null}
+                        onChange={(date) => field.onChange(date ? date.toISOString() : undefined)}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="dd/MM/yyyy h:mm aa"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
+                        placeholderText="Chọn ngày giờ"
+                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                      />
+                    )}
+                  />
+                  {errors.event?.endTime && <p className="mt-1 text-xs text-coral-500">{errors.event.endTime.message}</p>}
                 </div>
               </div>
+
+              {/* Địa điểm + Sức chứa */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Địa điểm</label>
-                  <input {...register('event.location')} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="VD: Tòa nhà Alpha, ĐH FPT" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <MapPin size={13} /> Địa điểm
+                  </label>
+                  <input
+                    {...register('event.location')}
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="Tòa nhà Alpha, ĐH FPT"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-plum-900">Sức chứa (số người)</label>
-                  <input type="number" {...register('event.capacity', { valueAsNumber: true })} className="w-full rounded-lg border border-plum-900/10 p-2 text-sm focus:border-brand-400 focus:outline-none" placeholder="Không giới hạn thì để trống" />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <Users size={13} /> Sức chứa (người) <span className="font-normal text-plum-400">— Để trống = không giới hạn</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    {...register('event.capacity', { valueAsNumber: true })}
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="100"
+                  />
                 </div>
               </div>
             </div>

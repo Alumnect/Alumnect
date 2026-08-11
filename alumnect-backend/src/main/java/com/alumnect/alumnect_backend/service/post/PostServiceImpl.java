@@ -369,12 +369,73 @@ public class PostServiceImpl implements PostService {
         }
 
         post.setContent(request.getContent().trim());
-        post.setEventId(request.getEventId());
-        post.setJobId(request.getJobId());
 
         PostCategory newCategory = parsePostCategory(request.getCategory());
         if (newCategory != null) {
             post.setCategory(newCategory);
+        } else {
+            newCategory = post.getCategory();
+        }
+
+        // Handle Event Update
+        if (newCategory == PostCategory.EVENT && request.getEvent() != null) {
+            if (post.getEventId() != null) {
+                com.alumnect.alumnect_backend.entity.event.Event existingEvent = eventRepository.findById(post.getEventId()).orElse(null);
+                if (existingEvent != null) {
+                    existingEvent.setTitle(request.getEvent().getTitle() != null ? request.getEvent().getTitle() : "");
+                    existingEvent.setStartTime(request.getEvent().getStartTime());
+                    existingEvent.setEndTime(request.getEvent().getEndTime());
+                    existingEvent.setLocation(request.getEvent().getLocation());
+                    existingEvent.setCapacity(request.getEvent().getCapacity());
+                    eventRepository.save(existingEvent);
+                }
+            } else {
+                com.alumnect.alumnect_backend.entity.event.Event newEvent = com.alumnect.alumnect_backend.entity.event.Event.builder()
+                        .organizer(author)
+                        .title(request.getEvent().getTitle() != null ? request.getEvent().getTitle() : "")
+                        .startTime(request.getEvent().getStartTime())
+                        .endTime(request.getEvent().getEndTime())
+                        .location(request.getEvent().getLocation())
+                        .capacity(request.getEvent().getCapacity())
+                        .build();
+                post.setEventId(eventRepository.save(newEvent).getId());
+            }
+        } else if (newCategory != PostCategory.EVENT) {
+            post.setEventId(null);
+        }
+
+        // Handle Job Update
+        if (newCategory == PostCategory.RECRUITMENT && request.getJob() != null) {
+            if (post.getJobId() != null) {
+                com.alumnect.alumnect_backend.entity.job.JobPosting existingJob = jobPostingRepository.findById(post.getJobId()).orElse(null);
+                if (existingJob != null) {
+                    existingJob.setTitle(request.getJob().getTitle() != null ? request.getJob().getTitle() : "");
+                    existingJob.setCompany(request.getJob().getCompany() != null ? request.getJob().getCompany() : "");
+                    existingJob.setEmploymentType(request.getJob().getEmploymentType() != null ? request.getJob().getEmploymentType() : "FULL_TIME");
+                    existingJob.setLocation(request.getJob().getLocation());
+                    existingJob.setSalaryMin(request.getJob().getSalaryMin());
+                    existingJob.setSalaryMax(request.getJob().getSalaryMax());
+                    existingJob.setApplyUrl(request.getJob().getApplyUrl());
+                    existingJob.setContactEmail(request.getJob().getContactEmail());
+                    jobPostingRepository.save(existingJob);
+                }
+            } else {
+                com.alumnect.alumnect_backend.entity.job.JobPosting newJob = com.alumnect.alumnect_backend.entity.job.JobPosting.builder()
+                        .poster(author)
+                        .title(request.getJob().getTitle() != null ? request.getJob().getTitle() : "")
+                        .company(request.getJob().getCompany() != null ? request.getJob().getCompany() : "")
+                        .employmentType(request.getJob().getEmploymentType() != null ? request.getJob().getEmploymentType() : "FULL_TIME")
+                        .location(request.getJob().getLocation())
+                        .salaryMin(request.getJob().getSalaryMin())
+                        .salaryMax(request.getJob().getSalaryMax())
+                        .applyUrl(request.getJob().getApplyUrl())
+                        .contactEmail(request.getJob().getContactEmail())
+                        .description(request.getContent() != null ? request.getContent() : "")
+                        .build();
+                post.setJobId(jobPostingRepository.save(newJob).getId());
+            }
+        } else if (newCategory != PostCategory.RECRUITMENT) {
+            post.setJobId(null);
         }
 
         if (request.getMediaUrls() != null) {
