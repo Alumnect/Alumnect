@@ -18,6 +18,7 @@ import {
   Flag,
   ArrowLeft,
   ArrowRight,
+  Pencil,
   Loader2,
   AlertTriangle,
   Lock,
@@ -33,7 +34,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
-import { useToggleLike } from '@/features/feed'
+import { useToggleLike, CreatePostModal } from '@/features/feed'
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
@@ -141,12 +142,17 @@ function PostForbidden() {
 function PostDetailCard({
   post,
   canInteract,
+  currentUserName,
+  onEdit,
 }: {
   post: import('@/features/feed').Post
   canInteract: boolean
+  currentUserName?: string
+  onEdit?: () => void
 }) {
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
   const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
+  const isAuthor = !!currentUserName && post.author === currentUserName
 
   // Trạng thái thích cục bộ (UC17) — khởi tạo từ dữ liệu bài viết đã tải.
   const [liked, setLiked] = useState(post.liked)
@@ -190,6 +196,17 @@ function PostDetailCard({
             </p>
             <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>
           </div>
+          {isAuthor && onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label="Chỉnh sửa bài viết"
+              title="Chỉnh sửa bài viết"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-3 py-1.5 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+            >
+              <Pencil size={14} /> Chỉnh sửa
+            </button>
+          )}
         </div>
 
         {/* Nội dung đầy đủ (không cắt dòng như thẻ ở bảng tin) */}
@@ -385,6 +402,7 @@ function CommentComposer({ postId }: { postId: string }) {
 export function PostDetailPage() {
   // === Bước 1: Lấy ID bài viết từ URL ===
   const { id = '' } = useParams<{ id: string }>()
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -414,8 +432,23 @@ export function PostDetailPage() {
       ) : post ? (
         <>
           <Reveal>
-            <PostDetailCard post={post} canInteract={!isGuest} />
+            <PostDetailCard
+              post={post}
+              canInteract={!isGuest}
+              currentUserName={user?.name}
+              onEdit={() => setEditModalOpen(true)}
+            />
           </Reveal>
+
+          {/* Modal chỉnh sửa bài viết (UC22) */}
+          {user && (
+            <CreatePostModal
+              open={editModalOpen}
+              onClose={() => setEditModalOpen(false)}
+              viewer={user}
+              editPost={post}
+            />
+          )}
 
           {/* Khu bình luận — chỉ hiển thị khi bài viết tải thành công */}
           <CommentsSection postId={id} commentCount={post.comments} isGuest={isGuest} />

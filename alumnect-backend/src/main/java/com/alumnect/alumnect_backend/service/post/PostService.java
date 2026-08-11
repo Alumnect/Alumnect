@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.service.post;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -96,4 +97,16 @@ public interface PostService {
      * @return Trạng thái like mới ({@code liked=false}) và số lượt thích hiện tại
      */
     LikeResponse unlikePost(String email, Long postId);
+
+    /**
+     * Chỉnh sửa một bài viết đã đăng (UC22 - Edit a post).
+     * Chỉ tác giả (STUDENT/ALUMNI) mới được sửa bài viết của chính mình;
+     * người khác hoặc Admin → 403. Bài đã ẩn/không tồn tại → 404.
+     *
+     * @param email   Email người dùng đang đăng nhập (từ JWT) — phải là tác giả bài viết
+     * @param postId  ID bài viết cần chỉnh sửa
+     * @param request Dữ liệu cập nhật (nội dung, loại, ảnh, phạm vi hiển thị)
+     * @return Bài viết đã được cập nhật, chuẩn hóa thành {@link PostResponse}
+     */
+    PostResponse editPost(String email, Long postId, EditPostRequest request);
 }
