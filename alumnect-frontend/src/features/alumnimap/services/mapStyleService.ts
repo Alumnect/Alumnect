@@ -56,7 +56,6 @@ const MAP_STYLE_MATRIX = {
     DEFAULT: 'tm',   // Đường phố VietMap
     MINIMAL: 'lm',   // Light map
     DARK:    'dm',   // Dark map
-    LIBERTY: 'tm',   // VietMap không có liberty – fallback về DEFAULT
     PASTEL:  'lm',
     SATELLITE: 'tm',
   },
@@ -64,7 +63,6 @@ const MAP_STYLE_MATRIX = {
     DEFAULT: 'streets-v4',    // Đường phố toàn cầu
     MINIMAL: 'basic-v2',      // Tối giản
     DARK:    'dataviz-dark',  // Đêm tối
-    LIBERTY: 'liberty',       // Hiện đại (Liberty)
     PASTEL:  'pastel',        // Pastel dịu nhẹ (Premium design)
     SATELLITE: 'hybrid',       // Vệ tinh địa hình
   },
@@ -181,7 +179,6 @@ function buildCartoRasterFallback(theme: MapTheme): Record<string, unknown> {
     DEFAULT: { path: 'rastertiles/voyager',    name: 'voyager' },
     MINIMAL: { path: 'light_all',               name: 'light' },
     DARK:    { path: 'dark_all',                name: 'dark' },
-    LIBERTY: { path: 'rastertiles/voyager',    name: 'voyager' },
     PASTEL:  { path: 'light_all',               name: 'pastel' },
   }
   const { path, name } = configs[theme]
@@ -228,7 +225,6 @@ export const AVAILABLE_THEMES: StyleEntry[] = [
   { theme: 'DEFAULT', name: 'Đường phố' },
   { theme: 'MINIMAL', name: 'Tối giản' },
   { theme: 'DARK',    name: 'Đêm tối' },
-  { theme: 'LIBERTY', name: 'Hiện đại' },
   { theme: 'PASTEL',  name: 'Pastel' },
   { theme: 'SATELLITE', name: 'Vệ tinh' },
 ]

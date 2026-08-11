@@ -15,6 +15,8 @@ public class AlumniMapResponse {
 
     private Long userId;
 
+    private Long majorId;
+
     private String fullName;
 
     private String avatarUrl;
@@ -26,6 +28,12 @@ public class AlumniMapResponse {
     private String company;
 
     private String location;
+
+    private String locationCity;
+
+    private String locationCountry;
+
+    private String locationCountryCode;
 
     private BigDecimal latitude;
 

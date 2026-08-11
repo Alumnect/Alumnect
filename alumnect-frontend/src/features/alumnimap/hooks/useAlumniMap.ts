@@ -7,7 +7,8 @@ import type { AlumniMapFilters } from '../api/alumniMapApi'
  */
 export function useAlumniMap(filters?: AlumniMapFilters) {
   return useQuery({
-    queryKey: ['alumniMap', filters],
+    // v3 invalidates cached responses from before the API exposed majorId.
+    queryKey: ['alumniMap-v3', filters],
     queryFn: async () => {
       const response = await alumniMapApi.getLocations(filters)
       return response.data
