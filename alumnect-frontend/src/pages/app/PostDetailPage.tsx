@@ -8,7 +8,7 @@
  *    / lỗi hệ thống (retry) / thành công.
  *  - Thành viên (Student/Alumni) đăng bình luận qua ô soạn (UC18); Guest được mời đăng nhập.
  */
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Heart,
@@ -126,7 +126,7 @@ function PostForbidden() {
       </div>
       <Link
         to="/login"
-        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
       >
         Đăng nhập <ArrowRight size={15} />
       </Link>
@@ -243,7 +243,11 @@ function PostDetailCard({
         <button
           disabled={!canInteract}
           title={guardTitle}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={() => {
+            window.location.hash = 'comments'
+            document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
+          }}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-brand-500/[0.08] enabled:hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <MessageCircle size={18} /> {compact(post.comments)}
         </button>
@@ -323,7 +327,7 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
         <p className="text-sm text-plum-500">Đăng nhập để tham gia bình luận.</p>
         <Link
           to="/login"
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
         >
           Đăng nhập <ArrowRight size={14} />
         </Link>
@@ -344,6 +348,14 @@ function CommentComposer({ postId }: { postId: string }) {
   const viewer = useAuthStore((s) => s.user)
   const [content, setContent] = useState('')
   const createComment = useCreateComment(postId)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (window.location.hash === '#comments' && textareaRef.current) {
+      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      textareaRef.current.focus()
+    }
+  }, [])
 
   const trimmed = content.trim()
   const disabled = trimmed.length === 0 || createComment.isPending
@@ -361,12 +373,13 @@ function CommentComposer({ postId }: { postId: string }) {
           <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? ''} size={38} verified={viewer?.verified} />
           <div className="min-w-0 flex-1">
             <textarea
+              ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={2}
               maxLength={COMMENT_MAX}
               placeholder="Viết bình luận…"
-              className="w-full resize-none rounded-xl border border-plum-900/10 bg-plum-900/[0.02] px-4 py-2.5 text-sm leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-400 focus:bg-white"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm leading-relaxed text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-[#F27024] focus:bg-white focus:ring-2 focus:ring-[#F27024]/20"
             />
 
             {/* Thông điệp lỗi nghiệp vụ từ Backend (VD 403/404/400) */}
@@ -489,7 +502,7 @@ function CommentsSection({
   const comments = data?.pages.flatMap((p) => p.items) ?? []
 
   return (
-    <section className="mt-6 space-y-4">
+    <section id="comments" className="mt-6 space-y-4">
       <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-plum-500">
         Bình luận{commentCount ? ` · ${compact(commentCount)}` : ''}
       </h2>

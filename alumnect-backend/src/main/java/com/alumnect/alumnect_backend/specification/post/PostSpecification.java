@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.specification.post;
 
 import com.alumnect.alumnect_backend.entity.post.Post;
+import com.alumnect.alumnect_backend.common.enums.PostStatus;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import jakarta.persistence.criteria.Join;
@@ -35,7 +36,9 @@ public class PostSpecification {
             // 2. Tìm theo tác giả (FullName hoặc Email)
             if (author != null && !author.trim().isEmpty()) {
                 String pattern = "%" + author.trim().toLowerCase() + "%";
-                Join<Post, User> userJoin = root.join("user");
+                Join<Post, User> userJoin = root.join("author");
+                // The User entity doesn't have a direct profile relationship, or wait, it does! (mappedBy = "user")
+                // Yes, User has private UserProfile profile;
                 Join<User, UserProfile> profileJoin = userJoin.join("profile");
 
                 Predicate emailPredicate = cb.like(cb.lower(userJoin.get("email")), pattern);
@@ -47,17 +50,17 @@ public class PostSpecification {
             if (status != null && !status.trim().isEmpty()) {
                 String statusUpper = status.trim().toUpperCase();
                 if ("VISIBLE".equals(statusUpper)) {
-                    predicates.add(cb.equal(root.get("isHidden"), false));
+                    predicates.add(cb.equal(root.get("status"), PostStatus.ACTIVE));
                 } else if ("HIDDEN".equals(statusUpper)) {
-                    predicates.add(cb.equal(root.get("isHidden"), true));
+                    predicates.add(cb.equal(root.get("status"), PostStatus.HIDDEN));
                 }
             }
 
-            // 4. Lọc theo loại bài viết (type)
+            // 4. Lọc theo loại bài viết (category)
             if (type != null && !type.trim().isEmpty() && !"ALL".equalsIgnoreCase(type.trim())) {
                 try {
                     // Ánh xạ chuỗi sang Enum hoặc so khớp String tuỳ thuộc loại thuộc tính của Entity
-                    predicates.add(cb.equal(cb.upper(root.get("type").as(String.class)), type.trim().toUpperCase()));
+                    predicates.add(cb.equal(cb.upper(root.get("category").as(String.class)), type.trim().toUpperCase()));
                 } catch (Exception e) {
                     // Bỏ qua nếu có lỗi convert
                 }

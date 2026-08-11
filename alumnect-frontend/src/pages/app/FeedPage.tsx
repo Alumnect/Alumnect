@@ -25,8 +25,12 @@ import {
   Loader2,
   AlertTriangle,
   Inbox,
+  MapPin,
+  ExternalLink,
+  Clock,
+  Users,
 } from 'lucide-react'
-import { Avatar, Badge, Card } from '@/components/ui'
+import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
@@ -36,6 +40,7 @@ import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
 import type { FeedFilter, Post } from '@/features/feed'
+import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
@@ -59,14 +64,14 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
  * đăng nhập qua popup (BR-12).
  * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
  */
-function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: () => void }) {
+function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostType) => void }) {
   return (
     <Card hover={false} className="p-4">
       <div className="flex gap-3">
         <Avatar src={viewer.avatarUrl ?? 'https://i.pravatar.cc/120?img=12'} name={viewer.name} size={44} verified={viewer.verified} />
         <button
           type="button"
-          onClick={onOpen}
+          onClick={() => onOpen()}
           className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]"
         >
           Share an achievement, ask, or post a job…
@@ -74,22 +79,22 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: () => void }) 
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-plum-900/8 pt-3">
         {[
-          { icon: Award, label: 'Achievement', tone: 'text-gold-600' },
-          { icon: ImageIcon, label: 'Photo', tone: 'text-aqua-500' },
-          { icon: Briefcase, label: 'Job', tone: 'text-brand-600' },
-          { icon: CalendarPlus, label: 'Event', tone: 'text-violet-600' },
+          { icon: Award, label: 'Achievement', tone: 'text-gold-600', type: 'achievement' },
+          { icon: ImageIcon, label: 'Photo', tone: 'text-aqua-500', type: 'normal' },
+          { icon: Briefcase, label: 'Job', tone: 'text-brand-600', type: 'recruitment' },
+          { icon: CalendarPlus, label: 'Event', tone: 'text-violet-600', type: 'event' },
         ].map((a) => (
           <button
             key={a.label}
             type="button"
-            onClick={onOpen}
+            onClick={() => onOpen(a.type as PostType)}
             className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04]"
           >
             <a.icon size={17} className={a.tone} />
             <span className="hidden sm:inline">{a.label}</span>
           </button>
         ))}
-        <Button size="sm" className="ml-auto" onClick={onOpen}>Post</Button>
+        <Button size="sm" className="ml-auto" onClick={() => onOpen()}>Post</Button>
       </div>
     </Card>
   )
@@ -113,7 +118,7 @@ function PostCard({
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
-  const [likeCount, setLikeCount] = useState(post.likes)
+  const [likeCount, setLikeCount] = useState<number>(post.likes)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
 
   // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
@@ -187,48 +192,134 @@ function PostCard({
         </Link>
       </div>
 
-      {/* --- Phần 3: Ảnh đính kèm (nếu có), lazy-load để tối ưu hiệu năng --- */}
-      {post.image && (
-        <img src={post.image} alt={`Ảnh đính kèm bài viết của ${post.author}`} className="max-h-[26rem] w-full object-cover" loading="lazy" />
+      {/* --- Phần 3: Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
+      {post.type === 'recruitment' && post.job && (
+        <div className="mx-5 mb-4 rounded-xl border border-aqua-200 bg-aqua-50/60 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-plum-900 truncate">{post.job.title}</p>
+              <p className="text-sm text-plum-600 font-medium">{post.job.company}</p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-plum-500">
+                {post.job.employmentType && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-aqua-100 px-2 py-0.5 font-semibold text-aqua-700">
+                    {post.job.employmentType.replace('_', ' ')}
+                  </span>
+                )}
+                {post.job.location && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin size={12} /> {post.job.location}
+                  </span>
+                )}
+                {(post.job.salaryMin || post.job.salaryMax) && (
+                  <span className="inline-flex items-center gap-1">
+                    {post.job.salaryMin ? post.job.salaryMin.toLocaleString('vi-VN') : '?'}
+                    {' — '}
+                    {post.job.salaryMax ? post.job.salaryMax.toLocaleString('vi-VN') : '?'}
+                    {' ₫'}
+                  </span>
+                )}
+              </div>
+            </div>
+            {post.job.applyUrl && (
+              <a
+                href={post.job.applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-3 py-2 text-xs font-bold text-white hover:bg-[#d96010] transition-colors"
+              >
+                Ứng tuyển <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
+          {post.job.contactEmail && (
+            <p className="mt-2 text-xs text-plum-400">Liên hệ: {post.job.contactEmail}</p>
+          )}
+        </div>
       )}
+
+      {/* --- Phần 3b: Thẻ thông tin Sự kiện (nếu là bài event) --- */}
+      {post.type === 'event' && post.event && (
+        <div className="mx-5 mb-4 rounded-xl border border-violet-200 bg-violet-50/60 p-4">
+          <p className="font-bold text-plum-900">{post.event.title}</p>
+          <div className="mt-2 flex flex-wrap gap-3 text-xs text-plum-500">
+            {post.event.startTime && (
+              <span className="inline-flex items-center gap-1">
+                <Clock size={12} />
+                {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })}
+                {' '}
+                {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            {post.event.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={12} /> {post.event.location}
+              </span>
+            )}
+            {post.event.capacity && (
+              <span className="inline-flex items-center gap-1">
+                <Users size={12} /> Tối đa {post.event.capacity} người
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* --- Phần 4: Ảnh đính kèm kiểu Instagram carousel --- */}
+      {(() => {
+        const imgs = post.images && post.images.length > 0
+          ? post.images
+          : post.image ? [post.image] : []
+        if (imgs.length === 0) return null
+        return <ImageCarousel images={imgs} height={480} altPrefix="Ảnh bài viết" />
+      })()}
 
       {/* --- Phần 4: Thanh hành động — Thích / Bình luận / Đăng lại / Báo cáo / Lưu.
           Guest bấm bất kỳ nút nào sẽ mở popup mời đăng nhập (kiểu Facebook) theo BR-12 --- */}
-      <div className="flex items-center gap-1 p-3">
+      <div className="flex items-center gap-1 p-3 border-t border-slate-100">
         {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
         <button
           onClick={handleLike}
           aria-pressed={liked}
           className={cn(
-            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-plum-900/[0.04]',
-            liked ? 'text-rose-500' : 'text-plum-500 hover:text-plum-900',
+            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-slate-100',
+            liked ? 'text-rose-500 bg-rose-50' : 'text-slate-600 hover:text-slate-900',
           )}
         >
-          <Heart size={18} className={liked ? 'fill-rose-400' : ''} />
+          <Heart size={18} className={liked ? 'fill-rose-500 text-rose-500' : ''} />
           {compact(likeCount)}
         </button>
-        <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để bình luận về bài viết.') }}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
-        >
-          <MessageCircle size={18} /> {compact(post.comments)}
-        </button>
+        {canInteract ? (
+          <Link
+            to={`/app/posts/${post.id}#comments`}
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F27024]/10 hover:text-[#F27024]"
+            title="Xem và viết bình luận"
+          >
+            <MessageCircle size={18} /> {compact(post.comments)}
+          </Link>
+        ) : (
+          <button
+            onClick={() => promptLogin('Đăng nhập để bình luận về bài viết.')}
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <MessageCircle size={18} /> {compact(post.comments)}
+          </button>
+        )}
         <button
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để đăng lại bài viết.') }}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
         <button
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để báo cáo bài viết.') }}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
+          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <Flag size={17} />
         </button>
         <button
           aria-label="Lưu bài viết"
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để lưu bài viết.') }}
-          className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900"
+          className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
         >
           <Bookmark size={18} />
         </button>
@@ -321,6 +412,7 @@ export function FeedPage() {
   // === Bước 1: State cục bộ — bộ lọc loại bài viết, mở/đóng modal & bài viết đang sửa (UC14/UC22) ===
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [composerOpen, setComposerOpen] = useState(false)
+  const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
@@ -333,6 +425,11 @@ export function FeedPage() {
 
   const handleStartEdit = (p: Post) => {
     setEditingPost(p)
+    setComposerOpen(true)
+  }
+
+  const handleOpenComposer = (type?: PostType) => {
+    setComposerDefaultType(type ?? 'normal')
     setComposerOpen(true)
   }
 
@@ -366,7 +463,7 @@ export function FeedPage() {
         {canPost && viewer && (
           <>
             <Reveal>
-              <Composer viewer={viewer} onOpen={() => setComposerOpen(true)} />
+              <Composer viewer={viewer} onOpen={handleOpenComposer} />
             </Reveal>
             {/* Modal soạn & đăng / chỉnh sửa bài viết (UC14 / UC22) */}
             <CreatePostModal
@@ -374,6 +471,7 @@ export function FeedPage() {
               onClose={handleCloseComposer}
               viewer={viewer}
               editPost={editingPost ?? undefined}
+              defaultType={composerDefaultType}
             />
           </>
         )}
@@ -387,8 +485,8 @@ export function FeedPage() {
               className={cn(
                 'rounded-full px-4 py-1.5 text-sm font-semibold transition-colors',
                 filter === f.key
-                  ? 'bg-gradient-to-r from-brand-600 to-violet-600 text-white shadow-sm'
-                  : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.07] hover:text-plum-900',
+                  ? 'bg-gradient-to-r from-[#F27024] to-[#FF8C38] text-white shadow-xs font-bold'
+                  : 'bg-slate-200/60 text-slate-600 hover:bg-slate-200 hover:text-slate-900',
               )}
             >
               {f.label}
@@ -417,7 +515,7 @@ export function FeedPage() {
         ) : (
           // (4) Có dữ liệu: render danh sách + điều khiển phân trang
           <>
-            <Stagger className="space-y-5" gap={0.08}>
+            <Stagger key={`${filter}-${posts[0]?.id}`} className="space-y-5" gap={0.08}>
               {posts.map((p) => (
                 <StaggerItem key={p.id}>
                   <PostCard

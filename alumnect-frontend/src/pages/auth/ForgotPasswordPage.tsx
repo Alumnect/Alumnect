@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Loader2, ArrowRight, Lock, Eye, EyeOff, Sparkles } from 'lucide-react'
+import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Loader2, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react'
 import {
   AuthScaffold,
   Field,
@@ -210,7 +210,7 @@ export function ForgotPasswordPage() {
               label="Email đăng ký"
               type="email"
               placeholder="you@fpt.edu.vn"
-              icon={<Mail size={16} />}
+              trailing={<Mail size={16} />}
               error={emailErrors.email?.message}
               {...registerEmail('email')}
             />
@@ -343,9 +343,6 @@ export function ForgotPasswordPage() {
               label="Mật khẩu mới"
               type={showPassword ? 'text' : 'password'}
               placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
-              icon={<Lock size={16} />}
-              error={passwordErrors.newPassword?.message}
-              {...registerPassword('newPassword')}
               trailing={
                 <button
                   type="button"
@@ -356,15 +353,14 @@ export function ForgotPasswordPage() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               }
+              error={passwordErrors.newPassword?.message}
+              {...registerPassword('newPassword')}
             />
 
             <Field
               label="Xác nhận mật khẩu mới"
               type={showConfirmPassword ? 'text' : 'password'}
               placeholder="Nhập lại mật khẩu mới"
-              icon={<Lock size={16} />}
-              error={passwordErrors.confirmPassword?.message}
-              {...registerPassword('confirmPassword')}
               trailing={
                 <button
                   type="button"

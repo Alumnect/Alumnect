@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
 import { 
-  User, Mail, Lock, Eye, EyeOff, GraduationCap, Users, 
+  User, Mail, Eye, EyeOff, GraduationCap, Users, 
   ArrowRight, BadgeCheck, Upload, Loader2, Sparkles, CheckCircle2, AlertCircle
 } from 'lucide-react'
 import { useMajors, useRegister, usePresignedUrl } from '../hooks/useAuth'
@@ -189,7 +189,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         <Field 
           label="Họ và tên" 
           placeholder="Nguyễn Văn A" 
-          icon={<User size={16} />} 
+          trailing={<User size={16} />} 
           error={errors.fullName?.message}
           {...register('fullName')}
         />
@@ -198,7 +198,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           label="Email FPT" 
           type="email" 
           placeholder="you@fpt.edu.vn" 
-          icon={<Mail size={16} />} 
+          trailing={<Mail size={16} />} 
           error={errors.email?.message}
           disabled={!!googleData}
           className={cn(googleData && 'bg-plum-900/[0.05] cursor-not-allowed')}
@@ -210,9 +210,6 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
             label="Mật khẩu"
             type={showPassword ? 'text' : 'password'}
             placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
-            icon={<Lock size={16} />}
-            error={errors.password?.message}
-            {...register('password')}
             trailing={
               <button
                 type="button"

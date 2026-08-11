@@ -39,7 +39,7 @@ export function EventsPage() {
             onClick={() => setTab(t)}
             className={cn(
               'rounded-full px-4 py-2 text-sm font-semibold transition-all',
-              tab === t ? 'bg-gradient-to-r from-brand-600 to-violet-600 text-white' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]',
+              tab === t ? 'bg-brand-600 text-white shadow-sm' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]',
             )}
           >
             {t}

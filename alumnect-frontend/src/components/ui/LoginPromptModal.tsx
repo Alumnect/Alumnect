@@ -53,7 +53,7 @@ export function LoginPromptModal() {
               <Link
                 to="/login"
                 onClick={close}
-                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
               >
                 Đăng nhập <ArrowRight size={16} />
               </Link>

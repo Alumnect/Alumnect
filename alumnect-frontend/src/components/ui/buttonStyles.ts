@@ -5,15 +5,15 @@ export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'text-white bg-gradient-to-r from-brand-500 to-violet-500 shadow-[0_12px_28px_-12px_rgba(124,134,238,0.85)] hover:shadow-[0_18px_40px_-14px_rgba(149,104,216,0.85)] hover:-translate-y-0.5',
+    'text-white bg-gradient-to-r from-[#F27024] to-[#FF8C38] shadow-[0_6px_20px_-6px_rgba(242,112,36,0.5)] hover:shadow-[0_10px_28px_-8px_rgba(242,112,36,0.65)] hover:-translate-y-0.5 font-bold',
   secondary:
-    'text-plum-700 bg-white border border-plum-900/10 shadow-[0_8px_22px_-14px_rgba(120,100,140,0.5)] hover:border-brand-300 hover:text-plum-900 hover:-translate-y-0.5',
+    'text-slate-800 bg-white border border-slate-200/80 shadow-sm hover:border-[#F27024]/40 hover:text-[#F27024] hover:-translate-y-0.5 font-semibold',
   outline:
-    'text-plum-700 border border-plum-900/15 hover:border-brand-400 hover:bg-brand-50',
-  ghost: 'text-plum-600 hover:text-plum-900 hover:bg-plum-900/[0.05]',
+    'text-slate-700 border border-slate-200 hover:border-[#F27024] hover:text-[#F27024] hover:bg-[#F27024]/5',
+  ghost: 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
   gold:
-    'text-plum-900 bg-gradient-to-r from-gold-300 to-gold-400 shadow-[0_12px_28px_-12px_rgba(239,175,62,0.8)] hover:-translate-y-0.5 font-bold',
-  glass: 'text-plum-800 glass hover:bg-white/80',
+    'text-slate-900 bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_8px_20px_-8px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 font-bold',
+  glass: 'text-slate-800 glass hover:bg-white/90',
 }
 
 const SIZES: Record<ButtonSize, string> = {

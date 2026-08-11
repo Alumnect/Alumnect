@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dto.response.admin.AdminPostResponse;
 import com.alumnect.alumnect_backend.entity.post.Post;
+import com.alumnect.alumnect_backend.common.enums.PostStatus;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.admin.AdminPostMapper;
 import com.alumnect.alumnect_backend.specification.post.PostSpecification;
@@ -55,7 +56,7 @@ public class AdminPostServiceImpl implements AdminPostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài viết với ID: " + id));
         
-        post.setHidden(isHidden);
+        post.setStatus(isHidden ? PostStatus.HIDDEN : PostStatus.ACTIVE);
         postRepository.save(post);
     }
 }
