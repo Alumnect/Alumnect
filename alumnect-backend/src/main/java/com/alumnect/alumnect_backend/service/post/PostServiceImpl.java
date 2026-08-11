@@ -11,6 +11,7 @@ import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -416,6 +417,71 @@ public class PostServiceImpl implements PostService {
         }
 
         return post;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng xử lý:
+     * <ol>
+     *   <li>RBAC: chỉ STUDENT/ALUMNI được sửa bài, vai trò khác bị từ chối 403.</li>
+     *   <li>Nạp bài viết có kiểm tra quyền xem (bài ẩn/không tồn tại → 404).</li>
+     *   <li>Kiểm tra quyền sở hữu: chỉ tác giả bài viết mới được sửa, người khác → 403.</li>
+     *   <li>Cập nhật các trường nội dung, loại, ảnh, phạm vi hiển thị.</li>
+     *   <li>Lưu thay đổi — {@code @PreUpdate} tự cập nhật {@code updated_at}.</li>
+     *   <li>Map sang {@link PostResponse} kèm hồ sơ tác giả và trạng thái liked.</li>
+     * </ol>
+     */
+    @Override
+    @Transactional
+    public PostResponse editPost(String email, Long postId, EditPostRequest request) {
+        // Bước 1: RBAC — chỉ Sinh viên/Cựu sinh viên mới được chỉnh sửa bài viết.
+        User author = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được chỉnh sửa bài viết");
+
+        // Bước 2: Nạp bài viết — bài đã ẩn hoặc không tồn tại trả 404.
+        Post post = loadViewablePost(postId, true);
+
+        // Bước 3: Kiểm tra quyền sở hữu — chỉ tác giả mới được sửa bài của mình.
+        if (!post.getUser().getId().equals(author.getId())) {
+            throw new ForbiddenException("Bạn chỉ được chỉnh sửa bài viết của chính mình");
+        }
+
+        // Bước 4: Cập nhật nội dung.
+        post.setContent(request.getContent().trim());
+
+        // Cập nhật loại bài viết (nếu gửi lên).
+        PostType newType = parsePostType(request.getType());
+        if (newType != null) {
+            post.setType(newType);
+        }
+
+        // Cập nhật phạm vi hiển thị (nếu gửi lên).
+        PostVisibility newVisibility = parsePostVisibility(request.getVisibility());
+        if (newVisibility != null) {
+            post.setVisibility(newVisibility);
+        }
+
+        // Cập nhật ảnh đính kèm: chuỗi rỗng/null = xóa ảnh cũ; có giá trị = thay ảnh mới.
+        String imageUrl = request.getImageUrl() != null && !request.getImageUrl().isBlank()
+                ? request.getImageUrl().trim()
+                : null;
+        post.setImageUrl(imageUrl);
+
+        // Bước 5: Lưu thay đổi — @PreUpdate tự cập nhật updated_at.
+        Post saved;
+        try {
+            saved = postRepository.save(post);
+        } catch (Exception ex) {
+            log.error("Lỗi khi cập nhật bài viết id={} của user {}: ", postId, email, ex);
+            throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật bài viết");
+        }
+        log.info("Chỉnh sửa bài viết: id={}, tác giả={}, loại={}, visibility={}",
+                saved.getId(), email, saved.getType(), saved.getVisibility());
+
+        // Bước 6: Nạp hồ sơ tác giả và trạng thái liked để trả response đầy đủ.
+        UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        boolean liked = !computeLikedPostIds(email, List.of(saved.getId())).isEmpty();
+        return postMapper.toResponse(saved, profile, liked);
     }
 
     /**

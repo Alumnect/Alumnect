@@ -3852,6 +3852,266 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "04.6. Chỉnh sửa bài viết (UC22)",
+					"item": [
+						{
+							"name": "Chỉnh sửa bài viết thành công - Đầy đủ thông tin (200)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1"
+									]
+								},
+								"description": "### Kịch bản 200 OK (Thành công - Đầy đủ thông tin UC22)\n* Chạy sau khi đăng nhập STUDENT/ALUMNI (tác giả bài viết id=1).\n* Cập nhật toàn bộ các trường: content, type, visibility, imageUrl.\n* Phản hồi (200 OK): { error: 0, message: \"Chỉnh sửa bài viết thành công\", data: PostResponse }.",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Bài viết đã được chỉnh sửa thành công với nội dung cập nhật mới nhất.\",\n  \"type\": \"achievement\",\n  \"visibility\": \"public\",\n  \"imageUrl\": \"https://example.com/updated-image.jpg\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Chỉnh sửa bài viết thành công - Chỉ sửa nội dung (200)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1"
+									]
+								},
+								"description": "### Kịch bản 200 OK (Chỉ sửa nội dung)\n* Chỉ gửi trường content bắt buộc, các trường khác giữ nguyên hoặc theo giá trị mặc định.\n* Phản hồi (200 OK): Cập nhật thành công.",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Nội dung bài viết mới sau khi sửa chỉ sửa văn bản.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Nội dung rỗng (400)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1"
+									]
+								},
+								"description": "### Kịch bản 400 Bad Request (Nội dung rỗng)\n* Gửi content rỗng hoặc chỉ toàn khoảng trắng.\n* Phản hồi (400): message \"Nội dung bài viết không được để trống\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"   \"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Bài viết không tồn tại (404)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/99999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"99999"
+									]
+								},
+								"description": "### Kịch bản 404 Not Found (Bài không tồn tại)\n* Truy vấn với ID bài viết không tồn tại trong DB (VD 99999).\n* Phản hồi (404): message \"Bài viết này không còn khả dụng\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Nội dung chỉnh sửa bài viết\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Không phải tác giả bài viết (403)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/2",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"2"
+									]
+								},
+								"description": "### Kịch bản 403 Forbidden (Quyền sở hữu UC22)\n* Đăng nhập với User A nhưng thử sửa bài viết của User B (id=2).\n* Phản hồi (403): message \"Bạn chỉ được chỉnh sửa bài viết của chính mình\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Thử sửa bài của người khác\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Admin không được sửa (403)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1"
+									]
+								},
+								"description": "### Kịch bản 403 Forbidden (RBAC UC22)\n* Đăng nhập vai trò Admin (quản trị viên) thử sửa bài viết.\n* Phản hồi (403): message \"Chỉ sinh viên và cựu sinh viên mới được chỉnh sửa bài viết\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Admin thử chỉnh sửa bài viết\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Guest chưa đăng nhập (401)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1"
+									]
+								},
+								"description": "### Kịch bản 401 Unauthorized (Guest)\n* Không kèm JWT token.\n* Phản hồi (401): message \"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Guest thử sửa bài\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}

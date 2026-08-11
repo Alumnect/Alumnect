@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react'
+import { useState, useEffect, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -11,9 +11,11 @@ import { cn } from '@/lib/utils'
 import type { AuthUser } from '@/store/authStore'
 import { feedApi } from '../api/feedApi'
 import { useCreatePost } from '../hooks/useCreatePost'
+import { useEditPost } from '../hooks/useEditPost'
 import { createPostSchema, POST_TYPE_LABELS, POST_CONTENT_MAX } from '../model/createPost'
 import type { CreatePostInput } from '../model/createPost'
 import { POST_TYPES } from '../model/post'
+import type { Post } from '../model/post'
 
 /** Biểu tượng cho từng loại bài viết trong bộ chọn loại. */
 const TYPE_ICONS: Record<string, LucideIcon> = {
@@ -37,12 +39,17 @@ export function CreatePostModal({
   open,
   onClose,
   viewer,
+  editPost,
 }: {
   open: boolean
   onClose: () => void
   viewer: AuthUser
+  editPost?: Post
 }) {
   const createMutation = useCreatePost()
+  const editMutation = useEditPost()
+  const activeMutation = editPost ? editMutation : createMutation
+
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -58,6 +65,21 @@ export function CreatePostModal({
     defaultValues: { content: '', type: 'normal', visibility: 'public', imageUrl: undefined },
   })
 
+  useEffect(() => {
+    if (open) {
+      if (editPost) {
+        reset({
+          content: editPost.text,
+          type: editPost.type,
+          visibility: 'public',
+          imageUrl: editPost.image ?? undefined,
+        })
+      } else {
+        reset({ content: '', type: 'normal', visibility: 'public', imageUrl: undefined })
+      }
+    }
+  }, [open, editPost, reset])
+
   const type = watch('type')
   const visibility = watch('visibility')
   const imageUrl = watch('imageUrl')
@@ -70,16 +92,21 @@ export function CreatePostModal({
     reset()
     setUploadError(null)
     createMutation.reset()
+    editMutation.reset()
     onClose()
   }
 
-  /** Gửi bài viết; đóng modal khi thành công (lỗi hiển thị qua createMutation.error). */
+  /** Gửi bài viết; đóng modal khi thành công. */
   const onSubmit = async (values: CreatePostInput) => {
     try {
-      await createMutation.mutateAsync(values)
+      if (editPost) {
+        await editMutation.mutateAsync({ postId: editPost.id, input: values })
+      } else {
+        await createMutation.mutateAsync(values)
+      }
       close()
     } catch {
-      /* Lỗi nghiệp vụ từ Backend hiển thị qua createMutation.isError bên dưới. */
+      /* Lỗi nghiệp vụ từ Backend hiển thị qua activeMutation.isError bên dưới. */
     }
   }
 
@@ -105,7 +132,9 @@ export function CreatePostModal({
       <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl border border-plum-900/5 animate-pop">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-plum-900">Tạo bài viết</h3>
+          <h3 className="text-xl font-bold text-plum-900">
+            {editPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
+          </h3>
           <button
             type="button"
             onClick={close}
@@ -221,10 +250,10 @@ export function CreatePostModal({
           {uploadError && <p className="text-xs font-medium text-coral-500">{uploadError}</p>}
 
           {/* Thông điệp lỗi nghiệp vụ từ Backend */}
-          {createMutation.isError && (
+          {activeMutation.isError && (
             <div className="flex items-start gap-2 rounded-xl border border-coral-200/50 bg-coral-50 p-3 text-xs text-coral-600">
               <AlertCircle size={15} className="mt-0.5 shrink-0" />
-              <span>{(createMutation.error as Error).message}</span>
+              <span>{(activeMutation.error as Error).message}</span>
             </div>
           )}
 
@@ -235,10 +264,16 @@ export function CreatePostModal({
             </Button>
             <Button
               type="submit"
-              disabled={createMutation.isPending || isUploading}
-              leftIcon={createMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
+              disabled={activeMutation.isPending || isUploading}
+              leftIcon={activeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
             >
-              {createMutation.isPending ? 'Đang đăng…' : 'Đăng bài'}
+              {editPost
+                ? activeMutation.isPending
+                  ? 'Đang lưu…'
+                  : 'Lưu thay đổi'
+                : activeMutation.isPending
+                ? 'Đang đăng…'
+                : 'Đăng bài'}
             </Button>
           </div>
         </form>
