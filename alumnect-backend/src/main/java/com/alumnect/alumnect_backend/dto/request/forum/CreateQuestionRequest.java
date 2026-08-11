@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 /**
  * DTO chứa dữ liệu yêu cầu đặt một câu hỏi mới trên diễn đàn Q&A (UC40 - Ask a question).
  * <p>
- * {@code topicId} là tùy chọn (null nếu người dùng chưa chọn chủ đề); nếu có sẽ được
- * kiểm tra tồn tại ở tầng Service (không tồn tại trả về lỗi 400).
+ * {@code topicId} (thể loại) và {@code majorId} (ngành) đều tùy chọn (null nếu chưa chọn);
+ * nếu có sẽ được kiểm tra tồn tại ở tầng Service (không tồn tại trả về lỗi 400).
  */
 @Data
 @Builder
@@ -29,6 +29,9 @@ public class CreateQuestionRequest {
     @Size(max = 10000, message = "Nội dung câu hỏi không được vượt quá 10000 ký tự")
     private String body;
 
-    /** ID chủ đề của câu hỏi (tùy chọn) — null nếu chưa phân loại */
+    /** ID thể loại của câu hỏi (tùy chọn) — null nếu chưa phân loại */
     private Long topicId;
+
+    /** ID ngành của câu hỏi (tùy chọn) — null nếu chưa chọn ngành */
+    private Long majorId;
 }

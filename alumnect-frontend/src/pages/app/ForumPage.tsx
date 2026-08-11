@@ -8,17 +8,18 @@
  *  - UC40: nút "Đặt câu hỏi" (chỉ Student/Alumni) mở modal đặt câu hỏi mới.
  *  - Xử lý đầy đủ trạng thái: loading (skeleton) / rỗng / lỗi (retry) / thành công.
  */
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HelpCircle, ChevronUp, ChevronDown, MessageSquare, Clock, Flame, CheckCircle2, Check, Minus, Loader2, AlertTriangle, Inbox, LayoutGrid } from 'lucide-react'
+import { HelpCircle, ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
-import { useClickOutside } from '@/hooks/useClickOutside'
 import { useAuthStore } from '@/store/authStore'
+import { useMajors } from '@/features/auth/hooks/useAuth'
 import { useQuestions, useTopics, AskQuestionModal } from '@/features/forum'
-import type { Question, SortOption, Topic } from '@/features/forum'
+import type { Question, SortOption } from '@/features/forum'
+import { FilterMultiSelect } from '@/features/forum/components/FilterMultiSelect'
 import { TopicIcon } from '@/features/forum/lib/topicIcons'
 
 /** Các tùy chọn sắp xếp — khớp tham số `sort` của backend. */
@@ -41,10 +42,19 @@ function QuestionCard({ q }: { q: Question }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          {q.topic && (
-            <Badge tone="violet" className="mb-2 px-2 py-0.5 text-[10px]">
-              {q.topic}
-            </Badge>
+          {(q.topic || q.major) && (
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              {q.topic && (
+                <Badge tone="violet" className="px-2 py-0.5 text-[10px]">
+                  {q.topic}
+                </Badge>
+              )}
+              {q.major && (
+                <Badge tone="aqua" className="px-2 py-0.5 text-[10px]">
+                  {q.major}
+                </Badge>
+              )}
+            </div>
           )}
           <Link to={`/app/forum/${q.id}`}>
             <h2 className="text-lg font-bold leading-snug text-plum-900 transition-colors hover:text-brand-600">{q.title}</h2>
@@ -123,169 +133,13 @@ function QuestionsEmpty({ onClear }: { onClear: () => void }) {
   )
 }
 
-/** Ô tick 3 trạng thái: rỗng / chọn một phần (some) / chọn hết (all). */
-function TickBox({ state }: { state: 'none' | 'some' | 'all' }) {
-  return (
-    <span
-      className={cn(
-        'grid h-[18px] w-[18px] shrink-0 place-items-center rounded-md border transition-colors',
-        state === 'none' ? 'border-plum-900/20 bg-transparent' : 'border-brand-500 bg-brand-500 text-white',
-      )}
-    >
-      {state === 'all' && <Check size={12} strokeWidth={3} />}
-      {state === 'some' && <Minus size={12} strokeWidth={3} />}
-    </span>
-  )
-}
-
-/**
- * Bộ lọc chủ đề PHÂN CẤP 2 CẤP dạng dropdown (multi-select).
- * Ngành lớn (parentId = null) có thể bung ra các chủ đề con để tick chọn nhiều.
- * - Tick vào ngành lớn = chọn/bỏ toàn bộ ngành (ngành + tất cả chủ đề con).
- * - Tick vào chủ đề con = chọn/bỏ riêng chủ đề đó (ngành hiện trạng thái "một phần").
- */
-function TopicDropdown({ topics, selected, onChange }: { topics: Topic[] | undefined; selected: number[]; onChange: (ids: number[]) => void }) {
-  const [open, setOpen] = useState(false)
-  const [expanded, setExpanded] = useState<number | null>(null)
-  const ref = useRef<HTMLDivElement>(null)
-
-  // Đóng khi bấm ra ngoài — dùng ref (không phải lớp phủ toàn màn hình) để KHÔNG chặn
-  // các nút bên cạnh (VD "Xóa lọc") khiến phải bấm 2 lần.
-  useClickOutside(ref, () => setOpen(false), open)
-
-  const list = topics ?? []
-  const parents = list.filter((t) => t.parentId == null)
-  const childrenOf = (pid: number) => list.filter((t) => t.parentId === pid)
-  const isSelected = (id: number) => selected.includes(id)
-
-  /** Tất cả id thuộc một ngành: chính nó + toàn bộ chủ đề con. */
-  const groupIds = (pid: number) => [pid, ...childrenOf(pid).map((c) => c.id)]
-
-  /** Trạng thái tick của một ngành lớn dựa trên số id đã chọn trong nhóm. */
-  const groupState = (pid: number): 'none' | 'some' | 'all' => {
-    const ids = groupIds(pid)
-    const n = ids.filter(isSelected).length
-    if (n === 0) return 'none'
-    return n === ids.length ? 'all' : 'some'
-  }
-
-  const toggleOne = (id: number) => {
-    let next = isSelected(id) ? selected.filter((x) => x !== id) : [...selected, id]
-    // Đồng bộ id ngành cha: chọn ĐỦ mọi chủ đề con -> coi như chọn cả ngành (thêm id cha,
-    // đếm gọn thành 1 và bao gồm câu hỏi gắn thẳng ngành cha); còn thiếu con -> bỏ id cha.
-    const child = list.find((t) => t.id === id)
-    if (child?.parentId != null) {
-      const siblingIds = childrenOf(child.parentId).map((c) => c.id)
-      const allSelected = siblingIds.every((cid) => next.includes(cid))
-      next = allSelected ? Array.from(new Set([...next, child.parentId])) : next.filter((x) => x !== child.parentId)
-    }
-    onChange(next)
-  }
-
-  const toggleGroup = (pid: number) => {
-    const ids = groupIds(pid)
-    if (groupState(pid) === 'all') {
-      onChange(selected.filter((id) => !ids.includes(id)))
-    } else {
-      onChange(Array.from(new Set([...selected, ...ids])))
-    }
-  }
-
-  // Đếm theo cảm nhận người dùng (KHÔNG cộng dồn id ngành cha vốn chỉ là nhóm):
-  //  - ngành chọn CẢ nhóm  -> tính 1
-  //  - ngành chọn MỘT PHẦN -> tính số chủ đề con đã chọn
-  //  - chủ đề đứng riêng    -> tính 1
-  const displayCount = parents.reduce((sum, p) => {
-    const kids = childrenOf(p.id)
-    if (kids.length === 0) return sum + (isSelected(p.id) ? 1 : 0)
-    return sum + (groupState(p.id) === 'all' ? 1 : kids.filter((c) => isSelected(c.id)).length)
-  }, 0)
-
-  const label = displayCount === 0 ? 'Tất cả chủ đề' : `Đã chọn ${displayCount} chủ đề`
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 rounded-full bg-plum-900/[0.04] px-4 py-2 text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-900/[0.07]"
-      >
-        <LayoutGrid size={15} className="text-brand-600" />
-        <span>{label}</span>
-        <ChevronDown size={15} className={cn('transition-transform', open && 'rotate-180')} />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-full z-20 mt-2 max-h-96 w-72 overflow-y-auto rounded-xl card-surface p-2 shadow-lg ring-1 ring-plum-900/10">
-          {/* Hàng "Tất cả chủ đề" = xóa toàn bộ lựa chọn */}
-          <button
-            onClick={() => onChange([])}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-              selected.length === 0 ? 'bg-brand-500/10 text-brand-700' : 'text-plum-700 hover:bg-plum-900/[0.04]',
-            )}
-          >
-            <LayoutGrid size={16} className="text-plum-400" />
-            <span className="flex-1 text-left">Tất cả chủ đề</span>
-            {selected.length === 0 && <Check size={15} className="text-brand-600" />}
-          </button>
-
-          <div className="my-1 h-px bg-plum-900/[0.06]" />
-
-          {parents.map((p) => {
-            const kids = childrenOf(p.id)
-            const hasKids = kids.length > 0
-            const isOpen = expanded === p.id
-            return (
-              <div key={p.id}>
-                <div className="flex items-center rounded-lg transition-colors hover:bg-plum-900/[0.04]">
-                  {/* Ô tick ngành lớn (chọn/bỏ cả nhóm) */}
-                  <button onClick={() => toggleGroup(p.id)} className="flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-plum-700">
-                    <TickBox state={groupState(p.id)} />
-                    <TopicIcon name={p.name} size={16} className="text-plum-400" />
-                    <span className="flex-1">{p.name}</span>
-                  </button>
-                  {/* Nút bung/thu chủ đề con */}
-                  {hasKids && (
-                    <button
-                      onClick={() => setExpanded(isOpen ? null : p.id)}
-                      aria-label={isOpen ? 'Thu gọn' : 'Mở rộng'}
-                      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-plum-400 hover:text-plum-700"
-                    >
-                      <ChevronDown size={15} className={cn('transition-transform', isOpen && 'rotate-180')} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Danh sách chủ đề con để tick riêng */}
-                {hasKids && isOpen && (
-                  <div className="ml-4 border-l border-plum-900/[0.08] pl-2">
-                    {kids.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => toggleOne(c.id)}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-left text-sm text-plum-600 transition-colors hover:bg-plum-900/[0.04]"
-                      >
-                        <TickBox state={isSelected(c.id) ? 'all' : 'none'} />
-                        <span className="flex-1">{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
 /**
  * Trang danh sách câu hỏi diễn đàn (UC38) + đặt câu hỏi (UC40).
  */
 export function ForumPage() {
   // === State: các chủ đề đang lọc (tick nhiều), danh sách tiêu chí sắp xếp (ưu tiên), mở modal ===
   const [topicIds, setTopicIds] = useState<number[]>([])
+  const [majorIds, setMajorIds] = useState<number[]>([])
   // Mảng rỗng = mặc định "recent" (backend tự hiểu). Cái người dùng bấm ĐẦU TIÊN là ưu tiên 1.
   const [sorts, setSorts] = useState<SortOption[]>([])
   const [askOpen, setAskOpen] = useState(false)
@@ -296,7 +150,8 @@ export function ForumPage() {
 
   // === Dữ liệu: chủ đề (cho bộ lọc) + danh sách câu hỏi (infinite scroll) ===
   const { data: topics } = useTopics()
-  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useQuestions(sorts, topicIds)
+  const { data: majors } = useMajors()
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useQuestions(sorts, topicIds, majorIds)
 
   const questions = data?.pages.flatMap((p) => p.items) ?? []
 
@@ -307,6 +162,7 @@ export function ForumPage() {
 
   const resetFilter = () => {
     setTopicIds([])
+    setMajorIds([])
     setSorts([])
   }
 
@@ -327,9 +183,27 @@ export function ForumPage() {
 
       {/* Bộ lọc chủ đề (dropdown) + tiêu chí sắp xếp (multi-select ưu tiên) */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <TopicDropdown topics={topics} selected={topicIds} onChange={setTopicIds} />
-          {(topicIds.length > 0 || sorts.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterMultiSelect
+            buttonIcon={<LayoutGrid size={15} className="text-brand-600" />}
+            allLabel="Tất cả thể loại"
+            noun="thể loại"
+            items={topics}
+            selected={topicIds}
+            onChange={setTopicIds}
+            itemIcon={(name) => <TopicIcon name={name} size={16} className="text-plum-400" />}
+          />
+          <FilterMultiSelect
+            buttonIcon={<GraduationCap size={15} className="text-brand-600" />}
+            allLabel="Tất cả ngành"
+            noun="ngành"
+            items={majors}
+            selected={majorIds}
+            onChange={setMajorIds}
+            searchable
+            itemIcon={() => <GraduationCap size={16} className="text-plum-400" />}
+          />
+          {(topicIds.length > 0 || majorIds.length > 0 || sorts.length > 0) && (
             <button onClick={resetFilter} className="text-xs font-semibold text-plum-400 underline-offset-2 transition-colors hover:text-plum-700 hover:underline">
               Xóa lọc
             </button>

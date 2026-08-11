@@ -31,22 +31,33 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
      * sách không rỗng (giá trị giữ chỗ) để tránh mệnh đề {@code IN ()} không hợp lệ; điều kiện IN khi
      * đó bị vô hiệu hóa bởi {@code filterByTopic = false}.
      *
-     * @param filterByTopic true = lọc theo {@code topicIds}; false = không lọc chủ đề
-     * @param topicIds       danh sách ID chủ đề cần lọc (chỉ dùng khi filterByTopic = true)
+     * Bộ lọc THỂ LOẠI ({@code topicIds}) và NGÀNH ({@code majorIds}) độc lập nhau: bật cả hai thì
+     * câu hỏi phải khớp cả điều kiện thể loại VÀ điều kiện ngành.
+     *
+     * @param filterByTopic true = lọc theo {@code topicIds}; false = không lọc thể loại
+     * @param topicIds       danh sách ID thể loại cần lọc (chỉ dùng khi filterByTopic = true)
+     * @param filterByMajor  true = lọc theo {@code majorIds}; false = không lọc ngành
+     * @param majorIds       danh sách ID ngành cần lọc (chỉ dùng khi filterByMajor = true)
      * @param pageable       Thông tin phân trang và sắp xếp
-     * @return Trang kết quả các câu hỏi khớp điều kiện, đã kèm sẵn tác giả và chủ đề
+     * @return Trang kết quả các câu hỏi khớp điều kiện, đã kèm sẵn tác giả, thể loại và ngành
      */
     @Query(value = "SELECT q FROM Question q " +
             "JOIN FETCH q.author " +
             "LEFT JOIN FETCH q.topic t " +
+            "LEFT JOIN FETCH q.major m " +
             "WHERE q.status = com.alumnect.alumnect_backend.common.enums.QuestionStatus.ACTIVE " +
-            "AND (:filterByTopic = false OR t.id IN :topicIds)",
+            "AND (:filterByTopic = false OR t.id IN :topicIds) " +
+            "AND (:filterByMajor = false OR m.id IN :majorIds)",
             countQuery = "SELECT COUNT(q) FROM Question q " +
             "LEFT JOIN q.topic t " +
+            "LEFT JOIN q.major m " +
             "WHERE q.status = com.alumnect.alumnect_backend.common.enums.QuestionStatus.ACTIVE " +
-            "AND (:filterByTopic = false OR t.id IN :topicIds)")
+            "AND (:filterByTopic = false OR t.id IN :topicIds) " +
+            "AND (:filterByMajor = false OR m.id IN :majorIds)")
     Page<Question> findActiveQuestions(@Param("filterByTopic") boolean filterByTopic,
                                        @Param("topicIds") List<Long> topicIds,
+                                       @Param("filterByMajor") boolean filterByMajor,
+                                       @Param("majorIds") List<Long> majorIds,
                                        Pageable pageable);
 
     /**
@@ -62,6 +73,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     @Query("SELECT q FROM Question q " +
             "JOIN FETCH q.author " +
             "LEFT JOIN FETCH q.topic " +
+            "LEFT JOIN FETCH q.major " +
             "WHERE q.id = :id " +
             "AND q.status = com.alumnect.alumnect_backend.common.enums.QuestionStatus.ACTIVE")
     Optional<Question> findActiveDetailById(@Param("id") Long id);

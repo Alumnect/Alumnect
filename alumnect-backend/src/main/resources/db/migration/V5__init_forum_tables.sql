@@ -39,7 +39,6 @@ CREATE TABLE questions (
 INSERT INTO forum_topics (name, description) VALUES
     ('Career',      'Định hướng nghề nghiệp, chuyển ngành, phát triển sự nghiệp'),
     ('Interview',   'Kinh nghiệm phỏng vấn, luyện thuật toán, system design'),
-    ('Engineering', 'Kỹ thuật lập trình, công nghệ, framework, công cụ'),
     ('Education',   'Học tập, chứng chỉ, học bổng, học lên cao'),
     ('Salary',      'Thảo luận về lương thưởng, đãi ngộ, thương lượng'),
     ('General',     'Các chủ đề chung khác của cộng đồng cựu sinh viên');

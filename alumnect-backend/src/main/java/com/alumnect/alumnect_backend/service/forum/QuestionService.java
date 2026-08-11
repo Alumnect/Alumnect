@@ -20,10 +20,11 @@ public interface QuestionService {
      * @param page     Số thứ tự trang cần lấy (0-based)
      * @param size     Kích thước trang (số câu hỏi mỗi trang)
      * @param sort     Tiêu chí sắp xếp: "recent" (mới nhất), "votes" (nhiều vote), "answers" (nhiều trả lời)
-     * @param topicIds Danh sách ID chủ đề cần lọc (khớp bất kỳ), hoặc null/rỗng nếu không lọc theo chủ đề
+     * @param topicIds Danh sách ID thể loại cần lọc (khớp bất kỳ), hoặc null/rỗng nếu không lọc theo thể loại
+     * @param majorIds Danh sách ID ngành cần lọc (khớp bất kỳ), hoặc null/rỗng nếu không lọc theo ngành
      * @return Trang kết quả câu hỏi đã chuẩn hóa, sẵn sàng trả về Client
      */
-    PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds);
+    PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds, List<Long> majorIds);
 
     /**
      * Lấy chi tiết một câu hỏi theo ID (UC39 - View question detail). Ai cũng xem được
@@ -44,7 +45,7 @@ public interface QuestionService {
      * @param request DTO chứa tiêu đề, nội dung và chủ đề (tùy chọn) của câu hỏi
      * @return Chi tiết câu hỏi vừa tạo đã chuẩn hóa
      * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu vai trò không phải Student/Alumni
-     * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu topicId truyền lên không tồn tại
+     * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu topicId hoặc majorId truyền lên không tồn tại
      */
     QuestionDetailResponse createQuestion(String email, CreateQuestionRequest request);
 

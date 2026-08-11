@@ -7,16 +7,18 @@ import type { CreateQuestionInput, SortOption } from '../model/question'
  * Hỗ trợ NHIỀU tiêu chí sắp xếp ưu tiên: mảng `sorts` được ghép bằng dấu phẩy gửi lên backend
  * (VD ['votes','answers'] → "votes,answers"); mảng rỗng mặc định "recent".
  * @param sorts Danh sách tiêu chí sắp xếp theo thứ tự ưu tiên
- * @param topicIds Danh sách ID chủ đề để lọc (tick nhiều), rỗng = tất cả
+ * @param topicIds Danh sách ID thể loại để lọc (tick nhiều), rỗng = tất cả
+ * @param majorIds Danh sách ID ngành để lọc (tick nhiều), rỗng = tất cả — độc lập với thể loại
  * @return Đối tượng query (pages, isLoading, isError, fetchNextPage, hasNextPage...)
  */
-export function useQuestions(sorts: SortOption[] = ['recent'], topicIds: number[] = []) {
+export function useQuestions(sorts: SortOption[] = ['recent'], topicIds: number[] = [], majorIds: number[] = []) {
   const sortParam = sorts.length > 0 ? sorts.join(',') : 'recent'
-  // Khóa cache ổn định theo tập chủ đề đã chọn (sắp xếp để thứ tự tick không tạo key khác nhau).
+  // Khóa cache ổn định theo tập đã chọn (sắp xếp để thứ tự tick không tạo key khác nhau).
   const topicKey = [...topicIds].sort((a, b) => a - b).join(',')
+  const majorKey = [...majorIds].sort((a, b) => a - b).join(',')
   return useInfiniteQuery({
-    queryKey: ['questions', sortParam, topicKey],
-    queryFn: ({ pageParam }) => forumApi.getQuestions({ page: pageParam, sort: sortParam, topicIds }),
+    queryKey: ['questions', sortParam, topicKey, majorKey],
+    queryFn: ({ pageParam }) => forumApi.getQuestions({ page: pageParam, sort: sortParam, topicIds, majorIds }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
     // Giữ danh sách cũ hiển thị trong lúc tải bộ lọc/sắp xếp mới -> đổi filter/sort mượt, không chớp skeleton.

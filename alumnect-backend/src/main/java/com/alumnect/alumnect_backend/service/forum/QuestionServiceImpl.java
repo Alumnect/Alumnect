@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.QuestionStatus;
 import com.alumnect.alumnect_backend.dao.forum.ForumTopicRepository;
 import com.alumnect.alumnect_backend.dao.forum.QuestionRepository;
+import com.alumnect.alumnect_backend.dao.user.MajorRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.forum.CreateQuestionRequest;
@@ -12,6 +13,7 @@ import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
 import com.alumnect.alumnect_backend.entity.forum.ForumTopic;
 import com.alumnect.alumnect_backend.entity.forum.Question;
+import com.alumnect.alumnect_backend.entity.user.Major;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
@@ -48,6 +50,9 @@ public class QuestionServiceImpl implements QuestionService {
     private ForumTopicRepository forumTopicRepository;
 
     @Autowired
+    private MajorRepository majorRepository;
+
+    @Autowired
     private UserProfileRepository userProfileRepository;
 
     @Autowired
@@ -70,7 +75,7 @@ public class QuestionServiceImpl implements QuestionService {
      * </ol>
      */
     @Override
-    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds) {
+    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds, List<Long> majorIds) {
         // Validate tham số phân trang trước khi tạo PageRequest — nếu không, PageRequest.of()
         // sẽ ném IllegalArgumentException và bị trả về nhầm HTTP 500 thay vì 400.
         if (page < 0) {
@@ -80,16 +85,19 @@ public class QuestionServiceImpl implements QuestionService {
             throw new BadRequestException("Tham số size phải là số nguyên dương");
         }
 
-        // Lọc theo nhiều chủ đề (tick chọn ở Frontend). Khi không lọc, truyền danh sách giữ chỗ
-        // không rỗng để tránh mệnh đề IN () không hợp lệ; điều kiện IN bị vô hiệu bởi filterByTopic=false.
+        // Lọc theo nhiều THỂ LOẠI và/hoặc nhiều NGÀNH (tick chọn ở Frontend), độc lập nhau.
+        // Khi một chiều không lọc, truyền danh sách giữ chỗ không rỗng để tránh mệnh đề IN () không hợp lệ;
+        // điều kiện IN khi đó bị vô hiệu hóa bởi cờ filterByTopic/filterByMajor = false.
         boolean filterByTopic = topicIds != null && !topicIds.isEmpty();
         List<Long> effectiveTopicIds = filterByTopic ? topicIds : List.of(-1L);
+        boolean filterByMajor = majorIds != null && !majorIds.isEmpty();
+        List<Long> effectiveMajorIds = filterByMajor ? majorIds : List.of(-1L);
 
         Sort sortSpec = resolveSort(sort);
         Page<Question> questionsPage = questionRepository.findActiveQuestions(
-                filterByTopic, effectiveTopicIds, PageRequest.of(page, size, sortSpec));
-        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, topicIds={}, tổng kết quả={}",
-                page, size, sort, filterByTopic ? topicIds : null, questionsPage.getTotalElements());
+                filterByTopic, effectiveTopicIds, filterByMajor, effectiveMajorIds, PageRequest.of(page, size, sortSpec));
+        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, topicIds={}, majorIds={}, tổng kết quả={}",
+                page, size, sort, filterByTopic ? topicIds : null, filterByMajor ? majorIds : null, questionsPage.getTotalElements());
 
         // Gộp truy vấn hồ sơ tác giả theo lô (batch) thay vì truy vấn riêng lẻ cho từng câu hỏi.
         List<Long> authorIds = questionsPage.getContent().stream()
@@ -153,16 +161,24 @@ public class QuestionServiceImpl implements QuestionService {
             throw new ForbiddenException("Chỉ sinh viên và cựu sinh viên mới được đặt câu hỏi");
         }
 
-        // Chủ đề là tùy chọn: nếu có topicId thì phải tồn tại, ngược lại để null (chưa phân loại).
+        // Thể loại là tùy chọn: nếu có topicId thì phải tồn tại, ngược lại để null (chưa phân loại).
         ForumTopic topic = null;
         if (request.getTopicId() != null) {
             topic = forumTopicRepository.findById(request.getTopicId())
-                    .orElseThrow(() -> new BadRequestException("Chủ đề không tồn tại"));
+                    .orElseThrow(() -> new BadRequestException("Thể loại không tồn tại"));
+        }
+
+        // Ngành là tùy chọn: nếu có majorId thì phải tồn tại, ngược lại để null (chưa chọn ngành).
+        Major major = null;
+        if (request.getMajorId() != null) {
+            major = majorRepository.findById(request.getMajorId())
+                    .orElseThrow(() -> new BadRequestException("Ngành không tồn tại"));
         }
 
         Question question = Question.builder()
                 .author(author)
                 .topic(topic)
+                .major(major)
                 .title(request.getTitle().trim())
                 .body(request.getBody().trim())
                 .status(QuestionStatus.ACTIVE)
@@ -177,7 +193,7 @@ public class QuestionServiceImpl implements QuestionService {
             log.error("Lỗi khi lưu câu hỏi mới của user {}: ", email, ex);
             throw new RuntimeException("Lỗi hệ thống: Không thể tạo câu hỏi");
         }
-        log.info("Tạo câu hỏi mới: id={}, tác giả={}, topicId={}", saved.getId(), email, request.getTopicId());
+        log.info("Tạo câu hỏi mới: id={}, tác giả={}, topicId={}, majorId={}", saved.getId(), email, request.getTopicId(), request.getMajorId());
 
         // Nạp hồ sơ tác giả để trả về chi tiết đầy đủ (tên/avatar/headline) cho Frontend.
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);

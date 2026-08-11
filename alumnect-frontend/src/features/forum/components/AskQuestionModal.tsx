@@ -13,12 +13,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { X, Loader2, AlertTriangle } from 'lucide-react'
+import { X, Loader2, AlertTriangle, LayoutGrid, GraduationCap } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { useMajors } from '@/features/auth/hooks/useAuth'
 import { createQuestionSchema } from '../model/question'
 import type { CreateQuestionInput } from '../model/question'
 import { useCreateQuestion, useTopics } from '../hooks/useQuestions'
-import { TopicSelectField } from './TopicSelectField'
+import { EntitySelectField } from './EntitySelectField'
+import { TopicIcon } from '../lib/topicIcons'
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
 const FIELD_CLASS =
@@ -27,6 +29,7 @@ const FIELD_CLASS =
 export function AskQuestionModal({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()
   const { data: topics } = useTopics()
+  const { data: majors } = useMajors()
   const { mutate, isPending, error } = useCreateQuestion()
 
   const {
@@ -37,10 +40,11 @@ export function AskQuestionModal({ onClose }: { onClose: () => void }) {
     formState: { errors },
   } = useForm<CreateQuestionInput>({
     resolver: zodResolver(createQuestionSchema),
-    defaultValues: { title: '', body: '', topicId: null },
+    defaultValues: { title: '', body: '', topicId: null, majorId: null },
   })
 
   const topicId = watch('topicId')
+  const majorId = watch('majorId')
 
   const onSubmit = (values: CreateQuestionInput) => {
     mutate(values, {
@@ -97,10 +101,32 @@ export function AskQuestionModal({ onClose }: { onClose: () => void }) {
             {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title.message}</p>}
           </div>
 
-          {/* Chủ đề (tùy chọn) — picker phân cấp: chọn ngành lớn hoặc bung ra chọn chủ đề con */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-plum-900">Chủ đề (tùy chọn)</label>
-            <TopicSelectField topics={topics} value={topicId ?? null} onChange={(id) => setValue('topicId', id, { shouldDirty: true })} />
+          {/* Thể loại + Ngành (đều tùy chọn) — 2 field tách biệt, mỗi câu hỏi gắn tối đa 1 mỗi loại */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-plum-900">Thể loại (tùy chọn)</label>
+              <EntitySelectField
+                items={topics}
+                value={topicId ?? null}
+                onChange={(id) => setValue('topicId', id, { shouldDirty: true })}
+                placeholder="— Chưa chọn thể loại —"
+                buttonIcon={<LayoutGrid size={16} className="shrink-0 text-plum-400" />}
+                itemIcon={(name) => <TopicIcon name={name} size={16} className="shrink-0 text-brand-600" />}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-plum-900">Ngành (tùy chọn)</label>
+              <EntitySelectField
+                items={majors}
+                value={majorId ?? null}
+                onChange={(id) => setValue('majorId', id, { shouldDirty: true })}
+                placeholder="— Chưa chọn ngành —"
+                searchPlaceholder="Tìm ngành…"
+                searchable
+                buttonIcon={<GraduationCap size={16} className="shrink-0 text-plum-400" />}
+                itemIcon={() => <GraduationCap size={16} className="shrink-0 text-brand-600" />}
+              />
+            </div>
           </div>
 
           {/* Nội dung */}
