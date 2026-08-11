@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FileText, Search, User, Newspaper, Clock, Eye, EyeOff, ThumbsUp, MessageSquare, Repeat } from 'lucide-react'
+import { Search, User, Newspaper, Clock, ThumbsUp, MessageSquare, Repeat } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'

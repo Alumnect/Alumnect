@@ -11,7 +11,6 @@ import {
   usePromoteExperience,
 } from '../hooks/useExperienceMutations'
 import type { ExperienceResponse, ExperienceRequest } from '../model/userTypes'
-import { Modal } from '@/components/ui'
 
 interface ExperienceFormModalProps {
   isOpen: boolean
