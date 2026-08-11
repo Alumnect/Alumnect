@@ -15,7 +15,7 @@ import type { ExperienceResponse, ExperienceRequest } from '../model/userTypes'
 interface ExperienceFormModalProps {
   isOpen: boolean
   onClose: () => void
-  mode: 'create' | 'edit' | 'promote'
+  mode: 'create' | 'edit' | 'promote' | 'rejoin'
   experience?: ExperienceResponse | null // Used for edit or promote source
 }
 
@@ -138,6 +138,24 @@ export function ExperienceFormModal({
         setLocationCountry(experience.locationCountry ?? undefined)
         setLocationCountryCode(experience.locationCountryCode ?? undefined)
         setGeocodingProvider(experience.geocodingProvider ?? undefined)
+      } else if (mode === 'rejoin' && experience) {
+        setTitle('')
+        setCompany(experience.company)
+        setLocation(experience.location ?? '')
+        setStartMonth('')
+        setStartYear('')
+        setEndMonth('')
+        setEndYear('')
+        setIsCurrent(true)
+        setIsPrimary(true)
+        setDescription('')
+        setLatitude(experience.latitude ?? undefined)
+        setLongitude(experience.longitude ?? undefined)
+        setPlaceId(experience.placeId ?? undefined)
+        setLocationCity(experience.locationCity ?? undefined)
+        setLocationCountry(experience.locationCountry ?? undefined)
+        setLocationCountryCode(experience.locationCountryCode ?? undefined)
+        setGeocodingProvider(experience.geocodingProvider ?? undefined)
       } else {
         // Create mode
         setTitle('')
@@ -162,14 +180,25 @@ export function ExperienceFormModal({
   }, [isOpen, mode, experience])
 
   const handlePlaceSelect = (data: any) => {
-    setLocation(data.formattedAddress)
+    if (!data) {
+      setLocation('')
+      setLatitude(undefined)
+      setLongitude(undefined)
+      setPlaceId(undefined)
+      setLocationCity(undefined)
+      setLocationCountry(undefined)
+      setLocationCountryCode(undefined)
+      setGeocodingProvider(undefined)
+      return
+    }
+    setLocation(data.formattedAddress || data.location || '')
     setLatitude(data.latitude)
     setLongitude(data.longitude)
     setPlaceId(data.placeId)
-    setLocationCity(data.city)
-    setLocationCountry(data.country)
-    setLocationCountryCode(data.countryCode)
-    setGeocodingProvider(data.provider)
+    setLocationCity(data.locationCity)
+    setLocationCountry(data.locationCountry)
+    setLocationCountryCode(data.locationCountryCode)
+    setGeocodingProvider(data.geocodingProvider)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -235,7 +264,7 @@ export function ExperienceFormModal({
     }
 
     try {
-      if (mode === 'create') {
+      if (mode === 'create' || mode === 'rejoin') {
         await createMutation.mutateAsync(requestPayload)
       } else if (mode === 'edit' && experience) {
         await updateMutation.mutateAsync({ id: experience.id, payload: requestPayload })
@@ -258,6 +287,8 @@ export function ExperienceFormModal({
       )
     }
   }
+
+  if (!isOpen) return null
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-plum-950/50 backdrop-blur-md animate-fade-in">
@@ -300,6 +331,19 @@ export function ExperienceFormModal({
               </div>
             )}
 
+            {mode === 'rejoin' && experience && (
+              <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
+                <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
+                <div className="space-y-1">
+                  <p>Đang thêm một vị trí khác tại <strong>{experience.company}</strong>.</p>
+                  <ul className="list-disc pl-4 space-y-0.5 text-brand-700/90">
+                    <li><strong>Để quay lại làm việc tại đây:</strong> Cứ giữ nguyên dấu tích ở ô <em>Công việc hiện tại</em>.</li>
+                    <li><strong>Để bổ sung công việc cũ:</strong> Hãy bỏ tích ô <em>Công việc hiện tại</em> để nhập ngày kết thúc nhé.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {/* Row 1: Title & Company side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Title */}
@@ -329,7 +373,7 @@ export function ExperienceFormModal({
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="VD: FPT Software..."
                   required
-                  disabled={loading || mode === 'promote'}
+                  disabled={loading || mode === 'promote' || mode === 'rejoin'}
                   className="w-full rounded-2xl border border-plum-900/10 bg-plum-50/30 disabled:bg-plum-900/[0.03] disabled:text-plum-400 py-2.5 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
@@ -338,9 +382,9 @@ export function ExperienceFormModal({
             {/* Row 2: Location Autocomplete */}
             <div>
               <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                Vị trí / Địa điểm (Geocoded)
+                Vị trí / Địa điểm
               </label>
-              {mode === 'promote' ? (
+              {mode === 'promote' || mode === 'rejoin' ? (
                 <input
                   type="text"
                   value={location}
@@ -417,7 +461,7 @@ export function ExperienceFormModal({
                     disabled={loading}
                     className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
                   />
-                  <span className="text-sm font-semibold text-plum-700">Kinh nghiệm chính (Primary)</span>
+                  <span className="text-sm font-semibold text-plum-700">Công việc chính (Primary)</span>
                 </label>
               )}
             </div>

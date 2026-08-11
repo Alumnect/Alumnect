@@ -192,9 +192,16 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
                         size={42}
                       />
                       <div className="text-left min-w-0">
-                        <h4 className="text-sm font-bold text-plum-900 group-hover:text-brand-600 transition-colors truncate">
-                          {item.fullName}
-                        </h4>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <h4 className="text-sm font-bold text-plum-900 group-hover:text-brand-600 transition-colors truncate">
+                            {item.fullName}
+                          </h4>
+                          {item.studentCode && (
+                            <span className="text-[11px] font-medium text-plum-400 shrink-0">
+                              ({item.studentCode})
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-plum-400 truncate leading-normal">
                           {item.headline || (item.email ? `@${item.email.split('@')[0]}` : '')}
                         </p>

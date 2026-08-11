@@ -32,7 +32,6 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
   // Form states
   const [fullName, setFullName] = useState('')
-  const [headline, setHeadline] = useState('')
   const [biography, setBiography] = useState('')
 
   const [campus, setCampus] = useState('')
@@ -59,7 +58,6 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
     if (profile) {
       setValidationError(null)
       setFullName(profile.fullName || '')
-      setHeadline(profile.headline || '')
       setBiography(profile.biography || '')
 
       setCampus(profile.campus || '')
@@ -132,7 +130,6 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
       coverUrl: profile.coverUrl || null,
 
       phone: phone.trim() || null,
-      headline: headline.trim() || null,
       biography: biography.trim() || null,
       campus: campus.trim() || null,
       cohort: cohort || null,
@@ -162,7 +159,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
   const navItems = [
     { id: 'overview', label: 'Thông tin cá nhân', icon: <User size={18} /> },
     { id: 'academic', label: 'Học tập tại FPTU', icon: <GraduationCap size={18} /> },
-    { id: 'contact', label: 'Thông tin liên hệ & Mạng xã hội', icon: <Phone size={18} /> },
+    { id: 'contact', label: 'Thông tin liên hệ', icon: <Phone size={18} /> },
     { id: 'skills', label: 'Kỹ năng chuyên môn', icon: <Sparkles size={18} /> },
   ]
 
@@ -182,7 +179,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
         {/* Left Sub-Sidebar Menu */}
         <div className="md:col-span-4 bg-white rounded-3xl p-4 border border-plum-900/5 shadow-sm space-y-1.5 sticky top-20">
           <h3 className="text-xs font-extrabold text-plum-400 uppercase tracking-wider px-3 pt-2 pb-1">
-            Danh mục chỉnh sửa
+            Giới thiệu
           </h3>
           {navItems.map((item) => {
             const active = activeSection === item.id
@@ -191,11 +188,10 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                 key={item.id}
                 type="button"
                 onClick={() => setActiveSection(item.id as any)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all text-left ${
-                  active
-                    ? 'bg-brand-50 text-brand-600 border border-brand-200/40 shadow-xs'
-                    : 'text-plum-700 hover:bg-plum-50/70 hover:text-plum-900'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all text-left ${active
+                  ? 'bg-brand-50 text-brand-600 border border-brand-200/40 shadow-xs'
+                  : 'text-plum-700 hover:bg-plum-50/70 hover:text-plum-900'
+                  }`}
               >
                 <span className={active ? 'text-brand-600' : 'text-plum-400'}>{item.icon}</span>
                 <span>{item.label}</span>
@@ -231,25 +227,6 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                   className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 font-semibold focus:border-brand-500 focus:outline-none"
                 />
               </div>
-
-              {/* Headline */}
-              <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Dòng giới thiệu ngắn (Headline)
-                </label>
-                <input
-                  type="text"
-                  value={headline}
-                  onChange={(e) => setHeadline(e.target.value)}
-                  placeholder="VD: Software Engineer Intern | Frontend Developer..."
-                  disabled={loading}
-                  maxLength={160}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none"
-                />
-              </div>
-
-
-
 
               {/* Tiểu sử */}
               <div>
@@ -349,7 +326,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
           {/* Section 3: Contact Info */}
           {activeSection === 'contact' && (
-            <Card hover={false} className="p-6 space-y-5">
+            <Card hover={false} className="p-6 space-y-5 !overflow-visible">
               <div className="border-b border-plum-900/5 pb-3">
                 <h3 className="text-lg font-extrabold text-plum-900 flex items-center gap-2">
                   <Phone size={18} className="text-brand-500" /> Thông tin liên hệ & Mạng xã hội
