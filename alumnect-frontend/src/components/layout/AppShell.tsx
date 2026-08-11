@@ -148,12 +148,6 @@ export function AppShell() {
 
           {/* right actions */}
           <div className="ml-auto flex items-center gap-1 lg:ml-0">
-            {isAuthenticated && (
-              <Button size="sm" variant="primary" leftIcon={<Plus size={16} />} className="hidden sm:inline-flex">
-                Create
-              </Button>
-            )}
-
             {/* mobile search toggle */}
             <button
               onClick={() => setSearchOpen((v) => !v)}

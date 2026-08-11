@@ -112,7 +112,6 @@ public class PostServiceImpl implements PostService {
                     .salaryMax(request.getJob().getSalaryMax())
                     .applyUrl(request.getJob().getApplyUrl())
                     .contactEmail(request.getJob().getContactEmail())
-                    .description(request.getContent() != null ? request.getContent() : "")
                     .build();
             jobId = jobPostingRepository.save(job).getId();
         }
@@ -430,7 +429,6 @@ public class PostServiceImpl implements PostService {
                         .salaryMax(request.getJob().getSalaryMax())
                         .applyUrl(request.getJob().getApplyUrl())
                         .contactEmail(request.getJob().getContactEmail())
-                        .description(request.getContent() != null ? request.getContent() : "")
                         .build();
                 post.setJobId(jobPostingRepository.save(newJob).getId());
             }

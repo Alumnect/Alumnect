@@ -1,26 +1,52 @@
 import { useState } from 'react'
-import { Briefcase, MapPin, Search, Bookmark, Building2, Clock } from 'lucide-react'
-import { PageHeader, Badge, Card, EmptyState } from '@/components/ui'
-import { Button } from '@/components/ui/Button'
+import { Link } from 'react-router-dom'
+import { Briefcase, MapPin, Search, Bookmark, Building2, Clock, Loader2 } from 'lucide-react'
+import { PageHeader, Badge, Card, EmptyState, Avatar } from '@/components/ui'
+import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import type { Job } from '@/lib/constants'
+import { useFeed } from '@/features/feed/hooks/useFeed'
 import { cn } from '@/lib/utils'
 
 const TYPES = ['All roles', 'Full-time', 'Internship', 'Remote']
-
-// TODO(team): chưa có API Jobs — thay JOBS bằng dữ liệu thật khi backend sẵn sàng.
-const JOBS: Job[] = []
 
 export function JobsPage() {
   const [type, setType] = useState('All roles')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
 
-  // "Remote" lọc theo địa điểm làm việc; các loại còn lại khớp trực tiếp field `type`.
-  const filteredJobs = JOBS.filter((job) => {
+  // Fetch recruitment posts from backend
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('recruitment')
+  const posts = data?.pages.flatMap((page) => page.items) || []
+
+  // Filter jobs based on selected type
+  const filteredJobs = posts.filter((post) => {
+    const job = post.job
+    if (!job) return false
+    
     if (type === 'All roles') return true
-    if (type === 'Remote') return job.location.includes('Remote')
-    return job.type === type
+    
+    // Remote is usually indicated in location or employmentType
+    if (type === 'Remote') {
+      return job.location?.toLowerCase().includes('remote') || job.employmentType?.toLowerCase().includes('remote')
+    }
+    
+    // Check against standard employment types
+    if (type === 'Full-time') {
+      return job.employmentType === 'FULL_TIME' || job.employmentType === 'Full-time'
+    }
+    
+    if (type === 'Internship') {
+      return job.employmentType === 'INTERNSHIP' || job.employmentType === 'Internship'
+    }
+    
+    return true
   })
+
+  const formatSalary = (min?: number | null, max?: number | null) => {
+    if (!min && !max) return 'Negotiable'
+    if (min && !max) return `From ${min.toLocaleString('vi-VN')}₫`
+    if (!min && max) return `Up to ${max.toLocaleString('vi-VN')}₫`
+    return `${min?.toLocaleString('vi-VN')} - ${max?.toLocaleString('vi-VN')}₫`
+  }
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -28,7 +54,6 @@ export function JobsPage() {
         icon={<Briefcase size={20} />}
         title="Jobs & Recruitment"
         subtitle="Alumni-trusted opportunities with priority screening for the FPTU community."
-        actions={<Button variant="gold" size="sm">Post a job</Button>}
       />
 
       {/* search bar */}
@@ -63,7 +88,18 @@ export function JobsPage() {
         ))}
       </div>
 
-      {filteredJobs.length === 0 ? (
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+        </div>
+      ) : isError ? (
+        <EmptyState
+          icon={<Briefcase size={24} />}
+          title="Failed to load jobs"
+          description="There was an error connecting to the server."
+          action={<Button size="sm" variant="secondary" onClick={() => window.location.reload()}>Try again</Button>}
+        />
+      ) : filteredJobs.length === 0 ? (
         <EmptyState
           icon={<Briefcase size={24} />}
           title="No jobs match this filter"
@@ -72,48 +108,85 @@ export function JobsPage() {
         />
       ) : (
       <Stagger className="space-y-4" gap={0.06}>
-        {filteredJobs.map((job) => (
-          <StaggerItem key={job.id}>
-            <Card hover={false} className="p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-plum-900/[0.04] text-3xl ring-1 ring-inset ring-plum-900/10">
-                  {job.logo}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-bold text-plum-900">{job.title}</h2>
-                    {job.featured && <Badge tone="gold">Featured</Badge>}
+        {filteredJobs.map((post) => {
+          const job = post.job!
+          return (
+            <StaggerItem key={post.id}>
+              <Card hover={false} className="transition-all hover:-translate-y-0.5 hover:shadow-glow relative">
+                <Link to={`/app/posts/${post.id}`} className="absolute inset-0 z-0" aria-label={`View job ${job.title}`} />
+                <div className="relative z-10 p-5 flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-plum-900/[0.04] ring-1 ring-inset ring-plum-900/10 overflow-hidden">
+                    <Avatar src={post.avatar} name={post.author} size={56} />
                   </div>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-plum-500">
-                    <span className="inline-flex items-center gap-1.5"><Building2 size={13} /> {job.company}</span>
-                    <span className="inline-flex items-center gap-1.5"><MapPin size={13} /> {job.location}</span>
-                    <span className="inline-flex items-center gap-1.5"><Clock size={13} /> {job.type}</span>
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {job.tags.map((t) => (
-                      <span key={t} className="rounded-md bg-plum-900/[0.04] px-2 py-1 text-[11px] font-medium text-plum-500">{t}</span>
-                    ))}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link to={`/app/posts/${post.id}`} className="hover:underline">
+                        <h2 className="text-lg font-bold text-plum-900">{job.title || 'Untitled Job'}</h2>
+                      </Link>
+                    </div>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-plum-500">
+                      <span className="inline-flex items-center gap-1.5"><Building2 size={13} /> {job.company || 'Unknown Company'}</span>
+                      {job.location && <span className="inline-flex items-center gap-1.5"><MapPin size={13} /> {job.location}</span>}
+                      {job.employmentType && <span className="inline-flex items-center gap-1.5"><Clock size={13} /> {job.employmentType.replace('_', ' ')}</span>}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      <span className="rounded-md bg-plum-900/[0.04] px-2 py-1 text-[11px] font-medium text-plum-500">
+                        Posted by {post.author}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end">
+                    <span className="text-sm font-bold text-brand-600">
+                      {formatSalary(job.salaryMin, job.salaryMax)}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setSaved((s) => ({ ...s, [post.id]: !s[post.id] }))
+                        }}
+                        className={cn('grid h-10 w-10 place-items-center rounded-xl ring-1 ring-inset ring-plum-900/10 transition-colors', saved[post.id] ? 'bg-brand-500/20 text-brand-600' : 'text-plum-400 hover:bg-plum-900/[0.04]')}
+                        aria-label="Save job"
+                      >
+                        <Bookmark size={17} className={saved[post.id] ? 'fill-brand-300' : ''} />
+                      </button>
+                      {(job.applyUrl || job.contactEmail) && (
+                        <ButtonLink
+                          size="sm"
+                          href={job.applyUrl || (job.contactEmail ? `mailto:${job.contactEmail}` : '#')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Apply
+                        </ButtonLink>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end">
-                  <span className="text-sm font-bold text-brand-600">{job.salary}</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSaved((s) => ({ ...s, [job.id]: !s[job.id] }))}
-                      className={cn('grid h-10 w-10 place-items-center rounded-xl ring-1 ring-inset ring-plum-900/10 transition-colors', saved[job.id] ? 'bg-brand-500/20 text-brand-600' : 'text-plum-400 hover:bg-plum-900/[0.04]')}
-                      aria-label="Save job"
-                    >
-                      <Bookmark size={17} className={saved[job.id] ? 'fill-brand-300' : ''} />
-                    </button>
-                    <Button size="sm">Apply</Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </StaggerItem>
-        ))}
+              </Card>
+            </StaggerItem>
+          )
+        })}
       </Stagger>
+      )}
+
+      {hasNextPage && (
+        <Reveal>
+          <div className="mt-8 flex justify-center">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? 'Loading...' : 'Load more jobs'}
+            </Button>
+          </div>
+        </Reveal>
       )}
     </div>
   )
 }
+

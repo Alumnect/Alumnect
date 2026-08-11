@@ -141,7 +141,7 @@ export function CreatePostModal({
   const onSubmit = async (values: CreatePostInput) => {
     try {
       const payload = { ...values }
-      
+
       // Auto-fill content for Job/Event if user left it empty (Backend @NotBlank constraint)
       if (!payload.content.trim()) {
         if (payload.type === 'recruitment') {
@@ -232,26 +232,28 @@ export function CreatePostModal({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4" noValidate>
-          {/* Nội dung */}
-          <div>
-            <textarea
-              {...register('content')}
-              rows={5}
-              maxLength={POST_CONTENT_MAX}
-              placeholder="Bạn muốn chia sẻ điều gì với cộng đồng?"
-              className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 text-[15px] leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-400 focus:bg-white"
-            />
-            <div className="mt-1 flex items-center justify-between">
-              {errors.content ? (
-                <span className="text-xs font-medium text-coral-500">{errors.content.message}</span>
-              ) : (
-                <span />
-              )}
-              <span className="text-xs text-plum-400">
-                {content.length}/{POST_CONTENT_MAX}
-              </span>
+          {/* Nội dung (Ẩn đi nếu là Sự kiện, vì Sự kiện sẽ có form mô tả riêng bên trong khối sự kiện) */}
+          {type !== 'event' && (
+            <div>
+              <textarea
+                {...register('content')}
+                rows={5}
+                maxLength={POST_CONTENT_MAX}
+                placeholder={type === 'recruitment' ? "Mô tả chi tiết công việc tuyển dụng..." : "Bạn muốn chia sẻ điều gì với cộng đồng?"}
+                className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 text-[15px] leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-400 focus:bg-white"
+              />
+              <div className="mt-1 flex items-center justify-between">
+                {errors.content ? (
+                  <span className="text-xs font-medium text-coral-500">{errors.content.message}</span>
+                ) : (
+                  <span />
+                )}
+                <span className="text-xs text-plum-400">
+                  {content.length}/{POST_CONTENT_MAX}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Chọn loại bài viết */}
           <div className="flex flex-wrap gap-2">
@@ -286,7 +288,7 @@ export function CreatePostModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
-                    Chức danh <span className="text-coral-500">*</span>
+                    Chức vụ <span className="text-coral-500">*</span>
                   </label>
                   <input
                     {...register('job.title')}
@@ -434,6 +436,7 @@ export function CreatePostModal({
                         showMonthDropdown
                         showYearDropdown
                         dropdownMode="select"
+                        minDate={new Date()}
                         placeholderText="Chọn ngày giờ"
                         className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
                       />
@@ -459,6 +462,7 @@ export function CreatePostModal({
                         showMonthDropdown
                         showYearDropdown
                         dropdownMode="select"
+                        minDate={watch('event.startTime') ? new Date(watch('event.startTime') as string) : new Date()}
                         placeholderText="Chọn ngày giờ"
                         className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
                       />
@@ -493,47 +497,92 @@ export function CreatePostModal({
                   />
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Ảnh đính kèm — Instagram carousel preview */}
-          {allImages.length > 0 && (
-            <div className="space-y-2">
-              <ImageCarousel
-                images={allImages}
-                height={280}
-                altPrefix="Ảnh xem trước"
-                className="rounded-xl"
-              />
-              {/* Thumbnail strip — hover để xóa từng ảnh */}
-              <div className="flex gap-1.5 flex-wrap">
-                {allImages.map((url, idx) => (
-                  <div key={idx} className="relative group w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                    <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label={`Xóa ảnh ${idx + 1}`}
-                    >
-                      <Trash2 size={13} className="text-white" />
-                    </button>
+              {/* Mô tả sự kiện */}
+              <div className="pt-2 border-t border-violet-500/10 mt-4">
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                  <FileText size={13} /> Mô tả chi tiết sự kiện
+                </label>
+                <textarea
+                  {...register('content')}
+                  rows={4}
+                  maxLength={POST_CONTENT_MAX}
+                  placeholder="Giới thiệu về nội dung sự kiện, khách mời, lịch trình..."
+                  className="w-full resize-none rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm leading-relaxed text-plum-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20"
+                />
+              </div>
+
+              {/* Ảnh sự kiện */}
+              <div className="pt-2">
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                  <ImageIcon size={13} /> Ảnh sự kiện
+                </label>
+                {allImages.length > 0 && (
+                  <div className="space-y-2 mb-2">
+                    <ImageCarousel images={allImages} height={180} altPrefix="Ảnh xem trước" className="rounded-xl" />
+                    <div className="flex gap-1.5 flex-wrap">
+                      {allImages.map((url, idx) => (
+                        <div key={idx} className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                          <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={13} className="text-white" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
+                {allImages.length < 10 && (
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-plum-900/15 px-4 py-2 text-xs font-semibold text-plum-500 transition-colors hover:bg-white">
+                    {isUploading ? (
+                      <><Loader2 size={14} className="animate-spin" /> Đang tải {uploadingCount} ảnh lên…</>
+                    ) : (
+                      <><ImageIcon size={14} className="text-violet-500" /> {allImages.length > 0 ? 'Thêm ảnh khác' : 'Tải ảnh lên'}</>
+                    )}
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
+                  </label>
+                )}
               </div>
             </div>
           )}
 
-          {/* Nút thêm ảnh */}
-          {allImages.length < 10 && (
-            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-plum-900/15 px-4 py-3 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.03]">
-              {isUploading ? (
-                <><Loader2 size={16} className="animate-spin" /> Đang tải {uploadingCount} ảnh lên…</>
-              ) : (
-                <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? 'Thêm ảnh khác' : 'Thêm ảnh (tùy chọn)'}</>
+          {/* Ảnh đính kèm (Ẩn nếu là Sự kiện vì đã có ở trên) */}
+          {type !== 'event' && (
+            <>
+              {allImages.length > 0 && (
+                <div className="space-y-2">
+                  <ImageCarousel images={allImages} height={280} altPrefix="Ảnh xem trước" className="rounded-xl" />
+                  <div className="flex gap-1.5 flex-wrap">
+                    {allImages.map((url, idx) => (
+                      <div key={idx} className="relative group w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                        <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={13} className="text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-              <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
-            </label>
+              {allImages.length < 10 && (
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-plum-900/15 px-4 py-3 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.03]">
+                  {isUploading ? (
+                    <><Loader2 size={16} className="animate-spin" /> Đang tải {uploadingCount} ảnh lên…</>
+                  ) : (
+                    <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? 'Thêm ảnh khác' : 'Thêm ảnh (tùy chọn)'}</>
+                  )}
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
+                </label>
+              )}
+            </>
           )}
           {uploadError && <p className="text-xs font-medium text-coral-500">{uploadError}</p>}
 
@@ -560,8 +609,8 @@ export function CreatePostModal({
                   ? 'Đang lưu…'
                   : 'Lưu thay đổi'
                 : activeMutation.isPending
-                ? 'Đang đăng…'
-                : 'Đăng bài'}
+                  ? 'Đang đăng…'
+                  : 'Đăng bài'}
             </Button>
           </div>
         </form>

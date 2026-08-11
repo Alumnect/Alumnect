@@ -28,11 +28,6 @@ public class Event {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "cover_image_url", length = 500)
-    private String coverImageUrl;
 
     @Column(length = 255)
     private String location;
