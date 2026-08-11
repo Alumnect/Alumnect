@@ -22,7 +22,7 @@ public class PostSpecification {
      * @param status Trạng thái bài viết lọc (VISIBLE, HIDDEN, hoặc ALL)
      * @return Specification của thực thể Post
      */
-    public static Specification<Post> filterPosts(String query, String author, String status) {
+    public static Specification<Post> filterPosts(String query, String author, String status, String type) {
         return (root, criteriaQuery, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -50,6 +50,16 @@ public class PostSpecification {
                     predicates.add(cb.equal(root.get("isHidden"), false));
                 } else if ("HIDDEN".equals(statusUpper)) {
                     predicates.add(cb.equal(root.get("isHidden"), true));
+                }
+            }
+
+            // 4. Lọc theo loại bài viết (type)
+            if (type != null && !type.trim().isEmpty() && !"ALL".equalsIgnoreCase(type.trim())) {
+                try {
+                    // Ánh xạ chuỗi sang Enum hoặc so khớp String tuỳ thuộc loại thuộc tính của Entity
+                    predicates.add(cb.equal(cb.upper(root.get("type").as(String.class)), type.trim().toUpperCase()));
+                } catch (Exception e) {
+                    // Bỏ qua nếu có lỗi convert
                 }
             }
 
