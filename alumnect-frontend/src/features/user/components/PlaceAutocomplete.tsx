@@ -76,6 +76,7 @@ export function PlaceAutocomplete({
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const VIETMAP_KEY = (
@@ -236,7 +237,7 @@ export function PlaceAutocomplete({
       }
 
       setSuggestions(results)
-      setOpen(results.length > 0)
+      setOpen(prev => prev ? results.length > 0 : false)
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         console.error('Lỗi khi tìm địa điểm Vietmap:', err)
@@ -315,6 +316,7 @@ export function PlaceAutocomplete({
           <Search size={16} />
         </span>
         <input
+          ref={inputRef}
           type="text"
           value={value}
           onChange={handleInputChange}

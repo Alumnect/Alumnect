@@ -150,7 +150,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
 
       {/* Floating Searchable Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-full bg-white rounded-3xl border border-plum-900/10 shadow-2xl overflow-hidden animate-scale-up">
+        <div className="absolute bottom-full left-0 mb-2 z-50 w-full bg-white rounded-3xl border border-plum-900/10 shadow-2xl overflow-hidden animate-scale-up">
           {/* Search Bar */}
           <div className="p-3 border-b border-plum-900/5 bg-plum-50/30">
             <div className="relative flex items-center">
