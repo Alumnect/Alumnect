@@ -6,9 +6,9 @@
  *  - Áp dụng phân quyền theo vai trò: Guest chỉ xem bài PUBLIC; bài MEMBERS trả 403 (mời đăng nhập).
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / không tồn tại-đã ẩn (404) / không có quyền (403)
  *    / lỗi hệ thống (retry) / thành công.
- *  - Đăng bình luận thuộc UC18 nên ô nhập chỉ hiển thị ở trạng thái chờ (chưa mở).
+ *  - Thành viên (Student/Alumni) đăng bình luận qua ô soạn (UC18); Guest được mời đăng nhập.
  */
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Heart,
@@ -23,6 +23,7 @@ import {
   Lock,
   Inbox,
   Send,
+  AlertCircle,
 } from 'lucide-react'
 import { Avatar, Badge, Card, Skeleton, EmptyState } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
@@ -30,7 +31,7 @@ import { SmartImage } from '@/components/ui/SmartImage'
 import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { usePostDetail, useComments } from '@/features/post'
+import { usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
 import { useToggleLike } from '@/features/feed'
 
@@ -288,14 +289,17 @@ function CommentSkeleton() {
   )
 }
 
+/** Giới hạn ký tự nội dung bình luận (đồng bộ ràng buộc @Size backend UC18). */
+const COMMENT_MAX = 2000
+
 /**
- * Ô soạn bình luận ở cuối trang chi tiết.
- * Đăng bình luận thuộc UC18 nên ở UC16 ô nhập chỉ ở trạng thái chờ:
- *  - Guest: mời đăng nhập.
- *  - Thành viên: ô nhập vô hiệu hóa kèm ghi chú tính năng sắp mở.
+ * Ô soạn bình luận ở cuối trang chi tiết (UC18 - Comment on a post).
+ *  - Guest: mời đăng nhập (không hiển thị form).
+ *  - Thành viên (Student/Alumni): hiển thị form soạn & gửi bình luận.
  * @param isGuest Người xem hiện tại có phải Guest hay không
+ * @param postId  ID bài viết đang được bình luận
  */
-function CommentBox({ isGuest }: { isGuest: boolean }) {
+function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
   if (isGuest) {
     return (
       <Card hover={false} className="flex items-center justify-between gap-3 p-4">
@@ -309,18 +313,66 @@ function CommentBox({ isGuest }: { isGuest: boolean }) {
       </Card>
     )
   }
+  return <CommentComposer postId={postId} />
+}
+
+/**
+ * Form soạn & gửi bình luận cho thành viên đã đăng nhập (UC18 - Comment on a post).
+ * Tách riêng khỏi {@link CommentBox} để các hook luôn được gọi vô điều kiện (rules-of-hooks).
+ * Validate phía client (không rỗng, tối đa {@link COMMENT_MAX} ký tự), hiển thị trạng thái
+ * gửi và thông điệp lỗi nghiệp vụ từ Backend; khi thành công dọn ô nhập (hook tự chèn vào luồng).
+ * @param postId ID bài viết đang được bình luận
+ */
+function CommentComposer({ postId }: { postId: string }) {
+  const viewer = useAuthStore((s) => s.user)
+  const [content, setContent] = useState('')
+  const createComment = useCreateComment(postId)
+
+  const trimmed = content.trim()
+  const disabled = trimmed.length === 0 || createComment.isPending
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (disabled) return
+    createComment.mutate({ content: trimmed }, { onSuccess: () => setContent('') })
+  }
+
   return (
     <Card hover={false} className="p-3">
-      <div className="flex items-center gap-2">
-        <input
-          disabled
-          title="Tính năng đăng bình luận sẽ sớm ra mắt"
-          placeholder="Viết bình luận…"
-          className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 text-sm text-plum-500 placeholder:text-plum-400 disabled:cursor-not-allowed"
-        />
-        <Button size="sm" disabled leftIcon={<Send size={15} />}>Gửi</Button>
-      </div>
-      <p className="mt-2 pl-1 text-[11px] text-plum-400">Tính năng đăng bình luận sẽ sớm ra mắt.</p>
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="flex gap-3">
+          <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? ''} size={38} verified={viewer?.verified} />
+          <div className="min-w-0 flex-1">
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={2}
+              maxLength={COMMENT_MAX}
+              placeholder="Viết bình luận…"
+              className="w-full resize-none rounded-xl border border-plum-900/10 bg-plum-900/[0.02] px-4 py-2.5 text-sm leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-400 focus:bg-white"
+            />
+
+            {/* Thông điệp lỗi nghiệp vụ từ Backend (VD 403/404/400) */}
+            {createComment.isError && (
+              <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-coral-500">
+                <AlertCircle size={13} className="shrink-0" /> {(createComment.error as Error).message}
+              </p>
+            )}
+
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="pl-1 text-[11px] text-plum-400">{content.length}/{COMMENT_MAX}</span>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={disabled}
+                leftIcon={createComment.isPending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+              >
+                {createComment.isPending ? 'Đang gửi…' : 'Gửi'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </form>
     </Card>
   )
 }
@@ -409,8 +461,8 @@ function CommentsSection({
         Bình luận{commentCount ? ` · ${compact(commentCount)}` : ''}
       </h2>
 
-      {/* Ô soạn bình luận (trạng thái chờ ở UC16) */}
-      <CommentBox isGuest={isGuest} />
+      {/* Ô soạn & đăng bình luận (UC18) */}
+      <CommentBox isGuest={isGuest} postId={postId} />
 
       {/* Danh sách bình luận theo trạng thái tải */}
       {isLoading ? (

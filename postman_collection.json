@@ -3627,6 +3627,231 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "04.5. Bình luận bài viết (Comment) — UC18",
+					"item": [
+						{
+							"name": "Đăng bình luận gốc - Thành công (201)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/comments",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"comments"
+									]
+								},
+								"description": "### API Đăng Bình Luận (UC18 - Comment on a post)\n* Quyen: Bearer Token ({{jwtToken}}) — chi STUDENT/ALUMNI.\n* Body: { content (bat buoc, <=2000 ky tu), parentId (tuy chon) }.\n* Phan hoi (201): message \"Đăng bình luận thành công\", data { id, author, role, avatar, verified, time, text, parentId:null }.\n* Cap nhat comment_count cua bai viet.",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Bài viết rất hữu ích, cảm ơn bạn!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Trả lời bình luận - Thành công (201)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/comments",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"comments"
+									]
+								},
+								"description": "### Tra loi 1 binh luan (UC18)\n* parentId = ID binh luan cha (cung bai, dang ACTIVE).\n* Chi ho tro 1 cap: tra loi cua tra loi se duoc quy ve binh luan goc.\n* Phan hoi (201): data.parentId = ID binh luan goc.",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"Mình cũng thấy vậy!\",\n  \"parentId\": 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Nội dung rỗng (400)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/comments",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"comments"
+									]
+								},
+								"description": "### Kich ban 400\n* content rong/chi khoang trang -> @NotBlank.\n* Phan hoi (400): message \"Nội dung bình luận không được để trống\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"   \"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Bài không tồn tại (404)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/999999/comments",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"999999",
+										"comments"
+									]
+								},
+								"description": "### Kich ban 404 (bai viet)\n* Bai khong ton tai hoac da bi an.\n* Phan hoi (404): message \"Bài viết này không còn khả dụng\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"x\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Bình luận cha không tồn tại (404)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/comments",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"comments"
+									]
+								},
+								"description": "### Kich ban 404 (parent)\n* parentId khong ton tai / khac bai / da xoa.\n* Phan hoi (404): message \"Bình luận cần trả lời không còn khả dụng\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"x\",\n  \"parentId\": 999999\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Guest chưa đăng nhập (401)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/comments",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"comments"
+									]
+								},
+								"description": "### Kich ban 401\n* POST /posts/{id}/comments KHONG public -> Guest bi Spring Security chan.\n* Phan hoi (401): { error: 401, message: \"Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.\" }.",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"x\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"auth": {
+									"type": "noauth"
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Thất bại - Admin không được bình luận (403)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/posts/1/comments",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"posts",
+										"1",
+										"comments"
+									]
+								},
+								"description": "### Kich ban 403 (RBAC UC18)\n* Chay SAU khi dang nhap ADMIN de {{jwtToken}} la token Admin.\n* Chi STUDENT/ALUMNI moi duoc binh luan -> Admin bi tu choi.\n* Phan hoi (403): message \"Chỉ sinh viên và cựu sinh viên mới được bình luận\".",
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"x\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}
