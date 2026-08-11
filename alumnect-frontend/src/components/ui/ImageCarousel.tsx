@@ -16,11 +16,24 @@ interface ImageCarouselProps {
   altPrefix?: string
 }
 
+function isVideoUrl(url?: string): boolean {
+  if (!url) return false
+  const lower = url.toLowerCase()
+  return (
+    lower.endsWith('.mp4') ||
+    lower.endsWith('.webm') ||
+    lower.endsWith('.mov') ||
+    lower.endsWith('.avi') ||
+    lower.endsWith('.mkv') ||
+    lower.includes('/video/')
+  )
+}
+
 export function ImageCarousel({
   images,
   height = 460,
   className,
-  altPrefix = 'Ảnh',
+  altPrefix = 'Phương tiện',
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -143,20 +156,29 @@ export function ImageCarousel({
       className={cn('relative w-full overflow-hidden select-none group', className)}
       style={{ height }}
     >
-      {/* Blur background tĩnh — chỉ đổi khi current thay đổi, KHÔNG chạy cùng track */}
+      {/* Blur background tĩnh — chỉ đổi khi current thay đổi */}
       <div className="absolute inset-0 overflow-hidden" aria-hidden>
-        <img
-          src={images[current]}
-          aria-hidden
-          draggable={false}
-          className="h-full w-full object-cover"
-          style={{
-            filter: 'blur(24px) brightness(0.72) saturate(1.2)',
-            transform: 'scale(1.12)',
-            userSelect: 'none',
-            pointerEvents: 'none',
-          }}
-        />
+        {isVideoUrl(images[current]) ? (
+          <video
+            src={images[current]}
+            className="h-full w-full object-cover opacity-40 blur-md"
+            aria-hidden
+            muted
+          />
+        ) : (
+          <img
+            src={images[current]}
+            aria-hidden
+            draggable={false}
+            className="h-full w-full object-cover"
+            style={{
+              filter: 'blur(24px) brightness(0.72) saturate(1.2)',
+              transform: 'scale(1.12)',
+              userSelect: 'none',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
         <div className="absolute inset-0 bg-white/12" />
       </div>
 
@@ -182,14 +204,23 @@ export function ImageCarousel({
             className="shrink-0 h-full overflow-hidden"
             style={{ width: '100%' }}
           >
-            <img
-              src={url}
-              alt={`${altPrefix} ${idx + 1}`}
-              draggable={false}
-              className="h-full w-full object-contain"
-              style={{ userSelect: 'none', pointerEvents: 'none' }}
-              loading={idx === 0 ? 'eager' : 'lazy'}
-            />
+            {isVideoUrl(url) ? (
+              <video
+                src={url}
+                controls
+                className="h-full w-full object-contain relative z-20"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <img
+                src={url}
+                alt={`${altPrefix} ${idx + 1}`}
+                draggable={false}
+                className="h-full w-full object-contain"
+                style={{ userSelect: 'none', pointerEvents: 'none' }}
+                loading={idx === 0 ? 'eager' : 'lazy'}
+              />
+            )}
           </div>
         ))}
       </div>

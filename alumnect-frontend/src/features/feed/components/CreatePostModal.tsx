@@ -15,6 +15,7 @@ import type { AuthUser } from '@/store/authStore'
 import { feedApi } from '../api/feedApi'
 import { useCreatePost } from '../hooks/useCreatePost'
 import { useEditPost } from '../hooks/useEditPost'
+import { PlaceAutocomplete } from '@/features/user/components/PlaceAutocomplete'
 import { createPostSchema, POST_TYPE_LABELS, POST_CONTENT_MAX } from '../model/createPost'
 import type { CreatePostInput } from '../model/createPost'
 import { POST_TYPES } from '../model/post'
@@ -86,7 +87,6 @@ export function CreatePostModal({
           job: editPost.job ? {
             title: editPost.job.title ?? '',
             company: editPost.job.company ?? '',
-            employmentType: (editPost.job.employmentType as 'FULL_TIME' | 'PART_TIME' | 'INTERNSHIP' | 'CONTRACT') ?? 'FULL_TIME',
             location: editPost.job.location ?? '',
             salaryMin: editPost.job.salaryMin ?? undefined,
             salaryMax: editPost.job.salaryMax ?? undefined,
@@ -178,6 +178,44 @@ export function CreatePostModal({
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
     setUploadError(null)
+    const invalidFile = files.find(
+      (f) => !f.type.startsWith('image/') && !f.type.startsWith('video/')
+    )
+    if (invalidFile) {
+      setUploadError('Chỉ hỗ trợ tệp định dạng Hình ảnh hoặc Video. Không nhận tài liệu (Word, PDF,...) hoặc tệp khác.')
+      return
+    }
+
+    const videoFiles = files.filter(f => f.type.startsWith('video/'))
+    if (videoFiles.length > 0) {
+      try {
+        for (const vf of videoFiles) {
+          const duration = await new Promise<number>((resolve, reject) => {
+            const video = document.createElement('video')
+            video.preload = 'metadata'
+            video.onloadedmetadata = () => {
+              URL.revokeObjectURL(video.src)
+              resolve(video.duration)
+            }
+            video.onerror = () => {
+              URL.revokeObjectURL(video.src)
+              reject(new Error('Invalid video'))
+            }
+            video.src = URL.createObjectURL(vf)
+          })
+          if (duration > 60) {
+            setUploadError('Video không được vượt quá 1 phút.')
+            e.target.value = ''
+            return
+          }
+        }
+      } catch (err) {
+        setUploadError('Đã có lỗi khi kiểm tra tệp video.')
+        e.target.value = ''
+        return
+      }
+    }
+
     setIsUploading(true)
     setUploadingCount(files.length)
     try {
@@ -310,30 +348,23 @@ export function CreatePostModal({
                 </div>
               </div>
 
-              {/* Loại hình + Địa điểm */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
-                    Loại hình
-                  </label>
-                  <select
-                    {...register('job.employmentType')}
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
-                  >
-                    <option value="FULL_TIME">Full-time</option>
-                    <option value="PART_TIME">Part-time</option>
-                    <option value="INTERNSHIP">Internship</option>
-                    <option value="CONTRACT">Hợp đồng</option>
-                  </select>
-                </div>
+              {/* Địa điểm */}
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
                     <MapPin size={13} /> Địa điểm
                   </label>
-                  <input
-                    {...register('job.location')}
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
-                    placeholder="Hà Nội, Remote..."
+                  <Controller
+                    control={control}
+                    name="job.location"
+                    render={({ field }) => (
+                      <PlaceAutocomplete
+                        value={field.value || ''}
+                        onChange={(val) => field.onChange(val)}
+                        onSelect={(place) => field.onChange(place?.location || '')}
+                        placeholder="Hà Nội, Remote..."
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -478,10 +509,17 @@ export function CreatePostModal({
                   <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
                     <MapPin size={13} /> Địa điểm
                   </label>
-                  <input
-                    {...register('event.location')}
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
-                    placeholder="Tòa nhà Alpha, ĐH FPT"
+                  <Controller
+                    control={control}
+                    name="event.location"
+                    render={({ field }) => (
+                      <PlaceAutocomplete
+                        value={field.value || ''}
+                        onChange={(val) => field.onChange(val)}
+                        onSelect={(place) => field.onChange(place?.location || '')}
+                        placeholder="Tòa nhà Alpha, ĐH FPT"
+                      />
+                    )}
                   />
                 </div>
                 <div>
@@ -521,29 +559,36 @@ export function CreatePostModal({
                   <div className="space-y-2 mb-2">
                     <ImageCarousel images={allImages} height={180} altPrefix="Ảnh xem trước" className="rounded-xl" />
                     <div className="flex gap-1.5 flex-wrap">
-                      {allImages.map((url, idx) => (
-                        <div key={idx} className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                          <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(idx)}
-                            className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 size={13} className="text-white" />
-                          </button>
-                        </div>
-                      ))}
+                      {allImages.map((url, idx) => {
+                        const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
+                        return (
+                          <div key={idx} className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-black/10">
+                            {isVid ? (
+                              <video src={url} className="h-full w-full object-cover" />
+                            ) : (
+                              <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 size={13} className="text-white" />
+                            </button>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
                 {allImages.length < 10 && (
                   <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-plum-900/15 px-4 py-2 text-xs font-semibold text-plum-500 transition-colors hover:bg-white">
                     {isUploading ? (
-                      <><Loader2 size={14} className="animate-spin" /> Đang tải {uploadingCount} ảnh lên…</>
+                      <><Loader2 size={14} className="animate-spin" /> Đang tải {uploadingCount} phương tiện lên…</>
                     ) : (
-                      <><ImageIcon size={14} className="text-violet-500" /> {allImages.length > 0 ? 'Thêm ảnh khác' : 'Tải ảnh lên'}</>
+                      <><ImageIcon size={14} className="text-violet-500" /> {allImages.length > 0 ? 'Thêm ảnh/video khác' : 'Tải ảnh hoặc video lên'}</>
                     )}
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
+                    <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
                   </label>
                 )}
               </div>
@@ -557,29 +602,36 @@ export function CreatePostModal({
                 <div className="space-y-2">
                   <ImageCarousel images={allImages} height={280} altPrefix="Ảnh xem trước" className="rounded-xl" />
                   <div className="flex gap-1.5 flex-wrap">
-                    {allImages.map((url, idx) => (
-                      <div key={idx} className="relative group w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                        <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(idx)}
-                          className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={13} className="text-white" />
-                        </button>
-                      </div>
-                    ))}
+                    {allImages.map((url, idx) => {
+                      const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
+                      return (
+                        <div key={idx} className="relative group w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-black/10">
+                          {isVid ? (
+                            <video src={url} className="h-full w-full object-cover" />
+                          ) : (
+                            <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={13} className="text-white" />
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
               {allImages.length < 10 && (
                 <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-plum-900/15 px-4 py-3 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.03]">
                   {isUploading ? (
-                    <><Loader2 size={16} className="animate-spin" /> Đang tải {uploadingCount} ảnh lên…</>
+                    <><Loader2 size={16} className="animate-spin" /> Đang tải {uploadingCount} phương tiện lên…</>
                   ) : (
-                    <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? 'Thêm ảnh khác' : 'Thêm ảnh (tùy chọn)'}</>
+                    <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? 'Thêm ảnh/video khác' : 'Thêm ảnh hoặc Video (tùy chọn)'}</>
                   )}
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
+                  <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
                 </label>
               )}
             </>

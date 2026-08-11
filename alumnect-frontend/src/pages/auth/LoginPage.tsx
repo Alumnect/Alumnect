@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff } from 'lucide-react'
@@ -14,10 +14,29 @@ export function LoginPage() {
   const location = useLocation()
   const successMessage = location.state?.successMessage as string | undefined
 
+  const navigate = useNavigate()
+
   // Xử lý khi Google đăng nhập thành công
-  const handleGoogleSuccess = (credentialResponse: any) => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
     if (credentialResponse.credential) {
-      googleLoginM.mutate(credentialResponse.credential)
+      try {
+        await googleLoginM.mutateAsync(credentialResponse.credential)
+      } catch (err: any) {
+        console.error('Google login failed:', err, 'Status:', err.status, 'Data:', err.data)
+        // Nếu lỗi 404 (Tài khoản chưa tồn tại), chuyển hướng sang trang đăng ký và điền sẵn thông tin
+        if (err.status === 404 || err.data?.error === 404) {
+          const metadata = err.data?.data || {}
+          navigate('/register', {
+            state: {
+              googleData: {
+                email: metadata.email || '',
+                fullName: metadata.fullName || '',
+                token: credentialResponse.credential
+              }
+            }
+          })
+        }
+      }
     }
   }
 

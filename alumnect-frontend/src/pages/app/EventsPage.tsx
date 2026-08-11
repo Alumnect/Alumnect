@@ -113,11 +113,7 @@ export function EventsPage() {
                     <span className="text-[10px] font-bold uppercase text-gold-600">{dateInfo.month}</span>
                     <span className="text-xl font-extrabold text-plum-900">{dateInfo.day}</span>
                   </div>
-                  {post.author && (
-                    <Badge tone="violet" className="absolute right-3 top-3 overflow-hidden text-ellipsis whitespace-nowrap max-w-[150px]">
-                      By {post.author}
-                    </Badge>
-                  )}
+
                 </Link>
                 <div className="flex flex-col justify-between flex-1 p-5">
                   <Link to={`/app/posts/${post.id}`} className="block">
@@ -136,20 +132,23 @@ export function EventsPage() {
                       </p>
                     )}
                   </Link>
-                  <div className="mt-4 flex items-center justify-between border-t border-plum-900/8 pt-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {/* Placeholder for attendees avatar */}
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-plum-900/8 pt-4">
+                    <div className="flex flex-1 items-center gap-2 min-w-0">
+                      <div className="shrink-0">
                         <Avatar src={post.avatar} name={post.author} size={26} />
                       </div>
+                      <span className="text-sm font-medium text-plum-900 truncate" title={post.author}>
+                        {post.author}
+                      </span>
                       {event.capacity && (
-                        <span className="inline-flex items-center gap-1 text-xs text-plum-400">
+                        <span className="shrink-0 inline-flex items-center gap-1 text-xs text-plum-400">
                           <Users size={12} /> Max {compact(event.capacity)}
                         </span>
                       )}
                     </div>
                     <Button
                       size="sm"
+                      className="shrink-0"
                       variant={rsvp[post.id] ? 'secondary' : 'primary'}
                       onClick={() => setRsvp((s) => ({ ...s, [post.id]: !s[post.id] }))}
                     >

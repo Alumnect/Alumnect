@@ -20,7 +20,6 @@ export type FeedFilter = PostType | 'all'
 export const jobSchema = z.object({
   title: z.string().optional(),
   company: z.string().optional(),
-  employmentType: z.string().optional(),
   location: z.string().optional().nullable(),
   salaryMin: z.number().optional().nullable(),
   salaryMax: z.number().optional().nullable(),

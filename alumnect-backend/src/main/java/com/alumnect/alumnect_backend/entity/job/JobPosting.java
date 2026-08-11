@@ -35,10 +35,6 @@ public class JobPosting {
     @Column(length = 150)
     private String location;
 
-    @Column(name = "employment_type", nullable = false, length = 20)
-    @Builder.Default
-    private String employmentType = "FULL_TIME";
-
     @Column(name = "salary_min", precision = 12, scale = 2)
     private BigDecimal salaryMin;
 

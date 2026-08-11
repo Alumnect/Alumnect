@@ -427,8 +427,8 @@ export function PlaceAutocomplete({
                 <MapPin size={16} />
               </span>
               <div className="text-left flex-1 min-w-0">
-                <p className="text-sm font-bold text-plum-900 truncate">{s.title}</p>
-                <p className="text-xs text-plum-500 mt-0.5 leading-relaxed line-clamp-2">
+                <p className="text-sm font-bold text-plum-900 break-words">{s.title}</p>
+                <p className="text-xs text-plum-500 mt-0.5 leading-relaxed break-words">
                   {s.subtitle}
                 </p>
               </div>

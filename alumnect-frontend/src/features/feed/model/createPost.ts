@@ -37,7 +37,6 @@ export const createPostSchema = z.object({
   job: z.object({
     title: z.string().trim().optional(),
     company: z.string().trim().optional(),
-    employmentType: z.enum(['FULL_TIME', 'PART_TIME', 'INTERNSHIP', 'CONTRACT']).default('FULL_TIME').optional(),
     location: z.string().optional(),
     salaryMin: z.number().or(z.nan().transform(() => undefined)).optional(),
     salaryMax: z.number().or(z.nan().transform(() => undefined)).optional(),

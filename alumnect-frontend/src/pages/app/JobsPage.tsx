@@ -7,7 +7,7 @@ import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useFeed } from '@/features/feed/hooks/useFeed'
 import { cn } from '@/lib/utils'
 
-const TYPES = ['All roles', 'Full-time', 'Internship', 'Remote']
+const TYPES = ['All roles', 'Remote']
 
 export function JobsPage() {
   const [type, setType] = useState('All roles')
@@ -24,18 +24,9 @@ export function JobsPage() {
     
     if (type === 'All roles') return true
     
-    // Remote is usually indicated in location or employmentType
+    // Remote is usually indicated in location
     if (type === 'Remote') {
-      return job.location?.toLowerCase().includes('remote') || job.employmentType?.toLowerCase().includes('remote')
-    }
-    
-    // Check against standard employment types
-    if (type === 'Full-time') {
-      return job.employmentType === 'FULL_TIME' || job.employmentType === 'Full-time'
-    }
-    
-    if (type === 'Internship') {
-      return job.employmentType === 'INTERNSHIP' || job.employmentType === 'Internship'
+      return job.location?.toLowerCase().includes('remote')
     }
     
     return true
@@ -127,7 +118,6 @@ export function JobsPage() {
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-plum-500">
                       <span className="inline-flex items-center gap-1.5"><Building2 size={13} /> {job.company || 'Unknown Company'}</span>
                       {job.location && <span className="inline-flex items-center gap-1.5"><MapPin size={13} /> {job.location}</span>}
-                      {job.employmentType && <span className="inline-flex items-center gap-1.5"><Clock size={13} /> {job.employmentType.replace('_', ' ')}</span>}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       <span className="rounded-md bg-plum-900/[0.04] px-2 py-1 text-[11px] font-medium text-plum-500">

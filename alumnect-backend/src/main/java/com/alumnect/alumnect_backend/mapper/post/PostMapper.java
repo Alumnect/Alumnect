@@ -78,7 +78,6 @@ public class PostMapper {
                 .job(job != null ? JobDTO.builder()
                         .title(job.getTitle())
                         .company(job.getCompany())
-                        .employmentType(job.getEmploymentType())
                         .location(job.getLocation())
                         .salaryMin(job.getSalaryMin())
                         .salaryMax(job.getSalaryMax())

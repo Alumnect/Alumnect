@@ -106,7 +106,6 @@ public class PostServiceImpl implements PostService {
                     .poster(author)
                     .title(request.getJob().getTitle() != null ? request.getJob().getTitle() : "")
                     .company(request.getJob().getCompany() != null ? request.getJob().getCompany() : "")
-                    .employmentType(request.getJob().getEmploymentType() != null ? request.getJob().getEmploymentType() : "FULL_TIME")
                     .location(request.getJob().getLocation())
                     .salaryMin(request.getJob().getSalaryMin())
                     .salaryMax(request.getJob().getSalaryMax())
@@ -410,7 +409,6 @@ public class PostServiceImpl implements PostService {
                 if (existingJob != null) {
                     existingJob.setTitle(request.getJob().getTitle() != null ? request.getJob().getTitle() : "");
                     existingJob.setCompany(request.getJob().getCompany() != null ? request.getJob().getCompany() : "");
-                    existingJob.setEmploymentType(request.getJob().getEmploymentType() != null ? request.getJob().getEmploymentType() : "FULL_TIME");
                     existingJob.setLocation(request.getJob().getLocation());
                     existingJob.setSalaryMin(request.getJob().getSalaryMin());
                     existingJob.setSalaryMax(request.getJob().getSalaryMax());
@@ -423,7 +421,6 @@ public class PostServiceImpl implements PostService {
                         .poster(author)
                         .title(request.getJob().getTitle() != null ? request.getJob().getTitle() : "")
                         .company(request.getJob().getCompany() != null ? request.getJob().getCompany() : "")
-                        .employmentType(request.getJob().getEmploymentType() != null ? request.getJob().getEmploymentType() : "FULL_TIME")
                         .location(request.getJob().getLocation())
                         .salaryMin(request.getJob().getSalaryMin())
                         .salaryMax(request.getJob().getSalaryMax())

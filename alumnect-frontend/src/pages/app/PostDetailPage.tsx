@@ -247,13 +247,8 @@ function PostDetailCard({
               
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                  <div>
-                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Hình thức & Địa điểm</p>
+                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
                    <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
-                     {post.job.employmentType && (
-                       <span className="inline-flex items-center gap-1 rounded-md bg-aqua-100 px-2 py-0.5 text-xs font-bold text-aqua-800">
-                         {post.job.employmentType.replace('_', ' ')}
-                       </span>
-                     )}
                      {post.job.location && (
                        <span className="inline-flex items-center gap-1">
                          <MapPin size={15} className="text-brand-500" /> {post.job.location}

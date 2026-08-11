@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 public class JobDTO {
     private String title;
     private String company;
-    private String employmentType;
     private String location;
     private BigDecimal salaryMin;
     private BigDecimal salaryMax;
