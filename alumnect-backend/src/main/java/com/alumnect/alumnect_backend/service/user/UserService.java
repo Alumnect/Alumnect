@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.service.user;
 
 import com.alumnect.alumnect_backend.dto.request.user.ChangePasswordRequest;
+import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
 import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
 
 /**
@@ -43,7 +44,7 @@ public interface UserService {
      * @param request DTO chứa dữ liệu hồ sơ cá nhân cần cập nhật
      * @return DTO chứa thông tin hồ sơ chi tiết sau khi cập nhật
      */
-    UserProfileResponse updateOwnProfile(String email, com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest request);
+    UserProfileResponse updateOwnProfile(String email, UpdateProfileRequest request);
 
 }
 
