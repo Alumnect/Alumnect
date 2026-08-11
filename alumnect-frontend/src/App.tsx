@@ -22,9 +22,7 @@ import { NotificationsPage } from '@/pages/app/NotificationsPage'
 import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
 import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
-import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
-import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
-import { AdminSectionPage } from '@/pages/admin/AdminSectionPage'
+import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage } from '@/features/admin'
 
 function App() {
   return (
@@ -76,6 +74,7 @@ function App() {
           >
             <Route index element={<AdminOverviewPage />} />
             <Route path="users" element={<AdminUsersPage />} />
+            <Route path="posts" element={<AdminPostsPage />} />
             <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />
             <Route path="reports" element={<AdminSectionPage sectionKey="reports" />} />
             <Route path="revenue" element={<AdminSectionPage sectionKey="revenue" />} />

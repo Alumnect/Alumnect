@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { userApi } from '../api/userApi'
 
 export const userKeys = {
@@ -33,6 +33,38 @@ export function useUserProfile(userId: number | null, options?: { enabled?: bool
       const response = await userApi.getUserProfile(userId)
       return response.data
     },
+    enabled: (options?.enabled !== false) && !!userId && !isNaN(userId),
+  })
+}
+
+/**
+ * Hook truy vấn danh sách người theo dõi (Followers) kiểu cuộn vô hạn
+ */
+export function useUserFollowers(userId: number, size = 10, options?: { enabled?: boolean }) {
+  return useInfiniteQuery({
+    queryKey: ['user-followers', userId, size],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await userApi.getFollowers(userId, pageParam, size)
+      return response.data
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.pageNumber + 1),
+    enabled: (options?.enabled !== false) && !!userId && !isNaN(userId),
+  })
+}
+
+/**
+ * Hook truy vấn danh sách đang theo dõi (Following) kiểu cuộn vô hạn
+ */
+export function useUserFollowing(userId: number, size = 10, options?: { enabled?: boolean }) {
+  return useInfiniteQuery({
+    queryKey: ['user-following', userId, size],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await userApi.getFollowing(userId, pageParam, size)
+      return response.data
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.pageNumber + 1),
     enabled: (options?.enabled !== false) && !!userId && !isNaN(userId),
   })
 }

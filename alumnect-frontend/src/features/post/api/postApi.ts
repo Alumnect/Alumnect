@@ -60,4 +60,20 @@ export const postApi = {
     const last = typeof data?.last === 'boolean' ? (data!.last as boolean) : true
     return { items, page, hasMore: !last }
   },
+
+  /**
+   * Đăng một bình luận mới trên bài viết (UC18 - Comment on a post).
+   * Gọi `POST /api/v1/posts/{id}/comments` (token Bearer do interceptor tự đính kèm);
+   * trả về bình luận vừa tạo đã chuẩn hóa qua `commentSchema` để chèn thẳng vào luồng bình luận.
+   * @param postId  ID bài viết được bình luận
+   * @param content Nội dung bình luận
+   * @param parentId ID bình luận cha nếu là trả lời (tùy chọn)
+   * @return Bình luận mới đã chuẩn hóa
+   */
+  createComment: async (postId: string, content: string, parentId?: string): Promise<Comment> => {
+    const payload: { content: string; parentId?: number } = { content }
+    if (parentId) payload.parentId = Number(parentId)
+    const body = await http.post(`/posts/${encodeURIComponent(postId)}/comments`, payload)
+    return commentSchema.parse(extractData(body))
+  },
 }

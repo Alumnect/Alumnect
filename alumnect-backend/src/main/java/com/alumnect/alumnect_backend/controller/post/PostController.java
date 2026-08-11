@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.controller.post;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
@@ -123,6 +124,28 @@ public class PostController {
 
         PageResponse<CommentResponse> comments = postService.getPostComments(id, page, size, isAuthenticated(authentication));
         return ResponseEntity.ok(ApiResponse.success("Lấy bình luận thành công", comments));
+    }
+
+    /**
+     * API đăng một bình luận mới trên bài viết (UC18 - Comment on a post).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được bình luận — vai trò khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     * Bài đã ẩn/không tồn tại trả 404; nội dung rỗng/quá dài trả 400.
+     *
+     * @param id             ID bài viết được bình luận
+     * @param request        DTO chứa nội dung bình luận và {@code parentId} nếu là trả lời
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return Bình luận vừa tạo {@link CommentResponse} bọc trong {@link ApiResponse}, HTTP 201 Created
+     */
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<ApiResponse<CommentResponse>> createComment(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateCommentRequest request,
+            Authentication authentication) {
+
+        CommentResponse created = postService.createComment(authentication.getName(), id, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng bình luận thành công", created));
     }
 
     /**

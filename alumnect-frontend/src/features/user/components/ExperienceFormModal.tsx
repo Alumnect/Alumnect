@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
-
 import { Button } from '@/components/ui/Button'
 import { PlaceAutocomplete } from './PlaceAutocomplete'
 import { MonthYearPicker } from './MonthYearPicker'
@@ -12,6 +11,7 @@ import {
   usePromoteExperience,
 } from '../hooks/useExperienceMutations'
 import type { ExperienceResponse, ExperienceRequest } from '../model/userTypes'
+import { Modal } from '@/components/ui'
 
 interface ExperienceFormModalProps {
   isOpen: boolean
@@ -20,6 +20,10 @@ interface ExperienceFormModalProps {
   experience?: ExperienceResponse | null // Used for edit or promote source
 }
 
+/**
+ * Modal thêm/sửa kinh nghiệm làm việc của người dùng.
+ * Sử dụng component Modal dùng chung để tự động kế thừa Portal (hiển thị tràn màn hình) và AnimatePresence.
+ */
 export function ExperienceFormModal({
   isOpen,
   onClose,
@@ -158,28 +162,15 @@ export function ExperienceFormModal({
     }
   }, [isOpen, mode, experience])
 
-  if (!isOpen) return null
-
-  const handlePlaceSelect = (place: any) => {
-    if (place) {
-      setLocation(place.location)
-      setLatitude(place.latitude)
-      setLongitude(place.longitude)
-      setPlaceId(place.placeId)
-      setLocationCity(place.locationCity)
-      setLocationCountry(place.locationCountry)
-      setLocationCountryCode(place.locationCountryCode)
-      setGeocodingProvider(place.geocodingProvider)
-    } else {
-      setLocation('')
-      setLatitude(undefined)
-      setLongitude(undefined)
-      setPlaceId(undefined)
-      setLocationCity(undefined)
-      setLocationCountry(undefined)
-      setLocationCountryCode(undefined)
-      setGeocodingProvider(undefined)
-    }
+  const handlePlaceSelect = (data: any) => {
+    setLocation(data.formattedAddress)
+    setLatitude(data.latitude)
+    setLongitude(data.longitude)
+    setPlaceId(data.placeId)
+    setLocationCity(data.city)
+    setLocationCountry(data.country)
+    setLocationCountryCode(data.countryCode)
+    setGeocodingProvider(data.provider)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,11 +182,11 @@ export function ExperienceFormModal({
 
     // Validations
     if (!title.trim()) {
-      setValidationError('Chức danh (Title) không được để trống')
+      setValidationError('Vui lòng nhập chức danh / vai trò')
       return
     }
     if (!company.trim()) {
-      setValidationError('Tên công ty / tổ chức không được để trống')
+      setValidationError('Vui lòng nhập tên công ty / tổ chức')
       return
     }
     if (!startMonth || !startYear) {
@@ -226,7 +217,6 @@ export function ExperienceFormModal({
         return
       }
     }
-
     const requestPayload: ExperienceRequest = {
       title: title.trim(),
       company: company.trim(),
@@ -234,7 +224,7 @@ export function ExperienceFormModal({
       startDate: formattedStartDate,
       endDate: formattedEndDate,
       isCurrent,
-      isPrimary: isCurrent ? isPrimary : false,
+      isPrimary,
       latitude: latitude ?? null,
       longitude: longitude ?? null,
       placeId: placeId ?? null,

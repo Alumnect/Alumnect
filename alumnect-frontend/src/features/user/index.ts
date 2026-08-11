@@ -12,3 +12,4 @@ export { PlaceAutocomplete } from './components/PlaceAutocomplete'
 export * from './hooks/useExperienceMutations'
 export * from './hooks/useExperienceQueries'
 
+export { FollowListModal } from './components/FollowListModal'

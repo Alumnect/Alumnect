@@ -67,8 +67,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 String dateStr;
                 if (row[0] instanceof java.sql.Date) {
                     dateStr = ((java.sql.Date) row[0]).toLocalDate().format(formatter);
-                } else if (row[0] instanceof java.time.LocalDate) {
-                    dateStr = ((java.time.LocalDate) row[0]).format(formatter);
+                } else if (row[0] instanceof LocalDate) {
+                    dateStr = ((LocalDate) row[0]).format(formatter);
                 } else {
                     dateStr = row[0].toString();
                 }

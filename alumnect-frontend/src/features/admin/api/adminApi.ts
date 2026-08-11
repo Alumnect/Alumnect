@@ -46,6 +46,21 @@ export interface AdminVerificationRequestDto {
   createdAt: string
 }
 
+export interface AdminPostDto {
+  id: number
+  authorName: string
+  authorEmail: string
+  type: string
+  content: string
+  imageUrl?: string
+  visibility: string
+  likeCount: number
+  commentCount: number
+  repostCount: number
+  hidden: boolean
+  createdAt: string
+}
+
 export interface PageResponse<T> {
   content: T[]
   totalElements: number
@@ -114,4 +129,23 @@ export const adminApi = {
     }
   ) =>
     http.put<any, ApiResponse<void>>(`/admin/verifications/${id}/review`, payload),
+
+  /**
+   * Xem danh sách bài viết với các bộ lọc động và phân trang (UC65 & UC66)
+   */
+  getPosts: (params: {
+    query?: string
+    author?: string
+    status?: string
+    type?: string
+    page: number
+    size: number
+  }) =>
+    http.get<any, ApiResponse<PageResponse<AdminPostDto>>>('/admin/posts', { params }),
+
+  /**
+   * Thay đổi trạng thái ẩn của bài viết (UC68)
+   */
+  togglePostHidden: (id: number, hidden: boolean) =>
+    http.put<any, ApiResponse<void>>(`/admin/posts/${id}/status`, { hidden }),
 }

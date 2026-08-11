@@ -20,6 +20,8 @@ import {
   Camera,
   User,
   Sparkles,
+  UserPlus,
+  UserMinus,
 } from 'lucide-react'
 import axios from 'axios'
 import { Avatar, Card, Skeleton, EmptyState, SmartImage } from '@/components/ui'
@@ -35,9 +37,13 @@ import {
   ExperienceFormModal,
   useDeleteExperience,
   useUpdateExperience,
+  useFollowUser,
+  useUnfollowUser,
+  FollowListModal,
 } from '@/features/user'
 
 import type { ExperienceResponse } from '@/features/user'
+import { useLoginPrompt } from '@/store/loginPrompt'
 import { formatPeriodDate } from '@/utils/date'
 import { getSocialPlatform } from '@/utils/social'
 import { groupSkills } from '@/utils/profile'
@@ -87,6 +93,16 @@ export function ProfilePage() {
   const [selectedExp, setSelectedExp] = useState<ExperienceResponse | null>(null)
   const [deleteExpId, setDeleteExpId] = useState<number | null>(null)
   const [isUploadingMedia, setIsUploadingMedia] = useState(false)
+
+  const [followModalOpen, setFollowModalOpen] = useState(false)
+  const [followModalType, setFollowModalType] = useState<'followers' | 'following'>('followers')
+  const [followError, setFollowError] = useState<string | null>(null)
+
+  const followMutation = useFollowUser()
+  const unfollowMutation = useUnfollowUser()
+  const triggerLoginPrompt = useLoginPrompt((s) => s.open)
+
+  const followPending = followMutation.isPending || unfollowMutation.isPending
 
   const presignedUrlMutation = usePresignedUrl()
   const updateProfileMutation = useUpdateOwnProfile()
@@ -155,6 +171,31 @@ export function ProfilePage() {
     } finally {
       setIsUploadingMedia(false)
     }
+  }
+
+  const handleFollowToggle = async () => {
+    if (!isAuthenticated) {
+      triggerLoginPrompt('Đăng nhập để theo dõi thành viên này.')
+      return
+    }
+    if (!profile) return
+
+    setFollowError(null)
+    try {
+      if (profile.isFollowing) {
+        await unfollowMutation.mutateAsync(profile.userId)
+      } else {
+        await followMutation.mutateAsync(profile.userId)
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.'
+      setFollowError(msg)
+    }
+  }
+
+  const handleOpenFollowModal = (type: 'followers' | 'following') => {
+    setFollowModalType(type)
+    setFollowModalOpen(true)
   }
 
   // Skeleton khi đang tải
@@ -325,7 +366,7 @@ export function ProfilePage() {
 
               {/* Action Button bên phải */}
               <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto mb-2">
-                {isOwnProfile && (
+                {isOwnProfile ? (
                   <Button
                     variant={isEditingInPage ? 'primary' : 'secondary'}
                     size="sm"
@@ -335,6 +376,31 @@ export function ProfilePage() {
                   >
                     {isEditingInPage ? 'Xem trang cá nhân' : 'Chỉnh sửa hồ sơ'}
                   </Button>
+                ) : (
+                  <div className="flex flex-col items-end gap-1">
+                    <Button
+                      variant={profile.isFollowing ? 'secondary' : 'primary'}
+                      onClick={handleFollowToggle}
+                      disabled={followPending}
+                      className="rounded-2xl font-bold px-5 shadow-sm text-sm"
+                      leftIcon={
+                        followPending ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : profile.isFollowing ? (
+                          <UserMinus size={16} />
+                        ) : (
+                          <UserPlus size={16} />
+                        )
+                      }
+                    >
+                      {profile.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
+                    </Button>
+                    {followError && (
+                      <p className="text-xs text-rose-500 font-medium max-w-[200px] text-right">
+                        {followError}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -362,6 +428,22 @@ export function ProfilePage() {
                   profile.headline || (isAlumni ? 'Cựu sinh viên FPTU' : 'Sinh viên FPTU')
                 )}
               </p>
+
+              <div className="flex items-center gap-4 text-sm text-plum-500 font-medium pt-1 pb-1">
+                <button
+                  onClick={() => handleOpenFollowModal('followers')}
+                  className="hover:text-brand-600 transition-colors"
+                >
+                  <strong className="font-bold text-plum-900">{profile.followersCount || 0}</strong> người theo dõi
+                </button>
+                <span className="text-plum-300">•</span>
+                <button
+                  onClick={() => handleOpenFollowModal('following')}
+                  className="hover:text-brand-600 transition-colors"
+                >
+                  Đang theo dõi <strong className="font-bold text-plum-900">{profile.followingCount || 0}</strong> người
+                </button>
+              </div>
 
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 text-xs sm:text-sm text-plum-500">
                 <span className="inline-flex items-center gap-1.5 font-medium">
@@ -701,6 +783,16 @@ export function ProfilePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal danh sách Follower / Following */}
+      {profile && (
+        <FollowListModal
+          isOpen={followModalOpen}
+          onClose={() => setFollowModalOpen(false)}
+          userId={profile.userId}
+          type={followModalType}
+        />
       )}
     </div>
   )

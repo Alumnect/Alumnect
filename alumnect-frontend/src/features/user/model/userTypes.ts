@@ -99,6 +99,19 @@ export interface UserProfileResponse {
   primaryExperience?: PrimaryExperienceResponse | null
   experiences?: ExperienceResponse[]
   skills?: UserSkillResponse[]
+  followersCount?: number
+  followingCount?: number
+  isFollowing?: boolean
+}
+
+export interface FollowUserResponse {
+  userId: number
+  email: string
+  fullName: string
+  avatarUrl: string | null
+  headline: string | null
+  isAccountVerified: boolean
+  isFollowing: boolean
 }
 
 export interface UserSkillRequest {
