@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.service.post;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.enums.CommentStatus;
 import com.alumnect.alumnect_backend.common.enums.PostType;
 import com.alumnect.alumnect_backend.common.enums.PostVisibility;
 import com.alumnect.alumnect_backend.dao.post.CommentRepository;
@@ -8,6 +9,7 @@ import com.alumnect.alumnect_backend.dao.post.PostLikeRepository;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
@@ -252,13 +254,76 @@ public class PostServiceImpl implements PostService {
     /**
      * {@inheritDoc}
      * <p>
+     * Luồng xử lý:
+     * <ol>
+     *   <li>Kiểm tra quyền bình luận: chỉ STUDENT/ALUMNI, vai trò khác bị từ chối 403.</li>
+     *   <li>Nạp bài viết còn khả dụng — bài đã ẩn/không tồn tại trả 404 (qua {@link #loadViewablePost}).</li>
+     *   <li>Nếu là trả lời: kiểm tra bình luận cha thuộc đúng bài và đang ACTIVE (xem {@link #resolveParentOrThrow}).</li>
+     *   <li>Lưu bình luận ACTIVE và tăng bộ đếm {@code comment_count} của bài viết trong cùng transaction.</li>
+     * </ol>
+     */
+    @Override
+    @Transactional
+    public CommentResponse createComment(String email, Long postId, CreateCommentRequest request) {
+        User author = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được bình luận");
+        Post post = loadViewablePost(postId, true);
+
+        // Trả lời (tùy chọn): bình luận cha phải thuộc đúng bài viết này và đang hiển thị.
+        Comment parent = resolveParentOrThrow(request.getParentId(), postId);
+
+        Comment comment = commentRepository.save(Comment.builder()
+                .post(post)
+                .user(author)
+                .parentComment(parent)
+                .content(request.getContent().trim())
+                .status(CommentStatus.ACTIVE)
+                .build());
+
+        // Bộ đếm denormalized trên bài viết — cập nhật cùng transaction với việc lưu bình luận.
+        post.setCommentCount(post.getCommentCount() + 1);
+        postRepository.save(post);
+
+        log.info("Đăng bình luận: postId={}, commentId={}, userId={}, parentId={}, commentCount={}",
+                postId, comment.getId(), author.getId(),
+                parent != null ? parent.getId() : null, post.getCommentCount());
+
+        UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        return commentMapper.toResponse(comment, profile);
+    }
+
+    /**
+     * Kiểm tra và nạp bình luận cha khi người dùng trả lời một bình luận (UC18).
+     * Bình luận cha phải tồn tại, đang ACTIVE và thuộc đúng bài viết đang được bình luận —
+     * ngược lại coi như không còn khả dụng (404). Bảng {@code comments} chỉ hỗ trợ 1 cấp
+     * trả lời nên nếu bình luận cha bản thân đã là trả lời thì quy chiếu về bình luận gốc.
+     *
+     * @param parentId ID bình luận cha, hoặc null nếu đây là bình luận gốc
+     * @param postId   ID bài viết đang được bình luận
+     * @return Bình luận cha hợp lệ (đã quy về gốc), hoặc null nếu không phải trả lời
+     */
+    private Comment resolveParentOrThrow(Long parentId, Long postId) {
+        if (parentId == null) {
+            return null;
+        }
+        Comment parent = commentRepository.findById(parentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bình luận cần trả lời không còn khả dụng"));
+        if (parent.getStatus() != CommentStatus.ACTIVE || !postId.equals(parent.getPost().getId())) {
+            throw new ResourceNotFoundException("Bình luận cần trả lời không còn khả dụng");
+        }
+        // Chỉ hỗ trợ 1 cấp: trả lời của một trả lời được gắn về đúng bình luận gốc.
+        return parent.getParentComment() != null ? parent.getParentComment() : parent;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
      * Chỉ STUDENT/ALUMNI được thích (else 403); bài ẩn/không tồn tại → 404 (qua {@link #loadViewablePost}).
      * Lũy đẳng: nếu đã thích rồi thì không thêm nữa. Cập nhật bộ đếm like_count của bài viết.
      */
     @Override
     @Transactional
     public LikeResponse likePost(String email, Long postId) {
-        User user = resolveMemberOrThrow(email);
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được thích bài viết");
         Post post = loadViewablePost(postId, true);
         if (!postLikeRepository.existsByPostIdAndUserId(postId, user.getId())) {
             postLikeRepository.save(PostLike.builder().post(post).user(user).build());
@@ -278,7 +343,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public LikeResponse unlikePost(String email, Long postId) {
-        User user = resolveMemberOrThrow(email);
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được thích bài viết");
         Post post = loadViewablePost(postId, true);
         if (postLikeRepository.existsByPostIdAndUserId(postId, user.getId())) {
             postLikeRepository.deleteByPostIdAndUserId(postId, user.getId());
@@ -290,18 +355,20 @@ public class PostServiceImpl implements PostService {
     }
 
     /**
-     * Nạp tài khoản đang đăng nhập theo email và kiểm tra quyền thích/bỏ thích (UC17):
-     * chỉ STUDENT/ALUMNI được phép, vai trò khác (VD Admin) bị từ chối với lỗi 403.
+     * Nạp tài khoản đang đăng nhập theo email và kiểm tra quyền tương tác với bài viết
+     * (UC17 thích/bỏ thích, UC18 bình luận): chỉ STUDENT/ALUMNI được phép, vai trò khác
+     * (VD Admin) bị từ chối với lỗi 403 kèm thông điệp phù hợp với hành động đang thực hiện.
      *
-     * @param email Email người dùng (từ JWT)
-     * @return User hợp lệ để thao tác like
+     * @param email            Email người dùng (từ JWT)
+     * @param forbiddenMessage Thông điệp lỗi 403 tương ứng hành động (thích / bình luận)
+     * @return User hợp lệ để thực hiện hành động
      */
-    private User resolveMemberOrThrow(String email) {
+    private User resolveMemberOrThrow(String email, String forbiddenMessage) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
         String role = user.getRole() != null ? user.getRole().getName().toUpperCase() : "";
         if (!role.equals("STUDENT") && !role.equals("ALUMNI")) {
-            throw new ForbiddenException("Chỉ sinh viên và cựu sinh viên mới được thích bài viết");
+            throw new ForbiddenException(forbiddenMessage);
         }
         return user;
     }
