@@ -1,6 +1,8 @@
 import http from '@/lib/http'
 import { questionDetailSchema, questionSchema, topicSchema } from '../model/question'
 import type { CreateQuestionInput, Question, QuestionDetail, QuestionPageResult, Topic } from '../model/question'
+import { answerSchema } from '../model/answer'
+import type { Answer, AnswerPageResult, CreateAnswerInput } from '../model/answer'
 
 /**
  * Tầng gọi API cho UC38 - View question list.
@@ -48,6 +50,25 @@ function parseQuestions(raw: unknown[]): Question[] {
   const out: Question[] = []
   for (const r of raw) {
     const res = questionSchema.safeParse(r)
+    if (res.success) out.push(res.data)
+  }
+  return out
+}
+
+/** Trích tổng số phần tử (totalElements) từ phong bì phản hồi phân trang; fallback nếu không có. */
+function extractTotal(body: unknown, fallback: number): number {
+  const b = body as Record<string, unknown> | undefined
+  const d = (b?.data ?? b) as Record<string, unknown> | undefined
+  if (typeof d?.totalElements === 'number') return d.totalElements
+  if (typeof d?.total === 'number') return d.total
+  return fallback
+}
+
+/** Xác thực & chuẩn hóa mảng thô thành Answer[], bỏ qua phần tử hỏng. */
+function parseAnswers(raw: unknown[]): Answer[] {
+  const out: Answer[] = []
+  for (const r of raw) {
+    const res = answerSchema.safeParse(r)
     if (res.success) out.push(res.data)
   }
   return out
@@ -118,5 +139,39 @@ export const forumApi = {
       if (res.success) out.push(res.data)
     }
     return out
+  },
+
+  /**
+   * Lấy một trang câu trả lời của một câu hỏi (UC41 - Answer a question).
+   * Gọi `GET /api/v1/questions/{questionId}/answers?page={n}&size={m}`.
+   * @param questionId ID câu hỏi cần lấy câu trả lời
+   * @param page Chỉ số trang cần lấy (0-based)
+   * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
+   */
+  getAnswers: async ({
+    questionId,
+    page = 0,
+  }: { questionId: string | number; page?: number }): Promise<AnswerPageResult> => {
+    const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) })
+    const body = await http.get(`/questions/${questionId}/answers?${query.toString()}`)
+    const items = parseAnswers(extractRawItems(body))
+    return { items, page, hasMore: inferHasMore(body, items.length), total: extractTotal(body, items.length) }
+  },
+
+  /**
+   * Gửi một câu trả lời mới cho câu hỏi (UC41 - Answer a question).
+   * Gọi `POST /api/v1/questions/{questionId}/answers`; interceptor `http` tự đính Bearer token.
+   * @param questionId ID câu hỏi được trả lời
+   * @param input Nội dung câu trả lời
+   * @return Câu trả lời vừa tạo đã chuẩn hóa
+   */
+  createAnswer: async ({
+    questionId,
+    input,
+  }: { questionId: string | number; input: CreateAnswerInput }): Promise<Answer> => {
+    const body = await http.post(`/questions/${questionId}/answers`, input)
+    const b = body as unknown as Record<string, unknown> | undefined
+    const payload = (b?.data ?? b) as unknown
+    return answerSchema.parse(payload)
   },
 }
