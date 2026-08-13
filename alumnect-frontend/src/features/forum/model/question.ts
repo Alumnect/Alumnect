@@ -19,6 +19,7 @@ export const questionSchema = z.object({
   title: z.string().default(''),
   excerpt: z.string().default(''),
   topic: z.string().default(''),
+  major: z.string().default(''),
   author: z.string().default('Ẩn danh'),
   avatar: z.string().default(''),
   verified: z.boolean().default(false),
@@ -40,6 +41,8 @@ export const questionDetailSchema = z.object({
   body: z.string().default(''),
   topic: z.string().default(''),
   topicId: z.union([z.string(), z.number()]).transform(Number).nullable().default(null),
+  major: z.string().default(''),
+  majorId: z.union([z.string(), z.number()]).transform(Number).nullable().default(null),
   author: z.string().default('Ẩn danh'),
   avatar: z.string().default(''),
   authorHeadline: z.string().default(''),
@@ -51,20 +54,23 @@ export const questionDetailSchema = z.object({
 })
 export type QuestionDetail = z.infer<typeof questionDetailSchema>
 
-/**
- * Schema Zod cho một chủ đề diễn đàn (dùng cho bộ lọc).
- * `parentId` tạo hệ phân cấp 2 cấp: null = ngành lớn (cấp 1), có giá trị = chủ đề con.
- */
+/** Schema Zod cho một THỂ LOẠI thảo luận dạng phẳng. */
 export const topicSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(Number),
   name: z.string().default(''),
-  parentId: z
-    .union([z.string(), z.number()])
-    .transform(Number)
-    .nullable()
-    .default(null),
 })
 export type Topic = z.infer<typeof topicSchema>
+
+/**
+ * Schema Zod cho một NGÀNH (major) — dùng cho bộ lọc và form đặt câu hỏi.
+ * Lấy từ `GET /api/v1/majors` (đồng bộ với type `Major` bên features/auth).
+ */
+export const majorSchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(Number),
+  code: z.string().default(''),
+  name: z.string().default(''),
+})
+export type MajorOption = z.infer<typeof majorSchema>
 
 /**
  * Schema Zod cho form đặt câu hỏi mới (UC40 - Ask a question).
@@ -82,6 +88,7 @@ export const createQuestionSchema = z.object({
     .min(1, 'Nội dung câu hỏi không được để trống')
     .max(10000, 'Nội dung câu hỏi không được vượt quá 10000 ký tự'),
   topicId: z.number().nullable(),
+  majorId: z.number().nullable(),
 })
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>
 

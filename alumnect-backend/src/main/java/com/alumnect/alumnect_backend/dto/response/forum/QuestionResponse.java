@@ -26,8 +26,11 @@ public class QuestionResponse {
     /** Đoạn trích ngắn từ nội dung câu hỏi (tối đa ~160 ký tự) để xem trước trên danh sách */
     private String excerpt;
 
-    /** Tên chủ đề của câu hỏi (chuỗi rỗng nếu chưa phân loại) */
+    /** Tên thể loại của câu hỏi (chuỗi rỗng nếu chưa phân loại) */
     private String topic;
+
+    /** Tên ngành của câu hỏi (chuỗi rỗng nếu chưa chọn ngành) */
+    private String major;
 
     /** Họ và tên tác giả câu hỏi */
     private String author;

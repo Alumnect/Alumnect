@@ -80,17 +80,20 @@ export const forumApi = {
    * Gọi `GET /api/v1/questions?page={n}&size={m}&sort={s}[&topicId={id}]`.
    * @param page Chỉ số trang cần lấy (0-based)
    * @param sort Tiêu chí sắp xếp ('recent' | 'votes' | 'answers'), có thể ghép nhiều bằng dấu phẩy
-   * @param topicIds Danh sách ID chủ đề để lọc (tick nhiều), rỗng = không lọc
+   * @param topicIds Danh sách ID thể loại để lọc (tick nhiều), rỗng = không lọc
+   * @param majorIds Danh sách ID ngành để lọc (tick nhiều), rỗng = không lọc — độc lập với thể loại
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
    */
   getQuestions: async ({
     page = 0,
     sort = 'recent',
     topicIds = [],
-  }: { page?: number; sort?: string; topicIds?: number[] } = {}): Promise<QuestionPageResult> => {
+    majorIds = [],
+  }: { page?: number; sort?: string; topicIds?: number[]; majorIds?: number[] } = {}): Promise<QuestionPageResult> => {
     const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE), sort })
-    // Gửi nhiều id chủ đề dạng CSV: topicId=3,7,9 — backend nhận List<Long>.
+    // Gửi nhiều id dạng CSV: topicId=3,7,9 / majorId=1,4 — backend nhận List<Long>.
     if (topicIds.length > 0) query.set('topicId', topicIds.join(','))
+    if (majorIds.length > 0) query.set('majorId', majorIds.join(','))
 
     const body = await http.get(`/questions?${query.toString()}`)
     const items = parseQuestions(extractRawItems(body))

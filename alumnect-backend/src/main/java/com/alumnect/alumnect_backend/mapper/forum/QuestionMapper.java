@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
 import com.alumnect.alumnect_backend.entity.forum.ForumTopic;
 import com.alumnect.alumnect_backend.entity.forum.Question;
+import com.alumnect.alumnect_backend.entity.user.Major;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.springframework.stereotype.Component;
@@ -43,15 +44,20 @@ public class QuestionMapper {
                 ? authorProfile.getAvatarUrl()
                 : "";
 
-        // Tên chủ đề: chuỗi rỗng nếu câu hỏi chưa được phân loại.
+        // Tên thể loại: chuỗi rỗng nếu câu hỏi chưa được phân loại.
         ForumTopic topic = question.getTopic();
         String topicName = topic != null ? topic.getName() : "";
+
+        // Tên ngành: chuỗi rỗng nếu câu hỏi chưa chọn ngành.
+        Major major = question.getMajor();
+        String majorName = major != null ? major.getName() : "";
 
         return QuestionResponse.builder()
                 .id(String.valueOf(question.getId()))
                 .title(question.getTitle())
                 .excerpt(buildExcerpt(question.getBody()))
                 .topic(topicName)
+                .major(majorName)
                 .author(authorName)
                 .avatar(avatarUrl)
                 .verified(author.isAccountVerified())
@@ -84,10 +90,15 @@ public class QuestionMapper {
                 ? authorProfile.getHeadline()
                 : "";
 
-        // Tên & ID chủ đề: rỗng/null nếu câu hỏi chưa được phân loại.
+        // Tên & ID thể loại: rỗng/null nếu câu hỏi chưa được phân loại.
         ForumTopic topic = question.getTopic();
         String topicName = topic != null ? topic.getName() : "";
         Long topicId = topic != null ? topic.getId() : null;
+
+        // Tên & ID ngành: rỗng/null nếu câu hỏi chưa chọn ngành.
+        Major major = question.getMajor();
+        String majorName = major != null ? major.getName() : "";
+        Long majorId = major != null ? major.getId() : null;
 
         return QuestionDetailResponse.builder()
                 .id(String.valueOf(question.getId()))
@@ -95,6 +106,8 @@ public class QuestionMapper {
                 .body(question.getBody())
                 .topic(topicName)
                 .topicId(topicId)
+                .major(majorName)
+                .majorId(majorId)
                 .author(authorName)
                 .avatar(avatarUrl)
                 .authorHeadline(headline)
@@ -116,7 +129,6 @@ public class QuestionMapper {
         return TopicResponse.builder()
                 .id(topic.getId())
                 .name(topic.getName())
-                .parentId(topic.getParentId())
                 .build();
     }
 

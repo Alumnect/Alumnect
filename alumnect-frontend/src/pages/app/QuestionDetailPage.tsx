@@ -129,8 +129,15 @@ function QuestionDetailContent({ q }: { q: QuestionDetail }) {
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
       <div className="min-w-0 flex-1">
-        {q.topic && (
-          <Badge tone="violet" className="mb-3 px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>
+        {(q.topic || q.major) && (
+          <div className="mb-3 flex flex-wrap items-center gap-1.5">
+            {q.topic && (
+              <Badge tone="violet" className="px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>
+            )}
+            {q.major && (
+              <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>
+            )}
+          </div>
         )}
         <h1 className="text-2xl font-extrabold leading-snug text-plum-900 sm:text-[1.75rem]">{q.title}</h1>
 

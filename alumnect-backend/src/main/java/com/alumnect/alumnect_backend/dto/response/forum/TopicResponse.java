@@ -5,25 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO chứa thông tin một chủ đề diễn đàn trả về cho Client (UC38 - View question list).
- * Dùng để đổ vào bộ lọc chủ đề (dropdown/tabs) phía Frontend.
- */
+/** Flat discussion category returned for forum filters and question forms. */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TopicResponse {
 
-    /** ID chủ đề — dùng làm giá trị lọc gửi lên tham số topicId */
     private Long id;
 
-    /** Tên chủ đề hiển thị */
     private String name;
-
-    /**
-     * ID chủ đề cha — null nếu là ngành lớn/chủ đề cấp 1, có giá trị nếu là chủ đề con.
-     * Frontend dùng trường này để dựng cây phân cấp (ngành lớn -> chủ đề con) cho bộ lọc.
-     */
-    private Long parentId;
 }

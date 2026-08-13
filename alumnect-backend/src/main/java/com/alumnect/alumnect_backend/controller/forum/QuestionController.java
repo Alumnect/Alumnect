@@ -43,8 +43,10 @@ public class QuestionController {
      * @param page    Số thứ tự trang cần lấy (0-based), mặc định 0
      * @param size    Kích thước trang, mặc định 10
      * @param sort    Tiêu chí sắp xếp: "recent" (mặc định), "votes", "answers"
-     * @param topicId Danh sách ID chủ đề cần lọc (tick chọn nhiều), VD {@code topicId=3,7,9};
-     *                bỏ trống nếu không lọc theo chủ đề
+     * @param topicId Danh sách ID thể loại cần lọc (tick chọn nhiều), VD {@code topicId=3,7,9};
+     *                bỏ trống nếu không lọc theo thể loại
+     * @param majorId Danh sách ID ngành cần lọc (tick chọn nhiều), VD {@code majorId=1,4};
+     *                bỏ trống nếu không lọc theo ngành. Lọc thể loại và ngành độc lập nhau.
      * @return Trang kết quả câu hỏi {@link QuestionResponse} bọc trong {@link ApiResponse}
      */
     @GetMapping
@@ -52,9 +54,10 @@ public class QuestionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "recent") String sort,
-            @RequestParam(required = false) List<Long> topicId) {
+            @RequestParam(required = false) List<Long> topicId,
+            @RequestParam(required = false) List<Long> majorId) {
 
-        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, topicId);
+        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, topicId, majorId);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách câu hỏi thành công", questions));
     }
 

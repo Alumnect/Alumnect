@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.entity.forum;
 
 import com.alumnect.alumnect_backend.common.enums.QuestionStatus;
+import com.alumnect.alumnect_backend.entity.user.Major;
 import com.alumnect.alumnect_backend.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,10 +33,15 @@ public class Question {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    /** Chủ đề của câu hỏi (null nếu chưa phân loại) — tham chiếu bảng forum_topics */
+    /** Thể loại thảo luận của câu hỏi (null nếu chưa phân loại) — tham chiếu bảng forum_topics */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id")
     private ForumTopic topic;
+
+    /** Ngành liên quan của câu hỏi (null nếu chưa chọn ngành) — tham chiếu bảng majors */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "major_id")
+    private Major major;
 
     /** Tiêu đề câu hỏi */
     @Column(nullable = false, length = 250)

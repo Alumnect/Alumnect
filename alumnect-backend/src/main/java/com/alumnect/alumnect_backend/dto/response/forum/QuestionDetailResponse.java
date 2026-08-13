@@ -28,11 +28,17 @@ public class QuestionDetailResponse {
     /** Toàn bộ nội dung chi tiết của câu hỏi (không cắt trích như danh sách) */
     private String body;
 
-    /** Tên chủ đề của câu hỏi (chuỗi rỗng nếu chưa phân loại) */
+    /** Tên thể loại của câu hỏi (chuỗi rỗng nếu chưa phân loại) */
     private String topic;
 
-    /** ID chủ đề của câu hỏi (null nếu chưa phân loại) — dùng để quay về danh sách đã lọc theo chủ đề */
+    /** ID thể loại của câu hỏi (null nếu chưa phân loại) — dùng để quay về danh sách đã lọc theo thể loại */
     private Long topicId;
+
+    /** Tên ngành của câu hỏi (chuỗi rỗng nếu chưa chọn ngành) */
+    private String major;
+
+    /** ID ngành của câu hỏi (null nếu chưa chọn ngành) — dùng để quay về danh sách đã lọc theo ngành */
+    private Long majorId;
 
     /** Họ và tên tác giả câu hỏi */
     private String author;
