@@ -363,6 +363,7 @@ export function CreatePostModal({
                         onChange={(val) => field.onChange(val)}
                         onSelect={(place) => field.onChange(place?.location || '')}
                         placeholder="Hà Nội, Remote..."
+                        inputClassName="!rounded-lg !py-2 h-[38px] text-sm"
                       />
                     )}
                   />
@@ -518,20 +519,21 @@ export function CreatePostModal({
                         onChange={(val) => field.onChange(val)}
                         onSelect={(place) => field.onChange(place?.location || '')}
                         placeholder="Tòa nhà Alpha, ĐH FPT"
+                        inputClassName="!rounded-lg !py-2 h-[38px] text-sm"
                       />
                     )}
                   />
                 </div>
                 <div>
                   <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
-                    <Users size={13} /> Sức chứa (người) <span className="font-normal text-plum-400">— Để trống = không giới hạn</span>
+                    <Users size={13} /> Sức chứa (người)
                   </label>
                   <input
                     type="number"
                     min={1}
                     {...register('event.capacity', { valueAsNumber: true })}
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
-                    placeholder="100"
+                    className="w-full h-[38px] rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    placeholder="100 (Để trống = không giới hạn)"
                   />
                 </div>
               </div>

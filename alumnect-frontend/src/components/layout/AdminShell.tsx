@@ -5,10 +5,13 @@ import { cn } from '@/lib/utils'
 import { ADMIN_NAV } from '@/lib/constants'
 import { Avatar, Badge } from '@/components/ui/primitives'
 import { useLogout } from '@/features/auth'
+import { useAuthStore } from '@/store/authStore'
 
 export function AdminShell() {
   const location = useLocation()
   const logoutM = useLogout()
+  const user = useAuthStore((s) => s.user)
+
   return (
     <div className="relative min-h-screen bg-cream-100 text-plum-600">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-grid mask-fade-b opacity-50" />
@@ -75,10 +78,10 @@ export function AdminShell() {
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-right sm:block">
-              <span className="block text-sm font-bold text-plum-900">Admin FPTU</span>
-              <span className="block text-xs text-plum-400">Super admin</span>
+              <span className="block text-sm font-bold text-plum-900">{user?.name || 'Admin FPTU'}</span>
+              <span className="block text-xs text-plum-400">Quản trị viên</span>
             </span>
-            <Avatar src="https://i.pravatar.cc/120?img=64" name="Admin" size={38} />
+            <Avatar src={user?.avatarUrl} name={user?.name || 'Admin'} size={38} />
           </div>
         </header>
 

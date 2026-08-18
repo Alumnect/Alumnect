@@ -120,7 +120,7 @@ export default function AdminPostDetailPage() {
               <div className="flex items-center justify-between border-b border-plum-900/5 pb-4 mb-5">
                 <div className="flex items-center gap-3">
                   <Avatar
-                    src={undefined}
+                    src={post.authorAvatarUrl}
                     name={post.authorName || 'U'}
                     className="h-12 w-12 border border-gold-300 bg-gradient-to-tr from-gold-100 to-gold-200 text-plum-900 font-bold"
                   />

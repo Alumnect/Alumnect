@@ -652,17 +652,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Xác thực Google ID Token bằng cách gửi yêu cầu tới endpoint tokeninfo của Google.
+     * Xác thực Google ID Token bằng cách gửi yêu cầu tới endpoint tokeninfo của
+     * Google.
      * Kiểm tra tính hợp lệ của token và so khớp với Client ID của hệ thống.
      *
      * @param tokenString Chuỗi ID Token nhận từ Client
-     * @return Map chứa thông tin các claims trong Google ID Token (email, name, sub, picture...)
+     * @return Map chứa thông tin các claims trong Google ID Token (email, name,
+     *         sub, picture...)
      */
     private Map<String, Object> verifyGoogleToken(String tokenString) {
         try {
             String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + tokenString;
 
-            // Gọi HTTP GET request tới Google API để xác thực token bằng RestTemplate bean dùng chung
+            // Gọi HTTP GET request tới Google API để xác thực token bằng RestTemplate bean
+            // dùng chung
             ResponseEntity<Map> responseEntity = this.restTemplate.getForEntity(url, Map.class);
 
             if (responseEntity.getStatusCode() != HttpStatus.OK || responseEntity.getBody() == null) {
@@ -714,7 +717,8 @@ public class AuthServiceImpl implements AuthService {
         String email = ((String) googleClaims.get("email")).trim().toLowerCase();
 
         // 2. Tìm kiếm trong bảng user_oauth_providers trước
-        Optional<UserOAuthProvider> oauthOpt = userOAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", providerUserId);
+        Optional<UserOAuthProvider> oauthOpt = userOAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE",
+                providerUserId);
 
         User user;
         if (oauthOpt.isPresent()) {
@@ -733,14 +737,15 @@ public class AuthServiceImpl implements AuthService {
                         .build();
                 userOAuthProviderRepository.save(newOauth);
 
-
             } else {
-                // 4. Nếu email chưa tồn tại -> Ném lỗi GoogleUserNotFoundException để Frontend biết và điền sẵn form đăng ký
+                // 4. Nếu email chưa tồn tại -> Ném lỗi GoogleUserNotFoundException để Frontend
+                // biết và điền sẵn form đăng ký
                 String name = (String) googleClaims.get("name");
                 if (name == null) {
                     name = "";
                 }
-                throw new GoogleUserNotFoundException(email, name, providerUserId, "Tài khoản Google chưa được đăng ký trên hệ thống.");
+                throw new GoogleUserNotFoundException(email, name, providerUserId,
+                        "Tài khoản Google chưa được đăng ký trên hệ thống.");
             }
         }
 
@@ -815,7 +820,8 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Đăng ký tài khoản người dùng mới sử dụng tài khoản Google.
-     * Xác thực token, lấy email từ Google, kiểm tra thông tin bổ sung và lưu vào DB.
+     * Xác thực token, lấy email từ Google, kiểm tra thông tin bổ sung và lưu vào
+     * DB.
      */
     @Override
     @Transactional
@@ -1072,7 +1078,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Đăng xuất người dùng khỏi tất cả các thiết bị bằng cách thu hồi toàn bộ refresh token.
+     * Đăng xuất người dùng khỏi tất cả các thiết bị bằng cách thu hồi toàn bộ
+     * refresh token.
      *
      * @param email Địa chỉ email của người dùng
      */
@@ -1080,7 +1087,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logoutAllDevices(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
         try {
             refreshTokenRepository.deleteByUser(user);
         } catch (Exception e) {
@@ -1100,17 +1108,20 @@ public class AuthServiceImpl implements AuthService {
 
         // 1. Tìm tài khoản bằng email
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
 
         // 2. Kiểm tra trạng thái tài khoản theo quy tắc nghiệp vụ
         if (user.getAccountStatus() == AccountStatus.LOCKED) {
             throw new BadRequestException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
         }
         if (user.getAccountStatus() == AccountStatus.PENDING) {
-            throw new BadRequestException("Tài khoản của bạn chưa được xác thực email. Vui lòng kiểm tra hòm thư để xác thực tài khoản hoặc thực hiện đăng ký lại.");
+            throw new BadRequestException(
+                    "Tài khoản của bạn chưa được xác thực email. Vui lòng kiểm tra hòm thư để xác thực tài khoản hoặc thực hiện đăng ký lại.");
         }
 
-        // 3. Áp dụng giới hạn thời gian chờ gửi lại mã mới (5 phút - bỏ qua nếu mã cũ đã bị khóa)
+        // 3. Áp dụng giới hạn thời gian chờ gửi lại mã mới (5 phút - bỏ qua nếu mã cũ
+        // đã bị khóa)
         Optional<VerificationToken> lastTokenOpt = tokenRepository.findFirstByUserAndTypeOrderByCreatedAtDesc(user,
                 VerificationType.PASSWORD_RESET);
         if (lastTokenOpt.isPresent()) {
@@ -1175,7 +1186,8 @@ public class AuthServiceImpl implements AuthService {
         String email = request.getEmail().trim().toLowerCase();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
 
         VerificationToken token = getAndValidateToken(user, request.getToken(), VerificationType.PASSWORD_RESET,
                 "Không tìm thấy yêu cầu đặt lại mật khẩu nào cho tài khoản này");
@@ -1208,16 +1220,19 @@ public class AuthServiceImpl implements AuthService {
         String email = request.getEmail().trim().toLowerCase();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
 
         getAndValidateToken(user, request.getToken(), VerificationType.PASSWORD_RESET,
                 "Không tìm thấy yêu cầu đặt lại mật khẩu nào cho tài khoản này");
     }
 
     /**
-     * Helper dùng chung kiểm tra và xác thực mã OTP (được sử dụng cho cả email verification và password reset).
+     * Helper dùng chung kiểm tra và xác thực mã OTP (được sử dụng cho cả email
+     * verification và password reset).
      */
-    private VerificationToken getAndValidateToken(User user, String tokenValue, VerificationType type, String notFoundMessage) {
+    private VerificationToken getAndValidateToken(User user, String tokenValue, VerificationType type,
+            String notFoundMessage) {
         VerificationToken token = tokenRepository
                 .findFirstByUserAndTypeOrderByCreatedAtDesc(user, type)
                 .orElseThrow(() -> new ResourceNotFoundException(notFoundMessage));
@@ -1232,7 +1247,8 @@ public class AuthServiceImpl implements AuthService {
 
         // Kiểm tra xem mã đã bị khóa do nhập sai quá 5 lần chưa
         if (token.getFailedAttempts() >= 5) {
-            throw new BadRequestException("Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
+            throw new BadRequestException(
+                    "Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
         }
 
         // So khớp mã OTP
@@ -1248,7 +1264,8 @@ public class AuthServiceImpl implements AuthService {
 
             int remaining = 5 - currentFailed;
             if (remaining <= 0) {
-                throw new BadRequestException("Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
+                throw new BadRequestException(
+                        "Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
             } else {
                 throw new BadRequestException("Mã xác thực không chính xác. Bạn còn " + remaining + " lần thử.");
             }

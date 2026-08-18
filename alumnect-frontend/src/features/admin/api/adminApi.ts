@@ -37,19 +37,26 @@ export interface AdminUserDto {
 export interface AdminVerificationRequestDto {
   id: number
   userId: number
+  email?: string
   fullName: string
+  avatarUrl?: string
   graduationYear: number
   majorCode: string
+  majorName?: string
   proofUrl: string
   note?: string
   status: string
   createdAt: string
+  reviewedBy?: string
+  reviewNote?: string
+  reviewedAt?: string
 }
 
 export interface AdminPostDto {
   id: number
   authorName: string
   authorEmail: string
+  authorAvatarUrl?: string
   type: string
   content: string
   imageUrl?: string

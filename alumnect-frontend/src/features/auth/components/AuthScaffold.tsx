@@ -57,22 +57,25 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
 
 type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string
+  icon?: ReactNode
   trailing?: ReactNode
   error?: string
 }
 
 export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
-  { label, trailing, error, className, ...rest },
+  { label, icon, trailing, error, className, ...rest },
   ref,
 ) {
   return (
     <div className="relative">
+      {icon && <span className="absolute top-3.5 left-3 text-gray-400 z-10 pointer-events-none">{icon}</span>}
       <input
         ref={ref}
         {...rest}
         placeholder=" "
         className={cn(
           'peer block w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 pb-2.5 pt-4 text-sm text-gray-900 focus:border-[#F27024] focus:outline-none focus:ring-0 [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white]',
+          icon && 'pl-10',
           error && 'border-red-500 focus:border-red-500',
           trailing && 'pr-10',
           className,
@@ -81,6 +84,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
       <label
         className={cn(
           'absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform bg-white px-1 text-xs font-medium text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-[#F27024]',
+          icon && 'left-9',
           error && 'peer-focus:text-red-500'
         )}
       >

@@ -10,8 +10,9 @@ export function Logo({ className, to = '/', compact }: { className?: string; to?
         <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo_2010.svg" alt="FPT" className="h-8" />
       </span>
       {!compact && (
-        <span className="text-lg font-extrabold tracking-tight text-[#004F9E]">
-          Alum<span className="text-[#F27024]">Nect</span>
+        <span className="text-2xl sm:text-3xl font-bold tracking-normal leading-none" style={{ fontFamily: "'Caveat', 'Dancing Script', cursive" }}>
+          <span className="text-[#004F9E]">Alum</span>
+          <span className="text-[#F27024]">Nect</span>
         </span>
       )}
     </Link>

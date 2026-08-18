@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { ArrowUpRight, BadgeCheck, UserPlus, Activity, Inbox, Loader2 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -20,6 +21,17 @@ export function AdminOverviewPage() {
   const [selectedReq, setSelectedReq] = useState<{ id: number; fullName: string } | null>(null)
   const [reviewAction, setReviewAction] = useState<'APPROVED' | 'REJECTED' | null>(null)
   const [reviewNote, setReviewNote] = useState('')
+
+  useEffect(() => {
+    if (selectedReq && reviewAction) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [selectedReq, reviewAction])
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -256,59 +268,61 @@ export function AdminOverviewPage() {
       </Reveal>
 
       {/* Review Confirmation Modal */}
-      {selectedReq && reviewAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4 backdrop-blur-sm">
-          <Card hover={false} className="w-full max-w-md bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-plum-900">
-              {reviewAction === 'APPROVED' ? 'Duyệt hồ sơ cựu sinh viên' : 'Từ chối hồ sơ cựu sinh viên'}
-            </h3>
-            <p className="mt-2 text-sm text-plum-500">
-              {reviewAction === 'APPROVED'
-                ? `Bạn có chắc muốn phê duyệt tài khoản cựu sinh viên cho `
-                : `Vui lòng nhập lý do từ chối tài khoản của cựu sinh viên `}
-              <strong>{selectedReq.fullName}</strong>.
-            </p>
+      {selectedReq && reviewAction &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4 backdrop-blur-sm">
+            <Card hover={false} className="w-full max-w-md bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <h3 className="text-lg font-bold text-plum-900">
+                {reviewAction === 'APPROVED' ? 'Duyệt hồ sơ cựu sinh viên' : 'Từ chối hồ sơ cựu sinh viên'}
+              </h3>
+              <p className="mt-2 text-sm text-plum-500">
+                {reviewAction === 'APPROVED'
+                  ? `Bạn có chắc muốn phê duyệt tài khoản cựu sinh viên cho `
+                  : `Vui lòng nhập lý do từ chối tài khoản của cựu sinh viên `}
+                <strong>{selectedReq.fullName}</strong>.
+              </p>
 
-            <form onSubmit={handleReviewSubmit} className="mt-4">
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-wider text-plum-400">
-                  Ghi chú phê duyệt / Lý do từ chối
-                </span>
-                <textarea
-                  required={reviewAction === 'REJECTED'}
-                  value={reviewNote}
-                  onChange={(e) => setReviewNote(e.target.value)}
-                  placeholder={
-                    reviewAction === 'APPROVED'
-                      ? 'Ví dụ: Minh chứng tốt nghiệp hợp lệ.'
-                      : 'Lý do cụ thể (Bắt buộc)...'
-                  }
-                  className="mt-2 h-24 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.02] p-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-gold-400/50 focus:outline-none"
-                />
-              </label>
+              <form onSubmit={handleReviewSubmit} className="mt-4">
+                <label className="block">
+                  <span className="text-xs font-bold uppercase tracking-wider text-plum-400">
+                    Ghi chú phê duyệt / Lý do từ chối
+                  </span>
+                  <textarea
+                    required={reviewAction === 'REJECTED'}
+                    value={reviewNote}
+                    onChange={(e) => setReviewNote(e.target.value)}
+                    placeholder={
+                      reviewAction === 'APPROVED'
+                        ? 'Ví dụ: Minh chứng tốt nghiệp hợp lệ.'
+                        : 'Lý do cụ thể (Bắt buộc)...'
+                    }
+                    className="mt-2 h-24 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.02] p-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-gold-400/50 focus:outline-none"
+                  />
+                </label>
 
-              <div className="mt-5 flex justify-end gap-3">
-                <Button type="button" variant="secondary" onClick={() => setSelectedReq(null)}>
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className={cn(
-                    reviewAction === 'APPROVED'
-                      ? 'from-gold-300 to-gold-400 text-plum-900 shadow-[0_12px_28px_-12px_rgba(239,175,62,0.8)]'
-                      : 'from-rose-600 to-rose-500 text-white shadow-[0_12px_28px_-12px_rgba(220,38,38,0.5)]'
-                  )}
-                  disabled={reviewMutation.isPending}
-                >
-                  {reviewMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-                  Xác nhận
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
+                <div className="mt-5 flex justify-end gap-3">
+                  <Button type="button" variant="secondary" onClick={() => setSelectedReq(null)}>
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className={cn(
+                      reviewAction === 'APPROVED'
+                        ? 'from-gold-300 to-gold-400 text-plum-900 shadow-[0_12px_28px_-12px_rgba(239,175,62,0.8)]'
+                        : 'from-rose-600 to-rose-500 text-white shadow-[0_12px_28px_-12px_rgba(220,38,38,0.5)]'
+                    )}
+                    disabled={reviewMutation.isPending}
+                  >
+                    {reviewMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                    Xác nhận
+                  </Button>
+                </div>
+              </form>
+            </Card>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

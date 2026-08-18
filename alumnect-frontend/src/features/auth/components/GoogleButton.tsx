@@ -40,6 +40,7 @@ export function GoogleButton({ label }: { label: string }) {
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
           callback: handleCredentialResponse,
+          auto_select: false,
         })
         window.google.accounts.id.renderButton(containerRef.current, {
           theme: 'outline',

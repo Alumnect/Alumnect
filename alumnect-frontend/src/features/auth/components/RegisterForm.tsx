@@ -235,6 +235,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
             label="Mật khẩu"
             type={showPassword ? 'text' : 'password'}
             placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
+            error={errors.password?.message}
             trailing={
               <button
                 type="button"
@@ -245,6 +246,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             }
+            {...register('password')}
           />
         )}
 
