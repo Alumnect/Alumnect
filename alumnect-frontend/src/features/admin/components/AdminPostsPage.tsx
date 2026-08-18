@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, User, Newspaper, Clock, ThumbsUp, MessageSquare, Repeat } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -21,6 +22,7 @@ const POST_TYPES = [
 ]
 
 export function AdminPostsPage() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState('ALL')
   const [type, setType] = useState('ALL')
   const [query, setQuery] = useState('')
@@ -152,6 +154,7 @@ export function AdminPostsPage() {
                     <th className="px-5 py-3 font-semibold">Phạm vi / Loại</th>
                     <th className="px-5 py-3 font-semibold">Tương tác</th>
                     <th className="px-5 py-3 font-semibold">Trạng thái</th>
+                    <th className="px-5 py-3 font-semibold text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -201,6 +204,16 @@ export function AdminPostsPage() {
                         <Badge tone={p.hidden ? 'danger' : 'success'}>
                           {p.hidden ? 'Đã ẩn' : 'Hiển thị'}
                         </Badge>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate(`/admin/posts/${p.id}`)}
+                          className="h-8 text-xs font-bold bg-plum-900/[0.04] text-plum-700 hover:bg-plum-900/[0.08]"
+                        >
+                          Chi tiết
+                        </Button>
                       </td>
                     </tr>
                   ))}

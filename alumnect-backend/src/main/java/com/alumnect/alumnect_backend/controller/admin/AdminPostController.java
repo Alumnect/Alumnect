@@ -59,5 +59,21 @@ public class AdminPostController {
         adminPostService.togglePostHidden(id, request.getHidden());
         String msg = request.getHidden() ? "Ẩn bài viết thành công" : "Mở ẩn bài viết thành công";
         return ResponseEntity.ok(ApiResponse.success(msg, null));
+     }
+
+    /**
+     * Lấy thông tin chi tiết bài viết cộng đồng dành cho Admin (UC67).
+     * Mô tả chi tiết: Tiếp nhận yêu cầu lấy chi tiết bài viết từ Client, thực hiện gọi Service và trả về định dạng ApiResponse.
+     *
+     * @param id ID bài viết cần lấy chi tiết
+     * @return Đối tượng phản hồi chứa chi tiết bài viết bọc trong ApiResponse
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<AdminPostResponse>> getPostDetail(@PathVariable Long id) {
+        // Gọi dịch vụ lấy chi tiết bài viết
+        AdminPostResponse post = adminPostService.getPostDetail(id);
+        
+        // Trả về kết quả thành công bọc trong ApiResponse
+        return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết bài viết thành công", post));
     }
 }

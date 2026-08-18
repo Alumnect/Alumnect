@@ -144,9 +144,25 @@ export function useTogglePostHidden() {
       const response = await adminApi.togglePostHidden(id, hidden)
       return response.data
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'posts'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'post', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
     },
+  })
+}
+
+/**
+ * Hook lấy chi tiết một bài viết cộng đồng dành cho Admin (UC67)
+ */
+export function useAdminPostDetail(id: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'post', id],
+    queryFn: async () => {
+      if (!id) return null
+      const response = await adminApi.getPostDetail(id)
+      return response.data
+    },
+    enabled: id !== null,
   })
 }
