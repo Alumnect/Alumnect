@@ -85,24 +85,26 @@ export function AppShell() {
   const roleLabel = user ? (user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
 
   return (
-    <div className="relative min-h-screen bg-cream-100 text-plum-600">
-      {/* ambient pastel wash */}
+    <div className="relative min-h-screen bg-slate-50 text-slate-600">
+      {/* ambient FPT brand wash */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-brand-300/25 blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-coral-300/20 blur-[150px]" />
+        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-[#F27024]/10 blur-[160px]" />
+        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-[#004F9E]/10 blur-[160px]" />
       </div>
 
       {/* ===== top header ===== */}
-      <header className="sticky top-0 z-30 border-b border-plum-900/[0.07] bg-cream-50/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl shadow-xs">
+        {/* Top FPT Brand Accent Bar */}
+        <div className="h-1 bg-gradient-to-r from-[#F27024] via-[#004F9E] to-[#009A3E]" />
+        <div className="mx-auto flex h-15 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
           <Logo />
 
           {/* desktop search */}
-          <label className="relative ml-1 hidden items-center md:flex">
-            <Search size={16} className="pointer-events-none absolute left-3 text-plum-400" />
+          <label className="relative ml-2 hidden items-center md:flex">
+            <Search size={16} className="pointer-events-none absolute left-3 text-slate-400" />
             <input
               placeholder="Search…"
-              className="h-10 w-48 rounded-full border border-plum-900/10 bg-white pl-9 pr-3 text-sm text-plum-900 placeholder:text-plum-400 transition-all focus:w-64 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25 lg:w-56"
+              className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56"
             />
           </label>
 
@@ -118,22 +120,22 @@ export function AppShell() {
                   aria-label={item.label}
                   className={({ isActive }) =>
                     cn(
-                      'group relative flex h-16 items-center justify-center px-5 transition-colors',
-                      isActive ? 'text-brand-700' : 'text-plum-400 hover:text-plum-900',
+                      'group relative flex h-15 items-center justify-center px-5 transition-colors',
+                      isActive ? 'text-[#F27024] font-bold' : 'text-slate-500 hover:text-slate-900',
                     )
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      {Icon && <Icon size={23} className={cn('transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'text-brand-600')} />}
+                      {Icon && <Icon size={22} className={cn('transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'text-[#F27024]')} />}
                       {/* hover tooltip label */}
-                      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-plum-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+                      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
                         {item.label}
                       </span>
                       {isActive && (
                         <motion.span
                           layoutId="app-tab"
-                          className="absolute inset-x-3 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-brand-500 to-violet-500"
+                          className="absolute inset-x-3 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#F27024] to-[#FF8C38]"
                           transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                         />
                       )}
@@ -146,12 +148,6 @@ export function AppShell() {
 
           {/* right actions */}
           <div className="ml-auto flex items-center gap-1 lg:ml-0">
-            {isAuthenticated && (
-              <Button size="sm" variant="primary" leftIcon={<Plus size={16} />} className="hidden sm:inline-flex">
-                Create
-              </Button>
-            )}
-
             {/* mobile search toggle */}
             <button
               onClick={() => setSearchOpen((v) => !v)}

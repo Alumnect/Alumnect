@@ -81,7 +81,7 @@ export function MessagesPage() {
               <div key={i} className={cn('flex', m.me ? 'justify-end' : 'justify-start')}>
                 <div className={cn(
                   'max-w-[75%] rounded-2xl px-4 py-2.5 text-sm',
-                  m.me ? 'bg-gradient-to-r from-brand-600 to-violet-600 text-white' : 'bg-plum-900/[0.05] text-plum-800',
+                  m.me ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-100 shadow-sm text-slate-800',
                 )}>
                   <p>{m.text}</p>
                   <p className={cn('mt-1 text-[10px]', m.me ? 'text-white/70' : 'text-plum-400')}>{m.time}</p>
@@ -92,7 +92,7 @@ export function MessagesPage() {
 
           <div className="flex items-center gap-2 border-t border-plum-900/8 p-4">
             <input placeholder="Write a message…" className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
-            <button className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 text-white transition-transform hover:scale-105">
+            <button className="grid h-11 w-11 place-items-center rounded-xl bg-brand-600 text-white shadow-sm transition-transform hover:scale-105 hover:bg-brand-700">
               <Send size={18} />
             </button>
           </div>

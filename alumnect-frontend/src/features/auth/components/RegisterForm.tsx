@@ -4,14 +4,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
 import { 
-  User, Mail, Lock, Eye, EyeOff, GraduationCap, Users, 
+  User, Mail, Eye, EyeOff, GraduationCap, Users, 
   ArrowRight, BadgeCheck, Upload, Loader2, Sparkles, CheckCircle2, AlertCircle
 } from 'lucide-react'
 import { useMajors, useRegister, usePresignedUrl } from '../hooks/useAuth'
-import { useGoogleRegister } from '../hooks/useAuthMutations'
+import { useGoogleRegister, useGoogleLogin } from '../hooks/useAuthMutations'
 import { Field } from './AuthScaffold'
-import { GoogleButton } from './GoogleButton'
 import { registerSchema, googleRegisterSchema } from '../model/schemas'
+import { GoogleLogin } from '@react-oauth/google'
+import { useNavigate } from 'react-router-dom'
 import type { RegisterFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -29,7 +30,31 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
   const { data: majors = [], isLoading: isLoadingMajors } = useMajors()
   const registerMutation = useRegister()
   const googleRegisterMutation = useGoogleRegister()
+  const googleLoginMutation = useGoogleLogin()
   const presignedUrlMutation = usePresignedUrl()
+  const navigate = useNavigate()
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (credentialResponse.credential) {
+      try {
+        await googleLoginMutation.mutateAsync(credentialResponse.credential)
+      } catch (err: any) {
+        if (err.status === 404 || err.data?.error === 404) {
+          const metadata = err.data?.data || {}
+          navigate('/register', {
+            state: {
+              googleData: {
+                email: metadata.email || '',
+                fullName: metadata.fullName || '',
+                token: credentialResponse.credential
+              }
+            },
+            replace: true
+          })
+        }
+      }
+    }
+  }
 
   const {
     register,
@@ -189,7 +214,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         <Field 
           label="Họ và tên" 
           placeholder="Nguyễn Văn A" 
-          icon={<User size={16} />} 
+          trailing={<User size={16} />} 
           error={errors.fullName?.message}
           {...register('fullName')}
         />
@@ -198,7 +223,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           label="Email FPT" 
           type="email" 
           placeholder="you@fpt.edu.vn" 
-          icon={<Mail size={16} />} 
+          trailing={<Mail size={16} />} 
           error={errors.email?.message}
           disabled={!!googleData}
           className={cn(googleData && 'bg-plum-900/[0.05] cursor-not-allowed')}
@@ -210,9 +235,6 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
             label="Mật khẩu"
             type={showPassword ? 'text' : 'password'}
             placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
-            icon={<Lock size={16} />}
-            error={errors.password?.message}
-            {...register('password')}
             trailing={
               <button
                 type="button"
@@ -356,7 +378,17 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
             <span className="h-px flex-1 bg-plum-900/[0.06]" />
           </div>
 
-          <GoogleButton label="Đăng ký bằng Google" />
+          <div className="flex justify-center mb-4">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.error('Google Login Failed')}
+              useOneTap
+              shape="rectangular"
+              theme="outline"
+              text="signup_with"
+              size="large"
+            />
+          </div>
         </>
       )}
 

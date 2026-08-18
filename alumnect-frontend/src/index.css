@@ -10,91 +10,92 @@
    ========================================================================== */
 
 @theme {
-  /* ---- Typography (warm, rounded, friendly) ---- */
+  /* ---- Typography (clean, modern, premium) ---- */
   --font-display: 'Sora', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  /* ---- Warm cream canvas (repurposed "ink" scale = LIGHT) ---- */
-  --color-ink-950: #f1e9dd;
-  --color-ink-900: #faf4ec;
+  /* ---- Clean Slate canvas (replacing old yellowish cream) ---- */
+  --color-ink-950: #f8fafc;
+  --color-ink-900: #f1f5f9;
   --color-ink-850: #ffffff;
   --color-ink-800: #ffffff;
-  --color-ink-700: #f0e7db;
-  --color-ink-600: #e7dccd;
+  --color-ink-700: #e2e8f0;
+  --color-ink-600: #cbd5e1;
 
-  --color-cream-50: #fffdfa;
-  --color-cream-100: #fbf5ee;
-  --color-cream-200: #f4ebe0;
-  --color-cream-300: #ecdfce;
+  --color-cream-50: #ffffff;
+  --color-cream-100: #f8fafc;
+  --color-cream-200: #f1f5f9;
+  --color-cream-300: #e2e8f0;
 
-  /* ---- Warm plum ink (text) — tuned for WCAG-AA on cream ---- */
-  --color-plum-300: #9b91a8;
-  --color-plum-400: #877d96;
-  --color-plum-500: #6f6680;
-  --color-plum-600: #6a6178;
-  --color-plum-700: #534b62;
-  --color-plum-800: #413a50;
-  --color-plum-900: #322c3f;
+  /* ---- Crisp Slate Ink (text) — high contrast, ultra-readable WCAG AAA ---- */
+  --color-plum-300: #cbd5e1;
+  --color-plum-400: #94a3b8;
+  --color-plum-500: #64748b;
+  --color-plum-600: #475569;
+  --color-plum-700: #334155;
+  --color-plum-800: #1e293b;
+  --color-plum-900: #0f172a;
 
-  /* ---- Brand: soft periwinkle / lavender ---- */
-  --color-brand-50: #f2f3ff;
-  --color-brand-100: #e8e9ff;
-  --color-brand-200: #d5d8ff;
-  --color-brand-300: #bcc0fb;
-  --color-brand-400: #9ca2f5;
-  --color-brand-500: #7f86ee;
-  --color-brand-600: #6c72e4;
-  --color-brand-700: #595ece;
+  /* ---- Primary Brand: FPT Corporate Orange (#F27024) ---- */
+  --color-brand-50: #fff4ec;
+  --color-brand-100: #ffe6d5;
+  --color-brand-200: #fec7a8;
+  --color-brand-300: #fd9f6e;
+  --color-brand-400: #fb7c3d;
+  --color-brand-500: #f75512;
+  --color-brand-600: #f27024;
+  --color-brand-700: #d45105;
 
-  /* ---- Violet ---- */
-  --color-violet-300: #dac4f7;
-  --color-violet-400: #c5a6f0;
-  --color-violet-500: #ad85e6;
-  --color-violet-600: #9568d8;
+  /* ---- Secondary Brand: FPT Corporate Navy (#004F9E & #0B2545) ---- */
+  --color-fpt-navy: #004f9e;
+  --color-violet-300: #93c5fd;
+  --color-violet-400: #60a5fa;
+  --color-violet-500: #004f9e;
+  --color-violet-600: #0b2545;
 
-  /* ---- Coral / peach (warmth) ---- */
+  /* ---- Coral / Warmth ---- */
   --color-coral-300: #ffc8ba;
   --color-coral-400: #ffa48f;
-  --color-coral-500: #fb8366;
-  --color-coral-600: #ec5f3e;
-  --color-coral-700: #cf4a2c;
+  --color-coral-500: #f27024;
+  --color-coral-600: #d45105;
+  --color-coral-700: #993500;
 
-  /* ---- Mint ---- */
-  --color-mint-300: #bdecd9;
-  --color-mint-400: #8bdcb9;
-  --color-mint-500: #5ecb9b;
-  --color-mint-700: #2f9e74;
+  /* ---- Mint / FPT Green accent (#009A3E) ---- */
+  --color-mint-300: #a7f3d0;
+  --color-mint-400: #4ade80;
+  --color-mint-500: #009a3e;
+  --color-mint-700: #047857;
 
   /* ---- Sky ---- */
-  --color-sky-300: #c0e2ff;
-  --color-sky-400: #8fcbf7;
-  --color-sky-500: #5fb2ef;
+  --color-sky-300: #bae6fd;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0284c7;
 
-  /* ---- Aqua / teal (legacy name kept) ---- */
-  --color-aqua-400: #4dc6d4;
-  --color-aqua-500: #29adbe;
-  --color-aqua-700: #1b7a86;
+  /* ---- Aqua / teal ---- */
+  --color-aqua-400: #38bdf8;
+  --color-aqua-500: #0284c7;
+  --color-aqua-700: #0369a1;
 
-  /* ---- Honey / gold (alumni prestige accent) ---- */
-  --color-gold-300: #ffdf9c;
-  --color-gold-400: #f8c863;
-  --color-gold-500: #efaf3e;
-  --color-gold-600: #d4922a;
-  --color-gold-700: #a66b14;
+  /* ---- Gold / FPT Yellow prestige accent (#F59E0B) ---- */
+  --color-gold-300: #fde68a;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+  --color-gold-700: #b45309;
 
-  /* ---- Soft, warm shadows & glows ---- */
-  --shadow-soft: 0 12px 36px -18px rgb(120 100 140 / 0.32);
-  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.7) inset, 0 18px 44px -22px rgb(120 100 140 / 0.3);
-  --shadow-glow: 0 0 0 1px rgb(124 134 238 / 0.18), 0 22px 50px -24px rgb(124 134 238 / 0.55);
-  --shadow-glow-gold: 0 0 0 1px rgb(248 200 99 / 0.25), 0 22px 50px -24px rgb(239 175 62 / 0.5);
+  /* ---- Sleek, modern FPT shadows & glows ---- */
+  --shadow-soft: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 6px 16px -4px rgba(15, 23, 42, 0.05);
+  --shadow-glow: 0 0 0 1px rgba(242, 112, 36, 0.2), 0 16px 36px -12px rgba(242, 112, 36, 0.35);
+  --shadow-glow-gold: 0 0 0 1px rgba(245, 158, 11, 0.25), 0 16px 36px -12px rgba(245, 158, 11, 0.4);
 
-  /* ---- Radii (rounder = friendlier) ---- */
+  /* ---- Radii (sleek & balanced) ---- */
   --radius-xl: 1.15rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2.1rem;
 
-  /* ---- Named animations (auto-generate `animate-*` utilities) ---- */
+  /* ---- Named animations ---- */
   --animate-float: float 7s ease-in-out infinite;
   --animate-float-slow: float 11s ease-in-out infinite;
   --animate-gradient: gradient-pan 8s ease infinite;
@@ -189,11 +190,11 @@
     margin: 0;
     font-family: var(--font-sans);
     color: var(--color-plum-600);
-    background-color: #faf4ec;
+    background-color: #f8fafc;
     background-image:
-      radial-gradient(900px circle at 12% -8%, rgba(159, 167, 245, 0.18), transparent 45%),
-      radial-gradient(800px circle at 92% 4%, rgba(255, 164, 143, 0.16), transparent 45%),
-      radial-gradient(900px circle at 78% 98%, rgba(139, 220, 185, 0.14), transparent 45%);
+      radial-gradient(900px circle at 12% -8%, rgba(242, 112, 36, 0.08), transparent 45%),
+      radial-gradient(800px circle at 92% 4%, rgba(0, 79, 158, 0.07), transparent 45%),
+      radial-gradient(900px circle at 78% 98%, rgba(0, 154, 62, 0.06), transparent 45%);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -214,11 +215,11 @@
   ::-webkit-scrollbar { width: 12px; height: 12px; }
   ::-webkit-scrollbar-track { background: var(--color-cream-100); }
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(var(--color-brand-300), var(--color-violet-400));
+    background: linear-gradient(var(--color-brand-500), var(--color-brand-700));
     border-radius: 999px;
     border: 3px solid var(--color-cream-100);
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-brand-400); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-brand-600); }
 
   :focus-visible {
     outline: 2px solid var(--color-brand-400);
@@ -231,21 +232,21 @@
    Reusable composite utilities
    ========================================================================== */
 
-/* Gradient text — warm pastel */
+/* Gradient text — FPT Orange & Navy */
 .text-gradient {
-  background-image: linear-gradient(110deg, #6c72e4 0%, #ad85e6 45%, #fb8366 100%);
+  background-image: linear-gradient(110deg, #f27024 0%, #ff8c38 45%, #004f9e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .text-gradient-cool {
-  background-image: linear-gradient(110deg, #6c72e4, #5fb2ef 55%, #ad85e6);
+  background-image: linear-gradient(110deg, #004f9e, #0284c7 55%, #f27024);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .text-gradient-anim {
-  background-image: linear-gradient(110deg, #6c72e4, #ad85e6, #fb8366, #f8c863, #6c72e4);
+  background-image: linear-gradient(110deg, #f27024, #ff8c38, #004f9e, #009a3e, #f27024);
   background-size: 250% auto;
   -webkit-background-clip: text;
   background-clip: text;

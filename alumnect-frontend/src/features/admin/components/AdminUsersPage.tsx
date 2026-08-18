@@ -259,7 +259,7 @@ export function AdminUsersPage() {
             className="w-full max-w-xl bg-white shadow-2xl animate-in slide-in-from-bottom-8 duration-300 overflow-hidden"
           >
             {/* Header info */}
-            <div className="relative bg-gradient-to-r from-brand-600 to-violet-600 p-6 text-white">
+            <div className="relative bg-brand-600 p-6 text-white">
               <button
                 onClick={() => setSelectedUserId(null)}
                 className="absolute right-4 top-4 rounded-full bg-black/15 p-1 text-white hover:bg-black/25 transition-all"

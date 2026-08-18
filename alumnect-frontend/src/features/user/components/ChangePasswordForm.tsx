@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { 
-  KeyRound, Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, LogOut, ArrowRight
+  KeyRound, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, LogOut, ArrowRight
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useChangePassword } from '../hooks/useUserMutations'
@@ -124,7 +124,6 @@ export function ChangePasswordForm() {
           label="Mật khẩu hiện tại"
           type={showOldPassword ? 'text' : 'password'}
           placeholder="Nhập mật khẩu hiện tại"
-          icon={<Lock size={16} />}
           error={errors.oldPassword?.message}
           {...register('oldPassword')}
           trailing={
@@ -144,7 +143,6 @@ export function ChangePasswordForm() {
           label="Mật khẩu mới"
           type={showNewPassword ? 'text' : 'password'}
           placeholder="Nhập mật khẩu mới"
-          icon={<Lock size={16} />}
           error={errors.newPassword?.message}
           {...register('newPassword')}
           trailing={
@@ -164,7 +162,6 @@ export function ChangePasswordForm() {
           label="Xác nhận mật khẩu mới"
           type={showConfirmPassword ? 'text' : 'password'}
           placeholder="Xác nhận mật khẩu mới"
-          icon={<Lock size={16} />}
           error={errors.confirmNewPassword?.message}
           {...register('confirmNewPassword')}
           trailing={

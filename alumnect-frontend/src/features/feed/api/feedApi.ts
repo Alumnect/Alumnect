@@ -53,7 +53,11 @@ function parsePosts(raw: unknown[]): Post[] {
   const out: Post[] = []
   for (const r of raw) {
     const res = postSchema.safeParse(r)
-    if (res.success) out.push(res.data)
+    if (res.success) {
+      out.push(res.data)
+    } else {
+      console.error('Post parsing failed:', res.error, r)
+    }
   }
   return out
 }
