@@ -148,4 +148,10 @@ export const adminApi = {
    */
   togglePostHidden: (id: number, hidden: boolean) =>
     http.put<any, ApiResponse<void>>(`/admin/posts/${id}/status`, { hidden }),
+
+  /**
+   * Xem chi tiết bài viết cộng đồng dành cho Admin (UC67)
+   */
+  getPostDetail: (id: number) =>
+    http.get<any, ApiResponse<AdminPostDto>>(`/admin/posts/${id}`),
 }

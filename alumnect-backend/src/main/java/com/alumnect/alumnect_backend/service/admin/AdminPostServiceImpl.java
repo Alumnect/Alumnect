@@ -59,4 +59,23 @@ public class AdminPostServiceImpl implements AdminPostService {
         post.setStatus(isHidden ? PostStatus.HIDDEN : PostStatus.ACTIVE);
         postRepository.save(post);
     }
+
+    /**
+     * Lấy thông tin chi tiết bài viết cộng đồng dành cho Admin (UC67).
+     * Mô tả chi tiết: Tìm kiếm bài viết bằng ID thông qua Repository (đã nạp trước thông tin tác giả và mediaList),
+     * nếu không tìm thấy sẽ ném ngoại lệ ResourceNotFoundException, ngược lại chuyển đổi sang DTO để trả về.
+     *
+     * @param id ID bài viết cần lấy chi tiết
+     * @return DTO chứa thông tin chi tiết bài viết cộng đồng dành cho Admin
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public AdminPostResponse getPostDetail(Long id) {
+        // Tìm kiếm chi tiết bài viết kèm thông tin tác giả và hình ảnh đính kèm
+        Post post = postRepository.findDetailById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài viết với ID: " + id));
+        
+        // Chuyển đổi từ thực thể Post sang DTO phản hồi
+        return adminPostMapper.toDto(post);
+    }
 }

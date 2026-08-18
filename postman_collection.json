@@ -1837,7 +1837,6 @@
 					},
 					"response": []
 				},
-
 				{
 					"name": "Lấy hồ sơ người dùng khác (Other Profile) - Thành công",
 					"request": {
@@ -2638,6 +2637,76 @@
 							]
 						},
 						"description": "### API Xem Toàn Bộ Bài Viết Cộng Đồng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy danh sách toàn bộ bài viết trên feed cộng đồng có phân trang (UC65)."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết bài viết (Feed Posts) - Thành công",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/posts/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"posts",
+								"1"
+							]
+						},
+						"description": "### API Xem Chi Tiết Bài Viết Cộng Đồng\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Lấy thông tin chi tiết một bài viết cụ thể trên bảng tin cộng đồng (UC67)."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem chi tiết bài viết (Feed Posts) - Thất bại (Không tồn tại)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/posts/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"posts",
+								"999999"
+							]
+						},
+						"description": "### API Xem Chi Tiết Bài Viết - Thất bại\n* **Quyền truy cập**: Vai trò ADMIN.\n* **Mục đích**: Trả về lỗi 404 khi bài viết có ID không tồn tại trên hệ thống (UC67)."
 					},
 					"response": []
 				}

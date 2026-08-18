@@ -28,4 +28,13 @@ public interface AdminPostService {
      * @param isHidden true nếu muốn ẩn bài viết, false nếu muốn hiển thị lại
      */
     void togglePostHidden(Long id, boolean isHidden);
+
+    /**
+     * Lấy thông tin chi tiết bài viết cộng đồng dành cho Admin (UC67).
+     * Mô tả chi tiết: Hỗ trợ Quản trị viên xem đầy đủ thông tin bài viết để thực hiện công tác kiểm duyệt.
+     *
+     * @param id ID bài viết cần lấy chi tiết
+     * @return DTO chứa thông tin chi tiết bài viết cộng đồng
+     */
+    AdminPostResponse getPostDetail(Long id);
 }
