@@ -1,4 +1,5 @@
 export { AuthScaffold, Field } from './components/AuthScaffold'
+export { GoogleButton } from './components/GoogleButton'
 export { RegisterForm } from './components/RegisterForm'
 export { OtpVerification } from './components/OtpVerification'
 export * from './hooks/useAuth'
