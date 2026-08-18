@@ -1,4 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
+import { useAuthStore } from '@/store/authStore'
 import { userApi } from '../api/userApi'
 
 export const userKeys = {
@@ -15,7 +16,18 @@ export function useOwnProfile(options?: { enabled?: boolean }) {
     queryKey: userKeys.ownProfile(),
     queryFn: async () => {
       const response = await userApi.getOwnProfile()
-      return response.data
+      const data = response.data
+      if (data) {
+        const currentUser = useAuthStore.getState().user
+        if (currentUser && (currentUser.name !== data.fullName || currentUser.avatarUrl !== data.avatarUrl)) {
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            name: data.fullName,
+            avatarUrl: data.avatarUrl || currentUser.avatarUrl,
+          })
+        }
+      }
+      return data
     },
     ...options,
   })

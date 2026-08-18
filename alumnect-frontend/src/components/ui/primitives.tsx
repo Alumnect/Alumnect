@@ -122,6 +122,7 @@ export function Avatar({
           width={size}
           height={size}
           loading="lazy"
+          referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
           className={cn(
             'h-full w-full rounded-full object-cover',

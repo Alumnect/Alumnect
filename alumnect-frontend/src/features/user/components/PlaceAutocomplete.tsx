@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, MapPin, X, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface PlaceData {
   location: string
@@ -17,6 +18,7 @@ interface PlaceAutocompleteProps {
   onChange: (value: string) => void
   onSelect: (place: PlaceData | null) => void
   placeholder?: string
+  inputClassName?: string
 }
 
 interface SuggestionItem {
@@ -81,6 +83,7 @@ export function PlaceAutocomplete({
   onChange,
   onSelect,
   placeholder = 'Nhập số nhà, tên tòa nhà, địa chỉ công ty...',
+  inputClassName,
 }: PlaceAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -397,7 +400,7 @@ export function PlaceAutocomplete({
             if (suggestions.length > 0) setOpen(true)
           }}
           placeholder={placeholder}
-          className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 pl-10 pr-10 text-sm text-plum-900 placeholder-plum-400 shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className={cn("w-full rounded-2xl border border-plum-900/10 bg-white py-3 pl-10 pr-10 text-sm text-plum-900 placeholder-plum-400 shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500", inputClassName)}
         />
         {loading && (
           <span className="absolute right-10 text-plum-400">

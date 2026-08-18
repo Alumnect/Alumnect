@@ -24,6 +24,9 @@ public class AdminPostResponse {
     /** Email của tác giả */
     private String authorEmail;
 
+    /** URL ảnh đại diện của tác giả */
+    private String authorAvatarUrl;
+
     /** Loại bài viết: NORMAL, ACHIEVEMENT, RECRUITMENT, EVENT */
     private String type;
 

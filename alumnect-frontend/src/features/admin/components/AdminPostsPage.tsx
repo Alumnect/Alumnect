@@ -165,7 +165,7 @@ export function AdminPostsPage() {
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <Avatar name={p.authorName} size={38} />
+                          <Avatar src={p.authorAvatarUrl} name={p.authorName} size={38} />
                           <div>
                             <p className="font-semibold text-plum-900">{p.authorName}</p>
                             <p className="text-xs text-plum-400">{p.authorEmail}</p>

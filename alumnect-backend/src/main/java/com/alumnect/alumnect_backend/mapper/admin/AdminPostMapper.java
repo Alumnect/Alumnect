@@ -18,6 +18,7 @@ public interface AdminPostMapper {
     @Mapping(target = "id", source = "post.id")
     @Mapping(target = "authorName", source = "post.author.profile.fullName")
     @Mapping(target = "authorEmail", source = "post.author.email")
+    @Mapping(target = "authorAvatarUrl", source = "post.author.profile.avatarUrl")
     @Mapping(target = "type", source = "post.category")
     @Mapping(target = "content", source = "post.content")
     @Mapping(target = "imageUrl", expression = "java(post.getMediaList() != null && !post.getMediaList().isEmpty() ? post.getMediaList().get(0).getUrl() : null)")

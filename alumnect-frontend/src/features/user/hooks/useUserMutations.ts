@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '@/store/authStore'
 import { userApi } from '../api/userApi'
 import { userKeys } from './useUserQueries'
 import type { ChangePasswordPayload, UpdateProfileRequest } from '../model/userTypes'
@@ -17,8 +18,18 @@ export function useUpdateOwnProfile() {
 
   return useMutation({
     mutationFn: (payload: UpdateProfileRequest) => userApi.updateOwnProfile(payload),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: userKeys.ownProfile() })
+
+      // Tự động đồng bộ avatarUrl và name vào Zustand authStore để UI cập nhật ngay lập tức
+      const currentUser = useAuthStore.getState().user
+      if (currentUser) {
+        useAuthStore.getState().setUser({
+          ...currentUser,
+          name: variables.fullName ? variables.fullName : currentUser.name,
+          avatarUrl: variables.avatarUrl !== undefined ? (variables.avatarUrl || undefined) : currentUser.avatarUrl,
+        })
+      }
     },
   })
 }
