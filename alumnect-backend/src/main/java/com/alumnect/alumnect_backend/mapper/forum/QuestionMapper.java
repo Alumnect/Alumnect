@@ -11,6 +11,7 @@ import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Lớp Mapper chuyển đổi dữ liệu câu hỏi diễn đàn (UC38 - View question list).
@@ -31,9 +32,10 @@ public class QuestionMapper {
      *
      * @param question      Entity câu hỏi (đã JOIN FETCH sẵn {@code author} và {@code topic})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar) — có thể null nếu chưa tạo hồ sơ
+     * @param imageUrls     Danh sách URL ảnh đính kèm của câu hỏi (đã sắp thứ tự) — có thể null/rỗng
      * @return DTO phẳng khớp schema Zod {@code questionSchema} phía Frontend
      */
-    public QuestionResponse toResponse(Question question, UserProfile authorProfile) {
+    public QuestionResponse toResponse(Question question, UserProfile authorProfile, List<String> imageUrls) {
         User author = question.getAuthor();
 
         // Tên hiển thị & avatar: lấy từ UserProfile nếu có, fallback về email khi hồ sơ chưa được tạo.
@@ -58,6 +60,7 @@ public class QuestionMapper {
                 .excerpt(buildExcerpt(question.getBody()))
                 .topic(topicName)
                 .major(majorName)
+                .images(imageUrls != null ? imageUrls : List.of())
                 .author(authorName)
                 .avatar(avatarUrl)
                 .verified(author.isAccountVerified())
@@ -74,9 +77,10 @@ public class QuestionMapper {
      *
      * @param question      Entity câu hỏi (đã JOIN FETCH sẵn {@code author} và {@code topic})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu chưa tạo hồ sơ
+     * @param imageUrls     Danh sách URL ảnh đính kèm của câu hỏi (đã sắp thứ tự) — có thể null/rỗng
      * @return DTO chi tiết phẳng khớp schema Zod {@code questionDetailSchema} phía Frontend
      */
-    public QuestionDetailResponse toDetailResponse(Question question, UserProfile authorProfile) {
+    public QuestionDetailResponse toDetailResponse(Question question, UserProfile authorProfile, List<String> imageUrls) {
         User author = question.getAuthor();
 
         // Tên hiển thị, avatar & headline: lấy từ UserProfile nếu có, fallback hợp lý khi hồ sơ chưa được tạo.
@@ -108,6 +112,8 @@ public class QuestionMapper {
                 .topicId(topicId)
                 .major(majorName)
                 .majorId(majorId)
+                .images(imageUrls != null ? imageUrls : List.of())
+                .authorId(String.valueOf(author.getId()))
                 .author(authorName)
                 .avatar(avatarUrl)
                 .authorHeadline(headline)

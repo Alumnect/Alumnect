@@ -60,6 +60,19 @@ function QuestionCard({ q }: { q: Question }) {
             <h2 className="text-lg font-bold leading-snug text-plum-900 transition-colors hover:text-brand-600">{q.title}</h2>
           </Link>
           {q.excerpt && <p className="mt-1.5 line-clamp-2 text-sm text-plum-500">{q.excerpt}</p>}
+          {q.images.length > 0 && (
+            <div className="mt-3 flex gap-2">
+              {q.images.slice(0, 3).map((url, idx) => (
+                <div key={url + idx} className="relative h-16 w-16 overflow-hidden rounded-lg ring-1 ring-plum-900/10">
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                  {/* Nhãn "+N" trên ảnh cuối nếu còn ảnh chưa hiển thị */}
+                  {idx === 2 && q.images.length > 3 && (
+                    <span className="absolute inset-0 grid place-items-center bg-plum-900/50 text-xs font-bold text-white">+{q.images.length - 3}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="mt-4 flex items-center justify-between border-t border-plum-900/8 pt-3">
             <div className="flex items-center gap-2 text-sm text-plum-500">
               <Avatar src={q.avatar} name={q.author} size={24} verified={q.verified} />

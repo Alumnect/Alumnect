@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.controller.forum;
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.forum.CreateQuestionRequest;
+import com.alumnect.alumnect_backend.dto.request.forum.UpdateQuestionRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -78,6 +80,26 @@ public class QuestionController {
         QuestionDetailResponse created = questionService.createQuestion(authentication.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đặt câu hỏi thành công", created));
+    }
+
+    /**
+     * API chỉnh sửa một câu hỏi trên diễn đàn Q&A (UC46 - Edit a question).
+     * Yêu cầu đăng nhập (JWT); chỉ TÁC GIẢ của câu hỏi mới được sửa — người khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param id             ID câu hỏi cần sửa
+     * @param request        DTO chứa tiêu đề, nội dung, thể loại, ngành và bộ ảnh mới
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người sửa
+     * @return Chi tiết câu hỏi sau khi cập nhật {@link QuestionDetailResponse} bọc trong {@link ApiResponse}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<QuestionDetailResponse>> updateQuestion(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateQuestionRequest request,
+            Authentication authentication) {
+
+        QuestionDetailResponse updated = questionService.updateQuestion(authentication.getName(), id, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật câu hỏi thành công", updated));
     }
 
     /**

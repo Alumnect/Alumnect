@@ -1,6 +1,6 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { forumApi } from '../api/forumApi'
-import type { CreateQuestionInput, SortOption } from '../model/question'
+import type { CreateQuestionInput, SortOption, UpdateQuestionInput } from '../model/question'
 
 /**
  * Hook lấy danh sách câu hỏi diễn đàn theo phân trang vô hạn (infinite scroll).
@@ -65,6 +65,23 @@ export function useCreateQuestion() {
     mutationFn: (input: CreateQuestionInput) => forumApi.createQuestion(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] })
+    },
+  })
+}
+
+/**
+ * Hook chỉnh sửa một câu hỏi (UC46 - Edit a question). Bọc `useMutation`; khi thành công làm mới
+ * cả cache danh sách (['questions']) lẫn cache chi tiết câu hỏi vừa sửa (['question', id]).
+ * @param id ID câu hỏi cần sửa
+ * @return Đối tượng mutation (mutate, isPending, error...)
+ */
+export function useUpdateQuestion(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: UpdateQuestionInput) => forumApi.updateQuestion({ id, input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
+      queryClient.invalidateQueries({ queryKey: ['question', id] })
     },
   })
 }

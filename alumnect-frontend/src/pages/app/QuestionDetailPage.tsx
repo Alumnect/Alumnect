@@ -8,17 +8,13 @@
  *  - Ai cũng xem được (Guest/Student/Alumni) vì câu hỏi ACTIVE là nội dung công khai.
  *  - Chỉ HIỂN THỊ chi tiết; vote và trả lời thuộc các UC khác nên ở đây chỉ đọc số liệu.
  */
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import {
-  ArrowLeft,
-  ChevronUp,
-  Clock,
-  AlertTriangle,
-  SearchX,
-} from 'lucide-react'
-import { Badge, Card, Avatar } from '@/components/ui'
+import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil } from 'lucide-react'
+import { Badge, Card, Avatar, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
-import { useQuestionDetail, AnswersSection } from '@/features/forum'
+import { useAuthStore } from '@/store/authStore'
+import { useQuestionDetail, AnswersSection, AskQuestionModal } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
 
 /** Chuyển mốc ISO-8601 sang ngày giờ đọc được (VD: "11/07/2026 09:30"), rỗng nếu không hợp lệ. */
@@ -114,7 +110,7 @@ function DetailError({ message, onRetry }: { message?: string; onRetry: () => vo
 }
 
 /** Nội dung chi tiết câu hỏi (không bọc Card riêng — đặt chung Card với khu vực câu trả lời). */
-function QuestionDetailContent({ q }: { q: QuestionDetail }) {
+function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canEdit: boolean; onEdit: () => void }) {
   const postedAt = formatDateTime(q.createdAt)
   return (
     <div className="flex gap-5">
@@ -129,13 +125,21 @@ function QuestionDetailContent({ q }: { q: QuestionDetail }) {
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
       <div className="min-w-0 flex-1">
-        {(q.topic || q.major) && (
-          <div className="mb-3 flex flex-wrap items-center gap-1.5">
-            {q.topic && (
-              <Badge tone="violet" className="px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>
-            )}
-            {q.major && (
-              <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>
+        {/* Hàng đầu: nhãn thể loại/ngành (trái) + nút Chỉnh sửa (phải, chỉ tác giả) */}
+        {(q.topic || q.major || canEdit) && (
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {q.topic && <Badge tone="violet" className="px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>}
+              {q.major && <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>}
+            </div>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-brand-600"
+              >
+                <Pencil size={13} /> Chỉnh sửa
+              </button>
             )}
           </div>
         )}
@@ -161,6 +165,13 @@ function QuestionDetailContent({ q }: { q: QuestionDetail }) {
           {q.body || 'Câu hỏi này chưa có nội dung chi tiết.'}
         </div>
 
+        {/* Ảnh đính kèm của câu hỏi — carousel dùng chung với bài đăng (kéo/vuốt xem tất cả ảnh) */}
+        {q.images.length > 0 && (
+          <div className="mt-5 overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+            <ImageCarousel images={q.images} height={420} altPrefix="Ảnh câu hỏi" />
+          </div>
+        )}
+
         {/* Số vote (chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
         <div className="mt-5 text-sm sm:hidden">
           <span className="inline-flex items-center gap-1.5 font-semibold text-plum-500">
@@ -178,6 +189,11 @@ function QuestionDetailContent({ q }: { q: QuestionDetail }) {
 export function QuestionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data, isLoading, isError, error, refetch } = useQuestionDetail(id)
+  const [editOpen, setEditOpen] = useState(false)
+
+  // Quyền chỉnh sửa (UC46): chỉ chính TÁC GIẢ câu hỏi (Student/Alumni) mới thấy nút "Chỉnh sửa".
+  const user = useAuthStore((s) => s.user)
+  const canEdit = !!user && !!data && String(user.id) === data.authorId && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
   // Phân biệt lỗi 404 (không tìm thấy) với lỗi hệ thống khác để hiển thị đúng trạng thái.
   const notFound = isError && /không tìm thấy|not found|404/i.test((error as Error)?.message ?? '')
@@ -195,7 +211,7 @@ export function QuestionDetailPage() {
         // Câu hỏi + câu trả lời nằm chung MỘT card (như bài viết + bình luận trên Facebook/Reddit)
         <Card hover={false} className="overflow-hidden p-0">
           <div className="p-6 sm:p-8">
-            <QuestionDetailContent q={data} />
+            <QuestionDetailContent q={data} canEdit={canEdit} onEdit={() => setEditOpen(true)} />
           </div>
           {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
           <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
@@ -205,6 +221,9 @@ export function QuestionDetailPage() {
       ) : (
         <NotFoundState />
       )}
+
+      {/* Modal chỉnh sửa câu hỏi (UC46) — mở khi tác giả bấm "Chỉnh sửa" */}
+      {editOpen && data && <AskQuestionModal editQuestion={data} onClose={() => setEditOpen(false)} />}
     </div>
   )
 }
