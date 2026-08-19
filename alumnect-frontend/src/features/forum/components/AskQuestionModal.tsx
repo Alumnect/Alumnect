@@ -229,8 +229,11 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
               )}
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} />
-            {uploadError && <p className="mt-1 text-xs text-rose-500">{uploadError}</p>}
-            {errors.imageUrls && <p className="mt-1 text-xs text-rose-500">{errors.imageUrls.message as string}</p>}
+            {(uploadError || errors.imageUrls) && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600">
+                <AlertTriangle size={13} className="shrink-0" /> {uploadError ?? (errors.imageUrls?.message as string)}
+              </p>
+            )}
           </div>
 
           {/* Nút hành động */}
