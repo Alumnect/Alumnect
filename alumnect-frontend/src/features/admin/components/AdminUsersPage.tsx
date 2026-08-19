@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Lock, Unlock, Users, Mail, Phone, BookOpen, User, X, Loader2 } from 'lucide-react'
+import { Search, Lock, Unlock, Users, X, Loader2, Mail, Phone, BookOpen, GraduationCap, Calendar, ShieldCheck, FileText, Award, MapPin } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -267,24 +267,24 @@ export function AdminUsersPage() {
       {/* User Profile Detail Drawer / Modal */}
       {selectedUserId !== null &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/45 p-4 backdrop-blur-sm animate-in fade-in duration-200">
             <Card
               hover={false}
-              className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100 rounded-2xl"
+              className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100/30 rounded-2xl animate-pop"
             >
-              {/* Header info - FPT System Orange-Gold Gradient */}
-              <div className="relative bg-gradient-to-r from-brand-500 via-brand-600 to-gold-500 p-6 text-white rounded-t-2xl shadow-sm">
+              {/* Header Banner - Wrap avatar, name, and email with white text on gradient background */}
+              <div className="relative bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400 p-6 text-white rounded-t-2xl shadow-sm">
                 <button
                   onClick={() => setSelectedUserId(null)}
-                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-all border border-white/10 z-20 shadow-xs"
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
 
                 {isLoadingDetail ? (
                   <div className="flex items-center gap-4">
-                    <Skeleton className="h-16 w-16 rounded-full bg-white/20" />
-                    <div className="space-y-2 flex-1">
+                    <Skeleton className="h-20 w-20 rounded-full border-4 border-white/30 shadow-md bg-white/10 shrink-0" />
+                    <div className="space-y-2 flex-1 pb-1">
                       <Skeleton className="h-5 w-40 bg-white/20" />
                       <Skeleton className="h-4 w-48 bg-white/20" />
                     </div>
@@ -294,89 +294,130 @@ export function AdminUsersPage() {
                     <Avatar
                       src={userDetail.avatarUrl}
                       name={userDetail.fullName}
-                      size={64}
+                      size={80}
                       verified={userDetail.isAccountVerified}
-                      className="border-2 border-white ring-4 ring-white/30 shadow-lg shrink-0"
+                      className="rounded-full border-4 border-white ring-1 ring-plum-900/5 shadow-md shrink-0 bg-white"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-xl font-black text-white tracking-tight">{userDetail.fullName}</h2>
-                        <span className="rounded-full bg-white/20 backdrop-blur-md px-3 py-0.5 text-xs font-bold text-white border border-white/30 shadow-2xs">
-                          {userDetail.role === 'ADMIN' ? 'Hệ thống Admin' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
-                        </span>
+                        <h2 className="text-xl font-bold text-white tracking-tight">{userDetail.fullName}</h2>
+                        <Badge
+                          tone="neutral"
+                          className="bg-white/20 backdrop-blur-md px-2 py-0.5 text-[9px] rounded-full shrink-0 font-extrabold uppercase border border-white/30 text-white shadow-2xs"
+                        >
+                          {userDetail.role === 'ADMIN' ? 'Admin' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                        </Badge>
                       </div>
-                      <p className="text-brand-50 text-xs mt-1 truncate">{userDetail.email}</p>
+                      <p className="text-white/80 text-xs mt-0.5 font-medium">{userDetail.email}</p>
                       {userDetail.headline && (
-                        <p className="text-gold-100 text-xs mt-1.5 italic font-medium">"{userDetail.headline}"</p>
+                        <p className="text-gold-100 text-xs mt-2 italic font-semibold flex items-center gap-1.5 bg-black/10 px-2.5 py-1.5 rounded-lg border border-white/5 w-fit">
+                          <Award size={13} className="shrink-0 text-gold-400" />
+                          <span>"{userDetail.headline}"</span>
+                        </p>
                       )}
                     </div>
                   </div>
                 ) : null}
               </div>
 
-              {/* Body Info */}
-              <div className="p-6 bg-white space-y-4">
+              {/* Body Content */}
+              <div className="p-6 space-y-4 bg-white">
                 {isLoadingDetail ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
+                      <Skeleton key={i} className="h-16 w-full bg-plum-900/5 rounded-xl" />
                     ))}
                   </div>
                 ) : userDetail ? (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-sm">
-                      {/* Cột 1: Thông tin cá nhân & Liên hệ */}
-                      <div className="space-y-3 p-4 rounded-xl bg-brand-50/40 border border-brand-100">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Thông tin liên hệ</h4>
-                        <div>
-                          <span className="text-xs text-plum-500 block">Địa chỉ Email</span>
-                          <span className="font-bold text-plum-900 break-all">{userDetail.email}</span>
-                        </div>
-                        <div>
-                          <span className="text-xs text-plum-500 block">Số điện thoại</span>
-                          <span className="font-bold text-plum-900">{userDetail.phone || 'Chưa cập nhật'}</span>
+                    {/* Information Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Contact Column */}
+                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <Mail size={12} className="text-brand-500" />
+                          <span>Thông tin liên hệ</span>
+                        </h4>
+                        
+                        <div className="space-y-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Địa chỉ Email</span>
+                            <span className="font-semibold text-plum-900 break-all">{userDetail.email}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Số điện thoại</span>
+                            <span className="font-semibold text-plum-900 flex items-center gap-1">
+                              <Phone size={11} className="text-slate-400 shrink-0" />
+                              {userDetail.phone || 'Chưa cập nhật'}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Cột 2: Học vấn & Sinh viên */}
-                      <div className="space-y-3 p-4 rounded-xl bg-brand-50/40 border border-brand-100">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Thông tin học tập</h4>
-                        <div>
-                          <span className="text-xs text-plum-500 block">Ngành học</span>
-                          <span className="font-bold text-plum-900">
-                            {userDetail.major ? `${userDetail.major.name} (${userDetail.major.code})` : 'Chưa chọn'}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-xs text-plum-500 block">Mã sinh viên / Khóa</span>
-                          <span className="font-bold text-plum-900">
-                            {userDetail.studentCode || 'N/A'} {userDetail.cohort ? `(Khóa K${userDetail.cohort})` : ''}
-                          </span>
+                      {/* Education Column */}
+                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <GraduationCap size={13} className="text-brand-500" />
+                          <span>Học vấn & Mã số</span>
+                        </h4>
+                        
+                        <div className="space-y-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Chuyên ngành</span>
+                            <span className="font-semibold text-plum-900 flex items-center gap-1">
+                              <BookOpen size={11} className="text-slate-400 shrink-0" />
+                              {userDetail.majorName ? `${userDetail.majorName} (${userDetail.majorCode})` : 'Chưa chọn'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Mã sinh viên / Khóa</span>
+                            <span className="font-semibold text-plum-900 flex items-center gap-1.5">
+                              <span>{userDetail.studentCode || 'N/A'}</span>
+                              {userDetail.cohort ? (
+                                <Badge tone="neutral" className="px-1.5 py-0 text-[9px] font-bold border border-plum-900/10">
+                                  K{userDetail.cohort}
+                                </Badge>
+                              ) : ''}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Trạng thái tài khoản */}
-                    <div className="p-4 rounded-xl bg-brand-50/30 border border-brand-100 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <span className="text-xs text-plum-500 block">Ngày khởi tạo tài khoản</span>
-                        <span className="font-bold text-plum-900">
+                    {/* Biography block if present */}
+                    {userDetail.biography && (
+                      <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 space-y-2">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <FileText size={12} className="text-brand-500" />
+                          <span>Tiểu sử bản thân</span>
+                        </h4>
+                        <p className="text-xs text-plum-800 leading-relaxed whitespace-pre-line">{userDetail.biography}</p>
+                      </div>
+                    )}
+
+                    {/* Account Status / Metadata */}
+                    <div className="p-4 rounded-xl bg-slate-50/30 border border-slate-100/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={13} className="text-slate-400" />
+                        <span className="text-slate-400">Tham gia:</span>
+                        <span className="font-semibold text-plum-900">
                           {new Date(userDetail.createdAt).toLocaleDateString('vi-VN')}
                         </span>
                       </div>
+                      
                       <div className="flex items-center gap-2">
-                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'}>
+                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] px-2 py-0.5">
                           {userDetail.accountStatus === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
                         </Badge>
-                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'}>
+                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[9px] px-2 py-0.5">
                           {userDetail.isAccountVerified ? 'Đã xác minh' : 'Chưa xác minh'}
                         </Badge>
                       </div>
                     </div>
 
-                    {/* Nút thao tác dưới Modal */}
+                    {/* Actions under Modal */}
                     {userDetail.role !== 'ADMIN' && (
-                      <div className="mt-6 flex justify-end gap-3 border-t border-plum-900/8 pt-4">
+                      <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
                         <Button
                           size="sm"
                           variant={userDetail.accountStatus === 'LOCKED' ? 'primary' : 'secondary'}
@@ -384,18 +425,27 @@ export function AdminUsersPage() {
                             handleToggleLock(userDetail.id, userDetail.accountStatus)
                           }}
                           className={cn(
-                            'font-bold text-xs shadow-xs',
+                            'font-bold text-xs shadow-3xs rounded-xl px-4 py-2 transition-all',
                             userDetail.accountStatus === 'LOCKED'
-                              ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700'
-                              : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 hover:shadow-xs'
+                              : 'border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100/80 hover:text-red-700'
                           )}
                         >
-                          {updateStatusMutation.isPending && (
+                          {updateStatusMutation.isPending ? (
                             <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : userDetail.accountStatus === 'LOCKED' ? (
+                            <Unlock size={14} className="mr-1.5" />
+                          ) : (
+                            <Lock size={14} className="mr-1.5" />
                           )}
                           {userDetail.accountStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
                         </Button>
-                        <Button size="sm" variant="secondary" onClick={() => setSelectedUserId(null)} className="font-bold text-xs">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setSelectedUserId(null)}
+                          className="font-bold text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl px-4 py-2"
+                        >
                           Đóng
                         </Button>
                       </div>

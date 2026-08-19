@@ -33,6 +33,7 @@ export function useAdminUsers(filters: {
       const response = await adminApi.getUsers(filters)
       return response.data
     },
+    refetchInterval: 5000, // Poll every 5s for real-time list updates
   })
 }
 
@@ -48,6 +49,7 @@ export function useAdminUserDetail(id: number | null) {
       return response.data
     },
     enabled: id !== null,
+    refetchInterval: 3000, // Poll every 3s when the user details modal is open
   })
 }
 
