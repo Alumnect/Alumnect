@@ -54,8 +54,10 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
   const updateProfileMutation = useUpdateOwnProfile()
   const loading = updateProfileMutation.isPending
 
+  const [isInitialized, setIsInitialized] = useState(false)
+
   useEffect(() => {
-    if (profile) {
+    if (profile && !isInitialized) {
       setValidationError(null)
       setFullName(profile.fullName || '')
       setBiography(profile.biography || '')
@@ -80,8 +82,9 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
       } else {
         setSkills([])
       }
+      setIsInitialized(true)
     }
-  }, [profile])
+  }, [profile, isInitialized])
 
 
   const handleAddSocialLink = () => {
