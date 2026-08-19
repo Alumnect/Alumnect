@@ -140,6 +140,20 @@ export function ProfilePage() {
         fullName: profile.fullName,
         avatarUrl: publicUrl,
         coverUrl: profile.coverUrl,
+        phone: profile.phone,
+        headline: profile.headline,
+        biography: profile.biography,
+        campus: profile.campus,
+        cohort: profile.cohort,
+        majorId: profile.major?.id,
+        graduationYear: profile.graduationYear,
+        city: profile.city,
+        socialLinks: profile.socialLinks,
+        skills: profile.skills?.map(s => ({
+          groupName: s.groupName,
+          skillName: s.skillName,
+          sortOrder: s.sortOrder
+        }))
       })
     } catch (err) {
       console.error('Lỗi đổi ảnh đại diện:', err)
@@ -165,6 +179,20 @@ export function ProfilePage() {
         fullName: profile.fullName,
         avatarUrl: profile.avatarUrl,
         coverUrl: publicUrl,
+        phone: profile.phone,
+        headline: profile.headline,
+        biography: profile.biography,
+        campus: profile.campus,
+        cohort: profile.cohort,
+        majorId: profile.major?.id,
+        graduationYear: profile.graduationYear,
+        city: profile.city,
+        socialLinks: profile.socialLinks,
+        skills: profile.skills?.map(s => ({
+          groupName: s.groupName,
+          skillName: s.skillName,
+          sortOrder: s.sortOrder
+        }))
       })
     } catch (err) {
       console.error('Lỗi đổi ảnh bìa:', err)
