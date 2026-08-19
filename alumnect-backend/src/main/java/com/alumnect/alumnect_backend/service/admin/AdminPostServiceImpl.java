@@ -9,6 +9,11 @@ import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.admin.AdminPostMapper;
 import com.alumnect.alumnect_backend.specification.post.PostSpecification;
 import lombok.RequiredArgsConstructor;
+import com.alumnect.alumnect_backend.dao.job.JobPostingRepository;
+import com.alumnect.alumnect_backend.dao.event.EventRepository;
+import com.alumnect.alumnect_backend.entity.job.JobPosting;
+import com.alumnect.alumnect_backend.entity.event.Event;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +32,9 @@ public class AdminPostServiceImpl implements AdminPostService {
 
     private final PostRepository postRepository;
     private final AdminPostMapper adminPostMapper;
+    private final JobPostingRepository jobPostingRepository;
+    private final EventRepository eventRepository;
+
 
     @Override
     @Transactional(readOnly = true)
@@ -75,7 +83,10 @@ public class AdminPostServiceImpl implements AdminPostService {
         Post post = postRepository.findDetailById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài viết với ID: " + id));
         
+        JobPosting job = post.getJobId() != null ? jobPostingRepository.findById(post.getJobId()).orElse(null) : null;
+        Event event = post.getEventId() != null ? eventRepository.findById(post.getEventId()).orElse(null) : null;
+
         // Chuyển đổi từ thực thể Post sang DTO phản hồi
-        return adminPostMapper.toDto(post);
+        return adminPostMapper.toDto(post, job, event);
     }
 }

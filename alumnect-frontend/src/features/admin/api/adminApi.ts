@@ -24,11 +24,8 @@ export interface AdminUserDto {
   createdAt: string
   avatarUrl?: string
   phone?: string
-  major?: {
-    id: number
-    code: string
-    name: string
-  }
+  majorCode?: string
+  majorName?: string
   cohort?: number
   headline?: string
   socialLinks?: string[]
@@ -66,6 +63,23 @@ export interface AdminPostDto {
   repostCount: number
   hidden: boolean
   createdAt: string
+  images?: string[]
+  job?: {
+    title?: string
+    company?: string
+    location?: string
+    salaryMin?: number
+    salaryMax?: number
+    applyUrl?: string
+    contactEmail?: string
+  }
+  event?: {
+    title?: string
+    location?: string
+    startTime?: string
+    endTime?: string
+    capacity?: number
+  }
 }
 
 export interface PageResponse<T> {

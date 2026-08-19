@@ -184,7 +184,21 @@ export function AdminPostsPage() {
                           <Badge tone={p.visibility === 'PUBLIC' ? 'success' : 'neutral'} className="w-max">
                             {p.visibility === 'PUBLIC' ? 'Công khai' : 'Thành viên'}
                           </Badge>
-                          <span className="text-xs text-plum-500 font-semibold">{p.type}</span>
+                          {(() => {
+                            type BadgeTone = 'brand' | 'gold' | 'aqua' | 'violet' | 'neutral' | 'success' | 'danger'
+                            const map: Record<string, { label: string; tone: BadgeTone }> = {
+                              GENERAL: { label: 'General', tone: 'neutral' },
+                              ACHIEVEMENT: { label: 'Achievement', tone: 'gold' },
+                              RECRUITMENT: { label: 'Hiring', tone: 'aqua' },
+                              EVENT: { label: 'Event', tone: 'violet' },
+                            }
+                            const match = map[p.type] || { label: p.type, tone: 'neutral' as BadgeTone }
+                            return (
+                              <Badge tone={match.tone} className="w-max px-2 py-0.5 text-[10px]">
+                                {match.label}
+                              </Badge>
+                            )
+                          })()}
                         </div>
                       </td>
                       <td className="px-5 py-3.5 text-plum-600">

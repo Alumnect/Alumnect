@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Repeat, Eye, EyeOff, ShieldAlert } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
+import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Repeat, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Inbox } from 'lucide-react'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAdminPostDetail, useTogglePostHidden } from '../hooks/useAdmin'
@@ -85,15 +85,15 @@ export default function AdminPostDetailPage() {
     )
   }
 
-  // Bản đồ dịch loại bài viết sang tiếng Việt
-  const typeLabels: Record<string, { label: string; color: string }> = {
-    GENERAL: { label: 'Bình thường', color: 'bg-teal-500/10 text-teal-700' },
-    ACHIEVEMENT: { label: 'Thành tựu', color: 'bg-emerald-500/10 text-emerald-700' },
-    RECRUITMENT: { label: 'Tuyển dụng', color: 'bg-blue-500/10 text-blue-700' },
-    EVENT: { label: 'Sự kiện', color: 'bg-amber-500/10 text-amber-700' },
+  type BadgeTone = 'brand' | 'gold' | 'aqua' | 'violet' | 'neutral' | 'success' | 'danger'
+  const typeLabels: Record<string, { label: string; tone: BadgeTone }> = {
+    GENERAL: { label: 'Bình thường', tone: 'neutral' },
+    ACHIEVEMENT: { label: 'Thành tựu', tone: 'gold' },
+    RECRUITMENT: { label: 'Tuyển dụng', tone: 'aqua' },
+    EVENT: { label: 'Sự kiện', tone: 'violet' },
   }
 
-  const postTypeInfo = typeLabels[post.type] || { label: post.type, color: 'bg-plum-900/5 text-plum-600' }
+  const postTypeInfo = typeLabels[post.type] || { label: post.type, tone: 'neutral' as BadgeTone }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -130,28 +130,159 @@ export default function AdminPostDetailPage() {
                   </div>
                 </div>
 
-                <Badge className={`rounded-full px-2.5 py-1 text-xs font-semibold ${postTypeInfo.color}`}>
+                <Badge tone={postTypeInfo.tone} className="rounded-full px-2.5 py-1">
                   {postTypeInfo.label}
                 </Badge>
               </div>
 
               {/* Nội dung bài viết */}
               <div className="space-y-4">
-                <p className="whitespace-pre-line text-sm leading-relaxed text-plum-800">
-                  {post.content}
-                </p>
-
-                {/* Ảnh đính kèm (nếu có) */}
-                {post.imageUrl && (
-                  <div className="relative mt-4 overflow-hidden rounded-2xl border border-plum-900/5 bg-plum-900/[0.02]">
-                    <img
-                      src={post.imageUrl}
-                      alt="Ảnh đính kèm bài viết"
-                      className="w-full max-h-[400px] object-cover transition-transform duration-300 hover:scale-[1.02]"
-                      loading="lazy"
-                    />
+                {/* --- Thẻ thông tin Tuyển dụng (nếu là bài RECRUITMENT) --- */}
+                {post.type === 'RECRUITMENT' && post.job && (
+                  <div className="mb-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4">
+                      <h3 className="flex items-center gap-2 font-bold text-brand-900 text-base">
+                        <Briefcase size={18} className="text-brand-600 animate-pulse" />
+                        <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
+                      </h3>
+                      {post.job.applyUrl && (
+                        <a
+                          href={post.job.applyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-[#F27024] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#d96010] transition-colors"
+                        >
+                          Ứng tuyển <ExternalLink size={12} />
+                        </a>
+                      )}
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-sm font-bold text-plum-900 mb-2">{post.job.company}</p>
+                        <div className="grid gap-3 sm:grid-cols-2 text-xs font-medium text-plum-800">
+                          <div>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
+                            {post.job.location ? (
+                              <span className="inline-flex items-center gap-1">
+                                <MapPin size={14} className="text-brand-500" /> {post.job.location}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 font-normal">Chưa cập nhật</span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
+                            <div className="flex flex-col gap-1">
+                              {(post.job.salaryMin || post.job.salaryMax) ? (
+                                <span className="font-semibold text-emerald-600">
+                                  {post.job.salaryMin ? post.job.salaryMin.toLocaleString('vi-VN') : '?'}
+                                  {' — '}
+                                  {post.job.salaryMax ? post.job.salaryMax.toLocaleString('vi-VN') : '?'}
+                                  {' ₫'}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 font-normal">Thỏa thuận</span>
+                              )}
+                              {post.job.contactEmail && (
+                                <span className="inline-flex items-center gap-1 text-slate-600">
+                                  <Inbox size={14} className="text-plum-400" /> {post.job.contactEmail}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {post.content && (
+                        <div>
+                          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc</p>
+                          <p className="whitespace-pre-line text-sm leading-relaxed text-plum-800">{post.content}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
+
+                {/* --- Thẻ thông tin Sự kiện (nếu là bài EVENT) --- */}
+                {post.type === 'EVENT' && post.event && (
+                  <div className="mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all">
+                    <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4">
+                      <h3 className="flex items-center gap-2 font-bold text-violet-900 text-base">
+                        <CalendarPlus size={18} className="text-violet-600" />
+                        <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
+                      </h3>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2 text-xs">
+                        {post.event.startTime && (
+                          <div>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
+                            <p className="flex items-center gap-1.5 font-semibold text-plum-900">
+                              <Clock size={14} className="text-violet-500" />
+                              {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
+                              {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        )}
+                        {post.event.endTime ? (
+                          <div>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
+                            <p className="flex items-center gap-1.5 font-semibold text-plum-900">
+                              <Clock size={14} className="text-coral-500" />
+                              {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
+                              {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
+                            <p className="font-semibold text-slate-400">—</p>
+                          </div>
+                        )}
+                        {(post.event.location || post.event.capacity) && (
+                          <div className="col-span-1 sm:col-span-2 mt-2 border-t border-slate-200/60 pt-3">
+                            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Địa điểm & Sức chứa</p>
+                            <div className="flex flex-wrap items-center gap-4 font-medium text-plum-800">
+                              {post.event.location && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin size={14} className="text-brand-500" /> {post.event.location}
+                                </span>
+                              )}
+                              {post.event.capacity && (
+                                <span className="flex items-center gap-1">
+                                  <Users size={14} className="text-aqua-600" /> Tối đa {post.event.capacity} người
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {post.content && (
+                        <div>
+                          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện</p>
+                          <p className="whitespace-pre-line text-sm leading-relaxed text-plum-800">{post.content}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* --- Nội dung text cho các loại bài thường & thành tựu --- */}
+                {post.type !== 'EVENT' && post.type !== 'RECRUITMENT' && (
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-plum-800">
+                    {post.content}
+                  </p>
+                )}
+
+                {/* --- Carousel ảnh đính kèm --- */}
+                {(() => {
+                  const imgs = post.images && post.images.length > 0 ? post.images : post.imageUrl ? [post.imageUrl] : []
+                  if (imgs.length === 0) return null
+                  return (
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-plum-900/5 bg-plum-900/[0.02]">
+                      <ImageCarousel images={imgs} height={360} altPrefix="Ảnh đính kèm" />
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Các chỉ số tương tác */}
