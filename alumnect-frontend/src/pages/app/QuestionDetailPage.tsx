@@ -8,22 +8,11 @@
  *  - Ai cũng xem được (Guest/Student/Alumni) vì câu hỏi ACTIVE là nội dung công khai.
  *  - Chỉ HIỂN THỊ chi tiết; vote và trả lời thuộc các UC khác nên ở đây chỉ đọc số liệu.
  */
-import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import {
-  ArrowLeft,
-  ChevronUp,
-  Clock,
-  AlertTriangle,
-  SearchX,
-  Pencil,
-  ZoomIn,
-  X,
-} from 'lucide-react'
-import { Badge, Card, Avatar } from '@/components/ui'
+import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil } from 'lucide-react'
+import { Badge, Card, Avatar, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
-import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useQuestionDetail, AnswersSection, AskQuestionModal } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
@@ -120,72 +109,6 @@ function DetailError({ message, onRetry }: { message?: string; onRetry: () => vo
   )
 }
 
-/**
- * Thư viện ảnh đính kèm của câu hỏi — lưới ảnh responsive + lightbox xem toàn màn hình.
- * 1 ảnh hiển thị lớn; nhiều ảnh xếp lưới. Bấm ảnh mở lightbox; Esc/←/→ để đóng/chuyển.
- */
-function QuestionImageGallery({ images }: { images: string[] }) {
-  const [active, setActive] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (active === null) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setActive(null)
-      else if (e.key === 'ArrowRight') setActive((i) => (i === null ? i : (i + 1) % images.length))
-      else if (e.key === 'ArrowLeft') setActive((i) => (i === null ? i : (i - 1 + images.length) % images.length))
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [active, images.length])
-
-  if (images.length === 0) return null
-
-  const gridCls = images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'
-
-  return (
-    <>
-      <div className={cn('mt-5 grid gap-2.5', gridCls)}>
-        {images.map((url, idx) => (
-          <button
-            key={url + idx}
-            type="button"
-            onClick={() => setActive(idx)}
-            className={cn(
-              'group relative overflow-hidden rounded-xl bg-plum-900/[0.04] ring-1 ring-inset ring-plum-900/10 transition-all hover:ring-brand-400/50 hover:shadow-md',
-              images.length === 1 ? 'aspect-video max-h-[26rem]' : 'aspect-[4/3]',
-            )}
-          >
-            <img src={url} alt={`Ảnh minh hoạ ${idx + 1}`} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-            <span className="absolute inset-0 grid place-items-center bg-plum-900/0 text-transparent transition-all duration-200 group-hover:bg-plum-900/25 group-hover:text-white">
-              <ZoomIn size={22} />
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {active !== null &&
-        createPortal(
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-plum-900/85 p-4 backdrop-blur-sm" onClick={() => setActive(null)}>
-            <button
-              aria-label="Đóng"
-              onClick={() => setActive(null)}
-              className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-            >
-              <X size={20} />
-            </button>
-            <img src={images[active]} alt="" onClick={(e) => e.stopPropagation()} className="max-h-[90vh] max-w-full rounded-xl object-contain shadow-2xl" />
-            {images.length > 1 && (
-              <span className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-                {active + 1} / {images.length}
-              </span>
-            )}
-          </div>,
-          document.body,
-        )}
-    </>
-  )
-}
-
 /** Nội dung chi tiết câu hỏi (không bọc Card riêng — đặt chung Card với khu vực câu trả lời). */
 function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canEdit: boolean; onEdit: () => void }) {
   const postedAt = formatDateTime(q.createdAt)
@@ -242,8 +165,12 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
           {q.body || 'Câu hỏi này chưa có nội dung chi tiết.'}
         </div>
 
-        {/* Ảnh đính kèm của câu hỏi (lưới + lightbox) */}
-        <QuestionImageGallery images={q.images} />
+        {/* Ảnh đính kèm của câu hỏi — carousel dùng chung với bài đăng (kéo/vuốt xem tất cả ảnh) */}
+        {q.images.length > 0 && (
+          <div className="mt-5 overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+            <ImageCarousel images={q.images} height={420} altPrefix="Ảnh câu hỏi" />
+          </div>
+        )}
 
         {/* Số vote (chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
         <div className="mt-5 text-sm sm:hidden">
