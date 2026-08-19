@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * DTO chứa thông tin chi tiết một câu hỏi trả về cho Client (UC39 - View question detail).
  * Khác với {@link QuestionResponse} (dùng cho danh sách, chỉ có đoạn trích ngắn), DTO này
@@ -39,6 +41,12 @@ public class QuestionDetailResponse {
 
     /** ID ngành của câu hỏi (null nếu chưa chọn ngành) — dùng để quay về danh sách đã lọc theo ngành */
     private Long majorId;
+
+    /** Danh sách URL ảnh đính kèm (rỗng nếu không có) */
+    private List<String> images;
+
+    /** ID tác giả câu hỏi (dạng chuỗi) — Frontend so khớp với người đăng nhập để hiện nút "Chỉnh sửa" (UC46) */
+    private String authorId;
 
     /** Họ và tên tác giả câu hỏi */
     private String author;

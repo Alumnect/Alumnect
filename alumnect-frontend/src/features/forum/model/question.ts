@@ -20,6 +20,7 @@ export const questionSchema = z.object({
   excerpt: z.string().default(''),
   topic: z.string().default(''),
   major: z.string().default(''),
+  images: z.array(z.string()).default([]),
   author: z.string().default('Ẩn danh'),
   avatar: z.string().default(''),
   verified: z.boolean().default(false),
@@ -43,6 +44,8 @@ export const questionDetailSchema = z.object({
   topicId: z.union([z.string(), z.number()]).transform(Number).nullable().default(null),
   major: z.string().default(''),
   majorId: z.union([z.string(), z.number()]).transform(Number).nullable().default(null),
+  images: z.array(z.string()).default([]),
+  authorId: z.union([z.string(), z.number()]).transform(String).default(''),
   author: z.string().default('Ẩn danh'),
   avatar: z.string().default(''),
   authorHeadline: z.string().default(''),
@@ -72,9 +75,12 @@ export const majorSchema = z.object({
 })
 export type MajorOption = z.infer<typeof majorSchema>
 
+/** Số ảnh tối đa cho phép đính kèm một câu hỏi (khớp giới hạn Backend). */
+export const MAX_QUESTION_IMAGES = 5
+
 /**
- * Schema Zod cho form đặt câu hỏi mới (UC40 - Ask a question).
- * Thông điệp lỗi khớp 100% với validation phía Backend (CreateQuestionRequest).
+ * Schema Zod cho form đặt/sửa câu hỏi (UC40 - Ask a question, UC46 - Edit a question).
+ * Thông điệp lỗi khớp 100% với validation phía Backend (CreateQuestionRequest/UpdateQuestionRequest).
  */
 export const createQuestionSchema = z.object({
   title: z
@@ -89,8 +95,12 @@ export const createQuestionSchema = z.object({
     .max(10000, 'Nội dung câu hỏi không được vượt quá 10000 ký tự'),
   topicId: z.number().nullable(),
   majorId: z.number().nullable(),
+  imageUrls: z.array(z.string()).max(MAX_QUESTION_IMAGES, `Chỉ được đính kèm tối đa ${MAX_QUESTION_IMAGES} ảnh`),
 })
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>
+
+/** Form sửa câu hỏi (UC46) dùng chung schema với tạo mới. */
+export type UpdateQuestionInput = CreateQuestionInput
 
 /**
  * Một trang kết quả danh sách câu hỏi đã chuẩn hóa cho phân trang / infinite scroll.

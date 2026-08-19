@@ -8,6 +8,7 @@
  *  - Ai cũng xem được (Guest/Student/Alumni) vì câu hỏi ACTIVE là nội dung công khai.
  *  - Chỉ HIỂN THỊ chi tiết; vote và trả lời thuộc các UC khác nên ở đây chỉ đọc số liệu.
  */
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -15,10 +16,12 @@ import {
   Clock,
   AlertTriangle,
   SearchX,
+  Pencil,
 } from 'lucide-react'
 import { Badge, Card, Avatar } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
-import { useQuestionDetail, AnswersSection } from '@/features/forum'
+import { useAuthStore } from '@/store/authStore'
+import { useQuestionDetail, AnswersSection, AskQuestionModal } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
 
 /** Chuyển mốc ISO-8601 sang ngày giờ đọc được (VD: "11/07/2026 09:30"), rỗng nếu không hợp lệ. */
@@ -114,7 +117,7 @@ function DetailError({ message, onRetry }: { message?: string; onRetry: () => vo
 }
 
 /** Nội dung chi tiết câu hỏi (không bọc Card riêng — đặt chung Card với khu vực câu trả lời). */
-function QuestionDetailContent({ q }: { q: QuestionDetail }) {
+function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canEdit: boolean; onEdit: () => void }) {
   const postedAt = formatDateTime(q.createdAt)
   return (
     <div className="flex gap-5">
@@ -154,12 +157,29 @@ function QuestionDetailContent({ q }: { q: QuestionDetail }) {
             <Clock size={13} />
             {postedAt ? <span title={postedAt}>{postedAt}</span> : <span>{q.time}</span>}
           </span>
+          {/* Nút chỉnh sửa (UC46) — chỉ hiện với tác giả câu hỏi */}
+          {canEdit && (
+            <Button variant="secondary" size="sm" onClick={onEdit} leftIcon={<Pencil size={14} />}>
+              Chỉnh sửa
+            </Button>
+          )}
         </div>
 
         {/* Nội dung đầy đủ của câu hỏi — giữ nguyên xuống dòng của người dùng */}
         <div className="mt-5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-700">
           {q.body || 'Câu hỏi này chưa có nội dung chi tiết.'}
         </div>
+
+        {/* Ảnh đính kèm của câu hỏi */}
+        {q.images.length > 0 && (
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {q.images.map((url, idx) => (
+              <a key={url + idx} href={url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-xl ring-1 ring-plum-900/10">
+                <img src={url} alt={`Ảnh minh hoạ ${idx + 1}`} className="h-32 w-full object-cover transition-transform hover:scale-[1.03]" />
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Số vote (chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
         <div className="mt-5 text-sm sm:hidden">
@@ -178,6 +198,11 @@ function QuestionDetailContent({ q }: { q: QuestionDetail }) {
 export function QuestionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data, isLoading, isError, error, refetch } = useQuestionDetail(id)
+  const [editOpen, setEditOpen] = useState(false)
+
+  // Quyền chỉnh sửa (UC46): chỉ chính TÁC GIẢ câu hỏi (Student/Alumni) mới thấy nút "Chỉnh sửa".
+  const user = useAuthStore((s) => s.user)
+  const canEdit = !!user && !!data && String(user.id) === data.authorId && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
   // Phân biệt lỗi 404 (không tìm thấy) với lỗi hệ thống khác để hiển thị đúng trạng thái.
   const notFound = isError && /không tìm thấy|not found|404/i.test((error as Error)?.message ?? '')
@@ -195,7 +220,7 @@ export function QuestionDetailPage() {
         // Câu hỏi + câu trả lời nằm chung MỘT card (như bài viết + bình luận trên Facebook/Reddit)
         <Card hover={false} className="overflow-hidden p-0">
           <div className="p-6 sm:p-8">
-            <QuestionDetailContent q={data} />
+            <QuestionDetailContent q={data} canEdit={canEdit} onEdit={() => setEditOpen(true)} />
           </div>
           {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
           <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
@@ -205,6 +230,9 @@ export function QuestionDetailPage() {
       ) : (
         <NotFoundState />
       )}
+
+      {/* Modal chỉnh sửa câu hỏi (UC46) — mở khi tác giả bấm "Chỉnh sửa" */}
+      {editOpen && data && <AskQuestionModal editQuestion={data} onClose={() => setEditOpen(false)} />}
     </div>
   )
 }

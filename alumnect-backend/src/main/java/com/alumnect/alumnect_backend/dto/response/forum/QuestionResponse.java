@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * DTO chứa thông tin một câu hỏi trả về cho Client (UC38 - View question list).
  * Cấu trúc phẳng (flat) khớp trực tiếp với schema Zod {@code questionSchema} phía Frontend
@@ -31,6 +33,9 @@ public class QuestionResponse {
 
     /** Tên ngành của câu hỏi (chuỗi rỗng nếu chưa chọn ngành) */
     private String major;
+
+    /** Danh sách URL ảnh đính kèm (rỗng nếu không có) — dùng hiển thị ảnh xem trước trên danh sách */
+    private List<String> images;
 
     /** Họ và tên tác giả câu hỏi */
     private String author;
