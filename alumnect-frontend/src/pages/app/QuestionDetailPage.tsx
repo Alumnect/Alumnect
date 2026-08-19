@@ -8,7 +8,8 @@
  *  - Ai cũng xem được (Guest/Student/Alumni) vì câu hỏi ACTIVE là nội dung công khai.
  *  - Chỉ HIỂN THỊ chi tiết; vote và trả lời thuộc các UC khác nên ở đây chỉ đọc số liệu.
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -17,9 +18,12 @@ import {
   AlertTriangle,
   SearchX,
   Pencil,
+  ZoomIn,
+  X,
 } from 'lucide-react'
 import { Badge, Card, Avatar } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useQuestionDetail, AnswersSection, AskQuestionModal } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
@@ -116,6 +120,72 @@ function DetailError({ message, onRetry }: { message?: string; onRetry: () => vo
   )
 }
 
+/**
+ * Thư viện ảnh đính kèm của câu hỏi — lưới ảnh responsive + lightbox xem toàn màn hình.
+ * 1 ảnh hiển thị lớn; nhiều ảnh xếp lưới. Bấm ảnh mở lightbox; Esc/←/→ để đóng/chuyển.
+ */
+function QuestionImageGallery({ images }: { images: string[] }) {
+  const [active, setActive] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (active === null) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActive(null)
+      else if (e.key === 'ArrowRight') setActive((i) => (i === null ? i : (i + 1) % images.length))
+      else if (e.key === 'ArrowLeft') setActive((i) => (i === null ? i : (i - 1 + images.length) % images.length))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [active, images.length])
+
+  if (images.length === 0) return null
+
+  const gridCls = images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'
+
+  return (
+    <>
+      <div className={cn('mt-5 grid gap-2.5', gridCls)}>
+        {images.map((url, idx) => (
+          <button
+            key={url + idx}
+            type="button"
+            onClick={() => setActive(idx)}
+            className={cn(
+              'group relative overflow-hidden rounded-xl bg-plum-900/[0.04] ring-1 ring-inset ring-plum-900/10 transition-all hover:ring-brand-400/50 hover:shadow-md',
+              images.length === 1 ? 'aspect-video max-h-[26rem]' : 'aspect-[4/3]',
+            )}
+          >
+            <img src={url} alt={`Ảnh minh hoạ ${idx + 1}`} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <span className="absolute inset-0 grid place-items-center bg-plum-900/0 text-transparent transition-all duration-200 group-hover:bg-plum-900/25 group-hover:text-white">
+              <ZoomIn size={22} />
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {active !== null &&
+        createPortal(
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-plum-900/85 p-4 backdrop-blur-sm" onClick={() => setActive(null)}>
+            <button
+              aria-label="Đóng"
+              onClick={() => setActive(null)}
+              className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            >
+              <X size={20} />
+            </button>
+            <img src={images[active]} alt="" onClick={(e) => e.stopPropagation()} className="max-h-[90vh] max-w-full rounded-xl object-contain shadow-2xl" />
+            {images.length > 1 && (
+              <span className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                {active + 1} / {images.length}
+              </span>
+            )}
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
 /** Nội dung chi tiết câu hỏi (không bọc Card riêng — đặt chung Card với khu vực câu trả lời). */
 function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canEdit: boolean; onEdit: () => void }) {
   const postedAt = formatDateTime(q.createdAt)
@@ -132,13 +202,21 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
       <div className="min-w-0 flex-1">
-        {(q.topic || q.major) && (
-          <div className="mb-3 flex flex-wrap items-center gap-1.5">
-            {q.topic && (
-              <Badge tone="violet" className="px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>
-            )}
-            {q.major && (
-              <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>
+        {/* Hàng đầu: nhãn thể loại/ngành (trái) + nút Chỉnh sửa (phải, chỉ tác giả) */}
+        {(q.topic || q.major || canEdit) && (
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {q.topic && <Badge tone="violet" className="px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>}
+              {q.major && <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>}
+            </div>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-brand-600"
+              >
+                <Pencil size={13} /> Chỉnh sửa
+              </button>
             )}
           </div>
         )}
@@ -157,12 +235,6 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
             <Clock size={13} />
             {postedAt ? <span title={postedAt}>{postedAt}</span> : <span>{q.time}</span>}
           </span>
-          {/* Nút chỉnh sửa (UC46) — chỉ hiện với tác giả câu hỏi */}
-          {canEdit && (
-            <Button variant="secondary" size="sm" onClick={onEdit} leftIcon={<Pencil size={14} />}>
-              Chỉnh sửa
-            </Button>
-          )}
         </div>
 
         {/* Nội dung đầy đủ của câu hỏi — giữ nguyên xuống dòng của người dùng */}
@@ -170,16 +242,8 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
           {q.body || 'Câu hỏi này chưa có nội dung chi tiết.'}
         </div>
 
-        {/* Ảnh đính kèm của câu hỏi */}
-        {q.images.length > 0 && (
-          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {q.images.map((url, idx) => (
-              <a key={url + idx} href={url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-xl ring-1 ring-plum-900/10">
-                <img src={url} alt={`Ảnh minh hoạ ${idx + 1}`} className="h-32 w-full object-cover transition-transform hover:scale-[1.03]" />
-              </a>
-            ))}
-          </div>
-        )}
+        {/* Ảnh đính kèm của câu hỏi (lưới + lightbox) */}
+        <QuestionImageGallery images={q.images} />
 
         {/* Số vote (chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
         <div className="mt-5 text-sm sm:hidden">

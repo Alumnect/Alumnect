@@ -198,13 +198,13 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
             </label>
             <div className="flex flex-wrap gap-2.5">
               {imageUrls.map((url, idx) => (
-                <div key={url + idx} className="group relative h-20 w-20 overflow-hidden rounded-xl ring-1 ring-plum-900/10">
+                <div key={url + idx} className="group relative h-20 w-20 overflow-hidden rounded-xl ring-1 ring-inset ring-plum-900/10">
                   <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeImage(idx)}
                     aria-label="Xóa ảnh"
-                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-plum-900/60 text-white opacity-0 transition-opacity hover:bg-plum-900/80 group-hover:opacity-100"
+                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-plum-900/60 text-white shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:bg-rose-500"
                   >
                     <X size={13} />
                   </button>
