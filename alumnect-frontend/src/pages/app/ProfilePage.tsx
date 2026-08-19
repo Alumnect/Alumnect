@@ -22,6 +22,7 @@ import {
   UserPlus,
   UserMinus,
   PlusSquare,
+  ArrowLeft,
 } from 'lucide-react'
 import axios from 'axios'
 import { Avatar, Card, Skeleton, EmptyState, SmartImage } from '@/components/ui'

@@ -21,6 +21,9 @@ public class PostResponse {
     /** ID bài viết (dạng chuỗi để Frontend không gặp vấn đề mất độ chính xác số lớn) */
     private String id;
 
+    /** ID của tác giả bài viết */
+    private String authorId;
+
     /** Loại bài viết, viết thường: "normal" | "achievement" | "recruitment" | "event" */
     private String type;
 

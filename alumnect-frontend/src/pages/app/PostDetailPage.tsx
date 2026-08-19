@@ -193,10 +193,22 @@ function PostDetailCard({
       <div className="p-6">
         {/* Header: avatar, tên tác giả, badge loại bài, chức danh · thời gian */}
         <div className="flex items-center gap-3">
-          <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
+          <Link
+            to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+            className="shrink-0 transition-transform duration-200 hover:scale-105"
+            title={`Xem hồ sơ của ${post.author}`}
+          >
+            <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
+          </Link>
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-2 font-bold text-plum-900">
-              <span className="truncate">{post.author}</span>
+              <Link
+                to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+                className="truncate hover:underline hover:text-brand-600 transition-colors"
+                title={`Xem hồ sơ của ${post.author}`}
+              >
+                {post.author}
+              </Link>
               <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
             </p>
             <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>

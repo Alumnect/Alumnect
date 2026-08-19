@@ -55,6 +55,7 @@ public class PostMapper {
 
         return PostResponse.builder()
                 .id(String.valueOf(post.getId()))
+                .authorId(author != null && author.getId() != null ? String.valueOf(author.getId()) : null)
                 .type(post.getCategory() == com.alumnect.alumnect_backend.common.enums.PostCategory.GENERAL ? "normal" : post.getCategory().name().toLowerCase())
                 .author(authorName)
                 .role(role)

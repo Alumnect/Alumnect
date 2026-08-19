@@ -68,7 +68,7 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
   return (
     <Card hover={false} className="p-4">
       <div className="flex gap-3">
-        <Avatar src={viewer.avatarUrl ?? 'https://i.pravatar.cc/120?img=12'} name={viewer.name} size={44} verified={viewer.verified} />
+        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={44} verified={viewer.verified} />
         <button
           type="button"
           onClick={() => onOpen()}
@@ -159,15 +159,31 @@ function PostCard({
       <div className="p-5">
         {/* --- Phần 1: Header — avatar, tên tác giả, badge loại bài, thời gian, menu "..." --- */}
         <div className="flex items-center gap-3">
-          <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
-          {/* Tên tác giả + badge/thời gian: bấm vào mở trang chi tiết bài viết (UC16) */}
-          <Link to={`/app/posts/${post.id}`} className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 font-bold text-plum-900">
-              <span className="truncate hover:underline">{post.author}</span>
-              <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
-            </p>
-            <p className="truncate text-xs text-plum-400">{post.role} · {post.time}</p>
+          <Link
+            to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+            className="shrink-0 transition-transform duration-200 hover:scale-105"
+            title={`Xem hồ sơ của ${post.author}`}
+          >
+            <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
           </Link>
+          {/* Tên tác giả chuyển qua Profile, Badge và Thời gian chuyển qua chi tiết bài viết */}
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-2 font-bold text-plum-900">
+              <Link
+                to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+                className="truncate hover:underline hover:text-brand-600 transition-colors"
+                title={`Xem hồ sơ của ${post.author}`}
+              >
+                {post.author}
+              </Link>
+              <Link to={`/app/posts/${post.id}`}>
+                <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
+              </Link>
+            </p>
+            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-plum-400 hover:text-plum-600 transition-colors">
+              {post.role ? `${post.role} · ` : ''}{post.time}
+            </Link>
+          </div>
           {/* Nút Chỉnh sửa (UC22) chỉ hiển thị cho chính tác giả bài viết */}
           {isAuthor && onEdit ? (
             <button
