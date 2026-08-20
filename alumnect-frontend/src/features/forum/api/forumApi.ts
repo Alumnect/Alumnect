@@ -3,7 +3,7 @@ import http from '@/lib/http'
 import { questionDetailSchema, questionSchema, topicSchema } from '../model/question'
 import type { CreateQuestionInput, Question, QuestionDetail, QuestionPageResult, Topic, UpdateQuestionInput } from '../model/question'
 import { answerSchema } from '../model/answer'
-import type { Answer, AnswerPageResult, CreateAnswerInput } from '../model/answer'
+import type { Answer, AnswerPageResult, CreateAnswerInput, UpdateAnswerInput } from '../model/answer'
 
 /**
  * Tầng gọi API cho UC38 - View question list.
@@ -192,17 +192,39 @@ export const forumApi = {
   },
 
   /**
-   * Gửi một câu trả lời mới cho câu hỏi (UC41 - Answer a question).
+   * Gửi một câu trả lời mới, hoặc reply cho một câu trả lời gốc (UC41 - Answer, reply lồng nhau).
    * Gọi `POST /api/v1/questions/{questionId}/answers`; interceptor `http` tự đính Bearer token.
    * @param questionId ID câu hỏi được trả lời
    * @param input Nội dung câu trả lời
+   * @param parentId ID câu trả lời cha (tùy chọn) — có giá trị nếu đây là reply
    * @return Câu trả lời vừa tạo đã chuẩn hóa
    */
   createAnswer: async ({
     questionId,
     input,
-  }: { questionId: string | number; input: CreateAnswerInput }): Promise<Answer> => {
-    const body = await http.post(`/questions/${questionId}/answers`, input)
+    parentId,
+  }: { questionId: string | number; input: CreateAnswerInput; parentId?: string | null }): Promise<Answer> => {
+    const payloadReq = parentId ? { ...input, parentId: Number(parentId) } : input
+    const body = await http.post(`/questions/${questionId}/answers`, payloadReq)
+    const b = body as unknown as Record<string, unknown> | undefined
+    const payload = (b?.data ?? b) as unknown
+    return answerSchema.parse(payload)
+  },
+
+  /**
+   * Chỉnh sửa một câu trả lời (hoặc reply) (UC48 - Edit an answer).
+   * Gọi `PUT /api/v1/questions/{questionId}/answers/{answerId}`; chỉ tác giả sửa được (BE chặn 403).
+   * @param questionId ID câu hỏi chứa câu trả lời
+   * @param answerId ID câu trả lời cần sửa
+   * @param input Nội dung mới
+   * @return Câu trả lời sau khi cập nhật đã chuẩn hóa
+   */
+  updateAnswer: async ({
+    questionId,
+    answerId,
+    input,
+  }: { questionId: string | number; answerId: string | number; input: UpdateAnswerInput }): Promise<Answer> => {
+    const body = await http.put(`/questions/${questionId}/answers/${answerId}`, input)
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return answerSchema.parse(payload)

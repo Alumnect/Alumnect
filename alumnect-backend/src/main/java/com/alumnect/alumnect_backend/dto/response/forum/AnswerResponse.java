@@ -5,10 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
- * DTO chứa thông tin một câu trả lời trả về cho Client (UC41 - Answer a question).
+ * DTO chứa thông tin một câu trả lời trả về cho Client (UC41 - Answer a question, UC48 - Edit an answer).
  * Cấu trúc phẳng (flat) khớp trực tiếp với schema Zod {@code answerSchema} phía Frontend
- * để không cần tầng chuyển đổi thêm ở phía Client.
+ * để không cần tầng chuyển đổi thêm ở phía Client. Câu trả lời gốc mang kèm danh sách {@code replies}.
  */
 @Data
 @Builder
@@ -18,6 +20,9 @@ public class AnswerResponse {
 
     /** ID câu trả lời (dạng chuỗi để Frontend không mất độ chính xác số lớn) */
     private String id;
+
+    /** ID câu trả lời cha (null nếu là câu trả lời gốc) — đánh dấu đây là reply của câu trả lời nào */
+    private String parentId;
 
     /** ID tác giả câu trả lời (dạng chuỗi) */
     private String authorId;
@@ -45,4 +50,10 @@ public class AnswerResponse {
 
     /** Mốc thời gian tuyệt đối (ISO-8601) tạo câu trả lời */
     private String createdAt;
+
+    /** true nếu câu trả lời đã từng được chỉnh sửa (updated_at trễ hơn created_at) — để hiển thị "Đã chỉnh sửa" */
+    private boolean edited;
+
+    /** Danh sách reply của câu trả lời gốc này (rỗng nếu không có, hoặc bản thân đây là reply) */
+    private List<AnswerResponse> replies;
 }

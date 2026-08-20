@@ -7,6 +7,7 @@ import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Lớp Mapper chuyển đổi dữ liệu câu trả lời diễn đàn (UC41 - Answer a question).
@@ -21,9 +22,10 @@ public class AnswerMapper {
      *
      * @param answer        Entity câu trả lời (đã JOIN FETCH sẵn {@code author})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu chưa tạo hồ sơ
+     * @param replies       Danh sách reply của câu trả lời này (rỗng nếu không có / bản thân là reply)
      * @return DTO phẳng khớp schema Zod {@code answerSchema} phía Frontend
      */
-    public AnswerResponse toResponse(Answer answer, UserProfile authorProfile) {
+    public AnswerResponse toResponse(Answer answer, UserProfile authorProfile, List<AnswerResponse> replies) {
         User author = answer.getAuthor();
 
         // Tên hiển thị, avatar & headline: lấy từ UserProfile nếu có, fallback hợp lý khi hồ sơ chưa được tạo.
@@ -39,6 +41,7 @@ public class AnswerMapper {
 
         return AnswerResponse.builder()
                 .id(String.valueOf(answer.getId()))
+                .parentId(answer.getParent() != null ? String.valueOf(answer.getParent().getId()) : null)
                 .authorId(String.valueOf(author.getId()))
                 .body(answer.getBody())
                 .author(authorName)
@@ -48,6 +51,8 @@ public class AnswerMapper {
                 .votes(answer.getVoteCount())
                 .time(toRelativeTime(answer.getCreatedAt()))
                 .createdAt(answer.getCreatedAt() != null ? answer.getCreatedAt().toString() : "")
+                .edited(isEdited(answer))
+                .replies(replies != null ? replies : List.of())
                 .build();
     }
 
@@ -57,6 +62,20 @@ public class AnswerMapper {
      * @param createdAt Thời điểm tạo câu trả lời
      * @return Chuỗi thời gian tương đối, hoặc "vừa xong" nếu chưa đầy 1 phút
      */
+    /**
+     * Xác định câu trả lời đã từng được chỉnh sửa hay chưa: updated_at trễ hơn created_at
+     * quá 2 giây (bỏ qua chênh lệch nhỏ lúc tạo do @PrePersist gán hai mốc gần như trùng nhau).
+     *
+     * @param answer Entity câu trả lời
+     * @return true nếu đã chỉnh sửa
+     */
+    private boolean isEdited(Answer answer) {
+        if (answer.getCreatedAt() == null || answer.getUpdatedAt() == null) {
+            return false;
+        }
+        return answer.getUpdatedAt().isAfter(answer.getCreatedAt().plusSeconds(2));
+    }
+
     private String toRelativeTime(Instant createdAt) {
         Duration diff = Duration.between(createdAt, Instant.now());
         long minutes = diff.toMinutes();
