@@ -51,18 +51,11 @@ function absoluteTime(iso: string): string {
 
 /**
  * Khi tạo reply cho một comment con, phần @tên và nội dung được ngăn cách bằng 2 dấu cách.
- * Hàm này tách chúng ra để hiển thị @tên IN ĐẬM (màu brand) và chừa khoảng cách với nội dung.
+ * Gộp lại thành 1 khoảng trắng cho gọn; @tên để chữ thường (không tô màu/đậm).
  */
-function renderAnswerBody(body: string) {
+function renderAnswerBody(body: string): string {
   const m = body.match(/^(@\S[^]*?)\s{2,}([\s\S]*)$/)
-  if (m) {
-    return (
-      <>
-        <span className="font-semibold text-brand-600">{m[1]}</span> {m[2]}
-      </>
-    )
-  }
-  return body
+  return m ? `${m[1]} ${m[2]}` : body
 }
 
 /**
