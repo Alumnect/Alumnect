@@ -50,6 +50,22 @@ function absoluteTime(iso: string): string {
 }
 
 /**
+ * Khi tạo reply cho một comment con, phần @tên và nội dung được ngăn cách bằng 2 dấu cách.
+ * Hàm này tách chúng ra để hiển thị @tên IN ĐẬM (màu brand) và chừa khoảng cách với nội dung.
+ */
+function renderAnswerBody(body: string) {
+  const m = body.match(/^(@\S[^]*?)\s{2,}([\s\S]*)$/)
+  if (m) {
+    return (
+      <>
+        <span className="font-semibold text-brand-600">{m[1]}</span> {m[2]}
+      </>
+    )
+  }
+  return body
+}
+
+/**
  * Form gọn dùng cho SỬA câu trả lời (UC48) và REPLY một câu trả lời gốc.
  * Cùng validate Zod với form tạo mới; tự chọn mutation theo `mode`.
  */
@@ -177,7 +193,7 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
                 )}
               </div>
               {a.authorHeadline ? <p className="truncate text-[11px] text-plum-400">{a.authorHeadline}</p> : null}
-              <p className="mt-0.5 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-plum-800">{a.body}</p>
+              <p className="mt-0.5 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-plum-800">{renderAnswerBody(a.body)}</p>
             </div>
 
             {/* Hàng hành động kiểu FB (gọn): Trả lời · Chỉnh sửa · Đã chỉnh sửa */}
@@ -204,7 +220,7 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
             mode="reply"
             parentId={replyParentId}
             replyingToName={a.author}
-            initialBody={isReply ? `@${a.author} ` : ''}
+            initialBody={isReply ? `@${a.author}  ` : ''}
             onDone={() => {
               setReplying(false)
               if (!isReply) setShowReplies(true)
