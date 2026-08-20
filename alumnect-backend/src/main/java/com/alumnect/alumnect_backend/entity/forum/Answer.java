@@ -37,6 +37,11 @@ public class Answer {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
+    /** Câu trả lời cha (null = câu trả lời gốc; có giá trị = reply cho câu trả lời cha) — tự tham chiếu bảng answers */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Answer parent;
+
     /** Nội dung câu trả lời */
     @Column(nullable = false, columnDefinition = "TEXT")
     private String body;

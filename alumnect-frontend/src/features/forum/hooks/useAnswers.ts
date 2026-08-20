@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { forumApi } from '../api/forumApi'
-import type { CreateAnswerInput } from '../model/answer'
+import type { CreateAnswerInput, UpdateAnswerInput } from '../model/answer'
 
 /**
  * Hook lấy danh sách câu trả lời của một câu hỏi (UC41 - Answer a question) theo phân trang vô hạn.
@@ -28,10 +28,28 @@ export function useAnswers(questionId: string | undefined) {
 export function useCreateAnswer(questionId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (input: CreateAnswerInput) => forumApi.createAnswer({ questionId, input }),
+    mutationFn: ({ input, parentId }: { input: CreateAnswerInput; parentId?: string | null }) =>
+      forumApi.createAnswer({ questionId, input, parentId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['answers', questionId] })
       queryClient.invalidateQueries({ queryKey: ['question', questionId] })
+    },
+  })
+}
+
+/**
+ * Hook chỉnh sửa một câu trả lời (UC48 - Edit an answer). Khi thành công làm mới danh sách câu trả lời
+ * (['answers', id]) để hiển thị nội dung mới.
+ * @param questionId ID câu hỏi chứa câu trả lời
+ * @return Đối tượng mutation (mutate, isPending, error...)
+ */
+export function useUpdateAnswer(questionId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ answerId, input }: { answerId: string; input: UpdateAnswerInput }) =>
+      forumApi.updateAnswer({ questionId, answerId, input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['answers', questionId] })
     },
   })
 }

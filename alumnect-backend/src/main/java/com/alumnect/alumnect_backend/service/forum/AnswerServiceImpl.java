@@ -7,6 +7,7 @@ import com.alumnect.alumnect_backend.dao.forum.QuestionRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.forum.CreateAnswerRequest;
+import com.alumnect.alumnect_backend.dto.request.forum.UpdateAnswerRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.AnswerResponse;
 import com.alumnect.alumnect_backend.entity.forum.Answer;
 import com.alumnect.alumnect_backend.entity.forum.Question;
@@ -25,8 +26,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -74,30 +77,41 @@ public class AnswerServiceImpl implements AnswerService {
         questionRepository.findActiveDetailById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu hỏi với id: " + questionId));
 
+        // Lấy trang câu trả lời GỐC (top-level); các reply lấy riêng theo lô rồi lồng vào.
         Sort sortSpec = Sort.by(Sort.Direction.ASC, "createdAt");
-        Page<Answer> answersPage = answerRepository.findActiveByQuestionId(questionId, PageRequest.of(page, size, sortSpec));
-        log.info("Lấy danh sách câu trả lời: questionId={}, page={}, size={}, tổng kết quả={}",
-                questionId, page, size, answersPage.getTotalElements());
+        Page<Answer> topPage = answerRepository.findActiveTopLevelByQuestionId(questionId, PageRequest.of(page, size, sortSpec));
+        List<Answer> tops = topPage.getContent();
 
-        // Gộp truy vấn hồ sơ tác giả theo lô (batch) thay vì truy vấn riêng lẻ cho từng câu trả lời.
-        List<Long> authorIds = answersPage.getContent().stream()
-                .map(a -> a.getAuthor().getId())
-                .distinct()
-                .collect(Collectors.toList());
+        List<Long> topIds = tops.stream().map(Answer::getId).collect(Collectors.toList());
+        List<Answer> replies = topIds.isEmpty() ? List.of() : answerRepository.findActiveRepliesByParentIds(topIds);
+        log.info("Lấy danh sách câu trả lời: questionId={}, page={}, size={}, gốc={}, reply={}",
+                questionId, page, size, topPage.getTotalElements(), replies.size());
+
+        // Gộp truy vấn hồ sơ tác giả theo lô cho CẢ câu trả lời gốc lẫn reply — tránh N+1 query.
+        Set<Long> authorIds = new HashSet<>();
+        tops.forEach(a -> authorIds.add(a.getAuthor().getId()));
+        replies.forEach(a -> authorIds.add(a.getAuthor().getId()));
         Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
 
-        List<AnswerResponse> content = answersPage.getContent().stream()
-                .map(answer -> answerMapper.toResponse(answer, profileByUserId.get(answer.getAuthor().getId())))
+        // Gom reply theo id câu trả lời gốc (parent), map sẵn sang DTO (reply không có reply con).
+        Map<Long, List<AnswerResponse>> repliesByParent = replies.stream().collect(Collectors.groupingBy(
+                r -> r.getParent().getId(),
+                Collectors.mapping(r -> answerMapper.toResponse(r, profileByUserId.get(r.getAuthor().getId()), List.of()),
+                        Collectors.toList())));
+
+        List<AnswerResponse> content = tops.stream()
+                .map(a -> answerMapper.toResponse(a, profileByUserId.get(a.getAuthor().getId()),
+                        repliesByParent.getOrDefault(a.getId(), List.of())))
                 .collect(Collectors.toList());
 
         return PageResponse.<AnswerResponse>builder()
                 .content(content)
-                .pageNumber(answersPage.getNumber())
-                .pageSize(answersPage.getSize())
-                .totalElements(answersPage.getTotalElements())
-                .totalPages(answersPage.getTotalPages())
-                .last(answersPage.isLast())
+                .pageNumber(topPage.getNumber())
+                .pageSize(topPage.getSize())
+                .totalElements(topPage.getTotalElements())
+                .totalPages(topPage.getTotalPages())
+                .last(topPage.isLast())
                 .build();
     }
 
@@ -124,22 +138,74 @@ public class AnswerServiceImpl implements AnswerService {
         Question question = questionRepository.findActiveDetailById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu hỏi với id: " + questionId));
 
+        // Nếu là REPLY: câu trả lời cha phải tồn tại, ACTIVE, cùng câu hỏi và là câu trả lời GỐC (2 cấp).
+        Answer parent = null;
+        if (request.getParentId() != null) {
+            parent = answerRepository.findById(request.getParentId())
+                    .filter(p -> p.getStatus() == AnswerStatus.ACTIVE)
+                    .orElseThrow(() -> new BadRequestException("Câu trả lời cha không tồn tại"));
+            if (!parent.getQuestion().getId().equals(questionId)) {
+                throw new BadRequestException("Câu trả lời cha không thuộc câu hỏi này");
+            }
+            if (parent.getParent() != null) {
+                throw new BadRequestException("Chỉ được trả lời trực tiếp một câu trả lời gốc");
+            }
+        }
+
         Answer answer = Answer.builder()
                 .question(question)
                 .author(author)
+                .parent(parent)
                 .body(request.getBody().trim())
                 .status(AnswerStatus.ACTIVE)
                 .voteCount(0)
                 .build();
         Answer saved = answerRepository.save(answer);
 
-        // Tăng bộ đếm số câu trả lời (denormalized) của câu hỏi.
-        question.setAnswerCount(question.getAnswerCount() + 1);
-        questionRepository.save(question);
+        // Chỉ câu trả lời GỐC mới tăng bộ đếm answer_count (reply không tính vào số câu trả lời).
+        if (parent == null) {
+            question.setAnswerCount(question.getAnswerCount() + 1);
+            questionRepository.save(question);
+        }
 
-        log.info("Tạo câu trả lời mới: id={}, questionId={}, tác giả={}", saved.getId(), questionId, email);
+        log.info("Tạo câu trả lời mới: id={}, questionId={}, parentId={}, tác giả={}",
+                saved.getId(), questionId, request.getParentId(), email);
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
-        return answerMapper.toResponse(saved, profile);
+        return answerMapper.toResponse(saved, profile, List.of());
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm câu trả lời ACTIVE theo id (404) → xác nhận thuộc đúng
+     * câu hỏi (404) → kiểm tra người dùng chính là TÁC GIẢ (403) → cập nhật nội dung → lưu → map trả về.
+     */
+    @Override
+    @Transactional
+    public AnswerResponse updateAnswer(String email, Long questionId, Long answerId, UpdateAnswerRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        Answer answer = answerRepository.findById(answerId)
+                .filter(a -> a.getStatus() == AnswerStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu trả lời với id: " + answerId));
+
+        // Câu trả lời phải thuộc đúng câu hỏi trên đường dẫn (tránh sửa nhầm chéo câu hỏi).
+        if (!answer.getQuestion().getId().equals(questionId)) {
+            throw new ResourceNotFoundException("Không tìm thấy câu trả lời với id: " + answerId);
+        }
+
+        // Ownership (UC48): chỉ tác giả câu trả lời mới được chỉnh sửa; người khác nhận 403.
+        if (!answer.getAuthor().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ tác giả mới được chỉnh sửa câu trả lời này");
+        }
+
+        answer.setBody(request.getBody().trim());
+        Answer saved = answerRepository.save(answer);
+        log.info("Cập nhật câu trả lời: id={}, questionId={}, tác giả={}", saved.getId(), questionId, email);
+
+        UserProfile profile = userProfileRepository.findById(user.getId()).orElse(null);
+        return answerMapper.toResponse(saved, profile, List.of());
     }
 }

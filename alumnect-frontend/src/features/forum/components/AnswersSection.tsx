@@ -1,20 +1,20 @@
 /**
- * AnswersSection — Khu vực câu trả lời dưới một câu hỏi (UC41 - Answer a question).
+ * AnswersSection — Khu vực câu trả lời dưới một câu hỏi.
  *
  * Trách nhiệm:
- *  - Hiển thị danh sách câu trả lời (infinite scroll) của câu hỏi.
- *  - Cho Student/Alumni gửi câu trả lời mới (form + validate Zod, khớp Backend).
- *  - Xử lý đầy đủ trạng thái: loading / rỗng / lỗi / thành công; RBAC theo vai trò.
+ *  - Hiển thị danh sách câu trả lời GỐC (infinite scroll), mỗi câu kèm các reply lồng bên dưới.
+ *  - Cho Student/Alumni: gửi câu trả lời mới (UC41), reply một câu trả lời, và SỬA câu trả lời của mình (UC48).
+ *  - Xử lý đầy đủ trạng thái: loading / rỗng / lỗi / thành công; RBAC + quyền sở hữu.
  */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil } from 'lucide-react'
+import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil, CornerDownRight } from 'lucide-react'
 import { Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
-import { useAnswers, useCreateAnswer } from '../hooks/useAnswers'
+import { useAnswers, useCreateAnswer, useUpdateAnswer } from '../hooks/useAnswers'
 import { createAnswerSchema } from '../model/answer'
 import type { Answer, CreateAnswerInput } from '../model/answer'
 
@@ -22,32 +22,145 @@ import type { Answer, CreateAnswerInput } from '../model/answer'
 const MAX_BODY = 10000
 
 /**
- * Một câu trả lời dạng "comment bubble" (giống Facebook/Reddit): avatar ở ngoài,
- * nội dung trong bong bóng bo góc, mốc thời gian nhỏ bên dưới — tách bạch từng câu trả lời.
+ * Form gọn dùng cho SỬA câu trả lời (UC48) và REPLY một câu trả lời gốc.
+ * Cùng validate Zod với form tạo mới; tự chọn mutation theo `mode`.
  */
-function AnswerCard({ a }: { a: Answer }) {
+function InlineAnswerForm({
+  questionId,
+  mode,
+  answerId,
+  parentId,
+  initialBody = '',
+  onDone,
+}: {
+  questionId: string
+  mode: 'edit' | 'reply'
+  answerId?: string
+  parentId?: string
+  initialBody?: string
+  onDone: () => void
+}) {
+  const create = useCreateAnswer(questionId)
+  const update = useUpdateAnswer(questionId)
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<CreateAnswerInput>({
+    resolver: zodResolver(createAnswerSchema),
+    defaultValues: { body: initialBody },
+  })
+  const isPending = mode === 'edit' ? update.isPending : create.isPending
+  const error = mode === 'edit' ? update.error : create.error
+  const bodyLength = watch('body')?.length ?? 0
+
+  const onSubmit = (values: CreateAnswerInput) => {
+    if (mode === 'edit') update.mutate({ answerId: answerId as string, input: values }, { onSuccess: onDone })
+    else create.mutate({ input: values, parentId }, { onSuccess: onDone })
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="mt-2">
+      {error && (
+        <div className="mb-2 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
+          <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
+        </div>
+      )}
+      <textarea
+        {...register('body')}
+        autoFocus
+        rows={mode === 'edit' ? 3 : 2}
+        maxLength={MAX_BODY}
+        placeholder={mode === 'edit' ? 'Chỉnh sửa câu trả lời…' : 'Viết phản hồi của bạn…'}
+        className="w-full resize-y rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-3.5 py-2.5 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+      />
+      {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body.message}</p>}
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <Button type="button" variant="secondary" size="sm" onClick={onDone} disabled={isPending}>
+          Hủy
+        </Button>
+        <Button
+          type="submit"
+          variant="primary"
+          size="sm"
+          disabled={isPending || bodyLength === 0}
+          leftIcon={isPending ? <Loader2 size={14} className="animate-spin" /> : undefined}
+        >
+          {mode === 'edit' ? (isPending ? 'Đang lưu…' : 'Lưu') : isPending ? 'Đang gửi…' : 'Gửi'}
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+/**
+ * Một câu trả lời dạng "comment bubble" (giống Facebook): avatar ngoài, nội dung trong bong bóng.
+ * Kèm nút "Trả lời" (chỉ với câu trả lời gốc) + "Chỉnh sửa" (chỉ tác giả), và các reply lồng bên dưới.
+ */
+function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionId: string; isReply?: boolean }) {
+  const user = useAuthStore((s) => s.user)
+  const canEdit = !!user && !!a.authorId && String(user.id) === a.authorId
+  const canReply = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
+  const [editing, setEditing] = useState(false)
+  const [replying, setReplying] = useState(false)
+
+  const profileLink = a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'
+
   return (
     <div className="flex gap-3">
-      <Link to={a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'} className="shrink-0">
-        <Avatar src={a.avatar} name={a.author} size={40} verified={a.verified} />
+      <Link to={profileLink} className="shrink-0">
+        <Avatar src={a.avatar} name={a.author} size={isReply ? 32 : 40} verified={a.verified} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl rounded-tl-md bg-plum-900/[0.04] px-4 py-3">
-          <div className="flex items-baseline justify-between gap-2">
-            <Link to={a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'} className="hover:underline">
-              <p className="truncate text-sm font-bold text-plum-900 hover:text-brand-600">{a.author}</p>
-            </Link>
-            <span className="shrink-0 text-xs text-plum-400">{a.time}</span>
+        {editing ? (
+          <InlineAnswerForm questionId={questionId} mode="edit" answerId={a.id} initialBody={a.body} onDone={() => setEditing(false)} />
+        ) : (
+          <div className="rounded-2xl rounded-tl-md bg-plum-900/[0.04] px-4 py-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <Link to={profileLink} className="hover:underline">
+                <p className="truncate text-sm font-bold text-plum-900 hover:text-brand-600">{a.author}</p>
+              </Link>
+              <span className="shrink-0 text-xs text-plum-400">{a.time}</span>
+            </div>
+            {a.authorHeadline ? <p className="truncate text-xs text-plum-500">{a.authorHeadline}</p> : null}
+            <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-800">{a.body}</p>
           </div>
-          {a.authorHeadline ? <p className="truncate text-xs text-plum-500">{a.authorHeadline}</p> : null}
-          <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-800">{a.body}</p>
-        </div>
+        )}
+
+        {/* Hàng hành động: Trả lời (chỉ câu trả lời gốc) + Chỉnh sửa (chỉ tác giả) */}
+        {!editing && (canReply || canEdit) && (
+          <div className="mt-1 flex items-center gap-4 pl-2 text-xs font-semibold text-plum-400">
+            {canReply && !isReply && (
+              <button type="button" onClick={() => setReplying((v) => !v)} className="inline-flex items-center gap-1 transition-colors hover:text-brand-600">
+                <CornerDownRight size={13} /> Trả lời
+              </button>
+            )}
+            {canEdit && (
+              <button type="button" onClick={() => setEditing(true)} className="inline-flex items-center gap-1 transition-colors hover:text-brand-600">
+                <Pencil size={12} /> Chỉnh sửa
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Form reply cho câu trả lời gốc này */}
+        {replying && <InlineAnswerForm questionId={questionId} mode="reply" parentId={a.id} onDone={() => setReplying(false)} />}
+
+        {/* Danh sách reply lồng (2 cấp) */}
+        {a.replies.length > 0 && (
+          <div className="mt-3 space-y-3 border-l-2 border-plum-900/[0.06] pl-3.5">
+            {a.replies.map((r) => (
+              <AnswerBubble key={r.id} a={{ ...r, replies: [] }} questionId={questionId} isReply />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-/** Form gửi câu trả lời mới — chỉ dành cho Student/Alumni. */
+/** Form gửi câu trả lời GỐC mới — chỉ dành cho Student/Alumni (ô thu gọn kiểu bình luận FB/IG). */
 function AnswerForm({ questionId }: { questionId: string }) {
   const user = useAuthStore((s) => s.user)
   const [expanded, setExpanded] = useState(false)
@@ -71,10 +184,10 @@ function AnswerForm({ questionId }: { questionId: string }) {
   }
 
   const onSubmit = (values: CreateAnswerInput) => {
-    mutate(values, { onSuccess: () => collapse() })
+    mutate({ input: values }, { onSuccess: () => collapse() })
   }
 
-  // Trạng thái THU GỌN: một ô bấm để mở form (avatar + placeholder dạng pill) — giống ô bình luận FB/IG.
+  // Trạng thái THU GỌN: một ô bấm để mở form (avatar + placeholder dạng pill).
   if (!expanded) {
     return (
       <button
@@ -83,9 +196,7 @@ function AnswerForm({ questionId }: { questionId: string }) {
         className="mb-5 flex w-full items-center gap-3 rounded-2xl card-surface p-3.5 text-left transition-colors hover:bg-plum-900/[0.02]"
       >
         <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={36} verified={user?.verified} />
-        <span className="flex-1 rounded-full bg-plum-900/[0.05] px-4 py-2.5 text-sm text-plum-400">
-          Viết câu trả lời của bạn…
-        </span>
+        <span className="flex-1 rounded-full bg-plum-900/[0.05] px-4 py-2.5 text-sm text-plum-400">Viết câu trả lời của bạn…</span>
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/10 text-brand-600">
           <Pencil size={16} />
         </span>
@@ -153,21 +264,18 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
   const user = useAuthStore((s) => s.user)
   const canAnswer = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
-  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useAnswers(questionId)
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useAnswers(questionId)
   const answers = data?.pages.flatMap((p) => p.items) ?? []
-  // Số câu trả lời THỰC TẾ từ API (khớp danh sách bên dưới); khi chưa tải xong thì tạm dùng `count`.
+  // Số câu trả lời GỐC thực tế từ API (khớp danh sách bên dưới); khi chưa tải xong thì tạm dùng `count`.
   const total = data?.pages[0]?.total ?? count
 
   return (
     <section id="answers" className="scroll-mt-24">
-      {/* Tiêu đề khu vực + huy hiệu số câu trả lời (tránh lặp lại "N câu trả lời" như footer câu hỏi) */}
+      {/* Tiêu đề khu vực + huy hiệu số câu trả lời */}
       <div className="mb-4 flex items-center gap-2.5">
         <MessageSquare size={18} className="text-brand-600" />
         <h2 className="text-lg font-extrabold text-plum-900">Câu trả lời</h2>
-        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">
-          {total}
-        </span>
+        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">{total}</span>
       </div>
 
       {/* Form gửi câu trả lời (chỉ Student/Alumni); khách được mời đăng nhập */}
@@ -207,9 +315,9 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
         </Card>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-5">
             {answers.map((a) => (
-              <AnswerCard key={a.id} a={a} />
+              <AnswerBubble key={a.id} a={a} questionId={questionId} />
             ))}
           </div>
           {hasNextPage && (
