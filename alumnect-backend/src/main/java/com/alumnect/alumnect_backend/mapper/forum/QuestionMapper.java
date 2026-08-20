@@ -56,6 +56,7 @@ public class QuestionMapper {
 
         return QuestionResponse.builder()
                 .id(String.valueOf(question.getId()))
+                .authorId(String.valueOf(author.getId()))
                 .title(question.getTitle())
                 .excerpt(buildExcerpt(question.getBody()))
                 .topic(topicName)

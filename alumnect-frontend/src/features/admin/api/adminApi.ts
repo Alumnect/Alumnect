@@ -28,6 +28,8 @@ export interface AdminUserDto {
   majorName?: string
   cohort?: number
   headline?: string
+  bio?: string
+  biography?: string
   socialLinks?: string[]
 }
 

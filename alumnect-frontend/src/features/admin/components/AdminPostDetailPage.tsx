@@ -158,7 +158,7 @@ export default function AdminPostDetailPage() {
                     </div>
                     <div className="p-5 space-y-4">
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                        <p className="text-sm font-bold text-plum-900 mb-2">{post.job.company}</p>
+                        <p className="text-sm font-bold text-plum-900 mb-2">Công ty: {post.job.company}</p>
                         <div className="grid gap-3 sm:grid-cols-2 text-xs font-medium text-plum-800">
                           <div>
                             <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
@@ -175,10 +175,11 @@ export default function AdminPostDetailPage() {
                             <div className="flex flex-col gap-1">
                               {(post.job.salaryMin || post.job.salaryMax) ? (
                                 <span className="font-semibold text-emerald-600">
-                                  {post.job.salaryMin ? post.job.salaryMin.toLocaleString('vi-VN') : '?'}
-                                  {' — '}
-                                  {post.job.salaryMax ? post.job.salaryMax.toLocaleString('vi-VN') : '?'}
-                                  {' ₫'}
+                                  {post.job.salaryMin && post.job.salaryMax
+                                    ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                                    : post.job.salaryMin
+                                    ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
+                                    : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
                                 </span>
                               ) : (
                                 <span className="text-slate-400 font-normal">Thỏa thuận</span>

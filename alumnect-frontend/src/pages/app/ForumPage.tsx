@@ -24,9 +24,9 @@ import { TopicIcon } from '@/features/forum/lib/topicIcons'
 
 /** Các tùy chọn sắp xếp — khớp tham số `sort` của backend. */
 const SORTS: { key: SortOption; label: string; icon: LucideIcon }[] = [
-  { key: 'recent', label: 'Newest', icon: Clock },
-  { key: 'votes', label: 'Top voted', icon: Flame },
-  { key: 'answers', label: 'Most answered', icon: CheckCircle2 },
+  { key: 'recent', label: 'Mới nhất', icon: Clock },
+  { key: 'votes', label: 'Nhiều bình chọn', icon: Flame },
+  { key: 'answers', label: 'Nhiều câu trả lời', icon: CheckCircle2 },
 ]
 
 /** Thẻ hiển thị một câu hỏi trong danh sách. */
@@ -75,13 +75,18 @@ function QuestionCard({ q }: { q: Question }) {
           )}
           <div className="mt-4 flex items-center justify-between border-t border-plum-900/8 pt-3">
             <div className="flex items-center gap-2 text-sm text-plum-500">
-              <Avatar src={q.avatar} name={q.author} size={24} verified={q.verified} />
-              <span className="truncate">{q.author}</span>
+              <Link
+                to={q.authorId ? `/app/profile?userId=${q.authorId}` : '/app/profile'}
+                className="inline-flex items-center gap-2 text-sm text-plum-600 hover:text-brand-600 hover:underline transition-colors"
+              >
+                <Avatar src={q.avatar} name={q.author} size={24} verified={q.verified} />
+                <span className="truncate font-medium text-slate-800 hover:text-brand-600">{q.author}</span>
+              </Link>
               <span className="text-plum-300">·</span>
               <span>{q.time}</span>
             </div>
             <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-brand-600">
-              <MessageSquare size={15} /> {q.answers} answers
+              <MessageSquare size={15} /> {q.answers} câu trả lời
             </span>
           </div>
         </div>
@@ -183,8 +188,8 @@ export function ForumPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader
         icon={<HelpCircle size={20} />}
-        title="Q&A Forum"
-        subtitle="Ask seniors, answer juniors, and build a living knowledge base."
+        title="Diễn đàn Hỏi & Đáp"
+        subtitle="Hỏi đáp và chia sẻ kiến thức cùng cộng đồng FPTU."
         actions={
           canAsk ? (
             <Button variant="primary" size="sm" onClick={() => setAskOpen(true)}>

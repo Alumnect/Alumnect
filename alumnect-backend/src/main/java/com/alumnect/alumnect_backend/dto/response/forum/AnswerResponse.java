@@ -19,6 +19,9 @@ public class AnswerResponse {
     /** ID câu trả lời (dạng chuỗi để Frontend không mất độ chính xác số lớn) */
     private String id;
 
+    /** ID tác giả câu trả lời (dạng chuỗi) */
+    private String authorId;
+
     /** Nội dung câu trả lời */
     private String body;
 

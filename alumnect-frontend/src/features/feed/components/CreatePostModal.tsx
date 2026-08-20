@@ -460,7 +460,7 @@ export function CreatePostModal({
                     render={({ field }) => (
                       <DatePicker
                         selected={field.value ? new Date(field.value) : null}
-                        onChange={(date) => field.onChange(date ? date.toISOString() : undefined)}
+                        onChange={(date: Date | null) => field.onChange(date ? date.toISOString() : undefined)}
                         showTimeSelect
                         timeFormat="HH:mm"
                         timeIntervals={15}
@@ -486,7 +486,7 @@ export function CreatePostModal({
                     render={({ field }) => (
                       <DatePicker
                         selected={field.value ? new Date(field.value) : null}
-                        onChange={(date) => field.onChange(date ? date.toISOString() : undefined)}
+                        onChange={(date: Date | null) => field.onChange(date ? date.toISOString() : undefined)}
                         showTimeSelect
                         timeFormat="HH:mm"
                         timeIntervals={15}

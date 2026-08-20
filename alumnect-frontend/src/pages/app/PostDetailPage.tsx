@@ -43,10 +43,10 @@ import { useToggleLike, CreatePostModal } from '@/features/feed'
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Achievement', tone: 'gold' },
-  recruitment: { label: 'Hiring', tone: 'aqua' },
-  event: { label: 'Event', tone: 'violet' },
-  normal: { label: 'Post', tone: 'brand' },
+  achievement: { label: 'Thành tựu', tone: 'gold' },
+  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
+  event: { label: 'Sự kiện', tone: 'violet' },
+  normal: { label: 'Bài viết', tone: 'brand' },
 }
 
 /** Nút quay lại bảng tin, hiển thị ở đầu mọi trạng thái của trang. */
@@ -193,10 +193,22 @@ function PostDetailCard({
       <div className="p-6">
         {/* Header: avatar, tên tác giả, badge loại bài, chức danh · thời gian */}
         <div className="flex items-center gap-3">
-          <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
+          <Link
+            to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+            className="shrink-0 transition-transform duration-200 hover:scale-105"
+            title={`Xem hồ sơ của ${post.author}`}
+          >
+            <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
+          </Link>
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-2 font-bold text-plum-900">
-              <span className="truncate">{post.author}</span>
+              <Link
+                to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+                className="truncate hover:underline hover:text-brand-600 transition-colors"
+                title={`Xem hồ sơ của ${post.author}`}
+              >
+                {post.author}
+              </Link>
               <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
             </p>
             <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>
@@ -243,7 +255,7 @@ function PostDetailCard({
 
           <div className="p-6">
             <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 p-5">
-              <p className="text-lg font-bold text-plum-900 mb-2">{post.job.company}</p>
+              <p className="text-base font-bold text-plum-900 mb-3">Công ty: {post.job.company}</p>
               
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                  <div>
@@ -261,12 +273,13 @@ function PostDetailCard({
                    <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
                      {(post.job.salaryMin || post.job.salaryMax) ? (
                        <span className="inline-flex items-center gap-1">
-                         <span className="font-semibold text-emerald-600">
-                           {post.job.salaryMin ? post.job.salaryMin.toLocaleString('vi-VN') : '?'}
-                           {' — '}
-                           {post.job.salaryMax ? post.job.salaryMax.toLocaleString('vi-VN') : '?'}
-                           {' ₫'}
-                         </span>
+                          <span className="font-semibold text-emerald-600">
+                             {post.job.salaryMin && post.job.salaryMax
+                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                               : post.job.salaryMin
+                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
+                               : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
+                          </span>
                        </span>
                      ) : (
                        <span className="text-slate-400 font-normal">Thỏa thuận</span>
@@ -452,12 +465,19 @@ function CommentItem({ comment }: { comment: Comment }) {
   const isReply = !!comment.parentId
   return (
     <div className={cn('flex gap-3', isReply && 'ml-10')}>
-      <Avatar src={comment.avatar} name={comment.author} size={38} verified={comment.verified} />
+      <Link to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'} className="shrink-0">
+        <Avatar src={comment.avatar} name={comment.author} size={38} verified={comment.verified} />
+      </Link>
       <div className="min-w-0 flex-1">
         <div className="rounded-2xl bg-plum-900/[0.035] px-4 py-2.5">
-          <p className="flex items-center gap-2 text-sm font-bold text-plum-900">
-            <span className="truncate">{comment.author}</span>
-          </p>
+          <Link
+            to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
+            className="hover:underline"
+          >
+            <p className="flex items-center gap-2 text-sm font-bold text-plum-900 hover:text-brand-600">
+              <span className="truncate">{comment.author}</span>
+            </p>
+          </Link>
           {comment.role && <p className="truncate text-[11px] text-plum-400">{comment.role}</p>}
           <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-plum-800">{comment.text}</p>
         </div>

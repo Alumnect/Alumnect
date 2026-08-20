@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { 
-  Inbox, ExternalLink, Loader2, CheckCircle2, XCircle, 
-  Eye, ZoomIn, X, MessageSquare, AlertTriangle, ShieldCheck, FileImage
+  Inbox, Loader2, CheckCircle2, 
+  Eye, X, MessageSquare, AlertTriangle, FileImage
 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'

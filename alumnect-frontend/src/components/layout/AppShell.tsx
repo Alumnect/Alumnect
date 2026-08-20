@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink, Outlet, Link, useLocation, Navigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Search, Bell, Plus, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown } from 'lucide-react'
+import { Search, Bell, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
@@ -11,38 +11,47 @@ import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
-
-import { createPortal } from 'react-dom'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
 /* ----------------------------- small popover ----------------------------- */
-function Popover({ button, panelClass, children }: { button: ReactNode; panelClass?: string; children: ReactNode }) {
-  const [open, setOpen] = useState(false)
+function Popover({
+  isOpen,
+  onToggle,
+  onClose,
+  button,
+  panelClass,
+  children,
+}: {
+  isOpen: boolean
+  onToggle: () => void
+  onClose: () => void
+  button: ReactNode
+  panelClass?: string
+  children: ReactNode
+}) {
+  const popoverRef = useRef<HTMLDivElement>(null)
+  useClickOutside(popoverRef, onClose, isOpen)
+
   return (
-    <div className="relative">
-      <button onClick={() => setOpen((v) => !v)} className="flex items-center">
+    <div ref={popoverRef} className="relative">
+      <button onClick={onToggle} className="flex items-center">
         {button}
       </button>
       <AnimatePresence>
-        {open && (
-          <>
-            {createPortal(
-              <button aria-hidden className="fixed inset-0 z-20 cursor-default bg-transparent" onClick={() => setOpen(false)} />,
-              document.body
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            onClick={onClose}
+            className={cn(
+              'absolute right-0 z-50 mt-2 origin-top-right rounded-2xl border border-plum-900/[0.07] bg-white p-2 shadow-soft',
+              panelClass,
             )}
-            <motion.div
-              initial={{ opacity: 0, y: 8, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.97 }}
-              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-              onClick={() => setOpen(false)}
-              className={cn(
-                'absolute right-0 z-50 mt-2 origin-top-right rounded-2xl border border-plum-900/[0.07] bg-cream-50 p-2 shadow-soft',
-                panelClass,
-              )}
-            >
-              {children}
-            </motion.div>
-          </>
+          >
+            {children}
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
@@ -55,9 +64,13 @@ function IconLink({ to, label, icon, badge, dot }: { to: string; label: string; 
     <Link
       to={to}
       aria-label={badge ? `${label} (${badge} unread)` : label}
-      className="relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 active:scale-95"
+      className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 active:scale-95"
     >
-      {icon}
+      <span className="transition-transform duration-200 group-hover:-translate-y-0.5">{icon}</span>
+      {/* hover tooltip label */}
+      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+        {label}
+      </span>
       {badge ? (
         <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-coral-500 px-1 text-[10px] font-bold text-white ring-2 ring-cream-50">
           {badge}
@@ -74,15 +87,21 @@ export function AppShell() {
   const location = useLocation()
   const [sheet, setSheet] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [activePopover, setActivePopover] = useState<'apps' | 'account' | null>(null)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
+
+  // Đóng popover khi đổi trang
+  useEffect(() => {
+    setActivePopover(null)
+  }, [location.pathname])
 
   if (user?.role === 'ADMIN') {
     return <Navigate to="/admin" replace />
   }
   const logoutM = useLogout()
   // ADMIN đã được điều hướng về /admin ở trên, nên tại đây role chỉ còn STUDENT/ALUMNI.
-  const roleLabel = user ? (user.role === 'STUDENT' ? 'Student' : 'Alumni') : ''
+  const roleLabel = user ? (user.role === 'STUDENT' ? 'Sinh viên' : 'Cựu sinh viên') : ''
 
   return (
     <div className="relative min-h-screen bg-slate-50 text-slate-600">
@@ -103,7 +122,7 @@ export function AppShell() {
           <label className="relative ml-2 hidden items-center md:flex">
             <Search size={16} className="pointer-events-none absolute left-3 text-slate-400" />
             <input
-              placeholder="Search…"
+              placeholder="Tìm kiếm…"
               className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56"
             />
           </label>
@@ -151,7 +170,7 @@ export function AppShell() {
             {/* mobile search toggle */}
             <button
               onClick={() => setSearchOpen((v) => !v)}
-              aria-label="Search"
+              aria-label="Tìm kiếm"
               className="grid h-11 w-11 place-items-center rounded-2xl text-plum-500 hover:bg-plum-900/[0.05] md:hidden"
             >
               <Search size={19} />
@@ -159,20 +178,26 @@ export function AppShell() {
 
             {isAuthenticated ? (
               <>
-                <IconLink to="/app/messages" label="Messages" icon={<MessagesSquare size={19} />} badge={3} />
-                <IconLink to="/app/notifications" label="Notifications" icon={<Bell size={19} />} dot />
+                <IconLink to="/app/messages" label="Tin nhắn" icon={<MessagesSquare size={19} />} badge={3} />
+                <IconLink to="/app/notifications" label="Thông báo" icon={<Bell size={19} />} dot />
 
                 {/* More apps (desktop) */}
                 <div className="hidden lg:block">
                   <Popover
+                    isOpen={activePopover === 'apps'}
+                    onToggle={() => setActivePopover((prev) => (prev === 'apps' ? null : 'apps'))}
+                    onClose={() => setActivePopover(null)}
                     panelClass="w-72"
                     button={
-                      <span className="grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
-                        <LayoutGrid size={19} />
+                      <span className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
+                        <span className="transition-transform duration-200 group-hover:-translate-y-0.5"><LayoutGrid size={19} /></span>
+                        <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+                          Khám phá
+                        </span>
                       </span>
                     }
                   >
-                    <p className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-plum-400">Explore more</p>
+                    <p className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-plum-400">Khám phá thêm</p>
                     <div className="grid grid-cols-3 gap-1">
                       {APP_MORE_NAV.map((item) => {
                         const Icon = item.icon
@@ -197,6 +222,9 @@ export function AppShell() {
 
                 {/* account */}
                 <Popover
+                  isOpen={activePopover === 'account'}
+                  onToggle={() => setActivePopover((prev) => (prev === 'account' ? null : 'account'))}
+                  onClose={() => setActivePopover(null)}
                   panelClass="w-64"
                   button={
                     <span className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-plum-900/[0.05]">
@@ -209,7 +237,7 @@ export function AppShell() {
                     <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={42} verified={user?.verified} />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-plum-900">{user?.name}</p>
-                      <p className="truncate text-xs text-brand-600">{user?.verified ? 'Verified ' : ''}{roleLabel}</p>
+                      <p className="truncate text-xs text-brand-600">{user?.verified ? 'Đã xác minh · ' : ''}{roleLabel}</p>
                     </div>
                   </Link>
                   <div className="my-1 h-px bg-plum-900/[0.07]" />
@@ -234,7 +262,7 @@ export function AppShell() {
                     onClick={() => logoutM.mutate()}
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-coral-600 transition-colors hover:bg-coral-300/25"
                   >
-                    <LogOut size={16} /> Sign out
+                    <LogOut size={16} /> Đăng xuất
                   </button>
                 </Popover>
               </>
@@ -261,7 +289,7 @@ export function AppShell() {
                 <Search size={16} className="pointer-events-none absolute left-7 text-plum-400" />
                 <input
                   autoFocus
-                  placeholder="Search alumni, jobs, posts…"
+                  placeholder="Tìm cựu sinh viên, việc làm, bài viết…"
                   className="h-11 w-full rounded-xl border border-plum-900/10 bg-white pl-10 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
                 />
               </label>
@@ -314,7 +342,7 @@ export function AppShell() {
                       />
                     )}
                     {Icon && <Icon size={21} className={isActive ? 'text-brand-600' : ''} />}
-                    <span className="truncate">{item.label.replace('Q&A ', '')}</span>
+                    <span className="truncate">{item.label}</span>
                   </>
                 )}
               </NavLink>
@@ -325,7 +353,7 @@ export function AppShell() {
             className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold text-plum-400"
           >
             <LayoutGrid size={21} />
-            More
+            Thêm
           </button>
         </div>
       </nav>
@@ -350,14 +378,14 @@ export function AppShell() {
             >
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-plum-900/15" />
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-extrabold text-plum-900">Explore more</h3>
+                <h3 className="text-lg font-extrabold text-plum-900">Khám phá thêm</h3>
                 <button onClick={() => setSheet(false)} aria-label="Đóng" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05]">
                   <X size={18} />
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-3" onClick={() => setSheet(false)}>
                 {(isAuthenticated 
-                  ? [...APP_MORE_NAV, { label: 'Messages', to: '/app/messages', icon: MessagesSquare }, { label: 'Subscription', to: '/app/subscription', icon: APP_ACCOUNT_NAV[1].icon }]
+                  ? [...APP_MORE_NAV, { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare }, { label: 'Gói thành viên', to: '/app/subscription', icon: APP_ACCOUNT_NAV[2].icon }]
                   : APP_MORE_NAV.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')
                 ).map((item) => {
                   const Icon = item.icon
@@ -376,17 +404,16 @@ export function AppShell() {
               <div className="mt-4 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 {isAuthenticated ? (
                   <>
-                    {/* Sau redirect ADMIN (đầu AppShell), user chỉ còn STUDENT/ALUMNI → My Profile luôn chiếm cả 2 cột */}
                     <Link
                       to="/app/profile"
                       className="col-span-2 rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]"
                     >
-                      My Profile
+                      Trang cá nhân
                     </Link>
-                    <button onClick={() => logoutM.mutate()} className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500">Sign out</button>
+                    <button onClick={() => logoutM.mutate()} className="col-span-2 rounded-xl bg-rose-500/10 px-4 py-3 text-center text-sm font-semibold text-rose-500">Đăng xuất</button>
                   </>
                 ) : (
-                  <Link to="/login" className="col-span-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm">Sign in</Link>
+                  <Link to="/login" className="col-span-2 rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm">Đăng nhập</Link>
                 )}
               </div>
             </motion.div>

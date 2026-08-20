@@ -47,6 +47,7 @@ export type EventInfo = z.infer<typeof eventSchema>
  */
 export const postSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
+  authorId: z.union([z.string(), z.number()]).transform(String).optional().nullable(),
   type: z.enum(POST_TYPES).catch('normal'),
   author: z.string().default('Ẩn danh'),
   role: z.string().default(''),

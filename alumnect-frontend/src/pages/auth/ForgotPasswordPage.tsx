@@ -371,6 +371,8 @@ export function ForgotPasswordPage() {
                   {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               }
+              error={passwordErrors.confirmPassword?.message}
+              {...registerPassword('confirmPassword')}
             />
 
             <Button
