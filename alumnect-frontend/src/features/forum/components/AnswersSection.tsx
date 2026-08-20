@@ -151,6 +151,8 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
 
   const profileLink = a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'
   const replyCount = a.replies.length
+  // Reply luôn gộp vào luồng của câu trả lời GỐC (2 cấp): với comment con thì parent là câu gốc của nó.
+  const replyParentId = isReply ? (a.parentId ?? undefined) : a.id
 
   return (
     <div className="flex gap-2.5">
@@ -180,7 +182,7 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
 
             {/* Hàng hành động kiểu FB (gọn): Trả lời · Chỉnh sửa · Đã chỉnh sửa */}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 pl-2 text-xs">
-              {canReply && !isReply && (
+              {canReply && (
                 <button type="button" onClick={() => setReplying((v) => !v)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
                   Trả lời
                 </button>
@@ -195,16 +197,17 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
           </>
         )}
 
-        {/* Form reply cho câu trả lời gốc này (mở reply thì tự bung danh sách reply) */}
+        {/* Form reply — gộp vào luồng câu trả lời gốc; reply cho comment con thì nhắc tên (@) người đó */}
         {replying && (
           <InlineAnswerForm
             questionId={questionId}
             mode="reply"
-            parentId={a.id}
+            parentId={replyParentId}
             replyingToName={a.author}
+            initialBody={isReply ? `@${a.author} ` : ''}
             onDone={() => {
               setReplying(false)
-              setShowReplies(true)
+              if (!isReply) setShowReplies(true)
             }}
           />
         )}
