@@ -63,13 +63,10 @@ function InlineAnswerForm({
     else create.mutate({ input: values, parentId }, { onSuccess: onDone })
   }
 
+  const placeholder = mode === 'edit' ? 'Chỉnh sửa câu trả lời…' : replyingToName ? `Trả lời ${replyingToName}…` : 'Viết phản hồi của bạn…'
+
   const formInner = (
     <form onSubmit={handleSubmit(onSubmit)} className="min-w-0 flex-1">
-      {mode === 'reply' && replyingToName && (
-        <p className="mb-1 pl-1 text-xs text-plum-400">
-          Đang trả lời <span className="font-semibold text-plum-600">{replyingToName}</span>
-        </p>
-      )}
       {error && (
         <div className="mb-2 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
           <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
@@ -80,7 +77,7 @@ function InlineAnswerForm({
         autoFocus
         rows={mode === 'edit' ? 3 : 2}
         maxLength={MAX_BODY}
-        placeholder={mode === 'edit' ? 'Chỉnh sửa câu trả lời…' : 'Viết phản hồi của bạn…'}
+        placeholder={placeholder}
         className="w-full resize-y rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] px-3.5 py-2.5 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
       />
       {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body.message}</p>}
@@ -137,16 +134,19 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
           <InlineAnswerForm questionId={questionId} mode="edit" answerId={a.id} initialBody={a.body} onDone={() => setEditing(false)} />
         ) : (
           <>
-            {/* Bong bóng nội dung (gọn kiểu bình luận FB): tên + headline + nội dung */}
+            {/* Bong bóng nội dung (gọn kiểu bình luận FB): tên · thời gian + headline + nội dung */}
             <div className="inline-block max-w-full rounded-2xl rounded-tl-md bg-plum-900/[0.05] px-3.5 py-2">
-              <Link to={profileLink} className="hover:underline">
-                <span className="text-[13px] font-bold text-plum-900 hover:text-brand-600">{a.author}</span>
-              </Link>
+              <div className="flex items-baseline gap-1.5">
+                <Link to={profileLink} className="hover:underline">
+                  <span className="text-[13px] font-bold text-plum-900 hover:text-brand-600">{a.author}</span>
+                </Link>
+                {a.time ? <span className="shrink-0 text-[11px] text-plum-400">· {a.time}</span> : null}
+              </div>
               {a.authorHeadline ? <p className="truncate text-[11px] text-plum-400">{a.authorHeadline}</p> : null}
               <p className="mt-0.5 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-plum-800">{a.body}</p>
             </div>
 
-            {/* Hàng hành động kiểu FB: Trả lời · Chỉnh sửa · thời gian · Đã chỉnh sửa */}
+            {/* Hàng hành động kiểu FB (gọn): Trả lời · Chỉnh sửa · Đã chỉnh sửa */}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 pl-2 text-xs">
               {canReply && !isReply && (
                 <button type="button" onClick={() => setReplying((v) => !v)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
@@ -158,7 +158,7 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
                   Chỉnh sửa
                 </button>
               )}
-              <span className="text-plum-400">{a.time}</span>
+              {a.edited && <span className="text-plum-400">Đã chỉnh sửa</span>}
             </div>
           </>
         )}
