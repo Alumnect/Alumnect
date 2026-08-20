@@ -10,7 +10,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil, CornerDownRight } from 'lucide-react'
+import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil } from 'lucide-react'
 import { Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
@@ -31,6 +31,7 @@ function InlineAnswerForm({
   answerId,
   parentId,
   initialBody = '',
+  replyingToName,
   onDone,
 }: {
   questionId: string
@@ -38,8 +39,10 @@ function InlineAnswerForm({
   answerId?: string
   parentId?: string
   initialBody?: string
+  replyingToName?: string
   onDone: () => void
 }) {
+  const user = useAuthStore((s) => s.user)
   const create = useCreateAnswer(questionId)
   const update = useUpdateAnswer(questionId)
   const {
@@ -60,8 +63,13 @@ function InlineAnswerForm({
     else create.mutate({ input: values, parentId }, { onSuccess: onDone })
   }
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mt-2">
+  const formInner = (
+    <form onSubmit={handleSubmit(onSubmit)} className="min-w-0 flex-1">
+      {mode === 'reply' && replyingToName && (
+        <p className="mb-1 pl-1 text-xs text-plum-400">
+          Đang trả lời <span className="font-semibold text-plum-600">{replyingToName}</span>
+        </p>
+      )}
       {error && (
         <div className="mb-2 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
           <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
@@ -73,10 +81,10 @@ function InlineAnswerForm({
         rows={mode === 'edit' ? 3 : 2}
         maxLength={MAX_BODY}
         placeholder={mode === 'edit' ? 'Chỉnh sửa câu trả lời…' : 'Viết phản hồi của bạn…'}
-        className="w-full resize-y rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-3.5 py-2.5 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        className="w-full resize-y rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] px-3.5 py-2.5 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
       />
       {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body.message}</p>}
-      <div className="mt-2 flex items-center justify-end gap-2">
+      <div className="mt-1.5 flex items-center justify-end gap-2">
         <Button type="button" variant="secondary" size="sm" onClick={onDone} disabled={isPending}>
           Hủy
         </Button>
@@ -92,6 +100,16 @@ function InlineAnswerForm({
       </div>
     </form>
   )
+
+  // Chế độ SỬA: form thay thế bong bóng tại chỗ (không thêm avatar).
+  // Chế độ REPLY: kèm avatar người trả lời bên trái như ô bình luận Facebook.
+  if (mode === 'edit') return <div className="mt-2">{formInner}</div>
+  return (
+    <div className="mt-2 flex gap-2.5">
+      <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={30} verified={user?.verified} />
+      {formInner}
+    </div>
+  )
 }
 
 /**
@@ -104,55 +122,84 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
   const canReply = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
   const [editing, setEditing] = useState(false)
   const [replying, setReplying] = useState(false)
+  const [showReplies, setShowReplies] = useState(false)
 
   const profileLink = a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'
+  const replyCount = a.replies.length
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-2.5">
       <Link to={profileLink} className="shrink-0">
-        <Avatar src={a.avatar} name={a.author} size={isReply ? 32 : 40} verified={a.verified} />
+        <Avatar src={a.avatar} name={a.author} size={isReply ? 30 : 38} verified={a.verified} />
       </Link>
       <div className="min-w-0 flex-1">
         {editing ? (
           <InlineAnswerForm questionId={questionId} mode="edit" answerId={a.id} initialBody={a.body} onDone={() => setEditing(false)} />
         ) : (
-          <div className="rounded-2xl rounded-tl-md bg-plum-900/[0.04] px-4 py-3">
-            <div className="flex items-baseline justify-between gap-2">
+          <>
+            {/* Bong bóng nội dung (gọn kiểu bình luận FB): tên + headline + nội dung */}
+            <div className="inline-block max-w-full rounded-2xl rounded-tl-md bg-plum-900/[0.05] px-3.5 py-2">
               <Link to={profileLink} className="hover:underline">
-                <p className="truncate text-sm font-bold text-plum-900 hover:text-brand-600">{a.author}</p>
+                <span className="text-[13px] font-bold text-plum-900 hover:text-brand-600">{a.author}</span>
               </Link>
-              <span className="shrink-0 text-xs text-plum-400">{a.time}</span>
+              {a.authorHeadline ? <p className="truncate text-[11px] text-plum-400">{a.authorHeadline}</p> : null}
+              <p className="mt-0.5 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-plum-800">{a.body}</p>
             </div>
-            {a.authorHeadline ? <p className="truncate text-xs text-plum-500">{a.authorHeadline}</p> : null}
-            <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-800">{a.body}</p>
-          </div>
+
+            {/* Hàng hành động kiểu FB: Trả lời · Chỉnh sửa · thời gian · Đã chỉnh sửa */}
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 pl-2 text-xs">
+              {canReply && !isReply && (
+                <button type="button" onClick={() => setReplying((v) => !v)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
+                  Trả lời
+                </button>
+              )}
+              {canEdit && (
+                <button type="button" onClick={() => setEditing(true)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
+                  Chỉnh sửa
+                </button>
+              )}
+              <span className="text-plum-400">{a.time}</span>
+              {a.edited && <span className="text-plum-400">Đã chỉnh sửa</span>}
+            </div>
+          </>
         )}
 
-        {/* Hàng hành động: Trả lời (chỉ câu trả lời gốc) + Chỉnh sửa (chỉ tác giả) */}
-        {!editing && (canReply || canEdit) && (
-          <div className="mt-1 flex items-center gap-4 pl-2 text-xs font-semibold text-plum-400">
-            {canReply && !isReply && (
-              <button type="button" onClick={() => setReplying((v) => !v)} className="inline-flex items-center gap-1 transition-colors hover:text-brand-600">
-                <CornerDownRight size={13} /> Trả lời
-              </button>
-            )}
-            {canEdit && (
-              <button type="button" onClick={() => setEditing(true)} className="inline-flex items-center gap-1 transition-colors hover:text-brand-600">
-                <Pencil size={12} /> Chỉnh sửa
-              </button>
-            )}
-          </div>
+        {/* Form reply cho câu trả lời gốc này (mở reply thì tự bung danh sách reply) */}
+        {replying && (
+          <InlineAnswerForm
+            questionId={questionId}
+            mode="reply"
+            parentId={a.id}
+            replyingToName={a.author}
+            onDone={() => {
+              setReplying(false)
+              setShowReplies(true)
+            }}
+          />
         )}
 
-        {/* Form reply cho câu trả lời gốc này */}
-        {replying && <InlineAnswerForm questionId={questionId} mode="reply" parentId={a.id} onDone={() => setReplying(false)} />}
-
-        {/* Danh sách reply lồng (2 cấp) */}
-        {a.replies.length > 0 && (
-          <div className="mt-3 space-y-3 border-l-2 border-plum-900/[0.06] pl-3.5">
-            {a.replies.map((r) => (
-              <AnswerBubble key={r.id} a={{ ...r, replies: [] }} questionId={questionId} isReply />
-            ))}
+        {/* Reply lồng (2 cấp) — thu gọn mặc định, kiểu "Xem N phản hồi" của FB/TikTok */}
+        {replyCount > 0 && (
+          <div className="mt-2">
+            {!showReplies ? (
+              <button
+                type="button"
+                onClick={() => setShowReplies(true)}
+                className="ml-1 flex items-center gap-2 text-xs font-semibold text-plum-500 transition-colors hover:text-brand-600"
+              >
+                <span className="h-3.5 w-4 shrink-0 rounded-bl-lg border-b-2 border-l-2 border-plum-900/15" />
+                Xem {replyCount} phản hồi
+              </button>
+            ) : (
+              <div className="space-y-3 border-l-2 border-plum-900/[0.06] pl-3.5">
+                {a.replies.map((r) => (
+                  <AnswerBubble key={r.id} a={{ ...r, replies: [] }} questionId={questionId} isReply />
+                ))}
+                <button type="button" onClick={() => setShowReplies(false)} className="text-xs font-semibold text-plum-400 transition-colors hover:text-plum-700">
+                  Ẩn phản hồi
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

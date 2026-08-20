@@ -51,6 +51,9 @@ public class AnswerResponse {
     /** Mốc thời gian tuyệt đối (ISO-8601) tạo câu trả lời */
     private String createdAt;
 
+    /** true nếu câu trả lời đã từng được chỉnh sửa (updated_at trễ hơn created_at) — để hiển thị "Đã chỉnh sửa" */
+    private boolean edited;
+
     /** Danh sách reply của câu trả lời gốc này (rỗng nếu không có, hoặc bản thân đây là reply) */
     private List<AnswerResponse> replies;
 }

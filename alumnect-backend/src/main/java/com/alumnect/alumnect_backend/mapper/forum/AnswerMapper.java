@@ -51,6 +51,7 @@ public class AnswerMapper {
                 .votes(answer.getVoteCount())
                 .time(toRelativeTime(answer.getCreatedAt()))
                 .createdAt(answer.getCreatedAt() != null ? answer.getCreatedAt().toString() : "")
+                .edited(isEdited(answer))
                 .replies(replies != null ? replies : List.of())
                 .build();
     }
@@ -61,6 +62,20 @@ public class AnswerMapper {
      * @param createdAt Thời điểm tạo câu trả lời
      * @return Chuỗi thời gian tương đối, hoặc "vừa xong" nếu chưa đầy 1 phút
      */
+    /**
+     * Xác định câu trả lời đã từng được chỉnh sửa hay chưa: updated_at trễ hơn created_at
+     * quá 2 giây (bỏ qua chênh lệch nhỏ lúc tạo do @PrePersist gán hai mốc gần như trùng nhau).
+     *
+     * @param answer Entity câu trả lời
+     * @return true nếu đã chỉnh sửa
+     */
+    private boolean isEdited(Answer answer) {
+        if (answer.getCreatedAt() == null || answer.getUpdatedAt() == null) {
+            return false;
+        }
+        return answer.getUpdatedAt().isAfter(answer.getCreatedAt().plusSeconds(2));
+    }
+
     private String toRelativeTime(Instant createdAt) {
         Duration diff = Duration.between(createdAt, Instant.now());
         long minutes = diff.toMinutes();

@@ -22,6 +22,7 @@ const answerBaseSchema = z.object({
   votes: z.number().default(0),
   time: z.string().default(''),
   createdAt: z.string().default(''),
+  edited: z.boolean().default(false),
 })
 
 /**
