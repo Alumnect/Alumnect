@@ -126,6 +126,16 @@ export function ProfilePage() {
   const handleAvatarUploadDirect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !profile) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file định dạng hình ảnh hợp lệ (VD: JPG, PNG...)')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh không được vượt quá 5MB')
+      return
+    }
+
     setIsUploadingMedia(true)
     try {
       const presignedRes = await presignedUrlMutation.mutateAsync({
@@ -165,6 +175,16 @@ export function ProfilePage() {
   const handleCoverUploadDirect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !profile) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file định dạng hình ảnh hợp lệ (VD: JPG, PNG...)')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh không được vượt quá 5MB')
+      return
+    }
+
     setIsUploadingMedia(true)
     try {
       const presignedRes = await presignedUrlMutation.mutateAsync({

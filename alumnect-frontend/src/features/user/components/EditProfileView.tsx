@@ -89,8 +89,25 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
   const handleAddSocialLink = () => {
     if (!newSocialLink.trim()) return
-    if (socialLinks.includes(newSocialLink.trim())) return
-    setSocialLinks([...socialLinks, newSocialLink.trim()])
+    const link = newSocialLink.trim()
+    
+    try {
+      new URL(link)
+      if (!link.startsWith('http://') && !link.startsWith('https://')) {
+        throw new Error()
+      }
+    } catch {
+      setValidationError('Liên kết cá nhân không hợp lệ. Vui lòng bắt đầu bằng http:// hoặc https:// (VD: https://linkedin.com/...)')
+      return
+    }
+
+    if (socialLinks.includes(link)) {
+      setValidationError('Liên kết cá nhân này đã tồn tại')
+      return
+    }
+    
+    setValidationError(null)
+    setSocialLinks([...socialLinks, link])
     setNewSocialLink('')
   }
 
@@ -122,8 +139,45 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
     e.preventDefault()
     setValidationError(null)
 
-    if (!fullName.trim()) {
+    const name = fullName.trim()
+    if (!name) {
       setValidationError('Họ và tên không được để trống')
+      return
+    }
+    if (name.length < 2 || name.length > 50) {
+      setValidationError('Họ và tên hiển thị phải có độ dài từ 2 đến 50 ký tự')
+      return
+    }
+    if (/\d/.test(name)) {
+      setValidationError('Họ và tên hiển thị không được chứa số')
+      return
+    }
+
+    if (cohort) {
+      if (cohort < 1 || cohort > 50) {
+        setValidationError('Khóa học (Cohort) không hợp lệ (nhập số từ 1 đến 50)')
+        return
+      }
+    }
+
+    if (graduationYear) {
+      const currentYear = new Date().getFullYear()
+      if (graduationYear < 2006 || graduationYear > currentYear + 10) {
+        setValidationError(`Năm tốt nghiệp không hợp lệ (từ 2006 đến ${currentYear + 10})`)
+        return
+      }
+    }
+
+    if (phone && phone.trim()) {
+      const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/
+      if (!phoneRegex.test(phone.trim())) {
+        setValidationError('Số điện thoại không hợp lệ (phải là định dạng số điện thoại Việt Nam)')
+        return
+      }
+    }
+
+    if (biography && biography.trim().length > 500) {
+      setValidationError('Tiểu sử / Giới thiệu bản thân không được vượt quá 500 ký tự')
       return
     }
 
