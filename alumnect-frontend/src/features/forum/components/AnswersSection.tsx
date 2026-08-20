@@ -159,7 +159,6 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
                 </button>
               )}
               <span className="text-plum-400">{a.time}</span>
-              {a.edited && <span className="text-plum-400">Đã chỉnh sửa</span>}
             </div>
           </>
         )}
