@@ -49,4 +49,5 @@ function invalidateQueries(queryClient: any) {
   queryClient.invalidateQueries({ queryKey: ['user-profile'] })
   queryClient.invalidateQueries({ queryKey: ['alumni-map'] })
   queryClient.invalidateQueries({ queryKey: ['career-paths'] })
+  queryClient.invalidateQueries({ queryKey: ['career-path-detail'] })
 }

@@ -26,8 +26,8 @@ public class CareerPathQueryRepositoryImpl implements CareerPathQueryRepository 
             Long majorId,
             Pageable pageable
     ) {
-        StringBuilder jpql = new StringBuilder("SELECT up.userId FROM UserProfile up JOIN up.user u WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI'");
-        StringBuilder countJpql = new StringBuilder("SELECT COUNT(up.userId) FROM UserProfile up JOIN up.user u WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI'");
+        StringBuilder jpql = new StringBuilder("SELECT up.userId FROM UserProfile up JOIN up.user u WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI' AND EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id)");
+        StringBuilder countJpql = new StringBuilder("SELECT COUNT(up.userId) FROM UserProfile up JOIN up.user u WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI' AND EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id)");
         
         StringBuilder where = new StringBuilder();
         
