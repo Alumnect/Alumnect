@@ -44,18 +44,18 @@ import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Achievement', tone: 'gold' },
-  recruitment: { label: 'Hiring', tone: 'aqua' },
-  event: { label: 'Event', tone: 'violet' },
-  normal: { label: 'Post', tone: 'brand' },
+  achievement: { label: 'Thành tựu', tone: 'gold' },
+  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
+  event: { label: 'Sự kiện', tone: 'violet' },
+  normal: { label: 'Bài viết', tone: 'brand' },
 }
 
 /** Các tab lọc bảng tin theo loại bài viết (UC15: lọc theo loại). */
 const FILTERS: { key: FeedFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'achievement', label: 'Achievements' },
-  { key: 'recruitment', label: 'Hiring' },
-  { key: 'event', label: 'Events' },
+  { key: 'all', label: 'Tất cả' },
+  { key: 'achievement', label: 'Thành tựu' },
+  { key: 'recruitment', label: 'Tuyển dụng' },
+  { key: 'event', label: 'Sự kiện' },
 ]
 
 /**
@@ -74,15 +74,15 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
           onClick={() => onOpen()}
           className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]"
         >
-          Share an achievement, ask, or post a job…
+          Bạn muốn chia sẻ thành tựu, đặt câu hỏi hay đăng tin tuyển dụng?…
         </button>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-plum-900/8 pt-3">
         {[
-          { icon: Award, label: 'Achievement', tone: 'text-gold-600', type: 'achievement' },
-          { icon: ImageIcon, label: 'Photo', tone: 'text-aqua-500', type: 'normal' },
-          { icon: Briefcase, label: 'Job', tone: 'text-brand-600', type: 'recruitment' },
-          { icon: CalendarPlus, label: 'Event', tone: 'text-violet-600', type: 'event' },
+          { icon: Award, label: 'Thành tựu', tone: 'text-gold-600', type: 'achievement' },
+          { icon: ImageIcon, label: 'Hình ảnh', tone: 'text-aqua-500', type: 'normal' },
+          { icon: Briefcase, label: 'Tuyển dụng', tone: 'text-brand-600', type: 'recruitment' },
+          { icon: CalendarPlus, label: 'Sự kiện', tone: 'text-violet-600', type: 'event' },
         ].map((a) => (
           <button
             key={a.label}
@@ -94,7 +94,7 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
             <span className="hidden sm:inline">{a.label}</span>
           </button>
         ))}
-        <Button size="sm" className="ml-auto" onClick={() => onOpen()}>Post</Button>
+        <Button size="sm" className="ml-auto" onClick={() => onOpen()}>Đăng bài</Button>
       </div>
     </Card>
   )
@@ -234,7 +234,9 @@ function PostCard({
 
           <div className="p-5">
             <div className="mb-5 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <p className="text-base font-bold text-plum-900 mb-1">{post.job.company}</p>
+              <p className="text-base font-bold text-plum-900 mb-3">
+                Công ty: {post.job.company}
+              </p>
               
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                  <div>
@@ -252,12 +254,13 @@ function PostCard({
                    <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
                      {(post.job.salaryMin || post.job.salaryMax) ? (
                        <span className="inline-flex items-center gap-1">
-                         <span className="font-semibold text-emerald-600">
-                           {post.job.salaryMin ? post.job.salaryMin.toLocaleString('vi-VN') : '?'}
-                           {' — '}
-                           {post.job.salaryMax ? post.job.salaryMax.toLocaleString('vi-VN') : '?'}
-                           {' ₫'}
-                         </span>
+                          <span className="font-semibold text-emerald-600">
+                            {post.job.salaryMin && post.job.salaryMax
+                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                              : post.job.salaryMin
+                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
+                              : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
+                          </span>
                        </span>
                      ) : (
                        <span className="text-slate-400 font-normal">Thỏa thuận</span>
@@ -672,7 +675,7 @@ export function FeedPage() {
       <aside className="hidden space-y-5 lg:block">
         {/* Mục 1: Gợi ý người để theo dõi */}
         <Reveal direction="left">
-          <SidebarCard title="Who to follow" action="See all">
+          <SidebarCard title="Gợi ý kết nối" action="Xem tất cả">
             <ul className="space-y-4">
               {ALUMNI.slice(0, 3).map((a) => (
                 <li key={a.id} className="flex items-center gap-3">
@@ -681,7 +684,7 @@ export function FeedPage() {
                     <p className="truncate text-sm font-bold text-plum-900">{a.name}</p>
                     <p className="truncate text-xs text-plum-400">{a.cohort}</p>
                   </div>
-                  <Button size="sm" variant="secondary">Follow</Button>
+                  <Button size="sm" variant="secondary">Theo dõi</Button>
                 </li>
               ))}
             </ul>
@@ -690,7 +693,7 @@ export function FeedPage() {
 
         {/* Mục 2: Sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>
-          <SidebarCard title="Upcoming events" action="All events">
+          <SidebarCard title="Sự kiện sắp diễn ra" action="Tất cả">
             <ul className="space-y-3">
               {EVENTS.slice(0, 2).map((e) => (
                 <li key={e.id} className="flex items-center gap-3">
@@ -700,7 +703,7 @@ export function FeedPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-plum-900">{e.title}</p>
-                    <p className="truncate text-xs text-plum-400">{compact(e.attendees)} attending</p>
+                    <p className="truncate text-xs text-plum-400">{compact(e.attendees)} người tham gia</p>
                   </div>
                 </li>
               ))}
@@ -710,14 +713,14 @@ export function FeedPage() {
 
         {/* Mục 3: Câu hỏi Q&A đang nổi bật */}
         <Reveal direction="left" delay={0.2}>
-          <SidebarCard title="Trending Q&A" action="Forum">
+          <SidebarCard title="Hỏi đáp nổi bật" action="Diễn đàn">
             <ul className="space-y-3">
               {QUESTIONS.slice(0, 3).map((q) => (
                 <li key={q.id}>
                   <Link to="/app/forum" className="group block">
                     <p className="line-clamp-2 text-sm font-semibold text-plum-800 group-hover:text-brand-600">{q.title}</p>
                     <p className="mt-1 flex items-center gap-2 text-xs text-plum-400">
-                      <TrendingUp size={12} /> {q.votes} votes · {q.answers} answers
+                      <TrendingUp size={12} /> {q.votes} bình chọn · {q.answers} câu trả lời
                     </p>
                   </Link>
                 </li>

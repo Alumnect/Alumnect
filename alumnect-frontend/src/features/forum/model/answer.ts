@@ -12,6 +12,7 @@ import { z } from 'zod'
  */
 export const answerSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
+  authorId: z.union([z.string(), z.number()]).transform(String).optional().nullable().default(null),
   body: z.string().default(''),
   author: z.string().default('Ẩn danh'),
   avatar: z.string().default(''),

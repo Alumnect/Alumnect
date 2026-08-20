@@ -23,8 +23,8 @@ export function AdminShell() {
             <ShieldCheck size={18} />
           </span>
           <div>
-            <p className="text-sm font-extrabold text-plum-900">Admin Console</p>
-            <p className="text-[11px] text-plum-400">AlumNect operations</p>
+            <p className="text-sm font-extrabold text-plum-900">Bảng Quản Trị</p>
+            <p className="text-[11px] text-plum-400">Vận hành AlumNect</p>
           </div>
         </div>
 
@@ -66,15 +66,15 @@ export function AdminShell() {
           onClick={() => logoutM.mutate()}
           className="m-3 flex items-center justify-center gap-2 rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-500/20"
         >
-          <LogOut size={16} /> Sign out
+          <LogOut size={16} /> Đăng xuất
         </button>
       </aside>
 
       <div className="lg:pl-64">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-plum-900/[0.07] bg-cream-50/80 px-5 backdrop-blur-xl sm:px-8">
           <div className="flex items-center gap-3">
-            <Badge tone="gold">Admin</Badge>
-            <span className="hidden text-sm text-plum-500 sm:block">FPTU AlumNect · Operations dashboard</span>
+            <Badge tone="gold">Quản trị</Badge>
+            <span className="hidden text-sm text-plum-500 sm:block">FPTU AlumNect · Bảng điều khiển quản trị</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-right sm:block">

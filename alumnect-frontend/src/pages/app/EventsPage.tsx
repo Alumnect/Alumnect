@@ -1,26 +1,24 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, MapPin, Users, Clock, Loader2 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, SmartImage, EmptyState } from '@/components/ui'
+import { PageHeader, Card, Avatar, SmartImage, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { useFeed } from '@/features/feed/hooks/useFeed'
-import { useAuthStore } from '@/store/authStore'
 import { compact, cn } from '@/lib/utils'
 
-const TABS = ['Upcoming', 'This month', 'Online', 'My events']
-const CURRENT_MONTH = new Date().toLocaleString('en', { month: 'short' }).toUpperCase()
-const CURRENT_MONTH_INDEX = new Date().getMonth()
-const CURRENT_YEAR = new Date().getFullYear()
+const TABS = ['Sắp diễn ra', 'Trong tháng này']
 
 export function EventsPage() {
-  const [tab, setTab] = useState('Upcoming')
+  const [tab, setTab] = useState('Sắp diễn ra')
   const [rsvp, setRsvp] = useState<Record<string, boolean>>({})
-  const currentUser = useAuthStore((s) => s.user)
 
   // Fetch event posts from backend
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('event')
   const posts = useMemo(() => data?.pages.flatMap((page) => page.items) || [], [data])
+
+  const CURRENT_MONTH_INDEX = new Date().getMonth()
+  const CURRENT_YEAR = new Date().getFullYear()
 
   const filteredEvents = posts.filter((post) => {
     const event = post.event
@@ -28,27 +26,20 @@ export function EventsPage() {
     
     const eventDate = new Date(event.startTime)
     
-    if (tab === 'This month') {
+    if (tab === 'Trong tháng này') {
       return eventDate.getMonth() === CURRENT_MONTH_INDEX && eventDate.getFullYear() === CURRENT_YEAR
     }
     
-    if (tab === 'Online') {
-      return event.location?.toLowerCase().includes('online') || false
-    }
-    
-    if (tab === 'My events') {
-      return !!rsvp[post.id] || post.author === currentUser?.name
-    }
-    
-    // Default 'Upcoming' (show all for now, or you can filter by >= start of today)
+    // Default 'Sắp diễn ra'
     return true
   })
 
   const getEventDateInfo = (isoString?: string | null) => {
-    if (!isoString) return { month: 'TBA', day: '--', dateStr: 'TBA', timeStr: '' }
+    if (!isoString) return { month: 'TH--', day: '--', dateStr: 'Chưa xác định', timeStr: '' }
     const date = new Date(isoString)
+    const month = 'TH' + (date.getMonth() + 1)
     return {
-      month: date.toLocaleString('en', { month: 'short' }).toUpperCase(),
+      month,
       day: date.getDate().toString().padStart(2, '0'),
       dateStr: date.toLocaleDateString('vi-VN', { dateStyle: 'medium' }),
       timeStr: date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
@@ -59,8 +50,8 @@ export function EventsPage() {
     <div className="mx-auto max-w-6xl">
       <PageHeader
         icon={<CalendarDays size={20} />}
-        title="Events & Reunions"
-        subtitle="Reconnect at meetups, talks and homecomings — RSVP in a tap."
+        title="Sự kiện & Họp mặt"
+        subtitle="Tham gia các buổi giao lưu, hội thảo và ngày hội cựu sinh viên FPTU."
       />
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -85,16 +76,16 @@ export function EventsPage() {
       ) : isError ? (
         <EmptyState
           icon={<CalendarDays size={24} />}
-          title="Failed to load events"
-          description="There was an error connecting to the server."
-          action={<Button size="sm" variant="secondary" onClick={() => window.location.reload()}>Try again</Button>}
+          title="Không tải được danh sách sự kiện"
+          description="Đã xảy ra lỗi khi kết nối tới máy chủ."
+          action={<Button size="sm" variant="secondary" onClick={() => window.location.reload()}>Thử lại</Button>}
         />
       ) : filteredEvents.length === 0 ? (
         <EmptyState
           icon={<CalendarDays size={24} />}
-          title="No events here yet"
-          description="Try another tab, or check back soon for new events."
-          action={<Button size="sm" variant="secondary" onClick={() => setTab('Upcoming')}>Clear filter</Button>}
+          title="Chưa có sự kiện nào ở mục này"
+          description="Hãy thử chọn tab khác hoặc quay lại sau để xem các sự kiện mới."
+          action={<Button size="sm" variant="secondary" onClick={() => setTab('Sắp diễn ra')}>Xem tất cả sự kiện</Button>}
         />
       ) : (
       <Stagger className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" gap={0.08}>
@@ -107,17 +98,16 @@ export function EventsPage() {
             <StaggerItem key={post.id}>
               <Card hover={false} className="group h-full flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-glow">
                 <Link to={`/app/posts/${post.id}`} className="relative h-44 shrink-0 overflow-hidden block">
-                  <SmartImage src={cover} alt={event.title || 'Event'} className="h-full w-full" imgClassName="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
                   <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
                     <span className="text-[10px] font-bold uppercase text-gold-600">{dateInfo.month}</span>
                     <span className="text-xl font-extrabold text-plum-900">{dateInfo.day}</span>
                   </div>
-
                 </Link>
                 <div className="flex flex-col justify-between flex-1 p-5">
                   <Link to={`/app/posts/${post.id}`} className="block">
-                    <h2 className="text-lg font-bold text-plum-900 line-clamp-2 hover:underline hover:text-brand-600 transition-colors">{event.title || 'Untitled Event'}</h2>
+                    <h2 className="text-lg font-bold text-plum-900 line-clamp-2 hover:underline hover:text-brand-600 transition-colors">{event.title || 'Sự kiện chưa đặt tên'}</h2>
                     {event.location && (
                       <p className="mt-2 flex items-center gap-1.5 text-sm text-plum-500 truncate">
                         <MapPin size={14} className="shrink-0" /> {event.location}
@@ -134,15 +124,21 @@ export function EventsPage() {
                   </Link>
                   <div className="mt-4 flex items-center justify-between gap-3 border-t border-plum-900/8 pt-4">
                     <div className="flex flex-1 items-center gap-2 min-w-0">
-                      <div className="shrink-0">
-                        <Avatar src={post.avatar} name={post.author} size={26} />
-                      </div>
-                      <span className="text-sm font-medium text-plum-900 truncate" title={post.author}>
-                        {post.author}
-                      </span>
+                      <Link
+                        to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-2 min-w-0 hover:text-brand-600 transition-colors group/author"
+                      >
+                        <div className="shrink-0">
+                          <Avatar src={post.avatar} name={post.author} size={26} />
+                        </div>
+                        <span className="text-sm font-medium text-plum-900 truncate group-hover/author:underline group-hover/author:text-brand-600" title={post.author}>
+                          {post.author}
+                        </span>
+                      </Link>
                       {event.capacity && (
                         <span className="shrink-0 inline-flex items-center gap-1 text-xs text-plum-400">
-                          <Users size={12} /> Max {compact(event.capacity)}
+                          <Users size={12} /> Tối đa {compact(event.capacity)}
                         </span>
                       )}
                     </div>
@@ -152,7 +148,7 @@ export function EventsPage() {
                       variant={rsvp[post.id] ? 'secondary' : 'primary'}
                       onClick={() => setRsvp((s) => ({ ...s, [post.id]: !s[post.id] }))}
                     >
-                      {rsvp[post.id] ? 'Going ✓' : 'RSVP'}
+                      {rsvp[post.id] ? 'Đã đăng ký ✓' : 'Tham gia'}
                     </Button>
                   </div>
                 </div>
@@ -172,7 +168,7 @@ export function EventsPage() {
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
             >
-              {isFetchingNextPage ? 'Loading...' : 'Load more events'}
+              {isFetchingNextPage ? 'Đang tải...' : 'Tải thêm sự kiện'}
             </Button>
           </div>
         </Reveal>

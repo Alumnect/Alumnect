@@ -157,7 +157,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
     <>
       <div className="flex items-center gap-2">
         <Sparkles size={20} className="text-brand-500 animate-pulse" />
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Join AlumNect</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Gia nhập AlumNect</span>
       </div>
       <h2 className="mt-1 text-3xl font-extrabold text-plum-900 tracking-tight">Đăng ký tài khoản</h2>
       <p className="mt-1 text-sm text-plum-500">Kết nối với cộng đồng sinh viên và cựu sinh viên FPTU.</p>

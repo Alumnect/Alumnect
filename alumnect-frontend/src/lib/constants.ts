@@ -23,8 +23,8 @@ import {
 
 export const BRAND = {
   name: 'AlumNect',
-  tagline: 'The verified home of the FPTU alumni community',
-  university: 'FPT University',
+  tagline: 'Mạng lưới kết nối cựu sinh viên FPTU',
+  university: 'Đại học FPT',
   email: 'hello@alumnect.edu.vn',
 }
 
@@ -37,11 +37,11 @@ export type NavItem = {
 
 /** Top navigation for the public marketing site. */
 export const MARKETING_NAV: NavItem[] = [
-  { label: 'Platform', to: '/#platform' },
-  { label: 'Network', to: '/#network' },
-  { label: 'Careers', to: '/#careers' },
-  { label: 'Events', to: '/#events' },
-  { label: 'Insights', to: '/#insights' },
+  { label: 'Nền tảng', to: '/#platform' },
+  { label: 'Mạng lưới', to: '/#network' },
+  { label: 'Tuyển dụng', to: '/#careers' },
+  { label: 'Sự kiện', to: '/#events' },
+  { label: 'Góc nhìn', to: '/#insights' },
 ]
 
 /**
@@ -49,112 +49,112 @@ export const MARKETING_NAV: NavItem[] = [
  * and as the mobile bottom tab bar.
  */
 export const APP_PRIMARY_NAV: NavItem[] = [
-  { label: 'Feed', to: '/app', icon: Home },
-  { label: 'Alumni', to: '/app/alumni', icon: Users },
-  { label: 'Jobs', to: '/app/jobs', icon: Briefcase },
-  { label: 'Events', to: '/app/events', icon: CalendarDays },
-  { label: 'Q&A Forum', to: '/app/forum', icon: HelpCircle },
+  { label: 'Bảng tin', to: '/app', icon: Home },
+  { label: 'Cựu sinh viên', to: '/app/alumni', icon: Users },
+  { label: 'Tuyển dụng', to: '/app/jobs', icon: Briefcase },
+  { label: 'Sự kiện', to: '/app/events', icon: CalendarDays },
+  { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: HelpCircle },
 ]
 
 /** Secondary features — tucked into the "More" apps menu (used less often). */
 export const APP_MORE_NAV: NavItem[] = [
-  { label: 'Salary Board', to: '/app/salary', icon: LineChart },
-  { label: 'Alumni Map', to: '/app/map', icon: MapIcon },
-  { label: 'Career Paths', to: '/app/career', icon: Route },
+  { label: 'Bảng lương', to: '/app/salary', icon: LineChart },
+  { label: 'Bản đồ cựu SV', to: '/app/map', icon: MapIcon },
+  { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: Route },
 ]
 
 /** Items inside the avatar / account dropdown. */
 export const APP_ACCOUNT_NAV: NavItem[] = [
-  { label: 'My Profile', to: '/app/profile', icon: Users },
-  { label: 'Change Password', to: '/app/change-password', icon: Lock },
-  { label: 'Subscription', to: '/app/subscription', icon: CreditCard },
-  { label: 'Admin Console', to: '/admin', icon: ShieldCheck },
+  { label: 'Trang cá nhân', to: '/app/profile', icon: Users },
+  { label: 'Đổi mật khẩu', to: '/app/change-password', icon: Lock },
+  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
+  { label: 'Bảng quản trị', to: '/admin', icon: ShieldCheck },
 ]
 
 /** Full flat list (kept for any "all features" surfaces). */
 export const APP_NAV: NavItem[] = [
   ...APP_PRIMARY_NAV,
   ...APP_MORE_NAV,
-  { label: 'Messages', to: '/app/messages', icon: MessagesSquare, badge: '3' },
-  { label: 'Notifications', to: '/app/notifications', icon: Bell },
-  { label: 'Subscription', to: '/app/subscription', icon: CreditCard },
+  { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare, badge: '3' },
+  { label: 'Thông báo', to: '/app/notifications', icon: Bell },
+  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
 ]
 
 /** Admin dashboard navigation. */
 export const ADMIN_NAV: NavItem[] = [
-  { label: 'Overview', to: '/admin', icon: LayoutDashboard },
-  { label: 'Users', to: '/admin/users', icon: UserCog },
-  { label: 'Posts', to: '/admin/posts', icon: FileText },
-  { label: 'Verifications', to: '/admin/verifications', icon: BadgeCheck },
-  { label: 'Reports', to: '/admin/reports', icon: Flag },
-  { label: 'Revenue', to: '/admin/revenue', icon: CreditCard },
-  { label: 'Broadcast', to: '/admin/broadcast', icon: Megaphone },
-  { label: 'Moderation', to: '/admin/moderation', icon: ShieldCheck },
+  { label: 'Tổng quan', to: '/admin', icon: LayoutDashboard },
+  { label: 'Người dùng', to: '/admin/users', icon: UserCog },
+  { label: 'Bài viết', to: '/admin/posts', icon: FileText },
+  { label: 'Xác minh', to: '/admin/verifications', icon: BadgeCheck },
+  { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
+  { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
+  { label: 'Thông báo chung', to: '/admin/broadcast', icon: Megaphone },
+  { label: 'Kiểm duyệt', to: '/admin/moderation', icon: ShieldCheck },
 ]
 
 /** Headline platform stats (marketing). */
 export const STATS = [
-  { value: 24800, suffix: '+', label: 'Verified alumni' },
-  { value: 1260, suffix: '+', label: 'Jobs posted' },
-  { value: 540, suffix: '+', label: 'Events hosted' },
-  { value: 96, suffix: '%', label: 'Would recommend' },
+  { value: 24800, suffix: '+', label: 'Cựu sinh viên đã xác minh' },
+  { value: 1260, suffix: '+', label: 'Việc làm đã đăng' },
+  { value: 540, suffix: '+', label: 'Sự kiện đã tổ chức' },
+  { value: 96, suffix: '%', label: 'Đánh giá hài lòng' },
 ]
 
 export const MODULES = [
   {
     key: 'feed',
     icon: Home,
-    title: 'Community Feed',
-    desc: 'Achievements, stories and updates from a verified network — no noise, no fakes.',
+    title: 'Bảng tin cộng đồng',
+    desc: 'Cập nhật thành tựu, câu chuyện và tin tức từ mạng lưới đã xác thực.',
     tone: 'brand',
   },
   {
     key: 'jobs',
     icon: Briefcase,
-    title: 'Jobs & Recruitment',
-    desc: 'Alumni-only hiring with paid posting packages and trusted referrals.',
+    title: 'Tuyển dụng & Việc làm',
+    desc: 'Cơ hội việc làm nội bộ dành riêng cho cựu sinh viên và sinh viên FPTU.',
     tone: 'gold',
   },
   {
     key: 'events',
     icon: CalendarDays,
-    title: 'Events & Reunions',
-    desc: 'Create, RSVP and get reminders for meetups, talks and reunions.',
+    title: 'Sự kiện & Họp mặt',
+    desc: 'Tạo, đăng ký tham gia và nhận nhắc nhở về các buổi workshop, giao lưu.',
     tone: 'aqua',
   },
   {
     key: 'forum',
     icon: HelpCircle,
-    title: 'Q&A Forum',
-    desc: 'Ask seniors, answer juniors, and build a living knowledge base.',
+    title: 'Diễn đàn hỏi đáp',
+    desc: 'Hỏi tiền bối, giải đáp hậu bối, cùng nhau xây dựng kho tri thức.',
     tone: 'violet',
   },
   {
     key: 'salary',
     icon: LineChart,
-    title: 'Salary Board',
-    desc: 'Anonymous, aggregated salary insight by role, industry and region.',
+    title: 'Bảng lương ẩn danh',
+    desc: 'Tra cứu mức lương thực tế theo vị trí, ngành nghề và khu vực.',
     tone: 'brand',
   },
   {
     key: 'map',
     icon: MapIcon,
-    title: 'Alumni Map',
-    desc: 'See where the network lives and works across the globe.',
+    title: 'Bản đồ cựu SV',
+    desc: 'Xem mạng lưới cựu sinh viên đang sinh sống và làm việc trên toàn cầu.',
     tone: 'aqua',
   },
   {
     key: 'career',
     icon: Route,
-    title: 'Career Paths',
-    desc: 'Visualise real journeys FPTU graduates took to reach their roles.',
+    title: 'Lộ trình nghề nghiệp',
+    desc: 'Khám phá hành trình thăng tiến thực tế của các cựu sinh viên FPTU.',
     tone: 'violet',
   },
   {
     key: 'messaging',
     icon: MessagesSquare,
-    title: 'Direct Messaging',
-    desc: 'Mentor and connect privately with verified members.',
+    title: 'Nhắn tin trực tiếp',
+    desc: 'Kết nối và trao đổi kinh nghiệm trực tiếp với các thành viên đã xác thực.',
     tone: 'gold',
   },
 ] as const
@@ -162,53 +162,53 @@ export const MODULES = [
 export const STEPS = [
   {
     n: '01',
-    title: 'Register & verify',
-    desc: 'Sign up with email or Google, then submit FPTU proof to earn the verified badge.',
+    title: 'Đăng ký & Xác minh',
+    desc: 'Tạo tài khoản qua Email hoặc Google FPT, gửi minh chứng để nhận huy hiệu đã xác minh.',
   },
   {
     n: '02',
-    title: 'Build your profile',
-    desc: 'Add your career timeline, skills and cohort so the right people can find you.',
+    title: 'Hoàn thiện hồ sơ',
+    desc: 'Thêm quá trình công tác, kỹ năng và khóa học để kết nối đúng người.',
   },
   {
     n: '03',
-    title: 'Connect & grow',
-    desc: 'Follow alumni, join events, ask questions, get hired and give back.',
+    title: 'Kết nối & Phát triển',
+    desc: 'Theo dõi cựu sinh viên, tham gia sự kiện, tìm việc làm và mở rộng mạng lưới.',
   },
 ]
 
 export const TESTIMONIALS = [
   {
     quote:
-      'AlumNect is the first place that actually feels official. I found my first job through a senior I met here.',
+      'AlumNect là nền tảng kết nối rất hữu ích. Tôi đã tìm được công việc đầu tiên nhờ một anh cựu sinh viên khóa trên.',
     name: 'Trần Minh Anh',
     role: 'Software Engineer · SE K15',
     avatar: 'https://i.pravatar.cc/120?img=12',
   },
   {
     quote:
-      'The verified badge changes everything. You know you are talking to real FPTU graduates, not random accounts.',
+      'Huy hiệu xác minh giúp mọi kết nối an tâm hơn hẳn. Bạn luôn biết mình đang trò chuyện với cựu sinh viên FPTU thật sự.',
     name: 'Nguyễn Hải Long',
     role: 'Product Manager · IB K13',
     avatar: 'https://i.pravatar.cc/120?img=33',
   },
   {
     quote:
-      'We hired two interns from a single recruitment post. The quality of the network is unmatched.',
+      'Chúng tôi đã tuyển được 2 thực tập sinh xuất sắc chỉ sau một bài đăng tuyển dụng trên AlumNect.',
     name: 'Phạm Thu Hà',
     role: 'Talent Lead · MKT K12',
     avatar: 'https://i.pravatar.cc/120?img=45',
   },
   {
     quote:
-      'The salary board gave me the confidence to negotiate a 30% raise. Anonymous, but real data.',
+      'Bảng lương giúp tôi tự tin hơn rất nhiều khi đàm phán mức lương mới. Dữ liệu ẩn danh nhưng rất thực tế.',
     name: 'Lê Quốc Bảo',
     role: 'Data Analyst · AI K16',
     avatar: 'https://i.pravatar.cc/120?img=8',
   },
   {
     quote:
-      'I came back to mentor on the forum and ended up reconnecting with my whole cohort.',
+      'Tôi quay lại chia sẻ kinh nghiệm trên diễn đàn và đã kết nối lại với rất nhiều bạn bè cùng khóa.',
     name: 'Vũ Khánh Vy',
     role: 'UX Designer · GD K14',
     avatar: 'https://i.pravatar.cc/120?img=20',
@@ -226,8 +226,8 @@ export const FEED_POSTS = [
     role: 'Software Engineer @ FPT Software',
     avatar: 'https://i.pravatar.cc/120?img=12',
     verified: true,
-    time: '2h',
-    text: 'Just got promoted to Senior Engineer! Forever grateful to the seniors on AlumNect who mentored me through system design interviews. 🚀',
+    time: '2 giờ trước',
+    text: 'Vừa chính thức được thăng chức lên Senior Engineer! Cảm ơn các anh chị tiền bối trên AlumNect đã nhiệt tình hỗ trợ và chia sẻ kinh nghiệm phỏng vấn System Design. 🚀',
     image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop',
     likes: 248,
     comments: 36,
@@ -240,8 +240,8 @@ export const FEED_POSTS = [
     role: 'Talent Lead @ VNG',
     avatar: 'https://i.pravatar.cc/120?img=45',
     verified: true,
-    time: '5h',
-    text: "We're hiring 3 Frontend Interns (React/TS) for our Q3 cohort. FPTU alumni & students get a priority screening — drop a comment or DM me.",
+    time: '5 giờ trước',
+    text: 'Bên mình đang tuyển 3 bạn Thực tập sinh Frontend (React/TS) cho đợt Q3. Sinh viên & cựu sinh viên FPTU sẽ được ưu tiên duyệt hồ sơ phỏng vấn sớm — hãy để lại bình luận hoặc nhắn tin trực tiếp cho mình nhé.',
     image: null,
     likes: 96,
     comments: 54,
@@ -251,11 +251,11 @@ export const FEED_POSTS = [
     id: 'p3',
     type: 'event',
     author: 'AlumNect Events',
-    role: 'Official',
+    role: 'Ban tổ chức',
     avatar: 'https://i.pravatar.cc/120?img=64',
     verified: true,
-    time: '1d',
-    text: 'FPTU Alumni Homecoming 2026 — a night of reconnection, talks and live music. Limited seats. RSVP now.',
+    time: '1 ngày trước',
+    text: 'FPTU Alumni Homecoming 2026 — Đêm hội ngộ, giao lưu và âm nhạc dành riêng cho cựu sinh viên FPTU. Số lượng chỗ có hạn, hãy nhanh tay đăng ký ngay.',
     image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop',
     likes: 512,
     comments: 88,
@@ -265,21 +265,21 @@ export const FEED_POSTS = [
 
 /** Mock jobs. */
 export const JOBS = [
-  { id: 'j1', title: 'Senior Frontend Engineer', company: 'FPT Software', location: 'Đà Nẵng · Hybrid', type: 'Full-time', salary: '$1,800 – $2,800', tags: ['React', 'TypeScript', 'Tailwind'], featured: true, logo: '🟧' },
-  { id: 'j2', title: 'Product Designer', company: 'Momo', location: 'HCMC · On-site', type: 'Full-time', salary: '$1,500 – $2,400', tags: ['Figma', 'Design System'], featured: true, logo: '🟣' },
-  { id: 'j3', title: 'Data Analyst Intern', company: 'Shopee', location: 'Remote', type: 'Internship', salary: '$500 – $800', tags: ['SQL', 'Python', 'Tableau'], featured: false, logo: '🟠' },
-  { id: 'j4', title: 'Backend Engineer (Java)', company: 'Techcombank', location: 'Hà Nội · Hybrid', type: 'Full-time', salary: '$2,000 – $3,200', tags: ['Spring Boot', 'PostgreSQL', 'AWS'], featured: false, logo: '🔵' },
-  { id: 'j5', title: 'Mobile Engineer (Flutter)', company: 'VNG', location: 'HCMC · On-site', type: 'Full-time', salary: '$1,600 – $2,600', tags: ['Flutter', 'Dart'], featured: false, logo: '🟢' },
-  { id: 'j6', title: 'AI Research Engineer', company: 'Viettel AI', location: 'Hà Nội · On-site', type: 'Full-time', salary: '$2,400 – $4,000', tags: ['PyTorch', 'NLP', 'LLM'], featured: true, logo: '🔴' },
+  { id: 'j1', title: 'Senior Frontend Engineer', company: 'FPT Software', location: 'Đà Nẵng · Hybrid', type: 'Toàn thời gian', salary: '$1,800 – $2,800', tags: ['React', 'TypeScript', 'Tailwind'], featured: true, logo: '🟧' },
+  { id: 'j2', title: 'Product Designer', company: 'Momo', location: 'TP.HCM · Trực tiếp', type: 'Toàn thời gian', salary: '$1,500 – $2,400', tags: ['Figma', 'Design System'], featured: true, logo: '🟣' },
+  { id: 'j3', title: 'Data Analyst Intern', company: 'Shopee', location: 'Từ xa (Remote)', type: 'Thực tập', salary: '$500 – $800', tags: ['SQL', 'Python', 'Tableau'], featured: false, logo: '🟠' },
+  { id: 'j4', title: 'Backend Engineer (Java)', company: 'Techcombank', location: 'Hà Nội · Hybrid', type: 'Toàn thời gian', salary: '$2,000 – $3,200', tags: ['Spring Boot', 'PostgreSQL', 'AWS'], featured: false, logo: '🔵' },
+  { id: 'j5', title: 'Mobile Engineer (Flutter)', company: 'VNG', location: 'TP.HCM · Trực tiếp', type: 'Toàn thời gian', salary: '$1,600 – $2,600', tags: ['Flutter', 'Dart'], featured: false, logo: '🟢' },
+  { id: 'j6', title: 'AI Research Engineer', company: 'Viettel AI', location: 'Hà Nội · Trực tiếp', type: 'Toàn thời gian', salary: '$2,400 – $4,000', tags: ['PyTorch', 'NLP', 'LLM'], featured: true, logo: '🔴' },
 ]
 export type Job = (typeof JOBS)[number]
 
 /** Mock events. */
 export const EVENTS = [
-  { id: 'e1', title: 'FPTU Alumni Homecoming 2026', date: 'Jul 26', month: 'JUL', day: '26', location: 'FPT Campus, Đà Nẵng', attendees: 480, cover: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop', tag: 'Reunion' },
-  { id: 'e2', title: 'Tech Talk: Scaling to a Million Users', date: 'Aug 03', month: 'AUG', day: '03', location: 'Online · Zoom', attendees: 1240, cover: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200&auto=format&fit=crop', tag: 'Talk' },
-  { id: 'e3', title: 'Alumni Startup Demo Night', date: 'Aug 18', month: 'AUG', day: '18', location: 'Dreamplex, HCMC', attendees: 320, cover: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1200&auto=format&fit=crop', tag: 'Networking' },
-  { id: 'e4', title: 'Career Fair: Hire from the Network', date: 'Sep 09', month: 'SEP', day: '09', location: 'FPT Campus, Hà Nội', attendees: 760, cover: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=1200&auto=format&fit=crop', tag: 'Career' },
+  { id: 'e1', title: 'FPTU Alumni Homecoming 2026', date: '26 Th7', month: 'TH7', day: '26', location: 'FPT Campus, Đà Nẵng', attendees: 480, cover: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop', tag: 'Hội ngộ' },
+  { id: 'e2', title: 'Tech Talk: Tối ưu hệ thống triệu người dùng', date: '03 Th8', month: 'TH8', day: '03', location: 'Trực tuyến · Zoom', attendees: 1240, cover: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200&auto=format&fit=crop', tag: 'Hội thảo' },
+  { id: 'e3', title: 'Alumni Startup Demo Night', date: '18 Th8', month: 'TH8', day: '18', location: 'Dreamplex, TP.HCM', attendees: 320, cover: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1200&auto=format&fit=crop', tag: 'Kết nối' },
+  { id: 'e4', title: 'Ngày hội việc làm: Tuyển dụng nội bộ FPTU', date: '09 Th9', month: 'TH9', day: '09', location: 'FPT Campus, Hà Nội', attendees: 760, cover: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?q=80&w=1200&auto=format&fit=crop', tag: 'Tuyển dụng' },
 ]
 export type EventItem = (typeof EVENTS)[number]
 
@@ -298,37 +298,37 @@ export type AlumniProfile = (typeof ALUMNI)[number]
 
 /** Mock forum questions. */
 export const QUESTIONS = [
-  { id: 'q1', title: 'How do I transition from QA to a backend engineering role?', topic: 'Career', votes: 42, answers: 11, author: 'Anonymous', time: '3h', tags: ['career', 'backend'] },
-  { id: 'q2', title: 'What system design topics should I review for a senior interview?', topic: 'Interview', votes: 88, answers: 23, author: 'Lê Quốc Bảo', time: '6h', tags: ['interview', 'system-design'] },
-  { id: 'q3', title: 'Is a master degree worth it for a product manager in Vietnam?', topic: 'Education', votes: 31, answers: 14, author: 'Nguyễn Hải Long', time: '1d', tags: ['education', 'pm'] },
-  { id: 'q4', title: 'Best resources to learn Spring Boot in 2026?', topic: 'Engineering', votes: 56, answers: 19, author: 'Đỗ Gia Huy', time: '2d', tags: ['java', 'spring'] },
+  { id: 'q1', title: 'Làm thế nào để chuyển hướng từ QA sang Backend Engineer?', topic: 'Sự nghiệp', votes: 42, answers: 11, author: 'Ẩn danh', time: '3 giờ trước', tags: ['career', 'backend'] },
+  { id: 'q2', title: 'Những chủ đề System Design nào cần ôn tập khi phỏng vấn vị trí Senior?', topic: 'Phỏng vấn', votes: 88, answers: 23, author: 'Lê Quốc Bảo', time: '6 giờ trước', tags: ['interview', 'system-design'] },
+  { id: 'q3', title: 'Học thạc sĩ có thực sự cần thiết cho vị trí Product Manager tại VN không?', topic: 'Học vấn', votes: 31, answers: 14, author: 'Nguyễn Hải Long', time: '1 ngày trước', tags: ['education', 'pm'] },
+  { id: 'q4', title: 'Tài liệu tốt nhất để học Spring Boot nâng cao năm 2026?', topic: 'Kỹ thuật', votes: 56, answers: 19, author: 'Đỗ Gia Huy', time: '2 ngày trước', tags: ['java', 'spring'] },
 ]
 export type Question = (typeof QUESTIONS)[number]
 
 /** Mock salary rows for the salary board. */
 export const SALARY = [
   { role: 'Software Engineer', level: 'Junior', region: 'Đà Nẵng', median: 18, p25: 14, p75: 24, samples: 142 },
-  { role: 'Software Engineer', level: 'Senior', region: 'HCMC', median: 42, p25: 34, p75: 58, samples: 96 },
-  { role: 'Product Manager', level: 'Mid', region: 'HCMC', median: 38, p25: 30, p75: 50, samples: 54 },
+  { role: 'Software Engineer', level: 'Senior', region: 'TP.HCM', median: 42, p25: 34, p75: 58, samples: 96 },
+  { role: 'Product Manager', level: 'Mid', region: 'TP.HCM', median: 38, p25: 30, p75: 50, samples: 54 },
   { role: 'Data Analyst', level: 'Mid', region: 'Hà Nội', median: 28, p25: 22, p75: 36, samples: 71 },
-  { role: 'UX Designer', level: 'Mid', region: 'Remote', median: 26, p25: 20, p75: 34, samples: 48 },
-  { role: 'DevOps Engineer', level: 'Senior', region: 'HCMC', median: 50, p25: 40, p75: 66, samples: 39 },
+  { role: 'UX Designer', level: 'Mid', region: 'Từ xa (Remote)', median: 26, p25: 20, p75: 34, samples: 48 },
+  { role: 'DevOps Engineer', level: 'Senior', region: 'TP.HCM', median: 50, p25: 40, p75: 66, samples: 39 },
 ]
 export type SalaryRow = (typeof SALARY)[number]
 
 /** Mock career path stages. */
 export const CAREER_PATH = [
-  { stage: 'Graduate', roles: ['Intern', 'Fresher Engineer'], years: 'Year 0–1', share: 100 },
-  { stage: 'Early career', roles: ['Software Engineer', 'QA Engineer', 'BA'], years: 'Year 1–3', share: 82 },
-  { stage: 'Mid career', roles: ['Senior Engineer', 'Team Lead', 'Product Owner'], years: 'Year 3–6', share: 54 },
-  { stage: 'Leadership', roles: ['Engineering Manager', 'Principal', 'Founder'], years: 'Year 6+', share: 23 },
+  { stage: 'Mới tốt nghiệp', roles: ['Thực tập sinh', 'Fresher Engineer'], years: '0–1 năm', share: 100 },
+  { stage: 'Giai đoạn đầu', roles: ['Software Engineer', 'QA Engineer', 'BA'], years: '1–3 năm', share: 82 },
+  { stage: 'Giai đoạn giữa', roles: ['Senior Engineer', 'Team Lead', 'Product Owner'], years: '3–6 năm', share: 54 },
+  { stage: 'Lãnh đạo / Quản lý', roles: ['Engineering Manager', 'Principal', 'Founder'], years: '6+ năm', share: 23 },
 ]
 
 /** Mock map markers (percentage coordinates on the stylised map). */
 export const MAP_MARKERS = [
   { id: 'm1', city: 'Hà Nội', count: 6200, x: 62, y: 22 },
   { id: 'm2', city: 'Đà Nẵng', count: 4100, x: 66, y: 41 },
-  { id: 'm3', city: 'HCMC', count: 9800, x: 64, y: 60 },
+  { id: 'm3', city: 'TP.HCM', count: 9800, x: 64, y: 60 },
   { id: 'm4', city: 'Singapore', count: 880, x: 70, y: 70 },
   { id: 'm5', city: 'Tokyo', count: 640, x: 82, y: 30 },
   { id: 'm6', city: 'Sydney', count: 320, x: 88, y: 82 },
@@ -340,36 +340,37 @@ export type MapMarker = (typeof MAP_MARKERS)[number]
 /** Pricing / posting packages. */
 export const PACKAGES = [
   {
-    name: 'Starter',
+    name: 'Cơ bản (Starter)',
     price: 0,
-    period: 'free',
+    period: 'miễn phí',
     highlight: false,
-    features: ['1 active job post', 'Basic profile', 'Community feed', 'Event RSVP'],
-    cta: 'Current plan',
+    features: ['1 tin tuyển dụng đang chạy', 'Hồ sơ cơ bản', 'Bảng tin cộng đồng', 'Đăng ký sự kiện'],
+    cta: 'Gói hiện tại',
   },
   {
-    name: 'Recruiter',
+    name: 'Nhà tuyển dụng (Recruiter)',
     price: 990000,
-    period: '/ month',
+    period: '/ tháng',
     highlight: true,
-    features: ['10 active job posts', 'Featured listings', 'Applicant insights', 'Priority support', 'Verified recruiter badge'],
-    cta: 'Upgrade now',
+    features: ['10 tin tuyển dụng đang chạy', 'Ghim bài nổi bật', 'Thống kê ứng viên', 'Hỗ trợ ưu tiên', 'Huy hiệu nhà tuyển dụng uy tín'],
+    cta: 'Nâng cấp ngay',
   },
   {
-    name: 'Enterprise',
+    name: 'Doanh nghiệp (Enterprise)',
     price: 4900000,
-    period: '/ month',
+    period: '/ tháng',
     highlight: false,
-    features: ['Unlimited job posts', 'Employer branding page', 'Talent analytics', 'Dedicated manager', 'Event sponsorship'],
-    cta: 'Contact sales',
+    features: ['Không giới hạn tin tuyển dụng', 'Trang thương hiệu doanh nghiệp', 'Phân tích nhân tài nâng cao', 'Chuyên viên hỗ trợ riêng', 'Tài trợ sự kiện'],
+    cta: 'Liên hệ tư vấn',
   },
 ]
 
 /** Admin KPI cards. */
 export const ADMIN_KPIS = [
-  { label: 'Total users', value: 24800, delta: '+8.2%', up: true },
-  { label: 'Pending verifications', value: 132, delta: '+12', up: true },
-  { label: 'Active jobs', value: 486, delta: '-3.1%', up: false },
-  { label: 'Monthly revenue', value: 78_400_000, delta: '+14.6%', up: true, currency: true },
+  { label: 'Tổng người dùng', value: 24800, delta: '+8.2%', up: true },
+  { label: 'Chờ xác minh', value: 132, delta: '+12', up: true },
+  { label: 'Việc làm đang mở', value: 486, delta: '-3.1%', up: false },
+  { label: 'Doanh thu tháng', value: 78_400_000, delta: '+14.6%', up: true, currency: true },
 ]
 export type AdminKpi = (typeof ADMIN_KPIS)[number]
+

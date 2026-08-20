@@ -16,6 +16,7 @@ export type SortOption = (typeof SORT_OPTIONS)[number]
  */
 export const questionSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
+  authorId: z.union([z.string(), z.number()]).transform(String).optional().nullable().default(null),
   title: z.string().default(''),
   excerpt: z.string().default(''),
   topic: z.string().default(''),

@@ -120,7 +120,7 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
           <ChevronUp size={20} />
         </span>
         <span className="text-sm font-bold text-plum-900">{q.votes}</span>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-plum-400">votes</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-plum-400">bình chọn</span>
       </div>
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
@@ -147,13 +147,18 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
 
         {/* Hàng thông tin tác giả + thời gian đăng */}
         <div className="mt-4 flex flex-wrap items-center gap-3 border-b border-plum-900/8 pb-5">
-          <Avatar src={q.avatar} name={q.author} size={40} verified={q.verified} />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-plum-900">{q.author}</p>
-            {q.authorHeadline ? (
-              <p className="truncate text-xs text-plum-500">{q.authorHeadline}</p>
-            ) : null}
-          </div>
+          <Link
+            to={q.authorId ? `/app/profile?userId=${q.authorId}` : '/app/profile'}
+            className="flex items-center gap-3 min-w-0 hover:text-brand-600 transition-colors group"
+          >
+            <Avatar src={q.avatar} name={q.author} size={40} verified={q.verified} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-plum-900 group-hover:text-brand-600 group-hover:underline">{q.author}</p>
+              {q.authorHeadline ? (
+                <p className="truncate text-xs text-plum-500">{q.authorHeadline}</p>
+              ) : null}
+            </div>
+          </Link>
           <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-plum-400">
             <Clock size={13} />
             {postedAt ? <span title={postedAt}>{postedAt}</span> : <span>{q.time}</span>}
@@ -175,7 +180,7 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
         {/* Số vote (chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
         <div className="mt-5 text-sm sm:hidden">
           <span className="inline-flex items-center gap-1.5 font-semibold text-plum-500">
-            <ChevronUp size={15} /> {q.votes} votes
+            <ChevronUp size={15} /> {q.votes} bình chọn
           </span>
         </div>
       </div>

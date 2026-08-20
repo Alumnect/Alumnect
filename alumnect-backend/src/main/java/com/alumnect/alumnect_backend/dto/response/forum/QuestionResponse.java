@@ -22,6 +22,9 @@ public class QuestionResponse {
     /** ID câu hỏi (dạng chuỗi để Frontend không mất độ chính xác số lớn) */
     private String id;
 
+    /** ID tác giả câu hỏi (dạng chuỗi) */
+    private String authorId;
+
     /** Tiêu đề câu hỏi */
     private String title;
 

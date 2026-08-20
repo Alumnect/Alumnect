@@ -6,17 +6,17 @@ import { ALUMNI } from '@/lib/constants'
 
 const CONVOS = ALUMNI.slice(0, 6).map((a, i) => ({
   ...a,
-  last: ['Sounds great, let’s connect!', 'Thanks for the referral 🙏', 'See you at the event', 'I sent you the deck', 'Congrats on the promotion!', 'Let me check and revert'][i],
-  time: ['2m', '1h', '3h', '1d', '2d', '3d'][i],
+  last: ['Tuyệt vời, kết nối nhé!', 'Cảm ơn anh đã giới thiệu 🙏', 'Hẹn gặp bạn tại sự kiện', 'Mình đã gửi tài liệu qua email rồi', 'Chúc mừng bạn đã thăng chức nhé!', 'Để mình kiểm tra lại rồi báo bạn nhé'][i],
+  time: ['2 phút', '1 giờ', '3 giờ', '1 ngày', '2 ngày', '3 ngày'][i],
   unread: i < 2,
 }))
 
 const THREAD = [
-  { me: false, text: 'Hey! Saw your post about the Senior role — congrats! 🎉', time: '10:02' },
-  { me: true, text: 'Thank you! Means a lot coming from a senior 🙏', time: '10:04' },
-  { me: false, text: 'Happy to do a mock system design interview if useful?', time: '10:05' },
-  { me: true, text: 'That would be amazing. This week works for me.', time: '10:06' },
-  { me: false, text: 'Let’s do Thursday 8pm. I’ll send a calendar invite.', time: '10:08' },
+  { me: false, text: 'Chào anh! Em thấy bài đăng anh mới thăng chức Senior — chúc mừng anh nhé! 🎉', time: '10:02' },
+  { me: true, text: 'Cảm ơn em nhiều nhé! Được tiền bối chúc mừng thấy vui lắm 🙏', time: '10:04' },
+  { me: false, text: 'Nếu cần thì hôm nào anh mock interview System Design giúp em nhé?', time: '10:05' },
+  { me: true, text: 'Dạ được vậy thì tốt quá ạ! Tuần này em rảnh các buổi tối.', time: '10:06' },
+  { me: false, text: 'Thế tối thứ Năm 8h nhé. Anh gửi link Google Meet qua lịch.', time: '10:08' },
 ]
 
 export function MessagesPage() {
@@ -28,10 +28,10 @@ export function MessagesPage() {
         {/* conversations */}
         <div className="hidden flex-col border-r border-plum-900/8 md:flex">
           <div className="border-b border-plum-900/8 p-4">
-            <h2 className="mb-3 text-lg font-extrabold text-plum-900">Messages</h2>
+            <h2 className="mb-3 text-lg font-extrabold text-plum-900">Tin nhắn</h2>
             <label className="relative flex items-center">
               <Search size={16} className="pointer-events-none absolute left-3 text-plum-400" />
-              <input placeholder="Search" className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-9 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none" />
+              <input placeholder="Tìm kiếm cuộc trò chuyện..." className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-9 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none" />
             </label>
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -62,7 +62,7 @@ export function MessagesPage() {
               <Avatar src={active.avatar} name={active.name} size={42} verified={active.verified} />
               <div>
                 <p className="flex items-center gap-1 text-sm font-bold text-plum-900">{active.name} <BadgeCheck size={14} className="text-brand-400" /></p>
-                <p className="text-xs text-emerald-600">● Online</p>
+                <p className="text-xs text-emerald-600">● Đang trực tuyến</p>
               </div>
             </div>
             <div className="flex items-center gap-1 text-plum-400">
@@ -91,7 +91,7 @@ export function MessagesPage() {
           </div>
 
           <div className="flex items-center gap-2 border-t border-plum-900/8 p-4">
-            <input placeholder="Write a message…" className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
+            <input placeholder="Nhập tin nhắn…" className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
             <button className="grid h-11 w-11 place-items-center rounded-xl bg-brand-600 text-white shadow-sm transition-transform hover:scale-105 hover:bg-brand-700">
               <Send size={18} />
             </button>

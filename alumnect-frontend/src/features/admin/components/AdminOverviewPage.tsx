@@ -73,7 +73,7 @@ export function AdminOverviewPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader title="Overview" subtitle="Chỉ số vận hành hệ thống, biểu đồ đăng ký và hàng đợi phê duyệt." />
+      <PageHeader title="Tổng quan" subtitle="Chỉ số vận hành hệ thống, biểu đồ đăng ký và hàng đợi phê duyệt." />
 
       {/* KPI Section */}
       {isLoadingKpis ? (

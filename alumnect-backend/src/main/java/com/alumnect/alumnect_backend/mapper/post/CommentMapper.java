@@ -46,6 +46,7 @@ public class CommentMapper {
 
         return CommentResponse.builder()
                 .id(String.valueOf(comment.getId()))
+                .authorId(String.valueOf(author.getId()))
                 .author(authorName)
                 .role(role)
                 .avatar(avatarUrl != null ? avatarUrl : "")

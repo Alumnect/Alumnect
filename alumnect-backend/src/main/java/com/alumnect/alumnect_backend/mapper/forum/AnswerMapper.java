@@ -39,6 +39,7 @@ public class AnswerMapper {
 
         return AnswerResponse.builder()
                 .id(String.valueOf(answer.getId()))
+                .authorId(String.valueOf(author.getId()))
                 .body(answer.getBody())
                 .author(authorName)
                 .avatar(avatarUrl)
