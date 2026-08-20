@@ -22,6 +22,34 @@ import type { Answer, CreateAnswerInput } from '../model/answer'
 const MAX_BODY = 10000
 
 /**
+ * Thời gian tương đối tiếng Việt tính từ mốc tạo THẬT (ISO-8601): "Vừa xong", "5 phút",
+ * "3 giờ", "2 ngày", "2 tuần"; quá ~1 tháng thì hiện ngày cụ thể (dd/MM/yyyy).
+ */
+function relativeTime(iso: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const sec = Math.floor((Date.now() - d.getTime()) / 1000)
+  if (sec < 60) return 'Vừa xong'
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min} phút`
+  const hour = Math.floor(min / 60)
+  if (hour < 24) return `${hour} giờ`
+  const day = Math.floor(hour / 24)
+  if (day < 7) return `${day} ngày`
+  if (day < 30) return `${Math.floor(day / 7)} tuần`
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+/** Ngày giờ tuyệt đối (tooltip khi hover) từ mốc tạo THẬT — VD "19/08/2026 16:49". */
+function absoluteTime(iso: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+/**
  * Form gọn dùng cho SỬA câu trả lời (UC48) và REPLY một câu trả lời gốc.
  * Cùng validate Zod với form tạo mới; tự chọn mutation theo `mode`.
  */
@@ -140,7 +168,11 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
                 <Link to={profileLink} className="hover:underline">
                   <span className="text-[13px] font-bold text-plum-900 hover:text-brand-600">{a.author}</span>
                 </Link>
-                {a.time ? <span className="shrink-0 text-[11px] text-plum-400">· {a.time}</span> : null}
+                {(a.createdAt || a.time) && (
+                  <span className="shrink-0 text-[11px] text-plum-400" title={absoluteTime(a.createdAt)}>
+                    · {relativeTime(a.createdAt) || a.time}
+                  </span>
+                )}
               </div>
               {a.authorHeadline ? <p className="truncate text-[11px] text-plum-400">{a.authorHeadline}</p> : null}
               <p className="mt-0.5 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-plum-800">{a.body}</p>
