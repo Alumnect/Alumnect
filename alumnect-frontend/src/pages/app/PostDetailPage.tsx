@@ -8,7 +8,7 @@
  *    / lỗi hệ thống (retry) / thành công.
  *  - Thành viên (Student/Alumni) đăng bình luận qua ô soạn (UC18); Guest được mời đăng nhập.
  */
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Heart,
@@ -25,10 +25,15 @@ import {
   Inbox,
   Send,
   AlertCircle,
+  Clock,
+  MapPin,
+  Users,
+  ExternalLink,
+  CalendarPlus,
+  Briefcase,
 } from 'lucide-react'
-import { Avatar, Badge, Card, Skeleton, EmptyState } from '@/components/ui'
+import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
-import { SmartImage } from '@/components/ui/SmartImage'
 import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -38,10 +43,10 @@ import { useToggleLike, CreatePostModal } from '@/features/feed'
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Achievement', tone: 'gold' },
-  recruitment: { label: 'Hiring', tone: 'aqua' },
-  event: { label: 'Event', tone: 'violet' },
-  normal: { label: 'Post', tone: 'brand' },
+  achievement: { label: 'Thành tựu', tone: 'gold' },
+  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
+  event: { label: 'Sự kiện', tone: 'violet' },
+  normal: { label: 'Bài viết', tone: 'brand' },
 }
 
 /** Nút quay lại bảng tin, hiển thị ở đầu mọi trạng thái của trang. */
@@ -126,7 +131,7 @@ function PostForbidden() {
       </div>
       <Link
         to="/login"
-        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
       >
         Đăng nhập <ArrowRight size={15} />
       </Link>
@@ -188,10 +193,22 @@ function PostDetailCard({
       <div className="p-6">
         {/* Header: avatar, tên tác giả, badge loại bài, chức danh · thời gian */}
         <div className="flex items-center gap-3">
-          <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
+          <Link
+            to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+            className="shrink-0 transition-transform duration-200 hover:scale-105"
+            title={`Xem hồ sơ của ${post.author}`}
+          >
+            <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
+          </Link>
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-2 font-bold text-plum-900">
-              <span className="truncate">{post.author}</span>
+              <Link
+                to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+                className="truncate hover:underline hover:text-brand-600 transition-colors"
+                title={`Xem hồ sơ của ${post.author}`}
+              >
+                {post.author}
+              </Link>
               <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
             </p>
             <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>
@@ -210,19 +227,185 @@ function PostDetailCard({
         </div>
 
         {/* Nội dung đầy đủ (không cắt dòng như thẻ ở bảng tin) */}
-        <p className="mt-5 whitespace-pre-line text-[15px] leading-relaxed text-plum-800">{post.text}</p>
+        {post.type !== 'event' && post.type !== 'recruitment' && (
+          <p className="mt-5 whitespace-pre-line text-[15px] leading-relaxed text-plum-800">{post.text}</p>
+        )}
       </div>
 
-      {/* Ảnh đính kèm (nếu có) — bọc SmartImage trong container cao cố định để xử lý
-          shimmer khi tải & ảnh fallback khi link lỗi (theo chuẩn Design System). */}
-      {post.image && (
-        <div className="h-72 w-full sm:h-96">
-          <SmartImage
-            src={post.image}
-            alt={`Ảnh đính kèm bài viết của ${post.author}`}
-            className="h-full w-full"
-          />
+      {/* --- Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
+      {post.type === 'recruitment' && post.job && (
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all">
+          {/* Header Tuyển dụng */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4">
+            <h3 className="flex items-center gap-2 font-bold text-brand-900 text-lg">
+              <Briefcase size={20} className="text-brand-600" />
+              <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
+            </h3>
+            {post.job.applyUrl && (
+              <a
+                href={post.job.applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-4 py-2 text-sm font-bold text-white hover:bg-[#d96010] transition-colors"
+              >
+                Ứng tuyển <ExternalLink size={14} />
+              </a>
+            )}
+          </div>
+
+          <div className="p-6">
+            <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 p-5">
+              <p className="text-base font-bold text-plum-900 mb-3">Công ty: {post.job.company}</p>
+              
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                 <div>
+                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
+                   <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
+                     {post.job.location && (
+                       <span className="inline-flex items-center gap-1">
+                         <MapPin size={15} className="text-brand-500" /> {post.job.location}
+                       </span>
+                     )}
+                   </div>
+                 </div>
+                 <div>
+                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
+                   <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
+                     {(post.job.salaryMin || post.job.salaryMax) ? (
+                       <span className="inline-flex items-center gap-1">
+                          <span className="font-semibold text-emerald-600">
+                             {post.job.salaryMin && post.job.salaryMax
+                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                               : post.job.salaryMin
+                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
+                               : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
+                          </span>
+                       </span>
+                     ) : (
+                       <span className="text-slate-400 font-normal">Thỏa thuận</span>
+                     )}
+                     {post.job.contactEmail && (
+                       <span className="inline-flex items-center gap-1.5 text-sm">
+                         <Inbox size={15} className="text-plum-400" /> {post.job.contactEmail}
+                       </span>
+                     )}
+                   </div>
+                 </div>
+              </div>
+            </div>
+
+            {/* Mô tả tuyển dụng */}
+            {post.text && (
+              <div className="mb-6">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc:</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800">
+                  {post.text}
+                </p>
+              </div>
+            )}
+
+            {/* Ảnh tuyển dụng */}
+            {(() => {
+              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
+              if (imgs.length === 0) return null
+              return (
+                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+                  <ImageCarousel images={imgs} height={420} altPrefix="Ảnh tuyển dụng" />
+                </div>
+              )
+            })()}
+          </div>
         </div>
+      )}
+
+      {/* --- Thẻ thông tin Sự kiện (nếu là bài event) --- */}
+      {post.type === 'event' && post.event && (
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all">
+          {/* Header Sự kiện */}
+          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4">
+            <h3 className="flex items-center gap-2 font-bold text-violet-900 text-lg">
+              <CalendarPlus size={20} className="text-violet-600" />
+              <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
+            </h3>
+          </div>
+
+          <div className="p-6">
+            {/* Thời gian & Địa điểm */}
+            <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2">
+              {post.event.startTime && (
+                <div>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
+                    <Clock size={15} className="text-violet-500" />
+                    {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
+                    {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+              {post.event.endTime ? (
+                <div>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
+                    <Clock size={15} className="text-coral-500" />
+                    {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
+                    {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
+                  <p className="text-sm font-semibold text-slate-400">—</p>
+                </div>
+              )}
+              {(post.event.location || post.event.capacity) && (
+                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-slate-200/60 pt-4">
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm & Sức chứa</p>
+                  <div className="flex flex-wrap items-center gap-5">
+                    {post.event.location && (
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
+                        <MapPin size={15} className="text-brand-500" /> {post.event.location}
+                      </p>
+                    )}
+                    {post.event.capacity && (
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
+                        <Users size={15} className="text-aqua-600" /> Tối đa {post.event.capacity} người
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mô tả sự kiện */}
+            {post.text && (
+              <div className="mb-6">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện:</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800">
+                  {post.text}
+                </p>
+              </div>
+            )}
+
+            {/* Ảnh sự kiện */}
+            {(() => {
+              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
+              if (imgs.length === 0) return null
+              return (
+                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+                  <ImageCarousel images={imgs} height={420} altPrefix="Ảnh sự kiện" />
+                </div>
+              )
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Danh sách ảnh đính kèm (nếu có) — dùng ImageCarousel */}
+      {post.type !== 'event' && post.type !== 'recruitment' && post.images && post.images.length > 0 && (
+        <ImageCarousel 
+          images={post.images} 
+          altPrefix={`Ảnh đính kèm bài viết của ${post.author}`}
+        />
       )}
 
       {/* Thanh hành động — số liệu tương tác. Đăng like/comment/repost thuộc UC17/18/21,
@@ -243,7 +426,11 @@ function PostDetailCard({
         <button
           disabled={!canInteract}
           title={guardTitle}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={() => {
+            window.location.hash = 'comments'
+            document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
+          }}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-brand-500/[0.08] enabled:hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <MessageCircle size={18} /> {compact(post.comments)}
         </button>
@@ -278,12 +465,19 @@ function CommentItem({ comment }: { comment: Comment }) {
   const isReply = !!comment.parentId
   return (
     <div className={cn('flex gap-3', isReply && 'ml-10')}>
-      <Avatar src={comment.avatar} name={comment.author} size={38} verified={comment.verified} />
+      <Link to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'} className="shrink-0">
+        <Avatar src={comment.avatar} name={comment.author} size={38} verified={comment.verified} />
+      </Link>
       <div className="min-w-0 flex-1">
         <div className="rounded-2xl bg-plum-900/[0.035] px-4 py-2.5">
-          <p className="flex items-center gap-2 text-sm font-bold text-plum-900">
-            <span className="truncate">{comment.author}</span>
-          </p>
+          <Link
+            to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
+            className="hover:underline"
+          >
+            <p className="flex items-center gap-2 text-sm font-bold text-plum-900 hover:text-brand-600">
+              <span className="truncate">{comment.author}</span>
+            </p>
+          </Link>
           {comment.role && <p className="truncate text-[11px] text-plum-400">{comment.role}</p>}
           <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-plum-800">{comment.text}</p>
         </div>
@@ -323,7 +517,7 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
         <p className="text-sm text-plum-500">Đăng nhập để tham gia bình luận.</p>
         <Link
           to="/login"
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
         >
           Đăng nhập <ArrowRight size={14} />
         </Link>
@@ -344,6 +538,14 @@ function CommentComposer({ postId }: { postId: string }) {
   const viewer = useAuthStore((s) => s.user)
   const [content, setContent] = useState('')
   const createComment = useCreateComment(postId)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (window.location.hash === '#comments' && textareaRef.current) {
+      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      textareaRef.current.focus()
+    }
+  }, [])
 
   const trimmed = content.trim()
   const disabled = trimmed.length === 0 || createComment.isPending
@@ -361,12 +563,13 @@ function CommentComposer({ postId }: { postId: string }) {
           <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? ''} size={38} verified={viewer?.verified} />
           <div className="min-w-0 flex-1">
             <textarea
+              ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={2}
               maxLength={COMMENT_MAX}
               placeholder="Viết bình luận…"
-              className="w-full resize-none rounded-xl border border-plum-900/10 bg-plum-900/[0.02] px-4 py-2.5 text-sm leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-400 focus:bg-white"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm leading-relaxed text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-[#F27024] focus:bg-white focus:ring-2 focus:ring-[#F27024]/20"
             />
 
             {/* Thông điệp lỗi nghiệp vụ từ Backend (VD 403/404/400) */}
@@ -489,7 +692,7 @@ function CommentsSection({
   const comments = data?.pages.flatMap((p) => p.items) ?? []
 
   return (
-    <section className="mt-6 space-y-4">
+    <section id="comments" className="mt-6 space-y-4">
       <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-plum-500">
         Bình luận{commentCount ? ` · ${compact(commentCount)}` : ''}
       </h2>

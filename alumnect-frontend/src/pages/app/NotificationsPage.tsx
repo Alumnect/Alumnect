@@ -17,12 +17,12 @@ const TONE = {
 type Kind = keyof typeof ICONS
 
 const NOTIFS: { kind: Kind; who: string; avatar: string; text: string; time: string; unread: boolean }[] = [
-  { kind: 'verify', who: 'AlumNect', avatar: 'https://i.pravatar.cc/60?img=64', text: 'Your alumni verification was approved. Welcome aboard! 🎉', time: '5m', unread: true },
-  { kind: 'like', who: 'Nguyễn Hải Long', avatar: 'https://i.pravatar.cc/60?img=33', text: 'and 24 others liked your achievement post.', time: '1h', unread: true },
-  { kind: 'follow', who: 'Phạm Thu Hà', avatar: 'https://i.pravatar.cc/60?img=45', text: 'started following you.', time: '3h', unread: true },
-  { kind: 'comment', who: 'Lê Quốc Bảo', avatar: 'https://i.pravatar.cc/60?img=8', text: 'commented: “Congrats! Well deserved.”', time: '5h', unread: false },
-  { kind: 'event', who: 'Events', avatar: 'https://i.pravatar.cc/60?img=64', text: 'Reminder: FPTU Homecoming starts in 2 days.', time: '1d', unread: false },
-  { kind: 'job', who: 'VNG', avatar: 'https://i.pravatar.cc/60?img=51', text: 'A new job matching your profile was posted.', time: '2d', unread: false },
+  { kind: 'verify', who: 'Ban quản trị AlumNect', avatar: 'https://i.pravatar.cc/60?img=64', text: 'đã phê duyệt hồ sơ xác minh cựu sinh viên của bạn. Chào mừng bạn gia nhập mạng lưới! 🎉', time: '5 phút', unread: true },
+  { kind: 'like', who: 'Nguyễn Hải Long', avatar: 'https://i.pravatar.cc/60?img=33', text: 'và 24 người khác đã thích bài viết thành tựu của bạn.', time: '1 giờ', unread: true },
+  { kind: 'follow', who: 'Phạm Thu Hà', avatar: 'https://i.pravatar.cc/60?img=45', text: 'đã bắt đầu theo dõi bạn.', time: '3 giờ', unread: true },
+  { kind: 'comment', who: 'Lê Quốc Bảo', avatar: 'https://i.pravatar.cc/60?img=8', text: 'đã bình luận: “Chúc mừng anh nhé! Thật xứng đáng.”', time: '5 giờ', unread: false },
+  { kind: 'event', who: 'Ban tổ chức sự kiện', avatar: 'https://i.pravatar.cc/60?img=64', text: 'Nhắc nhở: FPTU Homecoming 2026 sẽ diễn ra trong 2 ngày nữa.', time: '1 ngày', unread: false },
+  { kind: 'job', who: 'VNG', avatar: 'https://i.pravatar.cc/60?img=51', text: 'vừa đăng tin tuyển dụng mới phù hợp với hồ sơ của bạn.', time: '2 ngày', unread: false },
 ]
 
 export function NotificationsPage() {
@@ -30,9 +30,9 @@ export function NotificationsPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         icon={<Bell size={20} />}
-        title="Notifications"
-        subtitle="Stay on top of likes, follows, comments and events."
-        actions={<Button variant="secondary" size="sm" leftIcon={<Check size={15} />}>Mark all read</Button>}
+        title="Thông báo"
+        subtitle="Cập nhật nhanh lượt thích, bình luận, người theo dõi và các sự kiện mới."
+        actions={<Button variant="secondary" size="sm" leftIcon={<Check size={15} />}>Đánh dấu đã đọc</Button>}
       />
 
       <Stagger className="space-y-3" gap={0.05}>

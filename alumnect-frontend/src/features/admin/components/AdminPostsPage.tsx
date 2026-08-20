@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, User, Newspaper, Clock, ThumbsUp, MessageSquare, Repeat } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -21,6 +22,7 @@ const POST_TYPES = [
 ]
 
 export function AdminPostsPage() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState('ALL')
   const [type, setType] = useState('ALL')
   const [query, setQuery] = useState('')
@@ -152,6 +154,7 @@ export function AdminPostsPage() {
                     <th className="px-5 py-3 font-semibold">Phạm vi / Loại</th>
                     <th className="px-5 py-3 font-semibold">Tương tác</th>
                     <th className="px-5 py-3 font-semibold">Trạng thái</th>
+                    <th className="px-5 py-3 font-semibold text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,7 +165,7 @@ export function AdminPostsPage() {
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <Avatar name={p.authorName} size={38} />
+                          <Avatar src={p.authorAvatarUrl} name={p.authorName} size={38} />
                           <div>
                             <p className="font-semibold text-plum-900">{p.authorName}</p>
                             <p className="text-xs text-plum-400">{p.authorEmail}</p>
@@ -181,7 +184,21 @@ export function AdminPostsPage() {
                           <Badge tone={p.visibility === 'PUBLIC' ? 'success' : 'neutral'} className="w-max">
                             {p.visibility === 'PUBLIC' ? 'Công khai' : 'Thành viên'}
                           </Badge>
-                          <span className="text-xs text-plum-500 font-semibold">{p.type}</span>
+                          {(() => {
+                            type BadgeTone = 'brand' | 'gold' | 'aqua' | 'violet' | 'neutral' | 'success' | 'danger'
+                            const map: Record<string, { label: string; tone: BadgeTone }> = {
+                              GENERAL: { label: 'General', tone: 'neutral' },
+                              ACHIEVEMENT: { label: 'Achievement', tone: 'gold' },
+                              RECRUITMENT: { label: 'Hiring', tone: 'aqua' },
+                              EVENT: { label: 'Event', tone: 'violet' },
+                            }
+                            const match = map[p.type] || { label: p.type, tone: 'neutral' as BadgeTone }
+                            return (
+                              <Badge tone={match.tone} className="w-max px-2 py-0.5 text-[10px]">
+                                {match.label}
+                              </Badge>
+                            )
+                          })()}
                         </div>
                       </td>
                       <td className="px-5 py-3.5 text-plum-600">
@@ -201,6 +218,16 @@ export function AdminPostsPage() {
                         <Badge tone={p.hidden ? 'danger' : 'success'}>
                           {p.hidden ? 'Đã ẩn' : 'Hiển thị'}
                         </Badge>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate(`/admin/posts/${p.id}`)}
+                          className="h-8 text-xs font-bold bg-plum-900/[0.04] text-plum-700 hover:bg-plum-900/[0.08]"
+                        >
+                          Chi tiết
+                        </Button>
                       </td>
                     </tr>
                   ))}

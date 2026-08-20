@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, MapPin, X, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface PlaceData {
   location: string
@@ -17,6 +18,7 @@ interface PlaceAutocompleteProps {
   onChange: (value: string) => void
   onSelect: (place: PlaceData | null) => void
   placeholder?: string
+  inputClassName?: string
 }
 
 interface SuggestionItem {
@@ -66,11 +68,22 @@ function getFormattedSuggestionName(sugName: string, searchQuery: string): strin
   return displayAddress
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
 export function PlaceAutocomplete({
   value,
   onChange,
   onSelect,
   placeholder = 'Nhập số nhà, tên tòa nhà, địa chỉ công ty...',
+  inputClassName,
 }: PlaceAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -82,6 +95,7 @@ export function PlaceAutocomplete({
   const VIETMAP_KEY = (
     import.meta.env.VITE_VIETMAP_API_KEY || '5ccc4cd6f70448296dcc3ce29a3d34958dd4b86eef43fa46'
   ).trim()
+  const MAPTILER_KEY = (import.meta.env.VITE_MAPTILER_API_KEY || '').trim()
 
 
   // Debounce logic khi nhập
@@ -176,13 +190,75 @@ export function PlaceAutocomplete({
         }
       }
 
-      // 2. Nếu Vietmap chưa có kết quả, thử fallback Nominatim OpenStreetMap với house-number stripping
-      if (results.length === 0) {
+      // 2. VietMap tập trung vào Việt Nam. Nếu kết quả không thực sự khớp
+      // với từ khóa (ví dụ nhập "San Jose" nhưng trả về "Joseph's" ở Hà Nội),
+      // chuyển sang Nominatim để tìm kiếm toàn cầu.
+      const normalizedQuery = normalizeSearchText(query)
+      const hasRelevantVietmapResult = results.some((result) => {
+        const queryTokens = normalizedQuery.split(' ').filter(Boolean)
+        const locationTokens = new Set(normalizeSearchText(result.fullLocation).split(' ').filter(Boolean))
+        return queryTokens.length > 0 && queryTokens.every((token) => locationTokens.has(token))
+      })
+
+      if (!hasRelevantVietmapResult) {
+        results.length = 0
+
+        // 3. Nếu không phải địa chỉ Việt Nam, dùng MapTiler Geocoding API
+        // để tìm kiếm toàn cầu.
+        if (MAPTILER_KEY) {
+          try {
+            const mapTilerRes = await fetch(
+              `https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${MAPTILER_KEY}&autocomplete=true&limit=6&language=vi,en`,
+              { signal: controller.signal }
+            )
+            const mapTilerData = await mapTilerRes.json()
+            const features = Array.isArray(mapTilerData?.features) ? mapTilerData.features : []
+
+            for (const feature of features) {
+              const coordinates = feature.geometry?.coordinates
+              if (!Array.isArray(coordinates) || coordinates.length < 2) continue
+
+              const context = Array.isArray(feature.context) ? feature.context : []
+              const cityContext = context.find((item: any) =>
+                /^(place|locality|municipality|region)\./.test(item.id || '')
+              )
+              const countryContext = context.find((item: any) => /^country\./.test(item.id || ''))
+              const shortCode = String(
+                feature.properties?.short_code || countryContext?.short_code || ''
+              ).split('-').pop()?.toUpperCase() || ''
+              const city = feature.place_type?.includes('place')
+                ? feature.text
+                : cityContext?.text || feature.text || ''
+              const country = countryContext?.text || (
+                feature.place_type?.includes('country') ? feature.text : ''
+              )
+              const displayName = feature.place_name || feature.text || query
+
+              results.push({
+                id: `maptiler-${feature.id || Math.random()}`,
+                title: feature.text || displayName.split(',')[0],
+                subtitle: displayName,
+                fullLocation: displayName,
+                lat: Number(coordinates[1]),
+                lng: Number(coordinates[0]),
+                city,
+                country,
+                countryCode: shortCode,
+                provider: 'MAPTILER',
+              })
+            }
+          } catch (e: any) {
+            if (e.name === 'AbortError') throw e
+            console.warn('MapTiler geocoding error, trying Nominatim fallback:', e)
+          }
+        }
+
+        // 4. Fallback cuối cùng cho trường hợp MapTiler không có kết quả.
         try {
           let nomRes = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
               query
-            )}&countrycodes=vn&addressdetails=1&limit=6&accept-language=vi`,
+            )}&addressdetails=1&limit=6&accept-language=vi,en`,
             {
               signal: controller.signal,
               headers: { 'User-Agent': 'AlumNectApp/1.0' },
@@ -200,7 +276,7 @@ export function PlaceAutocomplete({
                 const fallbackRes = await fetch(
                   `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
                     strippedQuery
-                  )}&countrycodes=vn&addressdetails=1&limit=6&accept-language=vi`,
+                  )}&addressdetails=1&limit=6&accept-language=vi,en`,
                   {
                     signal: controller.signal,
                     headers: { 'User-Agent': 'AlumNectApp/1.0' },
@@ -223,9 +299,9 @@ export function PlaceAutocomplete({
                 fullLocation: formattedDisplay,
                 lat: parseFloat(item.lat),
                 lng: parseFloat(item.lon),
-                city: item.address?.city || item.address?.state || 'Việt Nam',
-                country: 'Việt Nam',
-                countryCode: 'vn',
+                city: item.address?.city || item.address?.town || item.address?.village || item.address?.state || '',
+                country: item.address?.country || '',
+                countryCode: item.address?.country_code?.toUpperCase() || '',
                 provider: 'NOMINATIM',
               })
             }
@@ -324,7 +400,7 @@ export function PlaceAutocomplete({
             if (suggestions.length > 0) setOpen(true)
           }}
           placeholder={placeholder}
-          className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 pl-10 pr-10 text-sm text-plum-900 placeholder-plum-400 shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className={cn("w-full rounded-2xl border border-plum-900/10 bg-white py-3 pl-10 pr-10 text-sm text-plum-900 placeholder-plum-400 shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500", inputClassName)}
         />
         {loading && (
           <span className="absolute right-10 text-plum-400">
@@ -354,8 +430,8 @@ export function PlaceAutocomplete({
                 <MapPin size={16} />
               </span>
               <div className="text-left flex-1 min-w-0">
-                <p className="text-sm font-bold text-plum-900 truncate">{s.title}</p>
-                <p className="text-xs text-plum-500 mt-0.5 leading-relaxed line-clamp-2">
+                <p className="text-sm font-bold text-plum-900 break-words">{s.title}</p>
+                <p className="text-xs text-plum-500 mt-0.5 leading-relaxed break-words">
                   {s.subtitle}
                 </p>
               </div>

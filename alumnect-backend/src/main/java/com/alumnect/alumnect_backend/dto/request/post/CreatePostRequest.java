@@ -6,14 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 /**
  * DTO chứa dữ liệu yêu cầu tạo một bài viết mới trên bảng tin cộng đồng
  * (UC14 - Create a post on the Feed).
- * <p>
- * {@code type} và {@code visibility} nhận dưới dạng chuỗi (Frontend gửi chữ thường)
- * và được chuẩn hóa/kiểm tra hợp lệ ở tầng Service (mặc định NORMAL / PUBLIC nếu để trống),
- * đồng nhất với cách xử lý ở luồng xem bảng tin (UC15).
  */
 @Data
 @Builder
@@ -22,23 +19,31 @@ import lombok.NoArgsConstructor;
 public class CreatePostRequest {
 
     /** Nội dung văn bản của bài viết (bắt buộc, tối đa 5000 ký tự) */
+    @NotBlank(message = "Post category cannot be blank")
+    private String type;
+
+    private String imageUrl;
+    
+    private JobDto job;
+    
+    private EventDto event;
+
     @NotBlank(message = "Nội dung bài viết không được để trống")
     @Size(max = 5000, message = "Nội dung bài viết không được vượt quá 5000 ký tự")
     private String content;
 
     /**
-     * Loại bài viết: "normal" | "achievement" | "recruitment" | "event".
-     * Bỏ trống sẽ mặc định là NORMAL. Giá trị không hợp lệ trả về lỗi 400 ở tầng Service.
+     * Loại bài viết: "general" | "achievement" | "recruitment" | "event".
+     * Bỏ trống sẽ mặc định là GENERAL. Giá trị không hợp lệ trả về lỗi 400.
      */
-    private String type;
+    private String category;
 
-    /** URL ảnh đính kèm (tùy chọn, tối đa 500 ký tự), null/rỗng nếu bài viết không có ảnh */
-    @Size(max = 500, message = "URL ảnh không được vượt quá 500 ký tự")
-    private String imageUrl;
+    /** Danh sách URL ảnh đính kèm (tùy chọn) */
+    private List<String> mediaUrls;
 
-    /**
-     * Phạm vi hiển thị: "public" (mọi người kể cả Guest) | "members" (chỉ thành viên đã đăng nhập).
-     * Bỏ trống sẽ mặc định là PUBLIC. Giá trị không hợp lệ trả về lỗi 400 ở tầng Service.
-     */
-    private String visibility;
+    /** ID của sự kiện liên kết (nếu category là EVENT) */
+    private Long eventId;
+
+    /** ID của tin tuyển dụng liên kết (nếu category là RECRUITMENT) */
+    private Long jobId;
 }

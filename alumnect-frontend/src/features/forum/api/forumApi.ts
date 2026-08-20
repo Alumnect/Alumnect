@@ -1,6 +1,7 @@
+import axios from 'axios'
 import http from '@/lib/http'
 import { questionDetailSchema, questionSchema, topicSchema } from '../model/question'
-import type { CreateQuestionInput, Question, QuestionDetail, QuestionPageResult, Topic } from '../model/question'
+import type { CreateQuestionInput, Question, QuestionDetail, QuestionPageResult, Topic, UpdateQuestionInput } from '../model/question'
 import { answerSchema } from '../model/answer'
 import type { Answer, AnswerPageResult, CreateAnswerInput } from '../model/answer'
 
@@ -80,17 +81,20 @@ export const forumApi = {
    * Gọi `GET /api/v1/questions?page={n}&size={m}&sort={s}[&topicId={id}]`.
    * @param page Chỉ số trang cần lấy (0-based)
    * @param sort Tiêu chí sắp xếp ('recent' | 'votes' | 'answers'), có thể ghép nhiều bằng dấu phẩy
-   * @param topicIds Danh sách ID chủ đề để lọc (tick nhiều), rỗng = không lọc
+   * @param topicIds Danh sách ID thể loại để lọc (tick nhiều), rỗng = không lọc
+   * @param majorIds Danh sách ID ngành để lọc (tick nhiều), rỗng = không lọc — độc lập với thể loại
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
    */
   getQuestions: async ({
     page = 0,
     sort = 'recent',
     topicIds = [],
-  }: { page?: number; sort?: string; topicIds?: number[] } = {}): Promise<QuestionPageResult> => {
+    majorIds = [],
+  }: { page?: number; sort?: string; topicIds?: number[]; majorIds?: number[] } = {}): Promise<QuestionPageResult> => {
     const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE), sort })
-    // Gửi nhiều id chủ đề dạng CSV: topicId=3,7,9 — backend nhận List<Long>.
+    // Gửi nhiều id dạng CSV: topicId=3,7,9 / majorId=1,4 — backend nhận List<Long>.
     if (topicIds.length > 0) query.set('topicId', topicIds.join(','))
+    if (majorIds.length > 0) query.set('majorId', majorIds.join(','))
 
     const body = await http.get(`/questions?${query.toString()}`)
     const items = parseQuestions(extractRawItems(body))
@@ -108,6 +112,35 @@ export const forumApi = {
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return questionDetailSchema.parse(payload)
+  },
+
+  /**
+   * Chỉnh sửa một câu hỏi đã có (UC46 - Edit a question).
+   * Gọi `PUT /api/v1/questions/{id}`; interceptor `http` tự đính Bearer token. Chỉ tác giả sửa được (BE chặn 403).
+   * @param id ID câu hỏi cần sửa
+   * @param input Dữ liệu mới (tiêu đề, nội dung, thể loại, ngành, ảnh)
+   * @return Chi tiết câu hỏi sau khi cập nhật đã chuẩn hóa
+   */
+  updateQuestion: async ({ id, input }: { id: string | number; input: UpdateQuestionInput }): Promise<QuestionDetail> => {
+    const body = await http.put(`/questions/${id}`, input)
+    const b = body as unknown as Record<string, unknown> | undefined
+    const payload = (b?.data ?? b) as unknown
+    return questionDetailSchema.parse(payload)
+  },
+
+  /**
+   * Tải một ảnh đính kèm câu hỏi lên storage qua presigned URL, trả về URL công khai để lưu vào câu hỏi.
+   * Cùng cơ chế với ảnh bài đăng: xin link ký sẵn → PUT thẳng file lên storage → dùng publicUrl.
+   * @param file Ảnh do người dùng chọn
+   * @return URL công khai của ảnh sau khi upload
+   */
+  uploadQuestionImage: async (file: File): Promise<string> => {
+    const res = await http.get<unknown, { data: { uploadUrl: string; publicUrl: string } }>(
+      `/files/presigned-url?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}&folder=questions`,
+    )
+    const { uploadUrl, publicUrl } = res.data
+    await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
+    return publicUrl
   },
 
   /**

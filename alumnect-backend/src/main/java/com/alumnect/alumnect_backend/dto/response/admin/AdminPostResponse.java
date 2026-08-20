@@ -5,6 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.Instant;
+import java.util.List;
+import com.alumnect.alumnect_backend.dto.response.post.JobDTO;
+import com.alumnect.alumnect_backend.dto.response.post.EventDTO;
+
 
 /**
  * DTO chứa thông tin chi tiết bài viết cộng đồng trả về cho giao diện Quản trị viên (Admin).
@@ -23,6 +27,9 @@ public class AdminPostResponse {
 
     /** Email của tác giả */
     private String authorEmail;
+
+    /** URL ảnh đại diện của tác giả */
+    private String authorAvatarUrl;
 
     /** Loại bài viết: NORMAL, ACHIEVEMENT, RECRUITMENT, EVENT */
     private String type;
@@ -50,4 +57,13 @@ public class AdminPostResponse {
 
     /** Thời điểm tạo bài viết */
     private Instant createdAt;
+
+    /** Danh sách ảnh đính kèm */
+    private List<String> images;
+
+    /** Chi tiết tin tuyển dụng liên kết */
+    private JobDTO job;
+
+    /** Chi tiết sự kiện liên kết */
+    private EventDTO event;
 }

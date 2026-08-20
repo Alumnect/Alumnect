@@ -6,14 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 /**
  * DTO chứa dữ liệu yêu cầu chỉnh sửa một bài viết trên bảng tin cộng đồng
  * (UC22 - Edit a post).
- * <p>
- * Cấu trúc trường giống {@link CreatePostRequest}: nội dung bắt buộc, loại và phạm vi
- * hiển thị mặc định NORMAL/PUBLIC nếu để trống, ảnh đính kèm tùy chọn.
- * Tầng Service sẽ kiểm tra thêm quyền sở hữu (chỉ tác giả mới được sửa bài của mình).
  */
 @Data
 @Builder
@@ -27,18 +24,25 @@ public class EditPostRequest {
     private String content;
 
     /**
-     * Loại bài viết: "normal" | "achievement" | "recruitment" | "event".
-     * Bỏ trống sẽ giữ nguyên loại hiện tại. Giá trị không hợp lệ trả về lỗi 400 ở tầng Service.
+     * Loại bài viết: "general" | "achievement" | "recruitment" | "event".
+     * Bỏ trống sẽ giữ nguyên loại hiện tại.
      */
+    private String category;
+
     private String type;
 
-    /** URL ảnh đính kèm (tùy chọn, tối đa 500 ký tự). Gửi chuỗi rỗng hoặc null để xóa ảnh cũ */
-    @Size(max = 500, message = "URL ảnh không được vượt quá 500 ký tự")
     private String imageUrl;
+    
+    private JobDto job;
+    
+    private EventDto event;
 
-    /**
-     * Phạm vi hiển thị: "public" (mọi người kể cả Guest) | "members" (chỉ thành viên đã đăng nhập).
-     * Bỏ trống sẽ giữ nguyên phạm vi hiện tại. Giá trị không hợp lệ trả về lỗi 400 ở tầng Service.
-     */
-    private String visibility;
+    /** Danh sách URL ảnh đính kèm (tùy chọn). Gửi rỗng để xóa hết ảnh cũ */
+    private List<String> mediaUrls;
+
+    /** ID của sự kiện liên kết (nếu category là EVENT) */
+    private Long eventId;
+
+    /** ID của tin tuyển dụng liên kết (nếu category là RECRUITMENT) */
+    private Long jobId;
 }

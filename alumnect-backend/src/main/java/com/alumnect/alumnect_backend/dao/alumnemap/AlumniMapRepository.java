@@ -10,9 +10,10 @@ import java.util.List;
 @Repository
 public interface AlumniMapRepository extends JpaRepository<Experience, Long> {
 
-    @Query("SELECT e.user.id as userId, up.fullName as fullName, up.avatarUrl as avatarUrl, " +
+    @Query("SELECT e.user.id as userId, up.major.id as majorId, up.fullName as fullName, up.avatarUrl as avatarUrl, " +
            "u.isAccountVerified as verified, e.title as title, e.company as company, " +
-           "e.location as location, e.latitude as latitude, e.longitude as longitude, " +
+           "e.location as location, e.locationCity as locationCity, e.locationCountry as locationCountry, " +
+           "e.locationCountryCode as locationCountryCode, e.latitude as latitude, e.longitude as longitude, " +
            "e.startDate as startDate, up.cohort as cohort " +
            "FROM Experience e " +
            "JOIN e.user u " +

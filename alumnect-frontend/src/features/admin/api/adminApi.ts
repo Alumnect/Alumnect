@@ -24,32 +24,38 @@ export interface AdminUserDto {
   createdAt: string
   avatarUrl?: string
   phone?: string
-  major?: {
-    id: number
-    code: string
-    name: string
-  }
+  majorCode?: string
+  majorName?: string
   cohort?: number
   headline?: string
+  bio?: string
+  biography?: string
   socialLinks?: string[]
 }
 
 export interface AdminVerificationRequestDto {
   id: number
   userId: number
+  email?: string
   fullName: string
+  avatarUrl?: string
   graduationYear: number
   majorCode: string
+  majorName?: string
   proofUrl: string
   note?: string
   status: string
   createdAt: string
+  reviewedBy?: string
+  reviewNote?: string
+  reviewedAt?: string
 }
 
 export interface AdminPostDto {
   id: number
   authorName: string
   authorEmail: string
+  authorAvatarUrl?: string
   type: string
   content: string
   imageUrl?: string
@@ -59,6 +65,23 @@ export interface AdminPostDto {
   repostCount: number
   hidden: boolean
   createdAt: string
+  images?: string[]
+  job?: {
+    title?: string
+    company?: string
+    location?: string
+    salaryMin?: number
+    salaryMax?: number
+    applyUrl?: string
+    contactEmail?: string
+  }
+  event?: {
+    title?: string
+    location?: string
+    startTime?: string
+    endTime?: string
+    capacity?: number
+  }
 }
 
 export interface PageResponse<T> {
@@ -148,4 +171,10 @@ export const adminApi = {
    */
   togglePostHidden: (id: number, hidden: boolean) =>
     http.put<any, ApiResponse<void>>(`/admin/posts/${id}/status`, { hidden }),
+
+  /**
+   * Xem chi tiết bài viết cộng đồng dành cho Admin (UC67)
+   */
+  getPostDetail: (id: number) =>
+    http.get<any, ApiResponse<AdminPostDto>>(`/admin/posts/${id}`),
 }

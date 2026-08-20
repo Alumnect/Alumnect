@@ -33,6 +33,7 @@ export function useAdminUsers(filters: {
       const response = await adminApi.getUsers(filters)
       return response.data
     },
+    refetchInterval: 5000, // Poll every 5s for real-time list updates
   })
 }
 
@@ -48,6 +49,7 @@ export function useAdminUserDetail(id: number | null) {
       return response.data
     },
     enabled: id !== null,
+    refetchInterval: 3000, // Poll every 3s when the user details modal is open
   })
 }
 
@@ -144,9 +146,25 @@ export function useTogglePostHidden() {
       const response = await adminApi.togglePostHidden(id, hidden)
       return response.data
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'posts'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'post', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
     },
+  })
+}
+
+/**
+ * Hook lấy chi tiết một bài viết cộng đồng dành cho Admin (UC67)
+ */
+export function useAdminPostDetail(id: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'post', id],
+    queryFn: async () => {
+      if (!id) return null
+      const response = await adminApi.getPostDetail(id)
+      return response.data
+    },
+    enabled: id !== null,
   })
 }

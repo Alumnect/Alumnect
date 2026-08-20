@@ -1,22 +1,24 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { forumApi } from '../api/forumApi'
-import type { CreateQuestionInput, SortOption } from '../model/question'
+import type { CreateQuestionInput, SortOption, UpdateQuestionInput } from '../model/question'
 
 /**
  * Hook lấy danh sách câu hỏi diễn đàn theo phân trang vô hạn (infinite scroll).
  * Hỗ trợ NHIỀU tiêu chí sắp xếp ưu tiên: mảng `sorts` được ghép bằng dấu phẩy gửi lên backend
  * (VD ['votes','answers'] → "votes,answers"); mảng rỗng mặc định "recent".
  * @param sorts Danh sách tiêu chí sắp xếp theo thứ tự ưu tiên
- * @param topicIds Danh sách ID chủ đề để lọc (tick nhiều), rỗng = tất cả
+ * @param topicIds Danh sách ID thể loại để lọc (tick nhiều), rỗng = tất cả
+ * @param majorIds Danh sách ID ngành để lọc (tick nhiều), rỗng = tất cả — độc lập với thể loại
  * @return Đối tượng query (pages, isLoading, isError, fetchNextPage, hasNextPage...)
  */
-export function useQuestions(sorts: SortOption[] = ['recent'], topicIds: number[] = []) {
+export function useQuestions(sorts: SortOption[] = ['recent'], topicIds: number[] = [], majorIds: number[] = []) {
   const sortParam = sorts.length > 0 ? sorts.join(',') : 'recent'
-  // Khóa cache ổn định theo tập chủ đề đã chọn (sắp xếp để thứ tự tick không tạo key khác nhau).
+  // Khóa cache ổn định theo tập đã chọn (sắp xếp để thứ tự tick không tạo key khác nhau).
   const topicKey = [...topicIds].sort((a, b) => a - b).join(',')
+  const majorKey = [...majorIds].sort((a, b) => a - b).join(',')
   return useInfiniteQuery({
-    queryKey: ['questions', sortParam, topicKey],
-    queryFn: ({ pageParam }) => forumApi.getQuestions({ page: pageParam, sort: sortParam, topicIds }),
+    queryKey: ['questions', sortParam, topicKey, majorKey],
+    queryFn: ({ pageParam }) => forumApi.getQuestions({ page: pageParam, sort: sortParam, topicIds, majorIds }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
     // Giữ danh sách cũ hiển thị trong lúc tải bộ lọc/sắp xếp mới -> đổi filter/sort mượt, không chớp skeleton.
@@ -63,6 +65,23 @@ export function useCreateQuestion() {
     mutationFn: (input: CreateQuestionInput) => forumApi.createQuestion(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] })
+    },
+  })
+}
+
+/**
+ * Hook chỉnh sửa một câu hỏi (UC46 - Edit a question). Bọc `useMutation`; khi thành công làm mới
+ * cả cache danh sách (['questions']) lẫn cache chi tiết câu hỏi vừa sửa (['question', id]).
+ * @param id ID câu hỏi cần sửa
+ * @return Đối tượng mutation (mutate, isPending, error...)
+ */
+export function useUpdateQuestion(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: UpdateQuestionInput) => forumApi.updateQuestion({ id, input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
+      queryClient.invalidateQueries({ queryKey: ['question', id] })
     },
   })
 }

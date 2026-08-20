@@ -7,6 +7,7 @@
  *  - Xử lý đầy đủ trạng thái: loading / rỗng / lỗi / thành công; RBAC theo vai trò.
  */
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil } from 'lucide-react'
@@ -27,13 +28,15 @@ const MAX_BODY = 10000
 function AnswerCard({ a }: { a: Answer }) {
   return (
     <div className="flex gap-3">
-      <div className="shrink-0">
+      <Link to={a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'} className="shrink-0">
         <Avatar src={a.avatar} name={a.author} size={40} verified={a.verified} />
-      </div>
+      </Link>
       <div className="min-w-0 flex-1">
         <div className="rounded-2xl rounded-tl-md bg-plum-900/[0.04] px-4 py-3">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="truncate text-sm font-bold text-plum-900">{a.author}</p>
+            <Link to={a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'} className="hover:underline">
+              <p className="truncate text-sm font-bold text-plum-900 hover:text-brand-600">{a.author}</p>
+            </Link>
             <span className="shrink-0 text-xs text-plum-400">{a.time}</span>
           </div>
           {a.authorHeadline ? <p className="truncate text-xs text-plum-500">{a.authorHeadline}</p> : null}

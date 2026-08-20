@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Search, Lock, Unlock, Users, Mail, Phone, BookOpen, User, X, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { Search, Lock, Unlock, Users, X, Loader2, Mail, Phone, BookOpen, GraduationCap, Calendar, FileText, Award } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -36,6 +37,18 @@ export function AdminUsersPage() {
   const updateStatusMutation = useUpdateUserStatus()
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const { data: userDetail, isLoading: isLoadingDetail } = useAdminUserDetail(selectedUserId)
+
+  // Khóa cuộn trang khi mở modal chi tiết
+  useEffect(() => {
+    if (selectedUserId !== null) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [selectedUserId])
 
   // Lock / Unlock Action handler
   const handleToggleLock = async (userId: number, currentStatus: string) => {
@@ -175,16 +188,16 @@ export function AdminUsersPage() {
                             u.accountStatus === 'ACTIVE'
                               ? 'success'
                               : u.accountStatus === 'LOCKED'
-                              ? 'danger'
-                              : 'gold'
+                                ? 'danger'
+                                : 'gold'
                           }
                           className="px-2.5 py-0.5"
                         >
                           {u.accountStatus === 'ACTIVE'
                             ? 'Hoạt động'
                             : u.accountStatus === 'LOCKED'
-                            ? 'Bị khóa'
-                            : 'Đợi duyệt'}
+                              ? 'Bị khóa'
+                              : 'Đợi duyệt'}
                         </Badge>
                       </td>
                       <td className="px-5 py-3.5 text-plum-600">
@@ -252,148 +265,198 @@ export function AdminUsersPage() {
       </Reveal>
 
       {/* User Profile Detail Drawer / Modal */}
-      {selectedUserId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4 backdrop-blur-sm">
-          <Card
-            hover={false}
-            className="w-full max-w-xl bg-white shadow-2xl animate-in slide-in-from-bottom-8 duration-300 overflow-hidden"
-          >
-            {/* Header info */}
-            <div className="relative bg-gradient-to-r from-brand-600 to-violet-600 p-6 text-white">
-              <button
-                onClick={() => setSelectedUserId(null)}
-                className="absolute right-4 top-4 rounded-full bg-black/15 p-1 text-white hover:bg-black/25 transition-all"
-              >
-                <X size={18} />
-              </button>
+      {selectedUserId !== null &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/45 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+            <Card
+              hover={false}
+              className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100/30 rounded-2xl animate-pop"
+            >
+              {/* Header Banner - Wrap avatar, name, and email with white text on gradient background */}
+              <div className="relative bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400 p-6 text-white rounded-t-2xl shadow-sm">
+                <button
+                  onClick={() => setSelectedUserId(null)}
+                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-all border border-white/10 z-20 shadow-xs"
+                >
+                  <X size={16} />
+                </button>
 
-              {isLoadingDetail ? (
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-16 w-16 rounded-full bg-white/20" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-5 w-40 bg-white/20" />
-                    <Skeleton className="h-4 w-48 bg-white/20" />
-                  </div>
-                </div>
-              ) : userDetail ? (
-                <div className="flex items-center gap-4">
-                  <Avatar src={userDetail.avatarUrl} name={userDetail.fullName} size={64} ring verified={userDetail.isAccountVerified} />
-                  <div>
-                    <h3 className="text-xl font-bold">{userDetail.fullName}</h3>
-                    <p className="text-white/80 text-sm mt-0.5">
-                      {userDetail.role === 'ADMIN' ? 'Hệ thống Admin' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
-                    </p>
-                    {userDetail.headline && <p className="text-white/70 text-xs mt-1.5 italic">"{userDetail.headline}"</p>}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Body Info */}
-            <div className="p-6">
-              {isLoadingDetail ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-10 w-full" />
-                  ))}
-                </div>
-              ) : userDetail ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Email */}
-                    <div className="flex items-center gap-3 text-sm text-plum-700">
-                      <span className="p-2 rounded-xl bg-plum-900/[0.04] text-plum-500">
-                        <Mail size={16} />
-                      </span>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-plum-400">Email</p>
-                        <p className="font-semibold truncate max-w-[200px]">{userDetail.email}</p>
-                      </div>
+                {isLoadingDetail ? (
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-20 w-20 rounded-full border-4 border-white/30 shadow-md bg-white/10 shrink-0" />
+                    <div className="space-y-2 flex-1 pb-1">
+                      <Skeleton className="h-5 w-40 bg-white/20" />
+                      <Skeleton className="h-4 w-48 bg-white/20" />
                     </div>
-
-                    {/* Điện thoại */}
-                    <div className="flex items-center gap-3 text-sm text-plum-700">
-                      <span className="p-2 rounded-xl bg-plum-900/[0.04] text-plum-500">
-                        <Phone size={16} />
-                      </span>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-plum-400">Điện thoại</p>
-                        <p className="font-semibold">{userDetail.phone || 'Chưa cập nhật'}</p>
+                  </div>
+                ) : userDetail ? (
+                  <div className="flex items-center gap-4">
+                    <Avatar
+                      src={userDetail.avatarUrl}
+                      name={userDetail.fullName}
+                      size={80}
+                      verified={userDetail.isAccountVerified}
+                      className="rounded-full border-4 border-white ring-1 ring-plum-900/5 shadow-md shrink-0 bg-white"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-xl font-bold text-white tracking-tight">{userDetail.fullName}</h2>
+                        <Badge
+                          tone="neutral"
+                          className="bg-white/20 backdrop-blur-md px-2 py-0.5 text-[9px] rounded-full shrink-0 font-extrabold uppercase border border-white/30 text-white shadow-2xs"
+                        >
+                          {userDetail.role === 'ADMIN' ? 'Admin' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                        </Badge>
                       </div>
-                    </div>
-
-                    {/* Ngành học */}
-                    <div className="flex items-center gap-3 text-sm text-plum-700">
-                      <span className="p-2 rounded-xl bg-plum-900/[0.04] text-plum-500">
-                        <BookOpen size={16} />
-                      </span>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-plum-400">Ngành học</p>
-                        <p className="font-semibold">
-                          {userDetail.major ? `${userDetail.major.name} (${userDetail.major.code})` : 'N/A'}
+                      <p className="text-white/80 text-xs mt-0.5 font-medium">{userDetail.email}</p>
+                      {userDetail.headline && (
+                        <p className="text-gold-100 text-xs mt-2 italic font-semibold flex items-center gap-1.5 bg-black/10 px-2.5 py-1.5 rounded-lg border border-white/5 w-fit">
+                          <Award size={13} className="shrink-0 text-gold-400" />
+                          <span>"{userDetail.headline}"</span>
                         </p>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Body Content */}
+              <div className="p-6 space-y-4 bg-white">
+                {isLoadingDetail ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full bg-plum-900/5 rounded-xl" />
+                    ))}
+                  </div>
+                ) : userDetail ? (
+                  <>
+                    {/* Information Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Contact Column */}
+                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <Mail size={12} className="text-brand-500" />
+                          <span>Thông tin liên hệ</span>
+                        </h4>
+                        
+                        <div className="space-y-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Địa chỉ Email</span>
+                            <span className="font-semibold text-plum-900 break-all">{userDetail.email}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Số điện thoại</span>
+                            <span className="font-semibold text-plum-900 flex items-center gap-1">
+                              <Phone size={11} className="text-slate-400 shrink-0" />
+                              {userDetail.phone || 'Chưa cập nhật'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Education Column */}
+                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <GraduationCap size={13} className="text-brand-500" />
+                          <span>Học vấn & Mã số</span>
+                        </h4>
+                        
+                        <div className="space-y-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Chuyên ngành</span>
+                            <span className="font-semibold text-plum-900 flex items-center gap-1">
+                              <BookOpen size={11} className="text-slate-400 shrink-0" />
+                              {userDetail.majorName ? `${userDetail.majorName} (${userDetail.majorCode})` : 'Chưa chọn'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Mã sinh viên / Khóa</span>
+                            <span className="font-semibold text-plum-900 flex items-center gap-1.5">
+                              <span>{userDetail.studentCode || 'N/A'}</span>
+                              {userDetail.cohort ? (
+                                <Badge tone="neutral" className="px-1.5 py-0 text-[9px] font-bold border border-plum-900/10">
+                                  K{userDetail.cohort}
+                                </Badge>
+                              ) : ''}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Mã số / Khóa */}
-                    <div className="flex items-center gap-3 text-sm text-plum-700">
-                      <span className="p-2 rounded-xl bg-plum-900/[0.04] text-plum-500">
-                        <User size={16} />
-                      </span>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-plum-400">Mã sinh viên / Khóa</p>
-                        <p className="font-semibold">
-                          {userDetail.studentCode || 'N/A'} {userDetail.cohort ? `(K${userDetail.cohort})` : ''}
-                        </p>
+                    {/* Biography block if present */}
+                    {userDetail.biography && (
+                      <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 space-y-2">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <FileText size={12} className="text-brand-500" />
+                          <span>Tiểu sử bản thân</span>
+                        </h4>
+                        <p className="text-xs text-plum-800 leading-relaxed whitespace-pre-line">{userDetail.biography}</p>
+                      </div>
+                    )}
+
+                    {/* Account Status / Metadata */}
+                    <div className="p-4 rounded-xl bg-slate-50/30 border border-slate-100/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={13} className="text-slate-400" />
+                        <span className="text-slate-400">Tham gia:</span>
+                        <span className="font-semibold text-plum-900">
+                          {new Date(userDetail.createdAt).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] px-2 py-0.5">
+                          {userDetail.accountStatus === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
+                        </Badge>
+                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[9px] px-2 py-0.5">
+                          {userDetail.isAccountVerified ? 'Đã xác minh' : 'Chưa xác minh'}
+                        </Badge>
                       </div>
                     </div>
-                  </div>
 
-                  <hr className="border-plum-900/5 my-4" />
-
-                  {/* Account state info */}
-                  <div className="flex flex-wrap gap-4 items-center justify-between text-xs text-plum-400">
-                    <p>
-                      Tài khoản khởi tạo: <strong>{new Date(userDetail.createdAt).toLocaleDateString('vi-VN')}</strong>
-                    </p>
-                    <div className="flex gap-2">
-                      <Badge
-                        tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'}
-                      >
-                        {userDetail.accountStatus === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
-                      </Badge>
-                      <Badge tone={userDetail.isAccountVerified ? 'brand' : 'gold'}>
-                        {userDetail.isAccountVerified ? 'Đã xác minh' : 'Chưa xác minh'}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Actions inside profile details */}
-                  {userDetail.role !== 'ADMIN' && (
-                    <div className="mt-6 flex justify-end gap-3 border-t border-plum-900/5 pt-4">
-                      <Button
-                        size="sm"
-                        variant={userDetail.accountStatus === 'LOCKED' ? 'primary' : 'secondary'}
-                        onClick={() => {
-                          handleToggleLock(userDetail.id, userDetail.accountStatus)
-                        }}
-                      >
-                        {updateStatusMutation.isPending && (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        )}
-                        {userDetail.accountStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={() => setSelectedUserId(null)}>
-                        Đóng
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          </Card>
-        </div>
-      )}
+                    {/* Actions under Modal */}
+                    {userDetail.role !== 'ADMIN' && (
+                      <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
+                        <Button
+                          size="sm"
+                          variant={userDetail.accountStatus === 'LOCKED' ? 'primary' : 'secondary'}
+                          onClick={() => {
+                            handleToggleLock(userDetail.id, userDetail.accountStatus)
+                          }}
+                          className={cn(
+                            'font-bold text-xs shadow-3xs rounded-xl px-4 py-2 transition-all',
+                            userDetail.accountStatus === 'LOCKED'
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 hover:shadow-xs'
+                              : 'border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100/80 hover:text-red-700'
+                          )}
+                        >
+                          {updateStatusMutation.isPending ? (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : userDetail.accountStatus === 'LOCKED' ? (
+                            <Unlock size={14} className="mr-1.5" />
+                          ) : (
+                            <Lock size={14} className="mr-1.5" />
+                          )}
+                          {userDetail.accountStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setSelectedUserId(null)}
+                          className="font-bold text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl px-4 py-2"
+                        >
+                          Đóng
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : null}
+              </div>
+            </Card>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

@@ -22,6 +22,7 @@ import {
   UserPlus,
   UserMinus,
   PlusSquare,
+  ArrowLeft,
 } from 'lucide-react'
 import axios from 'axios'
 import { Avatar, Card, Skeleton, EmptyState, SmartImage } from '@/components/ui'
@@ -36,7 +37,6 @@ import {
   EditProfileView,
   ExperienceFormModal,
   useDeleteExperience,
-  useUpdateExperience,
   useFollowUser,
   useUnfollowUser,
   FollowListModal,
@@ -107,7 +107,6 @@ export function ProfilePage() {
   const presignedUrlMutation = usePresignedUrl()
   const updateProfileMutation = useUpdateOwnProfile()
   const deleteExpMutation = useDeleteExperience()
-  const updateExpMutation = useUpdateExperience()
 
   // Tự động chuyển hướng về /login nếu cố tình xem hồ sơ bản thân khi chưa đăng nhập
   useEffect(() => {
@@ -140,6 +139,20 @@ export function ProfilePage() {
         fullName: profile.fullName,
         avatarUrl: publicUrl,
         coverUrl: profile.coverUrl,
+        phone: profile.phone,
+        headline: profile.headline,
+        biography: profile.biography,
+        campus: profile.campus,
+        cohort: profile.cohort,
+        majorId: profile.major?.id,
+        graduationYear: profile.graduationYear,
+        city: profile.city,
+        socialLinks: profile.socialLinks,
+        skills: profile.skills?.map(s => ({
+          groupName: s.groupName,
+          skillName: s.skillName,
+          sortOrder: s.sortOrder
+        }))
       })
     } catch (err) {
       console.error('Lỗi đổi ảnh đại diện:', err)
@@ -165,6 +178,20 @@ export function ProfilePage() {
         fullName: profile.fullName,
         avatarUrl: profile.avatarUrl,
         coverUrl: publicUrl,
+        phone: profile.phone,
+        headline: profile.headline,
+        biography: profile.biography,
+        campus: profile.campus,
+        cohort: profile.cohort,
+        majorId: profile.major?.id,
+        graduationYear: profile.graduationYear,
+        city: profile.city,
+        socialLinks: profile.socialLinks,
+        skills: profile.skills?.map(s => ({
+          groupName: s.groupName,
+          skillName: s.skillName,
+          sortOrder: s.sortOrder
+        }))
       })
     } catch (err) {
       console.error('Lỗi đổi ảnh bìa:', err)
@@ -276,30 +303,6 @@ export function ProfilePage() {
       await deleteExpMutation.mutateAsync(deleteExpId)
       setDeleteExpId(null)
     }
-  }
-
-  const handleSetPrimaryExp = async (exp: ExperienceResponse) => {
-    if (exp.isPrimary) return
-    await updateExpMutation.mutateAsync({
-      id: exp.id,
-      payload: {
-        title: exp.title,
-        company: exp.company,
-        location: exp.location,
-        startDate: exp.startDate,
-        endDate: exp.endDate,
-        isCurrent: exp.isCurrent,
-        isPrimary: true,
-        latitude: exp.latitude,
-        longitude: exp.longitude,
-        placeId: exp.placeId,
-        locationCity: exp.locationCity,
-        locationCountry: exp.locationCountry,
-        locationCountryCode: exp.locationCountryCode,
-        geocodingProvider: exp.geocodingProvider,
-        description: exp.description,
-      },
-    })
   }
 
   return (

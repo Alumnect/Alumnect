@@ -20,11 +20,10 @@ export type MapProvider = 'AUTO' | 'VIETMAP' | 'MAPTILER'
  * - DEFAULT: Bản đồ đường phố mặc định
  * - MINIMAL: Bản đồ tối giản
  * - DARK: Bản đồ đêm tối
- * - LIBERTY: Bản đồ hiện đại
  * - PASTEL: Bản đồ Pastel dịu nhẹ (Premium Pastel Design)
  * - SATELLITE: Bản đồ vệ tinh địa hình (Hybrid)
  */
-export type MapTheme = 'DEFAULT' | 'MINIMAL' | 'DARK' | 'LIBERTY' | 'PASTEL' | 'SATELLITE'
+export type MapTheme = 'DEFAULT' | 'MINIMAL' | 'DARK' | 'PASTEL' | 'SATELLITE'
 
 // ---------------------------------------------------------------------------
 // Alumni Map Item
@@ -37,6 +36,8 @@ export type MapTheme = 'DEFAULT' | 'MINIMAL' | 'DARK' | 'LIBERTY' | 'PASTEL' | '
 export interface AlumniMapItem {
   /** ID duy nhất của cựu sinh viên (ánh xạ từ userId) */
   alumniId: string
+  /** ID chuyên ngành dùng để thống kê và lọc */
+  majorId?: number
   /** Họ và tên hiển thị (ánh xạ từ fullName) */
   displayName: string
   /** URL ảnh đại diện */
@@ -49,6 +50,8 @@ export interface AlumniMapItem {
   cohort?: number
   /** Thành phố hiện tại */
   city?: string
+  locationCity?: string
+  locationCountry?: string
   /**
    * Mã quốc gia ISO alpha-2 (ví dụ: 'VN', 'JP', 'US').
    * Suy diễn từ tọa độ nếu backend chưa cung cấp.

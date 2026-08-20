@@ -19,6 +19,9 @@ public class CommentResponse {
     /** ID bình luận (dạng chuỗi để Frontend không mất độ chính xác số lớn) */
     private String id;
 
+    /** ID tác giả bình luận (dạng chuỗi) */
+    private String authorId;
+
     /** Họ và tên tác giả bình luận */
     private String author;
 
