@@ -15,6 +15,8 @@ import {
   CalendarPlus,
   Briefcase,
   Award,
+  Trophy,
+  Sparkles,
   Heart,
   MessageCircle,
   Repeat2,
@@ -156,8 +158,13 @@ function PostCard({
   const isAuthor = !!currentUserName && post.author === currentUserName
 
   return (
-    <Card hover={false} className="overflow-hidden">
-      <div className="p-5">
+    <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white")}>
+      {post.type === 'achievement' && (
+        <div className="absolute -top-4 -right-4 p-6 opacity-[0.04] pointer-events-none -rotate-12">
+          <Trophy size={160} className="text-amber-600" />
+        </div>
+      )}
+      <div className="p-5 relative z-10">
         {/* --- Phần 1: Header — avatar, tên tác giả, badge loại bài, thời gian, menu "..." --- */}
         <div className="flex items-center gap-3">
           <Link
@@ -178,7 +185,13 @@ function PostCard({
                 {post.author}
               </Link>
               <Link to={`/app/posts/${post.id}`}>
-                <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
+                {post.type === 'achievement' ? (
+                  <Badge tone={meta.tone} className="px-2.5 py-0.5 text-[10px] cursor-pointer hover:opacity-85 shadow-sm shadow-amber-200/50 border border-amber-300/50 flex items-center gap-1 font-extrabold uppercase tracking-wide">
+                    <Sparkles size={10} className="text-amber-600" /> {meta.label}
+                  </Badge>
+                ) : (
+                  <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
+                )}
               </Link>
             </p>
             <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-plum-400 hover:text-plum-600 transition-colors">
@@ -597,9 +610,9 @@ export function FeedPage() {
 
   // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
-    <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:justify-center">
+    <div className="mx-auto flex max-w-6xl items-start justify-center gap-8">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
-      <div className="space-y-5">
+      <div className="w-full max-w-[640px] shrink-0 space-y-5">
         {/* Khối A: Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy gì ở đây —
             Guest khi tương tác sẽ được mời đăng nhập qua popup (kiểu Facebook). */}
         {canPost && viewer && (
@@ -693,7 +706,7 @@ export function FeedPage() {
       {/* ============ CỘT PHẢI: GỢI Ý (ẩn trên mobile) ============
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
-      <aside className="hidden space-y-5 lg:block">
+      <aside className="hidden w-[320px] shrink-0 space-y-5 lg:block">
         {/* Mục 1: Gợi ý người để theo dõi */}
         <Reveal direction="left">
           <SidebarCard title="Gợi ý kết nối" action="Xem tất cả">
