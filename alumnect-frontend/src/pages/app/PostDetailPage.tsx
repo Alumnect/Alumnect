@@ -411,7 +411,7 @@ function PostDetailCard({
 
       {/* Thanh hành động — số liệu tương tác. Đăng like/comment/repost thuộc UC17/18/21,
           ở UC16 chỉ hiển thị số đếm (nút vô hiệu hóa với Guest theo BR-12). */}
-      <div className="flex items-center gap-1 border-t border-plum-900/[0.06] p-3">
+      <div className="flex items-center gap-1 border-t border-plum-900/[0.06] px-6 py-3">
         <button
           disabled={!canInteract}
           onClick={handleLike}
@@ -453,6 +453,11 @@ function PostDetailCard({
           <Bookmark size={18} />
         </button>
       </div>
+
+      {/* Khu bình luận */}
+      <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
+        <CommentsSection postId={post.id} commentCount={post.comments} isGuest={!canInteract} />
+      </div>
     </Card>
   )
 }
@@ -467,29 +472,31 @@ function CommentItem({ comment, onReply }: { comment: Comment; onReply?: (id: st
   return (
     <div className={cn('flex gap-3', isReply && 'ml-10')}>
       <Link to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'} className="shrink-0">
-        <Avatar src={comment.avatar} name={comment.author} size={38} verified={comment.verified} />
+        <Avatar src={comment.avatar} name={comment.author} size={isReply ? 32 : 40} verified={comment.verified} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl bg-plum-900/[0.035] px-4 py-2.5">
-          <Link
-            to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
-            className="hover:underline"
-          >
-            <p className="flex items-center gap-2 text-sm font-bold text-plum-900 hover:text-brand-600">
-              <span className="truncate">{comment.author}</span>
-            </p>
-          </Link>
-          {comment.role && <p className="truncate text-[11px] text-plum-400">{comment.role}</p>}
-          <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-plum-800">{comment.text}</p>
+        <div className="rounded-2xl rounded-tl-md bg-plum-900/[0.04] px-4 py-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <Link
+              to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
+              className="hover:underline"
+            >
+              <p className="truncate text-sm font-bold text-plum-900 hover:text-brand-600">
+                {comment.author}
+              </p>
+            </Link>
+            <span className="shrink-0 text-xs text-plum-400">{comment.time}</span>
+          </div>
+          {comment.role && <p className="truncate text-xs text-plum-500">{comment.role}</p>}
+          <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-800">{comment.text}</p>
         </div>
-        <div className="mt-1 flex items-center gap-3 pl-1">
-          <p className="text-[11px] text-plum-400">{comment.time}</p>
+        <div className="mt-1 flex items-center pl-1">
           {onReply && (
             <button
               onClick={() => onReply(comment.parentId || comment.id, comment.author)}
-              className="text-[11px] font-bold text-plum-500 hover:text-[#F27024] transition-colors"
+              className="text-xs font-bold text-plum-500 hover:text-plum-900 transition-colors"
             >
-              Phản hồi
+              Trả lời
             </button>
           )}
         </div>
@@ -548,40 +555,71 @@ function CommentBox({ isGuest, postId, replyingTo, setReplyingTo }: { isGuest: b
 function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string; replyingTo: { id: string; name: string } | null; setReplyingTo: (val: { id: string; name: string } | null) => void }) {
   const viewer = useAuthStore((s) => s.user)
   const [content, setContent] = useState('')
+  const [expanded, setExpanded] = useState(false)
   const createComment = useCreateComment(postId)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (window.location.hash === '#comments' && textareaRef.current) {
-      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      textareaRef.current.focus()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (replyingTo && textareaRef.current) {
-      textareaRef.current.focus()
+    if (replyingTo) {
+      setExpanded(true)
     }
   }, [replyingTo])
 
+  useEffect(() => {
+    if (expanded && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [expanded, replyingTo])
+
   const trimmed = content.trim()
   const disabled = trimmed.length === 0 || createComment.isPending
+
+  const collapse = () => {
+    setContent('')
+    setExpanded(false)
+    setReplyingTo(null)
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (disabled) return
     createComment.mutate({ content: trimmed, parentId: replyingTo?.id }, { 
       onSuccess: () => {
-        setContent('')
-        setReplyingTo(null)
+        collapse()
       } 
     })
   }
 
+  if (!expanded && !replyingTo) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="mb-5 flex w-full items-center gap-3 rounded-2xl card-surface p-3.5 text-left transition-colors hover:bg-plum-900/[0.02]"
+      >
+        <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? 'Bạn'} size={36} verified={viewer?.verified} />
+        <span className="flex-1 rounded-full bg-plum-900/[0.05] px-4 py-2.5 text-sm text-plum-400">
+          Viết bình luận của bạn…
+        </span>
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/10 text-brand-600">
+          <Pencil size={16} />
+        </span>
+      </button>
+    )
+  }
+
   return (
-    <Card hover={false} className="p-3">
+    <Card hover={false} className="mb-4 p-5">
+      <div className="mb-3 flex items-center gap-2.5">
+        <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? 'Bạn'} size={34} verified={viewer?.verified} />
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold text-plum-900">Bình luận của bạn</h3>
+          <p className="text-xs text-plum-400">Tham gia thảo luận về bài viết này</p>
+        </div>
+      </div>
+
       {replyingTo && (
-        <div className="mb-2 flex items-center gap-2 rounded-lg bg-[#F27024]/10 px-3 py-1.5 text-xs font-semibold text-[#F27024] animate-fade-in w-fit">
+        <div className="mb-3 flex items-center gap-2 rounded-lg bg-[#F27024]/10 px-3 py-1.5 text-xs font-semibold text-[#F27024] animate-fade-in w-fit">
           <MessageCircle size={14} />
           Đang trả lời {replyingTo.name}
           <button type="button" onClick={() => setReplyingTo(null)} className="ml-2 hover:text-[#d96010]">
@@ -589,38 +627,40 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
           </button>
         </div>
       )}
+
+      {createComment.isError && (
+        <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">
+          <AlertTriangle size={16} className="shrink-0" /> {(createComment.error as Error).message}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} noValidate>
-        <div className="flex gap-3">
-          <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? ''} size={38} verified={viewer?.verified} />
-          <div className="min-w-0 flex-1">
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={2}
-              maxLength={COMMENT_MAX}
-              placeholder={replyingTo ? `Viết câu trả lời cho ${replyingTo.name}...` : "Viết bình luận…"}
-              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm leading-relaxed text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-[#F27024] focus:bg-white focus:ring-2 focus:ring-[#F27024]/20"
-            />
-
-            {/* Thông điệp lỗi nghiệp vụ từ Backend (VD 403/404/400) */}
-            {createComment.isError && (
-              <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-coral-500">
-                <AlertCircle size={13} className="shrink-0" /> {(createComment.error as Error).message}
-              </p>
-            )}
-
-            <div className="mt-1.5 flex items-center justify-between">
-              <span className="pl-1 text-[11px] text-plum-400">{content.length}/{COMMENT_MAX}</span>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={disabled}
-                leftIcon={createComment.isPending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-              >
-                {createComment.isPending ? 'Đang gửi…' : 'Gửi'}
-              </Button>
-            </div>
+        <textarea
+          ref={textareaRef}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={3}
+          maxLength={COMMENT_MAX}
+          placeholder={replyingTo ? `Viết câu trả lời cho ${replyingTo.name}...` : "Chia sẻ bình luận của bạn…"}
+          className="w-full resize-y rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 py-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        />
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-plum-400">
+            {content.length.toLocaleString('vi-VN')}/{COMMENT_MAX.toLocaleString('vi-VN')}
+          </span>
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" size="md" onClick={collapse} disabled={createComment.isPending}>
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={disabled}
+              leftIcon={createComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            >
+              {createComment.isPending ? 'Đang gửi…' : 'Gửi bình luận'}
+            </Button>
           </div>
         </div>
       </form>
@@ -684,8 +724,6 @@ export function PostDetailPage() {
             />
           )}
 
-          {/* Khu bình luận — chỉ hiển thị khi bài viết tải thành công */}
-          <CommentsSection postId={id} commentCount={post.comments} isGuest={isGuest} />
         </>
       ) : null}
     </div>
@@ -724,20 +762,43 @@ function CommentsSection({
   // Gộp tất cả trang bình luận đã tải thành một danh sách phẳng.
   const comments = data?.pages.flatMap((p) => p.items) ?? []
 
+  // Nhóm bình luận: Root -> Các Reply của Root đó
+  const rootComments = comments.filter((c) => !c.parentId)
+  const repliesByParent = comments.reduce((acc, c) => {
+    if (c.parentId) {
+      if (!acc[c.parentId]) acc[c.parentId] = []
+      acc[c.parentId].push(c)
+    }
+    return acc
+  }, {} as Record<string, typeof comments>)
+
+  // Làm phẳng lại cây thành danh sách tuyến tính: Root 1, Reply 1.1, Root 2...
+  const structuredComments = rootComments.flatMap((root) => [
+    root,
+    ...(repliesByParent[root.id] ?? []),
+  ])
+  
+  // Đảm bảo không mất bình luận nào (vd: reply mà root nằm ở trang bị thiếu)
+  const structuredIds = new Set(structuredComments.map(c => c.id))
+  const orphanedComments = comments.filter(c => !structuredIds.has(c.id))
+
   const handleReply = (id: string, name: string) => {
     setReplyingTo({ id, name })
-    document.getElementById('comments-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
   return (
-    <section id="comments" className="mt-6 space-y-4">
-      <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-plum-500">
-        Bình luận{commentCount ? ` · ${compact(commentCount)}` : ''}
-      </h2>
+    <section id="comments" className="space-y-4">
+      <div className="mb-4 flex items-center gap-2.5">
+        <MessageCircle size={18} className="text-brand-600" />
+        <h2 className="text-lg font-extrabold text-plum-900">Bình luận</h2>
+        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">
+          {compact(commentCount)}
+        </span>
+      </div>
 
-      {/* Ô soạn & đăng bình luận (UC18) */}
+      {/* Ô soạn & đăng bình luận gốc (UC18) */}
       <div id="comments-box">
-        <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
+        <CommentBox isGuest={isGuest} postId={postId} replyingTo={null} setReplyingTo={setReplyingTo} />
       </div>
 
       {/* Danh sách bình luận theo trạng thái tải */}
@@ -755,8 +816,38 @@ function CommentsSection({
         <p className="py-6 text-center text-sm text-plum-400">Chưa có bình luận nào — hãy là người đầu tiên bình luận.</p>
       ) : (
         <div className="space-y-4">
-          {comments.map((c) => (
-            <CommentItem key={c.id} comment={c} onReply={!isGuest ? handleReply : undefined} />
+          {rootComments.map((root) => {
+            const replies = repliesByParent[root.id] || []
+            return (
+              <div key={root.id} className="space-y-4">
+                {/* Bình luận gốc */}
+                <CommentItem comment={root} onReply={!isGuest ? handleReply : undefined} />
+                
+                {/* Các bình luận trả lời */}
+                {replies.map((reply) => (
+                  <CommentItem key={reply.id} comment={reply} onReply={!isGuest ? handleReply : undefined} />
+                ))}
+
+                {/* Form soạn trả lời hiển thị inline ngay dưới thread này */}
+                {replyingTo?.id === root.id && (
+                  <div className="ml-10 animate-fade-in">
+                    <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {/* Các bình luận mồ côi (nếu có, để đề phòng lỗi dữ liệu) */}
+          {orphanedComments.map((c) => (
+            <div key={c.id} className="space-y-4">
+              <CommentItem comment={c} onReply={!isGuest ? handleReply : undefined} />
+              {replyingTo?.id === c.id && (
+                <div className="ml-10 animate-fade-in">
+                  <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
+                </div>
+              )}
+            </div>
           ))}
 
           {/* Điều khiển tải thêm bình luận */}
