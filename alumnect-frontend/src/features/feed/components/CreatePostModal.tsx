@@ -1,5 +1,6 @@
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import DatePicker from 'react-datepicker'
@@ -55,8 +56,8 @@ export function CreatePostModal({
   const createMutation = useCreatePost()
   const editMutation = useEditPost()
   const activeMutation = editPost ? editMutation : createMutation
-
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadingCount, setUploadingCount] = useState(0)
 
@@ -126,8 +127,6 @@ export function CreatePostModal({
     }
   }, [open])
 
-  if (!open) return null
-
   /** Đóng modal và dọn sạch trạng thái form/lỗi. */
   const close = () => {
     reset()
@@ -163,11 +162,28 @@ export function CreatePostModal({
       }
 
       if (editPost) {
-        await editMutation.mutateAsync({ postId: editPost.id, input: payload })
+        editMutation.mutate(
+          { postId: editPost.id, input: payload },
+          { onSuccess: () => {
+              setShowSuccess(true)
+              setTimeout(() => {
+                setShowSuccess(false)
+                close()
+              }, 2200)
+            } 
+          }
+        )
       } else {
-        await createMutation.mutateAsync(payload)
+        createMutation.mutate(payload, { 
+          onSuccess: () => {
+            setShowSuccess(true)
+            setTimeout(() => {
+              setShowSuccess(false)
+              close()
+            }, 2200)
+          } 
+        })
       }
-      close()
     } catch {
       /* Lỗi nghiệp vụ từ Backend hiển thị qua activeMutation.isError bên dưới. */
     }
@@ -244,9 +260,65 @@ export function CreatePostModal({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex overflow-y-auto bg-plum-900/40 backdrop-blur-sm p-4 sm:p-6 animate-fade-in">
-      <div className="relative m-auto w-full max-w-xl rounded-3xl bg-white p-6 md:p-8 shadow-2xl border border-plum-900/5 animate-pop">
-        {/* Header */}
+    <AnimatePresence>
+      {open && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] flex overflow-y-auto bg-plum-900/40 backdrop-blur-sm p-4 sm:p-6"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="relative m-auto w-full max-w-xl rounded-3xl bg-white p-6 md:p-8 shadow-2xl border border-plum-900/5"
+          >
+            {showSuccess ? (
+              <div className="flex h-72 flex-col items-center justify-center animate-fade-in text-center relative overflow-hidden rounded-3xl">
+                {/* Confetti Particles */}
+                {[...Array(16)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className={`absolute w-2.5 h-2.5 rounded-full ${['bg-rose-500', 'bg-blue-500', 'bg-amber-400', 'bg-emerald-500', 'bg-purple-500'][i % 5]}`}
+                    initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                    animate={{
+                      opacity: 0,
+                      scale: [0, 1.2, 0.8],
+                      x: (Math.random() - 0.5) * 250,
+                      y: (Math.random() - 0.5) * 250 - 50,
+                    }}
+                    transition={{ duration: 1.2 + Math.random() * 0.5, ease: "easeOut" }}
+                  />
+                ))}
+                
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', damping: 15, stiffness: 250, delay: 0.1 }}
+                  className="h-24 w-24 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500 mb-2 z-10 relative shadow-inner"
+                >
+                  <motion.svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <motion.path
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 }}
+                      d="M20 6 9 17l-5-5"
+                    />
+                  </motion.svg>
+                </motion.div>
+
+                <h3 className="mt-4 text-2xl font-bold text-brand-600 z-10 relative">Đăng bài thành công!</h3>
+                <p className="text-plum-500 z-10 relative mt-1">Bài viết của bạn đã được chia sẻ.</p>
+              </div>
+            ) : (
+              <>
+                {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-plum-900">
             {editPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
@@ -278,7 +350,7 @@ export function CreatePostModal({
                 rows={5}
                 maxLength={POST_CONTENT_MAX}
                 placeholder={type === 'recruitment' ? "Mô tả chi tiết công việc tuyển dụng..." : "Bạn muốn chia sẻ điều gì với cộng đồng?"}
-                className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 text-[15px] leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-400 focus:bg-white"
+                className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 text-[15px] leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-[#F27024] transition-all duration-300 focus:bg-white"
               />
               <div className="mt-1 flex items-center justify-between">
                 {errors.content ? (
@@ -330,7 +402,7 @@ export function CreatePostModal({
                   </label>
                   <input
                     {...register('job.title')}
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                     placeholder="VD: Frontend Developer"
                   />
                   {errors.job?.title && <p className="mt-1 text-xs text-coral-500">{errors.job.title.message}</p>}
@@ -341,7 +413,7 @@ export function CreatePostModal({
                   </label>
                   <input
                     {...register('job.company')}
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                     placeholder="VD: FPT Software"
                   />
                   {errors.job?.company && <p className="mt-1 text-xs text-coral-500">{errors.job.company.message}</p>}
@@ -382,7 +454,7 @@ export function CreatePostModal({
                       min={0}
                       step={500000}
                       {...register('job.salaryMin', { valueAsNumber: true })}
-                      className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                      className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                       placeholder="Tối thiểu"
                     />
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VNĐ</span>
@@ -393,7 +465,7 @@ export function CreatePostModal({
                       min={0}
                       step={500000}
                       {...register('job.salaryMax', { valueAsNumber: true })}
-                      className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                      className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                       placeholder="Tối đa"
                     />
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VNĐ</span>
@@ -410,7 +482,7 @@ export function CreatePostModal({
                   <input
                     {...register('job.contactEmail')}
                     type="email"
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                     placeholder="hr@company.com"
                   />
                   {errors.job?.contactEmail && <p className="mt-1 text-xs text-coral-500">{errors.job.contactEmail.message}</p>}
@@ -422,7 +494,7 @@ export function CreatePostModal({
                   <input
                     {...register('job.applyUrl')}
                     type="url"
-                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                     placeholder="https://..."
                   />
                 </div>
@@ -442,7 +514,7 @@ export function CreatePostModal({
                 </label>
                 <input
                   {...register('event.title')}
-                  className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                  className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                   placeholder="VD: Hội thảo công nghệ 2024"
                 />
                 {errors.event?.title && <p className="mt-1 text-xs text-coral-500">{errors.event.title.message}</p>}
@@ -470,7 +542,7 @@ export function CreatePostModal({
                         dropdownMode="select"
                         minDate={new Date()}
                         placeholderText="Chọn ngày giờ"
-                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                       />
                     )}
                   />
@@ -496,7 +568,7 @@ export function CreatePostModal({
                         dropdownMode="select"
                         minDate={watch('event.startTime') ? new Date(watch('event.startTime') as string) : new Date()}
                         placeholderText="Chọn ngày giờ"
-                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                       />
                     )}
                   />
@@ -532,7 +604,7 @@ export function CreatePostModal({
                     type="number"
                     min={1}
                     {...register('event.capacity', { valueAsNumber: true })}
-                    className="w-full h-[38px] rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+                    className="w-full h-[38px] rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
                     placeholder="100 (Để trống = không giới hạn)"
                   />
                 </div>
@@ -548,7 +620,7 @@ export function CreatePostModal({
                   rows={4}
                   maxLength={POST_CONTENT_MAX}
                   placeholder="Giới thiệu về nội dung sự kiện, khách mời, lịch trình..."
-                  className="w-full resize-none rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm leading-relaxed text-plum-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20"
+                  className="w-full resize-none rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm leading-relaxed text-plum-800 outline-none focus:border-[#F27024] transition-all duration-300 focus:ring-2 focus:ring-[#F27024]/20"
                 />
               </div>
 
@@ -668,8 +740,12 @@ export function CreatePostModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   )
 }
