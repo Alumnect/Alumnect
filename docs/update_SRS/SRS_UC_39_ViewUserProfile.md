@@ -59,8 +59,8 @@ Chịu trách nhiệm hiển thị thông tin hồ sơ cá nhân phục vụ gia
 #### 3.3.1 Xem thông tin chi tiết hồ sơ
 *   **Function trigger**:
     *   **Navigation path**: 
-        *   Hồ sơ bản thân: Sidebar / Header menu -> Click "My Profile" (`/app/profile`).
-        *   Hồ sơ người khác: Click vào Tên/Avatar của thành viên trên danh sách, bài viết hoặc bản đồ (`/app/profile?userId={id}` hoặc `/profile?userId={id}`).
+        *   Hồ sơ bản thân: Sidebar / Header menu -> Click "Trang cá nhân" (`/app/profile`).
+        *   Hồ sơ người khác: Click vào Tên/Avatar của thành viên trên Bảng tin, Diễn đàn, Hỏi đáp, Bản đồ (`/app/profile?userId={id}`).
     *   **Timing Frequency**: Bất cứ khi nào người dùng muốn xem thông tin chi tiết hồ sơ.
 *   **Function description**:
     *   **Actors/Roles**: Tất cả người dùng đã đăng nhập, ADMIN, hoặc khách vãng lai (xem hồ sơ công khai).
@@ -127,6 +127,7 @@ classDiagram
         -String role
         -String fullName
         -String avatarUrl
+        -String coverUrl
         -String phone
         -MajorResponse major
         -Integer cohort
@@ -136,14 +137,21 @@ classDiagram
         -String currentPosition
         -String currentCompany
         -String city
+        -String campus
+        -Integer graduationYear
         -BigDecimal latitude
         -BigDecimal longitude
-        -String websiteUrl
-        -String linkedinUrl
+        -List~String~ socialLinks
         -Instant createdAt
         -Instant updatedAt
         -String accountStatus
         -Boolean isAccountVerified
+        -Long followersCount
+        -Long followingCount
+        -Boolean isFollowing
+        -PrimaryExperienceResponse primaryExperience
+        -List~ExperienceResponse~ experiences
+        -List~UserSkillResponse~ skills
     }
 
     class MajorResponse {
@@ -154,16 +162,17 @@ classDiagram
 
     class UserService {
         <<interface>>
-        +getOwnProfile(String) UserProfileResponse
-        +getUserProfile(Long) UserProfileResponse
+        +getOwnProfile(String email) UserProfileResponse
+        +getUserProfile(Long userId) UserProfileResponse
     }
 
     class UserServiceImpl {
         -UserRepository userRepository
         -UserProfileRepository userProfileRepository
+        -FollowRepository followRepository
         -UserProfileMapper userProfileMapper
-        +getOwnProfile(String) UserProfileResponse
-        +getUserProfile(Long) UserProfileResponse
+        +getOwnProfile(String email) UserProfileResponse
+        +getUserProfile(Long userId) UserProfileResponse
     }
 
     class UserProfileMapper {
@@ -212,6 +221,7 @@ classDiagram
     UserServiceImpl ..|> UserService : implements
     UserServiceImpl --> UserRepository : uses
     UserServiceImpl --> UserProfileRepository : uses
+    UserServiceImpl --> FollowRepository : uses
     UserServiceImpl --> UserProfileMapper : uses
     UserProfileMapper ..> UserProfileResponse : maps to
     UserProfileResponse --> MajorResponse : contains
@@ -276,18 +286,20 @@ sequenceDiagram
         Service-->>Controller: Throw ResourceNotFoundException
         Controller-->>Client: HTTP 404 Not Found ("Không tìm thấy tài khoản...")
     else Tìm thấy User
-        Repo-->>Service: Trả về đối tượng TargetUser
-        
         alt TargetUser status != ACTIVE (LOCKED/PENDING/...)
             Service-->>Controller: Throw BadRequestException
             Controller-->>Client: HTTP 400 Bad Request ("Tài khoản chưa kích hoạt hoặc bị khóa...")
+        else Tài khoản ACTIVE (Hợp lệ)
+            Service->>ProfRepo: findByUserId(userId)
+            ProfRepo-->>Service: Trả về đối tượng UserProfile
+            Service->>Mapper: toResponse(profile)
+            Mapper-->>Service: Trả về UserProfileResponse DTO
+            Note over Service: Nạp kinh nghiệm chính (primaryExperience) & đếm Followers/Following
+            opt Nếu người xem đã đăng nhập
+                Note over Service: Tính toán cờ isFollowing
+            end
+            Service-->>Controller: Trả về UserProfileResponse
+            Controller-->>Client: HTTP 200 OK (ApiResponse dữ liệu hồ sơ công khai)
         end
-        
-        Service->>ProfRepo: findByUserId(userId)
-        ProfRepo-->>Service: Trả về đối tượng UserProfile
-        Service->>Mapper: toResponse(profile)
-        Mapper-->>Service: Trả về UserProfileResponse DTO
-        Service-->>Controller: Trả về UserProfileResponse
-        Controller-->>Client: HTTP 200 OK (ApiResponse dữ liệu hồ sơ công khai)
     end
 ```
