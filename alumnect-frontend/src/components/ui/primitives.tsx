@@ -46,33 +46,6 @@ export function Badge({
   )
 }
 
-/** Eyebrow + title + subtitle block used at the top of marketing sections. */
-export function SectionHeading({
-  eyebrow,
-  title,
-  subtitle,
-  align = 'center',
-  className,
-}: {
-  eyebrow?: string
-  title: ReactNode
-  subtitle?: ReactNode
-  align?: 'center' | 'left'
-  className?: string
-}) {
-  return (
-    <div className={cn('max-w-2xl', align === 'center' ? 'mx-auto text-center' : 'text-left', className)}>
-      {eyebrow && (
-        <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-brand-700 ring-1 ring-inset ring-brand-300/50">
-          {eyebrow}
-        </span>
-      )}
-      <h2 className="text-balance text-3xl font-extrabold leading-[1.1] sm:text-4xl md:text-[2.7rem]">{title}</h2>
-      {subtitle && <p className="mt-4 text-pretty text-base leading-relaxed text-plum-500 sm:text-lg">{subtitle}</p>}
-    </div>
-  )
-}
-
 /** Pillowy surface card. */
 export function Card({
   className,

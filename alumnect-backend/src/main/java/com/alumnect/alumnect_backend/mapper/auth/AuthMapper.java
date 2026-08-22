@@ -25,12 +25,11 @@ public interface AuthMapper {
     @Mapping(target = "headline", ignore = true)
     @Mapping(target = "biography", ignore = true)
     @Mapping(target = "city", ignore = true)
-    @Mapping(target = "latitude", ignore = true)
-    @Mapping(target = "longitude", ignore = true)
     @Mapping(target = "socialLinks", ignore = true)
     @Mapping(target = "coverUrl", ignore = true)
     @Mapping(target = "experiences", ignore = true)
     @Mapping(target = "skills", ignore = true)
+    @Mapping(target = "campus", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     UserProfile toUserProfile(RegisterRequest request);

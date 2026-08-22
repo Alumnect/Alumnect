@@ -88,8 +88,6 @@ export interface UserProfileResponse {
   campus?: string | null
   graduationYear?: number | null
   city: string | null
-  latitude: number | null
-  longitude: number | null
   socialLinks?: string[]
   coverUrl?: string | null
   createdAt: string

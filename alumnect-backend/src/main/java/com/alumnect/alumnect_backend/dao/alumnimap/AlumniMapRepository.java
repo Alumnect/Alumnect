@@ -1,4 +1,4 @@
-package com.alumnect.alumnect_backend.dao.alumnemap;
+package com.alumnect.alumnect_backend.dao.alumnimap;
 
 import com.alumnect.alumnect_backend.entity.user.Experience;
 import org.springframework.data.jpa.repository.JpaRepository;

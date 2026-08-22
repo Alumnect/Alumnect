@@ -78,12 +78,6 @@ public class UserProfile {
     @Column(length = 120)
     private String city;
 
-    /** Vĩ độ địa lý — dùng cho tính năng bản đồ cựu sinh viên */
-    private BigDecimal latitude;
-
-    /** Kinh độ địa lý — dùng cho tính năng bản đồ cựu sinh viên */
-    private BigDecimal longitude;
-
     /** Danh sách liên kết mạng xã hội/website của người dùng */
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "social_links", columnDefinition = "varchar(500)[]")

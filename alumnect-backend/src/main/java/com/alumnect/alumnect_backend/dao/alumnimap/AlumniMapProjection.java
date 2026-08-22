@@ -1,4 +1,4 @@
-package com.alumnect.alumnect_backend.dao.alumnemap;
+package com.alumnect.alumnect_backend.dao.alumnimap;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

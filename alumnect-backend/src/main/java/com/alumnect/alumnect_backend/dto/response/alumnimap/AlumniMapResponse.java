@@ -1,4 +1,4 @@
-package com.alumnect.alumnect_backend.dto.response.alumnemap;
+package com.alumnect.alumnect_backend.dto.response.alumnimap;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

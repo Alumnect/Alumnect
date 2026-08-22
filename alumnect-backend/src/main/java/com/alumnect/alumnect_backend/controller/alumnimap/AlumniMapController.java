@@ -1,8 +1,8 @@
-package com.alumnect.alumnect_backend.controller.alumnemap;
+package com.alumnect.alumnect_backend.controller.alumnimap;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
-import com.alumnect.alumnect_backend.dto.response.alumnemap.AlumniMapResponse;
-import com.alumnect.alumnect_backend.service.alumnemap.AlumniMapService;
+import com.alumnect.alumnect_backend.dto.response.alumnimap.AlumniMapResponse;
+import com.alumnect.alumnect_backend.service.alumnimap.AlumniMapService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
