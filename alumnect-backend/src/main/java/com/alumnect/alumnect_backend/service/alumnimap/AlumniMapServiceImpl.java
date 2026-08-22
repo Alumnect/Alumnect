@@ -1,8 +1,8 @@
-package com.alumnect.alumnect_backend.service.alumnemap;
+package com.alumnect.alumnect_backend.service.alumnimap;
 
-import com.alumnect.alumnect_backend.dao.alumnemap.AlumniMapRepository;
-import com.alumnect.alumnect_backend.dao.alumnemap.AlumniMapProjection;
-import com.alumnect.alumnect_backend.dto.response.alumnemap.AlumniMapResponse;
+import com.alumnect.alumnect_backend.dao.alumnimap.AlumniMapRepository;
+import com.alumnect.alumnect_backend.dao.alumnimap.AlumniMapProjection;
+import com.alumnect.alumnect_backend.dto.response.alumnimap.AlumniMapResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,7 @@ public class AlumniMapServiceImpl implements AlumniMapService {
         String locationPattern = (location != null && !location.trim().isEmpty()) ? "%" + location.trim().toLowerCase() + "%" : null;
 
         List<AlumniMapProjection> projections = alumniMapRepository.findAlumniMapLocations(
-                searchPattern, titlePattern, companyPattern, locationPattern, cohort, majorId
+            searchPattern, titlePattern, companyPattern, locationPattern, cohort, majorId
         );
         
         log.info("Truy xuất thành công {} cựu sinh viên có thông tin vị trí địa lý hợp lệ", projections.size());

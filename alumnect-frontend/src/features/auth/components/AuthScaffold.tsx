@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import type { ReactNode, InputHTMLAttributes } from 'react'
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import loginBg from '@/assets/login-bg.jpg'
 
@@ -18,8 +19,8 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
 
       <div className="relative z-10 hidden lg:flex flex-col max-w-lg mt-[-10vh]">
         {/* Logo */}
-        <div className="mb-10 inline-flex items-center gap-4">
-          <div className="rounded bg-white px-3 py-2 flex items-center">
+        <Link to="/" className="mb-10 inline-flex items-center gap-4 transition-transform duration-200 hover:scale-105 cursor-pointer group" title="Về trang chủ AlumNect">
+          <div className="rounded bg-white px-3 py-2 flex items-center transition-shadow group-hover:shadow-md">
             <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo_2010.svg" alt="FPT" className="h-6" />
           </div>
           <style>
@@ -37,8 +38,8 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
               }
             `}
           </style>
-          <span className="brand-logo border-l-2 border-white/50 pl-4">AlumNect</span>
-        </div>
+          <span className="brand-logo border-l-2 border-white/50 pl-4 transition-colors group-hover:text-white/90">AlumNect</span>
+        </Link>
 
         <h1 className="text-4xl font-extrabold text-white drop-shadow-md leading-tight">
           Cộng đồng Cựu sinh viên <br /> Trường Đại học FPT

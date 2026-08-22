@@ -25,7 +25,6 @@ import {
   Inbox,
   X,
   Send,
-  AlertCircle,
   Clock,
   MapPin,
   Users,

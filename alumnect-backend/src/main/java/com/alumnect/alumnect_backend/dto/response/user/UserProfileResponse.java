@@ -61,12 +61,6 @@ public class UserProfileResponse {
     /** Thành phố sinh sống hoặc làm việc */
     private String city;
 
-    /** Vĩ độ địa lý phục vụ cho bản đồ */
-    private BigDecimal latitude;
-
-    /** Kinh độ địa lý phục vụ cho bản đồ */
-    private BigDecimal longitude;
-
     /** Danh sách các liên kết mạng xã hội/website của người dùng */
     private List<String> socialLinks;
 

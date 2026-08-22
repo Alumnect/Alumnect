@@ -1,6 +1,6 @@
-package com.alumnect.alumnect_backend.service.alumnemap;
+package com.alumnect.alumnect_backend.service.alumnimap;
 
-import com.alumnect.alumnect_backend.dto.response.alumnemap.AlumniMapResponse;
+import com.alumnect.alumnect_backend.dto.response.alumnimap.AlumniMapResponse;
 import java.util.List;
 
 public interface AlumniMapService {
