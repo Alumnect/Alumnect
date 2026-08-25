@@ -60,9 +60,11 @@ export interface PrimaryExperienceResponse {
   title: string
   company: string
   location?: string | null
+  locationCity?: string | null
   latitude?: number | null
   longitude?: number | null
 }
+
 
 export interface UserSkillResponse {
   id: number
@@ -83,9 +85,9 @@ export interface UserProfileResponse {
   studentCode: string | null
   headline: string | null
   biography: string | null
+  campus?: string | null
+  graduationYear?: number | null
   city: string | null
-  latitude: number | null
-  longitude: number | null
   socialLinks?: string[]
   coverUrl?: string | null
   createdAt: string
@@ -95,4 +97,41 @@ export interface UserProfileResponse {
   primaryExperience?: PrimaryExperienceResponse | null
   experiences?: ExperienceResponse[]
   skills?: UserSkillResponse[]
+  followersCount?: number
+  followingCount?: number
+  isFollowing?: boolean
 }
+
+export interface FollowUserResponse {
+  userId: number
+  email: string
+  fullName: string
+  avatarUrl: string | null
+  headline: string | null
+  isAccountVerified: boolean
+  isFollowing: boolean
+  studentCode?: string | null
+}
+
+export interface UserSkillRequest {
+  groupName: string
+  skillName: string
+  sortOrder: number
+}
+
+export interface UpdateProfileRequest {
+  fullName: string
+  avatarUrl?: string | null
+  coverUrl?: string | null
+  phone?: string | null
+  headline?: string | null
+  biography?: string | null
+  campus?: string | null
+  cohort?: number | null
+  majorId?: number | null
+  graduationYear?: number | null
+  city?: string | null
+  socialLinks?: string[]
+  skills?: UserSkillRequest[]
+}
+

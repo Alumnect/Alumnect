@@ -80,6 +80,11 @@ public class ExperienceServiceImpl implements ExperienceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy kinh nghiệm làm việc với ID: " + id));
 
         boolean wasPrimary = experience.isPrimary();
+        boolean willBePrimary = request.isPrimary();
+
+        if (willBePrimary && !wasPrimary) {
+            resetPrimaryFlagForUser(user.getId());
+        }
 
         experienceMapper.updateEntityFromRequest(request, experience);
 
@@ -90,15 +95,6 @@ public class ExperienceServiceImpl implements ExperienceService {
             if (experience.getEndDate() == null) {
                 throw new BadRequestException("Ngày kết thúc là bắt buộc đối với kinh nghiệm trong quá khứ");
             }
-        }
-
-        if (experience.isPrimary() && !experience.isCurrent()) {
-            throw new BadRequestException("Kinh nghiệm làm việc chính phải là kinh nghiệm hiện tại");
-        }
-
-        if (experience.isPrimary() && !wasPrimary) {
-            resetPrimaryFlagForUser(user.getId());
-            experience.setPrimary(true); // Re-set primary because resetPrimaryFlagForUser cleared it
         }
 
         Experience saved = experienceRepository.save(experience);
@@ -147,7 +143,7 @@ public class ExperienceServiceImpl implements ExperienceService {
         oldExp.setCurrent(false);
         oldExp.setPrimary(false);
         oldExp.setEndDate(request.getNewStartDate().minusDays(1));
-        experienceRepository.save(oldExp);
+        experienceRepository.saveAndFlush(oldExp);
 
         // Create new experience
         Experience newExp = new Experience();
@@ -191,9 +187,10 @@ public class ExperienceServiceImpl implements ExperienceService {
         if (oldPrimary.isPresent()) {
             Experience op = oldPrimary.get();
             op.setPrimary(false);
-            experienceRepository.save(op);
+            experienceRepository.saveAndFlush(op);
         }
     }
+
 
     private void autoPromoteLatestCurrentExperience(Long userId) {
         Optional<Experience> primary = experienceRepository.findByUserIdAndIsPrimaryTrue(userId);

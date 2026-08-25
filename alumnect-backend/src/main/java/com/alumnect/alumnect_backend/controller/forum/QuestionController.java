@@ -2,14 +2,22 @@ package com.alumnect.alumnect_backend.controller.forum;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.request.forum.CreateQuestionRequest;
+import com.alumnect.alumnect_backend.dto.request.forum.UpdateQuestionRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
 import com.alumnect.alumnect_backend.service.forum.QuestionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,7 +45,10 @@ public class QuestionController {
      * @param page    Số thứ tự trang cần lấy (0-based), mặc định 0
      * @param size    Kích thước trang, mặc định 10
      * @param sort    Tiêu chí sắp xếp: "recent" (mặc định), "votes", "answers"
-     * @param topicId ID chủ đề cần lọc, bỏ trống nếu không lọc theo chủ đề
+     * @param topicId Danh sách ID thể loại cần lọc (tick chọn nhiều), VD {@code topicId=3,7,9};
+     *                bỏ trống nếu không lọc theo thể loại
+     * @param majorId Danh sách ID ngành cần lọc (tick chọn nhiều), VD {@code majorId=1,4};
+     *                bỏ trống nếu không lọc theo ngành. Lọc thể loại và ngành độc lập nhau.
      * @return Trang kết quả câu hỏi {@link QuestionResponse} bọc trong {@link ApiResponse}
      */
     @GetMapping
@@ -45,10 +56,50 @@ public class QuestionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "recent") String sort,
-            @RequestParam(required = false) Long topicId) {
+            @RequestParam(required = false) List<Long> topicId,
+            @RequestParam(required = false) List<Long> majorId) {
 
-        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, topicId);
+        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, topicId, majorId);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách câu hỏi thành công", questions));
+    }
+
+    /**
+     * API đặt một câu hỏi mới trên diễn đàn Q&A (UC40 - Ask a question).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được đặt câu hỏi — Admin/vai trò khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param request        DTO chứa tiêu đề, nội dung và chủ đề (tùy chọn) của câu hỏi
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return Chi tiết câu hỏi vừa tạo {@link QuestionDetailResponse} bọc trong {@link ApiResponse}, HTTP 201 Created
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<QuestionDetailResponse>> createQuestion(
+            @Valid @RequestBody CreateQuestionRequest request,
+            Authentication authentication) {
+
+        QuestionDetailResponse created = questionService.createQuestion(authentication.getName(), request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đặt câu hỏi thành công", created));
+    }
+
+    /**
+     * API chỉnh sửa một câu hỏi trên diễn đàn Q&A (UC46 - Edit a question).
+     * Yêu cầu đăng nhập (JWT); chỉ TÁC GIẢ của câu hỏi mới được sửa — người khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param id             ID câu hỏi cần sửa
+     * @param request        DTO chứa tiêu đề, nội dung, thể loại, ngành và bộ ảnh mới
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người sửa
+     * @return Chi tiết câu hỏi sau khi cập nhật {@link QuestionDetailResponse} bọc trong {@link ApiResponse}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<QuestionDetailResponse>> updateQuestion(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateQuestionRequest request,
+            Authentication authentication) {
+
+        QuestionDetailResponse updated = questionService.updateQuestion(authentication.getName(), id, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật câu hỏi thành công", updated));
     }
 
     /**

@@ -1,8 +1,10 @@
+import axios from 'axios'
 import http from '@/lib/http'
 import { AUTH_ENFORCED } from '@/config/auth'
 import { FEED_POSTS } from '@/lib/constants'
 import { postSchema } from '../model/post'
 import type { FeedFilter, FeedPageResult, Post } from '../model/post'
+import type { CreatePostInput } from '../model/createPost'
 
 /**
  * Tầng gọi API cho UC15 - View community Feed.
@@ -51,9 +53,22 @@ function parsePosts(raw: unknown[]): Post[] {
   const out: Post[] = []
   for (const r of raw) {
     const res = postSchema.safeParse(r)
-    if (res.success) out.push(res.data)
+    if (res.success) {
+      out.push(res.data)
+    } else {
+      console.error('Post parsing failed:', res.error, r)
+    }
   }
   return out
+}
+
+/** Kết quả trả về sau khi thích/bỏ thích một bài viết (UC17 - Like a post). */
+export type LikeResult = { liked: boolean; likeCount: number }
+
+/** Chuẩn hóa phản hồi thích/bỏ thích từ nhiều biến thể phong bì (envelope) thành LikeResult. */
+function normalizeLike(body: unknown): LikeResult {
+  const d = ((body as { data?: unknown })?.data ?? body) as { liked?: boolean; likeCount?: number } | undefined
+  return { liked: !!d?.liked, likeCount: Number(d?.likeCount ?? 0) }
 }
 
 /* ------------------------------------------------------------------ */
@@ -110,5 +125,71 @@ export const feedApi = {
     // B4: Trích + xác thực dữ liệu bằng Zod, rồi suy ra cờ còn trang tiếp theo.
     const items = parsePosts(extractRawItems(body))
     return { items, page, hasMore: inferHasMore(body, items.length) }
+  },
+
+  /**
+   * Thích một bài viết (UC17 - Like a post).
+   * Gọi `POST /api/v1/posts/{id}/like` (token Bearer do interceptor `http` tự đính kèm).
+   * Thao tác lũy đẳng phía backend — thích lại bài đã thích không làm tăng số đếm.
+   * @param postId ID bài viết cần thích
+   * @return Trạng thái like mới + tổng số lượt thích ({ liked: true, likeCount })
+   */
+  likePost: async (postId: string): Promise<LikeResult> => {
+    const body = await http.post(`/posts/${postId}/like`)
+    return normalizeLike(body)
+  },
+
+  /**
+   * Bỏ thích một bài viết (UC17 - Like a post).
+   * Gọi `DELETE /api/v1/posts/{id}/like`. Thao tác lũy đẳng — bỏ thích bài chưa thích không đổi.
+   * @param postId ID bài viết cần bỏ thích
+   * @return Trạng thái like mới + tổng số lượt thích ({ liked: false, likeCount })
+   */
+  unlikePost: async (postId: string): Promise<LikeResult> => {
+    const body = await http.delete(`/posts/${postId}/like`)
+    return normalizeLike(body)
+  },
+
+  /**
+   * Tạo một bài viết mới trên bảng tin cộng đồng (UC14 - Create a post on the Feed).
+   * Gọi `POST /api/v1/posts` (token Bearer do interceptor tự đính); trả về bài viết
+   * vừa tạo đã chuẩn hóa qua `postSchema` để Frontend chèn ngay vào đầu bảng tin.
+   * @param input Dữ liệu bài viết đã hợp lệ (content, type, visibility, imageUrl tùy chọn)
+   * @return Bài viết mới đã chuẩn hóa
+   */
+  createPost: async (input: CreatePostInput): Promise<Post> => {
+    const body = await http.post('/posts', input)
+    const raw = (body as { data?: unknown })?.data ?? body
+    return postSchema.parse(raw)
+  },
+
+  /**
+   * Chỉnh sửa bài viết đã đăng (UC22 - Edit a post).
+   * Gọi `PUT /api/v1/posts/${postId}` (token Bearer do interceptor tự đính);
+   * trả về bài viết đã cập nhật qua `postSchema` để Frontend đồng bộ UI tức thì.
+   * @param postId ID bài viết cần chỉnh sửa
+   * @param input Dữ liệu cập nhật (content, type, visibility, imageUrl tùy chọn)
+   * @return Bài viết đã cập nhật, đã chuẩn hóa
+   */
+  editPost: async (postId: string, input: CreatePostInput): Promise<Post> => {
+    const body = await http.put(`/posts/${encodeURIComponent(postId)}`, input)
+    const raw = (body as { data?: unknown })?.data ?? body
+    return postSchema.parse(raw)
+  },
+
+  /**
+   * Tải ảnh đính kèm bài viết lên Cloudflare R2 qua link ký sẵn (presigned URL),
+   * theo đúng cơ chế đã dùng ở luồng đăng ký: xin link PUT tạm thời rồi tải trực tiếp
+   * từ client lên R2, trả về URL công khai để gán vào `imageUrl` khi tạo bài.
+   * @param file Tệp ảnh người dùng chọn
+   * @return URL công khai của ảnh sau khi tải lên thành công
+   */
+  uploadPostImage: async (file: File): Promise<string> => {
+    const res = await http.get<unknown, { data: { uploadUrl: string; publicUrl: string } }>(
+      `/files/presigned-url?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}&folder=posts`,
+    )
+    const { uploadUrl, publicUrl } = res.data
+    await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
+    return publicUrl
   },
 }

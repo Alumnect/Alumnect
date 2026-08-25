@@ -33,10 +33,11 @@ type ButtonLinkProps = {
   children: ReactNode
   target?: string
   rel?: string
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
 }
 
 /** A link styled as a button — internal (`to`) via React Router, or external (`href`). */
-export function ButtonLink({ to, href, variant, size, leftIcon, rightIcon, className, children, target, rel }: ButtonLinkProps) {
+export function ButtonLink({ to, href, variant, size, leftIcon, rightIcon, className, children, target, rel, onClick }: ButtonLinkProps) {
   const cls = buttonClasses(variant, size, className)
   const inner = (
     <>
@@ -47,13 +48,13 @@ export function ButtonLink({ to, href, variant, size, leftIcon, rightIcon, class
   )
   if (href) {
     return (
-      <a href={href} className={cls} target={target} rel={rel}>
+      <a href={href} className={cls} target={target} rel={rel} onClick={onClick}>
         {inner}
       </a>
     )
   }
   return (
-    <Link to={to ?? '#'} className={cls}>
+    <Link to={to ?? '#'} className={cls} onClick={onClick}>
       {inner}
     </Link>
   )

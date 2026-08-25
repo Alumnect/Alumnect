@@ -25,6 +25,9 @@ import com.alumnect.alumnect_backend.exception.GoogleUserNotFoundException;
 import com.alumnect.alumnect_backend.exception.WaitingApprovalException;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.ForgotPasswordRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.ResetPasswordRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.VerifyResetOtpRequest;
 import com.alumnect.alumnect_backend.entity.auth.UserOAuthProvider;
 import com.alumnect.alumnect_backend.dao.auth.UserOAuthProviderRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -322,44 +325,8 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
 
-        VerificationToken token = tokenRepository
-                .findFirstByUserAndTypeOrderByCreatedAtDesc(user, VerificationType.EMAIL_VERIFICATION)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy yêu cầu xác thực email nào cho tài khoản này"));
-
-        if (token.isUsed()) {
-            throw new BadRequestException("Mã xác thực này đã được sử dụng trước đó");
-        }
-
-        if (token.getExpiresAt().isBefore(Instant.now())) {
-            throw new BadRequestException("Mã xác thực đã hết hạn");
-        }
-
-        // Kiểm tra xem mã đã bị khóa do nhập sai quá 5 lần chưa
-        if (token.getFailedAttempts() >= 5) {
-            throw new BadRequestException(
-                    "Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
-        }
-
-        // So khớp mã OTP
-        if (!token.getToken().equals(tokenString)) {
-            int currentFailed = token.getFailedAttempts() + 1;
-            token.setFailedAttempts(currentFailed);
-            try {
-                tokenRepository.save(token);
-            } catch (Exception e) {
-                log.error("Lỗi khi cập nhật số lần nhập sai OTP: ", e);
-                throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật số lần nhập sai OTP");
-            }
-
-            int remaining = 5 - currentFailed;
-            if (remaining <= 0) {
-                throw new BadRequestException(
-                        "Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
-            } else {
-                throw new BadRequestException("Mã xác thực không chính xác. Bạn còn " + remaining + " lần thử.");
-            }
-        }
+        VerificationToken token = getAndValidateToken(user, tokenString, VerificationType.EMAIL_VERIFICATION,
+                "Không tìm thấy yêu cầu xác thực email nào cho tài khoản này");
 
         // Đánh dấu mã OTP đã được sử dụng thành công
         token.setUsed(true);
@@ -685,17 +652,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Xác thực Google ID Token bằng cách gửi yêu cầu tới endpoint tokeninfo của Google.
+     * Xác thực Google ID Token bằng cách gửi yêu cầu tới endpoint tokeninfo của
+     * Google.
      * Kiểm tra tính hợp lệ của token và so khớp với Client ID của hệ thống.
      *
      * @param tokenString Chuỗi ID Token nhận từ Client
-     * @return Map chứa thông tin các claims trong Google ID Token (email, name, sub, picture...)
+     * @return Map chứa thông tin các claims trong Google ID Token (email, name,
+     *         sub, picture...)
      */
     private Map<String, Object> verifyGoogleToken(String tokenString) {
         try {
             String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + tokenString;
 
-            // Gọi HTTP GET request tới Google API để xác thực token bằng RestTemplate bean dùng chung
+            // Gọi HTTP GET request tới Google API để xác thực token bằng RestTemplate bean
+            // dùng chung
             ResponseEntity<Map> responseEntity = this.restTemplate.getForEntity(url, Map.class);
 
             if (responseEntity.getStatusCode() != HttpStatus.OK || responseEntity.getBody() == null) {
@@ -747,7 +717,8 @@ public class AuthServiceImpl implements AuthService {
         String email = ((String) googleClaims.get("email")).trim().toLowerCase();
 
         // 2. Tìm kiếm trong bảng user_oauth_providers trước
-        Optional<UserOAuthProvider> oauthOpt = userOAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE", providerUserId);
+        Optional<UserOAuthProvider> oauthOpt = userOAuthProviderRepository.findByProviderAndProviderUserId("GOOGLE",
+                providerUserId);
 
         User user;
         if (oauthOpt.isPresent()) {
@@ -766,14 +737,15 @@ public class AuthServiceImpl implements AuthService {
                         .build();
                 userOAuthProviderRepository.save(newOauth);
 
-
             } else {
-                // 4. Nếu email chưa tồn tại -> Ném lỗi GoogleUserNotFoundException để Frontend biết và điền sẵn form đăng ký
+                // 4. Nếu email chưa tồn tại -> Ném lỗi GoogleUserNotFoundException để Frontend
+                // biết và điền sẵn form đăng ký
                 String name = (String) googleClaims.get("name");
                 if (name == null) {
                     name = "";
                 }
-                throw new GoogleUserNotFoundException(email, name, providerUserId, "Tài khoản Google chưa được đăng ký trên hệ thống.");
+                throw new GoogleUserNotFoundException(email, name, providerUserId,
+                        "Tài khoản Google chưa được đăng ký trên hệ thống.");
             }
         }
 
@@ -848,7 +820,8 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Đăng ký tài khoản người dùng mới sử dụng tài khoản Google.
-     * Xác thực token, lấy email từ Google, kiểm tra thông tin bổ sung và lưu vào DB.
+     * Xác thực token, lấy email từ Google, kiểm tra thông tin bổ sung và lưu vào
+     * DB.
      */
     @Override
     @Transactional
@@ -1105,7 +1078,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Đăng xuất người dùng khỏi tất cả các thiết bị bằng cách thu hồi toàn bộ refresh token.
+     * Đăng xuất người dùng khỏi tất cả các thiết bị bằng cách thu hồi toàn bộ
+     * refresh token.
      *
      * @param email Địa chỉ email của người dùng
      */
@@ -1113,12 +1087,189 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logoutAllDevices(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
         try {
             refreshTokenRepository.deleteByUser(user);
         } catch (Exception e) {
             log.error("Lỗi xảy ra khi xóa toàn bộ Refresh Token: ", e);
             throw new RuntimeException("Lỗi hệ thống: Không thể đăng xuất khỏi tất cả các thiết bị");
         }
+    }
+
+    /**
+     * Yêu cầu đặt lại mật khẩu (quên mật khẩu).
+     * Sinh mã OTP và gửi email hướng dẫn người dùng.
+     */
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+
+        // 1. Tìm tài khoản bằng email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+
+        // 2. Kiểm tra trạng thái tài khoản theo quy tắc nghiệp vụ
+        if (user.getAccountStatus() == AccountStatus.LOCKED) {
+            throw new BadRequestException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+        }
+        if (user.getAccountStatus() == AccountStatus.PENDING) {
+            throw new BadRequestException(
+                    "Tài khoản của bạn chưa được xác thực email. Vui lòng kiểm tra hòm thư để xác thực tài khoản hoặc thực hiện đăng ký lại.");
+        }
+
+        // 3. Áp dụng giới hạn thời gian chờ gửi lại mã mới (5 phút - bỏ qua nếu mã cũ
+        // đã bị khóa)
+        Optional<VerificationToken> lastTokenOpt = tokenRepository.findFirstByUserAndTypeOrderByCreatedAtDesc(user,
+                VerificationType.PASSWORD_RESET);
+        if (lastTokenOpt.isPresent()) {
+            VerificationToken lastToken = lastTokenOpt.get();
+            Instant nextAllowedTime = lastToken.getCreatedAt().plus(5, ChronoUnit.MINUTES);
+            if (lastToken.getFailedAttempts() < 5 && Instant.now().isBefore(nextAllowedTime)) {
+                long diffSeconds = Duration.between(Instant.now(), nextAllowedTime).getSeconds();
+                long minutes = diffSeconds / 60;
+                long seconds = diffSeconds % 60;
+                String timeStr = minutes > 0 ? (minutes + " phút " + seconds + " giây") : (seconds + " giây");
+                throw new BadRequestException("Vui lòng đợi " + timeStr + " trước khi yêu cầu gửi lại mã OTP mới.");
+            }
+        }
+
+        // 4. Vô hiệu hóa các mã OTP cũ chưa sử dụng của loại PASSWORD_RESET
+        try {
+            tokenRepository.invalidateOldTokens(user, VerificationType.PASSWORD_RESET);
+        } catch (Exception e) {
+            log.error("Lỗi khi vô hiệu hóa các mã OTP khôi phục mật khẩu cũ: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể vô hiệu hóa các mã OTP cũ");
+        }
+
+        // 5. Tạo mã xác thực mới (OTP 6 số ngẫu nhiên)
+        SecureRandom random = new SecureRandom();
+        String tokenString;
+        do {
+            tokenString = String.valueOf(100000 + random.nextInt(900000));
+        } while (tokenRepository.findByToken(tokenString).isPresent());
+
+        VerificationToken token = VerificationToken.builder()
+                .user(user)
+                .token(tokenString)
+                .type(VerificationType.PASSWORD_RESET)
+                .expiresAt(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .used(false)
+                .build();
+
+        try {
+            tokenRepository.save(token);
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu mã OTP quên mật khẩu: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể lưu mã OTP mới");
+        }
+
+        // Lấy tên đầy đủ của người dùng phục vụ nội dung email
+        String fullName = user.getEmail();
+        var profileOpt = userProfileRepository.findById(user.getId());
+        if (profileOpt.isPresent()) {
+            fullName = profileOpt.get().getFullName();
+        }
+
+        // Gửi email mới chứa mã OTP đặt lại mật khẩu
+        mailService.sendPasswordResetEmail(user.getEmail(), tokenString, fullName);
+    }
+
+    /**
+     * Thực hiện đặt lại mật khẩu mới bằng mã OTP xác thực.
+     */
+    @Override
+    @Transactional(noRollbackFor = BadRequestException.class)
+    public void resetPassword(ResetPasswordRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+
+        VerificationToken token = getAndValidateToken(user, request.getToken(), VerificationType.PASSWORD_RESET,
+                "Không tìm thấy yêu cầu đặt lại mật khẩu nào cho tài khoản này");
+
+        // Đánh dấu mã OTP đã được sử dụng thành công
+        token.setUsed(true);
+        try {
+            tokenRepository.save(token);
+        } catch (Exception e) {
+            log.error("Lỗi khi đánh dấu sử dụng OTP: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật trạng thái sử dụng OTP");
+        }
+
+        // Thiết lập mật khẩu mới (mã hóa BCrypt)
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            log.error("Lỗi khi cập nhật mật khẩu mới của người dùng: ", e);
+            throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật mật khẩu mới");
+        }
+    }
+
+    /**
+     * Xác minh mã OTP quên mật khẩu (không thực hiện đổi mật khẩu).
+     */
+    @Override
+    @Transactional(noRollbackFor = BadRequestException.class)
+    public void verifyResetOtp(VerifyResetOtpRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng với email: " + email));
+
+        getAndValidateToken(user, request.getToken(), VerificationType.PASSWORD_RESET,
+                "Không tìm thấy yêu cầu đặt lại mật khẩu nào cho tài khoản này");
+    }
+
+    /**
+     * Helper dùng chung kiểm tra và xác thực mã OTP (được sử dụng cho cả email
+     * verification và password reset).
+     */
+    private VerificationToken getAndValidateToken(User user, String tokenValue, VerificationType type,
+            String notFoundMessage) {
+        VerificationToken token = tokenRepository
+                .findFirstByUserAndTypeOrderByCreatedAtDesc(user, type)
+                .orElseThrow(() -> new ResourceNotFoundException(notFoundMessage));
+
+        if (token.isUsed()) {
+            throw new BadRequestException("Mã xác thực này đã được sử dụng trước đó");
+        }
+
+        if (token.getExpiresAt().isBefore(Instant.now())) {
+            throw new BadRequestException("Mã xác thực đã hết hạn");
+        }
+
+        // Kiểm tra xem mã đã bị khóa do nhập sai quá 5 lần chưa
+        if (token.getFailedAttempts() >= 5) {
+            throw new BadRequestException(
+                    "Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
+        }
+
+        // So khớp mã OTP
+        if (!token.getToken().equals(tokenValue.trim())) {
+            int currentFailed = token.getFailedAttempts() + 1;
+            token.setFailedAttempts(currentFailed);
+            try {
+                tokenRepository.save(token);
+            } catch (Exception e) {
+                log.error("Lỗi khi cập nhật số lần nhập sai OTP: ", e);
+                throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật số lần nhập sai OTP");
+            }
+
+            int remaining = 5 - currentFailed;
+            if (remaining <= 0) {
+                throw new BadRequestException(
+                        "Mã xác thực đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.");
+            } else {
+                throw new BadRequestException("Mã xác thực không chính xác. Bạn còn " + remaining + " lần thử.");
+            }
+        }
+        return token;
     }
 }

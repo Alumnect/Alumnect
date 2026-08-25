@@ -6,19 +6,19 @@ import { Stagger, StaggerItem, TiltCard } from '@/components/motion'
 import type { AlumniProfile } from '@/lib/constants'
 import { compact, cn } from '@/lib/utils'
 
-const FILTERS = ['All', 'Software', 'Product', 'Design', 'Data', 'Business']
+const FILTERS = ['Tất cả', 'Phần mềm', 'Sản phẩm', 'Thiết kế', 'Dữ liệu', 'Kinh doanh']
 
 // TODO(team): chưa có API Alumni Directory — thay ALUMNI bằng dữ liệu thật khi backend sẵn sàng.
 const ALUMNI: AlumniProfile[] = []
 
 export function AlumniDirectoryPage() {
-  const [active, setActive] = useState('All')
+  const [active, setActive] = useState('Tất cả')
   const [query, setQuery] = useState('')
 
   // Lọc theo danh mục đã chọn + từ khóa tìm kiếm (tên, vai trò, kỹ năng, cohort).
   const q = query.trim().toLowerCase()
   const filtered = ALUMNI.filter((a) => {
-    const matchesCategory = active === 'All' || a.category === active
+    const matchesCategory = active === 'Tất cả' || a.category === active
     const matchesQuery =
       !q ||
       a.name.toLowerCase().includes(q) ||
@@ -32,9 +32,9 @@ export function AlumniDirectoryPage() {
     <div className="mx-auto max-w-6xl">
       <PageHeader
         icon={<Users size={20} />}
-        title="Alumni Directory"
-        subtitle="Search and connect with verified FPTU graduates and students."
-        actions={<Button variant="secondary" size="sm" leftIcon={<SlidersHorizontal size={15} />}>Filters</Button>}
+        title="Danh bạ cựu sinh viên"
+        subtitle="Tìm kiếm và kết nối với các cựu sinh viên và sinh viên FPTU."
+        actions={<Button variant="secondary" size="sm" leftIcon={<SlidersHorizontal size={15} />}>Bộ lọc</Button>}
       />
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -43,7 +43,7 @@ export function AlumniDirectoryPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, skill, company or cohort…"
+            placeholder="Tìm theo tên, kỹ năng, công ty hoặc khóa học…"
             className="h-12 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-10 pr-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />
         </label>
@@ -66,18 +66,18 @@ export function AlumniDirectoryPage() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Users size={24} />}
-          title="No alumni found"
-          description="Try a different category or search term."
+          title="Không tìm thấy cựu sinh viên phù hợp"
+          description="Hãy thử tìm kiếm với từ khóa hoặc danh mục khác."
           action={
             <Button
               size="sm"
               variant="secondary"
               onClick={() => {
-                setActive('All')
+                setActive('Tất cả')
                 setQuery('')
               }}
             >
-              Clear filters
+              Xóa bộ lọc
             </Button>
           }
         />
@@ -100,10 +100,10 @@ export function AlumniDirectoryPage() {
                       ))}
                     </div>
                     <div className="mt-5 flex items-center gap-2">
-                      <Button size="sm" variant="primary" className="flex-1">Follow</Button>
-                      <Button size="sm" variant="secondary" className="flex-1">Message</Button>
+                      <Button size="sm" variant="primary" className="flex-1">Theo dõi</Button>
+                      <Button size="sm" variant="secondary" className="flex-1">Nhắn tin</Button>
                     </div>
-                    <p className="mt-3 text-xs text-plum-400">{compact(a.followers)} followers</p>
+                    <p className="mt-3 text-xs text-plum-400">{compact(a.followers)} người theo dõi</p>
                   </Card>
                 </TiltCard>
               </StaggerItem>
@@ -111,12 +111,12 @@ export function AlumniDirectoryPage() {
           </Stagger>
 
           <div className="mt-8 flex justify-center">
-            <Button variant="outline" size="md">Load more alumni</Button>
+            <Button variant="outline" size="md">Tải thêm cựu sinh viên</Button>
           </div>
 
           <div className="mt-4 flex items-center justify-center gap-2">
-            <Badge tone="brand">Tip</Badge>
-            <span className="text-xs text-plum-400">Connection suggestions are based on your major and cohort.</span>
+            <Badge tone="brand">Mẹo</Badge>
+            <span className="text-xs text-plum-400">Gợi ý kết nối được tự động cá nhân hóa theo chuyên ngành và khóa học của bạn.</span>
           </div>
         </>
       )}

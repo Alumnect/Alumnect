@@ -1,15 +1,26 @@
 package com.alumnect.alumnect_backend.service.forum;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.enums.QuestionStatus;
 import com.alumnect.alumnect_backend.dao.forum.ForumTopicRepository;
+import com.alumnect.alumnect_backend.dao.forum.QuestionImageRepository;
 import com.alumnect.alumnect_backend.dao.forum.QuestionRepository;
+import com.alumnect.alumnect_backend.dao.user.MajorRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.forum.CreateQuestionRequest;
+import com.alumnect.alumnect_backend.dto.request.forum.UpdateQuestionRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
+import com.alumnect.alumnect_backend.entity.forum.ForumTopic;
 import com.alumnect.alumnect_backend.entity.forum.Question;
+import com.alumnect.alumnect_backend.entity.forum.QuestionImage;
+import com.alumnect.alumnect_backend.entity.user.Major;
+import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
+import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.forum.QuestionMapper;
 import org.slf4j.Logger;
@@ -19,7 +30,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -41,10 +54,19 @@ public class QuestionServiceImpl implements QuestionService {
     private ForumTopicRepository forumTopicRepository;
 
     @Autowired
+    private QuestionImageRepository questionImageRepository;
+
+    @Autowired
+    private MajorRepository majorRepository;
+
+    @Autowired
     private UserProfileRepository userProfileRepository;
 
     @Autowired
     private QuestionMapper questionMapper;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * {@inheritDoc}
@@ -60,7 +82,7 @@ public class QuestionServiceImpl implements QuestionService {
      * </ol>
      */
     @Override
-    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, Long topicId) {
+    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds, List<Long> majorIds) {
         // Validate tham số phân trang trước khi tạo PageRequest — nếu không, PageRequest.of()
         // sẽ ném IllegalArgumentException và bị trả về nhầm HTTP 500 thay vì 400.
         if (page < 0) {
@@ -70,10 +92,19 @@ public class QuestionServiceImpl implements QuestionService {
             throw new BadRequestException("Tham số size phải là số nguyên dương");
         }
 
+        // Lọc theo nhiều THỂ LOẠI và/hoặc nhiều NGÀNH (tick chọn ở Frontend), độc lập nhau.
+        // Khi một chiều không lọc, truyền danh sách giữ chỗ không rỗng để tránh mệnh đề IN () không hợp lệ;
+        // điều kiện IN khi đó bị vô hiệu hóa bởi cờ filterByTopic/filterByMajor = false.
+        boolean filterByTopic = topicIds != null && !topicIds.isEmpty();
+        List<Long> effectiveTopicIds = filterByTopic ? topicIds : List.of(-1L);
+        boolean filterByMajor = majorIds != null && !majorIds.isEmpty();
+        List<Long> effectiveMajorIds = filterByMajor ? majorIds : List.of(-1L);
+
         Sort sortSpec = resolveSort(sort);
-        Page<Question> questionsPage = questionRepository.findActiveQuestions(topicId, PageRequest.of(page, size, sortSpec));
-        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, topicId={}, tổng kết quả={}",
-                page, size, sort, topicId, questionsPage.getTotalElements());
+        Page<Question> questionsPage = questionRepository.findActiveQuestions(
+                filterByTopic, effectiveTopicIds, filterByMajor, effectiveMajorIds, PageRequest.of(page, size, sortSpec));
+        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, topicIds={}, majorIds={}, tổng kết quả={}",
+                page, size, sort, filterByTopic ? topicIds : null, filterByMajor ? majorIds : null, questionsPage.getTotalElements());
 
         // Gộp truy vấn hồ sơ tác giả theo lô (batch) thay vì truy vấn riêng lẻ cho từng câu hỏi.
         List<Long> authorIds = questionsPage.getContent().stream()
@@ -83,8 +114,15 @@ public class QuestionServiceImpl implements QuestionService {
         Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
 
+        // Gộp truy vấn ảnh đính kèm theo lô cho toàn bộ câu hỏi trong trang — tránh N+1 query.
+        List<Long> questionIds = questionsPage.getContent().stream().map(Question::getId).collect(Collectors.toList());
+        Map<Long, List<String>> imagesByQuestionId = loadImagesByQuestionIds(questionIds);
+
         List<QuestionResponse> content = questionsPage.getContent().stream()
-                .map(question -> questionMapper.toResponse(question, profileByUserId.get(question.getAuthor().getId())))
+                .map(question -> questionMapper.toResponse(
+                        question,
+                        profileByUserId.get(question.getAuthor().getId()),
+                        imagesByQuestionId.getOrDefault(question.getId(), List.of())))
                 .collect(Collectors.toList());
 
         return PageResponse.<QuestionResponse>builder()
@@ -116,7 +154,120 @@ public class QuestionServiceImpl implements QuestionService {
 
         // Hồ sơ tác giả có thể chưa được tạo (null) — mapper tự xử lý fallback.
         UserProfile authorProfile = userProfileRepository.findById(question.getAuthor().getId()).orElse(null);
-        return questionMapper.toDetailResponse(question, authorProfile);
+        List<String> images = loadImageUrls(question.getId());
+        return questionMapper.toDetailResponse(question, authorProfile, images);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404 nếu không có) → kiểm tra vai trò Student/Alumni (403 nếu khác)
+     * → nếu có topicId thì kiểm tra chủ đề tồn tại (400 nếu không) → tạo Question trạng thái ACTIVE,
+     * số vote/trả lời = 0 → lưu → map sang chi tiết trả về.
+     */
+    @Override
+    @Transactional
+    public QuestionDetailResponse createQuestion(String email, CreateQuestionRequest request) {
+        User author = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        // RBAC (UC40): chỉ Sinh viên và Cựu sinh viên mới được đặt câu hỏi; Admin/khác bị từ chối 403.
+        String roleName = author.getRole() != null ? author.getRole().getName().toUpperCase() : "";
+        if (!roleName.equals("STUDENT") && !roleName.equals("ALUMNI")) {
+            throw new ForbiddenException("Chỉ sinh viên và cựu sinh viên mới được đặt câu hỏi");
+        }
+
+        // Thể loại là tùy chọn: nếu có topicId thì phải tồn tại, ngược lại để null (chưa phân loại).
+        ForumTopic topic = null;
+        if (request.getTopicId() != null) {
+            topic = forumTopicRepository.findById(request.getTopicId())
+                    .orElseThrow(() -> new BadRequestException("Thể loại không tồn tại"));
+        }
+
+        // Ngành là tùy chọn: nếu có majorId thì phải tồn tại, ngược lại để null (chưa chọn ngành).
+        Major major = null;
+        if (request.getMajorId() != null) {
+            major = majorRepository.findById(request.getMajorId())
+                    .orElseThrow(() -> new BadRequestException("Ngành không tồn tại"));
+        }
+
+        Question question = Question.builder()
+                .author(author)
+                .topic(topic)
+                .major(major)
+                .title(request.getTitle().trim())
+                .body(request.getBody().trim())
+                .status(QuestionStatus.ACTIVE)
+                .voteCount(0)
+                .answerCount(0)
+                .build();
+
+        Question saved;
+        try {
+            saved = questionRepository.save(question);
+        } catch (Exception ex) {
+            log.error("Lỗi khi lưu câu hỏi mới của user {}: ", email, ex);
+            throw new RuntimeException("Lỗi hệ thống: Không thể tạo câu hỏi");
+        }
+
+        // Lưu ảnh đính kèm (nếu có) theo đúng thứ tự người dùng gửi lên.
+        List<String> savedImages = replaceImages(saved, request.getImageUrls());
+        log.info("Tạo câu hỏi mới: id={}, tác giả={}, topicId={}, majorId={}, số ảnh={}",
+                saved.getId(), email, request.getTopicId(), request.getMajorId(), savedImages.size());
+
+        // Nạp hồ sơ tác giả để trả về chi tiết đầy đủ (tên/avatar/headline) cho Frontend.
+        UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        return questionMapper.toDetailResponse(saved, profile, savedImages);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm câu hỏi ACTIVE theo id (404) → kiểm tra người dùng
+     * chính là TÁC GIẢ (403 nếu không) → nếu có topicId/majorId thì kiểm tra tồn tại (400) →
+     * cập nhật tiêu đề/nội dung/thể loại/ngành, thay toàn bộ ảnh → lưu → map chi tiết trả về.
+     */
+    @Override
+    @Transactional
+    public QuestionDetailResponse updateQuestion(String email, Long questionId, UpdateQuestionRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        Question question = questionRepository.findActiveDetailById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu hỏi với id: " + questionId));
+
+        // Ownership (UC46): chỉ tác giả câu hỏi mới được chỉnh sửa; người khác nhận 403.
+        if (!question.getAuthor().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ tác giả mới được chỉnh sửa câu hỏi này");
+        }
+
+        // Thể loại tùy chọn: có thì phải tồn tại, không thì bỏ phân loại (null).
+        ForumTopic topic = null;
+        if (request.getTopicId() != null) {
+            topic = forumTopicRepository.findById(request.getTopicId())
+                    .orElseThrow(() -> new BadRequestException("Thể loại không tồn tại"));
+        }
+
+        // Ngành tùy chọn: có thì phải tồn tại, không thì bỏ chọn ngành (null).
+        Major major = null;
+        if (request.getMajorId() != null) {
+            major = majorRepository.findById(request.getMajorId())
+                    .orElseThrow(() -> new BadRequestException("Ngành không tồn tại"));
+        }
+
+        question.setTitle(request.getTitle().trim());
+        question.setBody(request.getBody().trim());
+        question.setTopic(topic);
+        question.setMajor(major);
+        Question saved = questionRepository.save(question);
+
+        // Thay toàn bộ ảnh cũ bằng bộ ảnh mới gửi lên (xóa hết rồi lưu lại).
+        List<String> savedImages = replaceImages(saved, request.getImageUrls());
+        log.info("Cập nhật câu hỏi: id={}, tác giả={}, topicId={}, majorId={}, số ảnh={}",
+                saved.getId(), email, request.getTopicId(), request.getMajorId(), savedImages.size());
+
+        UserProfile profile = userProfileRepository.findById(user.getId()).orElse(null);
+        return questionMapper.toDetailResponse(saved, profile, savedImages);
     }
 
     /**
@@ -124,26 +275,98 @@ public class QuestionServiceImpl implements QuestionService {
      */
     @Override
     public List<TopicResponse> getTopics() {
-        return forumTopicRepository.findAllByOrderByNameAsc().stream()
+        return forumTopicRepository.findAllByOrderByIdAsc().stream()
                 .map(questionMapper::toTopicResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Chuyển tham số sắp xếp (không phân biệt hoa/thường) thành đối tượng {@link Sort}.
-     * Mọi tiêu chí đều thêm createdAt DESC làm điều kiện phụ để kết quả ổn định khi trùng giá trị.
+     * Thay TOÀN BỘ ảnh của một câu hỏi bằng bộ URL mới: xóa hết ảnh cũ rồi lưu lại theo đúng thứ tự.
+     * Dùng chung cho tạo mới (không có ảnh cũ) và chỉnh sửa (thay ảnh cũ).
      *
-     * @param sort Chuỗi tiêu chí: "recent" (mặc định), "votes", "answers"
-     * @return Đối tượng Sort tương ứng
-     * @throws BadRequestException nếu giá trị sort không hợp lệ
+     * @param question Câu hỏi đã được lưu
+     * @param urls     Danh sách URL ảnh mới (có thể null/rỗng)
+     * @return Danh sách URL ảnh đã lưu (đã lọc/giới hạn), theo thứ tự
+     */
+    private List<String> replaceImages(Question question, List<String> urls) {
+        questionImageRepository.deleteByQuestion_Id(question.getId());
+        List<String> sanitized = sanitizeImageUrls(urls);
+        if (sanitized.isEmpty()) {
+            return List.of();
+        }
+        List<QuestionImage> entities = new ArrayList<>();
+        short order = 0;
+        for (String url : sanitized) {
+            entities.add(QuestionImage.builder()
+                    .question(question)
+                    .url(url)
+                    .sortOrder(order++)
+                    .build());
+        }
+        questionImageRepository.saveAll(entities);
+        return sanitized;
+    }
+
+    /** Lọc bỏ URL rỗng/quá dài và giới hạn số ảnh tối đa. */
+    private List<String> sanitizeImageUrls(List<String> urls) {
+        if (urls == null) {
+            return List.of();
+        }
+        return urls.stream()
+                .filter(u -> u != null && !u.isBlank())
+                .map(String::trim)
+                .filter(u -> u.length() <= 500)
+                .limit(CreateQuestionRequest.MAX_IMAGES)
+                .collect(Collectors.toList());
+    }
+
+    /** Lấy danh sách URL ảnh của một câu hỏi, theo thứ tự hiển thị. */
+    private List<String> loadImageUrls(Long questionId) {
+        return questionImageRepository.findByQuestion_IdOrderBySortOrderAsc(questionId).stream()
+                .map(QuestionImage::getUrl)
+                .collect(Collectors.toList());
+    }
+
+    /** Lấy ảnh của nhiều câu hỏi cùng lúc (batch), gom theo id câu hỏi — tránh N+1 query. */
+    private Map<Long, List<String>> loadImagesByQuestionIds(List<Long> questionIds) {
+        if (questionIds == null || questionIds.isEmpty()) {
+            return Map.of();
+        }
+        return questionImageRepository.findByQuestion_IdInOrderByQuestion_IdAscSortOrderAsc(questionIds).stream()
+                .collect(Collectors.groupingBy(
+                        img -> img.getQuestion().getId(),
+                        Collectors.mapping(QuestionImage::getUrl, Collectors.toList())));
+    }
+
+    /**
+     * Chuyển tham số sắp xếp thành đối tượng {@link Sort} hỗ trợ NHIỀU tiêu chí ưu tiên.
+     * Tham số là chuỗi các key cách nhau bởi dấu phẩy (VD "votes,answers"): sắp theo tiêu chí đầu,
+     * hòa thì theo tiêu chí kế; luôn thêm createdAt DESC cuối cùng để kết quả ổn định.
+     *
+     * @param sort Chuỗi tiêu chí cách nhau bởi dấu phẩy: "recent", "votes", "answers"
+     * @return Đối tượng Sort theo đúng thứ tự ưu tiên
+     * @throws BadRequestException nếu có tiêu chí không hợp lệ
      */
     private Sort resolveSort(String sort) {
-        String key = (sort == null || sort.isBlank()) ? "recent" : sort.trim().toLowerCase();
-        return switch (key) {
-            case "recent" -> Sort.by(Sort.Direction.DESC, "createdAt");
-            case "votes" -> Sort.by(Sort.Direction.DESC, "voteCount").and(Sort.by(Sort.Direction.DESC, "createdAt"));
-            case "answers" -> Sort.by(Sort.Direction.DESC, "answerCount").and(Sort.by(Sort.Direction.DESC, "createdAt"));
-            default -> throw new BadRequestException("Tiêu chí sắp xếp không hợp lệ: " + sort);
-        };
+        String raw = (sort == null || sort.isBlank()) ? "recent" : sort.trim().toLowerCase();
+        List<Sort.Order> orders = new ArrayList<>();
+        for (String part : raw.split(",")) {
+            String key = part.trim();
+            if (key.isEmpty()) {
+                continue;
+            }
+            switch (key) {
+                case "recent" -> orders.add(new Sort.Order(Sort.Direction.DESC, "createdAt"));
+                case "votes" -> orders.add(new Sort.Order(Sort.Direction.DESC, "voteCount"));
+                case "answers" -> orders.add(new Sort.Order(Sort.Direction.DESC, "answerCount"));
+                default -> throw new BadRequestException("Tiêu chí sắp xếp không hợp lệ: " + key);
+            }
+        }
+        // Thêm createdAt DESC làm điều kiện phụ cuối cùng nếu chưa có, đảm bảo thứ tự ổn định.
+        boolean hasCreatedAt = orders.stream().anyMatch(o -> "createdAt".equals(o.getProperty()));
+        if (!hasCreatedAt) {
+            orders.add(new Sort.Order(Sort.Direction.DESC, "createdAt"));
+        }
+        return Sort.by(orders);
     }
 }

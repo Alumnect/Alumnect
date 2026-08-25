@@ -8,24 +8,32 @@
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
   Image as ImageIcon,
   CalendarPlus,
   Briefcase,
   Award,
+  Trophy,
+  Sparkles,
   Heart,
   MessageCircle,
   Repeat2,
   Bookmark,
   MoreHorizontal,
+  Pencil,
   TrendingUp,
   Flag,
   Loader2,
   AlertTriangle,
   Inbox,
+  MapPin,
+  ExternalLink,
+  Clock,
+  Users,
 } from 'lucide-react'
-import { Avatar, Badge, Card } from '@/components/ui'
+import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
@@ -33,23 +41,24 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed } from '@/features/feed'
+import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
 import type { FeedFilter, Post } from '@/features/feed'
+import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Achievement', tone: 'gold' },
-  recruitment: { label: 'Hiring', tone: 'aqua' },
-  event: { label: 'Event', tone: 'violet' },
-  normal: { label: 'Post', tone: 'brand' },
+  achievement: { label: 'Thành tựu', tone: 'gold' },
+  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
+  event: { label: 'Sự kiện', tone: 'violet' },
+  normal: { label: 'Bài viết', tone: 'brand' },
 }
 
 /** Các tab lọc bảng tin theo loại bài viết (UC15: lọc theo loại). */
 const FILTERS: { key: FeedFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'achievement', label: 'Achievements' },
-  { key: 'recruitment', label: 'Hiring' },
-  { key: 'event', label: 'Events' },
+  { key: 'all', label: 'Tất cả' },
+  { key: 'achievement', label: 'Thành tựu' },
+  { key: 'recruitment', label: 'Tuyển dụng' },
+  { key: 'event', label: 'Sự kiện' },
 ]
 
 /**
@@ -58,31 +67,37 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
  * đăng nhập qua popup (BR-12).
  * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
  */
-function Composer({ viewer }: { viewer: AuthUser }) {
+function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostType) => void }) {
   return (
     <Card hover={false} className="p-4">
       <div className="flex gap-3">
-        <Avatar src={viewer.avatarUrl ?? 'https://i.pravatar.cc/120?img=12'} name={viewer.name} size={44} verified={viewer.verified} />
-        <button className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]">
-          Share an achievement, ask, or post a job…
+        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={44} verified={viewer.verified} />
+        <button
+          type="button"
+          onClick={() => onOpen()}
+          className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]"
+        >
+          Bạn muốn chia sẻ thành tựu, đặt câu hỏi hay đăng tin tuyển dụng?…
         </button>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-plum-900/8 pt-3">
         {[
-          { icon: Award, label: 'Achievement', tone: 'text-gold-600' },
-          { icon: ImageIcon, label: 'Photo', tone: 'text-aqua-500' },
-          { icon: Briefcase, label: 'Job', tone: 'text-brand-600' },
-          { icon: CalendarPlus, label: 'Event', tone: 'text-violet-600' },
+          { icon: Award, label: 'Thành tựu', tone: 'text-gold-600', type: 'achievement' },
+          { icon: ImageIcon, label: 'Hình ảnh', tone: 'text-aqua-500', type: 'normal' },
+          { icon: Briefcase, label: 'Tuyển dụng', tone: 'text-brand-600', type: 'recruitment' },
+          { icon: CalendarPlus, label: 'Sự kiện', tone: 'text-violet-600', type: 'event' },
         ].map((a) => (
           <button
             key={a.label}
+            type="button"
+            onClick={() => onOpen(a.type as PostType)}
             className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04]"
           >
             <a.icon size={17} className={a.tone} />
             <span className="hidden sm:inline">{a.label}</span>
           </button>
         ))}
-        <Button size="sm" className="ml-auto">Post</Button>
+        <Button size="sm" className="ml-auto" onClick={() => onOpen()}>Đăng bài</Button>
       </div>
     </Card>
   )
@@ -93,80 +108,363 @@ function Composer({ viewer }: { viewer: AuthUser }) {
  * @param post Dữ liệu bài viết
  * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
  */
-function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
+function PostCard({
+  post,
+  canInteract,
+  currentUserName,
+  onEdit,
+}: {
+  post: Post
+  canInteract: boolean
+  currentUserName?: string
+  onEdit?: (post: Post) => void
+}) {
+  // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
+  const [likeCount, setLikeCount] = useState<number>(post.likes)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
 
   // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
   const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleLike = useToggleLike()
+
+  /**
+   * Xử lý bấm nút Thích (UC17): cập nhật lạc quan (đổi UI ngay), đồng bộ theo phản hồi
+   * backend khi thành công, hoàn tác (rollback) khi lỗi. Guest → popup mời đăng nhập (BR-12).
+   */
+  const handleLike = () => {
+    if (!canInteract) {
+      promptLogin('Đăng nhập để thích và tương tác với bài viết.')
+      return
+    }
+    const next = !liked
+    setLiked(next)
+    setLikeCount((c) => c + (next ? 1 : -1))
+    toggleLike.mutate(
+      { postId: post.id, like: next },
+      {
+        onSuccess: (data) => {
+          setLiked(data.liked)
+          setLikeCount(data.likeCount)
+        },
+        onError: () => {
+          setLiked(!next)
+          setLikeCount((c) => c + (next ? -1 : 1))
+        },
+      },
+    )
+  }
+
+  const isAuthor = !!currentUserName && post.author === currentUserName
 
   return (
-    <Card hover={false} className="overflow-hidden">
-      <div className="p-5">
+    <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white")}>
+      {post.type === 'achievement' && (
+        <div className="absolute -top-4 -right-4 p-6 opacity-[0.04] pointer-events-none -rotate-12">
+          <Trophy size={160} className="text-amber-600" />
+        </div>
+      )}
+      <div className="p-5 relative z-10">
         {/* --- Phần 1: Header — avatar, tên tác giả, badge loại bài, thời gian, menu "..." --- */}
         <div className="flex items-center gap-3">
-          <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
-          {/* Tên tác giả + badge/thời gian: bấm vào mở trang chi tiết bài viết (UC16) */}
-          <Link to={`/app/posts/${post.id}`} className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 font-bold text-plum-900">
-              <span className="truncate hover:underline">{post.author}</span>
-              <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
-            </p>
-            <p className="truncate text-xs text-plum-400">{post.role} · {post.time}</p>
+          <Link
+            to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+            className="shrink-0 transition-transform duration-200 hover:scale-105"
+            title={`Xem hồ sơ của ${post.author}`}
+          >
+            <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
           </Link>
-          {/* Menu tác giả (Edit/Delete) — thuộc UC khác, ở đây chỉ hiển thị icon */}
-          <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
-            <MoreHorizontal size={18} />
-          </button>
+          {/* Tên tác giả chuyển qua Profile, Badge và Thời gian chuyển qua chi tiết bài viết */}
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-2 font-bold text-plum-900">
+              <Link
+                to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
+                className="truncate hover:underline hover:text-brand-600 transition-colors"
+                title={`Xem hồ sơ của ${post.author}`}
+              >
+                {post.author}
+              </Link>
+              <Link to={`/app/posts/${post.id}`}>
+                {post.type === 'achievement' ? (
+                  <Badge tone={meta.tone} className="px-2.5 py-0.5 text-[10px] cursor-pointer hover:opacity-85 shadow-sm shadow-amber-200/50 border border-amber-300/50 flex items-center gap-1 font-extrabold uppercase tracking-wide">
+                    <Sparkles size={10} className="text-amber-600" /> {meta.label}
+                  </Badge>
+                ) : (
+                  <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
+                )}
+              </Link>
+            </p>
+            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-plum-400 hover:text-plum-600 transition-colors">
+              {post.role ? `${post.role} · ` : ''}{post.time}
+            </Link>
+          </div>
+          {/* Nút Chỉnh sửa (UC22) chỉ hiển thị cho chính tác giả bài viết */}
+          {isAuthor && onEdit ? (
+            <button
+              type="button"
+              onClick={() => onEdit(post)}
+              aria-label="Chỉnh sửa bài viết"
+              title="Chỉnh sửa bài viết"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+            >
+              <Pencil size={13} /> Sửa
+            </button>
+          ) : (
+            <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
+              <MoreHorizontal size={18} />
+            </button>
+          )}
         </div>
 
-        {/* --- Phần 2: Nội dung văn bản — bấm vào mở trang chi tiết bài viết (UC16) --- */}
-        <Link to={`/app/posts/${post.id}`} className="mt-4 block">
-          <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">{post.text}</p>
-        </Link>
+        {/* --- Phần 2: Nội dung văn bản (Ẩn đi nếu là bài event hoặc recruitment, vì văn bản đã được gom vào khung riêng) --- */}
+        {post.type !== 'event' && post.type !== 'recruitment' && (
+          <Link to={`/app/posts/${post.id}`} className="mt-4 block">
+            <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">{post.text}</p>
+          </Link>
+        )}
       </div>
 
-      {/* --- Phần 3: Ảnh đính kèm (nếu có), lazy-load để tối ưu hiệu năng --- */}
-      {post.image && (
-        <img src={post.image} alt={`Ảnh đính kèm bài viết của ${post.author}`} className="max-h-[26rem] w-full object-cover" loading="lazy" />
+      {/* --- Phần 3: Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
+      {post.type === 'recruitment' && post.job && (
+        <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all hover:shadow-md">
+          {/* Header Tuyển dụng */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-5 py-3.5">
+            <h3 className="flex items-center gap-2 font-bold text-brand-900">
+              <Briefcase size={18} className="text-brand-600" />
+              <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
+            </h3>
+            {post.job.applyUrl && (
+              <a
+                href={post.job.applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#d96010] transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Ứng tuyển <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
+
+          <div className="p-5">
+            <div className="mb-5 rounded-xl border border-slate-100 bg-slate-50 p-4">
+              <p className="text-base font-bold text-plum-900 mb-3">
+                Công ty: {post.job.company}
+              </p>
+              
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                 <div>
+                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
+                   <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
+                     {post.job.location && (
+                       <span className="inline-flex items-center gap-1">
+                         <MapPin size={14} className="text-brand-500" /> {post.job.location}
+                       </span>
+                     )}
+                   </div>
+                 </div>
+                 <div>
+                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
+                   <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
+                     {(post.job.salaryMin || post.job.salaryMax) ? (
+                       <span className="inline-flex items-center gap-1">
+                          <span className="font-semibold text-emerald-600">
+                            {post.job.salaryMin && post.job.salaryMax
+                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                              : post.job.salaryMin
+                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
+                              : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
+                          </span>
+                       </span>
+                     ) : (
+                       <span className="text-slate-400 font-normal">Thỏa thuận</span>
+                     )}
+                     {post.job.contactEmail && (
+                       <span className="inline-flex items-center gap-1 text-xs">
+                         <Inbox size={12} className="text-plum-400" /> {post.job.contactEmail}
+                       </span>
+                     )}
+                   </div>
+                 </div>
+              </div>
+            </div>
+
+            {/* Mô tả tuyển dụng */}
+            {post.text && (
+              <div className="mb-5">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc:</p>
+                <Link to={`/app/posts/${post.id}`} className="block">
+                  <p className="whitespace-pre-line text-[14px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900 line-clamp-4">
+                    {post.text}
+                  </p>
+                </Link>
+              </div>
+            )}
+
+            {/* Ảnh tuyển dụng (nếu có) */}
+            {(() => {
+              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
+              if (imgs.length === 0) return null
+              return (
+                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+                  <ImageCarousel images={imgs} height={380} altPrefix="Ảnh tuyển dụng" />
+                </div>
+              )
+            })()}
+          </div>
+        </div>
       )}
+
+      {/* --- Phần 3b: Thẻ thông tin Sự kiện (nếu là bài event) --- */}
+      {post.type === 'event' && post.event && (
+        <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all hover:shadow-md">
+          {/* Header Sự kiện */}
+          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-5 py-3.5">
+            <h3 className="flex items-center gap-2 font-bold text-violet-900">
+              <CalendarPlus size={18} className="text-violet-600" />
+              <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
+            </h3>
+          </div>
+
+          <div className="p-5">
+            {/* Thời gian & Địa điểm */}
+            <div className="mb-5 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2">
+              {post.event.startTime && (
+                <div>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
+                    <Clock size={14} className="text-violet-500" />
+                    {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
+                    {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+              {post.event.endTime ? (
+                <div>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
+                    <Clock size={14} className="text-coral-500" />
+                    {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
+                    {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
+                  <p className="text-sm font-semibold text-slate-400">—</p>
+                </div>
+              )}
+              {(post.event.location || post.event.capacity) && (
+                <div className="col-span-1 sm:col-span-2 mt-1 border-t border-slate-200/60 pt-3">
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm & Sức chứa</p>
+                  <div className="flex flex-wrap items-center gap-4">
+                    {post.event.location && (
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
+                        <MapPin size={14} className="text-brand-500" /> {post.event.location}
+                      </p>
+                    )}
+                    {post.event.capacity && (
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
+                        <Users size={14} className="text-aqua-600" /> Tối đa {post.event.capacity} người
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mô tả sự kiện */}
+            {post.text && (
+              <div className="mb-5">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện:</p>
+                <Link to={`/app/posts/${post.id}`} className="block">
+                  <p className="whitespace-pre-line text-[14px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">
+                    {post.text}
+                  </p>
+                </Link>
+              </div>
+            )}
+
+            {/* Ảnh sự kiện */}
+            {(() => {
+              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
+              if (imgs.length === 0) return null
+              return (
+                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+                  <ImageCarousel images={imgs} height={380} altPrefix="Ảnh sự kiện" />
+                </div>
+              )
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* --- Phần 4: Ảnh đính kèm (Ẩn nếu là Sự kiện hoặc Tuyển dụng, vì ảnh đã ở trong khung riêng) --- */}
+      {post.type !== 'event' && post.type !== 'recruitment' && (() => {
+        const imgs = post.images && post.images.length > 0
+          ? post.images
+          : post.image ? [post.image] : []
+        if (imgs.length === 0) return null
+        return <ImageCarousel images={imgs} height={480} altPrefix="Ảnh bài viết" />
+      })()}
 
       {/* --- Phần 4: Thanh hành động — Thích / Bình luận / Đăng lại / Báo cáo / Lưu.
           Guest bấm bất kỳ nút nào sẽ mở popup mời đăng nhập (kiểu Facebook) theo BR-12 --- */}
-      <div className="flex items-center gap-1 p-3">
+      <div className="flex items-center gap-1 p-3 border-t border-slate-100">
         {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
         <button
-          onClick={() => (canInteract ? setLiked((v) => !v) : promptLogin('Đăng nhập để thích và tương tác với bài viết.'))}
+          onClick={handleLike}
+          aria-pressed={liked}
           className={cn(
-            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-plum-900/[0.04]',
-            liked ? 'text-rose-500' : 'text-plum-500 hover:text-plum-900',
+            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-slate-100',
+            liked ? 'text-rose-500 bg-rose-50' : 'text-slate-600 hover:text-slate-900',
           )}
         >
-          <Heart size={18} className={liked ? 'fill-rose-400' : ''} />
-          {compact(post.likes + (liked ? 1 : 0))}
+          {liked ? (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: [1.3, 1], opacity: 1 }}
+              transition={{ duration: 0.4, type: 'spring', bounce: 0.6 }}
+            >
+              <Heart size={18} className="fill-rose-500 text-rose-500" />
+            </motion.div>
+          ) : (
+            <Heart size={18} />
+          )}
+          {compact(likeCount)}
         </button>
-        <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để bình luận về bài viết.') }}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
-        >
-          <MessageCircle size={18} /> {compact(post.comments)}
-        </button>
+        {canInteract ? (
+          <Link
+            to={`/app/posts/${post.id}#comments`}
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F27024]/10 hover:text-[#F27024]"
+            title="Xem và viết bình luận"
+          >
+            <MessageCircle size={18} /> {compact(post.comments)}
+          </Link>
+        ) : (
+          <button
+            onClick={() => promptLogin('Đăng nhập để bình luận về bài viết.')}
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <MessageCircle size={18} /> {compact(post.comments)}
+          </button>
+        )}
         <button
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để đăng lại bài viết.') }}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
         <button
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để báo cáo bài viết.') }}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
+          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <Flag size={17} />
         </button>
         <button
           aria-label="Lưu bài viết"
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để lưu bài viết.') }}
-          className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900"
+          className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
         >
           <Bookmark size={18} />
         </button>
@@ -178,8 +476,15 @@ function PostCard({ post, canInteract }: { post: Post; canInteract: boolean }) {
 /** Khung xương (skeleton) hiển thị trong lúc tải bảng tin lần đầu. */
 function PostSkeleton() {
   return (
-    <Card hover={false} className="p-5">
-      <div className="flex items-center gap-3">
+    <Card hover={false} className="p-5 relative overflow-hidden">
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="h-10 w-10 border-4 border-brand-200 border-t-brand-600 rounded-full"
+        />
+      </div>
+      <div className="flex items-center gap-3 opacity-30">
         <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-plum-900/[0.07]" />
         <div className="flex-1 space-y-2">
           <div className="h-3.5 w-40 animate-pulse rounded bg-plum-900/[0.07]" />
@@ -219,15 +524,18 @@ function FeedError({ message, onRetry }: { message?: string; onRetry: () => void
 /** Trạng thái rỗng khi cộng đồng chưa có bài viết nào ("No posts yet"). */
 function FeedEmpty() {
   return (
-    <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
-        <Inbox size={24} />
-      </span>
-      <div>
-        <p className="font-bold text-plum-900">Chưa có bài viết nào</p>
-        <p className="mt-1 text-sm text-plum-500">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
-      </div>
-    </Card>
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-plum-900/10 bg-white/50 p-12 text-center">
+      <motion.div
+        initial={{ y: 0 }}
+        animate={{ y: [-5, 5, -5] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        className="mb-4 text-brand-300 drop-shadow-sm"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+      </motion.div>
+      <h3 className="mb-1 text-lg font-bold text-plum-900">Chưa có bài viết nào</h3>
+      <p className="text-sm text-plum-500">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
+    </div>
   )
 }
 
@@ -256,8 +564,11 @@ function SidebarCard({ title, action, children }: { title: string; action?: stri
  * trạng thái loading / empty / error / permission.
  */
 export function FeedPage() {
-  // === Bước 1: State cục bộ — bộ lọc loại bài viết đang chọn ===
+  // === Bước 1: State cục bộ — bộ lọc loại bài viết, mở/đóng modal & bài viết đang sửa (UC14/UC22) ===
   const [filter, setFilter] = useState<FeedFilter>('all')
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -266,6 +577,21 @@ export function FeedPage() {
   const isGuest = !viewer
   // Chỉ Student/Alumni mới được đăng bài & tương tác (Admin không phải người đăng).
   const canPost = !!viewer && (viewer.role === 'STUDENT' || viewer.role === 'ALUMNI')
+
+  const handleStartEdit = (p: Post) => {
+    setEditingPost(p)
+    setComposerOpen(true)
+  }
+
+  const handleOpenComposer = (type?: PostType) => {
+    setComposerDefaultType(type ?? 'normal')
+    setComposerOpen(true)
+  }
+
+  const handleCloseComposer = () => {
+    setComposerOpen(false)
+    setEditingPost(null)
+  }
 
   // === Bước 3: Gọi dữ liệu bảng tin qua hook infinite-query ===
   const {
@@ -284,15 +610,25 @@ export function FeedPage() {
 
   // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="mx-auto flex max-w-6xl items-start justify-center gap-8">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
-      <div className="space-y-5">
+      <div className="w-full max-w-[640px] shrink-0 space-y-5">
         {/* Khối A: Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy gì ở đây —
             Guest khi tương tác sẽ được mời đăng nhập qua popup (kiểu Facebook). */}
         {canPost && viewer && (
-          <Reveal>
-            <Composer viewer={viewer} />
-          </Reveal>
+          <>
+            <Reveal>
+              <Composer viewer={viewer} onOpen={handleOpenComposer} />
+            </Reveal>
+            {/* Modal soạn & đăng / chỉnh sửa bài viết (UC14 / UC22) */}
+            <CreatePostModal
+              open={composerOpen}
+              onClose={handleCloseComposer}
+              viewer={viewer}
+              editPost={editingPost ?? undefined}
+              defaultType={composerDefaultType}
+            />
+          </>
         )}
 
         {/* Khối B: Tabs lọc theo loại bài viết (All / Achievements / Hiring / Events) */}
@@ -304,8 +640,8 @@ export function FeedPage() {
               className={cn(
                 'rounded-full px-4 py-1.5 text-sm font-semibold transition-colors',
                 filter === f.key
-                  ? 'bg-gradient-to-r from-brand-600 to-violet-600 text-white shadow-sm'
-                  : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.07] hover:text-plum-900',
+                  ? 'bg-gradient-to-r from-[#F27024] to-[#FF8C38] text-white shadow-xs font-bold'
+                  : 'bg-slate-200/60 text-slate-600 hover:bg-slate-200 hover:text-slate-900',
               )}
             >
               {f.label}
@@ -334,10 +670,15 @@ export function FeedPage() {
         ) : (
           // (4) Có dữ liệu: render danh sách + điều khiển phân trang
           <>
-            <Stagger className="space-y-5" gap={0.08}>
+            <Stagger key={`${filter}-${posts[0]?.id}`} className="space-y-5" gap={0.08}>
               {posts.map((p) => (
                 <StaggerItem key={p.id}>
-                  <PostCard post={p} canInteract={!isGuest} />
+                  <PostCard
+                    post={p}
+                    canInteract={!isGuest}
+                    currentUserName={viewer?.name}
+                    onEdit={handleStartEdit}
+                  />
                 </StaggerItem>
               ))}
             </Stagger>
@@ -365,10 +706,10 @@ export function FeedPage() {
       {/* ============ CỘT PHẢI: GỢI Ý (ẩn trên mobile) ============
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
-      <aside className="hidden space-y-5 lg:block">
+      <aside className="hidden w-[320px] shrink-0 space-y-5 lg:block">
         {/* Mục 1: Gợi ý người để theo dõi */}
         <Reveal direction="left">
-          <SidebarCard title="Who to follow" action="See all">
+          <SidebarCard title="Gợi ý kết nối" action="Xem tất cả">
             <ul className="space-y-4">
               {ALUMNI.slice(0, 3).map((a) => (
                 <li key={a.id} className="flex items-center gap-3">
@@ -377,7 +718,7 @@ export function FeedPage() {
                     <p className="truncate text-sm font-bold text-plum-900">{a.name}</p>
                     <p className="truncate text-xs text-plum-400">{a.cohort}</p>
                   </div>
-                  <Button size="sm" variant="secondary">Follow</Button>
+                  <Button size="sm" variant="secondary">Theo dõi</Button>
                 </li>
               ))}
             </ul>
@@ -386,7 +727,7 @@ export function FeedPage() {
 
         {/* Mục 2: Sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>
-          <SidebarCard title="Upcoming events" action="All events">
+          <SidebarCard title="Sự kiện sắp diễn ra" action="Tất cả">
             <ul className="space-y-3">
               {EVENTS.slice(0, 2).map((e) => (
                 <li key={e.id} className="flex items-center gap-3">
@@ -396,7 +737,7 @@ export function FeedPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-plum-900">{e.title}</p>
-                    <p className="truncate text-xs text-plum-400">{compact(e.attendees)} attending</p>
+                    <p className="truncate text-xs text-plum-400">{compact(e.attendees)} người tham gia</p>
                   </div>
                 </li>
               ))}
@@ -406,14 +747,14 @@ export function FeedPage() {
 
         {/* Mục 3: Câu hỏi Q&A đang nổi bật */}
         <Reveal direction="left" delay={0.2}>
-          <SidebarCard title="Trending Q&A" action="Forum">
+          <SidebarCard title="Hỏi đáp nổi bật" action="Diễn đàn">
             <ul className="space-y-3">
               {QUESTIONS.slice(0, 3).map((q) => (
                 <li key={q.id}>
                   <Link to="/app/forum" className="group block">
                     <p className="line-clamp-2 text-sm font-semibold text-plum-800 group-hover:text-brand-600">{q.title}</p>
                     <p className="mt-1 flex items-center gap-2 text-xs text-plum-400">
-                      <TrendingUp size={12} /> {q.votes} votes · {q.answers} answers
+                      <TrendingUp size={12} /> {q.votes} bình chọn · {q.answers} câu trả lời
                     </p>
                   </Link>
                 </li>

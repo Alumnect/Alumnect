@@ -37,3 +37,15 @@ export interface GoogleRegisterPayload {
   proofUrl?: string
   note?: string
 }
+
+export interface ResetPasswordPayload {
+  email: string
+  token: string
+  newPassword: string
+}
+
+export interface VerifyResetOtpPayload {
+  email: string
+  token: string
+}
+

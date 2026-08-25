@@ -33,7 +33,10 @@ public class Endpoints {
         "/api/v1/questions",        // Xem danh sách câu hỏi diễn đàn Q&A (UC38 - Guest xem được)
         "/api/v1/questions/topics", // Lấy danh mục chủ đề để lọc câu hỏi (UC38)
         "/api/v1/questions/*",      // Xem chi tiết một câu hỏi theo id (UC39 - Guest xem được)
+        "/api/v1/questions/*/answers", // Xem danh sách câu trả lời của một câu hỏi (UC41 - Guest xem được)
         "/api/v1/users/profile/*",    // Xem hồ sơ cá nhân người khác bằng ID (UC39)
+        "/api/v1/users/*/followers",  // Lấy danh sách người theo dõi công khai (phân trang)
+        "/api/v1/users/*/following",  // Lấy danh sách người đang theo dõi công khai (phân trang)
         "/api/v1/career-paths",       // Lấy danh sách Career Paths phân trang công khai
         "/api/v1/career-paths/users/*" // Lấy chi tiết Career Path của người dùng công khai
     };
@@ -46,7 +49,10 @@ public class Endpoints {
         "/api/v1/auth/google",   // Đăng nhập bằng Google OAuth2
         "/api/v1/auth/google/register", // Đăng ký bằng Google OAuth2
         "/api/v1/auth/resend-otp", // Gửi lại mã OTP xác thực
-        "/api/v1/auth/refresh"   // Làm mới access token bằng refresh token
+        "/api/v1/auth/refresh",   // Làm mới access token bằng refresh token
+        "/api/v1/auth/forgot-password", // Yêu cầu gửi mã OTP quên mật khẩu
+        "/api/v1/auth/reset-password",   // Đặt lại mật khẩu mới bằng OTP
+        "/api/v1/auth/verify-reset-otp"  // Xác minh OTP khôi phục mật khẩu
     };
 
     // Endpoint dành riêng cho Admin

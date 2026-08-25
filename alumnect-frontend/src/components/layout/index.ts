@@ -1,6 +1,3 @@
-export { MarketingLayout } from './MarketingLayout'
-export { MarketingNavbar } from './MarketingNavbar'
-export { MarketingFooter } from './MarketingFooter'
 export { AppShell } from './AppShell'
 export { AdminShell } from './AdminShell'
 export { ScrollToTop } from './ScrollToTop'

@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { 
-  KeyRound, Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, LogOut, ArrowRight
+  KeyRound, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, LogOut, ArrowRight
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useChangePassword } from '../hooks/useUserMutations'
 import { changePasswordSchema } from '../model/schemas'
 import type { ChangePasswordFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui'
 import { Field, useLogoutAllDevices } from '@/features/auth'
 
 export function ChangePasswordForm() {
@@ -24,6 +25,7 @@ export function ChangePasswordForm() {
   
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [backendSuccessMessage, setBackendSuccessMessage] = useState('')
   
   // Trạng thái hiển thị modal hỏi đăng xuất
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -49,13 +51,14 @@ export function ChangePasswordForm() {
     
     try {
       // 1. Gọi API đổi mật khẩu thành công trước
-      await changePasswordMutation.mutateAsync({
+      const res = await changePasswordMutation.mutateAsync({
         oldPassword: values.oldPassword,
         newPassword: values.newPassword,
         confirmNewPassword: values.confirmNewPassword,
       })
 
       // 2. Đổi mật khẩu thành công: Mở modal xác nhận hỏi đăng xuất
+      setBackendSuccessMessage(res.message || 'Đổi mật khẩu thành công!')
       setShowConfirmModal(true)
       reset() // Clear form nhập liệu ngay lập tức
     } catch (err: any) {
@@ -81,13 +84,13 @@ export function ChangePasswordForm() {
       logout()
       navigate('/login', {
         state: {
-          successMessage: 'Đổi mật khẩu thành công! Bạn đã được đăng xuất khỏi tất cả các thiết bị.',
+          successMessage: backendSuccessMessage ? `${backendSuccessMessage} Bạn đã được đăng xuất khỏi tất cả các thiết bị.` : 'Đổi mật khẩu thành công! Bạn đã được đăng xuất khỏi tất cả các thiết bị.',
         },
         replace: true,
       })
     } else {
       // Giữ đăng nhập: Chỉ hiển thị thông báo thành công tại chỗ
-      setSuccessMessage('Đổi mật khẩu thành công!')
+      setSuccessMessage(backendSuccessMessage || 'Đổi mật khẩu thành công!')
     }
   }
 
@@ -121,7 +124,6 @@ export function ChangePasswordForm() {
           label="Mật khẩu hiện tại"
           type={showOldPassword ? 'text' : 'password'}
           placeholder="Nhập mật khẩu hiện tại"
-          icon={<Lock size={16} />}
           error={errors.oldPassword?.message}
           {...register('oldPassword')}
           trailing={
@@ -141,7 +143,6 @@ export function ChangePasswordForm() {
           label="Mật khẩu mới"
           type={showNewPassword ? 'text' : 'password'}
           placeholder="Nhập mật khẩu mới"
-          icon={<Lock size={16} />}
           error={errors.newPassword?.message}
           {...register('newPassword')}
           trailing={
@@ -161,7 +162,6 @@ export function ChangePasswordForm() {
           label="Xác nhận mật khẩu mới"
           type={showConfirmPassword ? 'text' : 'password'}
           placeholder="Xác nhận mật khẩu mới"
-          icon={<Lock size={16} />}
           error={errors.confirmNewPassword?.message}
           {...register('confirmNewPassword')}
           trailing={
@@ -189,43 +189,38 @@ export function ChangePasswordForm() {
       </form>
 
       {/* CONFIRMATION MODAL - HỎI ĐĂNG XUẤT */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-xl border border-plum-900/5 animate-pop">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600">
-                <LogOut size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-plum-900">Xác nhận đổi mật khẩu</h3>
-            </div>
-            
-            <p className="mt-4 text-sm leading-relaxed text-plum-600">
-              Bạn có muốn đăng xuất khỏi tài khoản trên tất cả các thiết bị sau khi đổi mật khẩu thành công không?
-            </p>
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Xác nhận đổi mật khẩu"
+        icon={<LogOut size={18} />}
+        maxWidthClassName="max-w-md"
+      >
+        <p className="text-sm leading-relaxed text-plum-600">
+          Bạn có muốn đăng xuất khỏi tài khoản trên tất cả các thiết bị sau khi đổi mật khẩu thành công không?
+        </p>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              {/* Nút đăng xuất tất cả */}
-              <button
-                type="button"
-                onClick={() => handleLogoutDecision(true)}
-                disabled={logoutAllDevicesMutation.isPending}
-                className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 active:bg-brand-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {logoutAllDevicesMutation.isPending ? 'Đang đăng xuất...' : 'Đăng xuất mọi thiết bị'}
-              </button>
-              
-              {/* Nút duy trì đăng nhập */}
-              <button
-                type="button"
-                onClick={() => handleLogoutDecision(false)}
-                className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] transition-colors cursor-pointer"
-              >
-                Duy trì đăng nhập
-              </button>
-            </div>
-          </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          {/* Nút đăng xuất tất cả */}
+          <button
+            type="button"
+            onClick={() => handleLogoutDecision(true)}
+            disabled={logoutAllDevicesMutation.isPending}
+            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 active:bg-brand-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {logoutAllDevicesMutation.isPending ? 'Đang đăng xuất...' : 'Đăng xuất mọi thiết bị'}
+          </button>
+          
+          {/* Nút duy trì đăng nhập */}
+          <button
+            type="button"
+            onClick={() => handleLogoutDecision(false)}
+            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] transition-colors cursor-pointer"
+          >
+            Duy trì đăng nhập
+          </button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

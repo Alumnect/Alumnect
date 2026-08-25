@@ -2,12 +2,16 @@ import http from '@/lib/http'
 
 export interface AlumniMapResponse {
   userId: number
+  majorId?: number | null
   fullName: string
   avatarUrl: string
   verifiedStatus: boolean
   title: string
   company: string
   location: string
+  locationCity?: string | null
+  locationCountry?: string | null
+  locationCountryCode?: string | null
   latitude: number
   longitude: number
   startDate: string

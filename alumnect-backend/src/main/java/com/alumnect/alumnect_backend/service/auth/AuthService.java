@@ -6,6 +6,9 @@ import com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.LogoutRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.ForgotPasswordRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.ResetPasswordRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.VerifyResetOtpRequest;
 import com.alumnect.alumnect_backend.dto.response.auth.LoginResponse;
 
 /**
@@ -94,4 +97,26 @@ public interface AuthService {
      * @param email Địa chỉ email của người dùng
      */
     void logoutAllDevices(String email);
+
+    /**
+     * Yêu cầu đặt lại mật khẩu (quên mật khẩu).
+     * Sinh mã OTP và gửi email hướng dẫn người dùng.
+     *
+     * @param request DTO chứa email yêu cầu
+     */
+    void forgotPassword(ForgotPasswordRequest request);
+
+    /**
+     * Thực hiện đặt lại mật khẩu mới bằng mã OTP xác thực.
+     *
+     * @param request DTO chứa thông tin email, mã OTP và mật khẩu mới
+     */
+    void resetPassword(ResetPasswordRequest request);
+
+    /**
+     * Xác minh mã OTP quên mật khẩu (không thực hiện đổi mật khẩu).
+     *
+     * @param request DTO chứa thông tin email và mã OTP cần kiểm tra
+     */
+    void verifyResetOtp(VerifyResetOtpRequest request);
 }

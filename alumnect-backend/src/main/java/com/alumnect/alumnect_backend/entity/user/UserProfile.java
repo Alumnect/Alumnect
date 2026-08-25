@@ -65,16 +65,18 @@ public class UserProfile {
     /** Giới thiệu bản thân chi tiết (không giới hạn ký tự) */
     private String biography;
 
+    /** Cơ sở đào tạo của FPT University (VD: FPT University Đà Nẵng, Hòa Lạc...) */
+    @Column(length = 80)
+    private String campus;
+
+    /** Năm tốt nghiệp hoặc năm dự kiến tốt nghiệp */
+    @Column(name = "graduation_year")
+    private Integer graduationYear;
+
 
     /** Thành phố đang sinh sống hoặc làm việc */
     @Column(length = 120)
     private String city;
-
-    /** Vĩ độ địa lý — dùng cho tính năng bản đồ cựu sinh viên */
-    private BigDecimal latitude;
-
-    /** Kinh độ địa lý — dùng cho tính năng bản đồ cựu sinh viên */
-    private BigDecimal longitude;
 
     /** Danh sách liên kết mạng xã hội/website của người dùng */
     @JdbcTypeCode(SqlTypes.ARRAY)

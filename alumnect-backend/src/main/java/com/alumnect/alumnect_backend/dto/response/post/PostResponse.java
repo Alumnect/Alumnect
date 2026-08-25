@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 /**
  * DTO chứa thông tin một bài viết trả về cho Client (UC15 - View community Feed).
@@ -19,6 +20,9 @@ public class PostResponse {
 
     /** ID bài viết (dạng chuỗi để Frontend không gặp vấn đề mất độ chính xác số lớn) */
     private String id;
+
+    /** ID của tác giả bài viết */
+    private String authorId;
 
     /** Loại bài viết, viết thường: "normal" | "achievement" | "recruitment" | "event" */
     private String type;
@@ -41,8 +45,8 @@ public class PostResponse {
     /** Nội dung văn bản của bài viết */
     private String text;
 
-    /** URL ảnh đính kèm bài viết, null nếu không có ảnh */
-    private String image;
+    /** Danh sách URL ảnh đính kèm bài viết (nhiều ảnh) */
+    private List<String> images;
 
     /** Số lượt thích */
     private int likes;
@@ -59,4 +63,16 @@ public class PostResponse {
      * nên trường này luôn trả về false ở giai đoạn hiện tại (sẽ triển khai ở UC "Like Post" riêng).
      */
     private boolean liked;
+
+    /** ID của sự kiện liên kết (nếu có) */
+    private String eventId;
+
+    /** ID của tin tuyển dụng liên kết (nếu có) */
+    private String jobId;
+
+    /** Thông tin sự kiện (nếu là bài viết sự kiện) */
+    private EventDTO event;
+
+    /** Thông tin tuyển dụng (nếu là bài viết tuyển dụng) */
+    private JobDTO job;
 }

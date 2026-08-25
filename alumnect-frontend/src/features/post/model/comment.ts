@@ -13,6 +13,7 @@ import { z } from 'zod'
  */
 export const commentSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
+  authorId: z.union([z.string(), z.number()]).transform(String).optional().nullable().default(null),
   author: z.string().default('Ẩn danh'),
   role: z.string().default(''),
   avatar: z.string().default(''),

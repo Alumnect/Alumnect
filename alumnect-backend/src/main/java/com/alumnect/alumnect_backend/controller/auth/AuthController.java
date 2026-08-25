@@ -5,6 +5,9 @@ import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.LogoutRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.ForgotPasswordRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.ResetPasswordRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.VerifyResetOtpRequest;
 import com.alumnect.alumnect_backend.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,5 +168,43 @@ public class AuthController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         authService.logoutAllDevices(email);
         return ResponseEntity.ok(ApiResponse.success("Đăng xuất khỏi tất cả các thiết bị thành công!", null));
+    }
+
+    /**
+     * API Yêu cầu gửi mã OTP đặt lại mật khẩu (quên mật khẩu).
+     *
+     * @param request DTO chứa email người dùng cần khôi phục mật khẩu
+     * @return Response phản hồi gửi thành công mã OTP qua email
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Yêu cầu thành công! Vui lòng kiểm tra email để lấy mã OTP đặt lại mật khẩu.", null));
+    }
+
+    /**
+     * API Thực hiện đặt lại mật khẩu mới.
+     * Xác thực thông tin qua email, mã OTP 6 số và lưu mật khẩu mới đã mã hóa.
+     *
+     * @param request DTO chứa thông tin email, mã OTP và mật khẩu mới
+     * @return Response phản hồi đổi mật khẩu thành công
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.", null));
+    }
+
+    /**
+     * API Xác minh mã OTP quên mật khẩu.
+     * Xác thực mã OTP 6 số của email mà không thực hiện đặt lại mật khẩu.
+     *
+     * @param request DTO chứa thông tin email và mã OTP
+     * @return Response phản hồi xác thực thành công
+     */
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<ApiResponse<Void>> verifyResetOtp(@Valid @RequestBody VerifyResetOtpRequest request) {
+        authService.verifyResetOtp(request);
+        return ResponseEntity.ok(ApiResponse.success("Mã OTP hợp lệ! Vui lòng thiết lập mật khẩu mới.", null));
     }
 }

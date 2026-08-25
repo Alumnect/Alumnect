@@ -51,15 +51,15 @@ public class UserProfileResponse {
     /** Tiểu sử/Giới thiệu bản thân */
     private String biography;
 
+    /** Cơ sở đào tạo của FPT University */
+    private String campus;
+
+    /** Năm tốt nghiệp hoặc dự kiến tốt nghiệp */
+    private Integer graduationYear;
+
 
     /** Thành phố sinh sống hoặc làm việc */
     private String city;
-
-    /** Vĩ độ địa lý phục vụ cho bản đồ */
-    private BigDecimal latitude;
-
-    /** Kinh độ địa lý phục vụ cho bản đồ */
-    private BigDecimal longitude;
 
     /** Danh sách các liên kết mạng xã hội/website của người dùng */
     private List<String> socialLinks;
@@ -87,4 +87,13 @@ public class UserProfileResponse {
 
     /** Danh sách kỹ năng của người dùng */
     private List<UserSkillResponse> skills;
+
+    /** Số lượng người theo dõi hồ sơ này */
+    private Long followersCount;
+
+    /** Số lượng người mà hồ sơ này đang theo dõi */
+    private Long followingCount;
+
+    /** true nếu người dùng đang đăng nhập hiện tại có theo dõi hồ sơ này không */
+    private Boolean isFollowing;
 }

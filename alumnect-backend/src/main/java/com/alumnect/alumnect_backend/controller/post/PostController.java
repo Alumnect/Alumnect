@@ -2,15 +2,25 @@ package com.alumnect.alumnect_backend.controller.post;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
+import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
+import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.service.post.PostService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,8 +63,50 @@ public class PostController {
             @RequestParam(required = false) String type,
             Authentication authentication) {
 
-        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, isAuthenticated(authentication));
+        boolean authenticated = isAuthenticated(authentication);
+        String viewerEmail = authenticated ? authentication.getName() : null;
+        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, authenticated, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy bảng tin thành công", feed));
+    }
+
+    /**
+     * API tạo một bài viết mới trên bảng tin cộng đồng (UC14 - Create a post on the Feed).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được đăng bài — Admin/vai trò khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param request        DTO chứa nội dung, loại, ảnh và phạm vi hiển thị của bài viết
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return Bài viết vừa tạo {@link PostResponse} bọc trong {@link ApiResponse}, HTTP 201 Created
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(
+            @Valid @RequestBody CreatePostRequest request,
+            Authentication authentication) {
+
+        PostResponse created = postService.createPost(authentication.getName(), request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng bài viết thành công", created));
+    }
+
+    /**
+     * API chỉnh sửa bài viết đã đăng (UC22 - Edit a post).
+     * Yêu cầu đăng nhập (JWT); chỉ tác giả (Sinh viên/Cựu sinh viên) mới được sửa bài
+     * của chính mình — người khác hoặc Admin nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param id             ID bài viết cần chỉnh sửa
+     * @param request        DTO chứa nội dung mới, loại, ảnh và phạm vi hiển thị
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return Bài viết đã được cập nhật {@link PostResponse} bọc trong {@link ApiResponse}, HTTP 200 OK
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostResponse>> editPost(
+            @PathVariable Long id,
+            @Valid @RequestBody EditPostRequest request,
+            Authentication authentication) {
+
+        PostResponse updated = postService.editPost(authentication.getName(), id, request);
+        return ResponseEntity.ok(ApiResponse.success("Chỉnh sửa bài viết thành công", updated));
     }
 
     /**
@@ -70,7 +122,9 @@ public class PostController {
             @PathVariable Long id,
             Authentication authentication) {
 
-        PostResponse post = postService.getPostDetail(id, isAuthenticated(authentication));
+        boolean authenticated = isAuthenticated(authentication);
+        String viewerEmail = authenticated ? authentication.getName() : null;
+        PostResponse post = postService.getPostDetail(id, authenticated, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết bài viết thành công", post));
     }
 
@@ -93,6 +147,62 @@ public class PostController {
 
         PageResponse<CommentResponse> comments = postService.getPostComments(id, page, size, isAuthenticated(authentication));
         return ResponseEntity.ok(ApiResponse.success("Lấy bình luận thành công", comments));
+    }
+
+    /**
+     * API đăng một bình luận mới trên bài viết (UC18 - Comment on a post).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được bình luận — vai trò khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     * Bài đã ẩn/không tồn tại trả 404; nội dung rỗng/quá dài trả 400.
+     *
+     * @param id             ID bài viết được bình luận
+     * @param request        DTO chứa nội dung bình luận và {@code parentId} nếu là trả lời
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return Bình luận vừa tạo {@link CommentResponse} bọc trong {@link ApiResponse}, HTTP 201 Created
+     */
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<ApiResponse<CommentResponse>> createComment(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateCommentRequest request,
+            Authentication authentication) {
+
+        CommentResponse created = postService.createComment(authentication.getName(), id, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng bình luận thành công", created));
+    }
+
+    /**
+     * API thích một bài viết (UC17 - Like a post). Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI được thích
+     * (Admin/vai trò khác nhận 403). Bài đã ẩn/không tồn tại trả 404. Thao tác lũy đẳng.
+     *
+     * @param id             ID bài viết cần thích
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
+     * @return Trạng thái like mới + số lượt thích {@link LikeResponse} bọc trong {@link ApiResponse}
+     */
+    @PostMapping("/{id}/like")
+    public ResponseEntity<ApiResponse<LikeResponse>> likePost(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        LikeResponse result = postService.likePost(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Đã thích bài viết", result));
+    }
+
+    /**
+     * API bỏ thích một bài viết (UC17 - Like a post). Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI.
+     * Bài đã ẩn/không tồn tại trả 404. Thao tác lũy đẳng.
+     *
+     * @param id             ID bài viết cần bỏ thích
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
+     * @return Trạng thái like mới + số lượt thích {@link LikeResponse} bọc trong {@link ApiResponse}
+     */
+    @DeleteMapping("/{id}/like")
+    public ResponseEntity<ApiResponse<LikeResponse>> unlikePost(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        LikeResponse result = postService.unlikePost(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Đã bỏ thích bài viết", result));
     }
 
     /**

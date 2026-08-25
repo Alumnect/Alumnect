@@ -1,16 +1,20 @@
 package com.alumnect.alumnect_backend.entity.forum;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.Instant;
 
-/**
- * Entity ánh xạ bảng forum_topics — danh mục chủ đề của diễn đàn Q&A (UC38 - View question list).
- * Là bảng danh mục dùng chung, mỗi câu hỏi có thể thuộc về một chủ đề để lọc/phân loại.
- */
+/** Flat discussion-category catalog used by forum questions. */
 @Entity
 @Table(name = "forum_topics")
 @Data
@@ -19,31 +23,22 @@ import java.time.Instant;
 @AllArgsConstructor
 public class ForumTopic {
 
-    /** Khóa chính, tự tăng */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Tên chủ đề — duy nhất trên toàn hệ thống (VD: "Career", "Interview") */
     @Column(nullable = false, unique = true, length = 120)
     private String name;
 
-    /** Mô tả ngắn về chủ đề (không bắt buộc) */
     @Column(length = 500)
     private String description;
 
-    /**
-     * ID người tạo chủ đề (tham chiếu users.id). Null với các chủ đề mặc định của hệ thống.
-     * UC38 chỉ hiển thị danh sách nên lưu dạng khóa đơn giản, chưa cần map sang đối tượng User.
-     */
     @Column(name = "created_by")
     private Long createdBy;
 
-    /** Thời điểm tạo chủ đề, không thể cập nhật sau khi tạo */
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    /** Tự động gán thời gian tạo khi lần đầu lưu vào DB */
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
