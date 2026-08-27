@@ -6,6 +6,7 @@ export const userKeys = {
   all: ['user-profile'] as const,
   ownProfile: () => ['user-profile', 'own'] as const,
   userProfile: (id: number | null) => ['user-profile', id] as const,
+  search: (params?: import('../model/userTypes').UserSearchParams) => ['user-search', params] as const,
 }
 
 /**
@@ -78,5 +79,19 @@ export function useUserFollowing(userId: number, size = 10, options?: { enabled?
     initialPageParam: 0,
     getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.pageNumber + 1),
     enabled: (options?.enabled !== false) && !!userId && !isNaN(userId),
+  })
+}
+
+/**
+ * Hook tìm kiếm và lọc danh sách thành viên trong mạng lưới AlumNect (Alumni Directory)
+ */
+export function useSearchUsers(params?: import('../model/userTypes').UserSearchParams, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: userKeys.search(params),
+    queryFn: async () => {
+      const response = await userApi.searchUsers(params)
+      return response.data
+    },
+    ...options,
   })
 }

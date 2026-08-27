@@ -587,6 +587,142 @@
               ]
             }
           }
+        },
+        {
+          "name": "2.9 Tìm kiếm người dùng - Mặc định (Tất cả)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/search?page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.10 Tìm kiếm người dùng - Theo từ khóa (Tên, Kỹ năng, Công ty)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/search?query=Software&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Software"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.11 Tìm kiếm người dùng - Lọc theo Vai trò, Chuyên ngành & Niên khóa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/search?role=ALUMNI&majorId=1&cohort=18&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "ALUMNI"
+                },
+                {
+                  "key": "majorId",
+                  "value": "1"
+                },
+                {
+                  "key": "cohort",
+                  "value": "18"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.12 Tìm kiếm người dùng - Lọc theo Địa điểm, Kỹ năng & Công ty",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/search?city=Hà%20Nội&skill=Java&company=FPT&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "Hà Nội"
+                },
+                {
+                  "key": "skill",
+                  "value": "Java"
+                },
+                {
+                  "key": "company",
+                  "value": "FPT"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          }
         }
       ]
     },

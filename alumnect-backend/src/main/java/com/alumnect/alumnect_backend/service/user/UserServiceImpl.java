@@ -25,6 +25,14 @@ import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
 import com.alumnect.alumnect_backend.entity.user.Major;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.entity.user.UserSkill;
+import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
+import com.alumnect.alumnect_backend.specification.user.UserSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -251,6 +259,116 @@ public class UserServiceImpl implements UserService {
             return authentication.getName();
         }
         return null;
+    }
+
+    /**
+     * Tìm kiếm và lọc danh sách thành viên trong mạng lưới cựu sinh viên & sinh viên (Alumni Directory).
+     * Hỗ trợ tìm kiếm từ khóa đa trường, lọc theo vai trò, chuyên ngành, niên khóa, địa điểm, kỹ năng, công ty.
+     * Tự động bổ sung thông tin kinh nghiệm chính, kỹ năng, số follower/following và cờ isFollowing.
+     *
+     * @param query Từ khóa tìm kiếm đa năng
+     * @param role Vai trò người dùng (STUDENT hoặc ALUMNI)
+     * @param majorId ID chuyên ngành
+     * @param cohort Niên khóa / Khóa nhập học
+     * @param city Tỉnh / Thành phố
+     * @param skill Kỹ năng cụ thể
+     * @param company Công ty làm việc
+     * @param page Số trang (bắt đầu từ 0)
+     * @param size Kích thước trang
+     * @param sortBy Trường sắp xếp (createdAt, fullName, cohort)
+     * @param sortDirection Hướng sắp xếp (ASC, DESC)
+     * @return Danh sách phân trang người dùng bọc trong PageResponse<UserDirectoryResponse>
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<UserDirectoryResponse> searchUsers(
+            String query,
+            String role,
+            Long majorId,
+            Integer cohort,
+            String city,
+            String skill,
+            String company,
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection
+    ) {
+        Sort.Direction direction = "ASC".equalsIgnoreCase(sortDirection) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        String property = "createdAt";
+        if ("fullName".equalsIgnoreCase(sortBy)) {
+            property = "profile.fullName";
+        } else if ("cohort".equalsIgnoreCase(sortBy)) {
+            property = "profile.cohort";
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, property));
+
+        Specification<User> spec = UserSpecification.filterUsers(query, role, majorId, cohort, city, skill, company);
+        Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        // Lấy thông tin người xem hiện tại nếu đã xác thực
+        String currentViewerEmail = getAuthenticatedUserEmailOrNull();
+        Long currentViewerId = null;
+        if (currentViewerEmail != null) {
+            currentViewerId = userRepository.findByEmail(currentViewerEmail).map(User::getId).orElse(null);
+        }
+
+        final Long viewerId = currentViewerId;
+
+        List<UserDirectoryResponse> content = userPage.getContent().stream().map(user -> {
+            UserProfile profile = user.getProfile();
+            UserDirectoryResponse item;
+            if (profile != null) {
+                item = userProfileMapper.toDirectoryResponse(profile);
+            } else {
+                item = UserDirectoryResponse.builder()
+                        .userId(user.getId())
+                        .email(user.getEmail())
+                        .role(user.getRole() != null ? user.getRole().getName() : "")
+                        .isAccountVerified(user.isAccountVerified())
+                        .createdAt(user.getCreatedAt())
+                        .build();
+            }
+
+            // Gán thông tin kinh nghiệm làm việc chính
+            experienceRepository.findByUserIdAndIsPrimaryTrue(user.getId()).ifPresent(exp -> {
+                PrimaryExperienceResponse per = PrimaryExperienceResponse.builder()
+                        .id(exp.getId())
+                        .title(exp.getTitle())
+                        .company(exp.getCompany())
+                        .location(exp.getLocation())
+                        .latitude(exp.getLatitude())
+                        .longitude(exp.getLongitude())
+                        .build();
+                item.setPrimaryExperience(per);
+            });
+
+            // Gán thống kê số lượng người theo dõi
+            long followersCount = followRepository.countByFollowingId(user.getId());
+            long followingCount = followRepository.countByFollowerId(user.getId());
+            item.setFollowersCount(followersCount);
+            item.setFollowingCount(followingCount);
+
+            // Xác định trạng thái theo dõi đối với người xem
+            if (viewerId != null) {
+                boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(viewerId, user.getId());
+                item.setIsFollowing(isFollowing);
+            } else {
+                item.setIsFollowing(false);
+            }
+
+            return item;
+        }).toList();
+
+        return new PageResponse<>(
+                content,
+                userPage.getNumber(),
+                userPage.getSize(),
+                userPage.getTotalElements(),
+                userPage.getTotalPages(),
+                userPage.isLast()
+        );
     }
 }
 

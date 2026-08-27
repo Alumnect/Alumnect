@@ -66,5 +66,19 @@ export const userApi = {
       totalPages: number
       last: boolean
     }>>(`/users/${userId}/following`, { params: { page, size } }),
+
+  /**
+   * Tìm kiếm và lọc danh sách thành viên trong mạng lưới AlumNect (Alumni Directory)
+   * GET /users/search
+   */
+  searchUsers: (params?: import('../model/userTypes').UserSearchParams) =>
+    http.get<any, ApiResponse<{
+      content: import('../model/userTypes').UserDirectoryResponse[]
+      pageNumber: number
+      pageSize: number
+      totalElements: number
+      totalPages: number
+      last: boolean
+    }>>('/users/search', { params }),
 }
 

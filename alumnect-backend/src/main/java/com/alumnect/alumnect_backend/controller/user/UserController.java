@@ -15,8 +15,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
+import org.springframework.web.bind.annotation.RequestParam;
 
+
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controller xử lý các yêu cầu liên quan đến quản lý thông tin tài khoản người dùng.
@@ -28,6 +33,51 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+
+    /**
+     * API Tìm kiếm và lọc danh sách thành viên trong mạng lưới AlumNect (Alumni Directory).
+     * Hỗ trợ tìm kiếm từ khóa đa trường, lọc theo vai trò, chuyên ngành, niên khóa, địa điểm, kỹ năng, công ty.
+     * Endpoint công khai cho cả khách vãng lai và thành viên đã đăng nhập.
+     *
+     * @param query Từ khóa tìm kiếm
+     * @param role Vai trò người dùng (STUDENT / ALUMNI)
+     * @param majorId ID chuyên ngành
+     * @param cohort Niên khóa
+     * @param city Tỉnh / Thành phố
+     * @param skill Kỹ năng
+     * @param company Công ty
+     * @param page Số trang (mặc định: 0, tối thiểu 0)
+     * @param size Kích thước trang (mặc định: 12, từ 1 đến 100)
+     * @param sortBy Tiêu chí sắp xếp (createdAt, fullName, cohort)
+     * @param sortDirection Hướng sắp xếp (ASC, DESC)
+     * @return Danh sách phân trang người dùng phù hợp
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PageResponse<UserDirectoryResponse>>> searchUsers(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long majorId,
+            @RequestParam(required = false) Integer cohort,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String skill,
+            @RequestParam(required = false) String company,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection
+    ) {
+        if (page < 0) {
+            throw new BadRequestException("Số trang (page) không được nhỏ hơn 0.");
+        }
+        if (size <= 0 || size > 100) {
+            throw new BadRequestException("Kích thước trang (size) phải từ 1 đến 100.");
+        }
+
+        PageResponse<UserDirectoryResponse> result = userService.searchUsers(
+                query, role, majorId, cohort, city, skill, company, page, size, sortBy, sortDirection
+        );
+        return ResponseEntity.ok(ApiResponse.success("Tìm kiếm danh sách người dùng thành công!", result));
+    }
 
     /**
      * API Đổi mật khẩu tài khoản người dùng hiện tại.

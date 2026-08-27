@@ -87,7 +87,7 @@ export function Avatar({
 }) {
   const [failed, setFailed] = useState(false)
   return (
-    <span className={cn('relative inline-flex shrink-0', className)} style={{ width: size, height: size }}>
+    <span className={cn('relative inline-flex shrink-0 rounded-full', className)} style={{ width: size, height: size }}>
       {src && !failed ? (
         <img
           src={src}

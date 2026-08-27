@@ -135,3 +135,38 @@ export interface UpdateProfileRequest {
   skills?: UserSkillRequest[]
 }
 
+export interface UserDirectoryResponse {
+  userId: number
+  email: string
+  role: string
+  fullName: string
+  avatarUrl: string | null
+  coverUrl?: string | null
+  headline: string | null
+  major: MajorResponse | null
+  cohort: number | null
+  studentCode: string | null
+  city: string | null
+  skills?: UserSkillResponse[] | null
+  primaryExperience?: PrimaryExperienceResponse | null
+  followersCount?: number
+  followingCount?: number
+  isFollowing?: boolean
+  isAccountVerified: boolean
+  createdAt: string
+}
+
+export interface UserSearchParams {
+  query?: string
+  role?: string
+  majorId?: number
+  cohort?: number
+  city?: string
+  skill?: string
+  company?: string
+  page?: number
+  size?: number
+  sortBy?: string
+  sortDirection?: string
+}
+
