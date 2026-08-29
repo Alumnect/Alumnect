@@ -39,6 +39,16 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
 
     /**
+     * Lấy danh sách ID của tất cả người dùng mà một người đang theo dõi.
+     *
+     * @param followerId ID của người theo dõi
+     * @return Danh sách ID người được theo dõi
+     */
+    @Query("SELECT f.following.id FROM Follow f WHERE f.follower.id = :followerId")
+    List<Long> findFollowingIdsByFollowerId(@Param("followerId") Long followerId);
+
+
+    /**
      * Tìm danh sách các mối quan hệ theo dõi giữa một người theo dõi và danh sách
      * những người được theo dõi.
      * Hỗ trợ tải hàng loạt (batch load) để tối ưu hóa truy vấn tránh lỗi N+1.

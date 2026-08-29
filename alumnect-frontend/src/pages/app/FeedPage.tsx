@@ -36,13 +36,16 @@ import {
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
+import { EVENTS, QUESTIONS } from '@/lib/constants'
+
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
+import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
+
 import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
@@ -707,23 +710,11 @@ export function FeedPage() {
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
       <aside className="hidden w-[320px] shrink-0 space-y-5 lg:block">
-        {/* Mục 1: Gợi ý người để theo dõi */}
+        {/* Mục 1: Gợi ý kết nối (UC10 - View Connection Suggestions) */}
         <Reveal direction="left">
-          <SidebarCard title="Gợi ý kết nối" action="Xem tất cả">
-            <ul className="space-y-4">
-              {ALUMNI.slice(0, 3).map((a) => (
-                <li key={a.id} className="flex items-center gap-3">
-                  <Avatar src={a.avatar} name={a.name} size={40} verified={a.verified} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-plum-900">{a.name}</p>
-                    <p className="truncate text-xs text-plum-400">{a.cohort}</p>
-                  </div>
-                  <Button size="sm" variant="secondary">Theo dõi</Button>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
+          <ConnectionSuggestionsWidget limit={4} />
         </Reveal>
+
 
         {/* Mục 2: Sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>

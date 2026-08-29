@@ -27,8 +27,12 @@ import com.alumnect.alumnect_backend.entity.user.Major;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.entity.user.UserSkill;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.dto.response.user.ConnectionSuggestionResponse;
+import com.alumnect.alumnect_backend.dto.response.user.MajorResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserSkillResponse;
 import com.alumnect.alumnect_backend.specification.user.UserSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -428,7 +432,194 @@ public class UserServiceImpl implements UserService {
                 .cities(cities)
                 .build();
     }
+
+    /**
+     * Lấy danh sách thành viên đề xuất kết nối (UC10 - View Connection Suggestions).
+     * Dựa trên thuật toán tính điểm tương đồng (cùng chuyên ngành, cùng niên khóa, cùng địa điểm, tài khoản verified).
+     *
+     * @param email Email tài khoản người xem (nếu đã đăng nhập, null nếu là khách vãng lai)
+     * @param limit Số lượng đề xuất tối đa
+     * @return Danh sách thành viên được gợi ý kèm lý do trực quan
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConnectionSuggestionResponse> getConnectionSuggestions(String email, int limit) {
+        if (limit <= 0) {
+            limit = 5;
+        }
+        if (limit > 50) {
+            limit = 50;
+        }
+
+        User currentUser = null;
+        if (email != null && !email.isBlank()) {
+            currentUser = userRepository.findByEmail(email).orElse(null);
+        }
+
+        List<User> candidateUsers;
+        List<Long> followedIds = Collections.emptyList();
+
+        if (currentUser != null) {
+            followedIds = followRepository.findFollowingIdsByFollowerId(currentUser.getId());
+            Set<Long> excludedSet = new HashSet<>(followedIds);
+            excludedSet.add(currentUser.getId());
+            candidateUsers = userRepository.findCandidatesForSuggestions(currentUser.getId(), excludedSet);
+        } else {
+            candidateUsers = userRepository.findGuestCandidates();
+        }
+
+        if (candidateUsers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Tải hàng loạt (Batch Fetching) để triệt tiêu lỗi N+1 Query
+        List<Long> candidateUserIds = candidateUsers.stream().map(User::getId).toList();
+
+        // 1. Batch Fetch Primary Experience
+        List<Experience> primaryExperiences = experienceRepository.findByUserIdInAndIsPrimaryTrue(candidateUserIds);
+        Map<Long, PrimaryExperienceResponse> expMap = primaryExperiences.stream()
+                .collect(Collectors.toMap(
+                        e -> e.getUser().getId(),
+                        e -> PrimaryExperienceResponse.builder()
+                                .id(e.getId())
+                                .title(e.getTitle())
+                                .company(e.getCompany())
+                                .location(e.getLocation())
+                                .build(),
+                        (existing, replacement) -> existing
+                ));
+
+        // 2. Batch Fetch Followers Count
+        List<Object[]> followersCountResults = followRepository.countFollowersByUserIds(candidateUserIds);
+        Map<Long, Long> followersCountMap = followersCountResults.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        // 3. Batch Fetch Following Count
+        List<Object[]> followingCountResults = followRepository.countFollowingByUserIds(candidateUserIds);
+        Map<Long, Long> followingCountMap = followingCountResults.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        UserProfile currentProfile = (currentUser != null) ? currentUser.getProfile() : null;
+        Long currentMajorId = (currentProfile != null && currentProfile.getMajor() != null) ? currentProfile.getMajor().getId() : null;
+        String currentMajorName = (currentProfile != null && currentProfile.getMajor() != null) ? currentProfile.getMajor().getName() : null;
+        Integer currentCohort = (currentProfile != null) ? currentProfile.getCohort() : null;
+        String currentCity = (currentProfile != null && currentProfile.getCity() != null) ? currentProfile.getCity().trim() : null;
+
+        List<ConnectionSuggestionResponse> scoredList = new ArrayList<>();
+
+        for (User user : candidateUsers) {
+            UserProfile profile = user.getProfile();
+            int score = 0;
+            String reason = "Cựu sinh viên tiêu biểu";
+            PrimaryExperienceResponse primaryExp = expMap.get(user.getId());
+            boolean hasExperience = (primaryExp != null && primaryExp.getCompany() != null && !primaryExp.getCompany().trim().isEmpty())
+                    || (profile != null && profile.getHeadline() != null && !profile.getHeadline().trim().isEmpty());
+
+
+            if (currentUser != null && profile != null) {
+                boolean hasMajorMatch = false;
+                boolean hasCohortMatch = false;
+                boolean hasCityMatch = false;
+
+                if (currentMajorId != null && profile.getMajor() != null && currentMajorId.equals(profile.getMajor().getId())) {
+                    score += 40;
+                    hasMajorMatch = true;
+                }
+                if (currentCohort != null && profile.getCohort() != null) {
+                    int diff = Math.abs(currentCohort - profile.getCohort());
+                    if (diff == 0) {
+                        score += 30;
+                        hasCohortMatch = true;
+                    } else if (diff == 1) {
+                        score += 15;
+                    }
+                }
+                if (currentCity != null && !currentCity.isEmpty() && profile.getCity() != null && currentCity.equalsIgnoreCase(profile.getCity().trim())) {
+                    score += 20;
+                    hasCityMatch = true;
+                }
+                // Ưu tiên cựu sinh viên đã có kinh nghiệm làm việc / chức danh công ty (+20 điểm)
+                if (hasExperience) {
+                    score += 20;
+                }
+                if (user.isAccountVerified()) {
+                    score += 10;
+                }
+                long followers = followersCountMap.getOrDefault(user.getId(), 0L);
+                score += (int) Math.min(followers, 10);
+
+                if (hasMajorMatch && currentMajorName != null) {
+                    reason = "Cùng chuyên ngành " + (profile.getMajor().getCode() != null ? profile.getMajor().getCode() : currentMajorName);
+                } else if (hasCohortMatch) {
+                    reason = "Cùng niên khóa K" + profile.getCohort();
+                } else if (hasCityMatch) {
+                    reason = "Đang ở " + profile.getCity();
+                } else if (hasExperience && primaryExp != null && primaryExp.getCompany() != null) {
+                    reason = primaryExp.getTitle() + " @ " + primaryExp.getCompany();
+                } else if (user.isAccountVerified()) {
+                    reason = "Tài khoản đã xác minh";
+                } else {
+                    reason = "Thành viên cộng đồng FPTU";
+                }
+            } else {
+                // Ưu tiên hàng đầu cho Guest: Cựu sinh viên đã có kinh nghiệm làm việc / công ty (+40 điểm)
+                if (hasExperience) {
+                    score += 40;
+                }
+                if (user.isAccountVerified()) {
+                    score += 30;
+                    reason = "Cựu sinh viên tiêu biểu đã xác minh";
+                }
+                long followers = followersCountMap.getOrDefault(user.getId(), 0L);
+                score += (int) Math.min(followers, 20);
+            }
+
+
+            ConnectionSuggestionResponse dto = ConnectionSuggestionResponse.builder()
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .role(user.getRole() != null ? user.getRole().getName() : "")
+                    .fullName(profile != null ? profile.getFullName() : user.getEmail())
+                    .avatarUrl(profile != null ? profile.getAvatarUrl() : null)
+                    .headline(profile != null ? profile.getHeadline() : null)
+                    .major(profile != null && profile.getMajor() != null ? MajorResponse.builder()
+                            .id(profile.getMajor().getId())
+                            .code(profile.getMajor().getCode())
+                            .name(profile.getMajor().getName())
+                            .build() : null)
+                    .cohort(profile != null ? profile.getCohort() : null)
+                    .studentCode(profile != null ? profile.getStudentCode() : null)
+                    .city(profile != null ? profile.getCity() : null)
+                    .skills(profile != null && profile.getSkills() != null ? profile.getSkills().stream().map(s -> UserSkillResponse.builder()
+                            .id(s.getId())
+                            .skillName(s.getSkillName())
+                            .build()).toList() : Collections.emptyList())
+                    .primaryExperience(expMap.get(user.getId()))
+                    .followersCount(followersCountMap.getOrDefault(user.getId(), 0L))
+                    .followingCount(followingCountMap.getOrDefault(user.getId(), 0L))
+                    .isFollowing(false)
+                    .isAccountVerified(user.isAccountVerified())
+                    .createdAt(user.getCreatedAt())
+                    .suggestionReason(reason)
+                    .matchScore(score)
+                    .build();
+
+            scoredList.add(dto);
+        }
+
+        // Sắp xếp giảm dần theo matchScore
+        scoredList.sort((a, b) -> Integer.compare(b.getMatchScore(), a.getMatchScore()));
+
+        return scoredList.stream().limit(limit).toList();
+    }
 }
+
 
 
 

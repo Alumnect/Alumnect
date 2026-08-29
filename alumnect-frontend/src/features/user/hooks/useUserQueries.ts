@@ -113,3 +113,19 @@ export function useUserFilterOptions() {
   })
 }
 
+/**
+ * Hook nạp danh sách thành viên gợi ý kết nối (UC10 - View Connection Suggestions)
+ */
+export function useConnectionSuggestions(limit = 5, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['connection-suggestions', limit],
+    queryFn: async () => {
+      const response = await userApi.getConnectionSuggestions(limit)
+      return response.data || []
+    },
+    staleTime: 60 * 1000,
+    ...options,
+  })
+}
+
+

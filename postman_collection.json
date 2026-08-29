@@ -723,9 +723,106 @@
               ]
             }
           }
+        },
+        {
+          "name": "2.13 Lấy danh sách tùy chọn bộ lọc động (Filter Options)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/filter-options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "filter-options"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.14 Gợi ý kết nối thành viên - Khách vãng lai (UC10)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/suggestions?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.15 Gợi ý kết nối thành viên - Đã đăng nhập cá nhân hóa (UC10)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/suggestions?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.16 Gợi ý kết nối thành viên - Thất bại do limit không hợp lệ (UC10)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/suggestions?limit=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "0"
+                }
+              ]
+            }
+          }
         }
       ]
     },
+
     {
       "name": "3. Work Experiences & Promotion",
       "description": "Quản lý kinh nghiệm làm việc, tọa độ địa lý công ty và thăng chức vai trò",

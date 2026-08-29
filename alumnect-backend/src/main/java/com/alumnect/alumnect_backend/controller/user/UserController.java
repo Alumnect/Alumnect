@@ -1,9 +1,14 @@
 package com.alumnect.alumnect_backend.controller.user;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.user.ChangePasswordRequest;
 import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
+import com.alumnect.alumnect_backend.dto.response.user.ConnectionSuggestionResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +20,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import com.alumnect.alumnect_backend.common.api.PageResponse;
-import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
-import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
-import com.alumnect.alumnect_backend.exception.BadRequestException;
 import org.springframework.web.bind.annotation.RequestParam;
-
-
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
 
 /**
  * Controller xử lý các yêu cầu liên quan đến quản lý thông tin tài khoản người dùng.
@@ -91,6 +93,34 @@ public class UserController {
         UserFilterOptionsResponse options = userService.getFilterOptions();
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tùy chọn bộ lọc thành công!", options));
     }
+
+    /**
+     * API Gợi ý kết nối thành viên (UC10 - View Connection Suggestions).
+     * Endpoint công khai cho cả khách vãng lai và thành viên đã đăng nhập.
+     * Nếu đã đăng nhập, tự động lấy thông tin từ SecurityContext để cá nhân hóa đề xuất (cùng ngành, cùng khóa, cùng địa điểm).
+     *
+     * @param limit Số lượng đề xuất (mặc định 5, từ 1 đến 50)
+     * @return Danh sách thành viên được gợi ý kèm lý do
+     */
+    @GetMapping("/suggestions")
+    public ResponseEntity<ApiResponse<List<ConnectionSuggestionResponse>>> getConnectionSuggestions(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        if (limit <= 0 || limit > 50) {
+            throw new BadRequestException("Số lượng gợi ý (limit) phải từ 1 đến 50.");
+        }
+
+        String email = null;
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            email = authentication.getName();
+        }
+
+        List<ConnectionSuggestionResponse> suggestions = userService.getConnectionSuggestions(email, limit);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách gợi ý kết nối thành công!", suggestions));
+    }
+
+
 
     /**
      * API Đổi mật khẩu tài khoản người dùng hiện tại.
