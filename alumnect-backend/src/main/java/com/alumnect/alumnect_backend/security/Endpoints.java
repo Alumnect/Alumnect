@@ -34,6 +34,8 @@ public class Endpoints {
         "/api/v1/questions/topics", // Lấy danh mục chủ đề để lọc câu hỏi (UC38)
         "/api/v1/questions/*",      // Xem chi tiết một câu hỏi theo id (UC39 - Guest xem được)
         "/api/v1/questions/*/answers", // Xem danh sách câu trả lời của một câu hỏi (UC41 - Guest xem được)
+        "/api/v1/users/search",       // Tìm kiếm và lọc danh sách thành viên công khai (UC09)
+        "/api/v1/users/filter-options", // Lấy danh sách tùy chọn bộ lọc động (khóa học, thành phố)
         "/api/v1/users/profile/*",    // Xem hồ sơ cá nhân người khác bằng ID (UC39)
         "/api/v1/users/*/followers",  // Lấy danh sách người theo dõi công khai (phân trang)
         "/api/v1/users/*/following",  // Lấy danh sách người đang theo dõi công khai (phân trang)

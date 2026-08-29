@@ -1,12 +1,15 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/authStore'
 import { userApi } from '../api/userApi'
+import type { UserSearchParams } from '../model/userTypes'
 
 export const userKeys = {
   all: ['user-profile'] as const,
   ownProfile: () => ['user-profile', 'own'] as const,
   userProfile: (id: number | null) => ['user-profile', id] as const,
+  search: (params?: UserSearchParams) => ['user-search', params] as const,
 }
+
 
 /**
  * Hook truy vấn thông tin hồ sơ của chính mình (Own Profile)
@@ -80,3 +83,33 @@ export function useUserFollowing(userId: number, size = 10, options?: { enabled?
     enabled: (options?.enabled !== false) && !!userId && !isNaN(userId),
   })
 }
+
+/**
+ * Hook tìm kiếm và lọc danh sách thành viên trong mạng lưới AlumNect (Alumni Directory)
+ */
+export function useSearchUsers(params?: UserSearchParams, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: userKeys.search(params),
+    queryFn: async () => {
+      const response = await userApi.searchUsers(params)
+      return response.data
+    },
+    ...options,
+  })
+}
+
+
+/**
+ * Hook nạp danh sách các tùy chọn lọc động (Khóa học, Tỉnh/Thành phố) từ DB
+ */
+export function useUserFilterOptions() {
+  return useQuery({
+    queryKey: ['user-filter-options'],
+    queryFn: async () => {
+      const response = await userApi.getFilterOptions()
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+

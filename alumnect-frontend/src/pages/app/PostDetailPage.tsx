@@ -39,7 +39,8 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
-import { useToggleLike, CreatePostModal } from '@/features/feed'
+import { useToggleLike, CreatePostModal, type Post } from '@/features/feed'
+
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
@@ -150,11 +151,12 @@ function PostDetailCard({
   currentUserName,
   onEdit,
 }: {
-  post: import('@/features/feed').Post
+  post: Post
   canInteract: boolean
   currentUserName?: string
   onEdit?: () => void
 }) {
+
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
   const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
   const isAuthor = !!currentUserName && post.author === currentUserName

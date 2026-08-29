@@ -1,9 +1,12 @@
 package com.alumnect.alumnect_backend.mapper.user;
 
+import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
+import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 /**
  * Lớp MapStruct Mapper chuyển đổi dữ liệu hồ sơ người dùng.
@@ -30,6 +33,22 @@ public interface UserProfileMapper {
     UserProfileResponse toResponse(UserProfile userProfile);
 
     /**
+     * Chuyển đổi từ UserProfile Entity sang UserDirectoryResponse DTO phục vụ tìm kiếm.
+     *
+     * @param userProfile Thực thể hồ sơ người dùng
+     * @return DTO chứa thông tin tóm tắt danh bạ thành viên
+     */
+    @Mapping(target = "email", source = "user.email")
+    @Mapping(target = "role", source = "user.role.name")
+    @Mapping(target = "isAccountVerified", source = "user.accountVerified")
+    @Mapping(target = "createdAt", source = "user.createdAt")
+    @Mapping(target = "primaryExperience", ignore = true)
+    @Mapping(target = "followersCount", ignore = true)
+    @Mapping(target = "followingCount", ignore = true)
+    @Mapping(target = "isFollowing", ignore = true)
+    UserDirectoryResponse toDirectoryResponse(UserProfile userProfile);
+
+    /**
      * Cập nhật thực thể UserProfile từ DTO UpdateProfileRequest.
      * Bỏ qua các thuộc tính không được trực tiếp map như user, major, skills, experiences, createdAt, updatedAt.
      *
@@ -44,6 +63,7 @@ public interface UserProfileMapper {
     @Mapping(target = "skills", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateEntityFromRequest(com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest request, @org.mapstruct.MappingTarget UserProfile profile);
+    void updateEntityFromRequest(UpdateProfileRequest request, @MappingTarget UserProfile profile);
 
 }
+
