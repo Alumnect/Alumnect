@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -77,6 +78,18 @@ public class UserController {
                 query, role, majorId, cohort, city, skill, company, page, size, sortBy, sortDirection
         );
         return ResponseEntity.ok(ApiResponse.success("Tìm kiếm danh sách người dùng thành công!", result));
+    }
+
+    /**
+     * API Lấy danh sách các tùy chọn lọc động (Khóa học, Tỉnh/Thành phố) có sẵn trong Database.
+     * Endpoint công khai phục vụ render Modal bộ lọc.
+     *
+     * @return DTO chứa danh sách khóa học và thành phố thực tế
+     */
+    @GetMapping("/filter-options")
+    public ResponseEntity<ApiResponse<UserFilterOptionsResponse>> getFilterOptions() {
+        UserFilterOptionsResponse options = userService.getFilterOptions();
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tùy chọn bộ lọc thành công!", options));
     }
 
     /**

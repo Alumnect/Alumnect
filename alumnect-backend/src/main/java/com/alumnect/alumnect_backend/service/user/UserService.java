@@ -1,7 +1,10 @@
 package com.alumnect.alumnect_backend.service.user;
 
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.user.ChangePasswordRequest;
 import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
+import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
 
 /**
@@ -52,7 +55,7 @@ public interface UserService {
      * @param sortDirection Hướng sắp xếp (ASC, DESC)
      * @return Danh sách phân trang người dùng bọc trong PageResponse<UserDirectoryResponse>
      */
-    com.alumnect.alumnect_backend.common.api.PageResponse<com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse> searchUsers(
+    PageResponse<UserDirectoryResponse> searchUsers(
             String query,
             String role,
             Long majorId,
@@ -67,6 +70,13 @@ public interface UserService {
     );
 
     /**
+     * Lấy danh sách các tùy chọn bộ lọc động (khóa học, thành phố) từ DB.
+     *
+     * @return DTO chứa danh sách khóa học và thành phố thực tế
+     */
+    UserFilterOptionsResponse getFilterOptions();
+
+    /**
      * Cập nhật thông tin hồ sơ cá nhân của tài khoản đăng nhập hiện tại.
      * Cập nhật thông tin cơ bản, học tập, giới thiệu, kỹ năng và các liên kết cá nhân.
      *
@@ -76,4 +86,6 @@ public interface UserService {
      */
     UserProfileResponse updateOwnProfile(String email, UpdateProfileRequest request);
 }
+
+
 

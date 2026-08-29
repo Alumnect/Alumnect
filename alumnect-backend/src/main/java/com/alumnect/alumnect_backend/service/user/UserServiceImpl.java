@@ -18,6 +18,7 @@ import com.alumnect.alumnect_backend.dao.user.ExperienceRepository;
 import com.alumnect.alumnect_backend.dao.user.FollowRepository;
 import com.alumnect.alumnect_backend.dto.response.user.PrimaryExperienceResponse;
 import com.alumnect.alumnect_backend.entity.user.Experience;
+import com.alumnect.alumnect_backend.entity.user.Follow;
 
 import com.alumnect.alumnect_backend.dao.user.MajorRepository;
 import com.alumnect.alumnect_backend.dao.user.UserSkillRepository;
@@ -27,6 +28,7 @@ import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.entity.user.UserSkill;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
 import com.alumnect.alumnect_backend.specification.user.UserSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +36,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Lớp triển khai dịch vụ (Service Implementation) quản lý thông tin tài khoản người dùng.
@@ -307,16 +314,68 @@ public class UserServiceImpl implements UserService {
         Specification<User> spec = UserSpecification.filterUsers(query, role, majorId, cohort, city, skill, company);
         Page<User> userPage = userRepository.findAll(spec, pageable);
 
-        // Lấy thông tin người xem hiện tại nếu đã xác thực
-        String currentViewerEmail = getAuthenticatedUserEmailOrNull();
-        Long currentViewerId = null;
-        if (currentViewerEmail != null) {
-            currentViewerId = userRepository.findByEmail(currentViewerEmail).map(User::getId).orElse(null);
+        List<User> users = userPage.getContent();
+        if (users.isEmpty()) {
+            return new PageResponse<>(
+                    Collections.emptyList(),
+                    userPage.getNumber(),
+                    userPage.getSize(),
+                    userPage.getTotalElements(),
+                    userPage.getTotalPages(),
+                    userPage.isLast()
+            );
         }
 
-        final Long viewerId = currentViewerId;
+        List<Long> userIds = users.stream().map(User::getId).toList();
 
-        List<UserDirectoryResponse> content = userPage.getContent().stream().map(user -> {
+        // 1. Batch fetch kinh nghiệm chính (Primary Experience) cho tất cả users trong trang (1 Query)
+        List<Experience> primaryExperiences = experienceRepository.findByUserIdInAndIsPrimaryTrue(userIds);
+        Map<Long, PrimaryExperienceResponse> expMap = primaryExperiences.stream()
+                .collect(Collectors.toMap(
+                        exp -> exp.getUser().getId(),
+                        exp -> PrimaryExperienceResponse.builder()
+                                .id(exp.getId())
+                                .title(exp.getTitle())
+                                .company(exp.getCompany())
+                                .location(exp.getLocation())
+                                .latitude(exp.getLatitude())
+                                .longitude(exp.getLongitude())
+                                .build(),
+                        (existing, replacement) -> existing
+                ));
+
+        // 2. Batch fetch số lượng Followers cho tất cả users trong trang (1 Query)
+        List<Object[]> followersCountList = followRepository.countFollowersByUserIds(userIds);
+        Map<Long, Long> followersCountMap = followersCountList.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> ((Number) row[1]).longValue()
+                ));
+
+        // 3. Batch fetch số lượng Following cho tất cả users trong trang (1 Query)
+        List<Object[]> followingCountList = followRepository.countFollowingByUserIds(userIds);
+        Map<Long, Long> followingCountMap = followingCountList.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> ((Number) row[1]).longValue()
+                ));
+
+        // 4. Batch fetch trạng thái isFollowing nếu người xem đã đăng nhập (1 Query)
+        String currentViewerEmail = getAuthenticatedUserEmailOrNull();
+        Set<Long> followedUserIds = new HashSet<>();
+        if (currentViewerEmail != null) {
+            Long currentViewerId = userRepository.findByEmail(currentViewerEmail).map(User::getId).orElse(null);
+            if (currentViewerId != null) {
+                List<Follow> follows = followRepository.findByFollowerIdAndFollowingIdIn(currentViewerId, userIds);
+                followedUserIds = follows.stream()
+                        .map(f -> f.getFollowing().getId())
+                        .collect(Collectors.toSet());
+            }
+        }
+
+        final Set<Long> finalFollowedUserIds = followedUserIds;
+
+        List<UserDirectoryResponse> content = users.stream().map(user -> {
             UserProfile profile = user.getProfile();
             UserDirectoryResponse item;
             if (profile != null) {
@@ -331,32 +390,15 @@ public class UserServiceImpl implements UserService {
                         .build();
             }
 
-            // Gán thông tin kinh nghiệm làm việc chính
-            experienceRepository.findByUserIdAndIsPrimaryTrue(user.getId()).ifPresent(exp -> {
-                PrimaryExperienceResponse per = PrimaryExperienceResponse.builder()
-                        .id(exp.getId())
-                        .title(exp.getTitle())
-                        .company(exp.getCompany())
-                        .location(exp.getLocation())
-                        .latitude(exp.getLatitude())
-                        .longitude(exp.getLongitude())
-                        .build();
-                item.setPrimaryExperience(per);
-            });
+            // Gán thông tin kinh nghiệm làm việc chính từ Map
+            item.setPrimaryExperience(expMap.get(user.getId()));
 
-            // Gán thống kê số lượng người theo dõi
-            long followersCount = followRepository.countByFollowingId(user.getId());
-            long followingCount = followRepository.countByFollowerId(user.getId());
-            item.setFollowersCount(followersCount);
-            item.setFollowingCount(followingCount);
+            // Gán thống kê số lượng người theo dõi từ Map
+            item.setFollowersCount(followersCountMap.getOrDefault(user.getId(), 0L));
+            item.setFollowingCount(followingCountMap.getOrDefault(user.getId(), 0L));
 
-            // Xác định trạng thái theo dõi đối với người xem
-            if (viewerId != null) {
-                boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(viewerId, user.getId());
-                item.setIsFollowing(isFollowing);
-            } else {
-                item.setIsFollowing(false);
-            }
+            // Gán trạng thái theo dõi đối với người xem
+            item.setIsFollowing(finalFollowedUserIds.contains(user.getId()));
 
             return item;
         }).toList();
@@ -370,6 +412,24 @@ public class UserServiceImpl implements UserService {
                 userPage.isLast()
         );
     }
+
+    /**
+     * Lấy danh sách các tùy chọn bộ lọc động (khóa học, thành phố) từ DB.
+     *
+     * @return DTO chứa danh sách khóa học và thành phố thực tế
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public UserFilterOptionsResponse getFilterOptions() {
+        List<Integer> cohorts = userProfileRepository.findDistinctCohorts();
+        List<String> cities = userProfileRepository.findDistinctCities();
+        return UserFilterOptionsResponse.builder()
+                .cohorts(cohorts)
+                .cities(cities)
+                .build();
+    }
 }
+
+
 
 

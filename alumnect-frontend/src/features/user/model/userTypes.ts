@@ -165,8 +165,13 @@ export interface UserSearchParams {
   skill?: string
   company?: string
   page?: number
-  size?: number
   sortBy?: string
   sortDirection?: string
 }
+
+export interface UserFilterOptionsResponse {
+  cohorts: number[]
+  cities: string[]
+}
+
 

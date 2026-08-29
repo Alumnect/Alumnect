@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/lib/utils'
 import { useMajors } from '@/features/auth/hooks/useAuth'
+import { useUserFilterOptions } from '../hooks/useUserQueries'
 
 export interface FilterState {
   query: string
@@ -24,24 +25,51 @@ interface UserSearchFilterBarProps {
   onReset: () => void
 }
 
-const QUICK_CATEGORIES = [
-  { label: 'Tất cả', value: 'ALL' },
-  { label: 'Kỹ thuật phần mềm', value: 'SE', majorCode: 'SE' },
-  { label: 'Trí tuệ nhân tạo', value: 'AI', majorCode: 'AI' },
-  { label: 'An toàn thông tin', value: 'IA', majorCode: 'IA' },
-  { label: 'Thiết kế đồ họa', value: 'GD', majorCode: 'GD' },
-  { label: 'Kinh doanh quốc tế', value: 'IB', majorCode: 'IB' },
-  { label: 'Marketing', value: 'MKT', majorCode: 'MKT' },
+// Giá trị phòng hờ (fallback) khi API đang tải hoặc mất kết nối:
+// 1. Dải khóa học FPTU đầy đủ từ K21 đến K1
+const DEFAULT_COHORTS = Array.from({ length: 21 }, (_, i) => 21 - i)
+
+// 2. Danh sách 63 tỉnh / thành phố Việt Nam (sắp xếp A-Z)
+const DEFAULT_CITIES = [
+  'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh', 'Bến Tre',
+  'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau', 'Cần Thơ', 'Cao Bằng',
+  'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai',
+  'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương', 'Hải Phòng', 'Hậu Giang',
+  'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng',
+  'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình', 'Ninh Thuận',
+  'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị',
+  'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế',
+  'Tiền Giang', 'TP. Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
 ]
 
-const CITIES = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ', 'Quy Nhơn']
-const COHORTS = [19, 18, 17, 16, 15, 14, 13, 12]
 
 export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFilterBarProps) {
   const [localQuery, setLocalQuery] = useState(filters.query)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { data: majors = [] } = useMajors()
+  const { data: filterOptions } = useUserFilterOptions()
+
+  // Ưu tiên nạp dữ liệu động từ DB, tự động fallback nếu chưa có dữ liệu
+  const cohorts = filterOptions?.cohorts && filterOptions.cohorts.length > 0
+    ? filterOptions.cohorts
+    : DEFAULT_COHORTS
+
+  const cities = filterOptions?.cities && filterOptions.cities.length > 0
+    ? filterOptions.cities
+    : DEFAULT_CITIES
+
+  // Danh mục chuyên ngành gợi ý nhanh được sinh động từ DB
+  const quickCategories = [
+    { label: 'Tất cả', value: 'ALL', majorId: null },
+    ...majors.slice(0, 6).map((m) => ({
+      label: m.name,
+      value: m.code,
+      majorId: m.id,
+    })),
+  ]
+
   const filtersRef = useRef(filters)
+
 
   useEffect(() => {
     filtersRef.current = filters
@@ -63,18 +91,18 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
   }, [localQuery, onChange])
 
   // Xử lý chọn Quick Category
-  const handleSelectCategory = (cat: typeof QUICK_CATEGORIES[0]) => {
+  const handleSelectCategory = (cat: { label: string; value: string; majorId: number | null }) => {
     if (cat.value === 'ALL') {
       onChange({ ...filters, category: 'ALL', majorId: null })
     } else {
-      const foundMajor = majors.find((m) => m.code === cat.majorCode)
       onChange({
         ...filters,
         category: cat.value,
-        majorId: foundMajor ? foundMajor.id : null,
+        majorId: cat.majorId,
       })
     }
   }
+
 
   // Đếm số lượng bộ lọc nâng cao đang áp dụng
   const activeAdvancedFilterCount = [
@@ -134,7 +162,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
         <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-plum-400 mr-1">
           <Sparkles size={13} className="text-brand-500" /> Gợi ý:
         </span>
-        {QUICK_CATEGORIES.map((cat) => {
+        {quickCategories.map((cat) => {
           const isSelected = filters.category === cat.value
           return (
             <button
@@ -152,6 +180,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             </button>
           )
         })}
+
       </div>
 
       {/* Advanced Filter Modal */}
@@ -207,7 +236,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
               }}
               className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             >
-              <option value="">Tất cả chuyên ngành (24 ngành FPTU)</option>
+              <option value="">Tất cả chuyên ngành</option>
               {majors.map((m) => (
                 <option key={m.id} value={m.id}>
                   [{m.code}] {m.name}
@@ -228,7 +257,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                 className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               >
                 <option value="">Tất cả các khóa</option>
-                {COHORTS.map((c) => (
+                {cohorts.map((c) => (
                   <option key={c} value={c}>
                     Khóa K{c}
                   </option>
@@ -246,7 +275,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                 className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               >
                 <option value="">Tất cả địa điểm</option>
-                {CITIES.map((c) => (
+                {cities.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -254,6 +283,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
               </select>
             </div>
           </div>
+
 
           {/* Sắp xếp kết quả */}
           <div>

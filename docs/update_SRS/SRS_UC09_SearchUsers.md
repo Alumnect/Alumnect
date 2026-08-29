@@ -163,6 +163,9 @@ classDiagram
 
     class FollowRepository {
         <<interface>>
+        +countFollowersByUserIds(userIds) List~Object[]~
+        +countFollowingByUserIds(userIds) List~Object[]~
+        +findByFollowerIdAndFollowingIdIn(followerId, followingIds) List~Follow~
         +countByFollowingId(userId) long
         +countByFollowerId(userId) long
         +existsByFollowerIdAndFollowingId(followerId, followingId) boolean
@@ -170,6 +173,7 @@ classDiagram
 
     class ExperienceRepository {
         <<interface>>
+        +findByUserIdInAndIsPrimaryTrue(userIds) List~Experience~
         +findByUserIdAndIsPrimaryTrue(userId) Optional~Experience~
     }
 
@@ -240,10 +244,10 @@ classDiagram
 
 ###### Mô tả chi tiết cấu trúc các lớp (Class Design Description):
 * **Lớp `UserController`**: Tiếp nhận yêu cầu HTTP `GET /api/v1/users/search`, kiểm tra hợp lệ các tham số phân trang (`page`, `size`) và trả về `ResponseEntity<ApiResponse<PageResponse<UserDirectoryResponse>>>`.
-* **Lớp `UserService` & `UserServiceImpl`**: Chứa logic tìm kiếm, cấu hình `Pageable`, xây dựng điều kiện `Specification`, truy vấn DB, nạp thêm dữ liệu kinh nghiệm chính, thống kê theo dõi và trạng thái `isFollowing`.
+* **Lớp `UserService` & `UserServiceImpl`**: Chứa logic tìm kiếm, cấu hình `Pageable`, xây dựng điều kiện `Specification`, thực thi Batch Fetching chống lỗi N+1 Query để nạp hàng loạt kinh nghiệm chính, số lượng followers/following và cờ `isFollowing`.
 * **Lớp `UserSpecification`**: Xây dựng biểu thức JPA Criteria truy vấn linh hoạt, lọc theo tài khoản `ACTIVE`, loại trừ `ADMIN`, tìm kiếm mờ theo từ khóa và lọc theo từng tiêu chí chuyên sâu.
 * **Lớp `UserProfileMapper`**: Giao diện MapStruct tự động chuyển đổi từ thực thể `UserProfile` sang DTO `UserDirectoryResponse`.
-* **Các Lớp Repository (`UserRepository`, `FollowRepository`, `ExperienceRepository`)**: Tương tác trực tiếp với cơ sở dữ liệu PostgreSQL.
+* **Các Lớp Repository (`UserRepository`, `FollowRepository`, `ExperienceRepository`)**: Tương tác trực tiếp với cơ sở dữ liệu PostgreSQL qua các phương thức truy vấn tối ưu theo lô (`IN`, `GROUP BY`).
 
 ---
 
@@ -268,33 +272,46 @@ sequenceDiagram
         Note over Controller: Kiểm tra validation tham số đầu vào
         Controller-->>Client: HTTP 400 Bad Request (ApiResponse: "Số trang (page) không được nhỏ hơn 0.")
 
-    else Trường hợp 2: Tham số hợp lệ
+    else Trường hợp 2: Tham số hợp lệ (Áp dụng Batch Fetching chống N+1 Query)
         Controller->>Service: searchUsers(query, role, majorId, cohort, city, skill, company, page, size, sortBy, sortDirection)
         Service->>Spec: filterUsers(query, role, majorId, cohort, city, skill, company)
         Spec-->>Service: Trả về Specification<User>
         Service->>UserRepo: findAll(spec, pageable)
         UserRepo->>DB: Thực thi SQL SELECT ... WHERE account_status = 'ACTIVE' ... ORDER BY ... LIMIT 12 OFFSET 0
-        DB-->>UserRepo: Trả về tập bản ghi User + Profile
-        UserRepo-->>Service: Page<User>
+        DB-->>UserRepo: Trả về tập bản ghi Page<User>
+        UserRepo-->>Service: Page<User> (chứa danh sách 12 User)
 
-        loop Lặp qua từng User trong trang kết quả
+        Note over Service: Trích xuất danh sách userIds = [id1, id2, ...]
+
+        par Batch Fetch 1: Nạp kinh nghiệm chính (Primary Experience)
+            Service->>ExpRepo: findByUserIdInAndIsPrimaryTrue(userIds)
+            ExpRepo->>DB: SELECT * FROM experiences WHERE user_id IN (...) AND is_primary = true
+            DB-->>ExpRepo: List<Experience>
+            ExpRepo-->>Service: List<Experience> (chuyển sang expMap)
+        and Batch Fetch 2: Đếm số lượng Followers
+            Service->>FollowRepo: countFollowersByUserIds(userIds)
+            FollowRepo->>DB: SELECT f.following_id, COUNT(*) FROM follows WHERE following_id IN (...) GROUP BY ...
+            DB-->>FollowRepo: List<Object[]> (followersCountMap)
+            FollowRepo-->>Service: List<Object[]>
+        and Batch Fetch 3: Đếm số lượng Following
+            Service->>FollowRepo: countFollowingByUserIds(userIds)
+            FollowRepo->>DB: SELECT f.follower_id, COUNT(*) FROM follows WHERE follower_id IN (...) GROUP BY ...
+            DB-->>FollowRepo: List<Object[]> (followingCountMap)
+            FollowRepo-->>Service: List<Object[]>
+        end
+
+        opt Nếu người xem đã đăng nhập (Batch Fetch 4: Kiểm tra quan hệ Follow)
+            Service->>FollowRepo: findByFollowerIdAndFollowingIdIn(viewerId, userIds)
+            FollowRepo->>DB: SELECT * FROM follows WHERE follower_id = viewerId AND following_id IN (...)
+            DB-->>FollowRepo: List<Follow>
+            FollowRepo-->>Service: List<Follow> (chuyển sang followedUserIds set)
+        end
+
+        Note over Service: Ghép nối dữ liệu từ Map vào DTO trong bộ nhớ (In-memory mapping, không query DB)
+        loop Lặp qua từng User trong danh sách 12 người
             Service->>Mapper: toDirectoryResponse(profile)
             Mapper-->>Service: UserDirectoryResponse
-            Service->>ExpRepo: findByUserIdAndIsPrimaryTrue(userId)
-            ExpRepo->>DB: SELECT * FROM experiences WHERE user_id = ? AND is_primary = true
-            DB-->>ExpRepo: Bản ghi kinh nghiệm chính (nếu có)
-            ExpRepo-->>Service: Optional<Experience>
-            Service->>FollowRepo: countByFollowingId(userId) & countByFollowerId(userId)
-            FollowRepo->>DB: SELECT COUNT(*) FROM follows WHERE following_id / follower_id = ?
-            DB-->>FollowRepo: Số lượng followers & following
-            FollowRepo-->>Service: followersCount, followingCount
-
-            opt Nếu người xem đã đăng nhập
-                Service->>FollowRepo: existsByFollowerIdAndFollowingId(viewerId, userId)
-                FollowRepo->>DB: SELECT EXISTS(SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?)
-                DB-->>FollowRepo: true / false
-                FollowRepo-->>Service: isFollowing
-            end
+            Note over Service: item.setPrimaryExperience(expMap.get(id))<br/>item.setFollowersCount(followersCountMap.get(id))<br/>item.setIsFollowing(followedUserIds.contains(id))
         end
 
         Service-->>Controller: PageResponse<UserDirectoryResponse>
@@ -303,11 +320,17 @@ sequenceDiagram
 ```
 
 ###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
-1. **Luồng 1 - Thành công (Normal Case)**:
+1. **Luồng 1 - Thành công (Normal Case - Tối ưu Batch Fetching)**:
    * Client gửi yêu cầu `GET /api/v1/users/search` kèm các tham số tìm kiếm và phân trang hợp lệ.
    * `UserController` tiếp nhận và chuyển tiếp tham số cho `UserServiceImpl`.
    * `UserServiceImpl` sinh `Specification<User>`, yêu cầu `UserRepository` thực thi truy vấn phân trang trên PostgreSQL.
-   * Hệ thống lặp qua danh sách kết quả, map sang DTO `UserDirectoryResponse`, bổ sung thông tin kinh nghiệm chính từ `ExperienceRepository`, đếm số lượng người theo dõi từ `FollowRepository` và xác định cờ `isFollowing` nếu người xem đã xác thực.
+   * Sau khi nhận danh sách `Page<User>`, hệ thống gom toàn bộ `userIds` và thực thi **4 truy vấn Batch song song/tuần tự**:
+     1. Lấy toàn bộ kinh nghiệm chính qua `findByUserIdInAndIsPrimaryTrue(userIds)`.
+     2. Đếm số followers qua `countFollowersByUserIds(userIds)`.
+     3. Đếm số following qua `countFollowingByUserIds(userIds)`.
+     4. Kiểm tra trạng thái đã follow của người xem qua `findByFollowerIdAndFollowingIdIn(viewerId, userIds)`.
+   * Toàn bộ dữ liệu được nạp vào các Map tra cứu trong bộ nhớ RAM (`expMap`, `followersCountMap`, `followingCountMap`, `followedUserIds`). Vòng lặp map DTO chỉ thực hiện ghép nối dữ liệu trong bộ nhớ mà **không bắn thêm bất kỳ câu truy vấn SQL nào xuống Database** (triệt tiêu hoàn toàn lỗi N+1 Query).
    * Kết quả được đóng gói thành `PageResponse<UserDirectoryResponse>` và phản hồi cho Client với mã HTTP 200 OK.
 2. **Luồng 2 - Ngoại lệ Validation tham số (Validation Error Case)**:
    * Client gửi tham số phân trang âm hoặc không hợp lệ (ví dụ `page = -1`). `UserController` phát hiện và ném `BadRequestException`. `GlobalExceptionHandler` bắt và trả về HTTP 400 Bad Request kèm thông báo lỗi tiếng Việt.
+

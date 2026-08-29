@@ -1,9 +1,12 @@
 package com.alumnect.alumnect_backend.mapper.user;
 
+import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
+import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 /**
  * Lớp MapStruct Mapper chuyển đổi dữ liệu hồ sơ người dùng.
@@ -43,7 +46,7 @@ public interface UserProfileMapper {
     @Mapping(target = "followersCount", ignore = true)
     @Mapping(target = "followingCount", ignore = true)
     @Mapping(target = "isFollowing", ignore = true)
-    com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse toDirectoryResponse(UserProfile userProfile);
+    UserDirectoryResponse toDirectoryResponse(UserProfile userProfile);
 
     /**
      * Cập nhật thực thể UserProfile từ DTO UpdateProfileRequest.
@@ -60,6 +63,7 @@ public interface UserProfileMapper {
     @Mapping(target = "skills", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateEntityFromRequest(com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest request, @org.mapstruct.MappingTarget UserProfile profile);
+    void updateEntityFromRequest(UpdateProfileRequest request, @MappingTarget UserProfile profile);
 
 }
+

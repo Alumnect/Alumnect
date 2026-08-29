@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -56,12 +58,27 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     long countByFollowingId(Long userId);
 
     /**
+     * Đếm số lượng người theo dõi (followers) hàng loạt theo danh sách ID người dùng.
+     * Trả về danh sách Object[] gồm [userId (Long), count (Long)].
+     */
+    @Query("SELECT f.following.id, COUNT(f) FROM Follow f WHERE f.following.id IN :userIds GROUP BY f.following.id")
+    List<Object[]> countFollowersByUserIds(@Param("userIds") Collection<Long> userIds);
+
+    /**
      * Đếm số lượng người mà một người dùng đang theo dõi (following).
      *
      * @param userId ID của người theo dõi
      * @return Số lượng người đang theo dõi
      */
     long countByFollowerId(Long userId);
+
+    /**
+     * Đếm số lượng người đang theo dõi (following) hàng loạt theo danh sách ID người dùng.
+     * Trả về danh sách Object[] gồm [userId (Long), count (Long)].
+     */
+    @Query("SELECT f.follower.id, COUNT(f) FROM Follow f WHERE f.follower.id IN :userIds GROUP BY f.follower.id")
+    List<Object[]> countFollowingByUserIds(@Param("userIds") Collection<Long> userIds);
+
 
     /**
      * Lấy danh sách những người đang theo dõi một người dùng (followers) có phân

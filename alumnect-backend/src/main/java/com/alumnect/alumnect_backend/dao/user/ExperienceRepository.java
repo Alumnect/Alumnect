@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +16,10 @@ public interface ExperienceRepository extends JpaRepository<Experience, Long> {
     List<Experience> findByUserIdOrderByStartDateDesc(Long userId);
     List<Experience> findByUserIdAndIsCurrentTrue(Long userId);
     Optional<Experience> findByUserIdAndIsPrimaryTrue(Long userId);
+    List<Experience> findByUserIdInAndIsPrimaryTrue(Collection<Long> userIds);
     
     @Query("SELECT e FROM Experience e WHERE e.user.id IN :userIds ORDER BY e.startDate ASC, e.endDate ASC, e.id ASC")
     List<Experience> findByUserIdsSortedChronologically(@Param("userIds") List<Long> userIds);
 }
+
+
