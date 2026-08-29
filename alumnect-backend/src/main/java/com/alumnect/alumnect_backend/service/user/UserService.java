@@ -3,9 +3,12 @@ package com.alumnect.alumnect_backend.service.user;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.user.ChangePasswordRequest;
 import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
+import com.alumnect.alumnect_backend.dto.response.user.ConnectionSuggestionResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
+
+import java.util.List;
 
 /**
  * Giao diện dịch vụ (Service Interface) quản lý các hoạt động nghiệp vụ của người dùng.
@@ -77,6 +80,16 @@ public interface UserService {
     UserFilterOptionsResponse getFilterOptions();
 
     /**
+     * Lấy danh sách thành viên đề xuất kết nối (UC10 - View Connection Suggestions).
+     * Dựa trên thuật toán tính điểm tương đồng (cùng chuyên ngành, cùng niên khóa, cùng địa điểm, tài khoản verified).
+     *
+     * @param email Email tài khoản người xem (nếu đã đăng nhập, null nếu là khách vãng lai)
+     * @param limit Số lượng đề xuất tối đa (mặc định 5-10)
+     * @return Danh sách thành viên được gợi ý kèm lý do trực quan
+     */
+    List<ConnectionSuggestionResponse> getConnectionSuggestions(String email, int limit);
+
+    /**
      * Cập nhật thông tin hồ sơ cá nhân của tài khoản đăng nhập hiện tại.
      * Cập nhật thông tin cơ bản, học tập, giới thiệu, kỹ năng và các liên kết cá nhân.
      *
@@ -86,6 +99,7 @@ public interface UserService {
      */
     UserProfileResponse updateOwnProfile(String email, UpdateProfileRequest request);
 }
+
 
 
 

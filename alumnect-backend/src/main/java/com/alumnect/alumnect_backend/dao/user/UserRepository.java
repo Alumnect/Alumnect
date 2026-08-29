@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,4 +64,33 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
            "GROUP BY CAST(u.createdAt AS date) " +
            "ORDER BY regDate ASC")
     List<Object[]> countRegistrationsByDayInRange(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+
+    /**
+     * Tìm kiếm danh sách ứng viên đề xuất kết nối cho người dùng đã đăng nhập.
+     * Chỉ gợi ý các cựu sinh viên (ALUMNI), tài khoản ACTIVE, không phải chính mình và chưa theo dõi.
+     *
+     * @param currentUserId ID người dùng hiện tại
+     * @param excludedIds Danh sách ID cần loại trừ (đã theo dõi)
+     * @return Danh sách User kèm Profile
+     */
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile up " +
+           "WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE " +
+           "AND u.role.name = 'ALUMNI' " +
+           "AND u.id != :currentUserId " +
+           "AND (COALESCE(:excludedIds, NULL) IS NULL OR u.id NOT IN :excludedIds)")
+    List<User> findCandidatesForSuggestions(@Param("currentUserId") Long currentUserId, @Param("excludedIds") Collection<Long> excludedIds);
+
+    /**
+     * Tìm kiếm danh sách cựu sinh viên (ALUMNI) đề xuất tiêu biểu cho khách vãng lai (chưa đăng nhập).
+     *
+     * @return Danh sách User kèm Profile
+     */
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile up " +
+           "WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE " +
+           "AND u.role.name = 'ALUMNI' " +
+           "ORDER BY u.isAccountVerified DESC, u.createdAt DESC")
+    List<User> findGuestCandidates();
+
 }
+
+

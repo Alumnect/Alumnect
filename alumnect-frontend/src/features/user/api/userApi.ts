@@ -8,6 +8,7 @@ import type {
   UserSearchParams,
   UserDirectoryResponse,
   UserFilterOptionsResponse,
+  ConnectionSuggestionResponse,
 } from '../model/userTypes'
 
 export const userApi = {
@@ -95,7 +96,15 @@ export const userApi = {
    */
   getFilterOptions: () =>
     http.get<any, ApiResponse<UserFilterOptionsResponse>>('/users/filter-options'),
+
+  /**
+   * Lấy danh sách thành viên gợi ý kết nối (UC10 - View Connection Suggestions)
+   * GET /users/suggestions
+   */
+  getConnectionSuggestions: (limit = 5) =>
+    http.get<any, ApiResponse<ConnectionSuggestionResponse[]>>('/users/suggestions', { params: { limit } }),
 }
+
 
 
 
