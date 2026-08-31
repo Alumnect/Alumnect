@@ -16,7 +16,6 @@
     "@tanstack/react-query": "^5.101.2",
     "@vietmap/vietmap-gl-js": "^7.0.0-pre.1",
     "axios": "^1.18.1",
-    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.42.1",
