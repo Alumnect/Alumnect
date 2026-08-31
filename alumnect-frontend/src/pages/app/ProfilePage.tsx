@@ -23,6 +23,7 @@ import {
   UserMinus,
   PlusSquare,
   ArrowLeft,
+  Bookmark,
 } from 'lucide-react'
 import axios from 'axios'
 import { Avatar, Card, Skeleton, EmptyState, SmartImage } from '@/components/ui'
@@ -30,6 +31,7 @@ import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAuthStore } from '@/store/authStore'
 import { usePresignedUrl } from '@/features/auth/hooks/useAuth'
+import { SavedPostsView } from '@/features/feed'
 import {
   useOwnProfile,
   useUserProfile,
@@ -86,8 +88,27 @@ export function ProfilePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isOwnProfile = !userId || String(userId) === currentUserId
 
-  // State quản lý chế độ chỉnh sửa in-page (Facebook style)
-  const [isEditingInPage, setIsEditingInPage] = useState(searchParams.get('edit') === 'true')
+  // Tab đang hoạt động: 'profile' (Tất cả hồ sơ), 'about' (Giới thiệu / Chỉnh sửa), 'saved' (Bài viết đã lưu kiểu Instagram)
+  const initialTab = searchParams.get('tab') === 'saved'
+    ? 'saved'
+    : searchParams.get('edit') === 'true'
+    ? 'about'
+    : 'profile'
+  const [activeTab, setActiveTab] = useState<'profile' | 'about' | 'saved'>(initialTab)
+
+  // Cập nhật tab khi URL searchParams thay đổi
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    const edit = searchParams.get('edit')
+    if (tab === 'saved') {
+      setActiveTab('saved')
+    } else if (edit === 'true') {
+      setActiveTab('about')
+    } else if (tab === 'profile') {
+      setActiveTab('profile')
+    }
+  }, [searchParams])
+
   const [isExpModalOpen, setIsExpModalOpen] = useState(false)
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'promote' | 'rejoin'>('create')
   const [expToEdit, setExpToEdit] = useState<ExperienceResponse | null>(null)
@@ -383,13 +404,13 @@ export function ProfilePage() {
               <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto mb-2">
                 {isOwnProfile ? (
                   <Button
-                    variant={isEditingInPage ? 'primary' : 'secondary'}
+                    variant={activeTab === 'about' ? 'primary' : 'secondary'}
                     size="sm"
-                    leftIcon={isEditingInPage ? <User size={15} /> : <Edit3 size={15} />}
-                    onClick={() => setIsEditingInPage(!isEditingInPage)}
+                    leftIcon={activeTab === 'about' ? <User size={15} /> : <Edit3 size={15} />}
+                    onClick={() => setActiveTab(activeTab === 'about' ? 'profile' : 'about')}
                     className="rounded-2xl font-bold px-5 border border-plum-900/10 shadow-sm"
                   >
-                    {isEditingInPage ? 'Xem trang cá nhân' : 'Chỉnh sửa hồ sơ'}
+                    {activeTab === 'about' ? 'Xem trang cá nhân' : 'Chỉnh sửa hồ sơ'}
                   </Button>
                 ) : (
                   <div className="flex flex-col items-end gap-1">
@@ -493,12 +514,12 @@ export function ProfilePage() {
               </div>
             </div>
 
-            {/* Navigation Tabs Bar phong cách Facebook */}
+            {/* Navigation Tabs Bar phong cách Facebook & Instagram */}
             <div className="flex border-t border-plum-900/5 pt-1 gap-1">
               <button
                 type="button"
-                onClick={() => setIsEditingInPage(false)}
-                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${!isEditingInPage
+                onClick={() => setActiveTab('profile')}
+                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === 'profile'
                   ? 'border-brand-500 text-brand-600'
                   : 'border-transparent text-plum-500 hover:text-plum-800'
                   }`}
@@ -508,13 +529,26 @@ export function ProfilePage() {
               {isOwnProfile && (
                 <button
                   type="button"
-                  onClick={() => setIsEditingInPage(true)}
-                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all ${isEditingInPage
+                  onClick={() => setActiveTab('about')}
+                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === 'about'
                     ? 'border-brand-500 text-brand-600'
                     : 'border-transparent text-plum-500 hover:text-plum-800'
                     }`}
                 >
                   Giới thiệu
+                </button>
+              )}
+              {isOwnProfile && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('saved')}
+                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'saved'
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-plum-500 hover:text-plum-800'
+                    }`}
+                >
+                  <Bookmark size={14} className={activeTab === 'saved' ? 'fill-brand-600' : ''} />
+                  Bài viết đã lưu
                 </button>
               )}
             </div>
@@ -523,13 +557,16 @@ export function ProfilePage() {
       </Reveal>
 
       {/* MAIN BODY CONTAINER */}
-      {isOwnProfile && isEditingInPage ? (
+      {isOwnProfile && activeTab === 'about' ? (
         /* Chế độ Chỉnh sửa Hồ sơ dạng Facebook */
         <EditProfileView
           profile={profile}
-          onCancel={() => setIsEditingInPage(false)}
-          onSuccess={() => setIsEditingInPage(false)}
+          onCancel={() => setActiveTab('profile')}
+          onSuccess={() => setActiveTab('profile')}
         />
+      ) : isOwnProfile && activeTab === 'saved' ? (
+        /* Chế độ Xem Bài viết đã lưu dạng Instagram */
+        <SavedPostsView />
       ) : (
         /* Chế độ Xem Trang Hồ sơ bình thường */
         <div className="space-y-6">
