@@ -64,6 +64,7 @@ export interface AdminPostDto {
   commentCount: number
   repostCount: number
   hidden: boolean
+  deleted: boolean
   createdAt: string
   images?: string[]
   job?: {

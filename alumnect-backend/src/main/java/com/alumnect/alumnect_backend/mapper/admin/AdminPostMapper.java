@@ -29,6 +29,7 @@ public interface AdminPostMapper {
     @Mapping(target = "commentCount", source = "post.commentCount")
     @Mapping(target = "repostCount", source = "post.repostCount")
     @Mapping(target = "hidden", expression = "java(post.getStatus() == com.alumnect.alumnect_backend.common.enums.PostStatus.HIDDEN)")
+    @Mapping(target = "deleted", expression = "java(post.getStatus() == com.alumnect.alumnect_backend.common.enums.PostStatus.DELETED)")
     @Mapping(target = "createdAt", source = "post.createdAt")
     @Mapping(target = "event", source = "event")
     @Mapping(target = "job", source = "job")

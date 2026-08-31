@@ -53,10 +53,9 @@ public class PostSpecification {
                     predicates.add(cb.equal(root.get("status"), PostStatus.ACTIVE));
                 } else if ("HIDDEN".equals(statusUpper)) {
                     predicates.add(cb.equal(root.get("status"), PostStatus.HIDDEN));
+                } else if ("DELETED".equals(statusUpper)) {
+                    predicates.add(cb.equal(root.get("status"), PostStatus.DELETED));
                 }
-            } else {
-                // Mặc định (Tất cả) không lấy các bài viết đã bị xoá
-                predicates.add(cb.notEqual(root.get("status"), PostStatus.DELETED));
             }
 
             // 4. Lọc theo loại bài viết (category)

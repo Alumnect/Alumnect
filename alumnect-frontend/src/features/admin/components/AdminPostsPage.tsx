@@ -11,6 +11,7 @@ const STATUS_TABS = [
   { name: 'Tất cả', value: 'ALL' },
   { name: 'Đang hiển thị', value: 'VISIBLE' },
   { name: 'Đã ẩn', value: 'HIDDEN' },
+  { name: 'Đã xóa', value: 'DELETED' },
 ]
 
 const POST_TYPES = [
@@ -215,9 +216,13 @@ export function AdminPostsPage() {
                         </div>
                       </td>
                       <td className="px-5 py-3.5">
-                        <Badge tone={p.hidden ? 'danger' : 'success'}>
-                          {p.hidden ? 'Đã ẩn' : 'Hiển thị'}
-                        </Badge>
+                        {p.deleted ? (
+                          <Badge tone="danger">Đã xóa</Badge>
+                        ) : p.hidden ? (
+                          <Badge tone="danger">Đã ẩn</Badge>
+                        ) : (
+                          <Badge tone="success">Hiển thị</Badge>
+                        )}
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <Button
