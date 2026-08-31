@@ -206,6 +206,25 @@ public class PostController {
     }
 
     /**
+     * API xóa một bài viết đã đăng (UC23 - Delete a post).
+     * Yêu cầu đăng nhập (JWT); chỉ tác giả (Sinh viên/Cựu sinh viên) mới được xóa bài
+     * của chính mình — người khác hoặc Admin nhận 403.
+     * Bài đã xóa/không tồn tại trả 404.
+     *
+     * @param id             ID bài viết cần xóa
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email tác giả
+     * @return {@link ApiResponse} rỗng với trạng thái thành công, HTTP 200 OK
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        postService.deletePost(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Xóa bài viết thành công", null));
+    }
+
+    /**
      * Xác định người gọi đã đăng nhập hay là Guest dựa trên {@link Authentication} do Spring Security cung cấp.
      *
      * @param authentication Đối tượng xác thực — null hoặc {@link AnonymousAuthenticationToken} nếu là Guest

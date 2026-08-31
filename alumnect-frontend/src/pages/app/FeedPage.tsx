@@ -32,6 +32,7 @@ import {
   ExternalLink,
   Clock,
   Users,
+  Trash2,
 } from 'lucide-react'
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -42,7 +43,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, CreatePostModal, DeletePostModal } from '@/features/feed'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
 
@@ -116,11 +117,13 @@ function PostCard({
   canInteract,
   currentUserName,
   onEdit,
+  onDelete,
 }: {
   post: Post
   canInteract: boolean
   currentUserName?: string
   onEdit?: (post: Post) => void
+  onDelete?: (post: Post) => void
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
@@ -201,17 +204,28 @@ function PostCard({
               {post.role ? `${post.role} · ` : ''}{post.time}
             </Link>
           </div>
-          {/* Nút Chỉnh sửa (UC22) chỉ hiển thị cho chính tác giả bài viết */}
-          {isAuthor && onEdit ? (
-            <button
-              type="button"
-              onClick={() => onEdit(post)}
-              aria-label="Chỉnh sửa bài viết"
-              title="Chỉnh sửa bài viết"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-            >
-              <Pencil size={13} /> Sửa
-            </button>
+          {/* Nút Chỉnh sửa (UC22) và Xóa (UC23) chỉ hiển thị cho chính tác giả bài viết */}
+          {isAuthor && onEdit && onDelete ? (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => onEdit(post)}
+                aria-label="Chỉnh sửa bài viết"
+                title="Chỉnh sửa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+              >
+                <Pencil size={13} /> Sửa
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(post)}
+                aria-label="Xóa bài viết"
+                title="Xóa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+              >
+                <Trash2 size={13} /> Xóa
+              </button>
+            </div>
           ) : (
             <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
               <MoreHorizontal size={18} />
@@ -572,9 +586,11 @@ export function FeedPage() {
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
+
   // Người xem hiện tại: phiên đăng nhập thật hoặc null (Guest).
   const viewer: AuthUser | null = user ?? null
   const isGuest = !viewer
@@ -681,6 +697,7 @@ export function FeedPage() {
                     canInteract={!isGuest}
                     currentUserName={viewer?.name}
                     onEdit={handleStartEdit}
+                    onDelete={setPostToDelete}
                   />
                 </StaggerItem>
               ))}
@@ -702,6 +719,18 @@ export function FeedPage() {
                 <p className="text-sm text-plum-400">Bạn đã xem hết bảng tin 🎉</p>
               )}
             </div>
+
+            {postToDelete && (
+              <DeletePostModal
+                open={!!postToDelete}
+                onClose={() => setPostToDelete(null)}
+                post={postToDelete}
+                onDeleted={() => {
+                   setPostToDelete(null)
+                   refetch()
+                }}
+              />
+            )}
           </>
         )}
       </div>
