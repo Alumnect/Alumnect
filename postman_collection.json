@@ -1959,6 +1959,145 @@
                         },
                         "description": "Thay {{longKeyword251Chars}} bằng một chuỗi > 250 ký tự (biến Postman hoặc nhập tay) để xác nhận Backend trả về HTTP 400 với thông điệp 'Từ khóa tìm kiếm không được vượt quá 250 ký tự'."
                     }
+                },
+                {
+                    "name": "7.13 Lọc Câu hỏi theo 1 Thể loại (UC45 - Thành công)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&topicId=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "topicId",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7.14 Lọc Câu hỏi theo NHIỀU Thể loại (UC45 - Quan hệ OR)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&topicId=1,2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "topicId",
+                                    "value": "1,2"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: trả về câu hỏi thuộc thể loại 1 HOẶC thể loại 2 (quan hệ OR giữa các thể loại được chọn — BR-FT-02)."
+                    }
+                },
+                {
+                    "name": "7.15 Lọc Câu hỏi theo Thể loại không tồn tại (UC45 - Rỗng, không lỗi)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&topicId=99999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "topicId",
+                                    "value": "99999"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200, content rỗng (totalElements=0) — KHÔNG phải lỗi 404/400."
+                    }
+                },
+                {
+                    "name": "7.16 Lọc Câu hỏi với topicId sai kiểu dữ liệu (UC45 - Lỗi 400)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&topicId=abc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "topicId",
+                                    "value": "abc"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 400 \"Tham số 'topicId' không hợp lệ\" (GlobalExceptionHandler bắt MethodArgumentTypeMismatchException)."
+                    }
                 }
             ]
         },
