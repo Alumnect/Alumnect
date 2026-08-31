@@ -44,6 +44,9 @@ public class ReportServiceImpl implements ReportService {
         if (post.getStatus() != PostStatus.ACTIVE) {
             throw new ResourceNotFoundException("Bài viết này không còn khả dụng");
         }
+        if (post.getAuthor() != null && reporter.getId().equals(post.getAuthor().getId())) {
+            throw new ForbiddenException("Bạn không thể báo cáo bài viết của chính mình");
+        }
         if (reportRepository.countByReporterIdAndCreatedAtGreaterThanEqual(
                 reporter.getId(), Instant.now().minus(Duration.ofMinutes(10))) >= 5) {
             throw new BadRequestException("Bạn đã gửi quá nhiều báo cáo. Vui lòng thử lại sau 10 phút");

@@ -116,6 +116,7 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
 function PostCard({
   post,
   canInteract,
+  currentUserId,
   currentUserName,
   onEdit,
   onDelete,
@@ -124,6 +125,7 @@ function PostCard({
 }: {
   post: Post
   canInteract: boolean
+  currentUserId?: string
   currentUserName?: string
   onEdit?: (post: Post) => void
   onDelete?: (post: Post) => void
@@ -200,7 +202,9 @@ function PostCard({
     )
   }
 
-  const isAuthor = !!currentUserName && post.author === currentUserName
+  const isAuthor = post.authorId != null
+    ? !!currentUserId && post.authorId === currentUserId
+    : !!currentUserName && post.author === currentUserName
 
   return (
     <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white")}>
@@ -511,7 +515,7 @@ function PostCard({
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
-        {canReport ? (
+        {!isAuthor && (canReport ? (
           <button
             type="button"
             onClick={() => onReport?.(post)}
@@ -521,14 +525,14 @@ function PostCard({
           >
             <Flag size={17} />
           </button>
-        ) : (
-        <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để báo cáo bài viết.') }}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
-        >
-          <Flag size={17} />
-        </button>
-        )}
+        ) : !canInteract ? (
+          <button
+            onClick={() => promptLogin('Đăng nhập để báo cáo bài viết.')}
+            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Flag size={17} />
+          </button>
+        ) : null)}
         <button
           aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
@@ -765,6 +769,7 @@ export function FeedPage() {
                     post={p}
                     canInteract={!isGuest}
                     canReport={canReport}
+                    currentUserId={viewer?.id}
                     currentUserName={viewer?.name}
                     onEdit={handleStartEdit}
                     onDelete={setPostToDelete}
