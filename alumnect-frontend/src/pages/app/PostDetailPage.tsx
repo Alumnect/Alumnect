@@ -33,14 +33,16 @@ import {
   Trash2,
   CalendarPlus,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
+import { useLoginPrompt } from '@/store/loginPrompt'
 import { EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
-import { useToggleLike, CreatePostModal, DeletePostModal, type Post } from '@/features/feed'
+import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, type Post } from '@/features/feed'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -168,14 +170,28 @@ function PostDetailCard({
   // Trạng thái thích cục bộ (UC17) — khởi tạo từ dữ liệu bài viết đã tải.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState(post.likes)
+  // Trạng thái lưu bài viết cục bộ (UC20)
+  const [saved, setSaved] = useState(post.saved ?? false)
   const toggleLike = useToggleLike()
+  const toggleSave = useToggleSavePost()
+  const promptLogin = useLoginPrompt((s) => s.open)
+
+  // Đồng bộ lại state khi post props thay đổi
+  useEffect(() => {
+    setLiked(post.liked)
+    setLikeCount(post.likes)
+    setSaved(post.saved ?? false)
+  }, [post.liked, post.likes, post.saved])
 
   /**
    * Thích/bỏ thích bài viết (UC17): cập nhật lạc quan, đồng bộ theo phản hồi backend,
-   * hoàn tác khi lỗi. Guest đã bị chặn ở lớp `disabled` nên chỉ chạy khi có quyền.
+   * hoàn tác khi lỗi. Guest được mời đăng nhập.
    */
   const handleLike = () => {
-    if (!canInteract) return
+    if (!canInteract) {
+      promptLogin('Đăng nhập để thích và tương tác với bài viết.')
+      return
+    }
     const next = !liked
     setLiked(next)
     setLikeCount((c) => c + (next ? 1 : -1))
@@ -189,6 +205,29 @@ function PostDetailCard({
         onError: () => {
           setLiked(!next)
           setLikeCount((c) => c + (next ? -1 : 1))
+        },
+      },
+    )
+  }
+
+  /**
+   * Lưu / Bỏ lưu bài viết (UC20): cập nhật lạc quan, hoàn tác khi lỗi.
+   */
+  const handleSave = () => {
+    if (!canInteract) {
+      promptLogin('Đăng nhập để lưu bài viết.')
+      return
+    }
+    const next = !saved
+    setSaved(next)
+    toggleSave.mutate(
+      { postId: post.id, save: next },
+      {
+        onSuccess: (data) => {
+          setSaved(data.saved)
+        },
+        onError: () => {
+          setSaved(!next)
         },
       },
     )
@@ -465,8 +504,28 @@ function PostDetailCard({
         >
           <Flag size={17} />
         </button>
-        <button aria-label="Lưu bài viết" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900">
-          <Bookmark size={18} />
+        <button
+          aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+          title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+          onClick={handleSave}
+          className={cn(
+            'grid h-9 w-9 place-items-center rounded-lg transition-all duration-200',
+            saved
+              ? 'text-[#F27024] bg-orange-50 hover:bg-orange-100'
+              : 'text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900',
+          )}
+        >
+          {saved ? (
+            <motion.div
+              initial={{ scale: 0.6 }}
+              animate={{ scale: [1.25, 1] }}
+              transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
+            >
+              <Bookmark size={18} className="fill-[#F27024] text-[#F27024]" />
+            </motion.div>
+          ) : (
+            <Bookmark size={18} />
+          )}
         </button>
       </div>
 

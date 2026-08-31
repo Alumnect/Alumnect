@@ -7,7 +7,7 @@
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / rỗng / lỗi (retry) / phân quyền / thành công.
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -43,7 +43,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, CreatePostModal, DeletePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal } from '@/features/feed'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
 
@@ -128,11 +128,21 @@ function PostCard({
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState<number>(post.likes)
+  // Trạng thái lưu bài viết cục bộ (UC20 - Save Post)
+  const [saved, setSaved] = useState(post.saved ?? false)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
+
+  // Đồng bộ lại state khi post props thay đổi (ví dụ sau khi refetch hoặc đổi tab)
+  useEffect(() => {
+    setLiked(post.liked)
+    setLikeCount(post.likes)
+    setSaved(post.saved ?? false)
+  }, [post.liked, post.likes, post.saved])
 
   // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
   const promptLogin = useLoginPrompt((s) => s.open)
   const toggleLike = useToggleLike()
+  const toggleSave = useToggleSavePost()
 
   /**
    * Xử lý bấm nút Thích (UC17): cập nhật lạc quan (đổi UI ngay), đồng bộ theo phản hồi
@@ -156,6 +166,30 @@ function PostCard({
         onError: () => {
           setLiked(!next)
           setLikeCount((c) => c + (next ? -1 : 1))
+        },
+      },
+    )
+  }
+
+  /**
+   * Xử lý bấm nút Lưu / Bỏ lưu bài viết (UC20): cập nhật lạc quan,
+   * rollback khi lỗi, hiển thị popup đăng nhập với Guest.
+   */
+  const handleSave = () => {
+    if (!canInteract) {
+      promptLogin('Đăng nhập để lưu bài viết.')
+      return
+    }
+    const next = !saved
+    setSaved(next)
+    toggleSave.mutate(
+      { postId: post.id, save: next },
+      {
+        onSuccess: (data) => {
+          setSaved(data.saved)
+        },
+        onError: () => {
+          setSaved(!next)
         },
       },
     )
@@ -479,11 +513,27 @@ function PostCard({
           <Flag size={17} />
         </button>
         <button
-          aria-label="Lưu bài viết"
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để lưu bài viết.') }}
-          className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+          aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+          title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+          onClick={handleSave}
+          className={cn(
+            'grid h-9 w-9 place-items-center rounded-lg transition-all duration-200',
+            saved
+              ? 'text-[#F27024] bg-orange-50 hover:bg-orange-100'
+              : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900',
+          )}
         >
-          <Bookmark size={18} />
+          {saved ? (
+            <motion.div
+              initial={{ scale: 0.6 }}
+              animate={{ scale: [1.25, 1] }}
+              transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
+            >
+              <Bookmark size={18} className="fill-[#F27024] text-[#F27024]" />
+            </motion.div>
+          ) : (
+            <Bookmark size={18} />
+          )}
         </button>
       </div>
     </Card>

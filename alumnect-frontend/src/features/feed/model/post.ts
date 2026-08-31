@@ -63,6 +63,8 @@ export const postSchema = z.object({
   reposts: z.number().default(0),
   /** Bài viết này đã được người dùng hiện tại thích hay chưa (viewer-specific). */
   liked: z.boolean().default(false),
+  /** Bài viết này đã được người dùng hiện tại lưu hay chưa (viewer-specific, UC20). */
+  saved: z.boolean().default(false),
   /** Dữ liệu tuyển dụng (nếu là bài tuyển dụng). */
   job: jobSchema.nullable().default(null),
   /** Dữ liệu sự kiện (nếu là bài sự kiện). */
