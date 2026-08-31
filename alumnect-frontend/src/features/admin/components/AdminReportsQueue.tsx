@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { 
-  Inbox, Eye, X, 
-  Flag, ArrowRight, ShieldAlert
+  Inbox, Eye, EyeOff, X, 
+  Flag, ArrowRight, ShieldAlert, Check, Ban
 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
-import { useAdminReports } from '../hooks/useAdmin'
+import { useAdminReports, useUpdateReportStatus, useTogglePostHidden } from '../hooks/useAdmin'
 import type { AdminReportDto } from '../api/adminApi'
 
 const REASON_LABELS: Record<string, { label: string; tone: 'brand' | 'gold' | 'success' | 'danger' | 'neutral' }> = {
@@ -34,11 +34,23 @@ export function AdminReportsQueue() {
     size: 10,
   })
 
+  const updateStatusMutation = useUpdateReportStatus()
+  const togglePostHiddenMutation = useTogglePostHidden()
+
   // Modal Detail state
   const [selectedReport, setSelectedReport] = useState<AdminReportDto | null>(null)
 
+  // Store local will-hide state mapped by report ID to persist state between modal open/close
+  const [willHideMap, setWillHideMap] = useState<Record<number, boolean>>({})
+
+  // Custom Confirmation Popup state
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'RESOLVE' | 'DISMISS'
+    id: number
+  } | null>(null)
+
   useEffect(() => {
-    if (selectedReport) {
+    if (selectedReport || confirmAction) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
@@ -46,11 +58,84 @@ export function AdminReportsQueue() {
     return () => {
       document.body.style.overflow = ''
     }
-  }, [selectedReport])
+  }, [selectedReport, confirmAction])
+
+  const triggerResolveConfirm = (id: number) => {
+    setConfirmAction({ type: 'RESOLVE', id })
+  }
+
+  const triggerDismissConfirm = (id: number) => {
+    setConfirmAction({ type: 'DISMISS', id })
+  }
+
+  // Get current state of willHide for the selected report (default to DB state if not toggled yet)
+  const getSelectedReportWillHide = () => {
+    if (!selectedReport) return false
+    if (willHideMap[selectedReport.id] !== undefined) {
+      return willHideMap[selectedReport.id]
+    }
+    return selectedReport.postStatus === 'HIDDEN'
+  }
+
+  const toggleSelectedReportWillHide = () => {
+    if (!selectedReport) return
+    const current = getSelectedReportWillHide()
+    setWillHideMap(prev => ({
+      ...prev,
+      [selectedReport.id]: !current
+    }))
+  }
+
+  const executeConfirmAction = async () => {
+    if (!confirmAction || !selectedReport) return
+    const { type, id } = confirmAction
+
+    try {
+      if (type === 'RESOLVE') {
+        const targetWillHide = getSelectedReportWillHide()
+        
+        // 1. Chỉ thực hiện ẩn/hiện bài viết thật nếu có sự thay đổi so với trạng thái ban đầu của bài viết
+        const originalHidden = selectedReport.postStatus === 'HIDDEN'
+        if (targetWillHide !== originalHidden) {
+          await togglePostHiddenMutation.mutateAsync({ id: selectedReport.postId, hidden: targetWillHide })
+        }
+        
+        // 2. Cập nhật trạng thái báo cáo sang RESOLVED
+        await updateStatusMutation.mutateAsync({ id, status: 'RESOLVED' })
+        
+        // Clean up map for this report
+        setWillHideMap(prev => {
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+        
+        setSelectedReport(null)
+      } else if (type === 'DISMISS') {
+        // Cập nhật trạng thái báo cáo sang DISMISSED (không thay đổi trạng thái bài viết)
+        await updateStatusMutation.mutateAsync({ id, status: 'DISMISSED' })
+        
+        // Clean up map for this report
+        setWillHideMap(prev => {
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+
+        setSelectedReport(null)
+      }
+      setConfirmAction(null)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi thực hiện hành động')
+      setConfirmAction(null)
+    }
+  }
 
   const reports = reportsData?.content || []
   const totalPages = reportsData?.totalPages || 0
   const totalElements = reportsData?.totalElements || 0
+
+  const activeWillHide = getSelectedReportWillHide()
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -170,6 +255,13 @@ export function AdminReportsQueue() {
                 <tbody className="divide-y divide-plum-900/5">
                   {reports.map((r) => {
                     const reasonInfo = REASON_LABELS[r.reason] || { label: r.reason, tone: 'neutral' }
+                    
+                    // Show real-time local indicator if marked to hide
+                    const localWillHide = willHideMap[r.id]
+                    const currentStatus = localWillHide !== undefined 
+                      ? (localWillHide ? 'HIDDEN' : 'ACTIVE') 
+                      : r.postStatus
+
                     return (
                       <tr key={r.id} className="transition-colors hover:bg-plum-900/[0.015]">
                         {/* Người báo cáo */}
@@ -215,12 +307,12 @@ export function AdminReportsQueue() {
 
                         {/* Trạng thái bài viết */}
                         <td className="px-5 py-4 text-center">
-                          {r.postStatus === 'HIDDEN' ? (
-                            <Badge tone="danger">Đã ẩn</Badge>
-                          ) : r.postStatus === 'DELETED' ? (
+                          {currentStatus === 'HIDDEN' ? (
+                            <Badge tone="danger">Đã ẩn{localWillHide !== undefined && ' *'}</Badge>
+                          ) : currentStatus === 'DELETED' ? (
                             <Badge tone="neutral">Đã xóa</Badge>
                           ) : (
-                            <Badge tone="success">Công khai</Badge>
+                            <Badge tone="success">Công khai{localWillHide !== undefined && ' *'}</Badge>
                           )}
                         </td>
 
@@ -270,7 +362,7 @@ export function AdminReportsQueue() {
         )}
       </Reveal>
 
-      {/* Modal chi tiết báo cáo vi phạm (Chỉ xem chi tiết - UC70) */}
+      {/* Modal chi tiết báo cáo vi phạm */}
       {selectedReport && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           
@@ -386,16 +478,107 @@ export function AdminReportsQueue() {
                 </div>
               </div>
 
-              {/* Nút đóng đơn giản ở giao diện Chỉ Xem Chi Tiết */}
-              <div className="pt-4 border-t border-plum-900/8 flex justify-end">
-                <Button
-                  onClick={() => setSelectedReport(null)}
-                  className="font-bold text-xs rounded-full bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-100 px-5 py-2 cursor-pointer"
-                >
-                  Đóng
-                </Button>
+              {/* Nút thao tác xử lý báo cáo */}
+              <div className="pt-4 border-t border-plum-900/8 flex flex-col sm:flex-row gap-2 justify-between items-center">
+                
+                {/* Thiết lập trạng thái Ẩn / Mở ẩn cho bài viết (Chỉ thay đổi local state map) */}
+                {selectedReport.postStatus !== 'DELETED' && selectedReport.status === 'PENDING' && (
+                  <Button
+                    variant="secondary"
+                    onClick={toggleSelectedReportWillHide}
+                    className={cn(
+                      "w-full sm:w-auto font-bold text-xs rounded-full cursor-pointer transition-all",
+                      activeWillHide 
+                        ? "border border-green-200 text-green-600 hover:bg-green-50" 
+                        : "border border-red-200 text-red-600 hover:bg-red-50"
+                    )}
+                  >
+                    {activeWillHide ? (
+                      <span className="inline-flex items-center gap-1"><Eye size={12} /> Hủy ẩn bài (Sẽ giữ công khai)</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1"><EyeOff size={12} /> Đánh dấu ẩn bài viết</span>
+                    )}
+                  </Button>
+                )}
+
+                {/* Giải quyết / Bỏ qua */}
+                {selectedReport.status === 'PENDING' ? (
+                  <div className="flex gap-2 w-full sm:w-auto justify-end">
+                    <Button
+                      variant="secondary"
+                      onClick={() => triggerDismissConfirm(selectedReport.id)}
+                      className="w-full sm:w-auto font-bold text-xs rounded-full border border-plum-200 hover:bg-plum-50 cursor-pointer"
+                    >
+                      <span className="inline-flex items-center gap-1"><Ban size={12} /> Bỏ qua báo cáo</span>
+                    </Button>
+                    <Button
+                      onClick={() => triggerResolveConfirm(selectedReport.id)}
+                      className="w-full sm:w-auto font-bold text-xs rounded-full bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 shadow-sm cursor-pointer hover-sheen"
+                    >
+                      <span className="inline-flex items-center gap-1"><Check size={12} /> Đã giải quyết</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-xs font-bold text-plum-400">
+                    Báo cáo này đã ở trạng thái:{' '}
+                    <span className="text-plum-900 font-extrabold">
+                      {selectedReport.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đã bỏ qua'}
+                    </span>
+                  </div>
+                )}
+
               </div>
 
+            </div>
+          </Card>
+        </div>,
+        document.body
+      )}
+
+      {/* Custom Confirmation Popup Dialog */}
+      {confirmAction && createPortal(
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-plum-950/30 backdrop-blur-xs transition-opacity cursor-pointer"
+            onClick={() => setConfirmAction(null)}
+          />
+
+          {/* Dialog Container */}
+          <Card hover={false} className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-white p-6 pop">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="rounded-full bg-brand-50 p-3 border border-brand-100 text-brand-500 animate-breathe">
+                <ShieldAlert size={28} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-plum-950">
+                  {confirmAction.type === 'RESOLVE' && 'Giải quyết báo cáo'}
+                  {confirmAction.type === 'DISMISS' && 'Bỏ qua báo cáo'}
+                </h3>
+                <p className="text-xs text-plum-500 font-semibold leading-relaxed">
+                  {confirmAction.type === 'RESOLVE' && (
+                    activeWillHide 
+                      ? 'Bạn có chắc chắn muốn giải quyết báo cáo và ẨN bài viết này không?' 
+                      : 'Bạn có chắc chắn muốn giải quyết báo cáo và GIỮ CÔNG KHAI bài viết này không?'
+                  )}
+                  {confirmAction.type === 'DISMISS' && 'Bạn có chắc chắn muốn BỎ QUA báo cáo này không? (Bài viết sẽ giữ nguyên trạng thái)'}
+                </p>
+              </div>
+              <div className="flex gap-2 w-full pt-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setConfirmAction(null)}
+                  className="flex-1 font-bold text-xs rounded-full border border-plum-200 hover:bg-plum-50 cursor-pointer"
+                >
+                  Hủy bỏ
+                </Button>
+                <Button
+                  onClick={executeConfirmAction}
+                  className="flex-1 font-bold text-xs rounded-full bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 shadow-sm cursor-pointer hover-sheen"
+                >
+                  Xác nhận
+                </Button>
+              </div>
             </div>
           </Card>
         </div>,
