@@ -41,6 +41,9 @@ function inferHasMore(body: unknown, received: number): boolean {
   const d = (b?.data ?? b) as Record<string, unknown> | undefined
   if (typeof d?.hasMore === 'boolean') return d.hasMore
   if (typeof d?.last === 'boolean') return !d.last
+  if (typeof d?.pageNumber === 'number' && typeof d?.totalPages === 'number') {
+    return d.pageNumber + 1 < d.totalPages
+  }
   if (typeof d?.number === 'number' && typeof d?.totalPages === 'number') {
     return d.number + 1 < d.totalPages
   }
@@ -133,7 +136,9 @@ export const feedApi = {
 
     // B4: Trích + xác thực dữ liệu bằng Zod, rồi suy ra cờ còn trang tiếp theo.
     const items = parsePosts(extractRawItems(body))
-    return { items, page, hasMore: inferHasMore(body, items.length) }
+    // Không giữ nút "Tải thêm" khi trang vừa nhận không có bài nào có thể hiển thị.
+    // Trường hợp này có thể xảy ra khi dữ liệu thay đổi giữa hai lần tải trang.
+    return { items, page, hasMore: items.length > 0 && inferHasMore(body, items.length) }
   },
 
   /**

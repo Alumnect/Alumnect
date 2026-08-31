@@ -6,11 +6,14 @@ import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
+import com.alumnect.alumnect_backend.dto.request.report.CreatePostReportRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
+import com.alumnect.alumnect_backend.dto.response.report.ReportResponse;
 import com.alumnect.alumnect_backend.service.post.PostService;
+import com.alumnect.alumnect_backend.service.report.ReportService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,6 +47,9 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private ReportService reportService;
 
     /**
      * API lấy một trang bài viết trên bảng tin cộng đồng.
@@ -203,6 +209,21 @@ public class PostController {
      * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
      * @return Trạng thái like mới + số lượt thích {@link LikeResponse} bọc trong {@link ApiResponse}
      */
+    /**
+     * API báo cáo bài viết vi phạm (UC24). Báo cáo luôn được lưu ở trạng thái PENDING
+     * và không tự động thay đổi trạng thái của bài viết.
+     */
+    @PostMapping("/{id}/reports")
+    public ResponseEntity<ApiResponse<ReportResponse>> reportPost(
+            @PathVariable Long id,
+            @Valid @RequestBody CreatePostReportRequest request,
+            Authentication authentication) {
+
+        ReportResponse report = reportService.reportPost(authentication.getName(), id, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đã gửi báo cáo. Chúng tôi sẽ xem xét bài viết này", report));
+    }
+
     @PostMapping("/{id}/like")
     public ResponseEntity<ApiResponse<LikeResponse>> likePost(
             @PathVariable Long id,
