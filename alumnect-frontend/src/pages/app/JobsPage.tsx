@@ -4,13 +4,19 @@ import { Briefcase, MapPin, Search, Bookmark, Building2, Loader2 } from 'lucide-
 import { PageHeader, Card, EmptyState, Avatar } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import { useFeed } from '@/features/feed/hooks/useFeed'
+import { useFeed, useToggleSavePost } from '@/features/feed'
+import { useAuthStore } from '@/store/authStore'
+import { useLoginPrompt } from '@/store/loginPrompt'
 import { cn } from '@/lib/utils'
 
 export function JobsPage() {
   const [keyword, setKeyword] = useState('')
   const [location, setLocation] = useState('')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
+
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleSave = useToggleSavePost()
 
   // Fetch recruitment posts from backend
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('recruitment')
@@ -153,15 +159,33 @@ export function JobsPage() {
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            setSaved((s) => ({ ...s, [post.id]: !s[post.id] }))
+                            if (!isAuthenticated) {
+                              promptLogin('Đăng nhập để lưu tin tuyển dụng.')
+                              return
+                            }
+                            const isSaved = saved[post.id] ?? post.saved
+                            const next = !isSaved
+                            setSaved((s) => ({ ...s, [post.id]: next }))
+                            toggleSave.mutate(
+                              { postId: post.id, save: next },
+                              {
+                                onSuccess: (res) => {
+                                  setSaved((s) => ({ ...s, [post.id]: res.saved }))
+                                },
+                                onError: () => {
+                                  setSaved((s) => ({ ...s, [post.id]: !next }))
+                                },
+                              }
+                            )
                           }}
                           className={cn(
                             'grid h-9.5 w-9.5 place-items-center rounded-xl border transition-colors',
-                            saved[post.id] ? 'border-orange-200 bg-orange-50 text-[#F27024]' : 'border-slate-200 text-slate-400 hover:bg-slate-50'
+                            (saved[post.id] ?? post.saved) ? 'border-orange-200 bg-orange-50 text-[#F27024]' : 'border-slate-200 text-slate-400 hover:bg-slate-50'
                           )}
                           aria-label="Lưu công việc"
+                          title={(saved[post.id] ?? post.saved) ? 'Bỏ lưu tin tuyển dụng' : 'Lưu tin tuyển dụng'}
                         >
-                          <Bookmark size={16} className={saved[post.id] ? 'fill-[#F27024]' : ''} />
+                          <Bookmark size={16} className={(saved[post.id] ?? post.saved) ? 'fill-[#F27024]' : ''} />
                         </button>
                         {(job.applyUrl || job.contactEmail) && (
                           <ButtonLink

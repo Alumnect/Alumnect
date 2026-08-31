@@ -65,10 +65,19 @@ function parsePosts(raw: unknown[]): Post[] {
 /** Kết quả trả về sau khi thích/bỏ thích một bài viết (UC17 - Like a post). */
 export type LikeResult = { liked: boolean; likeCount: number }
 
+/** Kết quả trả về sau khi lưu/bỏ lưu một bài viết (UC20 - Save Post). */
+export type SaveResult = { saved: boolean }
+
 /** Chuẩn hóa phản hồi thích/bỏ thích từ nhiều biến thể phong bì (envelope) thành LikeResult. */
 function normalizeLike(body: unknown): LikeResult {
   const d = ((body as { data?: unknown })?.data ?? body) as { liked?: boolean; likeCount?: number } | undefined
   return { liked: !!d?.liked, likeCount: Number(d?.likeCount ?? 0) }
+}
+
+/** Chuẩn hóa phản hồi lưu/bỏ lưu từ phong bì (envelope) thành SaveResult. */
+function normalizeSave(body: unknown): SaveResult {
+  const d = ((body as { data?: unknown })?.data ?? body) as { saved?: boolean } | undefined
+  return { saved: !!d?.saved }
 }
 
 /* ------------------------------------------------------------------ */
@@ -202,5 +211,38 @@ export const feedApi = {
     const { uploadUrl, publicUrl } = res.data
     await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
     return publicUrl
+  },
+
+  /**
+   * Lưu/đánh dấu bài viết (UC20 - Save Post).
+   * Gọi `POST /api/v1/posts/{id}/save`.
+   * @param postId ID bài viết cần lưu
+   */
+  savePost: async (postId: string): Promise<SaveResult> => {
+    const body = await http.post(`/posts/${encodeURIComponent(postId)}/save`)
+    return normalizeSave(body)
+  },
+
+  /**
+   * Bỏ lưu bài viết (UC20 - Save Post).
+   * Gọi `DELETE /api/v1/posts/{id}/save`.
+   * @param postId ID bài viết cần bỏ lưu
+   */
+  unsavePost: async (postId: string): Promise<SaveResult> => {
+    const body = await http.delete(`/posts/${encodeURIComponent(postId)}/save`)
+    return normalizeSave(body)
+  },
+
+  /**
+   * Lấy danh sách bài viết đã lưu của người dùng (UC20 - View Saved Posts).
+   * Gọi `GET /api/v1/posts/saved?page={n}&size={m}`.
+   * @param page Chỉ số trang (0-based)
+   * @param size Số bài viết mỗi trang
+   */
+  getSavedPosts: async ({ page = 0, size = PAGE_SIZE } = {}): Promise<FeedPageResult> => {
+    const query = new URLSearchParams({ page: String(page), size: String(size) })
+    const body = await http.get(`/posts/saved?${query.toString()}`)
+    const items = parsePosts(extractRawItems(body))
+    return { items, page, hasMore: inferHasMore(body, items.length) }
   },
 }

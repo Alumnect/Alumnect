@@ -24,7 +24,7 @@ export function DeletePostModal({
         if (onDeleted) onDeleted()
       },
       onError: (err) => {
-        alert('Không thể xóa bài viết, vui lòng thử lại sau.')
+        alert(err.message || 'Không thể xóa bài viết, vui lòng thử lại sau.')
       }
     })
   }

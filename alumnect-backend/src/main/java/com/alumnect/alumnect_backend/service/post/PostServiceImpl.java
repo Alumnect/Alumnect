@@ -7,6 +7,7 @@ import com.alumnect.alumnect_backend.common.enums.PostStatus;
 import com.alumnect.alumnect_backend.dao.post.CommentRepository;
 import com.alumnect.alumnect_backend.dao.post.PostLikeRepository;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
+import com.alumnect.alumnect_backend.dao.post.PostSaveRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
@@ -16,10 +17,12 @@ import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
+import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
 import com.alumnect.alumnect_backend.entity.post.Comment;
 import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.post.PostLike;
 import com.alumnect.alumnect_backend.entity.post.PostMedia;
+import com.alumnect.alumnect_backend.entity.post.PostSave;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
@@ -74,6 +77,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private PostLikeRepository postLikeRepository;
+
+    @Autowired
+    private PostSaveRepository postSaveRepository;
 
     @Override
     @Transactional
@@ -162,7 +168,7 @@ public class PostServiceImpl implements PostService {
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         com.alumnect.alumnect_backend.entity.job.JobPosting savedJob = jobId != null ? jobPostingRepository.findById(jobId).orElse(null) : null;
         com.alumnect.alumnect_backend.entity.event.Event savedEvent = eventId != null ? eventRepository.findById(eventId).orElse(null) : null;
-        return postMapper.toResponse(saved, profile, false, savedJob, savedEvent);
+        return postMapper.toResponse(saved, profile, false, false, savedJob, savedEvent);
     }
 
     @Override
@@ -189,6 +195,7 @@ public class PostServiceImpl implements PostService {
 
         List<Long> postIds = postsPage.getContent().stream().map(Post::getId).collect(Collectors.toList());
         Set<Long> likedPostIds = computeLikedPostIds(viewerEmail, postIds);
+        Set<Long> savedPostIds = computeSavedPostIds(viewerEmail, postIds);
 
         // Batch-fetch Jobs and Events to avoid N+1 queries
         List<Long> jobIds = postsPage.getContent().stream()
@@ -207,6 +214,7 @@ public class PostServiceImpl implements PostService {
                         post,
                         profileByUserId.get(post.getAuthor().getId()),
                         likedPostIds.contains(post.getId()),
+                        savedPostIds.contains(post.getId()),
                         post.getJobId() != null ? jobById.get(post.getJobId()) : null,
                         post.getEventId() != null ? eventById.get(post.getEventId()) : null))
                 .collect(Collectors.toList());
@@ -226,10 +234,11 @@ public class PostServiceImpl implements PostService {
         Post post = loadViewablePost(id, isAuthenticated);
         UserProfile profile = userProfileRepository.findById(post.getAuthor().getId()).orElse(null);
         boolean liked = !computeLikedPostIds(viewerEmail, List.of(post.getId())).isEmpty();
+        boolean saved = !computeSavedPostIds(viewerEmail, List.of(post.getId())).isEmpty();
         com.alumnect.alumnect_backend.entity.job.JobPosting job = post.getJobId() != null ? jobPostingRepository.findById(post.getJobId()).orElse(null) : null;
         com.alumnect.alumnect_backend.entity.event.Event event = post.getEventId() != null ? eventRepository.findById(post.getEventId()).orElse(null) : null;
         log.info("Xem chi tiết bài viết: id={}", id);
-        return postMapper.toResponse(post, profile, liked, job, event);
+        return postMapper.toResponse(post, profile, liked, saved, job, event);
     }
 
     @Override
@@ -490,9 +499,10 @@ public class PostServiceImpl implements PostService {
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         boolean liked = !computeLikedPostIds(email, List.of(saved.getId())).isEmpty();
+        boolean savedFlag = !computeSavedPostIds(email, List.of(saved.getId())).isEmpty();
         com.alumnect.alumnect_backend.entity.job.JobPosting editedJob = saved.getJobId() != null ? jobPostingRepository.findById(saved.getJobId()).orElse(null) : null;
         com.alumnect.alumnect_backend.entity.event.Event editedEvent = saved.getEventId() != null ? eventRepository.findById(saved.getEventId()).orElse(null) : null;
-        return postMapper.toResponse(saved, profile, liked, editedJob, editedEvent);
+        return postMapper.toResponse(saved, profile, liked, savedFlag, editedJob, editedEvent);
     }
 
     private PostCategory parsePostCategory(String category) {
@@ -523,5 +533,95 @@ public class PostServiceImpl implements PostService {
         post.setStatus(PostStatus.DELETED);
         postRepository.save(post);
         log.info("Xóa bài viết: id={}, tác giả={}", postId, email);
+    }
+
+    @Override
+    @Transactional
+    public SavePostResponse savePost(String email, Long postId) {
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được lưu bài viết");
+        Post post = loadViewablePost(postId, true);
+        if (!postSaveRepository.existsByPostIdAndUserId(postId, user.getId())) {
+            postSaveRepository.save(PostSave.builder().post(post).user(user).build());
+            log.info("Người dùng {} đã lưu bài viết {}", email, postId);
+        }
+        return SavePostResponse.builder().saved(true).build();
+    }
+
+    @Override
+    @Transactional
+    public SavePostResponse unsavePost(String email, Long postId) {
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được lưu bài viết");
+        Post post = loadViewablePost(postId, true);
+        if (postSaveRepository.existsByPostIdAndUserId(postId, user.getId())) {
+            postSaveRepository.deleteByPostIdAndUserId(postId, user.getId());
+            log.info("Người dùng {} đã bỏ lưu bài viết {}", email, postId);
+        }
+        return SavePostResponse.builder().saved(false).build();
+    }
+
+    @Override
+    public PageResponse<PostResponse> getSavedPosts(String email, int page, int size) {
+        if (page < 0) {
+            throw new BadRequestException("Tham số page phải là số nguyên không âm");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("Tham số size phải là số nguyên dương");
+        }
+
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được xem bài viết đã lưu");
+
+        Page<PostSave> savedPage = postSaveRepository.findActiveSavedPostsByUserId(user.getId(), PageRequest.of(page, size));
+        log.info("Lấy danh sách bài viết đã lưu: user={}, page={}, size={}, tổng={}", email, page, size, savedPage.getTotalElements());
+
+        List<Post> posts = savedPage.getContent().stream().map(PostSave::getPost).collect(Collectors.toList());
+        List<Long> authorIds = posts.stream()
+                .map(p -> p.getAuthor().getId())
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
+                .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        Set<Long> likedPostIds = computeLikedPostIds(email, postIds);
+
+        // Batch-fetch Jobs and Events to avoid N+1 queries
+        List<Long> jobIds = posts.stream()
+                .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
+        List<Long> eventIds = posts.stream()
+                .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
+        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
+                jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
+                        com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
+        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
+                eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
+                        com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
+
+        List<PostResponse> content = posts.stream()
+                .map(post -> postMapper.toResponse(
+                        post,
+                        profileByUserId.get(post.getAuthor().getId()),
+                        likedPostIds.contains(post.getId()),
+                        true,
+                        post.getJobId() != null ? jobById.get(post.getJobId()) : null,
+                        post.getEventId() != null ? eventById.get(post.getEventId()) : null))
+                .collect(Collectors.toList());
+
+        return PageResponse.<PostResponse>builder()
+                .content(content)
+                .pageNumber(savedPage.getNumber())
+                .pageSize(savedPage.getSize())
+                .totalElements(savedPage.getTotalElements())
+                .totalPages(savedPage.getTotalPages())
+                .last(savedPage.isLast())
+                .build();
+    }
+
+    private Set<Long> computeSavedPostIds(String viewerEmail, List<Long> postIds) {
+        if (viewerEmail == null || postIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return userRepository.findByEmail(viewerEmail)
+                .<Set<Long>>map(u -> new HashSet<>(postSaveRepository.findSavedPostIds(u.getId(), postIds)))
+                .orElseGet(HashSet::new);
     }
 }

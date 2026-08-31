@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, MapPin, Users, Clock, Loader2 } from 'lucide-react'
+import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark } from 'lucide-react'
 import { PageHeader, Card, Avatar, SmartImage, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
-import { useFeed } from '@/features/feed/hooks/useFeed'
+import { useFeed, useToggleSavePost } from '@/features/feed'
+import { useAuthStore } from '@/store/authStore'
+import { useLoginPrompt } from '@/store/loginPrompt'
 import { compact, cn } from '@/lib/utils'
 
 const TABS = ['Sắp diễn ra', 'Trong tháng này']
@@ -12,6 +14,11 @@ const TABS = ['Sắp diễn ra', 'Trong tháng này']
 export function EventsPage() {
   const [tab, setTab] = useState('Sắp diễn ra')
   const [rsvp, setRsvp] = useState<Record<string, boolean>>({})
+  const [saved, setSaved] = useState<Record<string, boolean>>({})
+
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleSave = useToggleSavePost()
 
   // Fetch event posts from backend
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('event')
@@ -97,14 +104,53 @@ export function EventsPage() {
           return (
             <StaggerItem key={post.id}>
               <Card hover={false} className="group h-full flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-glow">
-                <Link to={`/app/posts/${post.id}`} className="relative h-44 shrink-0 overflow-hidden block">
-                  <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
-                  <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
-                    <span className="text-[10px] font-bold uppercase text-gold-600">{dateInfo.month}</span>
-                    <span className="text-xl font-extrabold text-plum-900">{dateInfo.day}</span>
-                  </div>
-                </Link>
+                <div className="relative h-44 shrink-0 overflow-hidden">
+                  <Link to={`/app/posts/${post.id}`} className="block h-full w-full">
+                    <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
+                    <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
+                      <span className="text-[10px] font-bold uppercase text-gold-600">{dateInfo.month}</span>
+                      <span className="text-xl font-extrabold text-plum-900">{dateInfo.day}</span>
+                    </div>
+                  </Link>
+
+                  {/* Nút Bookmark lưu sự kiện */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      if (!isAuthenticated) {
+                        promptLogin('Đăng nhập để lưu sự kiện.')
+                        return
+                      }
+                      const isSaved = saved[post.id] ?? post.saved
+                      const next = !isSaved
+                      setSaved((s) => ({ ...s, [post.id]: next }))
+                      toggleSave.mutate(
+                        { postId: post.id, save: next },
+                        {
+                          onSuccess: (res) => {
+                            setSaved((s) => ({ ...s, [post.id]: res.saved }))
+                          },
+                          onError: () => {
+                            setSaved((s) => ({ ...s, [post.id]: !next }))
+                          },
+                        }
+                      )
+                    }}
+                    className={cn(
+                      'absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 z-10',
+                      (saved[post.id] ?? post.saved)
+                        ? 'bg-white text-[#F27024] shadow-orange-500/20'
+                        : 'bg-black/35 text-white/90 hover:bg-black/55 hover:text-white backdrop-blur-xs'
+                    )}
+                    aria-label="Lưu sự kiện"
+                    title={(saved[post.id] ?? post.saved) ? 'Bỏ lưu sự kiện' : 'Lưu sự kiện'}
+                  >
+                    <Bookmark size={17} className={(saved[post.id] ?? post.saved) ? 'fill-[#F27024]' : ''} />
+                  </button>
+                </div>
                 <div className="flex flex-col justify-between flex-1 p-5">
                   <Link to={`/app/posts/${post.id}`} className="block">
                     <h2 className="text-lg font-bold text-plum-900 line-clamp-2 hover:underline hover:text-brand-600 transition-colors">{event.title || 'Sự kiện chưa đặt tên'}</h2>

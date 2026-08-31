@@ -58,11 +58,14 @@ public class PostResponse {
     private int reposts;
 
     /**
-     * Bài viết này đã được người xem hiện tại thích hay chưa.
-     * UC15 chỉ triển khai phần XEM bảng tin — chưa lưu trạng thái "ai đã thích bài nào",
-     * nên trường này luôn trả về false ở giai đoạn hiện tại (sẽ triển khai ở UC "Like Post" riêng).
+     * Bài viết này đã được người xem hiện tại thích hay chưa (UC17 - Like a post).
      */
     private boolean liked;
+
+    /**
+     * Bài viết này đã được người xem hiện tại lưu/đánh dấu hay chưa (UC20 - Save Post).
+     */
+    private boolean saved;
 
     /** ID của sự kiện liên kết (nếu có) */
     private String eventId;

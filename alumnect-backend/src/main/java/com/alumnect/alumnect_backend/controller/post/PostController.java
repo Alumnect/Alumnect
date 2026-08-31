@@ -9,6 +9,7 @@ import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
+import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
 import com.alumnect.alumnect_backend.service.post.PostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -226,6 +227,70 @@ public class PostController {
 
         LikeResponse result = postService.unlikePost(authentication.getName(), id);
         return ResponseEntity.ok(ApiResponse.success("Đã bỏ thích bài viết", result));
+    }
+
+    /**
+     * API lấy danh sách bài viết đã lưu của người dùng hiện tại (UC20 - View Saved Posts).
+     * Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI được truy cập — Admin/Guest nhận 403.
+     *
+     * @param page           Số thứ tự trang cần lấy (0-based), mặc định 0
+     * @param size           Kích thước trang, mặc định 10
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
+     * @return Trang kết quả bài viết đã lưu {@link PostResponse} bọc trong {@link ApiResponse}
+     */
+    @GetMapping("/saved")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getSavedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
+
+        if (!isAuthenticated(authentication)) {
+            throw new com.alumnect.alumnect_backend.exception.ForbiddenException("Vui lòng đăng nhập để xem danh sách bài viết đã lưu");
+        }
+        PageResponse<PostResponse> savedPosts = postService.getSavedPosts(authentication.getName(), page, size);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bài viết đã lưu thành công", savedPosts));
+    }
+
+    /**
+     * API lưu/đánh dấu (bookmark) một bài viết (UC20 - Save Post).
+     * Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI được lưu bài viết (Admin/vai trò khác nhận 403).
+     * Bài đã ẩn/xóa/không tồn tại trả 404. Thao tác có tính lũy đẳng.
+     *
+     * @param id             ID bài viết cần lưu
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
+     * @return Trạng thái lưu mới {@link SavePostResponse} bọc trong {@link ApiResponse}
+     */
+    @PostMapping("/{id}/save")
+    public ResponseEntity<ApiResponse<SavePostResponse>> savePost(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        if (!isAuthenticated(authentication)) {
+            throw new com.alumnect.alumnect_backend.exception.ForbiddenException("Vui lòng đăng nhập để lưu bài viết");
+        }
+        SavePostResponse result = postService.savePost(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Đã lưu bài viết thành công", result));
+    }
+
+    /**
+     * API bỏ lưu/bỏ đánh dấu một bài viết (UC20 - Save Post).
+     * Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI được bỏ lưu bài viết.
+     * Bài đã ẩn/xóa/không tồn tại trả 404. Thao tác có tính lũy đẳng.
+     *
+     * @param id             ID bài viết cần bỏ lưu
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người dùng
+     * @return Trạng thái lưu mới {@link SavePostResponse} bọc trong {@link ApiResponse}
+     */
+    @DeleteMapping("/{id}/save")
+    public ResponseEntity<ApiResponse<SavePostResponse>> unsavePost(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        if (!isAuthenticated(authentication)) {
+            throw new com.alumnect.alumnect_backend.exception.ForbiddenException("Vui lòng đăng nhập để bỏ lưu bài viết");
+        }
+        SavePostResponse result = postService.unsavePost(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Đã bỏ lưu bài viết thành công", result));
     }
 
     /**

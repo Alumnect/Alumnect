@@ -1,7 +1,7 @@
 {
     "info": {
         "name": "AlumNect Platform API Collection",
-        "description": "Tập hợp toàn bộ 100% REST APIs thực tế của n�?n tảng Mạng xã hội \u0026 Hướng nghiệp Cựu sinh viên FPT University (AlumNect).\nBao gồm đầy đủ Header Authorization Bearer Token, Body mẫu chuẩn, Biến môi trư�?ng và Tests script tự động lưu Token.",
+        "description": "Tập hợp toàn bộ 100% REST APIs thực tế của n�?n tảng Mạng xã hội & Hướng nghiệp Cựu sinh viên FPT University (AlumNect).\nBao gồm đầy đủ Header Authorization Bearer Token, Body mẫu chuẩn, Biến môi trư�?ng và Tests script tự động lưu Token.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -28,8 +28,8 @@
     ],
     "item": [
         {
-            "name": "1. Authentication \u0026 Onboarding",
-            "description": "�?ăng ký, �?ăng nhập, Xác thực OTP Email, Quên mật khẩu \u0026 Token Refresh",
+            "name": "1. Authentication & Onboarding",
+            "description": "�?ăng ký, �?ăng nhập, Xác thực OTP Email, Quên mật khẩu & Token Refresh",
             "item": [
                 {
                     "name": "1.1 Lấy danh sách 24 Chuyên ngành FPTU",
@@ -108,10 +108,10 @@
                                 "exec": [
                                     "if (pm.response.code === 200) {",
                                     "    var res = pm.response.json();",
-                                    "    if (res.data \u0026\u0026 res.data.accessToken) {",
-                                    "        pm.collectionVariables.set(\u0027accessToken\u0027, res.data.accessToken);",
-                                    "        pm.collectionVariables.set(\u0027refreshToken\u0027, res.data.refreshToken);",
-                                    "        console.log(\u0027Saved accessToken for User: \u0027 + res.data.email);",
+                                    "    if (res.data && res.data.accessToken) {",
+                                    "        pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                                    "        pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                                    "        console.log('Saved accessToken for User: ' + res.data.email);",
                                     "    }",
                                     "}"
                                 ],
@@ -152,9 +152,9 @@
                                 "exec": [
                                     "if (pm.response.code === 200) {",
                                     "    var res = pm.response.json();",
-                                    "    if (res.data \u0026\u0026 res.data.accessToken) {",
-                                    "        pm.collectionVariables.set(\u0027adminAccessToken\u0027, res.data.accessToken);",
-                                    "        console.log(\u0027Saved adminAccessToken\u0027);",
+                                    "    if (res.data && res.data.accessToken) {",
+                                    "        pm.collectionVariables.set('adminAccessToken', res.data.accessToken);",
+                                    "        console.log('Saved adminAccessToken');",
                                     "    }",
                                     "}"
                                 ],
@@ -192,7 +192,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/auth/verify-email?email=student.an@fpt.edu.vn\u0026otp=123456",
+                            "raw": "{{baseUrl}}/auth/verify-email?email=student.an@fpt.edu.vn&otp=123456",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -398,7 +398,7 @@
             ]
         },
         {
-            "name": "2. User Profile \u0026 Social",
+            "name": "2. User Profile & Social",
             "description": "Hồ sơ cá nhân, cập nhật thông tin, đổi mật khẩu và theo dõi thành viên",
             "item": [
                 {
@@ -558,7 +558,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/users/7/followers?page=0\u0026size=10",
+                            "raw": "{{baseUrl}}/users/7/followers?page=0&size=10",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -576,7 +576,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/users/7/following?page=0\u0026size=10",
+                            "raw": "{{baseUrl}}/users/7/following?page=0&size=10",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -594,7 +594,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/users/search?page=0\u0026size=12",
+                            "raw": "{{baseUrl}}/users/search?page=0&size=12",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -621,7 +621,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/users/search?query=Software\u0026page=0\u0026size=12",
+                            "raw": "{{baseUrl}}/users/search?query=Software&page=0&size=12",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -647,12 +647,12 @@
                     }
                 },
                 {
-                    "name": "2.11 Tìm kiếm ngư�?i dùng - L�?c theo Vai trò, Chuyên ngành \u0026 Niên khóa",
+                    "name": "2.11 Tìm kiếm ngư�?i dùng - L�?c theo Vai trò, Chuyên ngành & Niên khóa",
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/users/search?role=ALUMNI\u0026majorId=1\u0026cohort=18\u0026page=0\u0026size=12",
+                            "raw": "{{baseUrl}}/users/search?role=ALUMNI&majorId=1&cohort=18&page=0&size=12",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -686,12 +686,12 @@
                     }
                 },
                 {
-                    "name": "2.12 Tìm kiếm ngư�?i dùng - L�?c theo �?ịa điểm, Kỹ năng \u0026 Công ty",
+                    "name": "2.12 Tìm kiếm ngư�?i dùng - L�?c theo �?ịa điểm, Kỹ năng & Công ty",
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/users/search?city=Hà%20Nội\u0026skill=Java\u0026company=FPT\u0026page=0\u0026size=12",
+                            "raw": "{{baseUrl}}/users/search?city=Hà%20Nội&skill=Java&company=FPT&page=0&size=12",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -823,7 +823,7 @@
             ]
         },
         {
-            "name": "3. Work Experiences \u0026 Promotion",
+            "name": "3. Work Experiences & Promotion",
             "description": "Quản lý kinh nghiệm làm việc, t�?a độ địa lý công ty và thăng chức vai trò",
             "item": [
                 {
@@ -982,12 +982,12 @@
                     }
                 },
                 {
-                    "name": "4.2 L�?c bản đồ theo Chuyên ngành \u0026 Niên khóa",
+                    "name": "4.2 L�?c bản đồ theo Chuyên ngành & Niên khóa",
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/alumni-map?majorId=1\u0026cohort=14\u0026search=Software",
+                            "raw": "{{baseUrl}}/alumni-map?majorId=1&cohort=14&search=Software",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1014,7 +1014,7 @@
             ]
         },
         {
-            "name": "5. Career Paths \u0026 Salary",
+            "name": "5. Career Paths & Salary",
             "description": "Lộ trình hành trình sự nghiệp và chi tiết các bước nhảy việc",
             "item": [
                 {
@@ -1023,7 +1023,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/career-paths?page=0\u0026size=10\u0026majorId=1",
+                            "raw": "{{baseUrl}}/career-paths?page=0&size=10&majorId=1",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1068,8 +1068,8 @@
             ]
         },
         {
-            "name": "6. Community Feed \u0026 Posts",
-            "description": "Bảng tin cộng đồng, Bài viết �?a hình (Thư�?ng, Sự kiện, Tuyển dụng), Bình luận \u0026 Thả tim",
+            "name": "6. Community Feed & Posts",
+            "description": "Bảng tin cộng đồng, Bài viết �?a hình (Thư�?ng, Sự kiện, Tuyển dụng), Bình luận & Thả tim",
             "item": [
                 {
                     "name": "6.1 Xem Bảng tin Cộng đồng (Feed)",
@@ -1082,7 +1082,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{baseUrl}}/posts?page=0\u0026size=10\u0026sort=recent",
+                            "raw": "{{baseUrl}}/posts?page=0&size=10&sort=recent",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1131,7 +1131,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"type\": \"normal\",\n  \"content\": \"Chào m�?i ngư�?i! Mình vừa hoàn thành đồ án tốt nghiệp tại FPT University.\",\n  \"mediaUrls\": [\n    \"https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800\u0026q=80\"\n  ]\n}"
+                            "raw": "{\n  \"type\": \"normal\",\n  \"content\": \"Chào m�?i ngư�?i! Mình vừa hoàn thành đồ án tốt nghiệp tại FPT University.\",\n  \"mediaUrls\": [\n    \"https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80\"\n  ]\n}"
                         }
                     }
                 },
@@ -1160,7 +1160,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"type\": \"event\",\n  \"content\": \"Hội thảo: \u0027Ứng dụng Generative AI trong Phát triển Phần m�?m Hiện đại\u0027. M�?i các bạn sinh viên và cựu sinh viên tham dự!\",\n  \"mediaUrls\": [\n    \"https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800\u0026q=80\"\n  ],\n  \"event\": {\n    \"title\": \"FPTU AI Summit 2026\",\n    \"location\": \"Hội trư�?ng A, FPT University Hà Nội\",\n    \"startTime\": \"2026-09-15T09:00:00Z\",\n    \"endTime\": \"2026-09-15T12:00:00Z\",\n    \"capacity\": 200\n  }\n}"
+                            "raw": "{\n  \"type\": \"event\",\n  \"content\": \"Hội thảo: 'Ứng dụng Generative AI trong Phát triển Phần m�?m Hiện đại'. M�?i các bạn sinh viên và cựu sinh viên tham dự!\",\n  \"mediaUrls\": [\n    \"https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80\"\n  ],\n  \"event\": {\n    \"title\": \"FPTU AI Summit 2026\",\n    \"location\": \"Hội trư�?ng A, FPT University Hà Nội\",\n    \"startTime\": \"2026-09-15T09:00:00Z\",\n    \"endTime\": \"2026-09-15T12:00:00Z\",\n    \"capacity\": 200\n  }\n}"
                         }
                     }
                 },
@@ -1241,7 +1241,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"content\": \"Nội dung bài viết đã được cập nhật lại chuẩn chỉ hơn.\",\n  \"mediaUrls\": [\n    \"https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800\u0026q=80\"\n  ]\n}"
+                            "raw": "{\n  \"content\": \"Nội dung bài viết đã được cập nhật lại chuẩn chỉ hơn.\",\n  \"mediaUrls\": [\n    \"https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80\"\n  ]\n}"
                         }
                     }
                 },
@@ -1302,7 +1302,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{baseUrl}}/posts/1/comments?page=0\u0026size=10",
+                            "raw": "{{baseUrl}}/posts/1/comments?page=0&size=10",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1415,15 +1415,172 @@
                     },
                     "name": "6.11 X�a B�i vi?t - Th�nh c�ng",
                     "response": []
+                },
+                {
+                    "name": "6.12 [UC20] Lưu bài viết (Save Post) - Thành công",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/1/save",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "1",
+                                "save"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('Trả về saved = true', function () {",
+                                    "  var res = pm.response.json();",
+                                    "  pm.expect(res.data.saved).to.eql(true);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "6.13 [UC20] Bỏ lưu bài viết (Unsave Post) - Thành công",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/1/save",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "1",
+                                "save"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('Trả về saved = false', function () {",
+                                    "  var res = pm.response.json();",
+                                    "  pm.expect(res.data.saved).to.eql(false);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "6.14 [UC20] Lấy danh sách bài viết đã lưu (Get Saved Posts) - Thành công",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/saved?page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "saved"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('Trả về phân trang danh sách bài viết', function () {",
+                                    "  var res = pm.response.json();",
+                                    "  pm.expect(res.data).to.have.property('content');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "6.15 [UC20] Lưu bài viết - Thất bại do bài viết không tồn tại (404)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/999999/save",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "999999",
+                                "save"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('HTTP 404', function () { pm.response.to.have.status(404); });"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
                 }
             ]
         },
         {
-            "name": "7. Q\u0026A Forum",
-            "description": "Diễn đàn H�?i �?áp, Danh mục Chủ đ�?, Câu h�?i \u0026 Câu trả l�?i",
+            "name": "7. Q&A Forum",
+            "description": "Diễn đàn H�?i �?áp, Danh mục Chủ đ�?, Câu h�?i & Câu trả l�?i",
             "item": [
                 {
-                    "name": "7.1 Lấy danh mục Chủ đ�? Q\u0026A (Topics)",
+                    "name": "7.1 Lấy danh mục Chủ đ�? Q&A (Topics)",
                     "request": {
                         "method": "GET",
                         "header": [],
@@ -1440,12 +1597,12 @@
                     }
                 },
                 {
-                    "name": "7.2 Xem danh sách Câu h�?i Q\u0026A (Có bộ l�?c Topic \u0026 Major)",
+                    "name": "7.2 Xem danh sách Câu h�?i Q&A (Có bộ l�?c Topic & Major)",
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/questions?page=0\u0026size=10\u0026sort=recent\u0026topicId=1",
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&topicId=1",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1498,7 +1655,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"title\": \"Lộ trình h�?c Spring Boot \u0026 Cloud Native cho ngư�?i mới bắt đầu?\",\n  \"body\": \"Chào các anh chị cựu sinh viên FPTU, em là sinh viên K18 muốn theo hướng Java Backend. Xin các anh chị gợi ý lộ trình và các dự án thực tế nên làm.\",\n  \"topicId\": 1,\n  \"majorId\": 1\n}"
+                            "raw": "{\n  \"title\": \"Lộ trình h�?c Spring Boot & Cloud Native cho ngư�?i mới bắt đầu?\",\n  \"body\": \"Chào các anh chị cựu sinh viên FPTU, em là sinh viên K18 muốn theo hướng Java Backend. Xin các anh chị gợi ý lộ trình và các dự án thực tế nên làm.\",\n  \"topicId\": 1,\n  \"majorId\": 1\n}"
                         }
                     }
                 },
@@ -1545,7 +1702,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"title\": \"Lộ trình h�?c Spring Boot \u0026 Microservices nâng cao cho ngư�?i mới?\",\n  \"body\": \"Nội dung câu h�?i đã được bổ sung chi tiết hơn v�? các công nghệ Docker và Kubernetes.\",\n  \"topicId\": 1,\n  \"majorId\": 1\n}"
+                            "raw": "{\n  \"title\": \"Lộ trình h�?c Spring Boot & Microservices nâng cao cho ngư�?i mới?\",\n  \"body\": \"Nội dung câu h�?i đã được bổ sung chi tiết hơn v�? các công nghệ Docker và Kubernetes.\",\n  \"topicId\": 1,\n  \"majorId\": 1\n}"
                         }
                     }
                 },
@@ -1555,7 +1712,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/questions/1/answers?page=0\u0026size=10",
+                            "raw": "{{baseUrl}}/questions/1/answers?page=0&size=10",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1594,7 +1751,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"body\": \"Anh khuyên em nên nắm thật chắc Core Java (OOP, Collection, Concurrency), sau đó làm một dự án CRUD chuẩn REST API với Spring Boot \u0026 PostgreSQL trước nhé!\"\n}"
+                            "raw": "{\n  \"body\": \"Anh khuyên em nên nắm thật chắc Core Java (OOP, Collection, Concurrency), sau đó làm một dự án CRUD chuẩn REST API với Spring Boot & PostgreSQL trước nhé!\"\n}"
                         }
                     }
                 },
@@ -1642,7 +1799,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/files/presigned-url?fileName=avatar.jpg\u0026contentType=image/jpeg",
+                            "raw": "{{baseUrl}}/files/presigned-url?fileName=avatar.jpg&contentType=image/jpeg",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1666,8 +1823,8 @@
             ]
         },
         {
-            "name": "9. Admin Portal \u0026 Moderation",
-            "description": "Quản trị hệ thống, Thống kê KPIs, Phê duyệt Cựu SV, Quản trị Users \u0026 Bài viết",
+            "name": "9. Admin Portal & Moderation",
+            "description": "Quản trị hệ thống, Thống kê KPIs, Phê duyệt Cựu SV, Quản trị Users & Bài viết",
             "item": [
                 {
                     "name": "9.1 Thống kê KPIs Dashboard tổng quan",
@@ -1703,7 +1860,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{baseUrl}}/admin/users?page=0\u0026size=10\u0026status=ACTIVE",
+                            "raw": "{{baseUrl}}/admin/users?page=0&size=10&status=ACTIVE",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1794,7 +1951,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{baseUrl}}/admin/verifications?page=0\u0026size=10\u0026status=PENDING",
+                            "raw": "{{baseUrl}}/admin/verifications?page=0&size=10&status=PENDING",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -1862,7 +2019,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{baseUrl}}/admin/posts?page=0\u0026size=10\u0026status=VISIBLE",
+                            "raw": "{{baseUrl}}/admin/posts?page=0&size=10&status=VISIBLE",
                             "host": [
                                 "{{baseUrl}}"
                             ],

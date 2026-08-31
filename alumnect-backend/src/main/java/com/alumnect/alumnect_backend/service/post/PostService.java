@@ -133,4 +133,38 @@ public interface PostService {
      * @param postId ID bài viết cần xóa
      */
     void deletePost(String email, Long postId);
+
+    /**
+     * Lưu/đánh dấu (bookmark) một bài viết (UC20 - Save Post).
+     * Chỉ STUDENT/ALUMNI đã đăng nhập được lưu; thao tác có tính lũy đẳng (đã lưu rồi thì không thay đổi).
+     * Bài viết đã ẩn/xóa/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần lưu
+     * @return Trạng thái lưu mới ({@code saved=true})
+     */
+    com.alumnect.alumnect_backend.dto.response.post.SavePostResponse savePost(String email, Long postId);
+
+    /**
+     * Bỏ lưu/bỏ đánh dấu một bài viết (UC20 - Save Post).
+     * Chỉ STUDENT/ALUMNI đã đăng nhập được bỏ lưu; thao tác có tính lũy đẳng (chưa lưu thì không thay đổi).
+     * Bài viết đã ẩn/xóa/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần bỏ lưu
+     * @return Trạng thái lưu mới ({@code saved=false})
+     */
+    com.alumnect.alumnect_backend.dto.response.post.SavePostResponse unsavePost(String email, Long postId);
+
+    /**
+     * Lấy danh sách các bài viết đã lưu của người dùng hiện tại (UC20 - View Saved Posts).
+     * Yêu cầu người dùng đăng nhập với vai trò STUDENT hoặc ALUMNI.
+     * Danh sách được phân trang và sắp xếp theo thời gian lưu mới nhất trước.
+     *
+     * @param email Email người dùng đang đăng nhập (từ JWT)
+     * @param page  Số thứ tự trang cần lấy (0-based)
+     * @param size  Kích thước trang (số bài viết mỗi trang)
+     * @return Trang kết quả các bài viết đã lưu
+     */
+    PageResponse<PostResponse> getSavedPosts(String email, int page, int size);
 }
