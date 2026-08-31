@@ -74,6 +74,7 @@ export function Avatar({
   src,
   name,
   size = 44,
+  verified,
   className,
   ring,
 }: {

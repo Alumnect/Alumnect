@@ -59,11 +59,6 @@ public class Endpoints {
         "/api/v1/auth/verify-reset-otp"  // Xác minh OTP khôi phục mật khẩu
     };
 
-    // Endpoint thành viên — bắt buộc JWT; quyền Student/Alumni và quyền sở hữu được kiểm tra ở Service Layer.
-    public static final String[] MEMBER_ENDPOINTS = {
-        "/api/v1/posts/*/comments/*" // UC19 - Chỉnh sửa bình luận
-    };
-
     // Endpoint dành riêng cho Admin
     public static final String[] ADMIN_ENDPOINT = {
         "/api/v1/admin/**"

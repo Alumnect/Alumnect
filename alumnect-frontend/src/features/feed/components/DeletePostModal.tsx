@@ -23,7 +23,7 @@ export function DeletePostModal({
         onClose()
         if (onDeleted) onDeleted()
       },
-      onError: () => {
+      onError: (err) => {
         alert('Không thể xóa bài viết, vui lòng thử lại sau.')
       }
     })
