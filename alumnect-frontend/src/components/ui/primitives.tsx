@@ -74,7 +74,6 @@ export function Avatar({
   src,
   name,
   size = 44,
-  verified,
   className,
   ring,
 }: {
@@ -112,14 +111,6 @@ export function Avatar({
           aria-hidden
         >
           {initials(name)}
-        </span>
-      )}
-      {verified && (
-        <span
-          aria-label="Tài khoản đã xác minh"
-          className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border-2 border-cream-50 bg-brand-600 text-[9px] font-black text-white"
-        >
-          ✓
         </span>
       )}
     </span>
