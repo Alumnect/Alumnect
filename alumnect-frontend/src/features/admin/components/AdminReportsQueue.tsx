@@ -1,10 +1,15 @@
-import { useState } from 'react'
-import { Inbox } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { 
+  Inbox, Eye, X, 
+  Flag, ArrowRight, ShieldAlert
+} from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAdminReports } from '../hooks/useAdmin'
+import type { AdminReportDto } from '../api/adminApi'
 
 const REASON_LABELS: Record<string, { label: string; tone: 'brand' | 'gold' | 'success' | 'danger' | 'neutral' }> = {
   SPAM: { label: 'Spam / Rác', tone: 'neutral' },
@@ -28,6 +33,20 @@ export function AdminReportsQueue() {
     page,
     size: 10,
   })
+
+  // Modal Detail state
+  const [selectedReport, setSelectedReport] = useState<AdminReportDto | null>(null)
+
+  useEffect(() => {
+    if (selectedReport) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [selectedReport])
 
   const reports = reportsData?.content || []
   const totalPages = reportsData?.totalPages || 0
@@ -145,6 +164,7 @@ export function AdminReportsQueue() {
                     <th className="px-5 py-3.5 font-bold">Lý do</th>
                     <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung bài viết</th>
                     <th className="px-5 py-3.5 font-bold text-center">Trạng thái bài</th>
+                    <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-plum-900/5">
@@ -203,6 +223,18 @@ export function AdminReportsQueue() {
                             <Badge tone="success">Công khai</Badge>
                           )}
                         </td>
+
+                        {/* Thao tác */}
+                        <td className="px-5 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setSelectedReport(r)}
+                              className="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-xs rounded-full px-3 py-1.5 border border-brand-100 transition-colors shadow-2xs hover:shadow-xs cursor-pointer hover-sheen"
+                            >
+                              <Eye size={12} /> Chi tiết
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     )
                   })}
@@ -237,6 +269,138 @@ export function AdminReportsQueue() {
           </div>
         )}
       </Reveal>
+
+      {/* Modal chi tiết báo cáo vi phạm (Chỉ xem chi tiết - UC70) */}
+      {selectedReport && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
+            onClick={() => setSelectedReport(null)}
+          />
+
+          {/* Card Modal */}
+          <Card hover={false} className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-white max-h-[90vh] flex flex-col pop">
+            
+            {/* Header Modal */}
+            <div className="relative bg-gradient-to-r from-brand-500 to-violet-500 p-5 text-white flex items-center justify-between shrink-0 shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-white/20 p-2 border border-white/25">
+                  <Flag size={20} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white leading-none">Chi tiết báo cáo vi phạm</h3>
+                  <p className="text-xs text-brand-50 mt-1 font-medium">Báo cáo #{selectedReport.id}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedReport(null)}
+                className="rounded-full hover:bg-white/20 p-1.5 transition-colors border border-transparent hover:border-white/10 text-white cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content Modal */}
+            <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-140px)]">
+              
+              {/* Thông tin người báo cáo */}
+              <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600 flex items-center gap-1.5">
+                  <ShieldAlert size={14} /> Thông tin báo cáo
+                </h4>
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    src={selectedReport.reporterAvatarUrl}
+                    name={selectedReport.reporterName}
+                    size={40}
+                    className="border border-brand-200"
+                  />
+                  <div>
+                    <span className="text-xs text-plum-400 block font-medium">Người gửi báo cáo</span>
+                    <span className="font-bold text-plum-900 text-sm">{selectedReport.reporterName} ({selectedReport.reporterEmail})</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-xs mt-2 border-t border-brand-100/50 pt-2 font-medium">
+                  <div>
+                    <span className="text-plum-400 block">Lý do vi phạm</span>
+                    <span className="font-bold text-plum-900 text-sm">
+                      {REASON_LABELS[selectedReport.reason]?.label || selectedReport.reason}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-plum-400 block">Thời điểm gửi</span>
+                    <span className="font-bold text-plum-900 text-sm">
+                      {new Date(selectedReport.createdAt).toLocaleString('vi-VN')}
+                    </span>
+                  </div>
+                </div>
+                {selectedReport.description && (
+                  <div className="bg-white p-3 rounded-xl border border-brand-100 mt-2">
+                    <span className="text-xs text-plum-400 block font-medium mb-1">Mô tả chi tiết từ người gửi:</span>
+                    <p className="text-xs text-plum-800 italic font-medium leading-relaxed">
+                      "{selectedReport.description}"
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Thông tin bài viết bị báo cáo */}
+              <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">
+                    Bài viết bị báo cáo (Tác giả: {selectedReport.postAuthorName})
+                  </h4>
+                  <a
+                    href={`/admin/posts/${selectedReport.postId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold text-brand-500 hover:text-brand-600 inline-flex items-center gap-0.5 hover:underline"
+                  >
+                    Xem bài đầy đủ <ArrowRight size={10} />
+                  </a>
+                </div>
+                
+                <div className="bg-white p-4 rounded-xl border border-brand-100 space-y-2 max-h-48 overflow-y-auto">
+                  <p className="text-xs text-plum-800 font-medium whitespace-pre-wrap leading-relaxed">
+                    {selectedReport.postContent}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-medium border-t border-brand-100/50 pt-2">
+                  <div>
+                    <span className="text-plum-400 block">Tác giả bài viết</span>
+                    <span className="font-bold text-plum-900">{selectedReport.postAuthorEmail}</span>
+                  </div>
+                  <div>
+                    <span className="text-plum-400 block">Trạng thái bài viết gốc</span>
+                    {selectedReport.postStatus === 'HIDDEN' ? (
+                      <Badge tone="danger">Đang bị ẩn</Badge>
+                    ) : selectedReport.postStatus === 'DELETED' ? (
+                      <Badge tone="neutral">Đã xóa</Badge>
+                    ) : (
+                      <Badge tone="success">Đang công khai</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Nút đóng đơn giản ở giao diện Chỉ Xem Chi Tiết */}
+              <div className="pt-4 border-t border-plum-900/8 flex justify-end">
+                <Button
+                  onClick={() => setSelectedReport(null)}
+                  className="font-bold text-xs rounded-full bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-100 px-5 py-2 cursor-pointer"
+                >
+                  Đóng
+                </Button>
+              </div>
+
+            </div>
+          </Card>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
