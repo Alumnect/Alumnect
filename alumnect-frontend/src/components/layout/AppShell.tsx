@@ -233,13 +233,14 @@ export function AppShell() {
                     </span>
                   }
                 >
-                  <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-brand-50">
-                    <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={42} verified={user?.verified} />
+                  <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-plum-900/[0.04] transition-colors">
+                    <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={42} />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-plum-900">{user?.name}</p>
-                      <p className="truncate text-xs text-brand-600">{user?.verified ? 'Đã xác minh · ' : ''}{roleLabel}</p>
+                      <p className="truncate text-xs text-plum-500">{user?.verified ? 'Đã xác minh · ' : ''}{roleLabel}</p>
                     </div>
                   </Link>
+
                   <div className="my-1 h-px bg-plum-900/[0.07]" />
                   {APP_ACCOUNT_NAV
                     .filter((item) => item.to !== '/admin' || user?.role === 'ADMIN')

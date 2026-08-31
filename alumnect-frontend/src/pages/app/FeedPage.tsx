@@ -7,7 +7,7 @@
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / rỗng / lỗi (retry) / phân quyền / thành công.
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -32,17 +32,22 @@ import {
   ExternalLink,
   Clock,
   Users,
+  Trash2,
 } from 'lucide-react'
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
+import { EVENTS, QUESTIONS } from '@/lib/constants'
+
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal } from '@/features/feed'
+import { ReportPostModal } from '@/features/report'
+import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
+
 import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
@@ -111,22 +116,40 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
 function PostCard({
   post,
   canInteract,
+  currentUserId,
   currentUserName,
   onEdit,
+  onDelete,
+  canReport,
+  onReport,
 }: {
   post: Post
   canInteract: boolean
+  currentUserId?: string
   currentUserName?: string
   onEdit?: (post: Post) => void
+  onDelete?: (post: Post) => void
+  canReport: boolean
+  onReport?: (post: Post) => void
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState<number>(post.likes)
+  // Trạng thái lưu bài viết cục bộ (UC20 - Save Post)
+  const [saved, setSaved] = useState(post.saved ?? false)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
+
+  // Đồng bộ lại state khi post props thay đổi (ví dụ sau khi refetch hoặc đổi tab)
+  useEffect(() => {
+    setLiked(post.liked)
+    setLikeCount(post.likes)
+    setSaved(post.saved ?? false)
+  }, [post.liked, post.likes, post.saved])
 
   // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
   const promptLogin = useLoginPrompt((s) => s.open)
   const toggleLike = useToggleLike()
+  const toggleSave = useToggleSavePost()
 
   /**
    * Xử lý bấm nút Thích (UC17): cập nhật lạc quan (đổi UI ngay), đồng bộ theo phản hồi
@@ -155,7 +178,33 @@ function PostCard({
     )
   }
 
-  const isAuthor = !!currentUserName && post.author === currentUserName
+  /**
+   * Xử lý bấm nút Lưu / Bỏ lưu bài viết (UC20): cập nhật lạc quan,
+   * rollback khi lỗi, hiển thị popup đăng nhập với Guest.
+   */
+  const handleSave = () => {
+    if (!canInteract) {
+      promptLogin('Đăng nhập để lưu bài viết.')
+      return
+    }
+    const next = !saved
+    setSaved(next)
+    toggleSave.mutate(
+      { postId: post.id, save: next },
+      {
+        onSuccess: (data) => {
+          setSaved(data.saved)
+        },
+        onError: () => {
+          setSaved(!next)
+        },
+      },
+    )
+  }
+
+  const isAuthor = post.authorId != null
+    ? !!currentUserId && post.authorId === currentUserId
+    : !!currentUserName && post.author === currentUserName
 
   return (
     <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white")}>
@@ -198,17 +247,28 @@ function PostCard({
               {post.role ? `${post.role} · ` : ''}{post.time}
             </Link>
           </div>
-          {/* Nút Chỉnh sửa (UC22) chỉ hiển thị cho chính tác giả bài viết */}
-          {isAuthor && onEdit ? (
-            <button
-              type="button"
-              onClick={() => onEdit(post)}
-              aria-label="Chỉnh sửa bài viết"
-              title="Chỉnh sửa bài viết"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-            >
-              <Pencil size={13} /> Sửa
-            </button>
+          {/* Nút Chỉnh sửa (UC22) và Xóa (UC23) chỉ hiển thị cho chính tác giả bài viết */}
+          {isAuthor && onEdit && onDelete ? (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => onEdit(post)}
+                aria-label="Chỉnh sửa bài viết"
+                title="Chỉnh sửa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+              >
+                <Pencil size={13} /> Sửa
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(post)}
+                aria-label="Xóa bài viết"
+                title="Xóa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+              >
+                <Trash2 size={13} /> Xóa
+              </button>
+            </div>
           ) : (
             <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
               <MoreHorizontal size={18} />
@@ -455,18 +515,46 @@ function PostCard({
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
+        {!isAuthor && (canReport ? (
+          <button
+            type="button"
+            onClick={() => onReport?.(post)}
+            aria-label="Báo cáo bài viết"
+            title="Báo cáo bài viết"
+            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Flag size={17} />
+          </button>
+        ) : !canInteract ? (
+          <button
+            onClick={() => promptLogin('Đăng nhập để báo cáo bài viết.')}
+            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Flag size={17} />
+          </button>
+        ) : null)}
         <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để báo cáo bài viết.') }}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+          title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+          onClick={handleSave}
+          className={cn(
+            'grid h-9 w-9 place-items-center rounded-lg transition-all duration-200',
+            saved
+              ? 'text-[#F27024] bg-orange-50 hover:bg-orange-100'
+              : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900',
+          )}
         >
-          <Flag size={17} />
-        </button>
-        <button
-          aria-label="Lưu bài viết"
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để lưu bài viết.') }}
-          className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
-        >
-          <Bookmark size={18} />
+          {saved ? (
+            <motion.div
+              initial={{ scale: 0.6 }}
+              animate={{ scale: [1.25, 1] }}
+              transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
+            >
+              <Bookmark size={18} className="fill-[#F27024] text-[#F27024]" />
+            </motion.div>
+          ) : (
+            <Bookmark size={18} />
+          )}
         </button>
       </div>
     </Card>
@@ -569,14 +657,18 @@ export function FeedPage() {
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
+  const [postToReport, setPostToReport] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
+
   // Người xem hiện tại: phiên đăng nhập thật hoặc null (Guest).
   const viewer: AuthUser | null = user ?? null
   const isGuest = !viewer
   // Chỉ Student/Alumni mới được đăng bài & tương tác (Admin không phải người đăng).
   const canPost = !!viewer && (viewer.role === 'STUDENT' || viewer.role === 'ALUMNI')
+  const canReport = canPost
 
   const handleStartEdit = (p: Post) => {
     setEditingPost(p)
@@ -676,8 +768,12 @@ export function FeedPage() {
                   <PostCard
                     post={p}
                     canInteract={!isGuest}
+                    canReport={canReport}
+                    currentUserId={viewer?.id}
                     currentUserName={viewer?.name}
                     onEdit={handleStartEdit}
+                    onDelete={setPostToDelete}
+                    onReport={setPostToReport}
                   />
                 </StaggerItem>
               ))}
@@ -699,6 +795,25 @@ export function FeedPage() {
                 <p className="text-sm text-plum-400">Bạn đã xem hết bảng tin 🎉</p>
               )}
             </div>
+
+            {postToDelete && (
+              <DeletePostModal
+                open={!!postToDelete}
+                onClose={() => setPostToDelete(null)}
+                post={postToDelete}
+                onDeleted={() => {
+                   setPostToDelete(null)
+                   refetch()
+                }}
+              />
+            )}
+            {postToReport && (
+              <ReportPostModal
+                open={!!postToReport}
+                postId={postToReport.id}
+                onClose={() => setPostToReport(null)}
+              />
+            )}
           </>
         )}
       </div>
@@ -707,23 +822,11 @@ export function FeedPage() {
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
       <aside className="hidden w-[320px] shrink-0 space-y-5 lg:block">
-        {/* Mục 1: Gợi ý người để theo dõi */}
+        {/* Mục 1: Gợi ý kết nối (UC10 - View Connection Suggestions) */}
         <Reveal direction="left">
-          <SidebarCard title="Gợi ý kết nối" action="Xem tất cả">
-            <ul className="space-y-4">
-              {ALUMNI.slice(0, 3).map((a) => (
-                <li key={a.id} className="flex items-center gap-3">
-                  <Avatar src={a.avatar} name={a.name} size={40} verified={a.verified} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-plum-900">{a.name}</p>
-                    <p className="truncate text-xs text-plum-400">{a.cohort}</p>
-                  </div>
-                  <Button size="sm" variant="secondary">Theo dõi</Button>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
+          <ConnectionSuggestionsWidget limit={4} />
         </Reveal>
+
 
         {/* Mục 2: Sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>

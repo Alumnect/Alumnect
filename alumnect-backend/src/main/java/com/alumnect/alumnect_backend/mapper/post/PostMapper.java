@@ -34,10 +34,12 @@ public class PostMapper {
      * @param post          Entity bài viết (đã JOIN FETCH sẵn {@code user})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu hồ sơ chưa được tạo
      * @param liked         true nếu người xem hiện tại đã thích bài viết này (UC17 - Like a post)
+     * @param saved         true nếu người xem hiện tại đã lưu bài viết này (UC20 - Save Post)
+     * @param job           Thông tin tuyển dụng (có thể null)
      * @param event         Thông tin sự kiện (có thể null)
      * @return DTO phẳng khớp schema Zod {@code postSchema} phía Frontend
      */
-    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, JobPosting job, Event event) {
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event) {
         User author = post.getAuthor();
 
         // Tên hiển thị & avatar: lấy từ UserProfile nếu có, fallback về email khi hồ sơ chưa được tạo.
@@ -74,6 +76,8 @@ public class PostMapper {
                 .reposts(post.getRepostCount())
                 // UC17: cờ liked phản ánh người xem hiện tại đã thích bài này hay chưa.
                 .liked(liked)
+                // UC20: cờ saved phản ánh người xem hiện tại đã lưu bài này hay chưa.
+                .saved(saved)
                 .eventId(post.getEventId() != null ? String.valueOf(post.getEventId()) : null)
                 .jobId(post.getJobId() != null ? String.valueOf(post.getJobId()) : null)
                 .job(job != null ? JobDTO.builder()
@@ -93,6 +97,13 @@ public class PostMapper {
                         .capacity(event.getCapacity())
                         .build() : null)
                 .build();
+    }
+
+    /**
+     * Phương thức tương thích ngược (overload) không truyền cờ saved (mặc định false).
+     */
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, JobPosting job, Event event) {
+        return toResponse(post, authorProfile, liked, false, job, event);
     }
 
     /**

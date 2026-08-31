@@ -168,3 +168,41 @@ export function useAdminPostDetail(id: number | null) {
     enabled: id !== null,
   })
 }
+
+/**
+ * Hook lấy danh sách báo cáo vi phạm bài viết với bộ lọc động và phân trang (UC69)
+ */
+export function useAdminReports(filters: {
+  query?: string
+  reason?: string
+  status?: string
+  postId?: number
+  page: number
+  size: number
+}) {
+  return useQuery({
+    queryKey: ['admin', 'reports', filters],
+    queryFn: async () => {
+      const response = await adminApi.getReports(filters)
+      return response.data
+    },
+  })
+}
+
+/**
+ * Hook cập nhật trạng thái xử lý của một báo cáo vi phạm bài viết (UC69)
+ */
+export function useUpdateReportStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: 'RESOLVED' | 'DISMISSED' }) => {
+      const response = await adminApi.updateReportStatus(id, status)
+      return response.data
+    },
+    onSuccess: () => {
+      // Refresh danh sách báo cáo và các thống kê liên quan
+      queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
+    },
+  })
+}

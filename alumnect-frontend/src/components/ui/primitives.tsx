@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { ReactNode, HTMLAttributes } from 'react'
-import { BadgeCheck, Search } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { initials } from '@/lib/utils'
+import { Search } from 'lucide-react'
+import { cn, initials } from '@/lib/utils'
+
 
 /** Max-width responsive content container. */
 export function Container({ className, children }: { className?: string; children: ReactNode }) {
@@ -74,7 +74,6 @@ export function Avatar({
   src,
   name,
   size = 44,
-  verified,
   className,
   ring,
 }: {
@@ -87,7 +86,7 @@ export function Avatar({
 }) {
   const [failed, setFailed] = useState(false)
   return (
-    <span className={cn('relative inline-flex shrink-0', className)} style={{ width: size, height: size }}>
+    <span className={cn('relative inline-flex shrink-0 rounded-full', className)} style={{ width: size, height: size }}>
       {src && !failed ? (
         <img
           src={src}
@@ -114,16 +113,10 @@ export function Avatar({
           {initials(name)}
         </span>
       )}
-      {verified && (
-        <BadgeCheck
-          className="absolute -bottom-1 -right-1 rounded-full bg-white text-brand-500"
-          size={Math.max(14, size * 0.34)}
-          strokeWidth={2.4}
-        />
-      )}
     </span>
   )
 }
+
 
 /** Loading skeleton block. */
 export function Skeleton({ className }: { className?: string }) {

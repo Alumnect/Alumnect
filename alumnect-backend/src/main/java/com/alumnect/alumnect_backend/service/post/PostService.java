@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -79,6 +80,18 @@ public interface PostService {
     CommentResponse createComment(String email, Long postId, CreateCommentRequest request);
 
     /**
+     * Chỉnh sửa nội dung một bình luận đã đăng (UC19 - Edit a comment).
+     * Chỉ tác giả có vai trò STUDENT hoặc ALUMNI được chỉnh sửa bình luận ACTIVE của chính mình.
+     *
+     * @param email     Email người dùng đang đăng nhập, lấy từ JWT
+     * @param postId    ID bài viết chứa bình luận
+     * @param commentId ID bình luận cần chỉnh sửa
+     * @param request   Nội dung mới đã được Controller xác thực dữ liệu
+     * @return Bình luận sau khi cập nhật, chuẩn hóa thành {@link CommentResponse}
+     */
+    CommentResponse updateComment(String email, Long postId, Long commentId, UpdateCommentRequest request);
+
+    /**
      * Thích một bài viết (UC17 - Like a post). Chỉ STUDENT/ALUMNI đã đăng nhập được thích;
      * thao tác có tính lũy đẳng (đã thích rồi thì không thay đổi). Bài đã ẩn/không tồn tại → 404.
      *
@@ -109,4 +122,49 @@ public interface PostService {
      * @return Bài viết đã được cập nhật, chuẩn hóa thành {@link PostResponse}
      */
     PostResponse editPost(String email, Long postId, EditPostRequest request);
+
+    /**
+     * Xóa một bài viết (UC23 - Delete a post).
+     * Chỉ tác giả (STUDENT/ALUMNI) mới được xóa bài viết của chính mình;
+     * người khác hoặc Admin → 403. Bài đã xóa/không tồn tại → 404.
+     * Cập nhật trạng thái thành DELETED để ẩn khỏi bảng tin.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT) — phải là tác giả bài viết
+     * @param postId ID bài viết cần xóa
+     */
+    void deletePost(String email, Long postId);
+
+    /**
+     * Lưu/đánh dấu (bookmark) một bài viết (UC20 - Save Post).
+     * Chỉ STUDENT/ALUMNI đã đăng nhập được lưu; thao tác có tính lũy đẳng (đã lưu rồi thì không thay đổi).
+     * Bài viết đã ẩn/xóa/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần lưu
+     * @return Trạng thái lưu mới ({@code saved=true})
+     */
+    com.alumnect.alumnect_backend.dto.response.post.SavePostResponse savePost(String email, Long postId);
+
+    /**
+     * Bỏ lưu/bỏ đánh dấu một bài viết (UC20 - Save Post).
+     * Chỉ STUDENT/ALUMNI đã đăng nhập được bỏ lưu; thao tác có tính lũy đẳng (chưa lưu thì không thay đổi).
+     * Bài viết đã ẩn/xóa/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần bỏ lưu
+     * @return Trạng thái lưu mới ({@code saved=false})
+     */
+    com.alumnect.alumnect_backend.dto.response.post.SavePostResponse unsavePost(String email, Long postId);
+
+    /**
+     * Lấy danh sách các bài viết đã lưu của người dùng hiện tại (UC20 - View Saved Posts).
+     * Yêu cầu người dùng đăng nhập với vai trò STUDENT hoặc ALUMNI.
+     * Danh sách được phân trang và sắp xếp theo thời gian lưu mới nhất trước.
+     *
+     * @param email Email người dùng đang đăng nhập (từ JWT)
+     * @param page  Số thứ tự trang cần lấy (0-based)
+     * @param size  Kích thước trang (số bài viết mỗi trang)
+     * @return Trang kết quả các bài viết đã lưu
+     */
+    PageResponse<PostResponse> getSavedPosts(String email, int page, int size);
 }

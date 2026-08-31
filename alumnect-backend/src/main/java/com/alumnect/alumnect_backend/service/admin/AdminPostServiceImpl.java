@@ -21,6 +21,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -43,9 +45,36 @@ public class AdminPostServiceImpl implements AdminPostService {
         Specification<Post> spec = PostSpecification.filterPosts(query, author, status, type);
         
         Page<Post> postPage = postRepository.findAll(spec, pageable);
-        
-        List<AdminPostResponse> dtoList = postPage.getContent().stream()
-                .map(adminPostMapper::toDto)
+        List<Post> posts = postPage.getContent();
+        if (posts.isEmpty()) {
+            return PageResponse.<AdminPostResponse>builder()
+                    .content(List.of())
+                    .totalElements(postPage.getTotalElements())
+                    .totalPages(postPage.getTotalPages())
+                    .pageSize(postPage.getSize())
+                    .pageNumber(postPage.getNumber())
+                    .last(postPage.isLast())
+                    .build();
+        }
+
+        // Batch-fetch Jobs and Events to avoid N+1 queries
+        List<Long> jobIds = posts.stream()
+                .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().toList();
+        List<Long> eventIds = posts.stream()
+                .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().toList();
+        Map<Long, JobPosting> jobById = jobIds.isEmpty() ? Map.of() :
+                jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
+                        JobPosting::getId, Function.identity()));
+        Map<Long, Event> eventById = eventIds.isEmpty() ? Map.of() :
+                eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
+                        Event::getId, Function.identity()));
+
+        List<AdminPostResponse> dtoList = posts.stream()
+                .map(p -> {
+                    JobPosting job = p.getJobId() != null ? jobById.get(p.getJobId()) : null;
+                    Event event = p.getEventId() != null ? eventById.get(p.getEventId()) : null;
+                    return adminPostMapper.toDto(p, job, event);
+                })
                 .collect(Collectors.toList());
 
         return PageResponse.<AdminPostResponse>builder()
