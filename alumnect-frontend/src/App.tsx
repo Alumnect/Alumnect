@@ -54,6 +54,7 @@ function App() {
             <Route path="alumni" element={<AlumniDirectoryPage />} />
 
             {/* --- PROTECTED ROUTES (Login required) --- */}
+            <Route path="saved" element={<Navigate to="/app/profile?tab=saved" replace />} />
             <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
             <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
