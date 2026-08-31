@@ -1,6 +1,8 @@
 export { usePostDetail } from './hooks/usePostDetail'
 export { useComments } from './hooks/useComments'
 export { useCreateComment } from './hooks/useCreateComment'
+export { useUpdateComment } from './hooks/useUpdateComment'
+export { EditCommentModal } from './components/EditCommentModal'
 export { postApi, COMMENTS_PAGE_SIZE } from './api/postApi'
 export { commentSchema } from './model/comment'
 export type { Comment, CommentsPageResult } from './model/comment'

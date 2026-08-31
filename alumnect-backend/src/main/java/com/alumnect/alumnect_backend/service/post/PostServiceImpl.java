@@ -12,6 +12,7 @@ import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -286,6 +287,38 @@ public class PostServiceImpl implements PostService {
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         return commentMapper.toResponse(comment, profile);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: kiểm tra vai trò thành viên → tìm bình luận ACTIVE → xác nhận bình luận thuộc đúng bài viết
+     * trên URL → kiểm tra quyền sở hữu → cập nhật nội dung đã trim trong cùng transaction → trả về DTO mới.
+     */
+    @Override
+    @Transactional
+    public CommentResponse updateComment(String email, Long postId, Long commentId, UpdateCommentRequest request) {
+        User editor = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được chỉnh sửa bình luận");
+
+        Comment comment = commentRepository.findById(commentId)
+                .filter(item -> item.getStatus() == CommentStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Bình luận này không còn khả dụng"));
+
+        // Không để một URL có postId khác vô tình sửa được bình luận hợp lệ ở bài viết khác.
+        if (!comment.getPost().getId().equals(postId)) {
+            throw new ResourceNotFoundException("Bình luận này không còn khả dụng");
+        }
+
+        if (!comment.getUser().getId().equals(editor.getId())) {
+            throw new ForbiddenException("Bạn chỉ được chỉnh sửa bình luận của chính mình");
+        }
+
+        comment.setContent(request.getContent().trim());
+        Comment saved = commentRepository.save(comment);
+        log.info("Cập nhật bình luận: id={}, postId={}, tác giả={}", saved.getId(), postId, email);
+
+        UserProfile profile = userProfileRepository.findById(editor.getId()).orElse(null);
+        return commentMapper.toResponse(saved, profile);
     }
 
     private Comment resolveParentOrThrow(Long parentId, Long postId) {

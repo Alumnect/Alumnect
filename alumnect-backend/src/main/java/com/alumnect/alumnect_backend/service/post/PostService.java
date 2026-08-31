@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -77,6 +78,18 @@ public interface PostService {
      * @return Bình luận vừa tạo đã được chuẩn hóa thành {@link CommentResponse}
      */
     CommentResponse createComment(String email, Long postId, CreateCommentRequest request);
+
+    /**
+     * Chỉnh sửa nội dung một bình luận đã đăng (UC19 - Edit a comment).
+     * Chỉ tác giả có vai trò STUDENT hoặc ALUMNI được chỉnh sửa bình luận ACTIVE của chính mình.
+     *
+     * @param email     Email người dùng đang đăng nhập, lấy từ JWT
+     * @param postId    ID bài viết chứa bình luận
+     * @param commentId ID bình luận cần chỉnh sửa
+     * @param request   Nội dung mới đã được Controller xác thực dữ liệu
+     * @return Bình luận sau khi cập nhật, chuẩn hóa thành {@link CommentResponse}
+     */
+    CommentResponse updateComment(String email, Long postId, Long commentId, UpdateCommentRequest request);
 
     /**
      * Thích một bài viết (UC17 - Like a post). Chỉ STUDENT/ALUMNI đã đăng nhập được thích;

@@ -38,7 +38,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { usePostDetail, useComments, useCreateComment } from '@/features/post'
+import { EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
 import { useToggleLike, CreatePostModal, DeletePostModal, type Post } from '@/features/feed'
 import { useNavigate } from 'react-router-dom'
@@ -482,7 +482,15 @@ function PostDetailCard({
  * Một mục bình luận trong luồng bình luận.
  * @param comment Dữ liệu bình luận đã chuẩn hóa
  */
-function CommentItem({ comment, onReply }: { comment: Comment; onReply?: (id: string, name: string) => void }) {
+function CommentItem({
+  comment,
+  onReply,
+  onEdit,
+}: {
+  comment: Comment
+  onReply?: (id: string, name: string) => void
+  onEdit?: (comment: Comment) => void
+}) {
   // Bình luận trả lời (có parentId) được thụt lề để thể hiện 1 cấp phân cấp.
   const isReply = !!comment.parentId
   return (
@@ -513,6 +521,15 @@ function CommentItem({ comment, onReply }: { comment: Comment; onReply?: (id: st
               className="text-xs font-bold text-plum-500 hover:text-plum-900 transition-colors"
             >
               Trả lời
+            </button>
+          )}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(comment)}
+              className="ml-4 inline-flex items-center gap-1 text-xs font-bold text-plum-500 transition-colors hover:text-brand-600"
+            >
+              <Pencil size={13} /> Chỉnh sửa
             </button>
           )}
         </div>
@@ -779,7 +796,9 @@ function CommentsSection({
   isGuest: boolean
 }) {
   const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null)
-
+  const [editingComment, setEditingComment] = useState<Comment | null>(null)
+  const [editSuccessMessage, setEditSuccessMessage] = useState<string | null>(null)
+  const currentUser = useAuthStore((s) => s.user)
   const {
     data,
     isLoading,
@@ -817,6 +836,17 @@ function CommentsSection({
     setReplyingTo({ id, name })
   }
 
+  /** Chỉ tác giả Student/Alumni mới nhìn thấy thao tác UC19; backend kiểm tra lại khi gọi API. */
+  const canEditComment = (comment: Comment) =>
+    !!currentUser &&
+    (currentUser.role === 'STUDENT' || currentUser.role === 'ALUMNI') &&
+    currentUser.id === comment.authorId
+
+  const openEditComment = (comment: Comment) => {
+    setEditSuccessMessage(null)
+    setEditingComment(comment)
+  }
+
   return (
     <section id="comments" className="space-y-4">
       <div className="mb-4 flex items-center gap-2.5">
@@ -826,6 +856,12 @@ function CommentsSection({
           {compact(commentCount)}
         </span>
       </div>
+
+      {editSuccessMessage && (
+        <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700">
+          {editSuccessMessage}
+        </div>
+      )}
 
       {/* Ô soạn & đăng bình luận gốc (UC18) */}
       <div id="comments-box">
@@ -852,11 +888,19 @@ function CommentsSection({
             return (
               <div key={root.id} className="space-y-4">
                 {/* Bình luận gốc */}
-                <CommentItem comment={root} onReply={!isGuest ? handleReply : undefined} />
-
+                <CommentItem
+                  comment={root}
+                  onReply={!isGuest ? handleReply : undefined}
+                  onEdit={canEditComment(root) ? openEditComment : undefined}
+                />
                 {/* Các bình luận trả lời */}
                 {replies.map((reply) => (
-                  <CommentItem key={reply.id} comment={reply} onReply={!isGuest ? handleReply : undefined} />
+                  <CommentItem
+                    key={reply.id}
+                    comment={reply}
+                    onReply={!isGuest ? handleReply : undefined}
+                    onEdit={canEditComment(reply) ? openEditComment : undefined}
+                  />
                 ))}
 
                 {/* Form soạn trả lời hiển thị inline ngay dưới thread này */}
@@ -872,7 +916,11 @@ function CommentsSection({
           {/* Các bình luận mồ côi (nếu có, để đề phòng lỗi dữ liệu) */}
           {orphanedComments.map((c) => (
             <div key={c.id} className="space-y-4">
-              <CommentItem comment={c} onReply={!isGuest ? handleReply : undefined} />
+              <CommentItem
+                comment={c}
+                onReply={!isGuest ? handleReply : undefined}
+                onEdit={canEditComment(c) ? openEditComment : undefined}
+              />
               {replyingTo?.id === c.id && (
                 <div className="ml-10 animate-fade-in">
                   <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
@@ -897,6 +945,14 @@ function CommentsSection({
           )}
         </div>
       )}
+
+      <EditCommentModal
+        isOpen={editingComment !== null}
+        onClose={() => setEditingComment(null)}
+        onUpdated={() => setEditSuccessMessage('Chỉnh sửa bình luận thành công.')}
+        postId={postId}
+        comment={editingComment}
+      />
     </section>
   )
 }

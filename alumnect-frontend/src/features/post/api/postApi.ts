@@ -76,4 +76,19 @@ export const postApi = {
     const body = await http.post(`/posts/${encodeURIComponent(postId)}/comments`, payload)
     return commentSchema.parse(extractData(body))
   },
+
+  /**
+   * Chỉnh sửa nội dung bình luận của chính người dùng (UC19).
+   * @param postId ID bài viết chứa bình luận
+   * @param commentId ID bình luận cần sửa
+   * @param content Nội dung mới đã được client validate
+   * @return Bình luận sau khi cập nhật và được xác thực qua Zod
+   */
+  updateComment: async (postId: string, commentId: string, content: string): Promise<Comment> => {
+    const body = await http.put(
+      `/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`,
+      { content },
+    )
+    return commentSchema.parse(extractData(body))
+  },
 }
