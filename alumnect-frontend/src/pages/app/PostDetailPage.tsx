@@ -592,13 +592,17 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
   const createComment = useCreateComment(postId)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const isComposerOpen = expanded || !!replyingTo
+  useEffect(() => {
+    if (replyingTo) {
+      setExpanded(true)
+    }
+  }, [replyingTo])
 
   useEffect(() => {
-    if (isComposerOpen && textareaRef.current) {
+    if (expanded && textareaRef.current) {
       textareaRef.current.focus()
     }
-  }, [isComposerOpen])
+  }, [expanded, replyingTo])
 
   const trimmed = content.trim()
   const disabled = trimmed.length === 0 || createComment.isPending
@@ -619,7 +623,7 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
     })
   }
 
-  if (!isComposerOpen) {
+  if (!expanded && !replyingTo) {
     return (
       <button
         type="button"
