@@ -153,6 +153,7 @@ function PostForbidden() {
 function PostDetailCard({
   post,
   canInteract,
+  currentUserId,
   currentUserName,
   onEdit,
   onDelete,
@@ -161,6 +162,7 @@ function PostDetailCard({
 }: {
   post: Post
   canInteract: boolean
+  currentUserId?: string
   currentUserName?: string
   onEdit?: () => void
   onDelete?: () => void
@@ -170,7 +172,9 @@ function PostDetailCard({
 
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
   const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
-  const isAuthor = !!currentUserName && post.author === currentUserName
+  const isAuthor = post.authorId != null
+    ? !!currentUserId && post.authorId === currentUserId
+    : !!currentUserName && post.author === currentUserName
 
   // Trạng thái thích cục bộ (UC17) — khởi tạo từ dữ liệu bài viết đã tải.
   const [liked, setLiked] = useState(post.liked)
@@ -502,7 +506,7 @@ function PostDetailCard({
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
-        {canReport ? (
+        {!isAuthor && (canReport ? (
           <button
             type="button"
             onClick={onReport}
@@ -521,7 +525,7 @@ function PostDetailCard({
           >
             <Flag size={17} />
           </button>
-        ) : null}
+        ) : null)}
         <button
           aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
@@ -824,6 +828,7 @@ export function PostDetailPage() {
               post={post}
               canInteract={!isGuest}
               canReport={canReport}
+              currentUserId={user?.id}
               currentUserName={user?.name}
               onEdit={() => setEditModalOpen(true)}
               onDelete={() => setDeleteModalOpen(true)}
