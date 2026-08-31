@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { ADMIN_SECTIONS } from './adminSectionsData'
 import { useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
 import type { AdminVerificationRequestDto } from '../api/adminApi'
+import { AdminReportsQueue } from './AdminReportsQueue'
 
 const REJECT_REASON_TEMPLATES = [
   'Ảnh minh chứng mờ, không nhìn rõ thông tin.',
@@ -22,6 +23,10 @@ const REJECT_REASON_TEMPLATES = [
 export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
   const s = ADMIN_SECTIONS[sectionKey]
   const Icon = s.icon
+
+  if (sectionKey === 'reports') {
+    return <AdminReportsQueue />
+  }
 
   const isVerifications = sectionKey === 'verifications'
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING')

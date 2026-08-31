@@ -85,6 +85,24 @@ export interface AdminPostDto {
   }
 }
 
+export interface AdminReportDto {
+  id: number
+  postId: number
+  postContent: string
+  postStatus: string
+  postAuthorId: number
+  postAuthorName: string
+  postAuthorEmail: string
+  reporterId: number
+  reporterName: string
+  reporterEmail: string
+  reporterAvatarUrl?: string
+  reason: 'SPAM' | 'INAPPROPRIATE' | 'MISINFORMATION' | 'SCAM_OR_FRAUD' | 'OTHER'
+  description?: string
+  status: 'PENDING' | 'RESOLVED' | 'DISMISSED'
+  createdAt: string
+}
+
 export interface PageResponse<T> {
   content: T[]
   totalElements: number
@@ -178,4 +196,23 @@ export const adminApi = {
    */
   getPostDetail: (id: number) =>
     http.get<any, ApiResponse<AdminPostDto>>(`/admin/posts/${id}`),
+
+  /**
+   * Xem danh sách báo cáo vi phạm bài viết với bộ lọc động và phân trang (UC69)
+   */
+  getReports: (params: {
+    query?: string
+    reason?: string
+    status?: string
+    postId?: number
+    page: number
+    size: number
+  }) =>
+    http.get<any, ApiResponse<PageResponse<AdminReportDto>>>('/admin/reports', { params }),
+
+  /**
+   * Cập nhật trạng thái xử lý của một báo cáo (RESOLVED hoặc DISMISSED)
+   */
+  updateReportStatus: (id: number, status: 'RESOLVED' | 'DISMISSED') =>
+    http.put<any, ApiResponse<void>>(`/admin/reports/${id}/status`, { status }),
 }
