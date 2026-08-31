@@ -70,7 +70,11 @@ public class AdminPostServiceImpl implements AdminPostService {
                         Event::getId, Function.identity()));
 
         List<AdminPostResponse> dtoList = posts.stream()
-                .map(p -> adminPostMapper.toDto(p, jobById.get(p.getJobId()), eventById.get(p.getEventId())))
+                .map(p -> {
+                    JobPosting job = p.getJobId() != null ? jobById.get(p.getJobId()) : null;
+                    Event event = p.getEventId() != null ? eventById.get(p.getEventId()) : null;
+                    return adminPostMapper.toDto(p, job, event);
+                })
                 .collect(Collectors.toList());
 
         return PageResponse.<AdminPostResponse>builder()

@@ -476,4 +476,19 @@ public class PostServiceImpl implements PostService {
             throw new BadRequestException("Loại bài viết không hợp lệ: " + category);
         }
     }
+
+    @Override
+    @Transactional
+    public void deletePost(String email, Long postId) {
+        User author = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được xóa bài viết");
+        Post post = loadViewablePost(postId, true);
+
+        if (!post.getAuthor().getId().equals(author.getId())) {
+            throw new ForbiddenException("Bạn chỉ được xóa bài viết của chính mình");
+        }
+
+        post.setStatus(PostStatus.DELETED);
+        postRepository.save(post);
+        log.info("Xóa bài viết: id={}, tác giả={}", postId, email);
+    }
 }

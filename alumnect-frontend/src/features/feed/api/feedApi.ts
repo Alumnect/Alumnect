@@ -178,6 +178,17 @@ export const feedApi = {
   },
 
   /**
+   * Xóa một bài viết (UC23 - Delete a post).
+   * Gọi `DELETE /api/v1/posts/${postId}`. 
+   * Trả về true nếu thành công.
+   * @param postId ID bài viết cần xóa
+   */
+  deletePost: async (postId: string): Promise<boolean> => {
+    await http.delete(`/posts/${encodeURIComponent(postId)}`)
+    return true
+  },
+
+  /**
    * Tải ảnh đính kèm bài viết lên Cloudflare R2 qua link ký sẵn (presigned URL),
    * theo đúng cơ chế đã dùng ở luồng đăng ký: xin link PUT tạm thời rồi tải trực tiếp
    * từ client lên R2, trả về URL công khai để gán vào `imageUrl` khi tạo bài.
