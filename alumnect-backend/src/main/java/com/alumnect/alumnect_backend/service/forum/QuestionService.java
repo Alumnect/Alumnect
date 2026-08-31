@@ -15,17 +15,20 @@ import java.util.List;
 public interface QuestionService {
 
     /**
-     * Lấy một trang câu hỏi cho danh sách diễn đàn. Ai cũng xem được (Guest/Student/Alumni)
-     * vì câu hỏi ACTIVE là nội dung công khai; kết quả loại bỏ câu hỏi đã bị ẩn/xóa.
+     * Lấy một trang câu hỏi cho danh sách diễn đàn, có thể kèm tìm kiếm theo từ khóa
+     * (UC44 - Search questions). Ai cũng xem được (Guest/Student/Alumni) vì câu hỏi ACTIVE
+     * là nội dung công khai; kết quả loại bỏ câu hỏi đã bị ẩn/xóa.
      *
      * @param page     Số thứ tự trang cần lấy (0-based)
      * @param size     Kích thước trang (số câu hỏi mỗi trang)
      * @param sort     Tiêu chí sắp xếp: "recent" (mới nhất), "votes" (nhiều vote), "answers" (nhiều trả lời)
+     * @param keyword  Từ khóa tìm kiếm trên tiêu đề/nội dung (không phân biệt hoa/thường), hoặc null/rỗng nếu không tìm kiếm
      * @param topicIds Danh sách ID thể loại cần lọc (khớp bất kỳ), hoặc null/rỗng nếu không lọc theo thể loại
      * @param majorIds Danh sách ID ngành cần lọc (khớp bất kỳ), hoặc null/rỗng nếu không lọc theo ngành
      * @return Trang kết quả câu hỏi đã chuẩn hóa, sẵn sàng trả về Client
+     * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu keyword vượt quá độ dài tối đa cho phép
      */
-    PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds, List<Long> majorIds);
+    PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, String keyword, List<Long> topicIds, List<Long> majorIds);
 
     /**
      * Lấy chi tiết một câu hỏi theo ID (UC39 - View question detail). Ai cũng xem được

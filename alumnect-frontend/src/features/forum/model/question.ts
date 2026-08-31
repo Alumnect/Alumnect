@@ -79,6 +79,9 @@ export type MajorOption = z.infer<typeof majorSchema>
 /** Số ảnh tối đa cho phép đính kèm một câu hỏi (khớp giới hạn Backend). */
 export const MAX_QUESTION_IMAGES = 5
 
+/** Độ dài tối đa của từ khóa tìm kiếm câu hỏi (UC44), khớp giới hạn Backend (QuestionServiceImpl.KEYWORD_MAX_LENGTH). */
+export const SEARCH_KEYWORD_MAX_LENGTH = 250
+
 /**
  * Schema Zod cho form đặt/sửa câu hỏi (UC40 - Ask a question, UC46 - Edit a question).
  * Thông điệp lỗi khớp 100% với validation phía Backend (CreateQuestionRequest/UpdateQuestionRequest).

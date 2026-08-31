@@ -68,6 +68,12 @@ public class QuestionServiceImpl implements QuestionService {
     @Autowired
     private UserRepository userRepository;
 
+    /** Độ dài tối đa cho phép của từ khóa tìm kiếm (UC44 - Search questions), khớp độ dài tối đa của title. */
+    private static final int KEYWORD_MAX_LENGTH = 250;
+
+    /** Ký tự dùng để escape các ký tự đặc biệt của LIKE ({@code %}, {@code _}) trong mẫu tìm kiếm. */
+    private static final String LIKE_ESCAPE_CHAR = "\\";
+
     /**
      * {@inheritDoc}
      * <p>
@@ -75,6 +81,7 @@ public class QuestionServiceImpl implements QuestionService {
      * <ol>
      *   <li>Kiểm tra tham số phân trang ({@code page} ≥ 0, {@code size} ≥ 1), ném lỗi 400 nếu vi phạm.</li>
      *   <li>Chuyển tham số {@code sort} thành đối tượng {@link Sort}, ném lỗi 400 nếu giá trị không hợp lệ.</li>
+     *   <li>Chuẩn hóa {@code keyword} (trim, kiểm tra độ dài, escape ký tự đặc biệt của LIKE) nếu có (UC44).</li>
      *   <li>Truy vấn trang câu hỏi ACTIVE qua {@link QuestionRepository#findActiveQuestions}
      *       (đã JOIN FETCH tác giả + chủ đề để tránh N+1 query).</li>
      *   <li>Truy vấn gộp (batch) hồ sơ {@link UserProfile} của toàn bộ tác giả — tránh N+1 query lần 2.</li>
@@ -82,7 +89,7 @@ public class QuestionServiceImpl implements QuestionService {
      * </ol>
      */
     @Override
-    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, List<Long> topicIds, List<Long> majorIds) {
+    public PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, String keyword, List<Long> topicIds, List<Long> majorIds) {
         // Validate tham số phân trang trước khi tạo PageRequest — nếu không, PageRequest.of()
         // sẽ ném IllegalArgumentException và bị trả về nhầm HTTP 500 thay vì 400.
         if (page < 0) {
@@ -91,6 +98,14 @@ public class QuestionServiceImpl implements QuestionService {
         if (size <= 0) {
             throw new BadRequestException("Tham số size phải là số nguyên dương");
         }
+
+        // Tìm kiếm theo từ khóa (UC44 - Search questions, BR-44-01/BR-44-02): rỗng/blank = không tìm kiếm.
+        String trimmedKeyword = keyword != null ? keyword.trim() : "";
+        boolean filterByKeyword = !trimmedKeyword.isEmpty();
+        if (filterByKeyword && trimmedKeyword.length() > KEYWORD_MAX_LENGTH) {
+            throw new BadRequestException("Từ khóa tìm kiếm không được vượt quá " + KEYWORD_MAX_LENGTH + " ký tự");
+        }
+        String likePattern = filterByKeyword ? buildLikePattern(trimmedKeyword) : "";
 
         // Lọc theo nhiều THỂ LOẠI và/hoặc nhiều NGÀNH (tick chọn ở Frontend), độc lập nhau.
         // Khi một chiều không lọc, truyền danh sách giữ chỗ không rỗng để tránh mệnh đề IN () không hợp lệ;
@@ -102,9 +117,9 @@ public class QuestionServiceImpl implements QuestionService {
 
         Sort sortSpec = resolveSort(sort);
         Page<Question> questionsPage = questionRepository.findActiveQuestions(
-                filterByTopic, effectiveTopicIds, filterByMajor, effectiveMajorIds, PageRequest.of(page, size, sortSpec));
-        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, topicIds={}, majorIds={}, tổng kết quả={}",
-                page, size, sort, filterByTopic ? topicIds : null, filterByMajor ? majorIds : null, questionsPage.getTotalElements());
+                filterByKeyword, likePattern, filterByTopic, effectiveTopicIds, filterByMajor, effectiveMajorIds, PageRequest.of(page, size, sortSpec));
+        log.info("Lấy danh sách câu hỏi: page={}, size={}, sort={}, keyword={}, topicIds={}, majorIds={}, tổng kết quả={}",
+                page, size, sort, filterByKeyword ? trimmedKeyword : null, filterByTopic ? topicIds : null, filterByMajor ? majorIds : null, questionsPage.getTotalElements());
 
         // Gộp truy vấn hồ sơ tác giả theo lô (batch) thay vì truy vấn riêng lẻ cho từng câu hỏi.
         List<Long> authorIds = questionsPage.getContent().stream()
@@ -336,6 +351,22 @@ public class QuestionServiceImpl implements QuestionService {
                 .collect(Collectors.groupingBy(
                         img -> img.getQuestion().getId(),
                         Collectors.mapping(QuestionImage::getUrl, Collectors.toList())));
+    }
+
+    /**
+     * Chuẩn hóa từ khóa tìm kiếm (UC44) thành mẫu LIKE an toàn: chữ thường, escape các ký tự đặc biệt
+     * của LIKE ({@code \}, {@code %}, {@code _}) bằng {@link #LIKE_ESCAPE_CHAR}, rồi bọc {@code %...%}
+     * để khớp substring không phân biệt hoa/thường (dùng cùng {@code ESCAPE '\'} khai báo trong JPQL).
+     *
+     * @param rawKeyword Từ khóa đã trim, không rỗng
+     * @return Mẫu LIKE đã escape, sẵn sàng truyền cho {@link QuestionRepository#findActiveQuestions}
+     */
+    private String buildLikePattern(String rawKeyword) {
+        String escaped = rawKeyword.toLowerCase()
+                .replace(LIKE_ESCAPE_CHAR, LIKE_ESCAPE_CHAR + LIKE_ESCAPE_CHAR)
+                .replace("%", LIKE_ESCAPE_CHAR + "%")
+                .replace("_", LIKE_ESCAPE_CHAR + "_");
+        return "%" + escaped + "%";
     }
 
     /**

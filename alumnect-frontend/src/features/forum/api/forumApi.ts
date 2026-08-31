@@ -77,10 +77,11 @@ function parseAnswers(raw: unknown[]): Answer[] {
 
 export const forumApi = {
   /**
-   * Lấy một trang danh sách câu hỏi trên diễn đàn Q&A.
-   * Gọi `GET /api/v1/questions?page={n}&size={m}&sort={s}[&topicId={id}]`.
+   * Lấy một trang danh sách câu hỏi trên diễn đàn Q&A, có thể kèm tìm kiếm theo từ khóa (UC44 - Search questions).
+   * Gọi `GET /api/v1/questions?page={n}&size={m}&sort={s}[&keyword={k}][&topicId={id}]`.
    * @param page Chỉ số trang cần lấy (0-based)
    * @param sort Tiêu chí sắp xếp ('recent' | 'votes' | 'answers'), có thể ghép nhiều bằng dấu phẩy
+   * @param keyword Từ khóa tìm kiếm trên tiêu đề/nội dung câu hỏi, rỗng = không tìm kiếm
    * @param topicIds Danh sách ID thể loại để lọc (tick nhiều), rỗng = không lọc
    * @param majorIds Danh sách ID ngành để lọc (tick nhiều), rỗng = không lọc — độc lập với thể loại
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
@@ -88,11 +89,13 @@ export const forumApi = {
   getQuestions: async ({
     page = 0,
     sort = 'recent',
+    keyword = '',
     topicIds = [],
     majorIds = [],
-  }: { page?: number; sort?: string; topicIds?: number[]; majorIds?: number[] } = {}): Promise<QuestionPageResult> => {
+  }: { page?: number; sort?: string; keyword?: string; topicIds?: number[]; majorIds?: number[] } = {}): Promise<QuestionPageResult> => {
     const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE), sort })
     // Gửi nhiều id dạng CSV: topicId=3,7,9 / majorId=1,4 — backend nhận List<Long>.
+    if (keyword.trim()) query.set('keyword', keyword.trim())
     if (topicIds.length > 0) query.set('topicId', topicIds.join(','))
     if (majorIds.length > 0) query.set('majorId', majorIds.join(','))
 

@@ -6,22 +6,25 @@ import type { CreateQuestionInput, SortOption, UpdateQuestionInput } from '../mo
  * Hook lấy danh sách câu hỏi diễn đàn theo phân trang vô hạn (infinite scroll).
  * Hỗ trợ NHIỀU tiêu chí sắp xếp ưu tiên: mảng `sorts` được ghép bằng dấu phẩy gửi lên backend
  * (VD ['votes','answers'] → "votes,answers"); mảng rỗng mặc định "recent".
+ * Hỗ trợ tìm kiếm theo từ khóa (UC44 - Search questions) — độc lập với sắp xếp/lọc chủ đề/ngành.
  * @param sorts Danh sách tiêu chí sắp xếp theo thứ tự ưu tiên
  * @param topicIds Danh sách ID thể loại để lọc (tick nhiều), rỗng = tất cả
  * @param majorIds Danh sách ID ngành để lọc (tick nhiều), rỗng = tất cả — độc lập với thể loại
+ * @param keyword Từ khóa tìm kiếm (đã debounce phía Component), rỗng = không tìm kiếm
  * @return Đối tượng query (pages, isLoading, isError, fetchNextPage, hasNextPage...)
  */
-export function useQuestions(sorts: SortOption[] = ['recent'], topicIds: number[] = [], majorIds: number[] = []) {
+export function useQuestions(sorts: SortOption[] = ['recent'], topicIds: number[] = [], majorIds: number[] = [], keyword: string = '') {
   const sortParam = sorts.length > 0 ? sorts.join(',') : 'recent'
   // Khóa cache ổn định theo tập đã chọn (sắp xếp để thứ tự tick không tạo key khác nhau).
   const topicKey = [...topicIds].sort((a, b) => a - b).join(',')
   const majorKey = [...majorIds].sort((a, b) => a - b).join(',')
+  const keywordKey = keyword.trim().toLowerCase()
   return useInfiniteQuery({
-    queryKey: ['questions', sortParam, topicKey, majorKey],
-    queryFn: ({ pageParam }) => forumApi.getQuestions({ page: pageParam, sort: sortParam, topicIds, majorIds }),
+    queryKey: ['questions', sortParam, topicKey, majorKey, keywordKey],
+    queryFn: ({ pageParam }) => forumApi.getQuestions({ page: pageParam, sort: sortParam, keyword: keywordKey, topicIds, majorIds }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
-    // Giữ danh sách cũ hiển thị trong lúc tải bộ lọc/sắp xếp mới -> đổi filter/sort mượt, không chớp skeleton.
+    // Giữ danh sách cũ hiển thị trong lúc tải bộ lọc/sắp xếp/từ khóa mới -> đổi mượt, không chớp skeleton.
     placeholderData: keepPreviousData,
   })
 }
