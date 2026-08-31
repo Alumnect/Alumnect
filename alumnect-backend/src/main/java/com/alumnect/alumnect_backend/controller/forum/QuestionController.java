@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +27,8 @@ import java.util.List;
 
 /**
  * Controller xử lý các yêu cầu liên quan đến câu hỏi diễn đàn Q&A
- * (UC38 - View question list, UC39 - View question detail, UC44 - Search questions).
+ * (UC38 - View question list, UC39 - View question detail, UC44 - Search questions,
+ * UC47 - Delete a question).
  * Được map tự động với prefix global /api/v1/questions.
  * <p>
  * Các endpoint được khai báo công khai (xem {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET})
@@ -103,6 +105,24 @@ public class QuestionController {
 
         QuestionDetailResponse updated = questionService.updateQuestion(authentication.getName(), id, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật câu hỏi thành công", updated));
+    }
+
+    /**
+     * API xóa (mềm) một câu hỏi trên diễn đàn Q&A (UC47 - Delete a question).
+     * Yêu cầu đăng nhập (JWT); chỉ TÁC GIẢ của câu hỏi mới được xóa — người khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param id             ID câu hỏi cần xóa
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người xóa
+     * @return {@link ApiResponse} rỗng với thông báo thành công, HTTP 200 OK
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteQuestion(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        questionService.deleteQuestion(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Xóa câu hỏi thành công", null));
     }
 
     /**

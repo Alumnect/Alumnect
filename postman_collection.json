@@ -2098,6 +2098,93 @@
                         },
                         "description": "Kỳ vọng: HTTP 400 \"Tham số 'topicId' không hợp lệ\" (GlobalExceptionHandler bắt MethodArgumentTypeMismatchException)."
                     }
+                },
+                {
+                    "name": "7.17 Xóa Câu hỏi (UC47 - Thành công, đúng tác giả)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Xóa câu hỏi thành công\". Thay id=1 bằng ID câu hỏi thật do {{accessToken}} là tác giả (tạo mới ở 7.3 rồi lấy id để test, tránh xóa nhầm data seed)."
+                    }
+                },
+                {
+                    "name": "7.18 Xóa Câu hỏi (UC47 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
+                    }
+                },
+                {
+                    "name": "7.19 Xóa Câu hỏi (UC47 - Không phải tác giả, lỗi 403)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "2"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 403 \"Chỉ tác giả mới được xóa câu hỏi này\". Thay id=2 bằng câu hỏi KHÔNG thuộc về user của {{accessToken}}."
+                    }
+                },
+                {
+                    "name": "7.20 Xóa Câu hỏi (UC47 - Không tồn tại/đã xóa, lỗi 404)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/999999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "999999"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu hỏi với id: 999999\". Cũng dùng để test xóa 2 lần liên tiếp một câu hỏi (lần 2 phải trả 404 vì đã DELETED)."
+                    }
                 }
             ]
         },

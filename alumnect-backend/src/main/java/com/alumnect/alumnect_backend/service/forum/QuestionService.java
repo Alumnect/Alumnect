@@ -69,6 +69,19 @@ public interface QuestionService {
     QuestionDetailResponse updateQuestion(String email, Long questionId, UpdateQuestionRequest request);
 
     /**
+     * Xóa (mềm) một câu hỏi đã có trên diễn đàn Q&A (UC47 - Delete a question). Chỉ TÁC GIẢ của câu hỏi
+     * mới được xóa; người khác (kể cả Student/Alumni khác) bị từ chối với lỗi 403. Câu hỏi chuyển sang
+     * trạng thái {@link com.alumnect.alumnect_backend.common.enums.QuestionStatus#DELETED} — không xóa
+     * cứng dữ liệu, câu trả lời bên dưới vẫn còn trong DB nhưng không còn truy cập được qua UI.
+     *
+     * @param email      Email của người dùng đang đăng nhập (lấy từ SecurityContext)
+     * @param questionId ID câu hỏi cần xóa
+     * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy câu hỏi ACTIVE tương ứng
+     * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu người dùng không phải tác giả câu hỏi
+     */
+    void deleteQuestion(String email, Long questionId);
+
+    /**
      * Lấy toàn bộ danh mục chủ đề diễn đàn để đổ vào bộ lọc phía Frontend.
      *
      * @return Danh sách chủ đề (id + tên), sắp xếp theo tên

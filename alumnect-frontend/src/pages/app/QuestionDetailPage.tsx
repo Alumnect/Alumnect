@@ -9,12 +9,12 @@
  *  - Chỉ HIỂN THỊ chi tiết; vote và trả lời thuộc các UC khác nên ở đây chỉ đọc số liệu.
  */
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil, Trash2 } from 'lucide-react'
 import { Badge, Card, Avatar, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
-import { useQuestionDetail, AnswersSection, AskQuestionModal } from '@/features/forum'
+import { useQuestionDetail, AnswersSection, AskQuestionModal, DeleteQuestionModal } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
 
 /** Chuyển mốc ISO-8601 sang ngày giờ đọc được (VD: "11/07/2026 09:30"), rỗng nếu không hợp lệ. */
@@ -110,7 +110,17 @@ function DetailError({ message, onRetry }: { message?: string; onRetry: () => vo
 }
 
 /** Nội dung chi tiết câu hỏi (không bọc Card riêng — đặt chung Card với khu vực câu trả lời). */
-function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canEdit: boolean; onEdit: () => void }) {
+function QuestionDetailContent({
+  q,
+  canEdit,
+  onEdit,
+  onDelete,
+}: {
+  q: QuestionDetail
+  canEdit: boolean
+  onEdit: () => void
+  onDelete: () => void
+}) {
   const postedAt = formatDateTime(q.createdAt)
   return (
     <div className="flex gap-5">
@@ -125,7 +135,7 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
       <div className="min-w-0 flex-1">
-        {/* Hàng đầu: nhãn thể loại/ngành (trái) + nút Chỉnh sửa (phải, chỉ tác giả) */}
+        {/* Hàng đầu: nhãn thể loại/ngành (trái) + nút Chỉnh sửa/Xóa (phải, chỉ tác giả — UC46/UC47) */}
         {(q.topic || q.major || canEdit) && (
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -133,13 +143,22 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
               {q.major && <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>}
             </div>
             {canEdit && (
-              <button
-                type="button"
-                onClick={onEdit}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-brand-600"
-              >
-                <Pencil size={13} /> Chỉnh sửa
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-brand-600"
+                >
+                  <Pencil size={13} /> Chỉnh sửa
+                </button>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-400/50 hover:bg-rose-500/[0.06] hover:text-rose-600"
+                >
+                  <Trash2 size={13} /> Xóa
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -193,10 +212,12 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
  */
 export function QuestionDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { data, isLoading, isError, error, refetch } = useQuestionDetail(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
-  // Quyền chỉnh sửa (UC46): chỉ chính TÁC GIẢ câu hỏi (Student/Alumni) mới thấy nút "Chỉnh sửa".
+  // Quyền chỉnh sửa/xóa (UC46/UC47): chỉ chính TÁC GIẢ câu hỏi (Student/Alumni) mới thấy nút.
   const user = useAuthStore((s) => s.user)
   const canEdit = !!user && !!data && String(user.id) === data.authorId && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
@@ -216,7 +237,7 @@ export function QuestionDetailPage() {
         // Câu hỏi + câu trả lời nằm chung MỘT card (như bài viết + bình luận trên Facebook/Reddit)
         <Card hover={false} className="overflow-hidden p-0">
           <div className="p-6 sm:p-8">
-            <QuestionDetailContent q={data} canEdit={canEdit} onEdit={() => setEditOpen(true)} />
+            <QuestionDetailContent q={data} canEdit={canEdit} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
           </div>
           {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
           <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
@@ -229,6 +250,15 @@ export function QuestionDetailPage() {
 
       {/* Modal chỉnh sửa câu hỏi (UC46) — mở khi tác giả bấm "Chỉnh sửa" */}
       {editOpen && data && <AskQuestionModal editQuestion={data} onClose={() => setEditOpen(false)} />}
+
+      {/* Modal xác nhận xóa câu hỏi (UC47) — mở khi tác giả bấm "Xóa"; xóa xong điều hướng về danh sách */}
+      {deleteOpen && data && (
+        <DeleteQuestionModal
+          questionId={data.id}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => navigate('/app/forum')}
+        />
+      )}
     </div>
   )
 }
