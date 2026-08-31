@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -114,6 +115,21 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(
                 ApiResponse.error(-1, "Dữ liệu gửi lên không hợp lệ", errors),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    /**
+     * Xử lý JSON body bị sai cú pháp hoặc không thể ánh xạ sang DTO.
+     * Đây là lỗi dữ liệu đầu vào của Client nên phải trả HTTP 400, không phải HTTP 500.
+     *
+     * @param ex Ngoại lệ phát sinh khi Spring đọc request body
+     * @return ApiResponse lỗi dữ liệu đầu vào với HTTP 400
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        return new ResponseEntity<>(
+                ApiResponse.error(400, "Dữ liệu gửi lên không hợp lệ"),
                 HttpStatus.BAD_REQUEST
         );
     }

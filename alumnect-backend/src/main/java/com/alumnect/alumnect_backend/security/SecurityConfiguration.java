@@ -64,6 +64,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, Endpoints.PUBLIC_POST).permitAll()
                 // Các endpoint bắt đầu bằng /api/v1/admin yêu cầu quyền ADMIN
                 .requestMatchers(Endpoints.ADMIN_ENDPOINT).hasRole("ADMIN")
+                // Endpoint thao tác bình luận bắt buộc JWT; kiểm tra role/ownership chi tiết ở Service.
+                .requestMatchers(Endpoints.MEMBER_ENDPOINTS).authenticated()
                 // Mọi request còn lại đều phải được xác thực bằng JWT
                 .anyRequest().authenticated());
 

@@ -1112,6 +1112,53 @@
               "raw": "{\n  \"content\": \"Bài viết chia sẻ rất hữu ích, cảm ơn bạn nhiều!\"\n}"
             }
           }
+        },
+        {
+          "name": "[UC19] Chỉnh sửa bình luận - Cập nhật thành công (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/4/comments/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "4",
+                "comments",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Bình luận đã được chỉnh sửa qua UC19.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Trả về nội dung vừa cập nhật', function () {",
+                  "  var response = pm.response.json();",
+                  "  pm.expect(response.data.text).to.eql('Bình luận đã được chỉnh sửa qua UC19.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },

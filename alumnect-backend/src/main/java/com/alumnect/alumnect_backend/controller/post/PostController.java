@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -169,6 +170,28 @@ public class PostController {
         CommentResponse created = postService.createComment(authentication.getName(), id, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng bình luận thành công", created));
+    }
+
+    /**
+     * API chỉnh sửa một bình luận đã đăng (UC19 - Edit a comment).
+     * Yêu cầu JWT; chỉ Student/Alumni là tác giả bình luận mới được sửa. Guest nhận 401, người dùng
+     * không phải tác giả hoặc Admin nhận 403; bình luận đã xóa, không tồn tại hoặc không thuộc bài viết nhận 404.
+     *
+     * @param postId         ID bài viết chứa bình luận
+     * @param commentId      ID bình luận cần chỉnh sửa
+     * @param request        DTO chứa nội dung mới
+     * @param authentication Thông tin xác thực dùng để lấy email tác giả
+     * @return Bình luận sau khi cập nhật, bọc trong {@link ApiResponse}
+     */
+    @PutMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @Valid @RequestBody UpdateCommentRequest request,
+            Authentication authentication) {
+
+        CommentResponse updated = postService.updateComment(authentication.getName(), postId, commentId, request);
+        return ResponseEntity.ok(ApiResponse.success("Chỉnh sửa bình luận thành công", updated));
     }
 
     /**
