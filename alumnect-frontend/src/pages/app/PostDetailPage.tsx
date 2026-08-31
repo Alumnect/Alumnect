@@ -29,8 +29,9 @@ import {
   MapPin,
   Users,
   ExternalLink,
-  CalendarPlus,
   Briefcase,
+  Trash2,
+  CalendarPlus,
 } from 'lucide-react'
 import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
@@ -39,7 +40,9 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
-import { useToggleLike, CreatePostModal } from '@/features/feed'
+import { useToggleLike, CreatePostModal, DeletePostModal, type Post } from '@/features/feed'
+import { useNavigate } from 'react-router-dom'
+
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
 const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
@@ -149,12 +152,15 @@ function PostDetailCard({
   canInteract,
   currentUserName,
   onEdit,
+  onDelete,
 }: {
-  post: import('@/features/feed').Post
+  post: Post
   canInteract: boolean
   currentUserName?: string
   onEdit?: () => void
+  onDelete?: () => void
 }) {
+
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
   const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
   const isAuthor = !!currentUserName && post.author === currentUserName
@@ -213,16 +219,27 @@ function PostDetailCard({
             </p>
             <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>
           </div>
-          {isAuthor && onEdit && (
-            <button
-              type="button"
-              onClick={onEdit}
-              aria-label="Chỉnh sửa bài viết"
-              title="Chỉnh sửa bài viết"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-3 py-1.5 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-            >
-              <Pencil size={14} /> Chỉnh sửa
-            </button>
+          {isAuthor && onEdit && onDelete && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={onEdit}
+                aria-label="Chỉnh sửa bài viết"
+                title="Chỉnh sửa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-3 py-1.5 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+              >
+                <Pencil size={14} /> Chỉnh sửa
+              </button>
+              <button
+                type="button"
+                onClick={onDelete}
+                aria-label="Xóa bài viết"
+                title="Xóa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+              >
+                <Trash2 size={14} /> Xóa
+              </button>
+            </div>
           )}
         </div>
 
@@ -256,41 +273,41 @@ function PostDetailCard({
           <div className="p-6">
             <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 p-5">
               <p className="text-base font-bold text-plum-900 mb-3">Công ty: {post.job.company}</p>
-              
+
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                 <div>
-                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
-                   <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
-                     {post.job.location && (
-                       <span className="inline-flex items-center gap-1">
-                         <MapPin size={15} className="text-brand-500" /> {post.job.location}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-                 <div>
-                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
-                   <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
-                     {(post.job.salaryMin || post.job.salaryMax) ? (
-                       <span className="inline-flex items-center gap-1">
-                          <span className="font-semibold text-emerald-600">
-                             {post.job.salaryMin && post.job.salaryMax
-                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
-                               : post.job.salaryMin
-                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
-                               : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
-                          </span>
-                       </span>
-                     ) : (
-                       <span className="text-slate-400 font-normal">Thỏa thuận</span>
-                     )}
-                     {post.job.contactEmail && (
-                       <span className="inline-flex items-center gap-1.5 text-sm">
-                         <Inbox size={15} className="text-plum-400" /> {post.job.contactEmail}
-                       </span>
-                     )}
-                   </div>
-                 </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
+                  <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
+                    {post.job.location && (
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin size={15} className="text-brand-500" /> {post.job.location}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
+                  <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
+                    {(post.job.salaryMin || post.job.salaryMax) ? (
+                      <span className="inline-flex items-center gap-1">
+                        <span className="font-semibold text-emerald-600">
+                          {post.job.salaryMin && post.job.salaryMax
+                            ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                            : post.job.salaryMin
+                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
+                              : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 font-normal">Thỏa thuận</span>
+                    )}
+                    {post.job.contactEmail && (
+                      <span className="inline-flex items-center gap-1.5 text-sm">
+                        <Inbox size={15} className="text-plum-400" /> {post.job.contactEmail}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -402,8 +419,8 @@ function PostDetailCard({
 
       {/* Danh sách ảnh đính kèm (nếu có) — dùng ImageCarousel */}
       {post.type !== 'event' && post.type !== 'recruitment' && post.images && post.images.length > 0 && (
-        <ImageCarousel 
-          images={post.images} 
+        <ImageCarousel
+          images={post.images}
           altPrefix={`Ảnh đính kèm bài viết của ${post.author}`}
         />
       )}
@@ -595,10 +612,10 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (disabled) return
-    createComment.mutate({ content: trimmed, parentId: replyingTo?.id }, { 
+    createComment.mutate({ content: trimmed, parentId: replyingTo?.id }, {
       onSuccess: () => {
         collapse()
-      } 
+      }
     })
   }
 
@@ -688,7 +705,9 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
 export function PostDetailPage() {
   // === Bước 1: Lấy ID bài viết từ URL ===
   const { id = '' } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -723,6 +742,7 @@ export function PostDetailPage() {
               canInteract={!isGuest}
               currentUserName={user?.name}
               onEdit={() => setEditModalOpen(true)}
+              onDelete={() => setDeleteModalOpen(true)}
             />
           </Reveal>
 
@@ -733,6 +753,18 @@ export function PostDetailPage() {
               onClose={() => setEditModalOpen(false)}
               viewer={user}
               editPost={post}
+            />
+          )}
+
+          {/* Modal xóa bài viết (UC23) */}
+          {deleteModalOpen && (
+            <DeletePostModal
+              open={deleteModalOpen}
+              onClose={() => setDeleteModalOpen(false)}
+              post={post}
+              onDeleted={() => {
+                navigate('/app')
+              }}
             />
           )}
 
@@ -763,7 +795,6 @@ function CommentsSection({
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
   const [editSuccessMessage, setEditSuccessMessage] = useState<string | null>(null)
   const currentUser = useAuthStore((s) => s.user)
-  
   const {
     data,
     isLoading,
@@ -792,7 +823,7 @@ function CommentsSection({
     root,
     ...(repliesByParent[root.id] ?? []),
   ])
-  
+
   // Đảm bảo không mất bình luận nào (vd: reply mà root nằm ở trang bị thiếu)
   const structuredIds = new Set(structuredComments.map(c => c.id))
   const orphanedComments = comments.filter(c => !structuredIds.has(c.id))
@@ -858,7 +889,6 @@ function CommentsSection({
                   onReply={!isGuest ? handleReply : undefined}
                   onEdit={canEditComment(root) ? openEditComment : undefined}
                 />
-                
                 {/* Các bình luận trả lời */}
                 {replies.map((reply) => (
                   <CommentItem

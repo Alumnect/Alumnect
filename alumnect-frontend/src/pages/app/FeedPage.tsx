@@ -32,17 +32,21 @@ import {
   ExternalLink,
   Clock,
   Users,
+  Trash2,
 } from 'lucide-react'
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
+import { EVENTS, QUESTIONS } from '@/lib/constants'
+
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, CreatePostModal, DeletePostModal } from '@/features/feed'
+import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
+
 import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
@@ -113,11 +117,13 @@ function PostCard({
   canInteract,
   currentUserName,
   onEdit,
+  onDelete,
 }: {
   post: Post
   canInteract: boolean
   currentUserName?: string
   onEdit?: (post: Post) => void
+  onDelete?: (post: Post) => void
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
@@ -198,17 +204,28 @@ function PostCard({
               {post.role ? `${post.role} · ` : ''}{post.time}
             </Link>
           </div>
-          {/* Nút Chỉnh sửa (UC22) chỉ hiển thị cho chính tác giả bài viết */}
-          {isAuthor && onEdit ? (
-            <button
-              type="button"
-              onClick={() => onEdit(post)}
-              aria-label="Chỉnh sửa bài viết"
-              title="Chỉnh sửa bài viết"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-            >
-              <Pencil size={13} /> Sửa
-            </button>
+          {/* Nút Chỉnh sửa (UC22) và Xóa (UC23) chỉ hiển thị cho chính tác giả bài viết */}
+          {isAuthor && onEdit && onDelete ? (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => onEdit(post)}
+                aria-label="Chỉnh sửa bài viết"
+                title="Chỉnh sửa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+              >
+                <Pencil size={13} /> Sửa
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(post)}
+                aria-label="Xóa bài viết"
+                title="Xóa bài viết"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+              >
+                <Trash2 size={13} /> Xóa
+              </button>
+            </div>
           ) : (
             <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
               <MoreHorizontal size={18} />
@@ -569,9 +586,11 @@ export function FeedPage() {
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
+
   // Người xem hiện tại: phiên đăng nhập thật hoặc null (Guest).
   const viewer: AuthUser | null = user ?? null
   const isGuest = !viewer
@@ -678,6 +697,7 @@ export function FeedPage() {
                     canInteract={!isGuest}
                     currentUserName={viewer?.name}
                     onEdit={handleStartEdit}
+                    onDelete={setPostToDelete}
                   />
                 </StaggerItem>
               ))}
@@ -699,6 +719,18 @@ export function FeedPage() {
                 <p className="text-sm text-plum-400">Bạn đã xem hết bảng tin 🎉</p>
               )}
             </div>
+
+            {postToDelete && (
+              <DeletePostModal
+                open={!!postToDelete}
+                onClose={() => setPostToDelete(null)}
+                post={postToDelete}
+                onDeleted={() => {
+                   setPostToDelete(null)
+                   refetch()
+                }}
+              />
+            )}
           </>
         )}
       </div>
@@ -707,23 +739,11 @@ export function FeedPage() {
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
       <aside className="hidden w-[320px] shrink-0 space-y-5 lg:block">
-        {/* Mục 1: Gợi ý người để theo dõi */}
+        {/* Mục 1: Gợi ý kết nối (UC10 - View Connection Suggestions) */}
         <Reveal direction="left">
-          <SidebarCard title="Gợi ý kết nối" action="Xem tất cả">
-            <ul className="space-y-4">
-              {ALUMNI.slice(0, 3).map((a) => (
-                <li key={a.id} className="flex items-center gap-3">
-                  <Avatar src={a.avatar} name={a.name} size={40} verified={a.verified} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-plum-900">{a.name}</p>
-                    <p className="truncate text-xs text-plum-400">{a.cohort}</p>
-                  </div>
-                  <Button size="sm" variant="secondary">Theo dõi</Button>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
+          <ConnectionSuggestionsWidget limit={4} />
         </Reveal>
+
 
         {/* Mục 2: Sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>

@@ -122,4 +122,15 @@ public interface PostService {
      * @return Bài viết đã được cập nhật, chuẩn hóa thành {@link PostResponse}
      */
     PostResponse editPost(String email, Long postId, EditPostRequest request);
+
+    /**
+     * Xóa một bài viết (UC23 - Delete a post).
+     * Chỉ tác giả (STUDENT/ALUMNI) mới được xóa bài viết của chính mình;
+     * người khác hoặc Admin → 403. Bài đã xóa/không tồn tại → 404.
+     * Cập nhật trạng thái thành DELETED để ẩn khỏi bảng tin.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT) — phải là tác giả bài viết
+     * @param postId ID bài viết cần xóa
+     */
+    void deletePost(String email, Long postId);
 }

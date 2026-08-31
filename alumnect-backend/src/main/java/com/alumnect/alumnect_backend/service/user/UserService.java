@@ -1,8 +1,14 @@
 package com.alumnect.alumnect_backend.service.user;
 
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.user.ChangePasswordRequest;
 import com.alumnect.alumnect_backend.dto.request.user.UpdateProfileRequest;
+import com.alumnect.alumnect_backend.dto.response.user.ConnectionSuggestionResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserDirectoryResponse;
+import com.alumnect.alumnect_backend.dto.response.user.UserFilterOptionsResponse;
 import com.alumnect.alumnect_backend.dto.response.user.UserProfileResponse;
+
+import java.util.List;
 
 /**
  * Giao diện dịch vụ (Service Interface) quản lý các hoạt động nghiệp vụ của người dùng.
@@ -37,6 +43,53 @@ public interface UserService {
     UserProfileResponse getUserProfile(Long userId);
 
     /**
+     * Tìm kiếm và lọc danh sách thành viên trong mạng lưới cựu sinh viên & sinh viên (Alumni Directory).
+     *
+     * @param query Từ khóa tìm kiếm đa năng (tên, kỹ năng, công ty, chuyên ngành...)
+     * @param role Vai trò người dùng (STUDENT hoặc ALUMNI)
+     * @param majorId ID chuyên ngành
+     * @param cohort Niên khóa / Khóa nhập học
+     * @param city Tỉnh / Thành phố
+     * @param skill Kỹ năng cụ thể
+     * @param company Công ty làm việc
+     * @param page Số trang (bắt đầu từ 0)
+     * @param size Kích thước trang
+     * @param sortBy Trường sắp xếp (createdAt, fullName, cohort)
+     * @param sortDirection Hướng sắp xếp (ASC, DESC)
+     * @return Danh sách phân trang người dùng bọc trong PageResponse<UserDirectoryResponse>
+     */
+    PageResponse<UserDirectoryResponse> searchUsers(
+            String query,
+            String role,
+            Long majorId,
+            Integer cohort,
+            String city,
+            String skill,
+            String company,
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection
+    );
+
+    /**
+     * Lấy danh sách các tùy chọn bộ lọc động (khóa học, thành phố) từ DB.
+     *
+     * @return DTO chứa danh sách khóa học và thành phố thực tế
+     */
+    UserFilterOptionsResponse getFilterOptions();
+
+    /**
+     * Lấy danh sách thành viên đề xuất kết nối (UC10 - View Connection Suggestions).
+     * Dựa trên thuật toán tính điểm tương đồng (cùng chuyên ngành, cùng niên khóa, cùng địa điểm, tài khoản verified).
+     *
+     * @param email Email tài khoản người xem (nếu đã đăng nhập, null nếu là khách vãng lai)
+     * @param limit Số lượng đề xuất tối đa (mặc định 5-10)
+     * @return Danh sách thành viên được gợi ý kèm lý do trực quan
+     */
+    List<ConnectionSuggestionResponse> getConnectionSuggestions(String email, int limit);
+
+    /**
      * Cập nhật thông tin hồ sơ cá nhân của tài khoản đăng nhập hiện tại.
      * Cập nhật thông tin cơ bản, học tập, giới thiệu, kỹ năng và các liên kết cá nhân.
      *
@@ -45,6 +98,8 @@ public interface UserService {
      * @return DTO chứa thông tin hồ sơ chi tiết sau khi cập nhật
      */
     UserProfileResponse updateOwnProfile(String email, UpdateProfileRequest request);
-
 }
+
+
+
 

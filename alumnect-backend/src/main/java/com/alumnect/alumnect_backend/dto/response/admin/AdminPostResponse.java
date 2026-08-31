@@ -55,6 +55,9 @@ public class AdminPostResponse {
     /** Trạng thái ẩn của bài viết */
     private boolean hidden;
 
+    /** Trạng thái đã xóa của bài viết */
+    private boolean deleted;
+
     /** Thời điểm tạo bài viết */
     private Instant createdAt;
 

@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Lớp triển khai các nghiệp vụ quản lý tài khoản người dùng của Admin.
@@ -100,8 +103,16 @@ public class AdminUserServiceImpl implements AdminUserService {
 
         Page<User> userPage = userRepository.findAll(spec, pageable);
 
+        List<Long> userIds = userPage.getContent().stream()
+                .map(User::getId)
+                .toList();
+
+        Map<Long, UserProfile> profilesMap = userIds.isEmpty() ? Map.of() :
+                userProfileRepository.findAllById(userIds).stream()
+                        .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
         List<AdminUserDto> content = userPage.getContent().stream()
-                .map(user -> adminMapper.toDto(user, user.getProfile()))
+                .map(user -> adminMapper.toDto(user, profilesMap.get(user.getId())))
                 .toList();
 
         return PageResponse.<AdminUserDto>builder()
