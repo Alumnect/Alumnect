@@ -3,21 +3,22 @@
  *
  * Trách nhiệm:
  *  - UC38: lấy danh sách câu hỏi (infinite scroll), lọc theo chủ đề, sắp xếp, phân trang.
+ *  - UC44: tìm kiếm câu hỏi theo từ khóa (tiêu đề/nội dung), debounce 400ms, độc lập với bộ lọc/sắp xếp.
  *  - Bộ lọc chủ đề dạng dropdown gọn (có icon) thay vì dãy dài.
  *  - Sắp xếp cho phép chọn NHIỀU tiêu chí theo thứ tự ưu tiên (Newest / Top voted / Most answered).
  *  - UC40: nút "Đặt câu hỏi" (chỉ Student/Alumni) mở modal đặt câu hỏi mới.
  *  - Xử lý đầy đủ trạng thái: loading (skeleton) / rỗng / lỗi (retry) / thành công.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { HelpCircle, ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap } from 'lucide-react'
+import { HelpCircle, ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap, Search, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useMajors } from '@/features/auth/hooks/useAuth'
-import { useQuestions, useTopics, AskQuestionModal } from '@/features/forum'
+import { useQuestions, useTopics, AskQuestionModal, SEARCH_KEYWORD_MAX_LENGTH } from '@/features/forum'
 import type { Question, SortOption } from '@/features/forum'
 import { FilterMultiSelect } from '@/features/forum/components/FilterMultiSelect'
 import { TopicIcon } from '@/features/forum/lib/topicIcons'
@@ -133,26 +134,29 @@ function QuestionsError({ message, onRetry }: { message?: string; onRetry: () =>
   )
 }
 
-/** Trạng thái rỗng khi chưa có câu hỏi nào khớp bộ lọc. */
-function QuestionsEmpty({ onClear }: { onClear: () => void }) {
+/** Trạng thái rỗng khi chưa có câu hỏi nào khớp bộ lọc/từ khóa tìm kiếm (UC44). */
+function QuestionsEmpty({ keyword, onClear }: { keyword: string; onClear: () => void }) {
+  const searching = keyword.trim().length > 0
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
         <Inbox size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Chưa có câu hỏi nào</p>
-        <p className="mt-1 text-sm text-plum-500">Thử đổi chủ đề khác, hoặc là người đầu tiên đặt câu hỏi.</p>
+        <p className="font-bold text-plum-900">{searching ? `Không tìm thấy câu hỏi khớp "${keyword.trim()}"` : 'Chưa có câu hỏi nào'}</p>
+        <p className="mt-1 text-sm text-plum-500">
+          {searching ? 'Thử từ khóa khác, hoặc xóa tìm kiếm để xem toàn bộ câu hỏi.' : 'Thử đổi chủ đề khác, hoặc là người đầu tiên đặt câu hỏi.'}
+        </p>
       </div>
       <Button variant="secondary" size="sm" onClick={onClear}>
-        Xóa bộ lọc
+        {searching ? 'Xóa tìm kiếm' : 'Xóa bộ lọc'}
       </Button>
     </Card>
   )
 }
 
 /**
- * Trang danh sách câu hỏi diễn đàn (UC38) + đặt câu hỏi (UC40).
+ * Trang danh sách câu hỏi diễn đàn (UC38) + tìm kiếm (UC44) + đặt câu hỏi (UC40).
  */
 export function ForumPage() {
   // === State: các chủ đề đang lọc (tick nhiều), danh sách tiêu chí sắp xếp (ưu tiên), mở modal ===
@@ -162,6 +166,14 @@ export function ForumPage() {
   const [sorts, setSorts] = useState<SortOption[]>([])
   const [askOpen, setAskOpen] = useState(false)
 
+  // === Tìm kiếm (UC44): ô nhập cập nhật ngay để gõ mượt, debounce 400ms mới gọi API tránh spam request ===
+  const [searchInput, setSearchInput] = useState('')
+  const [keyword, setKeyword] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setKeyword(searchInput), 400)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
   // === Quyền: chỉ Student/Alumni đã đăng nhập mới thấy nút "Đặt câu hỏi" (UC40) ===
   const user = useAuthStore((s) => s.user)
   const canAsk = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
@@ -169,7 +181,7 @@ export function ForumPage() {
   // === Dữ liệu: chủ đề (cho bộ lọc) + danh sách câu hỏi (infinite scroll) ===
   const { data: topics } = useTopics()
   const { data: majors } = useMajors()
-  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useQuestions(sorts, topicIds, majorIds)
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useQuestions(sorts, topicIds, majorIds, keyword)
 
   const questions = data?.pages.flatMap((p) => p.items) ?? []
 
@@ -182,6 +194,7 @@ export function ForumPage() {
     setTopicIds([])
     setMajorIds([])
     setSorts([])
+    setSearchInput('')
   }
 
   return (
@@ -198,6 +211,27 @@ export function ForumPage() {
           ) : undefined
         }
       />
+
+      {/* Ô tìm kiếm câu hỏi theo tiêu đề/nội dung (UC44), debounce trước khi gọi API */}
+      <div className="relative mb-4">
+        <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-plum-400" />
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
+          maxLength={SEARCH_KEYWORD_MAX_LENGTH}
+          className="h-11 w-full rounded-xl bg-plum-900/[0.04] pl-11 pr-10 text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        />
+        {searchInput && (
+          <button
+            onClick={() => setSearchInput('')}
+            aria-label="Xóa tìm kiếm"
+            className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
 
       {/* Bộ lọc chủ đề (dropdown) + tiêu chí sắp xếp (multi-select ưu tiên) */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -221,7 +255,7 @@ export function ForumPage() {
             searchable
             itemIcon={() => <GraduationCap size={16} className="text-plum-400" />}
           />
-          {(topicIds.length > 0 || majorIds.length > 0 || sorts.length > 0) && (
+          {(topicIds.length > 0 || majorIds.length > 0 || sorts.length > 0 || searchInput.trim().length > 0) && (
             <button onClick={resetFilter} className="text-xs font-semibold text-plum-400 underline-offset-2 transition-colors hover:text-plum-700 hover:underline">
               Xóa lọc
             </button>
@@ -265,7 +299,7 @@ export function ForumPage() {
       ) : isError ? (
         <QuestionsError message={(error as Error)?.message} onRetry={() => refetch()} />
       ) : questions.length === 0 ? (
-        <QuestionsEmpty onClear={resetFilter} />
+        <QuestionsEmpty keyword={keyword} onClear={resetFilter} />
       ) : (
         <>
           <div className="space-y-4">

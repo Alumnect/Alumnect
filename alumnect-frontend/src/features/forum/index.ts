@@ -1,7 +1,7 @@
 export { useQuestions, useQuestionDetail, useTopics, useCreateQuestion } from './hooks/useQuestions'
 export { useAnswers, useCreateAnswer } from './hooks/useAnswers'
 export { forumApi, PAGE_SIZE } from './api/forumApi'
-export { questionSchema, questionDetailSchema, topicSchema, createQuestionSchema, SORT_OPTIONS } from './model/question'
+export { questionSchema, questionDetailSchema, topicSchema, createQuestionSchema, SORT_OPTIONS, SEARCH_KEYWORD_MAX_LENGTH } from './model/question'
 export { answerSchema, createAnswerSchema } from './model/answer'
 export type { Question, QuestionDetail, Topic, SortOption, QuestionPageResult, CreateQuestionInput } from './model/question'
 export type { Answer, CreateAnswerInput, AnswerPageResult } from './model/answer'

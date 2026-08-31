@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * Controller xử lý các yêu cầu liên quan đến câu hỏi diễn đàn Q&A
- * (UC38 - View question list, UC39 - View question detail).
+ * (UC38 - View question list, UC39 - View question detail, UC44 - Search questions).
  * Được map tự động với prefix global /api/v1/questions.
  * <p>
  * Các endpoint được khai báo công khai (xem {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET})
@@ -40,15 +40,17 @@ public class QuestionController {
     private QuestionService questionService;
 
     /**
-     * API lấy một trang câu hỏi trên diễn đàn Q&A.
+     * API lấy một trang câu hỏi trên diễn đàn Q&A, có thể kèm tìm kiếm theo từ khóa (UC44 - Search questions).
      *
      * @param page    Số thứ tự trang cần lấy (0-based), mặc định 0
      * @param size    Kích thước trang, mặc định 10
      * @param sort    Tiêu chí sắp xếp: "recent" (mặc định), "votes", "answers"
+     * @param keyword Từ khóa tìm kiếm trên tiêu đề/nội dung câu hỏi, không phân biệt hoa/thường;
+     *                bỏ trống nếu không tìm kiếm
      * @param topicId Danh sách ID thể loại cần lọc (tick chọn nhiều), VD {@code topicId=3,7,9};
      *                bỏ trống nếu không lọc theo thể loại
      * @param majorId Danh sách ID ngành cần lọc (tick chọn nhiều), VD {@code majorId=1,4};
-     *                bỏ trống nếu không lọc theo ngành. Lọc thể loại và ngành độc lập nhau.
+     *                bỏ trống nếu không lọc theo ngành. Lọc từ khóa, thể loại và ngành độc lập nhau.
      * @return Trang kết quả câu hỏi {@link QuestionResponse} bọc trong {@link ApiResponse}
      */
     @GetMapping
@@ -56,10 +58,11 @@ public class QuestionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "recent") String sort,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) List<Long> topicId,
             @RequestParam(required = false) List<Long> majorId) {
 
-        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, topicId, majorId);
+        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, keyword, topicId, majorId);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách câu hỏi thành công", questions));
     }
 

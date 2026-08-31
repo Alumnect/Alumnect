@@ -1818,6 +1818,147 @@
                             "raw": "{\n  \"body\": \"Anh đã bổ sung thêm link tài liệu h�?c tập chi tiết ở đây.\"\n}"
                         }
                     }
+                },
+                {
+                    "name": "7.9 Tìm kiếm Câu hỏi theo từ khóa (UC44 - Có kết quả)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&keyword=lương",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "keyword",
+                                    "value": "lương"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7.10 Tìm kiếm Câu hỏi theo từ khóa (UC44 - Không có kết quả)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&keyword=zzzkhongtontai123",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "keyword",
+                                    "value": "zzzkhongtontai123"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7.11 Tìm kiếm Câu hỏi kèm bộ lọc Topic (UC44 - Kết hợp lọc)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&keyword=học&topicId=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "keyword",
+                                    "value": "học"
+                                },
+                                {
+                                    "key": "topicId",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7.12 Tìm kiếm Câu hỏi với từ khóa quá dài (UC44 - Lỗi 400)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions?page=0&size=10&sort=recent&keyword={{longKeyword251Chars}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "recent"
+                                },
+                                {
+                                    "key": "keyword",
+                                    "value": "{{longKeyword251Chars}}"
+                                }
+                            ]
+                        },
+                        "description": "Thay {{longKeyword251Chars}} bằng một chuỗi > 250 ký tự (biến Postman hoặc nhập tay) để xác nhận Backend trả về HTTP 400 với thông điệp 'Từ khóa tìm kiếm không được vượt quá 250 ký tự'."
+                    }
                 }
             ]
         },
