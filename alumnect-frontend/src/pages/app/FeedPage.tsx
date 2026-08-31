@@ -44,6 +44,7 @@ import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal } from '@/features/feed'
+import { ReportPostModal } from '@/features/report'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
 
@@ -118,12 +119,16 @@ function PostCard({
   currentUserName,
   onEdit,
   onDelete,
+  canReport,
+  onReport,
 }: {
   post: Post
   canInteract: boolean
   currentUserName?: string
   onEdit?: (post: Post) => void
   onDelete?: (post: Post) => void
+  canReport: boolean
+  onReport?: (post: Post) => void
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
@@ -506,12 +511,24 @@ function PostCard({
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
+        {canReport ? (
+          <button
+            type="button"
+            onClick={() => onReport?.(post)}
+            aria-label="Báo cáo bài viết"
+            title="Báo cáo bài viết"
+            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Flag size={17} />
+          </button>
+        ) : (
         <button
           onClick={() => { if (!canInteract) promptLogin('Đăng nhập để báo cáo bài viết.') }}
           className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <Flag size={17} />
         </button>
+        )}
         <button
           aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
@@ -637,6 +654,7 @@ export function FeedPage() {
   const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [postToDelete, setPostToDelete] = useState<Post | null>(null)
+  const [postToReport, setPostToReport] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -646,6 +664,7 @@ export function FeedPage() {
   const isGuest = !viewer
   // Chỉ Student/Alumni mới được đăng bài & tương tác (Admin không phải người đăng).
   const canPost = !!viewer && (viewer.role === 'STUDENT' || viewer.role === 'ALUMNI')
+  const canReport = canPost
 
   const handleStartEdit = (p: Post) => {
     setEditingPost(p)
@@ -745,9 +764,11 @@ export function FeedPage() {
                   <PostCard
                     post={p}
                     canInteract={!isGuest}
+                    canReport={canReport}
                     currentUserName={viewer?.name}
                     onEdit={handleStartEdit}
                     onDelete={setPostToDelete}
+                    onReport={setPostToReport}
                   />
                 </StaggerItem>
               ))}
@@ -779,6 +800,13 @@ export function FeedPage() {
                    setPostToDelete(null)
                    refetch()
                 }}
+              />
+            )}
+            {postToReport && (
+              <ReportPostModal
+                open={!!postToReport}
+                postId={postToReport.id}
+                onClose={() => setPostToReport(null)}
               />
             )}
           </>

@@ -43,6 +43,7 @@ import { useLoginPrompt } from '@/store/loginPrompt'
 import { EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
 import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, type Post } from '@/features/feed'
+import { ReportPostModal } from '@/features/report'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -155,12 +156,16 @@ function PostDetailCard({
   currentUserName,
   onEdit,
   onDelete,
+  canReport,
+  onReport,
 }: {
   post: Post
   canInteract: boolean
   currentUserName?: string
   onEdit?: () => void
   onDelete?: () => void
+  canReport: boolean
+  onReport?: () => void
 }) {
 
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
@@ -497,13 +502,26 @@ function PostDetailCard({
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
         </button>
-        <button
-          disabled={!canInteract}
-          title={guardTitle}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Flag size={17} />
-        </button>
+        {canReport ? (
+          <button
+            type="button"
+            onClick={onReport}
+            aria-label="Báo cáo bài viết"
+            title="Báo cáo bài viết"
+            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
+          >
+            <Flag size={17} />
+          </button>
+        ) : !canInteract ? (
+          <button
+            disabled
+            title={guardTitle}
+            aria-label="Đăng nhập để báo cáo bài viết"
+            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Flag size={17} />
+          </button>
+        ) : null}
         <button
           aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
@@ -771,10 +789,12 @@ export function PostDetailPage() {
   const navigate = useNavigate()
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
   const isGuest = !user
+  const canReport = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
   // === Bước 3: Gọi dữ liệu chi tiết bài viết ===
   const { data: post, isLoading, isError, error, refetch } = usePostDetail(id)
@@ -803,9 +823,11 @@ export function PostDetailPage() {
             <PostDetailCard
               post={post}
               canInteract={!isGuest}
+              canReport={canReport}
               currentUserName={user?.name}
               onEdit={() => setEditModalOpen(true)}
               onDelete={() => setDeleteModalOpen(true)}
+              onReport={() => setReportModalOpen(true)}
             />
           </Reveal>
 
@@ -828,6 +850,14 @@ export function PostDetailPage() {
               onDeleted={() => {
                 navigate('/app')
               }}
+            />
+          )}
+
+          {reportModalOpen && (
+            <ReportPostModal
+              open={reportModalOpen}
+              postId={post.id}
+              onClose={() => setReportModalOpen(false)}
             />
           )}
 

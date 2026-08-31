@@ -1572,6 +1572,38 @@
                             }
                         }
                     ]
+                },
+                {
+                    "name": "6.16 [UC24] Báo cáo bài viết vi phạm - Tạo report PENDING",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/1/reports",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "1",
+                                "reports"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"reason\": \"MISINFORMATION\",\n  \"description\": \"Nội dung có thông tin chưa được kiểm chứng.\"\n}"
+                        }
+                    },
+                    "response": []
                 }
             ]
         },
