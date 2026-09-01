@@ -33,6 +33,8 @@ import {
   Clock,
   Users,
   Trash2,
+  Filter,
+  Share2
 } from 'lucide-react'
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -43,7 +45,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
@@ -113,7 +115,7 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
  * @param post Dữ liệu bài viết
  * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
  */
-function PostCard({
+export function PostCard({
   post,
   canInteract,
   currentUserId,
@@ -122,6 +124,7 @@ function PostCard({
   onDelete,
   canReport,
   onReport,
+  onShare,
 }: {
   post: Post
   canInteract: boolean
@@ -131,6 +134,7 @@ function PostCard({
   onDelete?: (post: Post) => void
   canReport: boolean
   onReport?: (post: Post) => void
+  onShare?: (post: Post) => void
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
@@ -510,10 +514,18 @@ function PostCard({
           </button>
         )}
         <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để đăng lại bài viết.') }}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!canInteract) {
+              promptLogin('Đăng nhập để chia sẻ bài viết.')
+            } else if (onShare) {
+              onShare(post)
+            }
+          }}
           className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
-          <Repeat2 size={18} /> {compact(post.reposts)}
+          <Share2 size={18} />
         </button>
         {!isAuthor && (canReport ? (
           <button
@@ -657,8 +669,9 @@ export function FeedPage() {
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
-  const [postToDelete, setPostToDelete] = useState<Post | null>(null)
-  const [postToReport, setPostToReport] = useState<Post | null>(null)
+  const [deletingPost, setDeletingPost] = useState<Post | null>(null)
+  const [sharingPost, setSharingPost] = useState<Post | null>(null)
+  const [reportingPost, setReportingPost] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -772,8 +785,9 @@ export function FeedPage() {
                     currentUserId={viewer?.id}
                     currentUserName={viewer?.name}
                     onEdit={handleStartEdit}
-                    onDelete={setPostToDelete}
-                    onReport={setPostToReport}
+                    onDelete={setDeletingPost}
+                    onReport={setReportingPost}
+                    onShare={setSharingPost}
                   />
                 </Reveal>
               ))}
@@ -796,22 +810,29 @@ export function FeedPage() {
               )}
             </div>
 
-            {postToDelete && (
+            {deletingPost && (
               <DeletePostModal
-                open={!!postToDelete}
-                onClose={() => setPostToDelete(null)}
-                post={postToDelete}
+                open={!!deletingPost}
+                onClose={() => setDeletingPost(null)}
+                post={deletingPost}
                 onDeleted={() => {
-                   setPostToDelete(null)
+                   setDeletingPost(null)
                    refetch()
                 }}
               />
             )}
-            {postToReport && (
+            {reportingPost && (
               <ReportPostModal
-                open={!!postToReport}
-                postId={postToReport.id}
-                onClose={() => setPostToReport(null)}
+                open={!!reportingPost}
+                postId={reportingPost.id}
+                onClose={() => setReportingPost(null)}
+              />
+            )}
+            {sharingPost && (
+              <ShareModal
+                isOpen={!!sharingPost}
+                onClose={() => setSharingPost(null)}
+                post={sharingPost}
               />
             )}
           </>

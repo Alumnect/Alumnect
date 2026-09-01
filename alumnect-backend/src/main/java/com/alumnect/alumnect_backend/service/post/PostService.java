@@ -177,4 +177,9 @@ public interface PostService {
      * @return Trang kết quả các bài viết đã lưu
      */
     PageResponse<PostResponse> getSavedPosts(String email, int page, int size);
+
+    /**
+     * Lấy danh sách bài viết của một user theo ID.
+     */
+    PageResponse<PostResponse> getUserPosts(Long userId, String category, int page, int size, String viewerEmail);
 }
