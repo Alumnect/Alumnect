@@ -123,13 +123,14 @@ export const feedApi = {
    * @param filter Bộ lọc loại bài viết ('all' = không lọc)
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
    */
-  getFeed: async ({ page = 0, filter = 'all' as FeedFilter } = {}): Promise<FeedPageResult> => {
+  getFeed: async ({ page = 0, filter = 'all' as FeedFilter, keyword = '' } = {}): Promise<FeedPageResult> => {
     // B1: Chế độ demo — dùng mock để FE chạy độc lập khi chưa có backend.
     if (!AUTH_ENFORCED) return getMockPage(page, filter)
 
     // B2: Dựng query string phân trang + sắp xếp mới nhất, kèm lọc theo loại nếu có.
     const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE), sort: 'recent' })
     if (filter !== 'all') query.set('type', filter)
+    if (keyword.trim() !== '') query.set('keyword', keyword.trim())
 
     // B3: Gọi API (interceptor tự đính Bearer token & bóc envelope response.data).
     const body = await http.get(`/posts?${query.toString()}`)

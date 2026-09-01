@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Filter, Loader2 } from 'lucide-react'
+import { Filter, Loader2, AlertCircle, FileText } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
@@ -78,7 +78,7 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
           </div>
         ) : isError ? (
           <EmptyState
-            icon="AlertCircle"
+            icon={<AlertCircle size={24} />}
             title="Lỗi tải bảng tin"
             description="Đã xảy ra sự cố khi lấy bài viết của người dùng này. Vui lòng thử lại sau."
             action={
@@ -89,7 +89,7 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
           />
         ) : posts.length === 0 ? (
           <EmptyState
-            icon="FileText"
+            icon={<FileText size={24} />}
             title="Chưa có bài viết nào"
             description="Người dùng này chưa có bài viết nào hoặc chưa phù hợp với bộ lọc hiện tại."
           />

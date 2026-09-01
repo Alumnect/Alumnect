@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink, Outlet, Link, useLocation, Navigate } from 'react-router-dom'
+import { NavLink, Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Bell, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
+import { useSearchStore } from '@/store/searchStore'
 import { useLogout } from '@/features/auth'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
@@ -85,11 +86,21 @@ function IconLink({ to, label, icon, badge, dot }: { to: string; label: string; 
 /* --------------------------------- shell --------------------------------- */
 export function AppShell() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [sheet, setSheet] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [activePopover, setActivePopover] = useState<'apps' | 'account' | null>(null)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
+  const keyword = useSearchStore((s) => s.keyword)
+  const setKeyword = useSearchStore((s) => s.setKeyword)
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKeyword(e.target.value)
+    if (location.pathname !== '/app') {
+      navigate('/app')
+    }
+  }
 
   // Đóng popover khi đổi trang
   useEffect(() => {
@@ -122,7 +133,9 @@ export function AppShell() {
           <label className="relative ml-2 hidden items-center md:flex">
             <Search size={16} className="pointer-events-none absolute left-3 text-slate-400" />
             <input
-              placeholder="Tìm kiếm…"
+              value={keyword}
+              onChange={handleSearchChange}
+              placeholder="Tìm kiếm bài viết, cựu sinh viên…"
               className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56"
             />
           </label>
@@ -290,7 +303,9 @@ export function AppShell() {
                 <Search size={16} className="pointer-events-none absolute left-7 text-plum-400" />
                 <input
                   autoFocus
-                  placeholder="Tìm cựu sinh viên, việc làm, bài viết…"
+                  value={keyword}
+                  onChange={handleSearchChange}
+                  placeholder="Tìm kiếm bài viết, cựu sinh viên…"
                   className="h-11 w-full rounded-xl border border-plum-900/10 bg-white pl-10 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
                 />
               </label>

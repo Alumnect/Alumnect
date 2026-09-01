@@ -15,14 +15,20 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
 
-    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u LEFT JOIN FETCH p.mediaList " +
+    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u LEFT JOIN u.profile up LEFT JOIN FETCH p.mediaList " +
             "WHERE p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
             "AND (:category IS NULL OR p.category = :category) " +
+            "AND (:keyword = '' " +
+            "   OR LOWER(p.content) LIKE :keyword " +
+            "   OR LOWER(up.fullName) LIKE :keyword) " +
             "ORDER BY p.isPinned DESC, p.createdAt DESC",
-            countQuery = "SELECT COUNT(DISTINCT p) FROM Post p JOIN p.author u " +
+            countQuery = "SELECT COUNT(DISTINCT p) FROM Post p JOIN p.author u LEFT JOIN u.profile up " +
             "WHERE p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
-            "AND (:category IS NULL OR p.category = :category)")
-    Page<Post> findFeed(@Param("guestMode") boolean guestMode, @Param("category") PostCategory category, Pageable pageable);
+            "AND (:category IS NULL OR p.category = :category) " +
+            "AND (:keyword = '' " +
+            "   OR LOWER(p.content) LIKE :keyword " +
+            "   OR LOWER(up.fullName) LIKE :keyword)")
+    Page<Post> findFeed(@Param("guestMode") boolean guestMode, @Param("category") PostCategory category, @Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT p FROM Post p JOIN FETCH p.author u LEFT JOIN FETCH p.mediaList WHERE p.id = :id")
     Optional<Post> findDetailById(@Param("id") Long id);

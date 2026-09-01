@@ -31,16 +31,18 @@ public interface PostService {
      * Lấy một trang bài viết cho bảng tin cộng đồng, áp dụng phân quyền theo vai trò người xem:
      * Guest (chưa đăng nhập) chỉ thấy bài viết PUBLIC, thành viên đã đăng nhập thấy toàn bộ
      * bài viết chưa bị ẩn (BR-12). Cờ {@code liked} của mỗi bài được tính theo người xem hiện tại (UC17).
+     * Hỗ trợ tìm kiếm theo từ khóa.
      *
      * @param page            Số thứ tự trang cần lấy (0-based)
      * @param size            Kích thước trang (số bài viết mỗi trang)
      * @param type            Loại bài viết cần lọc ("normal"/"achievement"/"recruitment"/"event"),
      *                        hoặc null/rỗng nếu không lọc theo loại
+     * @param keyword         Từ khóa tìm kiếm trên nội dung bài viết và tên tác giả
      * @param isAuthenticated true nếu người xem đã đăng nhập, false nếu là Guest
      * @param viewerEmail     Email người xem đã đăng nhập (để tính cờ liked); null nếu là Guest
      * @return Trang kết quả bài viết đã được chuẩn hóa, sẵn sàng trả về Client
      */
-    PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated, String viewerEmail);
+    PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, boolean isAuthenticated, String viewerEmail);
 
     /**
      * Lấy chi tiết một bài viết theo ID (UC16 - View Post Detail), áp dụng quy tắc quyền xem:

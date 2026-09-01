@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
+  Search,
   Image as ImageIcon,
   CalendarPlus,
   Briefcase,
@@ -42,6 +43,7 @@ import { EVENTS, QUESTIONS } from '@/lib/constants'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
+import { useSearchStore } from '@/store/searchStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
@@ -671,6 +673,16 @@ export function FeedPage() {
   const [sharingPost, setSharingPost] = useState<Post | null>(null)
   const [reportingPost, setReportingPost] = useState<Post | null>(null)
 
+  const globalKeyword = useSearchStore((s) => s.keyword)
+  const [debouncedKeyword, setDebouncedKeyword] = useState(globalKeyword)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedKeyword(globalKeyword)
+    }, 400)
+    return () => clearTimeout(handler)
+  }, [globalKeyword])
+
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
 
@@ -706,7 +718,7 @@ export function FeedPage() {
     fetchNextPage,      // tải trang kế tiếp
     hasNextPage,        // còn trang để tải không
     isFetchingNextPage, // đang tải trang kế tiếp
-  } = useFeed(filter)
+  } = useFeed(filter, debouncedKeyword)
 
   // === Bước 4: Gộp tất cả trang đã tải thành một danh sách bài viết phẳng ===
   const posts = data?.pages.flatMap((p) => p.items) ?? []
@@ -734,7 +746,7 @@ export function FeedPage() {
           </>
         )}
 
-        {/* Khối B: Tabs lọc theo loại bài viết (All / Achievements / Hiring / Events) */}
+        {/* Khối B: Tabs lọc theo loại bài viết */}
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
             <button
@@ -769,7 +781,17 @@ export function FeedPage() {
           <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
         ) : posts.length === 0 ? (
           // (3) Không có bài viết nào
-          <FeedEmpty />
+          debouncedKeyword ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-plum-900/10 bg-white/50 p-12 text-center">
+              <Search size={48} className="mb-4 text-brand-300 drop-shadow-sm" />
+              <h3 className="mb-1 text-lg font-bold text-plum-900">Không tìm thấy kết quả</h3>
+              <p className="text-sm text-plum-500">
+                Không có bài viết nào khớp với từ khóa "<span className="font-semibold">{debouncedKeyword}</span>"
+              </p>
+            </div>
+          ) : (
+            <FeedEmpty />
+          )
         ) : (
           // (4) Có dữ liệu: render danh sách + điều khiển phân trang
           <>
