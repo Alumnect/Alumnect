@@ -1,4 +1,4 @@
-# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC20 - SAVE POST (LƯU BÀI VIẾT)
+# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC36 - SAVE POST (LƯU BÀI VIẾT)
 
 ## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
 
@@ -135,7 +135,7 @@ Module chịu trách nhiệm quản lý bảng tin cộng đồng, bài viết �
 
 ### 3. Detail Design (Thiết kế chi tiết)
 
-#### 3.1 Thiết kế chi tiết cho Use Case UC20 - Save Post
+#### 3.1 Thiết kế chi tiết cho Use Case UC36 - Save Post
 
 ##### 3.1.1 Class Diagram (Sơ đồ Lớp)
 

@@ -202,6 +202,26 @@ public class PostController {
     }
 
     /**
+     * API xóa một bình luận đã đăng (UC20 - Delete a comment).
+     * Yêu cầu JWT; chỉ Student/Alumni là tác giả của bình luận ACTIVE mới được xóa. Guest nhận 401,
+     * người dùng không phải tác giả hoặc Admin nhận 403; bình luận không còn khả dụng hoặc sai bài viết nhận 404.
+     *
+     * @param postId         ID bài viết chứa bình luận
+     * @param commentId      ID bình luận cần xóa
+     * @param authentication Thông tin xác thực dùng để lấy email tác giả
+     * @return Phản hồi thành công không chứa dữ liệu nghiệp vụ
+     */
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<ApiResponse<Void>> deleteComment(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            Authentication authentication) {
+
+        postService.deleteComment(authentication.getName(), postId, commentId);
+        return ResponseEntity.ok(ApiResponse.success("Xóa bình luận thành công", null));
+    }
+
+    /**
      * API thích một bài viết (UC17 - Like a post). Yêu cầu đăng nhập; chỉ STUDENT/ALUMNI được thích
      * (Admin/vai trò khác nhận 403). Bài đã ẩn/không tồn tại trả 404. Thao tác lũy đẳng.
      *

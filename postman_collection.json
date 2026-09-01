@@ -1393,6 +1393,50 @@
                     ]
                 },
                 {
+                    "name": "[UC20 Delete Comment] Xóa bình luận của chính mình - Thành công (200)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "description": "UC20 - Xóa mềm một bình luận ACTIVE. Chỉ Student/Alumni là tác giả bình luận được phép gọi; Guest nhận 401, sai vai trò/không sở hữu nhận 403, bình luận không khả dụng hoặc sai postId nhận 404.",
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/4/comments/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "4",
+                                "comments",
+                                "1"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                                    "pm.test('Thông báo xóa bình luận thành công', function () {",
+                                    "  var response = pm.response.json();",
+                                    "  pm.expect(response.error).to.eql(0);",
+                                    "  pm.expect(response.message).to.eql('Xóa bình luận thành công');",
+                                    "  pm.expect(response.data).to.eql(null);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "response": []
+                },
+                {
                     "request": {
                         "method": "DELETE",
                         "url": {
