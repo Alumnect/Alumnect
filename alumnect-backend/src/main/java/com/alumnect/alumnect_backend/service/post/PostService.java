@@ -94,7 +94,8 @@ public interface PostService {
     CommentResponse updateComment(String email, Long postId, Long commentId, UpdateCommentRequest request);
 
     /**
-     * Xóa mềm một bình luận đã đăng (UC20 - Delete a comment).
+     * Xóa cứng một bình luận đã đăng (UC20 - Delete a comment).
+     * Nếu là bình luận cha, các reply con bị xóa theo ràng buộc cascade của cơ sở dữ liệu.
      * Chỉ tác giả có vai trò STUDENT hoặc ALUMNI được xóa bình luận ACTIVE của chính mình.
      *
      * @param email     Email người dùng đang đăng nhập, lấy từ JWT

@@ -38,7 +38,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -336,7 +335,8 @@ public class PostServiceImpl implements PostService {
      * {@inheritDoc}
      * <p>
      * Luồng: kiểm tra vai trò thành viên → tìm bình luận ACTIVE của đúng bài viết đang hoạt động
-     * → kiểm tra quyền sở hữu → chuyển trạng thái sang DELETED và giảm bộ đếm trong cùng transaction.
+     * → kiểm tra quyền sở hữu → xóa cứng bình luận; ràng buộc DB cascade xóa reply trực tiếp
+     * → giảm bộ đếm theo số bản ghi đã xóa trong cùng transaction.
      */
     @Override
     @Transactional
@@ -356,11 +356,17 @@ public class PostServiceImpl implements PostService {
             throw new ForbiddenException("Bạn chỉ được xóa bình luận của chính mình");
         }
 
-        comment.setStatus(CommentStatus.DELETED);
-        post.setCommentCount(Math.max(0, post.getCommentCount() - 1));
-        commentRepository.save(comment);
+        int deletedCommentCount = 1;
+        if (comment.getParentComment() == null) {
+            deletedCommentCount += Math.toIntExact(commentRepository.countByParentComment_IdAndStatus(
+                    comment.getId(), CommentStatus.ACTIVE));
+        }
+
+        commentRepository.delete(comment);
+        post.setCommentCount(Math.max(0, post.getCommentCount() - deletedCommentCount));
         postRepository.save(post);
-        log.info("Xóa bình luận: id={}, postId={}, tác giả={}", commentId, postId, email);
+        log.info("Xóa cứng bình luận: id={}, postId={}, số bình luận đã xóa={}, tác giả={}",
+                commentId, postId, deletedCommentCount, email);
     }
 
     private Comment resolveParentOrThrow(Long parentId, Long postId) {
