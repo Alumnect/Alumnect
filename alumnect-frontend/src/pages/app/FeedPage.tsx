@@ -19,7 +19,6 @@ import {
   Sparkles,
   Heart,
   MessageCircle,
-  Repeat2,
   Bookmark,
   MoreHorizontal,
   Pencil,
@@ -33,7 +32,6 @@ import {
   Clock,
   Users,
   Trash2,
-  Filter,
   Share2
 } from 'lucide-react'
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'

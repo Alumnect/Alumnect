@@ -13,7 +13,6 @@ import { Link, useParams } from 'react-router-dom'
 import {
   Heart,
   MessageCircle,
-  Repeat2,
   Bookmark,
   Flag,
   ArrowLeft,
