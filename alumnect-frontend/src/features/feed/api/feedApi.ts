@@ -250,4 +250,11 @@ export const feedApi = {
     const items = parsePosts(extractRawItems(body))
     return { items, page, hasMore: inferHasMore(body, items.length) }
   },
+
+  getUserPosts: async (userId: string | number, { page = 0, size = PAGE_SIZE, category = 'all' } = {}): Promise<FeedPageResult> => {
+    const query = new URLSearchParams({ page: String(page), size: String(size), category })
+    const body = await http.get(`/posts/user/${userId}?${query.toString()}`)
+    const items = parsePosts(extractRawItems(body))
+    return { items, page, hasMore: inferHasMore(body, items.length) }
+  }
 }
