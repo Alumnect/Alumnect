@@ -137,6 +137,22 @@ public class PostController {
     }
 
     /**
+     * API lấy danh sách bài viết của một người dùng.
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getUserPosts(
+            @PathVariable Long userId,
+            @RequestParam(required = false, defaultValue = "all") String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
+
+        String viewerEmail = isAuthenticated(authentication) ? authentication.getName() : null;
+        PageResponse<PostResponse> posts = postService.getUserPosts(userId, category, page, size, viewerEmail);
+        return ResponseEntity.ok(ApiResponse.success("Lấy bài viết của người dùng thành công", posts));
+    }
+
+    /**
      * API lấy một trang bình luận (chỉ đọc) của một bài viết (UC16 - View Post Detail).
      * Áp dụng cùng quy tắc quyền xem như xem chi tiết bài viết.
      *

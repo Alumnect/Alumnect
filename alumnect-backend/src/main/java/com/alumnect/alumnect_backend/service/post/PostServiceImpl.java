@@ -616,6 +616,71 @@ public class PostServiceImpl implements PostService {
                 .build();
     }
 
+    @Override
+    public PageResponse<PostResponse> getUserPosts(Long userId, String category, int page, int size, String viewerEmail) {
+        if (page < 0) {
+            throw new BadRequestException("Tham số page phải là số nguyên không âm");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("Tham số size phải là số nguyên dương");
+        }
+
+        PostCategory postCategory = null;
+        if (category != null && !category.isEmpty() && !category.equalsIgnoreCase("all")) {
+            try {
+                postCategory = PostCategory.valueOf(category.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Loại bài viết không hợp lệ: " + category);
+            }
+        }
+
+        boolean isAuthenticated = viewerEmail != null;
+        
+        Page<Post> postPage = postRepository.findByAuthorIdAndCategory(userId, postCategory, PageRequest.of(page, size));
+        
+        List<Post> posts = postPage.getContent();
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        
+        Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(
+                posts.stream().map(p -> p.getAuthor().getId()).distinct().collect(Collectors.toList())
+        ).stream().collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+        
+        Set<Long> likedPostIds = isAuthenticated ? computeLikedPostIds(viewerEmail, postIds) : new java.util.HashSet<>();
+        Set<Long> savedPostIds = isAuthenticated ? new java.util.HashSet<>(postSaveRepository.findSavedPostIds(
+                userRepository.findByEmail(viewerEmail).map(User::getId).orElse(-1L), postIds)) : new java.util.HashSet<>();
+
+        List<Long> jobIds = posts.stream()
+                .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
+        List<Long> eventIds = posts.stream()
+                .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
+        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
+                jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
+                        com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
+        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
+                eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
+                        com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
+
+        List<PostResponse> content = posts.stream()
+                .map(post -> postMapper.toResponse(
+                        post,
+                        profileByUserId.get(post.getAuthor().getId()),
+                        likedPostIds.contains(post.getId()),
+                        savedPostIds.contains(post.getId()),
+                        post.getJobId() != null ? jobById.get(post.getJobId()) : null,
+                        post.getEventId() != null ? eventById.get(post.getEventId()) : null
+                ))
+                .collect(Collectors.toList());
+
+        return PageResponse.<PostResponse>builder()
+                .content(content)
+                .pageNumber(postPage.getNumber())
+                .pageSize(postPage.getSize())
+                .totalElements(postPage.getTotalElements())
+                .totalPages(postPage.getTotalPages())
+                .last(postPage.isLast())
+                .build();
+    }
+
     private Set<Long> computeSavedPostIds(String viewerEmail, List<Long> postIds) {
         if (viewerEmail == null || postIds.isEmpty()) {
             return new HashSet<>();
