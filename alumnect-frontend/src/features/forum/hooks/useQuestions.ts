@@ -88,3 +88,19 @@ export function useUpdateQuestion(id: string) {
     },
   })
 }
+
+/**
+ * Hook xóa (mềm) một câu hỏi (UC47 - Delete a question). Bọc `useMutation`; khi thành công làm mới
+ * cache danh sách (['questions']) và cache chi tiết câu hỏi vừa xóa (['question', id]).
+ * @return Đối tượng mutation (mutate, isPending, error...)
+ */
+export function useDeleteQuestion() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => forumApi.deleteQuestion(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
+      queryClient.invalidateQueries({ queryKey: ['question', id] })
+    },
+  })
+}

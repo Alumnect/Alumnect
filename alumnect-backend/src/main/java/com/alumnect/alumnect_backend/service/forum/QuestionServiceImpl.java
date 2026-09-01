@@ -287,6 +287,31 @@ public class QuestionServiceImpl implements QuestionService {
 
     /**
      * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm câu hỏi ACTIVE theo id (404) → kiểm tra người dùng
+     * chính là TÁC GIẢ (403 nếu không) → chuyển trạng thái sang DELETED → lưu.
+     */
+    @Override
+    @Transactional
+    public void deleteQuestion(String email, Long questionId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        Question question = questionRepository.findActiveDetailById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu hỏi với id: " + questionId));
+
+        // Ownership (UC47): chỉ tác giả câu hỏi mới được xóa; người khác nhận 403.
+        if (!question.getAuthor().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ tác giả mới được xóa câu hỏi này");
+        }
+
+        question.setStatus(QuestionStatus.DELETED);
+        questionRepository.save(question);
+        log.info("Xóa câu hỏi: id={}, tác giả={}", questionId, email);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public List<TopicResponse> getTopics() {

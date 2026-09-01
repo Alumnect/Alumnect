@@ -132,6 +132,15 @@ export const forumApi = {
   },
 
   /**
+   * Xóa (mềm) một câu hỏi đã có (UC47 - Delete a question).
+   * Gọi `DELETE /api/v1/questions/{id}`; interceptor `http` tự đính Bearer token. Chỉ tác giả xóa được (BE chặn 403).
+   * @param id ID câu hỏi cần xóa
+   */
+  deleteQuestion: async (id: string | number): Promise<void> => {
+    await http.delete(`/questions/${id}`)
+  },
+
+  /**
    * Tải một ảnh đính kèm câu hỏi lên storage qua presigned URL, trả về URL công khai để lưu vào câu hỏi.
    * Cùng cơ chế với ảnh bài đăng: xin link ký sẵn → PUT thẳng file lên storage → dùng publicUrl.
    * @param file Ảnh do người dùng chọn
