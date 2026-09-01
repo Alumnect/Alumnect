@@ -19,6 +19,7 @@ import {
   UserCog,
   Lock,
   FileText,
+  MessageCircleQuestion,
 } from 'lucide-react'
 
 export const BRAND = {
@@ -74,13 +75,13 @@ export const APP_NAV: NavItem[] = [
 /** Admin dashboard navigation. */
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Tổng quan', to: '/admin', icon: LayoutDashboard },
-  { label: 'Người dùng', to: '/admin/users', icon: UserCog },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
-  { label: 'Xác minh', to: '/admin/verifications', icon: BadgeCheck },
+  { label: 'Kiểm duyệt', to: '/admin/moderation', icon: MessageCircleQuestion },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
+  { label: 'Xác minh', to: '/admin/verifications', icon: BadgeCheck },
+  { label: 'Người dùng', to: '/admin/users', icon: UserCog },
   { label: 'Thông báo chung', to: '/admin/broadcast', icon: Megaphone },
-  { label: 'Kiểm duyệt', to: '/admin/moderation', icon: ShieldCheck },
 ]
 
 /** Mock feed posts. */

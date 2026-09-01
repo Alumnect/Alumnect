@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { 
   Inbox, Eye, EyeOff, X, 
-  Flag, ArrowRight, ShieldAlert, Check, Ban
+  Flag, ArrowRight, ShieldAlert, Check, Ban,
+  Filter, Sparkles, CheckCircle2, ChevronRight,
+  Trash2, Info, UserX, HelpCircle
 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +19,158 @@ const REASON_LABELS: Record<string, { label: string; tone: 'brand' | 'gold' | 's
   MISINFORMATION: { label: 'Sai lệch thông tin', tone: 'gold' },
   SCAM_OR_FRAUD: { label: 'Lừa đảo & Giả mạo', tone: 'danger' },
   OTHER: { label: 'Lý do khác', tone: 'neutral' },
+}
+
+export type ReasonKey = 'ALL' | 'SPAM' | 'INAPPROPRIATE' | 'MISINFORMATION' | 'SCAM_OR_FRAUD' | 'OTHER'
+
+export interface ReasonConfig {
+  value: ReasonKey
+  label: string
+  icon: React.ElementType
+  colorHex: string
+  hoverBg: string
+}
+
+export const REASON_CONFIG: Record<ReasonKey, ReasonConfig> = {
+  ALL: {
+    value: 'ALL',
+    label: 'Tất cả lý do',
+    icon: Filter,
+    colorHex: '#F27024',
+    hoverBg: 'hover:bg-brand-50 hover:text-brand-900',
+  },
+  SPAM: {
+    value: 'SPAM',
+    label: 'Spam / Rác',
+    icon: Trash2,
+    colorHex: '#64748B',
+    hoverBg: 'hover:bg-slate-50 hover:text-slate-900',
+  },
+  INAPPROPRIATE: {
+    value: 'INAPPROPRIATE',
+    label: 'Nội dung không phù hợp',
+    icon: Ban,
+    colorHex: '#EF4444',
+    hoverBg: 'hover:bg-red-50 hover:text-red-900',
+  },
+  MISINFORMATION: {
+    value: 'MISINFORMATION',
+    label: 'Sai lệch thông tin',
+    icon: Info,
+    colorHex: '#F59E0B',
+    hoverBg: 'hover:bg-amber-50 hover:text-amber-900',
+  },
+  SCAM_OR_FRAUD: {
+    value: 'SCAM_OR_FRAUD',
+    label: 'Lừa đảo & Giả mạo',
+    icon: UserX,
+    colorHex: '#DC2626',
+    hoverBg: 'hover:bg-rose-50 hover:text-rose-900',
+  },
+  OTHER: {
+    value: 'OTHER',
+    label: 'Lý do khác',
+    icon: HelpCircle,
+    colorHex: '#6366F1',
+    hoverBg: 'hover:bg-indigo-50 hover:text-indigo-900',
+  },
+}
+
+interface CustomReasonDropdownProps {
+  value: string
+  onChange: (val: string) => void
+}
+
+function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedConfig = REASON_CONFIG[value as ReasonKey] || REASON_CONFIG.ALL
+  const SelectedIcon = selectedConfig.icon
+
+  return (
+    <div className="relative inline-block text-left" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'flex h-9 items-center justify-between gap-2 rounded-full border bg-brand-50/80 px-3.5 text-xs font-bold text-brand-900 shadow-2xs transition-all duration-200 hover:border-brand-300 focus:outline-none cursor-pointer min-w-[170px]',
+          isOpen ? 'ring-2 ring-brand-400/30 border-brand-400 bg-white' : 'border-brand-100 hover:bg-white'
+        )}
+      >
+        <div className="flex items-center gap-2 truncate">
+          <span
+            className="flex h-5 w-5 items-center justify-center rounded-full text-white shadow-2xs shrink-0"
+            style={{ backgroundColor: selectedConfig.colorHex }}
+          >
+            <SelectedIcon size={11} />
+          </span>
+          <span className="truncate">{selectedConfig.label}</span>
+        </div>
+        <ChevronRight
+          size={14}
+          className={cn('text-brand-400 transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-brand-600' : 'rotate-0')}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 z-50 mt-1.5 w-60 origin-top-right rounded-2xl border border-plum-900/15 bg-white/95 backdrop-blur-xl p-1.5 shadow-2xl shadow-plum-950/20 animate-in fade-in-80 zoom-in-95">
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-plum-400 border-b border-plum-900/5 mb-1 flex items-center justify-between">
+            <span>Lọc theo lý do</span>
+            <Sparkles size={11} className="text-brand-400" />
+          </div>
+          <div className="space-y-0.5">
+            {(Object.keys(REASON_CONFIG) as ReasonKey[]).map((rKey) => {
+              const cfg = REASON_CONFIG[rKey]
+              const Icon = cfg.icon
+              const isSelected = value === rKey
+
+              return (
+                <button
+                  key={rKey}
+                  type="button"
+                  onClick={() => {
+                    onChange(rKey)
+                    setIsOpen(false)
+                  }}
+                  className={cn(
+                    'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 text-left cursor-pointer',
+                    isSelected
+                      ? 'bg-brand-500 text-white shadow-sm font-bold'
+                      : cn('text-plum-800', cfg.hoverBg)
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={cn(
+                        'flex h-5.5 w-5.5 items-center justify-center rounded-lg text-white shadow-2xs shrink-0 transition-transform',
+                        isSelected ? 'scale-105 bg-white/20' : 'opacity-90'
+                      )}
+                      style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
+                    >
+                      <Icon size={12} />
+                    </span>
+                    <span>{cfg.label}</span>
+                  </div>
+                  {isSelected && <CheckCircle2 size={14} className="text-white shrink-0 ml-2" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function AdminReportsQueue() {
@@ -145,7 +299,7 @@ export function AdminReportsQueue() {
       />
 
       {/* Bộ lọc và Tìm kiếm */}
-      <Card hover={false} className="mb-6 p-4 border border-plum-900/10 bg-white">
+      <Card hover={false} className="mb-6 p-4 border border-plum-900/10 bg-white !overflow-visible relative z-20">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           
           {/* Tabs Trạng thái */}
@@ -175,21 +329,13 @@ export function AdminReportsQueue() {
 
           {/* Ô lọc lý do & Tìm kiếm */}
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <select
+            <CustomReasonDropdown
               value={reasonFilter}
-              onChange={(e) => {
-                setReasonFilter(e.target.value)
+              onChange={(val) => {
+                setReasonFilter(val)
                 setPage(0)
               }}
-              className="bg-brand-50 border border-brand-100 rounded-full px-3 py-1.5 text-xs font-bold text-brand-700 outline-none focus:ring-2 focus:ring-brand-500/20"
-            >
-              <option value="ALL">Tất cả lý do</option>
-              <option value="SPAM">Spam / Rác</option>
-              <option value="INAPPROPRIATE">Nội dung không phù hợp</option>
-              <option value="MISINFORMATION">Sai lệch thông tin</option>
-              <option value="SCAM_OR_FRAUD">Lừa đảo & Giả mạo</option>
-              <option value="OTHER">Lý do khác</option>
-            </select>
+            />
 
             <input
               type="text"
