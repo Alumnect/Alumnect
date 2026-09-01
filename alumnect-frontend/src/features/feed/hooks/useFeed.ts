@@ -9,10 +9,10 @@ import type { FeedFilter } from '../model/post'
  * @param filter Bộ lọc loại bài viết ('all' = tất cả)
  * @return Đối tượng query (pages, isLoading, isError, fetchNextPage, hasNextPage...)
  */
-export function useFeed(filter: FeedFilter = 'all') {
+export function useFeed(filter: FeedFilter = 'all', keyword: string = '') {
   return useInfiniteQuery({
-    queryKey: ['feed', filter],
-    queryFn: ({ pageParam }) => feedApi.getFeed({ page: pageParam, filter }),
+    queryKey: ['feed', { filter, keyword }],
+    queryFn: ({ pageParam }) => feedApi.getFeed({ page: pageParam, filter, keyword }),
     initialPageParam: 0,
     // Trang kế tiếp = số trang hiện tại + 1, hoặc dừng khi hết dữ liệu.
     getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),

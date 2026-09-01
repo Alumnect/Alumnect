@@ -172,7 +172,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated, String viewerEmail) {
+    public PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, boolean isAuthenticated, String viewerEmail) {
         if (page < 0) {
             throw new BadRequestException("Tham số page phải là số nguyên không âm");
         }
@@ -182,8 +182,10 @@ public class PostServiceImpl implements PostService {
 
         PostCategory category = parsePostCategory(type);
         boolean guestMode = !isAuthenticated;
+        
+        String searchKeyword = keyword == null || keyword.isBlank() ? "" : "%" + keyword.trim().toLowerCase() + "%";
 
-        Page<Post> postsPage = postRepository.findFeed(guestMode, category, PageRequest.of(page, size));
+        Page<Post> postsPage = postRepository.findFeed(guestMode, category, searchKeyword, PageRequest.of(page, size));
         log.info("Lấy bảng tin: page={}, size={}, category={}, tổng kết quả={}", page, size, type, postsPage.getTotalElements());
 
         List<Long> authorIds = postsPage.getContent().stream()

@@ -69,11 +69,12 @@ public class PostController {
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "recent") String sort,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String keyword,
             Authentication authentication) {
 
         boolean authenticated = isAuthenticated(authentication);
         String viewerEmail = authenticated ? authentication.getName() : null;
-        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, authenticated, viewerEmail);
+        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, keyword, authenticated, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy bảng tin thành công", feed));
     }
 
