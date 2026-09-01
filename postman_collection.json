@@ -1403,7 +1403,7 @@
                                 "type": "text"
                             }
                         ],
-                        "description": "UC20 - Xóa mềm một bình luận ACTIVE. Chỉ Student/Alumni là tác giả bình luận được phép gọi; Guest nhận 401, sai vai trò/không sở hữu nhận 403, bình luận không khả dụng hoặc sai postId nhận 404.",
+                        "description": "UC20 - Xóa cứng một bình luận ACTIVE; nếu đây là comment cha thì database cascade xóa toàn bộ reply trực tiếp. Chỉ Student/Alumni là tác giả bình luận được phép gọi; Guest nhận 401, sai vai trò/không sở hữu nhận 403, bình luận không khả dụng hoặc sai postId nhận 404.",
                         "url": {
                             "raw": "{{baseUrl}}/posts/4/comments/1",
                             "host": [

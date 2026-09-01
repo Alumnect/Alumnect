@@ -12,10 +12,12 @@ import java.time.Instant;
 /**
  * Entity ánh xạ bảng comments — một bình luận trên bài viết (UC16 - View Post Detail).
  * Mỗi bình luận thuộc về một {@link Post} và một tác giả {@link User}; có thể là trả lời
- * cho một bình luận khác (1 cấp) qua {@link #parentComment}. Việc ẩn bình luận là xóa mềm
- * qua {@link #status} = DELETED (BR-11).
+ * cho một bình luận khác (1 cấp) qua {@link #parentComment}.
  * <p>
- * Ở UC16 chỉ ĐỌC (hiển thị luồng bình luận); đăng/sửa/xóa bình luận thuộc UC18.
+ * UC20 xóa cứng bình luận khỏi DB ({@code commentRepository.delete()}); reply con bị xóa
+ * theo cascade DB ({@code parent_comment_id ON DELETE CASCADE}).
+ * <p>
+ * Ở UC16 chỉ ĐỌC (hiển thị luồng bình luận); đăng/sửa/xóa bình luận thuộc UC18/UC19/UC20.
  */
 @Entity
 @Table(name = "comments")
@@ -49,7 +51,7 @@ public class Comment {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    /** Trạng thái: ACTIVE (hiển thị) hoặc DELETED (đã xóa mềm — BR-11) */
+    /** Trạng thái: ACTIVE (đang hiển thị) hoặc DELETED (dùng nội bộ, không được set trực tiếp — UC20 xóa cứng) */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private CommentStatus status;

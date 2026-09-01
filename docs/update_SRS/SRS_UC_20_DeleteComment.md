@@ -14,8 +14,8 @@ stateDiagram-v2
     DangXoa --> Loi401: Không có/hết hạn JWT
     DangXoa --> Loi403: Sai vai trò hoặc không phải tác giả
     DangXoa --> Loi404: Comment không ACTIVE, sai postId hoặc bài không ACTIVE
-    DangXoa --> ThanhCong: status = DELETED và comment_count - 1
-    ThanhCong --> CapNhatCache: Bỏ comment khỏi cache và giảm bộ đếm
+    DangXoa --> ThanhCong: Xóa cứng comment và các reply con, comment_count giảm tương ứng
+    ThanhCong --> CapNhatCache: Bỏ cả nhánh comment khỏi cache và giảm bộ đếm
     CapNhatCache --> ThongBaoThanhCong
     ThongBaoThanhCong --> [*]
     Loi401 --> [*]
@@ -30,8 +30,8 @@ stateDiagram-v2
 3. Frontend gọi `DELETE /api/v1/posts/{postId}/comments/{commentId}` với Bearer JWT, không có request body.
 4. Spring Security chặn request không có JWT bằng HTTP 401. Service tra người dùng theo email và kiểm tra vai trò `STUDENT`/`ALUMNI` trước khi đọc bình luận.
 5. Service chỉ chấp nhận bình luận `ACTIVE`, thuộc đúng `postId` trên URL, nằm trong bài viết `ACTIVE` và có `comments.user_id` trùng người gọi. Sai vai trò/quyền sở hữu trả 403; tài nguyên không khả dụng hoặc sai bài trả 404.
-6. Trong một transaction, Service chuyển `comments.status` sang `DELETED`, để JPA cập nhật `comments.updated_at`, đồng thời giảm `posts.comment_count` đúng một đơn vị nhưng không thấp hơn 0. Không xóa cứng bản ghi và không xóa các reply của người khác.
-7. Backend trả HTTP 200 với `ApiResponse<Void>`. Frontend loại comment khỏi cache đang hiển thị, giảm bộ đếm bài viết, làm mới dữ liệu phân trang/feed, đóng modal và hiển thị thông báo thành công.
+6. Trong một transaction, Service xóa cứng comment được chọn. Nếu đó là comment cha, ràng buộc `comments.parent_comment_id ON DELETE CASCADE` xóa toàn bộ reply trực tiếp; `posts.comment_count` giảm đúng bằng số comment `ACTIVE` đã bị xóa nhưng không thấp hơn 0.
+7. Backend trả HTTP 200 với `ApiResponse<Void>`. Frontend loại cả nhánh comment đã xóa khỏi cache đang hiển thị, giảm bộ đếm bài viết, làm mới dữ liệu phân trang/feed, đóng modal và hiển thị thông báo thành công.
 
 ### 3.2 Module 3 - Social: Feed, Posts, Events, Packages & Messaging
 
@@ -53,9 +53,9 @@ stateDiagram-v2
 
 - Request path: `postId`, `commentId`; không có request body.
 - Response: HTTP 200, `ApiResponse<Void>` với `message = "Xóa bình luận thành công"`, `data = null`.
-- Persistence: cập nhật `comments.status = DELETED`, `comments.updated_at` và `posts.comment_count = max(0, comment_count - 1)` trong cùng transaction.
-- Database migration: không cần migration mới vì `comments.status`, `comments.updated_at` và `posts.comment_count` đã tồn tại trong schema hiện hành.
-- Frontend cache: xóa đúng comment khỏi mọi trang `['post-comments', postId]`, giảm `comments` trong `['post', postId]`, sau đó invalidate luồng bình luận và feed để tránh lệch phân trang/bộ đếm.
+- Persistence: xóa bản ghi comment; nếu là comment cha, database cascade xóa các reply trực tiếp qua `comments.parent_comment_id`; `posts.comment_count = max(0, comment_count - số comment ACTIVE đã xóa)` trong cùng transaction.
+- Database migration: không cần migration mới vì ràng buộc `comments.parent_comment_id ON DELETE CASCADE` và `posts.comment_count` đã tồn tại trong schema hiện hành.
+- Frontend cache: xóa comment cùng các reply trực tiếp khỏi mọi trang `['post-comments', postId]`, giảm `comments` trong `['post', postId]`, sau đó invalidate post detail, luồng bình luận và feed để tránh lệch phân trang/bộ đếm.
 
 **Validation**
 
@@ -87,9 +87,9 @@ stateDiagram-v2
 | BR-CMT-DEL-02 | Chỉ tác giả (`comments.user_id`) được xóa bình luận của chính mình; Admin không có ngoại lệ trong UC20. |
 | BR-CMT-DEL-03 | Chỉ bình luận `ACTIVE` thuộc bài viết `ACTIVE` mới có thể xóa; tài nguyên không khả dụng được trả thống nhất là 404. |
 | BR-CMT-DEL-04 | `postId` trên URL phải trùng `comments.post_id` để ngăn tác động chéo tài nguyên. |
-| BR-CMT-DEL-05 | Xóa bình luận là xóa mềm bằng `status = DELETED`; bản ghi vẫn được giữ trong cơ sở dữ liệu. |
-| BR-CMT-DEL-06 | Một lần xóa hợp lệ giảm `posts.comment_count` đúng một đơn vị và không để giá trị âm. |
-| BR-CMT-DEL-07 | Xóa một comment không xóa các reply của người khác; reply còn ACTIVE tiếp tục được hiển thị như bình luận mồ côi khi comment cha không còn trong luồng. |
+| BR-CMT-DEL-05 | Xóa bình luận là xóa cứng: bản ghi bị loại khỏi cơ sở dữ liệu. |
+| BR-CMT-DEL-06 | Một lần xóa hợp lệ giảm `posts.comment_count` đúng bằng số comment `ACTIVE` bị xóa (comment được chọn và các reply trực tiếp đang `ACTIVE`) và không để giá trị âm. |
+| BR-CMT-DEL-07 | Xóa comment cha phải xóa cứng toàn bộ reply trực tiếp của nó thông qua ràng buộc `ON DELETE CASCADE`. Xóa một reply chỉ tác động reply đó. |
 | BR-CMT-DEL-08 | Request thất bại không được sửa cache frontend hoặc dữ liệu trong database. |
 
 #### 5.2 Application Messages List
@@ -180,9 +180,9 @@ classDiagram
 #### Giải thích vai trò các lớp
 
 - `PostController`: nhận path variables và `Authentication`, gọi service, đóng gói phản hồi chuẩn HTTP 200.
-- `PostService`/`PostServiceImpl`: thực thi RBAC, ownership, trạng thái tài nguyên, xóa mềm và cập nhật bộ đếm transactionally.
+- `PostService`/`PostServiceImpl`: thực thi RBAC, ownership, trạng thái tài nguyên, xóa cứng comment và cập nhật bộ đếm transactionally.
 - `UserRepository`: tìm tài khoản từ email trong JWT để kiểm tra actor.
-- `CommentRepository`: đọc comment theo ID và lưu trạng thái `DELETED`.
+- `CommentRepository`: đọc, đếm reply `ACTIVE` và xóa comment theo ID; database tự cascade reply khi cần.
 - `PostRepository`: lưu bộ đếm comment sau khi giảm.
 - `Comment`/`Post`: ánh xạ các bản ghi persistence tham gia transaction.
 - `postApi`: gọi endpoint DELETE, Bearer token được interceptor tự đính kèm.
@@ -234,9 +234,9 @@ sequenceDiagram
                     S-->>C: ForbiddenException
                     C-->>UI: 403 MSG-CMT-DEL-04
                 else Hợp lệ
-                    S->>CR: save(status = DELETED)
-                    S->>PR: save(commentCount - 1, min 0)
-                    CR->>DB: UPDATE comments
+                    S->>CR: delete(comment)
+                    CR->>DB: DELETE comment (+ CASCADE reply nếu là cha)
+                    S->>PR: save(commentCount - số comment ACTIVE đã xóa, min 0)
                     PR->>DB: UPDATE posts
                     DB-->>S: Transaction thành công
                     S-->>C: void
@@ -252,7 +252,7 @@ sequenceDiagram
 
 #### Mô tả các luồng sequence
 
-1. **Luồng thành công:** RBAC, trạng thái, `postId` và ownership đều hợp lệ; comment được xóa mềm, bộ đếm giảm trong cùng transaction, UI cập nhật sau HTTP 200.
+1. **Luồng thành công:** RBAC, trạng thái, `postId` và ownership đều hợp lệ; comment được xóa cứng, reply trực tiếp cũng bị cascade nếu comment là cha, bộ đếm giảm trong cùng transaction, UI cập nhật sau HTTP 200.
 2. **Luồng Hủy:** modal đóng mà không tạo network request hay thay đổi cache.
 3. **Luồng 401:** Spring Security từ chối trước Controller; interceptor thử refresh token theo cơ chế chung, nếu không thể thì đăng xuất/chuyển tới trang đăng nhập.
 4. **Luồng 403:** service từ chối sai vai trò trước khi đọc comment hoặc từ chối thành viên không sở hữu sau khi tìm comment; database không thay đổi.
