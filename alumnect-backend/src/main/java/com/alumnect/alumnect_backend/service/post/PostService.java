@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
+import com.alumnect.alumnect_backend.dto.request.post.RepostRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
@@ -167,4 +168,27 @@ public interface PostService {
      * @return Trang kết quả các bài viết đã lưu
      */
     PageResponse<PostResponse> getSavedPosts(String email, int page, int size);
+
+    /**
+     * Đăng lại một bài viết (UC21 - Repost a post).
+     * 
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần đăng lại
+     * @param request Dữ liệu đăng lại (có thể chứa content tùy chọn)
+     * @return Bài viết repost vừa được tạo
+     */
+    PostResponse repostPost(String email, Long postId, RepostRequest request);
+
+    /**
+     * Lấy danh sách bài viết do một người dùng cụ thể đăng hoặc đăng lại.
+     *
+     * @param userId          ID người dùng cần lấy bài viết
+     * @param page            Số thứ tự trang (0-based)
+     * @param size            Kích thước trang
+     * @param type            Loại bài viết cần lọc (null nếu lấy tất cả)
+     * @param isAuthenticated Có đăng nhập hay không
+     * @param viewerEmail     Email người xem (nếu đã đăng nhập) để map like
+     * @return Trang kết quả
+     */
+    PageResponse<PostResponse> getUserPosts(Long userId, int page, int size, String type, boolean isAuthenticated, String viewerEmail);
 }

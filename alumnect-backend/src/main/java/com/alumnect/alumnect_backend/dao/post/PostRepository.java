@@ -26,4 +26,13 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
 
     @Query("SELECT p FROM Post p JOIN FETCH p.author u LEFT JOIN FETCH p.mediaList WHERE p.id = :id")
     Optional<Post> findDetailById(@Param("id") Long id);
+
+    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u LEFT JOIN FETCH p.mediaList " +
+            "WHERE u.id = :userId AND p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
+            "AND (:category IS NULL OR p.category = :category) " +
+            "ORDER BY p.createdAt DESC",
+            countQuery = "SELECT COUNT(DISTINCT p) FROM Post p JOIN p.author u " +
+            "WHERE u.id = :userId AND p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
+            "AND (:category IS NULL OR p.category = :category)")
+    Page<Post> findByAuthorIdAndCategory(@Param("userId") Long userId, @Param("category") PostCategory category, Pageable pageable);
 }

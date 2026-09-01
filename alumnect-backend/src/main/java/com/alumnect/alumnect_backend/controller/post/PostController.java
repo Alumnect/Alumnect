@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.RepostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.report.CreatePostReportRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
@@ -78,6 +79,30 @@ public class PostController {
     }
 
     /**
+     * API lấy trang bài viết của một người dùng cụ thể.
+     *
+     * @param userId         ID của người dùng cần lấy bài viết
+     * @param page           Số thứ tự trang (0-based)
+     * @param size           Kích thước trang
+     * @param type           Loại bài viết cần lọc
+     * @param authentication Thông tin xác thực
+     * @return Trang kết quả bài viết
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getUserPosts(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String type,
+            Authentication authentication) {
+
+        boolean authenticated = isAuthenticated(authentication);
+        String viewerEmail = authenticated ? authentication.getName() : null;
+        PageResponse<PostResponse> userPosts = postService.getUserPosts(userId, page, size, type, authenticated, viewerEmail);
+        return ResponseEntity.ok(ApiResponse.success("Lấy bài viết của người dùng thành công", userPosts));
+    }
+
+    /**
      * API tạo một bài viết mới trên bảng tin cộng đồng (UC14 - Create a post on the Feed).
      * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được đăng bài — Admin/vai trò khác nhận 403.
      * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
@@ -94,6 +119,26 @@ public class PostController {
         PostResponse created = postService.createPost(authentication.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng bài viết thành công", created));
+    }
+
+    /**
+     * API đăng lại một bài viết (UC21 - Repost a post).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được đăng lại.
+     *
+     * @param id             ID bài viết cần đăng lại
+     * @param request        DTO chứa nội dung đăng lại tùy chọn
+     * @param authentication Thông tin xác thực do Spring Security cung cấp
+     * @return Bài viết repost vừa tạo
+     */
+    @PostMapping("/{id}/repost")
+    public ResponseEntity<ApiResponse<PostResponse>> repostPost(
+            @PathVariable Long id,
+            @RequestBody RepostRequest request,
+            Authentication authentication) {
+            
+        PostResponse reposted = postService.repostPost(authentication.getName(), id, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng lại bài viết thành công", reposted));
     }
 
     /**

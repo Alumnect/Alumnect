@@ -13,6 +13,7 @@ import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.RepostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
@@ -186,38 +187,33 @@ public class PostServiceImpl implements PostService {
         Page<Post> postsPage = postRepository.findFeed(guestMode, category, PageRequest.of(page, size));
         log.info("Lấy bảng tin: page={}, size={}, category={}, tổng kết quả={}", page, size, type, postsPage.getTotalElements());
 
-        List<Long> authorIds = postsPage.getContent().stream()
-                .map(p -> p.getAuthor().getId())
-                .distinct()
-                .collect(Collectors.toList());
-        Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
-                .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+        List<PostResponse> content = mapPostsToResponses(postsPage.getContent(), viewerEmail, false);
 
-        List<Long> postIds = postsPage.getContent().stream().map(Post::getId).collect(Collectors.toList());
-        Set<Long> likedPostIds = computeLikedPostIds(viewerEmail, postIds);
-        Set<Long> savedPostIds = computeSavedPostIds(viewerEmail, postIds);
+        return PageResponse.<PostResponse>builder()
+                .content(content)
+                .pageNumber(postsPage.getNumber())
+                .pageSize(postsPage.getSize())
+                .totalElements(postsPage.getTotalElements())
+                .totalPages(postsPage.getTotalPages())
+                .last(postsPage.isLast())
+                .build();
+    }
 
-        // Batch-fetch Jobs and Events to avoid N+1 queries
-        List<Long> jobIds = postsPage.getContent().stream()
-                .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
-        List<Long> eventIds = postsPage.getContent().stream()
-                .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
-        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
-                jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
-        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
-                eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
+    @Override
+    public PageResponse<PostResponse> getUserPosts(Long userId, int page, int size, String type, boolean isAuthenticated, String viewerEmail) {
+        if (page < 0) {
+            throw new BadRequestException("Tham số page phải là số nguyên không âm");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("Tham số size phải là số nguyên dương");
+        }
 
-        List<PostResponse> content = postsPage.getContent().stream()
-                .map(post -> postMapper.toResponse(
-                        post,
-                        profileByUserId.get(post.getAuthor().getId()),
-                        likedPostIds.contains(post.getId()),
-                        savedPostIds.contains(post.getId()),
-                        post.getJobId() != null ? jobById.get(post.getJobId()) : null,
-                        post.getEventId() != null ? eventById.get(post.getEventId()) : null))
-                .collect(Collectors.toList());
+        PostCategory category = parsePostCategory(type);
+
+        Page<Post> postsPage = postRepository.findByAuthorIdAndCategory(userId, category, PageRequest.of(page, size));
+        log.info("Lấy bài viết của user: userId={}, page={}, size={}, category={}, tổng kết quả={}", userId, page, size, type, postsPage.getTotalElements());
+
+        List<PostResponse> content = mapPostsToResponses(postsPage.getContent(), viewerEmail, false);
 
         return PageResponse.<PostResponse>builder()
                 .content(content)
@@ -232,13 +228,8 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse getPostDetail(Long id, boolean isAuthenticated, String viewerEmail) {
         Post post = loadViewablePost(id, isAuthenticated);
-        UserProfile profile = userProfileRepository.findById(post.getAuthor().getId()).orElse(null);
-        boolean liked = !computeLikedPostIds(viewerEmail, List.of(post.getId())).isEmpty();
-        boolean saved = !computeSavedPostIds(viewerEmail, List.of(post.getId())).isEmpty();
-        com.alumnect.alumnect_backend.entity.job.JobPosting job = post.getJobId() != null ? jobPostingRepository.findById(post.getJobId()).orElse(null) : null;
-        com.alumnect.alumnect_backend.entity.event.Event event = post.getEventId() != null ? eventRepository.findById(post.getEventId()).orElse(null) : null;
         log.info("Xem chi tiết bài viết: id={}", id);
-        return postMapper.toResponse(post, profile, liked, saved, job, event);
+        return mapPostsToResponses(List.of(post), viewerEmail, false).get(0);
     }
 
     @Override
@@ -574,37 +565,7 @@ public class PostServiceImpl implements PostService {
         log.info("Lấy danh sách bài viết đã lưu: user={}, page={}, size={}, tổng={}", email, page, size, savedPage.getTotalElements());
 
         List<Post> posts = savedPage.getContent().stream().map(PostSave::getPost).collect(Collectors.toList());
-        List<Long> authorIds = posts.stream()
-                .map(p -> p.getAuthor().getId())
-                .distinct()
-                .collect(Collectors.toList());
-        Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
-                .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
-
-        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
-        Set<Long> likedPostIds = computeLikedPostIds(email, postIds);
-
-        // Batch-fetch Jobs and Events to avoid N+1 queries
-        List<Long> jobIds = posts.stream()
-                .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
-        List<Long> eventIds = posts.stream()
-                .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
-        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
-                jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
-        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
-                eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
-
-        List<PostResponse> content = posts.stream()
-                .map(post -> postMapper.toResponse(
-                        post,
-                        profileByUserId.get(post.getAuthor().getId()),
-                        likedPostIds.contains(post.getId()),
-                        true,
-                        post.getJobId() != null ? jobById.get(post.getJobId()) : null,
-                        post.getEventId() != null ? eventById.get(post.getEventId()) : null))
-                .collect(Collectors.toList());
+        List<PostResponse> content = mapPostsToResponses(posts, email, true);
 
         return PageResponse.<PostResponse>builder()
                 .content(content)
@@ -623,5 +584,100 @@ public class PostServiceImpl implements PostService {
         return userRepository.findByEmail(viewerEmail)
                 .<Set<Long>>map(u -> new HashSet<>(postSaveRepository.findSavedPostIds(u.getId(), postIds)))
                 .orElseGet(HashSet::new);
+    }
+
+    private List<PostResponse> mapPostsToResponses(List<Post> posts, String viewerEmail, boolean defaultSavedStatus) {
+        if (posts.isEmpty()) return new ArrayList<>();
+
+        List<Long> authorIds = posts.stream().map(p -> p.getAuthor().getId()).collect(Collectors.toList());
+        List<Long> originalAuthorIds = posts.stream().filter(p -> p.getRepostOf() != null).map(p -> p.getRepostOf().getAuthor().getId()).collect(Collectors.toList());
+        authorIds.addAll(originalAuthorIds);
+        authorIds = authorIds.stream().distinct().collect(Collectors.toList());
+        Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream().collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        List<Long> originalPostIds = posts.stream().filter(p -> p.getRepostOf() != null).map(p -> p.getRepostOf().getId()).collect(Collectors.toList());
+        List<Long> allPostIds = new ArrayList<>(postIds);
+        allPostIds.addAll(originalPostIds);
+        Set<Long> likedPostIds = computeLikedPostIds(viewerEmail, allPostIds);
+        Set<Long> savedPostIds = computeSavedPostIds(viewerEmail, allPostIds);
+
+        List<Long> jobIds = posts.stream().filter(p -> p.getJobId() != null).map(Post::getJobId).collect(Collectors.toList());
+        List<Long> originalJobIds = posts.stream().filter(p -> p.getRepostOf() != null && p.getRepostOf().getJobId() != null).map(p -> p.getRepostOf().getJobId()).collect(Collectors.toList());
+        jobIds.addAll(originalJobIds);
+        jobIds = jobIds.stream().distinct().collect(Collectors.toList());
+
+        List<Long> eventIds = posts.stream().filter(p -> p.getEventId() != null).map(Post::getEventId).collect(Collectors.toList());
+        List<Long> originalEventIds = posts.stream().filter(p -> p.getRepostOf() != null && p.getRepostOf().getEventId() != null).map(p -> p.getRepostOf().getEventId()).collect(Collectors.toList());
+        eventIds.addAll(originalEventIds);
+        eventIds = eventIds.stream().distinct().collect(Collectors.toList());
+
+        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() : jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
+        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() : eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
+
+        return posts.stream().map(post -> {
+            PostResponse originalPostResponse = null;
+            if (post.getRepostOf() != null) {
+                Post original = post.getRepostOf();
+                originalPostResponse = postMapper.toResponse(
+                        original,
+                        profileByUserId.get(original.getAuthor().getId()),
+                        likedPostIds.contains(original.getId()),
+                        savedPostIds.contains(original.getId()),
+                        original.getJobId() != null ? jobById.get(original.getJobId()) : null,
+                        original.getEventId() != null ? eventById.get(original.getEventId()) : null,
+                        null
+                );
+            }
+            return postMapper.toResponse(
+                    post,
+                    profileByUserId.get(post.getAuthor().getId()),
+                    likedPostIds.contains(post.getId()),
+                    defaultSavedStatus || savedPostIds.contains(post.getId()),
+                    post.getJobId() != null ? jobById.get(post.getJobId()) : null,
+                    post.getEventId() != null ? eventById.get(post.getEventId()) : null,
+                    originalPostResponse);
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public PostResponse repostPost(String email, Long postId, RepostRequest request) {
+        User author = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được đăng lại bài viết");
+        
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bài viết không tồn tại"));
+                
+        if (post.getStatus() != PostStatus.ACTIVE) {
+            throw new BadRequestException("Không thể đăng lại bài viết này");
+        }
+        
+        Post originalPost = post.getRepostOf() != null ? post.getRepostOf() : post;
+        
+        if (originalPost.getStatus() != PostStatus.ACTIVE) {
+            throw new BadRequestException("Không thể đăng lại bài viết này");
+        }
+        
+        String content = request.getContent() != null ? request.getContent().trim() : null;
+        
+        Post newRepost = Post.builder()
+                .author(author)
+                .category(PostCategory.GENERAL)
+                .content(content)
+                .status(PostStatus.ACTIVE)
+                .repostOf(originalPost)
+                .likeCount(0)
+                .commentCount(0)
+                .repostCount(0)
+                .build();
+                
+        Post savedRepost = postRepository.save(newRepost);
+        
+        originalPost.setRepostCount(originalPost.getRepostCount() + 1);
+        postRepository.save(originalPost);
+        
+        log.info("Tạo bài đăng lại: id={}, tác giả={}, originalId={}", savedRepost.getId(), email, originalPost.getId());
+        
+        return mapPostsToResponses(List.of(savedRepost), email, false).get(0);
     }
 }

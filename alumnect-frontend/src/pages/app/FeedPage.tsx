@@ -43,7 +43,7 @@ import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, RepostModal } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
@@ -113,7 +113,7 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
  * @param post Dữ liệu bài viết
  * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
  */
-function PostCard({
+export function PostCard({
   post,
   canInteract,
   currentUserId,
@@ -122,6 +122,8 @@ function PostCard({
   onDelete,
   canReport,
   onReport,
+  onRepost,
+  isNested = false,
 }: {
   post: Post
   canInteract: boolean
@@ -131,6 +133,8 @@ function PostCard({
   onDelete?: (post: Post) => void
   canReport: boolean
   onReport?: (post: Post) => void
+  onRepost?: (post: Post) => void
+  isNested?: boolean
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
@@ -207,7 +211,7 @@ function PostCard({
     : !!currentUserName && post.author === currentUserName
 
   return (
-    <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white")}>
+    <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white", isNested && "border-0 shadow-none bg-slate-50/50 rounded-2xl hover:bg-slate-50")}>
       {post.type === 'achievement' && (
         <div className="absolute -top-4 -right-4 p-6 opacity-[0.04] pointer-events-none -rotate-12">
           <Trophy size={160} className="text-amber-600" />
@@ -248,7 +252,7 @@ function PostCard({
             </Link>
           </div>
           {/* Nút Chỉnh sửa (UC22) và Xóa (UC23) chỉ hiển thị cho chính tác giả bài viết */}
-          {isAuthor && onEdit && onDelete ? (
+          {isAuthor && onEdit && onDelete && !isNested ? (
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -269,18 +273,32 @@ function PostCard({
                 <Trash2 size={13} /> Xóa
               </button>
             </div>
-          ) : (
+          ) : !isNested ? (
             <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
               <MoreHorizontal size={18} />
             </button>
-          )}
+          ) : null}
         </div>
 
         {/* --- Phần 2: Nội dung văn bản (Ẩn đi nếu là bài event hoặc recruitment, vì văn bản đã được gom vào khung riêng) --- */}
-        {post.type !== 'event' && post.type !== 'recruitment' && (
+        {post.type !== 'event' && post.type !== 'recruitment' && post.text && (
           <Link to={`/app/posts/${post.id}`} className="mt-4 block">
             <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">{post.text}</p>
           </Link>
+        )}
+
+        {/* --- Phần 2.5: Bài viết gốc (nếu là bài repost) --- */}
+        {post.originalPost && !isNested && (
+          <div className="mt-4 block rounded-2xl border border-plum-900/10 transition-colors overflow-hidden">
+             <PostCard 
+               post={post.originalPost} 
+               canInteract={canInteract} 
+               isNested={true} 
+               currentUserId={currentUserId} 
+               currentUserName={currentUserName} 
+               canReport={false}
+             />
+          </div>
         )}
       </div>
 
@@ -470,6 +488,7 @@ function PostCard({
 
       {/* --- Phần 4: Thanh hành động — Thích / Bình luận / Đăng lại / Báo cáo / Lưu.
           Guest bấm bất kỳ nút nào sẽ mở popup mời đăng nhập (kiểu Facebook) theo BR-12 --- */}
+      {!isNested && (
       <div className="flex items-center gap-1 p-3 border-t border-slate-100">
         {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
         <button
@@ -510,7 +529,15 @@ function PostCard({
           </button>
         )}
         <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để đăng lại bài viết.') }}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!canInteract) {
+              promptLogin('Đăng nhập để đăng lại bài viết.')
+            } else if (onRepost) {
+              onRepost(post)
+            }
+          }}
           className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <Repeat2 size={18} /> {compact(post.reposts)}
@@ -557,6 +584,7 @@ function PostCard({
           )}
         </button>
       </div>
+      )}
     </Card>
   )
 }
@@ -659,6 +687,7 @@ export function FeedPage() {
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [postToDelete, setPostToDelete] = useState<Post | null>(null)
   const [postToReport, setPostToReport] = useState<Post | null>(null)
+  const [postToRepost, setPostToRepost] = useState<Post | null>(null)
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -774,6 +803,7 @@ export function FeedPage() {
                     onEdit={handleStartEdit}
                     onDelete={setPostToDelete}
                     onReport={setPostToReport}
+                    onRepost={setPostToRepost}
                   />
                 </StaggerItem>
               ))}
@@ -798,7 +828,7 @@ export function FeedPage() {
 
             {postToDelete && (
               <DeletePostModal
-                open={!!postToDelete}
+                open={true}
                 onClose={() => setPostToDelete(null)}
                 post={postToDelete}
                 onDeleted={() => {
@@ -809,9 +839,18 @@ export function FeedPage() {
             )}
             {postToReport && (
               <ReportPostModal
-                open={!!postToReport}
+                open={true}
                 postId={postToReport.id}
                 onClose={() => setPostToReport(null)}
+              />
+            )}
+            
+            {postToRepost && viewer && (
+              <RepostModal
+                open={true}
+                onClose={() => setPostToRepost(null)}
+                post={postToRepost}
+                viewer={viewer}
               />
             )}
           </>

@@ -46,8 +46,9 @@ public class Post {
     @Column(name = "pinned_at")
     private Instant pinnedAt;
 
-    @Column(name = "repost_of_id")
-    private Long repostOfId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "repost_of_id")
+    private Post repostOf;
 
     @Column(name = "event_id")
     private Long eventId;

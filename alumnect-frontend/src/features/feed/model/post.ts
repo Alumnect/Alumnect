@@ -41,37 +41,53 @@ export const eventSchema = z.object({
 export type EventInfo = z.infer<typeof eventSchema>
 
 /**
- * Schema Zod cho một bài viết. Dùng `safeParse` khi nhận dữ liệu từ API để
- * loại bỏ phần tử hỏng thay vì làm sập cả trang. `.catch/.default` giúp dữ
- * liệu thiếu trường vẫn render được.
+ * Schema Zod cho một bài viết. Hỗ trợ đệ quy qua z.lazy() để map originalPost.
  */
-export const postSchema = z.object({
-  id: z.union([z.string(), z.number()]).transform(String),
-  authorId: z.union([z.string(), z.number()]).transform(String).optional().nullable(),
-  type: z.enum(POST_TYPES).catch('normal'),
-  author: z.string().default('Ẩn danh'),
-  role: z.string().default(''),
-  avatar: z.string().default(''),
-  verified: z.boolean().default(false),
-  time: z.string().default(''),
-  text: z.string().default(''),
-  image: z.string().nullable().default(null),
-  /** Danh sách URL ảnh đính kèm (hỗ trợ nhiều ảnh). */
-  images: z.array(z.string()).default([]),
-  likes: z.number().default(0),
-  comments: z.number().default(0),
-  reposts: z.number().default(0),
-  /** Bài viết này đã được người dùng hiện tại thích hay chưa (viewer-specific). */
-  liked: z.boolean().default(false),
-  /** Bài viết này đã được người dùng hiện tại lưu hay chưa (viewer-specific, UC20). */
-  saved: z.boolean().default(false),
-  /** Dữ liệu tuyển dụng (nếu là bài tuyển dụng). */
-  job: jobSchema.nullable().default(null),
-  /** Dữ liệu sự kiện (nếu là bài sự kiện). */
-  event: eventSchema.nullable().default(null),
-})
-export type Post = z.infer<typeof postSchema>
+export type Post = {
+  id: string
+  authorId?: string | null
+  type: PostType
+  author: string
+  role: string
+  avatar: string
+  verified: boolean
+  time: string
+  text: string
+  image: string | null
+  images: string[]
+  likes: number
+  comments: number
+  reposts: number
+  liked: boolean
+  saved: boolean
+  job: JobInfo | null
+  event: EventInfo | null
+  originalPost?: Post | null
+}
 
+export const postSchema: z.ZodType<Post> = z.lazy(() =>
+  z.object({
+    id: z.union([z.string(), z.number()]).transform(String),
+    authorId: z.union([z.string(), z.number()]).transform(String).optional().nullable(),
+    type: z.enum(POST_TYPES).catch('normal'),
+    author: z.string().default('Ẩn danh'),
+    role: z.string().default(''),
+    avatar: z.string().default(''),
+    verified: z.boolean().default(false),
+    time: z.string().default(''),
+    text: z.string().default(''),
+    image: z.string().nullable().default(null),
+    images: z.array(z.string()).default([]),
+    likes: z.number().default(0),
+    comments: z.number().default(0),
+    reposts: z.number().default(0),
+    liked: z.boolean().default(false),
+    saved: z.boolean().default(false),
+    job: jobSchema.nullable().default(null),
+    event: eventSchema.nullable().default(null),
+    originalPost: z.lazy(() => postSchema.nullable().optional().catch(null)),
+  })
+)
 /**
  * Một trang kết quả bảng tin đã được chuẩn hóa cho phân trang / infinite scroll.
  * `page` là chỉ số trang hiện tại (0-based), `hasMore` báo còn trang kế tiếp.

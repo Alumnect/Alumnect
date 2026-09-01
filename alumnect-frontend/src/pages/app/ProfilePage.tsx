@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAuthStore } from '@/store/authStore'
 import { usePresignedUrl } from '@/features/auth/hooks/useAuth'
-import { SavedPostsView } from '@/features/feed'
+import { SavedPostsView, UserPostsView } from '@/features/feed'
 import {
   useOwnProfile,
   useUserProfile,
@@ -91,10 +91,12 @@ export function ProfilePage() {
   // Tab đang hoạt động: 'profile' (Tất cả hồ sơ), 'about' (Giới thiệu / Chỉnh sửa), 'saved' (Bài viết đã lưu kiểu Instagram)
   const initialTab = searchParams.get('tab') === 'saved'
     ? 'saved'
+    : searchParams.get('tab') === 'posts'
+    ? 'posts'
     : searchParams.get('edit') === 'true'
     ? 'about'
     : 'profile'
-  const [activeTab, setActiveTab] = useState<'profile' | 'about' | 'saved'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'profile' | 'about' | 'saved' | 'posts'>(initialTab)
 
   // Cập nhật tab khi URL searchParams thay đổi
   useEffect(() => {
@@ -102,6 +104,8 @@ export function ProfilePage() {
     const edit = searchParams.get('edit')
     if (tab === 'saved') {
       setActiveTab('saved')
+    } else if (tab === 'posts') {
+      setActiveTab('posts')
     } else if (edit === 'true') {
       setActiveTab('about')
     } else if (tab === 'profile') {
@@ -526,6 +530,16 @@ export function ProfilePage() {
               >
                 Tất cả hồ sơ
               </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('posts')}
+                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === 'posts'
+                  ? 'border-brand-500 text-brand-600'
+                  : 'border-transparent text-plum-500 hover:text-plum-800'
+                  }`}
+              >
+                Bài viết
+              </button>
               {isOwnProfile && (
                 <button
                   type="button"
@@ -567,6 +581,9 @@ export function ProfilePage() {
       ) : isOwnProfile && activeTab === 'saved' ? (
         /* Chế độ Xem Bài viết đã lưu dạng Instagram */
         <SavedPostsView />
+      ) : activeTab === 'posts' ? (
+        /* Chế độ Xem Bài viết của Người dùng */
+        <UserPostsView userId={profile.userId} />
       ) : (
         /* Chế độ Xem Trang Hồ sơ bình thường */
         <div className="space-y-6">

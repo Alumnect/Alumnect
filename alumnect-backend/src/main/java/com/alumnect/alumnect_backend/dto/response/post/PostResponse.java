@@ -78,4 +78,7 @@ public class PostResponse {
 
     /** Thông tin tuyển dụng (nếu là bài viết tuyển dụng) */
     private JobDTO job;
+
+    /** Thông tin bài viết gốc (nếu là bài repost) */
+    private PostResponse originalPost;
 }

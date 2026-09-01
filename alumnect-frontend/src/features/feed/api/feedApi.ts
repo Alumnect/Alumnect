@@ -203,6 +203,19 @@ export const feedApi = {
   },
 
   /**
+   * Đăng lại bài viết (UC21 - Repost a post).
+   * Gọi `POST /api/v1/posts/${postId}/repost`.
+   * Trả về bài viết mới (repost) đã chuẩn hóa.
+   * @param postId ID bài viết gốc
+   * @param content Nội dung tùy chọn (trích dẫn)
+   */
+  repostPost: async (postId: string, content?: string | null): Promise<Post> => {
+    const body = await http.post(`/posts/${encodeURIComponent(postId)}/repost`, { content })
+    const raw = (body as { data?: unknown })?.data ?? body
+    return postSchema.parse(raw)
+  },
+
+  /**
    * Tải ảnh đính kèm bài viết lên Cloudflare R2 qua link ký sẵn (presigned URL),
    * theo đúng cơ chế đã dùng ở luồng đăng ký: xin link PUT tạm thời rồi tải trực tiếp
    * từ client lên R2, trả về URL công khai để gán vào `imageUrl` khi tạo bài.
@@ -249,5 +262,21 @@ export const feedApi = {
     const body = await http.get(`/posts/saved?${query.toString()}`)
     const items = parsePosts(extractRawItems(body))
     return { items, page, hasMore: inferHasMore(body, items.length) }
+  },
+
+  /**
+   * Lấy danh sách bài viết do một người dùng cụ thể đăng.
+   * Gọi `GET /api/v1/posts/user/{userId}?page={n}&size={m}[&type=...]`.
+   * @param userId ID người dùng
+   * @param page Chỉ số trang
+   * @param filter Loại bài viết
+   */
+  getUserPosts: async (userId: string | number, { page = 0, filter = 'all' as FeedFilter } = {}): Promise<FeedPageResult> => {
+    const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) })
+    if (filter !== 'all') query.set('type', filter)
+
+    const body = await http.get(`/posts/user/${encodeURIComponent(userId)}?${query.toString()}`)
+    const items = parsePosts(extractRawItems(body))
+    return { items, page, hasMore: items.length > 0 && inferHasMore(body, items.length) }
   },
 }

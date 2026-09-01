@@ -39,7 +39,7 @@ public class PostMapper {
      * @param event         Thông tin sự kiện (có thể null)
      * @return DTO phẳng khớp schema Zod {@code postSchema} phía Frontend
      */
-    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event) {
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event, PostResponse originalPost) {
         User author = post.getAuthor();
 
         // Tên hiển thị & avatar: lấy từ UserProfile nếu có, fallback về email khi hồ sơ chưa được tạo.
@@ -96,7 +96,15 @@ public class PostMapper {
                         .endTime(event.getEndTime())
                         .capacity(event.getCapacity())
                         .build() : null)
+                .originalPost(originalPost)
                 .build();
+    }
+
+    /**
+     * Phương thức tương thích ngược không truyền originalPost (mặc định null).
+     */
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event) {
+        return toResponse(post, authorProfile, liked, saved, job, event, null);
     }
 
     /**
