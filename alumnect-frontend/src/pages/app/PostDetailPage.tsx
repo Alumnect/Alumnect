@@ -13,7 +13,6 @@ import { Link, useParams } from 'react-router-dom'
 import {
   Heart,
   MessageCircle,
-  Repeat2,
   Bookmark,
   Flag,
   ArrowLeft,
@@ -40,7 +39,7 @@ import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
+import { DeleteCommentModal, EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
 import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, type Post } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
@@ -570,10 +569,12 @@ function CommentItem({
   comment,
   onReply,
   onEdit,
+  onDelete,
 }: {
   comment: Comment
   onReply?: (id: string, name: string) => void
   onEdit?: (comment: Comment) => void
+  onDelete?: (comment: Comment) => void
 }) {
   // Bình luận trả lời (có parentId) được thụt lề để thể hiện 1 cấp phân cấp.
   const isReply = !!comment.parentId
@@ -614,6 +615,15 @@ function CommentItem({
               className="ml-4 inline-flex items-center gap-1 text-xs font-bold text-plum-500 transition-colors hover:text-brand-600"
             >
               <Pencil size={13} /> Chỉnh sửa
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(comment)}
+              className="ml-4 inline-flex items-center gap-1 text-xs font-bold text-plum-500 transition-colors hover:text-rose-600"
+            >
+              <Trash2 size={13} /> Xóa
             </button>
           )}
         </div>
@@ -906,7 +916,8 @@ function CommentsSection({
 }) {
   const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null)
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
-  const [editSuccessMessage, setEditSuccessMessage] = useState<string | null>(null)
+  const [deletingComment, setDeletingComment] = useState<Comment | null>(null)
+  const [commentSuccessMessage, setCommentSuccessMessage] = useState<string | null>(null)
   const currentUser = useAuthStore((s) => s.user)
   const {
     data,
@@ -945,15 +956,20 @@ function CommentsSection({
     setReplyingTo({ id, name })
   }
 
-  /** Chỉ tác giả Student/Alumni mới nhìn thấy thao tác UC19; backend kiểm tra lại khi gọi API. */
-  const canEditComment = (comment: Comment) =>
+  /** Chỉ tác giả Student/Alumni mới nhìn thấy thao tác UC19/UC20; backend kiểm tra lại khi gọi API. */
+  const canManageComment = (comment: Comment) =>
     !!currentUser &&
     (currentUser.role === 'STUDENT' || currentUser.role === 'ALUMNI') &&
     currentUser.id === comment.authorId
 
   const openEditComment = (comment: Comment) => {
-    setEditSuccessMessage(null)
+    setCommentSuccessMessage(null)
     setEditingComment(comment)
+  }
+
+  const openDeleteComment = (comment: Comment) => {
+    setCommentSuccessMessage(null)
+    setDeletingComment(comment)
   }
 
   return (
@@ -966,9 +982,9 @@ function CommentsSection({
         </span>
       </div>
 
-      {editSuccessMessage && (
+      {commentSuccessMessage && (
         <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700">
-          {editSuccessMessage}
+          {commentSuccessMessage}
         </div>
       )}
 
@@ -1000,7 +1016,8 @@ function CommentsSection({
                 <CommentItem
                   comment={root}
                   onReply={!isGuest ? handleReply : undefined}
-                  onEdit={canEditComment(root) ? openEditComment : undefined}
+                  onEdit={canManageComment(root) ? openEditComment : undefined}
+                  onDelete={canManageComment(root) ? openDeleteComment : undefined}
                 />
                 {/* Các bình luận trả lời */}
                 {replies.map((reply) => (
@@ -1008,7 +1025,8 @@ function CommentsSection({
                     key={reply.id}
                     comment={reply}
                     onReply={!isGuest ? handleReply : undefined}
-                    onEdit={canEditComment(reply) ? openEditComment : undefined}
+                    onEdit={canManageComment(reply) ? openEditComment : undefined}
+                    onDelete={canManageComment(reply) ? openDeleteComment : undefined}
                   />
                 ))}
 
@@ -1028,7 +1046,8 @@ function CommentsSection({
               <CommentItem
                 comment={c}
                 onReply={!isGuest ? handleReply : undefined}
-                onEdit={canEditComment(c) ? openEditComment : undefined}
+                onEdit={canManageComment(c) ? openEditComment : undefined}
+                onDelete={canManageComment(c) ? openDeleteComment : undefined}
               />
               {replyingTo?.id === c.id && (
                 <div className="ml-10 animate-fade-in">
@@ -1058,9 +1077,16 @@ function CommentsSection({
       <EditCommentModal
         isOpen={editingComment !== null}
         onClose={() => setEditingComment(null)}
-        onUpdated={() => setEditSuccessMessage('Chỉnh sửa bình luận thành công.')}
+        onUpdated={() => setCommentSuccessMessage('Chỉnh sửa bình luận thành công.')}
         postId={postId}
         comment={editingComment}
+      />
+      <DeleteCommentModal
+        isOpen={deletingComment !== null}
+        onClose={() => setDeletingComment(null)}
+        onDeleted={() => setCommentSuccessMessage('Xóa bình luận thành công.')}
+        postId={postId}
+        comment={deletingComment}
       />
     </section>
   )

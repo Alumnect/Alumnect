@@ -330,6 +330,37 @@ public class PostServiceImpl implements PostService {
         return commentMapper.toResponse(saved, profile);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: kiểm tra vai trò thành viên → tìm bình luận ACTIVE của đúng bài viết đang hoạt động
+     * → kiểm tra quyền sở hữu → chuyển trạng thái sang DELETED và giảm bộ đếm trong cùng transaction.
+     */
+    @Override
+    @Transactional
+    public void deleteComment(String email, Long postId, Long commentId) {
+        User author = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được xóa bình luận");
+
+        Comment comment = commentRepository.findById(commentId)
+                .filter(item -> item.getStatus() == CommentStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Bình luận này không còn khả dụng"));
+
+        Post post = comment.getPost();
+        if (!post.getId().equals(postId) || post.getStatus() != PostStatus.ACTIVE) {
+            throw new ResourceNotFoundException("Bình luận này không còn khả dụng");
+        }
+
+        if (!comment.getUser().getId().equals(author.getId())) {
+            throw new ForbiddenException("Bạn chỉ được xóa bình luận của chính mình");
+        }
+
+        comment.setStatus(CommentStatus.DELETED);
+        post.setCommentCount(Math.max(0, post.getCommentCount() - 1));
+        commentRepository.save(comment);
+        postRepository.save(post);
+        log.info("Xóa bình luận: id={}, postId={}, tác giả={}", commentId, postId, email);
+    }
+
     private Comment resolveParentOrThrow(Long parentId, Long postId) {
         if (parentId == null) {
             return null;
