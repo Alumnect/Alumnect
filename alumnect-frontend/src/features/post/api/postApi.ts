@@ -91,4 +91,13 @@ export const postApi = {
     )
     return commentSchema.parse(extractData(body))
   },
+
+  /**
+   * Xóa bình luận của chính người dùng (UC20).
+   * @param postId ID bài viết chứa bình luận
+   * @param commentId ID bình luận cần xóa
+   */
+  deleteComment: async (postId: string, commentId: string): Promise<void> => {
+    await http.delete(`/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`)
+  },
 }

@@ -81,7 +81,11 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
             icon={<AlertCircle size={24} />}
             title="Lỗi tải bảng tin"
             description="Đã xảy ra sự cố khi lấy bài viết của người dùng này. Vui lòng thử lại sau."
-            action={<Button onClick={() => refetch()}>Thử lại</Button>}
+            action={
+              <Button type="button" variant="secondary" size="md" onClick={() => refetch()}>
+                Thử lại
+              </Button>
+            }
           />
         ) : posts.length === 0 ? (
           <EmptyState

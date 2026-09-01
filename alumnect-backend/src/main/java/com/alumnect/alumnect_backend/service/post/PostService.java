@@ -94,6 +94,16 @@ public interface PostService {
     CommentResponse updateComment(String email, Long postId, Long commentId, UpdateCommentRequest request);
 
     /**
+     * Xóa mềm một bình luận đã đăng (UC20 - Delete a comment).
+     * Chỉ tác giả có vai trò STUDENT hoặc ALUMNI được xóa bình luận ACTIVE của chính mình.
+     *
+     * @param email     Email người dùng đang đăng nhập, lấy từ JWT
+     * @param postId    ID bài viết chứa bình luận
+     * @param commentId ID bình luận cần xóa
+     */
+    void deleteComment(String email, Long postId, Long commentId);
+
+    /**
      * Thích một bài viết (UC17 - Like a post). Chỉ STUDENT/ALUMNI đã đăng nhập được thích;
      * thao tác có tính lũy đẳng (đã thích rồi thì không thay đổi). Bài đã ẩn/không tồn tại → 404.
      *

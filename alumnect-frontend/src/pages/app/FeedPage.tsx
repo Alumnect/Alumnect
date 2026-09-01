@@ -37,7 +37,7 @@ import {
 } from 'lucide-react'
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Reveal, Stagger, StaggerItem } from '@/components/motion'
+import { Reveal } from '@/components/motion'
 import { EVENTS, QUESTIONS } from '@/lib/constants'
 
 import { compact, cn } from '@/lib/utils'
@@ -795,9 +795,9 @@ export function FeedPage() {
         ) : (
           // (4) Có dữ liệu: render danh sách + điều khiển phân trang
           <>
-            <Stagger key={`${filter}-${posts[0]?.id}`} className="space-y-5" gap={0.08}>
+            <div className="space-y-5">
               {posts.map((p) => (
-                <StaggerItem key={p.id}>
+                <Reveal key={p.id} duration={0.6}>
                   <PostCard
                     post={p}
                     canInteract={!isGuest}
@@ -809,9 +809,9 @@ export function FeedPage() {
                     onReport={setReportingPost}
                     onShare={setSharingPost}
                   />
-                </StaggerItem>
+                </Reveal>
               ))}
-            </Stagger>
+            </div>
 
             {/* Điều khiển tải thêm trang (infinite/paged loading) */}
             <div className="pt-1 text-center">
