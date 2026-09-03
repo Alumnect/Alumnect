@@ -26,6 +26,7 @@ export const questionSchema = z.object({
   avatar: z.string().default(''),
   verified: z.boolean().default(false),
   votes: z.number().default(0),
+  voted: z.boolean().default(false),
   answers: z.number().default(0),
   time: z.string().default(''),
 })
@@ -52,6 +53,7 @@ export const questionDetailSchema = z.object({
   authorHeadline: z.string().default(''),
   verified: z.boolean().default(false),
   votes: z.number().default(0),
+  voted: z.boolean().default(false),
   answers: z.number().default(0),
   time: z.string().default(''),
   createdAt: z.string().default(''),

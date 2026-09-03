@@ -7,11 +7,13 @@ import com.alumnect.alumnect_backend.dto.request.forum.UpdateQuestionRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
+import com.alumnect.alumnect_backend.dto.response.forum.VoteResponse;
 import com.alumnect.alumnect_backend.service.forum.QuestionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +29,8 @@ import java.util.List;
 
 /**
  * Controller xử lý các yêu cầu liên quan đến câu hỏi diễn đàn Q&A
- * (UC38 - View question list, UC39 - View question detail, UC44 - Search questions,
- * UC47 - Delete a question).
+ * (UC38 - View question list, UC39 - View question detail, UC42 - Vote on a question,
+ * UC44 - Search questions, UC47 - Delete a question).
  * Được map tự động với prefix global /api/v1/questions.
  * <p>
  * Các endpoint được khai báo công khai (xem {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET})
@@ -53,6 +55,8 @@ public class QuestionController {
      *                bỏ trống nếu không lọc theo thể loại
      * @param majorId Danh sách ID ngành cần lọc (tick chọn nhiều), VD {@code majorId=1,4};
      *                bỏ trống nếu không lọc theo ngành. Lọc từ khóa, thể loại và ngành độc lập nhau.
+     * @param authentication Thông tin xác thực do Spring Security tự động cung cấp — null/Anonymous nếu là Guest;
+     *                       dùng để tính cờ {@code voted} của từng câu hỏi (UC42)
      * @return Trang kết quả câu hỏi {@link QuestionResponse} bọc trong {@link ApiResponse}
      */
     @GetMapping
@@ -62,9 +66,11 @@ public class QuestionController {
             @RequestParam(defaultValue = "recent") String sort,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) List<Long> topicId,
-            @RequestParam(required = false) List<Long> majorId) {
+            @RequestParam(required = false) List<Long> majorId,
+            Authentication authentication) {
 
-        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, keyword, topicId, majorId);
+        String viewerEmail = isAuthenticated(authentication) ? authentication.getName() : null;
+        PageResponse<QuestionResponse> questions = questionService.getQuestions(page, size, sort, keyword, topicId, majorId, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách câu hỏi thành công", questions));
     }
 
@@ -132,13 +138,56 @@ public class QuestionController {
      * Lưu ý: mapping literal {@code /topics} được Spring ưu tiên khớp trước biến đường dẫn {@code /{id}},
      * nên hai endpoint không xung đột.
      *
-     * @param id ID câu hỏi cần xem chi tiết
+     * @param id             ID câu hỏi cần xem chi tiết
+     * @param authentication Thông tin xác thực do Spring Security tự động cung cấp — null/Anonymous nếu là Guest;
+     *                       dùng để tính cờ {@code voted} (UC42)
      * @return Chi tiết câu hỏi {@link QuestionDetailResponse} bọc trong {@link ApiResponse}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<QuestionDetailResponse>> getQuestionById(@PathVariable Long id) {
-        QuestionDetailResponse question = questionService.getQuestionDetail(id);
+    public ResponseEntity<ApiResponse<QuestionDetailResponse>> getQuestionById(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String viewerEmail = isAuthenticated(authentication) ? authentication.getName() : null;
+        QuestionDetailResponse question = questionService.getQuestionDetail(id, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết câu hỏi thành công", question));
+    }
+
+    /**
+     * API bình chọn (upvote) một câu hỏi trên diễn đàn Q&A (UC42 - Vote on a question).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên được bình chọn — Admin/vai trò khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller. Idempotent — gọi
+     * lại nhiều lần không tăng thêm vote.
+     *
+     * @param id             ID câu hỏi cần bình chọn
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người bình chọn
+     * @return Trạng thái bình chọn mới + tổng số vote {@link VoteResponse} bọc trong {@link ApiResponse}
+     */
+    @PostMapping("/{id}/vote")
+    public ResponseEntity<ApiResponse<VoteResponse>> voteQuestion(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        VoteResponse result = questionService.voteQuestion(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Bình chọn câu hỏi thành công", result));
+    }
+
+    /**
+     * API bỏ bình chọn một câu hỏi trên diễn đàn Q&A (UC42 - Vote on a question).
+     * Yêu cầu đăng nhập (JWT); chỉ Sinh viên/Cựu sinh viên. Idempotent — bỏ bình chọn khi chưa từng
+     * bình chọn không lỗi.
+     *
+     * @param id             ID câu hỏi cần bỏ bình chọn
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người bỏ bình chọn
+     * @return Trạng thái bình chọn mới + tổng số vote {@link VoteResponse} bọc trong {@link ApiResponse}
+     */
+    @DeleteMapping("/{id}/vote")
+    public ResponseEntity<ApiResponse<VoteResponse>> unvoteQuestion(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        VoteResponse result = questionService.unvoteQuestion(authentication.getName(), id);
+        return ResponseEntity.ok(ApiResponse.success("Bỏ bình chọn câu hỏi thành công", result));
     }
 
     /**
@@ -150,5 +199,18 @@ public class QuestionController {
     public ResponseEntity<ApiResponse<List<TopicResponse>>> getTopics() {
         List<TopicResponse> topics = questionService.getTopics();
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách chủ đề thành công", topics));
+    }
+
+    /**
+     * Xác định người gọi đã đăng nhập hay là Guest dựa trên {@link Authentication} do Spring Security cung cấp.
+     * Mirror pattern {@code isAuthenticated} của {@code PostController} (UC14/UC16).
+     *
+     * @param authentication Đối tượng xác thực — null hoặc {@link AnonymousAuthenticationToken} nếu là Guest
+     * @return true nếu đã đăng nhập (có JWT hợp lệ), false nếu là Guest
+     */
+    private boolean isAuthenticated(Authentication authentication) {
+        return authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken);
     }
 }

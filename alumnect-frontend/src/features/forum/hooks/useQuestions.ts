@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { forumApi } from '../api/forumApi'
+import type { VoteResult } from '../api/forumApi'
 import type { CreateQuestionInput, SortOption, UpdateQuestionInput } from '../model/question'
 
 /**
@@ -102,5 +103,24 @@ export function useDeleteQuestion() {
       queryClient.invalidateQueries({ queryKey: ['questions'] })
       queryClient.invalidateQueries({ queryKey: ['question', id] })
     },
+  })
+}
+
+/**
+ * Hook bình chọn/bỏ bình chọn một câu hỏi (UC42 - Vote on a question).
+ *
+ * Bọc `useMutation` của TanStack Query: chọn endpoint theo cờ `vote`
+ * (POST /vote khi bình chọn, DELETE /vote khi bỏ bình chọn) và trả về trạng thái
+ * bình chọn mới do backend xác nhận ({ voted, voteCount }).
+ *
+ * UI dùng cập nhật lạc quan (optimistic) cục bộ ở component — cùng pattern với
+ * `useToggleLike` (UC17): đổi trạng thái ngay khi bấm, đồng bộ theo `onSuccess`,
+ * hoàn tác (rollback) ở `onError`. Hook không tự invalidate cache danh sách/chi tiết.
+ *
+ * @return Đối tượng mutation (mutate, isPending, ...) nhận `{ questionId, vote }`
+ */
+export function useToggleVoteQuestion() {
+  return useMutation<VoteResult, Error, { questionId: string; vote: boolean }>({
+    mutationFn: ({ questionId, vote }) => (vote ? forumApi.voteQuestion(questionId) : forumApi.unvoteQuestion(questionId)),
   })
 }

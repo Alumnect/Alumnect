@@ -6,15 +6,17 @@
  *  - Lấy chi tiết câu hỏi qua hook `useQuestionDetail` (TanStack Query).
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / không tìm thấy (404) / lỗi (retry) / thành công.
  *  - Ai cũng xem được (Guest/Student/Alumni) vì câu hỏi ACTIVE là nội dung công khai.
- *  - Chỉ HIỂN THỊ chi tiết; vote và trả lời thuộc các UC khác nên ở đây chỉ đọc số liệu.
+ *  - UC42: bình chọn/bỏ bình chọn câu hỏi (chỉ Student/Alumni đã đăng nhập; Guest bấm → popup mời đăng nhập).
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil, Trash2 } from 'lucide-react'
 import { Badge, Card, Avatar, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { useQuestionDetail, AnswersSection, AskQuestionModal, DeleteQuestionModal } from '@/features/forum'
+import { useLoginPrompt } from '@/store/loginPrompt'
+import { useQuestionDetail, AnswersSection, AskQuestionModal, DeleteQuestionModal, useToggleVoteQuestion } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
 
 /** Chuyển mốc ISO-8601 sang ngày giờ đọc được (VD: "11/07/2026 09:30"), rỗng nếu không hợp lệ. */
@@ -113,23 +115,69 @@ function DetailError({ message, onRetry }: { message?: string; onRetry: () => vo
 function QuestionDetailContent({
   q,
   canEdit,
+  canVote,
   onEdit,
   onDelete,
 }: {
   q: QuestionDetail
   canEdit: boolean
+  canVote: boolean
   onEdit: () => void
   onDelete: () => void
 }) {
   const postedAt = formatDateTime(q.createdAt)
+
+  // Bình chọn (UC42): state cục bộ cập nhật lạc quan, cùng pattern với "Thích bài viết" (UC17 - useToggleLike).
+  const [voted, setVoted] = useState(q.voted)
+  const [votes, setVotes] = useState(q.votes)
+  useEffect(() => {
+    setVoted(q.voted)
+    setVotes(q.votes)
+  }, [q.voted, q.votes])
+
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleVote = useToggleVoteQuestion()
+
+  const handleVote = () => {
+    if (!canVote) {
+      promptLogin('Đăng nhập để bình chọn câu hỏi.')
+      return
+    }
+    const next = !voted
+    setVoted(next)
+    setVotes((v) => v + (next ? 1 : -1))
+    toggleVote.mutate(
+      { questionId: q.id, vote: next },
+      {
+        onSuccess: (data) => {
+          setVoted(data.voted)
+          setVotes(data.voteCount)
+        },
+        onError: () => {
+          setVoted(!next)
+          setVotes((v) => v + (next ? -1 : 1))
+        },
+      },
+    )
+  }
+
   return (
     <div className="flex gap-5">
-      {/* Cột trái: số vote (chỉ đọc ở UC39 — bình chọn thuộc UC khác) */}
+      {/* Cột trái: nút bình chọn (UC42) — chỉ hiện trên desktop, mobile hiện ở cuối nội dung */}
       <div className="hidden flex-col items-center gap-1 sm:flex">
-        <span className="grid h-11 w-11 place-items-center rounded-xl bg-plum-900/[0.04] text-plum-500 ring-1 ring-inset ring-plum-900/10">
+        <button
+          type="button"
+          onClick={handleVote}
+          aria-pressed={voted}
+          aria-label={voted ? 'Bỏ bình chọn câu hỏi' : 'Bình chọn câu hỏi'}
+          className={cn(
+            'grid h-11 w-11 place-items-center rounded-xl ring-1 ring-inset transition-colors',
+            voted ? 'bg-brand-500/10 text-brand-600 ring-brand-500/30' : 'bg-plum-900/[0.04] text-plum-500 ring-plum-900/10 hover:bg-plum-900/[0.08]',
+          )}
+        >
           <ChevronUp size={20} />
-        </span>
-        <span className="text-sm font-bold text-plum-900">{q.votes}</span>
+        </button>
+        <span className="text-sm font-bold text-plum-900">{votes}</span>
         <span className="text-[10px] font-semibold uppercase tracking-wide text-plum-400">bình chọn</span>
       </div>
 
@@ -196,11 +244,19 @@ function QuestionDetailContent({
           </div>
         )}
 
-        {/* Số vote (chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
+        {/* Nút bình chọn (UC42, chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
         <div className="mt-5 text-sm sm:hidden">
-          <span className="inline-flex items-center gap-1.5 font-semibold text-plum-500">
-            <ChevronUp size={15} /> {q.votes} bình chọn
-          </span>
+          <button
+            type="button"
+            onClick={handleVote}
+            aria-pressed={voted}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold transition-colors',
+              voted ? 'bg-brand-500/10 text-brand-600' : 'text-plum-500 hover:bg-plum-900/[0.06]',
+            )}
+          >
+            <ChevronUp size={15} /> {votes} bình chọn
+          </button>
         </div>
       </div>
     </div>
@@ -221,6 +277,9 @@ export function QuestionDetailPage() {
   const user = useAuthStore((s) => s.user)
   const canEdit = !!user && !!data && String(user.id) === data.authorId && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
+  // Quyền bình chọn (UC42): mọi Student/Alumni đã đăng nhập (kể cả tác giả), không giới hạn chủ sở hữu.
+  const canVote = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
+
   // Phân biệt lỗi 404 (không tìm thấy) với lỗi hệ thống khác để hiển thị đúng trạng thái.
   const notFound = isError && /không tìm thấy|not found|404/i.test((error as Error)?.message ?? '')
 
@@ -237,7 +296,7 @@ export function QuestionDetailPage() {
         // Câu hỏi + câu trả lời nằm chung MỘT card (như bài viết + bình luận trên Facebook/Reddit)
         <Card hover={false} className="overflow-hidden p-0">
           <div className="p-6 sm:p-8">
-            <QuestionDetailContent q={data} canEdit={canEdit} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
+            <QuestionDetailContent q={data} canEdit={canEdit} canVote={canVote} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
           </div>
           {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
           <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">

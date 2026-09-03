@@ -6,6 +6,7 @@ import com.alumnect.alumnect_backend.dto.request.forum.UpdateQuestionRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.QuestionResponse;
 import com.alumnect.alumnect_backend.dto.response.forum.TopicResponse;
+import com.alumnect.alumnect_backend.dto.response.forum.VoteResponse;
 import java.util.List;
 
 /**
@@ -25,10 +26,12 @@ public interface QuestionService {
      * @param keyword  Từ khóa tìm kiếm trên tiêu đề/nội dung (không phân biệt hoa/thường), hoặc null/rỗng nếu không tìm kiếm
      * @param topicIds Danh sách ID thể loại cần lọc (khớp bất kỳ), hoặc null/rỗng nếu không lọc theo thể loại
      * @param majorIds Danh sách ID ngành cần lọc (khớp bất kỳ), hoặc null/rỗng nếu không lọc theo ngành
+     * @param viewerEmail Email người xem hiện tại (lấy từ SecurityContext nếu đã đăng nhập), null nếu là Guest —
+     *                    dùng để tính cờ {@code voted} của từng câu hỏi (UC42)
      * @return Trang kết quả câu hỏi đã chuẩn hóa, sẵn sàng trả về Client
      * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu keyword vượt quá độ dài tối đa cho phép
      */
-    PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, String keyword, List<Long> topicIds, List<Long> majorIds);
+    PageResponse<QuestionResponse> getQuestions(int page, int size, String sort, String keyword, List<Long> topicIds, List<Long> majorIds, String viewerEmail);
 
     /**
      * Lấy chi tiết một câu hỏi theo ID (UC39 - View question detail). Ai cũng xem được
@@ -36,10 +39,12 @@ public interface QuestionService {
      * hiển thị; câu hỏi bị ẩn/xóa (HIDDEN/DELETED) hoặc không tồn tại đều coi như không tìm thấy.
      *
      * @param id ID câu hỏi cần xem chi tiết
+     * @param viewerEmail Email người xem hiện tại (lấy từ SecurityContext nếu đã đăng nhập), null nếu là Guest —
+     *                    dùng để tính cờ {@code voted} (UC42)
      * @return Thông tin chi tiết câu hỏi đã chuẩn hóa, sẵn sàng trả về Client
      * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy câu hỏi ACTIVE tương ứng
      */
-    QuestionDetailResponse getQuestionDetail(Long id);
+    QuestionDetailResponse getQuestionDetail(Long id, String viewerEmail);
 
     /**
      * Đặt một câu hỏi mới trên diễn đàn Q&A (UC40 - Ask a question). Chỉ Student/Alumni đã đăng nhập
@@ -80,6 +85,32 @@ public interface QuestionService {
      * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu người dùng không phải tác giả câu hỏi
      */
     void deleteQuestion(String email, Long questionId);
+
+    /**
+     * Bình chọn (upvote) một câu hỏi trên diễn đàn Q&A (UC42 - Vote on a question). Chỉ Student/Alumni
+     * đã đăng nhập mới được bình chọn; vai trò khác (VD Admin) bị từ chối 403. Idempotent — bình chọn
+     * lần 2 trở đi không tăng thêm vote (không lỗi, chỉ trả về trạng thái hiện tại).
+     *
+     * @param email      Email của người dùng đang đăng nhập (lấy từ SecurityContext)
+     * @param questionId ID câu hỏi cần bình chọn
+     * @return Trạng thái bình chọn mới + tổng số vote hiện tại
+     * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy câu hỏi ACTIVE tương ứng
+     * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu vai trò không phải Student/Alumni
+     */
+    VoteResponse voteQuestion(String email, Long questionId);
+
+    /**
+     * Bỏ bình chọn một câu hỏi đã bình chọn trước đó (UC42 - Vote on a question). Chỉ Student/Alumni
+     * đã đăng nhập mới thao tác được. Idempotent — bỏ bình chọn khi chưa từng bình chọn không lỗi,
+     * chỉ trả về trạng thái hiện tại (chưa bình chọn).
+     *
+     * @param email      Email của người dùng đang đăng nhập (lấy từ SecurityContext)
+     * @param questionId ID câu hỏi cần bỏ bình chọn
+     * @return Trạng thái bình chọn mới + tổng số vote hiện tại
+     * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy câu hỏi ACTIVE tương ứng
+     * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu vai trò không phải Student/Alumni
+     */
+    VoteResponse unvoteQuestion(String email, Long questionId);
 
     /**
      * Lấy toàn bộ danh mục chủ đề diễn đàn để đổ vào bộ lọc phía Frontend.

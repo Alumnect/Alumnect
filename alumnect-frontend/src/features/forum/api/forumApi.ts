@@ -14,6 +14,15 @@ import type { Answer, AnswerPageResult, CreateAnswerInput, UpdateAnswerInput } f
 /** Số câu hỏi mỗi trang (đồng bộ với tham số `size` mặc định của backend). */
 export const PAGE_SIZE = 10
 
+/** Kết quả trả về sau khi bình chọn/bỏ bình chọn một câu hỏi (UC42 - Vote on a question). */
+export type VoteResult = { voted: boolean; voteCount: number }
+
+/** Chuẩn hóa phản hồi bình chọn từ nhiều biến thể phong bì (envelope) thành VoteResult. */
+function normalizeVote(body: unknown): VoteResult {
+  const d = ((body as { data?: unknown })?.data ?? body) as { voted?: boolean; voteCount?: number } | undefined
+  return { voted: !!d?.voted, voteCount: Number(d?.voteCount ?? 0) }
+}
+
 /**
  * Trích mảng phần tử thô từ nhiều biến thể phong bì (envelope) phản hồi:
  * hỗ trợ Spring Page (`content`), dạng `{ items }` hoặc mảng trực tiếp.
@@ -138,6 +147,28 @@ export const forumApi = {
    */
   deleteQuestion: async (id: string | number): Promise<void> => {
     await http.delete(`/questions/${id}`)
+  },
+
+  /**
+   * Bình chọn (upvote) một câu hỏi (UC42 - Vote on a question).
+   * Gọi `POST /api/v1/questions/{id}/vote`; interceptor `http` tự đính Bearer token. Thao tác lũy đẳng.
+   * @param id ID câu hỏi cần bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: true, voteCount })
+   */
+  voteQuestion: async (id: string | number): Promise<VoteResult> => {
+    const body = await http.post(`/questions/${id}/vote`)
+    return normalizeVote(body)
+  },
+
+  /**
+   * Bỏ bình chọn một câu hỏi (UC42 - Vote on a question).
+   * Gọi `DELETE /api/v1/questions/{id}/vote`. Thao tác lũy đẳng — bỏ bình chọn câu hỏi chưa bình chọn không đổi.
+   * @param id ID câu hỏi cần bỏ bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: false, voteCount })
+   */
+  unvoteQuestion: async (id: string | number): Promise<VoteResult> => {
+    const body = await http.delete(`/questions/${id}/vote`)
+    return normalizeVote(body)
   },
 
   /**

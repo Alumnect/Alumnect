@@ -17,8 +17,9 @@ import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
+import { useLoginPrompt } from '@/store/loginPrompt'
 import { useMajors } from '@/features/auth/hooks/useAuth'
-import { useQuestions, useTopics, AskQuestionModal, SEARCH_KEYWORD_MAX_LENGTH } from '@/features/forum'
+import { useQuestions, useTopics, AskQuestionModal, SEARCH_KEYWORD_MAX_LENGTH, useToggleVoteQuestion } from '@/features/forum'
 import type { Question, SortOption } from '@/features/forum'
 import { FilterMultiSelect } from '@/features/forum/components/FilterMultiSelect'
 import { TopicIcon } from '@/features/forum/lib/topicIcons'
@@ -31,15 +32,58 @@ const SORTS: { key: SortOption; label: string; icon: LucideIcon }[] = [
 ]
 
 /** Thẻ hiển thị một câu hỏi trong danh sách. */
-function QuestionCard({ q }: { q: Question }) {
+function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
+  // Bình chọn (UC42): state cục bộ cập nhật lạc quan, cùng pattern với "Thích bài viết" (UC17 - useToggleLike).
+  const [voted, setVoted] = useState(q.voted)
+  const [votes, setVotes] = useState(q.votes)
+  useEffect(() => {
+    setVoted(q.voted)
+    setVotes(q.votes)
+  }, [q.voted, q.votes])
+
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleVote = useToggleVoteQuestion()
+
+  const handleVote = () => {
+    if (!canVote) {
+      promptLogin('Đăng nhập để bình chọn câu hỏi.')
+      return
+    }
+    const next = !voted
+    setVoted(next)
+    setVotes((v) => v + (next ? 1 : -1))
+    toggleVote.mutate(
+      { questionId: q.id, vote: next },
+      {
+        onSuccess: (data) => {
+          setVoted(data.voted)
+          setVotes(data.voteCount)
+        },
+        onError: () => {
+          setVoted(!next)
+          setVotes((v) => v + (next ? -1 : 1))
+        },
+      },
+    )
+  }
+
   return (
     <Card hover={false} className="p-5 transition-all hover:-translate-y-0.5">
       <div className="flex gap-4">
         <div className="flex flex-col items-center gap-1">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-plum-900/[0.04] text-plum-500 ring-1 ring-inset ring-plum-900/10">
+          <button
+            type="button"
+            onClick={handleVote}
+            aria-pressed={voted}
+            aria-label={voted ? 'Bỏ bình chọn câu hỏi' : 'Bình chọn câu hỏi'}
+            className={cn(
+              'grid h-10 w-10 place-items-center rounded-xl ring-1 ring-inset transition-colors',
+              voted ? 'bg-brand-500/10 text-brand-600 ring-brand-500/30' : 'bg-plum-900/[0.04] text-plum-500 ring-plum-900/10 hover:bg-plum-900/[0.08]',
+            )}
+          >
             <ChevronUp size={18} />
-          </span>
-          <span className="text-sm font-bold text-plum-900">{q.votes}</span>
+          </button>
+          <span className="text-sm font-bold text-plum-900">{votes}</span>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -174,9 +218,10 @@ export function ForumPage() {
     return () => clearTimeout(timer)
   }, [searchInput])
 
-  // === Quyền: chỉ Student/Alumni đã đăng nhập mới thấy nút "Đặt câu hỏi" (UC40) ===
+  // === Quyền: chỉ Student/Alumni đã đăng nhập mới được đặt câu hỏi (UC40) và bình chọn (UC42) ===
   const user = useAuthStore((s) => s.user)
   const canAsk = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
+  const canVote = canAsk
 
   // === Dữ liệu: chủ đề (cho bộ lọc) + danh sách câu hỏi (infinite scroll) ===
   const { data: topics } = useTopics()
@@ -304,7 +349,7 @@ export function ForumPage() {
         <>
           <div className="space-y-4">
             {questions.map((q) => (
-              <QuestionCard key={q.id} q={q} />
+              <QuestionCard key={q.id} q={q} canVote={canVote} />
             ))}
           </div>
 
