@@ -2229,6 +2229,97 @@
                         },
                         "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu hỏi với id: 999999\". Cũng dùng để test xóa 2 lần liên tiếp một câu hỏi (lần 2 phải trả 404 vì đã DELETED)."
                     }
+                },
+                {
+                    "name": "7.21 Bình chọn Câu hỏi (UC42 - Thành công)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Bình chọn câu hỏi thành công\", data { voted: true, voteCount }. Gọi lại lần 2 (idempotent) không tăng thêm voteCount."
+                    }
+                },
+                {
+                    "name": "7.22 Bỏ bình chọn Câu hỏi (UC42 - Thành công)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Bỏ bình chọn câu hỏi thành công\", data { voted: false, voteCount }. Gọi khi chưa từng bình chọn cũng không lỗi (idempotent)."
+                    }
+                },
+                {
+                    "name": "7.23 Bình chọn Câu hỏi (UC42 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
+                    }
+                },
+                {
+                    "name": "7.24 Bình chọn Câu hỏi không tồn tại (UC42 - Lỗi 404)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/999999/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "999999",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu hỏi với id: 999999\"."
+                    }
                 }
             ]
         },

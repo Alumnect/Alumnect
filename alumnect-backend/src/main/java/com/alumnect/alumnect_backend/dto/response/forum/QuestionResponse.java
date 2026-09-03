@@ -52,6 +52,9 @@ public class QuestionResponse {
     /** Số lượt vote của câu hỏi */
     private int votes;
 
+    /** true nếu người xem hiện tại đã bình chọn câu hỏi này (UC42 - Vote on a question); luôn false với Guest */
+    private boolean voted;
+
     /** Số câu trả lời của câu hỏi */
     private int answers;
 
