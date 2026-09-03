@@ -23,9 +23,10 @@ public class AnswerMapper {
      * @param answer        Entity câu trả lời (đã JOIN FETCH sẵn {@code author})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu chưa tạo hồ sơ
      * @param replies       Danh sách reply của câu trả lời này (rỗng nếu không có / bản thân là reply)
+     * @param voted         true nếu người xem hiện tại đã bình chọn câu trả lời này (UC43), false với Guest
      * @return DTO phẳng khớp schema Zod {@code answerSchema} phía Frontend
      */
-    public AnswerResponse toResponse(Answer answer, UserProfile authorProfile, List<AnswerResponse> replies) {
+    public AnswerResponse toResponse(Answer answer, UserProfile authorProfile, List<AnswerResponse> replies, boolean voted) {
         User author = answer.getAuthor();
 
         // Tên hiển thị, avatar & headline: lấy từ UserProfile nếu có, fallback hợp lý khi hồ sơ chưa được tạo.
@@ -49,6 +50,7 @@ public class AnswerMapper {
                 .authorHeadline(headline)
                 .verified(author.isAccountVerified())
                 .votes(answer.getVoteCount())
+                .voted(voted)
                 .time(toRelativeTime(answer.getCreatedAt()))
                 .createdAt(answer.getCreatedAt() != null ? answer.getCreatedAt().toString() : "")
                 .edited(isEdited(answer))

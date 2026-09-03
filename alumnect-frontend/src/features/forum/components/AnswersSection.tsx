@@ -6,15 +6,17 @@
  *  - Cho Student/Alumni: gửi câu trả lời mới (UC41), reply một câu trả lời, và SỬA câu trả lời của mình (UC48).
  *  - Xử lý đầy đủ trạng thái: loading / rỗng / lỗi / thành công; RBAC + quyền sở hữu.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil } from 'lucide-react'
+import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil, ChevronUp } from 'lucide-react'
 import { Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { useAnswers, useCreateAnswer, useUpdateAnswer } from '../hooks/useAnswers'
+import { useLoginPrompt } from '@/store/loginPrompt'
+import { useAnswers, useCreateAnswer, useUpdateAnswer, useToggleVoteAnswer } from '../hooks/useAnswers'
 import { createAnswerSchema } from '../model/answer'
 import type { Answer, CreateAnswerInput } from '../model/answer'
 
@@ -154,6 +156,7 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
   const user = useAuthStore((s) => s.user)
   const canEdit = !!user && !!a.authorId && String(user.id) === a.authorId
   const canReply = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
+  const canVote = canReply
   const [editing, setEditing] = useState(false)
   const [replying, setReplying] = useState(false)
   const [showReplies, setShowReplies] = useState(false)
@@ -162,6 +165,40 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
   const replyCount = a.replies.length
   // Reply luôn gộp vào luồng của câu trả lời GỐC (2 cấp): với comment con thì parent là câu gốc của nó.
   const replyParentId = isReply ? (a.parentId ?? undefined) : a.id
+
+  // Bình chọn (UC43): state cục bộ cập nhật lạc quan, cùng pattern với UC42 (Vote a question)/UC17 (Like a post).
+  const [voted, setVoted] = useState(a.voted)
+  const [votes, setVotes] = useState(a.votes)
+  useEffect(() => {
+    setVoted(a.voted)
+    setVotes(a.votes)
+  }, [a.voted, a.votes])
+
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleVote = useToggleVoteAnswer(questionId)
+
+  const handleVote = () => {
+    if (!canVote) {
+      promptLogin('Đăng nhập để bình chọn câu trả lời.')
+      return
+    }
+    const next = !voted
+    setVoted(next)
+    setVotes((v) => v + (next ? 1 : -1))
+    toggleVote.mutate(
+      { answerId: a.id, vote: next },
+      {
+        onSuccess: (data) => {
+          setVoted(data.voted)
+          setVotes(data.voteCount)
+        },
+        onError: () => {
+          setVoted(!next)
+          setVotes((v) => v + (next ? -1 : 1))
+        },
+      },
+    )
+  }
 
   return (
     <div className="flex gap-2.5">
@@ -189,19 +226,34 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
               <p className="mt-0.5 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-plum-800">{renderAnswerBody(a.body)}</p>
             </div>
 
-            {/* Hàng hành động kiểu FB (gọn): Trả lời · Chỉnh sửa · Đã chỉnh sửa */}
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 pl-2 text-xs">
-              {canReply && (
-                <button type="button" onClick={() => setReplying((v) => !v)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
-                  Trả lời
-                </button>
-              )}
-              {canEdit && (
-                <button type="button" onClick={() => setEditing(true)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
-                  Chỉnh sửa
-                </button>
-              )}
-              {a.edited && <span className="text-plum-400">Đã chỉnh sửa</span>}
+            {/* Hàng hành động kiểu FB: chip bình chọn tách riêng (nền bo tròn) + nhóm link Trả lời/Chỉnh sửa */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleVote}
+                aria-pressed={voted}
+                aria-label={voted ? 'Bỏ bình chọn câu trả lời' : 'Bình chọn câu trả lời'}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold transition-colors',
+                  voted ? 'bg-brand-500/10 text-brand-600' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.08] hover:text-brand-600',
+                )}
+              >
+                <ChevronUp size={14} strokeWidth={2.5} />
+                {votes}
+              </button>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+                {canReply && (
+                  <button type="button" onClick={() => setReplying((v) => !v)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
+                    Trả lời
+                  </button>
+                )}
+                {canEdit && (
+                  <button type="button" onClick={() => setEditing(true)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
+                    Chỉnh sửa
+                  </button>
+                )}
+                {a.edited && <span className="text-plum-400">Đã chỉnh sửa</span>}
+              </div>
             </div>
           </>
         )}

@@ -272,4 +272,28 @@ export const forumApi = {
     const payload = (b?.data ?? b) as unknown
     return answerSchema.parse(payload)
   },
+
+  /**
+   * Bình chọn (upvote) một câu trả lời (hoặc reply) (UC43 - Vote on an answer).
+   * Gọi `POST /api/v1/questions/{questionId}/answers/{answerId}/vote`; interceptor `http` tự đính Bearer token. Thao tác lũy đẳng.
+   * @param questionId ID câu hỏi chứa câu trả lời
+   * @param answerId ID câu trả lời cần bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: true, voteCount })
+   */
+  voteAnswer: async ({ questionId, answerId }: { questionId: string | number; answerId: string | number }): Promise<VoteResult> => {
+    const body = await http.post(`/questions/${questionId}/answers/${answerId}/vote`)
+    return normalizeVote(body)
+  },
+
+  /**
+   * Bỏ bình chọn một câu trả lời (hoặc reply) (UC43 - Vote on an answer).
+   * Gọi `DELETE /api/v1/questions/{questionId}/answers/{answerId}/vote`. Thao tác lũy đẳng.
+   * @param questionId ID câu hỏi chứa câu trả lời
+   * @param answerId ID câu trả lời cần bỏ bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: false, voteCount })
+   */
+  unvoteAnswer: async ({ questionId, answerId }: { questionId: string | number; answerId: string | number }): Promise<VoteResult> => {
+    const body = await http.delete(`/questions/${questionId}/answers/${answerId}/vote`)
+    return normalizeVote(body)
+  },
 }

@@ -2320,6 +2320,105 @@
                         },
                         "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu hỏi với id: 999999\"."
                     }
+                },
+                {
+                    "name": "7.25 Bình chọn Câu trả lời (UC43 - Thành công)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/1/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "1",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Bình chọn câu trả lời thành công\", data { voted: true, voteCount }. Gọi lại lần 2 (idempotent) không tăng thêm voteCount."
+                    }
+                },
+                {
+                    "name": "7.26 Bỏ bình chọn Câu trả lời (UC43 - Thành công)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/1/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "1",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Bỏ bình chọn câu trả lời thành công\", data { voted: false, voteCount }. Gọi khi chưa từng bình chọn cũng không lỗi (idempotent)."
+                    }
+                },
+                {
+                    "name": "7.27 Bình chọn Câu trả lời (UC43 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/1/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "1",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
+                    }
+                },
+                {
+                    "name": "7.28 Bình chọn Câu trả lời không tồn tại/khác câu hỏi (UC43 - Lỗi 404)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/999999/vote",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "999999",
+                                "vote"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu trả lời với id: 999999\". Cũng dùng để test answerId có thật nhưng thuộc questionId khác (đổi questionId trong URL) — cùng trả 404."
+                    }
                 }
             ]
         },
