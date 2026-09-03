@@ -45,6 +45,9 @@ public class AnswerResponse {
     /** Số lượt vote của câu trả lời */
     private int votes;
 
+    /** true nếu người xem hiện tại đã bình chọn câu trả lời này (UC43 - Vote on an answer); luôn false với Guest */
+    private boolean voted;
+
     /** Thời gian đăng câu trả lời, định dạng tương đối ngắn gọn (VD: "2h", "3d") đã tính sẵn phía Backend */
     private String time;
 

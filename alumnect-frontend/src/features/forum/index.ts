@@ -1,5 +1,5 @@
 export { useQuestions, useQuestionDetail, useTopics, useCreateQuestion, useUpdateQuestion, useDeleteQuestion, useToggleVoteQuestion } from './hooks/useQuestions'
-export { useAnswers, useCreateAnswer } from './hooks/useAnswers'
+export { useAnswers, useCreateAnswer, useUpdateAnswer, useToggleVoteAnswer } from './hooks/useAnswers'
 export { forumApi, PAGE_SIZE } from './api/forumApi'
 export { questionSchema, questionDetailSchema, topicSchema, createQuestionSchema, SORT_OPTIONS, SEARCH_KEYWORD_MAX_LENGTH } from './model/question'
 export { answerSchema, createAnswerSchema } from './model/answer'
