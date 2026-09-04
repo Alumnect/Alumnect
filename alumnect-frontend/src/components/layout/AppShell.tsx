@@ -8,7 +8,7 @@ import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
 import { useLogout } from '@/features/auth'
-import { useConversations } from '@/features/message'
+import { useWebSocketChat } from '@/features/message'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -96,11 +96,8 @@ export function AppShell() {
   const keyword = useSearchStore((s) => s.keyword)
   const setKeyword = useSearchStore((s) => s.setKeyword)
 
-  // Lấy dữ liệu hội thoại để tính số tin nhắn chưa đọc thực tế
-  const { data: conversations } = useConversations()
-  const unreadMessagesCount = isAuthenticated
-    ? (conversations?.reduce((acc, c) => acc + (c.unreadCount || 0), 0) ?? 0)
-    : 0
+  // Duy trì kết nối WebSocket thời gian thực toàn cục để nhận tin nhắn
+  useWebSocketChat()
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
@@ -202,7 +199,6 @@ export function AppShell() {
                   to="/app/messages"
                   label="Tin nhắn"
                   icon={<MessagesSquare size={19} />}
-                  badge={unreadMessagesCount > 0 ? unreadMessagesCount : undefined}
                 />
                 <IconLink to="/app/notifications" label="Thông báo" icon={<Bell size={19} />} dot />
 

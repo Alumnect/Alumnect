@@ -7,9 +7,7 @@ import {
   ExternalLink, 
   ZoomIn, 
   ZoomOut, 
-  RotateCw, 
-  Maximize2,
-  RefreshCw
+  RotateCw 
 } from 'lucide-react'
 
 interface ImageViewerModalProps {

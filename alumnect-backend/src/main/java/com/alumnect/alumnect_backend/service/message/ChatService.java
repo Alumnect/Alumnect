@@ -39,4 +39,5 @@ public interface ChatService {
      * Đánh dấu cuộc hội thoại là đã đọc tin nhắn mới nhất.
      */
     void markAsRead(String currentUserEmail, Long conversationId);
+
 }

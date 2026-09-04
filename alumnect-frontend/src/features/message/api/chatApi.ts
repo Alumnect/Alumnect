@@ -28,6 +28,7 @@ export const chatApi = {
     return http.get<any, ApiResponse<Conversation[]>>('/conversations')
   },
 
+
   /** Tìm hoặc tạo cuộc trò chuyện trực tiếp 1-1 với một thành viên khác */
   getOrCreateDirectConversation: (targetUserId: number): Promise<ApiResponse<Conversation>> => {
     return http.post<any, ApiResponse<Conversation>>(`/conversations/direct/${targetUserId}`)

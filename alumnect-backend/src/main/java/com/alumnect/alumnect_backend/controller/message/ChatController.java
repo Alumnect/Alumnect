@@ -50,6 +50,7 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách hội thoại thành công.", conversations));
     }
 
+
     /**
      * Lấy hoặc tạo mới cuộc hội thoại trực tiếp 1-1 với một người dùng khác.
      */

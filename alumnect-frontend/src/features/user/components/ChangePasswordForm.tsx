@@ -24,7 +24,6 @@ export function ChangePasswordForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [backendSuccessMessage, setBackendSuccessMessage] = useState('')
   
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [pendingValues, setPendingValues] = useState<ChangePasswordFormValues | null>(null)
@@ -66,7 +65,6 @@ export function ChangePasswordForm() {
 
       // Backend trả về: "Đổi mật khẩu thành công!"
       const successMsg = res.message || 'Đổi mật khẩu thành công!'
-      setBackendSuccessMessage(successMsg)
       reset()
 
       if (logoutOthers) {

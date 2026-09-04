@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { MessagesSquare, Users } from 'lucide-react'
+import { MessagesSquare, Users, Loader2 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
@@ -11,6 +11,9 @@ interface ChatWindowProps {
   conversation: Conversation | null
   messages: Message[]
   isLoadingMessages?: boolean
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
+  onLoadMore?: () => void
   onSendMessage: (content: string, attachments: any[]) => Promise<void>
 }
 
@@ -18,13 +21,18 @@ export function ChatWindow({
   conversation,
   messages,
   isLoadingMessages,
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
   onSendMessage,
 }: ChatWindowProps) {
   const currentUserId = useAuthStore((state) => state.user?.id)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const isInitialLoadRef = useRef(true)
+  const prevScrollHeightRef = useRef(0)
+  const isFetchingOlderRef = useRef(false)
 
-  // Cuộn nội bộ trong container tin nhắn, KHÔNG kích hoạt cuộn ngoài cửa sổ trình duyệt
+  // Cuộn nội bộ trong container tin nhắn
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -34,20 +42,48 @@ export function ChatWindow({
     }
   }
 
+  // Xử lý sự kiện cuộn lên đỉnh để tải thêm tin nhắn cũ
+  const handleScroll = () => {
+    const el = scrollContainerRef.current
+    if (!el) return
+
+    if (el.scrollTop < 60 && hasNextPage && !isFetchingNextPage && onLoadMore) {
+      prevScrollHeightRef.current = el.scrollHeight
+      isFetchingOlderRef.current = true
+      onLoadMore()
+    }
+  }
+
   useEffect(() => {
-    if (messages.length > 0) {
-      const behavior = isInitialLoadRef.current ? 'auto' : 'smooth'
-      // Cho một tick nhẹ để DOM render đầy đủ chiều cao
+    const el = scrollContainerRef.current
+    if (!el || messages.length === 0) return
+
+    if (isInitialLoadRef.current) {
+      // Lần đầu mở hội thoại: cuộn ngay lập tức xuống tin nhắn mới nhất ở đáy
       requestAnimationFrame(() => {
-        scrollToBottom(behavior)
+        el.scrollTop = el.scrollHeight
       })
       isInitialLoadRef.current = false
+    } else if (isFetchingOlderRef.current) {
+      // Vừa tải thêm trang tin nhắn cũ: duy trì đúng vị trí scroll tương đối để không bị giật
+      const newScrollHeight = el.scrollHeight
+      const addedHeight = newScrollHeight - prevScrollHeightRef.current
+      el.scrollTop = addedHeight
+      isFetchingOlderRef.current = false
+    } else {
+      // Có tin nhắn mới phát sinh (gửi/nhận): tự cuộn xuống nếu đang ở gần đáy
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 200
+      if (isNearBottom) {
+        scrollToBottom('smooth')
+      }
     }
   }, [messages])
 
   // Reset cờ cuộn khi người dùng chuyển sang cuộc hội thoại khác
   useEffect(() => {
     isInitialLoadRef.current = true
+    isFetchingOlderRef.current = false
+    prevScrollHeightRef.current = 0
   }, [conversation?.id])
 
   if (!conversation) {
@@ -105,8 +141,15 @@ export function ChatWindow({
       {/* Danh sách tin nhắn - cuộn độc lập mượt mà */}
       <div
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="chat-scrollbar flex-1 min-h-0 space-y-3.5 overflow-y-auto overscroll-contain p-5"
       >
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-2">
+            <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+          </div>
+        )}
+
         {isLoadingMessages ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (

@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.service.message;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
 import com.alumnect.alumnect_backend.common.enums.MediaType;
 import com.alumnect.alumnect_backend.dao.message.ConversationParticipantRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
@@ -58,41 +59,72 @@ public class ChatServiceImpl implements ChatService {
         User currentUser = getUserByEmail(currentUserEmail);
         List<Conversation> conversations = conversationRepository.findConversationsByUserId(currentUser.getId());
 
-        Map<Long, ConversationResponse> uniqueMap = new LinkedHashMap<>();
-        for (Conversation conversation : conversations) {
-            List<ConversationParticipant> participants = conversationParticipantRepository.findByConversationId(conversation.getId());
+        if (conversations.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-            ConversationParticipant currentParticipant = null;
-            ConversationParticipant otherParticipant = null;
+        List<Long> conversationIds = conversations.stream().map(Conversation::getId).toList();
 
-            for (ConversationParticipant p : participants) {
-                if (p.getUser().getId().equals(currentUser.getId())) {
-                    currentParticipant = p;
-                } else {
-                    otherParticipant = p;
+        // 1. Nạp toàn bộ participants trong 1 query (JOIN FETCH user, lastReadMessage)
+        List<ConversationParticipant> allParticipants = conversationParticipantRepository
+                .findByConversationIdInWithUserAndLastRead(conversationIds);
+        Map<Long, List<ConversationParticipant>> participantsByConv = allParticipants.stream()
+                .collect(Collectors.groupingBy(cp -> cp.getConversation().getId()));
+
+        // Thu thập đối phương (recipients) của từng hội thoại
+        Map<Long, User> recipientByConv = new HashMap<>();
+        Set<Long> recipientUserIds = new HashSet<>();
+        for (Conversation conv : conversations) {
+            List<ConversationParticipant> parts = participantsByConv.getOrDefault(conv.getId(), Collections.emptyList());
+            for (ConversationParticipant p : parts) {
+                if (!p.getUser().getId().equals(currentUser.getId())) {
+                    recipientByConv.put(conv.getId(), p.getUser());
+                    recipientUserIds.add(p.getUser().getId());
+                    break;
                 }
             }
+        }
 
-            if (otherParticipant == null) {
+        // 2. Nạp toàn bộ UserProfile của recipients trong 1 query
+        Map<Long, UserProfile> profileMap = userProfileRepository.findAllById(recipientUserIds).stream()
+                .collect(Collectors.toMap(UserProfile::getUserId, p -> p));
+
+        // 3. Nạp tin nhắn mới nhất kèm tệp đính kèm của toàn bộ cuộc trò chuyện trong batch queries
+        List<Long> latestMessageIds = messageRepository.findLatestMessageIdsByConversationIds(conversationIds);
+        Map<Long, Message> latestMessageByConv = new HashMap<>();
+        if (!latestMessageIds.isEmpty()) {
+            List<Message> latestMessages = messageRepository.findMessagesWithAttachmentsByIdIn(latestMessageIds);
+            for (Message m : latestMessages) {
+                latestMessageByConv.put(m.getConversation().getId(), m);
+            }
+        }
+
+        // 4. Đếm số lượng tin nhắn chưa đọc của toàn bộ cuộc trò chuyện trong 1 query (GROUP BY)
+        List<Object[]> unreadRows = messageRepository.countUnreadGroupedByConversation(conversationIds, currentUser.getId());
+        Map<Long, Long> unreadMap = new HashMap<>();
+        for (Object[] row : unreadRows) {
+            Long convId = ((Number) row[0]).longValue();
+            Long count = ((Number) row[1]).longValue();
+            unreadMap.put(convId, count);
+        }
+
+        // 5. Lắp ghép dữ liệu hoàn toàn trong bộ nhớ (In-memory mapping, không query thêm)
+        Map<Long, ConversationResponse> uniqueMap = new LinkedHashMap<>();
+        for (Conversation conversation : conversations) {
+            User recipient = recipientByConv.get(conversation.getId());
+            if (recipient == null || uniqueMap.containsKey(recipient.getId())) {
                 continue;
             }
 
-            User recipient = otherParticipant.getUser();
-            if (uniqueMap.containsKey(recipient.getId())) {
-                continue;
-            }
+            UserProfile recipientProfile = profileMap.get(recipient.getId());
 
-            UserProfile recipientProfile = userProfileRepository.findById(recipient.getId()).orElse(null);
-
-            // Tìm tin nhắn mới nhất
-            Optional<Message> latestMsgOpt = messageRepository.findTopByConversationIdOrderByCreatedAtDesc(conversation.getId());
+            Message latestMsg = latestMessageByConv.get(conversation.getId());
             String lastSnippet = "";
-            if (latestMsgOpt.isPresent()) {
-                Message msg = latestMsgOpt.get();
-                if (msg.getContent() != null && !msg.getContent().isBlank()) {
-                    lastSnippet = msg.getContent();
-                } else if (!msg.getAttachments().isEmpty()) {
-                    MediaType type = msg.getAttachments().get(0).getMediaType();
+            if (latestMsg != null) {
+                if (latestMsg.getContent() != null && !latestMsg.getContent().isBlank()) {
+                    lastSnippet = latestMsg.getContent();
+                } else if (!latestMsg.getAttachments().isEmpty()) {
+                    MediaType type = latestMsg.getAttachments().get(0).getMediaType();
                     lastSnippet = switch (type) {
                         case IMAGE -> "[Hình ảnh]";
                         case VIDEO -> "[Video]";
@@ -101,22 +133,7 @@ public class ChatServiceImpl implements ChatService {
                 }
             }
 
-            // Đếm số tin nhắn chưa đọc
-            long unreadCount = 0;
-            if (currentParticipant != null) {
-                if (currentParticipant.getLastReadMessage() != null) {
-                    unreadCount = messageRepository.countByConversationIdAndIdGreaterThanAndSenderIdNot(
-                            conversation.getId(),
-                            currentParticipant.getLastReadMessage().getId(),
-                            currentUser.getId()
-                    );
-                } else {
-                    unreadCount = messageRepository.countByConversationIdAndSenderIdNot(
-                            conversation.getId(),
-                            currentUser.getId()
-                    );
-                }
-            }
+            long unreadCount = unreadMap.getOrDefault(conversation.getId(), 0L);
 
             uniqueMap.put(recipient.getId(), messageMapper.toConversationResponse(
                     conversation,
@@ -129,6 +146,7 @@ public class ChatServiceImpl implements ChatService {
 
         return new ArrayList<>(uniqueMap.values());
     }
+
 
     @Override
     @Transactional
@@ -309,7 +327,7 @@ public class ChatServiceImpl implements ChatService {
                 try {
                     messagingTemplate.convertAndSendToUser(
                             participant.getUser().getId().toString(),
-                            "/queue/messages",
+                            WebSocketDestinations.USER_QUEUE_MESSAGES,
                             response
                     );
                     log.info("Đã gửi tin nhắn WebSocket tới User ID: {}", participant.getUser().getId());

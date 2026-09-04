@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Card } from '@/components/ui'
 import {
@@ -9,7 +9,6 @@ import {
   useSendMessage,
   useDirectConversation,
   useMarkAsRead,
-  useWebSocketChat,
   type Conversation,
 } from '@/features/message'
 
@@ -23,9 +22,6 @@ export function MessagesPage() {
   const directConversationMutation = useDirectConversation()
   const sendMessageMutation = useSendMessage()
   const markAsReadMutation = useMarkAsRead()
-
-  // Kích hoạt kết nối WebSocket STOMP
-  useWebSocketChat()
 
   const requestedUserIdRef = useRef<number | null>(null)
 
@@ -69,10 +65,28 @@ export function MessagesPage() {
     }
   }, [conversations])
 
-  // Lấy lịch sử tin nhắn của cuộc trò chuyện hiện tại
-  const { data: messages = [], isLoading: isLoadingMessages } = useMessages(
-    activeConversation?.id ?? null
-  )
+  // Tự động đánh dấu đã đọc khi mở một cuộc trò chuyện hoặc khi có tin nhắn mới đến trong hội thoại đang xem
+  useEffect(() => {
+    if (activeConversation && activeConversation.unreadCount > 0) {
+      markAsReadMutation.mutate(activeConversation.id)
+    }
+  }, [activeConversation?.id, activeConversation?.unreadCount])
+
+  // Lấy lịch sử tin nhắn của cuộc trò chuyện hiện tại (cuộn vô hạn)
+  const {
+    data: messagesData,
+    isLoading: isLoadingMessages,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useMessages(activeConversation?.id ?? null)
+
+  // Ghép các trang và đảo thứ tự để hiển thị: từ cũ nhất (trên) tới mới nhất (dưới)
+  const messages = useMemo(() => {
+    if (!messagesData?.pages) return []
+    const allDesc = messagesData.pages.flatMap((page) => page.content || [])
+    return [...allDesc].reverse()
+  }, [messagesData])
 
   // Đánh dấu đã đọc khi mở cuộc trò chuyện
   const handleSelectConversation = (conv: Conversation) => {
@@ -116,6 +130,9 @@ export function MessagesPage() {
             conversation={activeConversation}
             messages={messages}
             isLoadingMessages={isLoadingMessages}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={fetchNextPage}
             onSendMessage={handleSendMessage}
           />
         </div>

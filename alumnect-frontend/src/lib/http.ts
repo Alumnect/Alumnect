@@ -43,10 +43,14 @@ http.interceptors.response.use(
       }
 
       original._retry = true
-      isRefreshing = true
+      const refreshToken = useAuthStore.getState().refreshToken
+      if (!refreshToken) {
+        isRefreshing = false
+        const data = error.response.data as { message?: string } | undefined
+        return Promise.reject(new Error(data?.message ?? 'Yêu cầu đăng nhập'))
+      }
+
       try {
-        const refreshToken = useAuthStore.getState().refreshToken
-        if (!refreshToken) throw new Error('No refresh token')
         const res = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken })
         const { accessToken, refreshToken: newRefresh } = res.data.data
         useAuthStore.getState().setTokens(accessToken, newRefresh)
