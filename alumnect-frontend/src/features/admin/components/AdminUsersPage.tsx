@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Search, Lock, Unlock, Users, X, Loader2, Mail, Phone, BookOpen, GraduationCap, Calendar, FileText, Award } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -50,20 +50,22 @@ export function AdminUsersPage() {
     }
   }, [selectedUserId])
 
+  const [confirmUserLock, setConfirmUserLock] = useState<{ id: number; currentStatus: string } | null>(null)
+
   // Lock / Unlock Action handler
-  const handleToggleLock = async (userId: number, currentStatus: string) => {
-    const nextStatus = currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED'
-    const confirmMsg =
-      currentStatus === 'LOCKED'
-        ? 'Bạn có chắc chắn muốn mở khóa tài khoản này không?'
-        : 'Bạn có chắc chắn muốn khóa tài khoản này không? Người dùng sẽ không thể đăng nhập.'
+  const handleToggleLock = (userId: number, currentStatus: string) => {
+    setConfirmUserLock({ id: userId, currentStatus })
+  }
 
-    if (!confirm(confirmMsg)) return
-
+  const handleConfirmToggleLock = async () => {
+    if (!confirmUserLock) return
+    const nextStatus = confirmUserLock.currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED'
     try {
-      await updateStatusMutation.mutateAsync({ id: userId, status: nextStatus })
+      await updateStatusMutation.mutateAsync({ id: confirmUserLock.id, status: nextStatus })
+      toast.success(nextStatus === 'ACTIVE' ? 'Đã mở khóa tài khoản thành công!' : 'Đã khóa tài khoản thành công!')
+      setConfirmUserLock(null)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Lỗi khi cập nhật trạng thái')
+      toast.error(err instanceof Error ? err.message : 'Lỗi khi cập nhật trạng thái')
     }
   }
 
@@ -457,6 +459,35 @@ export function AdminUsersPage() {
           </div>,
           document.body
         )}
+
+      {/* Modal xác nhận khóa / mở khóa tài khoản */}
+      {confirmUserLock && (
+        <Modal
+          isOpen={!!confirmUserLock}
+          onClose={() => setConfirmUserLock(null)}
+          title={confirmUserLock.currentStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+          icon={confirmUserLock.currentStatus === 'LOCKED' ? <Unlock size={18} className="text-emerald-500" /> : <Lock size={18} className="text-rose-500" />}
+          footer={
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setConfirmUserLock(null)} disabled={updateStatusMutation.isPending}>
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmToggleLock}
+                disabled={updateStatusMutation.isPending}
+                className={confirmUserLock.currentStatus === 'LOCKED' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-rose-500 hover:bg-rose-600 text-white'}
+              >
+                {updateStatusMutation.isPending ? 'Đang xử lý...' : confirmUserLock.currentStatus === 'LOCKED' ? 'Mở khóa' : 'Khóa tài khoản'}
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-sm text-plum-600">
+            Bạn có chắc muốn {confirmUserLock.currentStatus === 'LOCKED' ? 'mở khóa' : 'khóa'} tài khoản này không?
+          </p>
+        </Modal>
+      )}
     </div>
   )
 }

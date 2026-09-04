@@ -146,7 +146,7 @@ public class S3StorageServiceImpl implements StorageService {
                 mime.equals("application/octet-stream"); // Hỗ trợ tệp nhị phân thô
 
         if (!isValidExtension || !isValidMime) {
-            throw new BadRequestException("Kiểu tệp tin hoặc định dạng không hợp lệ. Chỉ cho phép các file: ảnh, video, pdf, tài liệu Word (doc/docx), markdown (md), text (txt).");
+            throw new BadRequestException("Định dạng tệp không được hỗ trợ.");
         }
     }
 }

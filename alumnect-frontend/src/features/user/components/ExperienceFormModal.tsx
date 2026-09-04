@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { toast } from '@/components/ui'
 import { PlaceAutocomplete } from './PlaceAutocomplete'
 import { MonthYearPicker } from './MonthYearPicker'
 
@@ -279,6 +280,7 @@ export function ExperienceFormModal({
           },
         })
       }
+      toast.success(mode === 'create' || mode === 'rejoin' ? 'Đã thêm kinh nghiệm làm việc thành công!' : 'Đã cập nhật kinh nghiệm làm việc!')
       onClose()
     } catch (err: any) {
       console.error('Lỗi khi lưu kinh nghiệm:', err)

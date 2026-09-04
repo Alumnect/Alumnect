@@ -6,7 +6,7 @@ import {
   Filter, Sparkles, CheckCircle2, ChevronRight,
   Trash2, Info, UserX, HelpCircle
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -277,10 +277,11 @@ export function AdminReportsQueue() {
         })
 
         setSelectedReport(null)
+        toast.success('Đã xử lý báo cáo thành công!')
       }
       setConfirmAction(null)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi thực hiện hành động')
+      toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra khi thực hiện hành động')
       setConfirmAction(null)
     }
   }
@@ -704,10 +705,10 @@ export function AdminReportsQueue() {
                 <p className="text-xs text-plum-500 font-semibold leading-relaxed">
                   {confirmAction.type === 'RESOLVE' && (
                     activeWillHide 
-                      ? 'Bạn có chắc chắn muốn giải quyết báo cáo và ẨN bài viết này không?' 
-                      : 'Bạn có chắc chắn muốn giải quyết báo cáo và GIỮ CÔNG KHAI bài viết này không?'
+                      ? 'Bạn có chắc muốn ẩn bài viết vi phạm này không?' 
+                      : 'Bạn có chắc muốn giữ công khai bài viết này không?'
                   )}
-                  {confirmAction.type === 'DISMISS' && 'Bạn có chắc chắn muốn BỎ QUA báo cáo này không? (Bài viết sẽ giữ nguyên trạng thái)'}
+                  {confirmAction.type === 'DISMISS' && 'Bạn có chắc muốn bỏ qua báo cáo này không?'}
                 </p>
               </div>
               <div className="flex gap-2 w-full pt-2">

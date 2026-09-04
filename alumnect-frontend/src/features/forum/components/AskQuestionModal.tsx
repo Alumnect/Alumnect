@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { X, Loader2, AlertTriangle, LayoutGrid, GraduationCap, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { toast } from '@/components/ui'
 import { useMajors } from '@/features/auth/hooks/useAuth'
 import { createQuestionSchema, MAX_QUESTION_IMAGES } from '../model/question'
 import type { CreateQuestionInput, QuestionDetail } from '../model/question'
@@ -65,13 +66,25 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
 
   const onSubmit = (values: CreateQuestionInput) => {
     if (isEdit) {
-      updateMut.mutate(values, { onSuccess: () => onClose() })
+      updateMut.mutate(values, {
+        onSuccess: () => {
+          toast.success('Đã cập nhật câu hỏi thành công!')
+          onClose()
+        },
+        onError: (err: any) => {
+          toast.error(err?.message || 'Không thể cập nhật câu hỏi.')
+        }
+      })
     } else {
       createMut.mutate(values, {
         onSuccess: (created) => {
+          toast.success('Đã đăng câu hỏi thành công!')
           onClose()
           navigate(`/app/forum/${created.id}`)
         },
+        onError: (err: any) => {
+          toast.error(err?.message || 'Không thể đăng câu hỏi, vui lòng thử lại.')
+        }
       })
     }
   }

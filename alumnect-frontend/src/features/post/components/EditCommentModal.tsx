@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { AlertTriangle, CheckCircle2, Loader2, Pencil } from 'lucide-react'
-import { Modal } from '@/components/ui'
+import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import type { Comment } from '../model/comment'
 import { useUpdateComment } from '../hooks/useUpdateComment'
@@ -76,8 +76,12 @@ export function EditCommentModal({
       { commentId, content: values.content.trim() },
       {
         onSuccess: () => {
+          toast.success('Đã cập nhật bình luận thành công!')
           onUpdated?.()
           onClose()
+        },
+        onError: (err: any) => {
+          toast.error(err?.message || 'Không thể cập nhật bình luận.')
         },
       },
     )

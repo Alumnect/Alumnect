@@ -21,6 +21,12 @@ public class Endpoints {
         "/error"
     };
 
+    // WebSocket Handshake endpoints — cho phép nâng cấp kết nối HTTP sang WebSocket
+    public static final String[] WEBSOCKET_ENDPOINTS = {
+        "/ws",
+        "/ws/**"
+    };
+
     // Endpoint công khai — GET, không cần đăng nhập
     public static final String[] PUBLIC_GET = {
         "/api/v1/majors",           // Lấy danh sách chuyên ngành (dùng lúc đăng ký)

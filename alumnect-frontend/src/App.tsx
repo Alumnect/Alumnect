@@ -23,10 +23,12 @@ import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
 import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage } from '@/features/admin'
+import { ToastContainer } from '@/components/ui'
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ToastContainer />
       <BrowserRouter>
         <ScrollToTop />
         <Routes>

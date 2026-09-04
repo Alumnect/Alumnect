@@ -3,14 +3,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { 
-  KeyRound, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, LogOut, ArrowRight
+  KeyRound, Eye, EyeOff, Loader2, AlertCircle, LogOut, ArrowRight
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useChangePassword } from '../hooks/useUserMutations'
 import { changePasswordSchema } from '../model/schemas'
 import type { ChangePasswordFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui'
+import { Modal, toast } from '@/components/ui'
 import { Field, useLogoutAllDevices } from '@/features/auth'
 
 export function ChangePasswordForm() {
@@ -23,12 +23,11 @@ export function ChangePasswordForm() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [backendSuccessMessage, setBackendSuccessMessage] = useState('')
   
-  // Trạng thái hiển thị modal hỏi đăng xuất
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingValues, setPendingValues] = useState<ChangePasswordFormValues | null>(null)
 
   const {
     register,
@@ -44,53 +43,56 @@ export function ChangePasswordForm() {
     },
   })
 
-  // Khi người dùng bấm submit form
-  const handleFormSubmit = async (values: ChangePasswordFormValues) => {
+  // 1. Submit Form bước 1: Hỏi xác nhận đăng xuất thiết bị khác
+  const handleFormSubmit = (values: ChangePasswordFormValues) => {
     setErrorMessage(null)
-    setSuccessMessage(null)
-    
-    try {
-      // 1. Gọi API đổi mật khẩu thành công trước
-      const res = await changePasswordMutation.mutateAsync({
-        oldPassword: values.oldPassword,
-        newPassword: values.newPassword,
-        confirmNewPassword: values.confirmNewPassword,
-      })
-
-      // 2. Đổi mật khẩu thành công: Mở modal xác nhận hỏi đăng xuất
-      setBackendSuccessMessage(res.message || 'Đổi mật khẩu thành công!')
-      setShowConfirmModal(true)
-      reset() // Clear form nhập liệu ngay lập tức
-    } catch (err: any) {
-      console.error(err)
-      // Hiển thị thông báo lỗi từ backend
-      setErrorMessage(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi đổi mật khẩu.')
-    }
+    setPendingValues(values)
+    setShowConfirmModal(true)
   }
 
-  // Gọi API đăng xuất hoặc giữ đăng nhập sau khi đổi thành công
-  const handleLogoutDecision = async (logoutAll: boolean) => {
+  // 2. Thực hiện đổi mật khẩu theo lựa chọn của người dùng
+  const executeChangePassword = async (logoutOthers: boolean) => {
+    if (!pendingValues) return
+
     setShowConfirmModal(false)
-    
-    if (logoutAll) {
-      try {
-        // Gọi API thu hồi tất cả refresh tokens trong DB
-        await logoutAllDevicesMutation.mutateAsync()
-      } catch (err) {
-        console.error('Lỗi khi thu hồi tokens:', err)
-      }
-      
-      // Xóa tokens cục bộ ở client và chuyển hướng về trang login
-      logout()
-      navigate('/login', {
-        state: {
-          successMessage: backendSuccessMessage ? `${backendSuccessMessage} Bạn đã được đăng xuất khỏi tất cả các thiết bị.` : 'Đổi mật khẩu thành công! Bạn đã được đăng xuất khỏi tất cả các thiết bị.',
-        },
-        replace: true,
+    setErrorMessage(null)
+
+    try {
+      const res = await changePasswordMutation.mutateAsync({
+        oldPassword: pendingValues.oldPassword,
+        newPassword: pendingValues.newPassword,
+        confirmNewPassword: pendingValues.confirmNewPassword,
       })
-    } else {
-      // Giữ đăng nhập: Chỉ hiển thị thông báo thành công tại chỗ
-      setSuccessMessage(backendSuccessMessage || 'Đổi mật khẩu thành công!')
+
+      // Backend trả về: "Đổi mật khẩu thành công!"
+      const successMsg = res.message || 'Đổi mật khẩu thành công!'
+      setBackendSuccessMessage(successMsg)
+      reset()
+
+      if (logoutOthers) {
+        // Thu hồi toàn bộ session đăng nhập trên các thiết bị khác
+        try {
+          await logoutAllDevicesMutation.mutateAsync()
+        } catch (err) {
+          console.error('Lỗi khi thu hồi tokens:', err)
+        }
+        
+        // Xóa tokens cục bộ ở client và chuyển hướng về trang login
+        logout()
+        navigate('/login', {
+          state: {
+            successMessage: `${successMsg} Bạn đã được đăng xuất khỏi tất cả các thiết bị.`,
+          },
+          replace: true,
+        })
+      } else {
+        // Giữ đăng nhập: Thông báo Toast gọn gàng
+        toast.success(successMsg)
+      }
+    } catch (err: any) {
+      setErrorMessage(err.response?.data?.message || err.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại thông tin.')
+    } finally {
+      setPendingValues(null)
     }
   }
 
@@ -101,14 +103,6 @@ export function ChangePasswordForm() {
         <h2 className="text-2xl font-extrabold text-plum-900 tracking-tight">Đổi mật khẩu</h2>
       </div>
       <p className="mt-1 text-sm text-plum-500">Bảo vệ tài khoản của bạn bằng cách cập nhật mật khẩu định kỳ.</p>
-
-      {/* Thông báo thành công */}
-      {successMessage && (
-        <div className="mt-4 rounded-xl bg-teal-50 border border-teal-200/50 p-3 text-xs text-teal-700 flex items-start gap-2 animate-pop">
-          <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-teal-600" />
-          <span>{successMessage}</span>
-        </div>
-      )}
 
       {/* Thông báo lỗi */}
       {errorMessage && (
@@ -204,18 +198,19 @@ export function ChangePasswordForm() {
           {/* Nút đăng xuất tất cả */}
           <button
             type="button"
-            onClick={() => handleLogoutDecision(true)}
-            disabled={logoutAllDevicesMutation.isPending}
+            onClick={() => executeChangePassword(true)}
+            disabled={changePasswordMutation.isPending || logoutAllDevicesMutation.isPending}
             className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 active:bg-brand-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {logoutAllDevicesMutation.isPending ? 'Đang đăng xuất...' : 'Đăng xuất mọi thiết bị'}
+            {changePasswordMutation.isPending || logoutAllDevicesMutation.isPending ? 'Đang xử lý...' : 'Đăng xuất mọi thiết bị'}
           </button>
           
           {/* Nút duy trì đăng nhập */}
           <button
             type="button"
-            onClick={() => handleLogoutDecision(false)}
-            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] transition-colors cursor-pointer"
+            onClick={() => executeChangePassword(false)}
+            disabled={changePasswordMutation.isPending}
+            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] transition-colors cursor-pointer disabled:opacity-50"
           >
             Duy trì đăng nhập
           </button>

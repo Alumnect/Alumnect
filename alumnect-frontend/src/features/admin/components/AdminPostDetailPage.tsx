@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Repeat, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Inbox } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel, Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAdminPostDetail, useTogglePostHidden } from '../hooks/useAdmin'
@@ -15,6 +16,7 @@ export default function AdminPostDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const postId = id ? parseInt(id, 10) : null
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   // Hook lấy chi tiết bài viết từ React Query
   const { data: post, isLoading, error } = useAdminPostDetail(postId)
@@ -25,20 +27,17 @@ export default function AdminPostDetailPage() {
   /**
    * Xử lý ẩn hoặc hiển thị lại bài viết vi phạm.
    */
-  const handleToggleHidden = async () => {
+  const handleConfirmToggle = async () => {
     if (!post) return
-    const actionText = post.hidden ? 'hiển thị lại' : 'ẩn'
-    const confirmMessage = `Bạn có chắc chắn muốn ${actionText} bài viết này không?\nBài viết sau khi ẩn sẽ không xuất hiện trên bảng tin cộng đồng của người dùng.`
-    
-    if (window.confirm(confirmMessage)) {
-      try {
-        await toggleMutation.mutateAsync({
-          id: post.id,
-          hidden: !post.hidden,
-        })
-      } catch (err) {
-        console.error('Lỗi khi thay đổi trạng thái bài viết:', err)
-      }
+    try {
+      await toggleMutation.mutateAsync({
+        id: post.id,
+        hidden: !post.hidden,
+      })
+      toast.success(post.hidden ? 'Đã hiển thị lại bài viết!' : 'Đã ẩn bài viết thành công!')
+      setShowConfirmModal(false)
+    } catch (err: any) {
+      toast.error(err?.message || 'Có lỗi xảy ra khi thay đổi trạng thái bài viết.')
     }
   }
 
@@ -368,7 +367,7 @@ export default function AdminPostDetailPage() {
               {/* Nút hành động */}
               <div className="mt-6 border-t border-plum-900/5 pt-4">
                 <Button
-                  onClick={handleToggleHidden}
+                  onClick={() => setShowConfirmModal(true)}
                   disabled={toggleMutation.isPending}
                   className={`w-full justify-center gap-2 text-xs font-bold transition-all shadow-sm ${
                     post.hidden
@@ -403,6 +402,33 @@ export default function AdminPostDetailPage() {
           </Reveal>
         </div>
       </div>
+
+      {/* Modal xác nhận ẩn / hiện bài viết */}
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title={post.hidden ? 'Mở ẩn bài viết' : 'Ẩn bài viết'}
+        icon={post.hidden ? <Eye size={18} className="text-emerald-500" /> : <ShieldAlert size={18} className="text-rose-500" />}
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowConfirmModal(false)} disabled={toggleMutation.isPending}>
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmToggle}
+              disabled={toggleMutation.isPending}
+              className={post.hidden ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-rose-500 hover:bg-rose-600 text-white'}
+            >
+              {toggleMutation.isPending ? 'Đang xử lý...' : post.hidden ? 'Mở ẩn' : 'Ẩn bài viết'}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-plum-600">
+          Bạn có chắc muốn {post.hidden ? 'mở ẩn lại' : 'ẩn'} bài viết này không?
+        </p>
+      </Modal>
     </div>
   )
 }

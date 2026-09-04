@@ -228,6 +228,35 @@
   }
 }
 
+/* Ẩn thanh cuộn nhưng vẫn cuộn được bình thường */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Thanh cuộn tinh tế dành riêng cho ô tin nhắn */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(120, 100, 115, 0.25);
+  border-radius: 9999px;
+  border: none;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 100, 115, 0.45);
+}
+.chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 100, 115, 0.25) transparent;
+}
+
 /* ============================================================================
    Reusable composite utilities
    ========================================================================== */

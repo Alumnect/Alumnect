@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X, User, GraduationCap, MapPin, Plus, Trash2, AlertTriangle, Loader2, Link as LinkIcon, Sparkles, Upload, Image as ImageIcon } from 'lucide-react'
 import axios from 'axios'
 import { Button } from '@/components/ui/Button'
-import { Avatar, SmartImage } from '@/components/ui'
+import { Avatar, SmartImage, toast } from '@/components/ui'
 import { useMajors, usePresignedUrl } from '@/features/auth/hooks/useAuth'
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
 import type { UserProfileResponse, UpdateProfileRequest, UserSkillRequest } from '../model/userTypes'
@@ -204,6 +204,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
 
     try {
       await updateProfileMutation.mutateAsync(payload)
+      toast.success('Đã cập nhật hồ sơ cá nhân thành công!')
       onClose()
     } catch (err: any) {
       setValidationError(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi cập nhật hồ sơ')

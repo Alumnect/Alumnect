@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Copy, MessageSquare, Check } from 'lucide-react'
-import { Modal } from '@/components/ui'
+import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import type { Post } from '../model/post'
 
@@ -18,15 +18,16 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
       const link = `${window.location.origin}/app/posts/${post.id}`
       await navigator.clipboard.writeText(link)
       setCopied(true)
+      toast.success('Đã sao chép liên kết!')
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy link: ', err)
+      toast.error('Không thể sao chép liên kết')
     }
   }
 
   const handleSendMessenger = () => {
-    // Tạm thời hiển thị alert hoặc toast
-    alert('Tính năng gửi tin nhắn cho bạn bè đang được phát triển!')
+    toast.info('Tính năng đang được phát triển')
     onClose()
   }
 

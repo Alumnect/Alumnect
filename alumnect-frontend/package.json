@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@react-oauth/google": "^0.13.5",
+    "@stomp/stompjs": "^7.3.0",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-query": "^5.101.2",
     "@vietmap/vietmap-gl-js": "^7.0.0-pre.1",

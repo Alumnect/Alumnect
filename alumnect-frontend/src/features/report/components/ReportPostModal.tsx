@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
-import { CheckCircle2, Flag, Loader2, ShieldAlert, Sparkles } from 'lucide-react'
+import { Flag, Loader2, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
+import { Modal, toast } from '@/components/ui'
 import { useCreatePostReport } from '../hooks/useCreatePostReport'
 import {
   createPostReportSchema,
@@ -22,14 +21,6 @@ const REASON_DETAILS: Record<ReportReason, string> = {
   OTHER: 'Một lý do khác cần được bạn mô tả rõ hơn.',
 }
 
-const SUCCESS_PARTICLES = Array.from({ length: 14 }, (_, index) => ({
-  id: index,
-  x: ((index * 47) % 220) - 110,
-  y: -50 - ((index * 31) % 130),
-  color: ['bg-brand-400', 'bg-emerald-400', 'bg-amber-400', 'bg-rose-400', 'bg-violet-400'][index % 5],
-  delay: (index % 4) * 0.04,
-}))
-
 export function ReportPostModal({
   open,
   postId,
@@ -39,7 +30,6 @@ export function ReportPostModal({
   postId: string
   onClose: () => void
 }) {
-  const [submitted, setSubmitted] = useState(false)
   const createReport = useCreatePostReport()
   const {
     register,
@@ -59,7 +49,6 @@ export function ReportPostModal({
     if (open) {
       reset({ reason: '', description: '' })
       createReport.reset()
-      setSubmitted(false)
     }
   }, [open, reset])
 
@@ -68,88 +57,17 @@ export function ReportPostModal({
   }
 
   const submit = (input: CreatePostReportInput) => {
-    createReport.mutate({ postId, input }, { onSuccess: () => setSubmitted(true) })
-  }
-
-  if (submitted) {
-    return (
-      <Modal
-        isOpen={open}
-        onClose={close}
-        title="Báo cáo đã được gửi"
-        icon={<CheckCircle2 size={18} className="text-emerald-600" />}
-        maxWidthClassName="max-w-md"
-        className="border-emerald-500/10"
-        footer={
-          <Button onClick={close} className="w-full sm:w-auto" leftIcon={<CheckCircle2 size={17} />}>
-            Đóng
-          </Button>
+    createReport.mutate(
+      { postId, input },
+      {
+        onSuccess: () => {
+          toast.success('Đã gửi báo cáo vi phạm thành công')
+          onClose()
+        },
+        onError: (err: any) => {
+          toast.error(err?.message || 'Không thể gửi báo cáo')
         }
-      >
-        <div className="relative isolate overflow-hidden rounded-2xl bg-gradient-to-b from-emerald-50 via-white to-brand-50/40 px-4 py-7 text-center">
-          <motion.div
-            aria-hidden="true"
-            className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-emerald-200/50 blur-2xl"
-            animate={{ scale: [1, 1.18, 1], opacity: [0.45, 0.8, 0.45] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            aria-hidden="true"
-            className="absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-brand-200/35 blur-2xl"
-            animate={{ scale: [1.12, 0.94, 1.12], opacity: [0.35, 0.7, 0.35] }}
-            transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-
-          {SUCCESS_PARTICLES.map((particle) => (
-            <motion.span
-              key={particle.id}
-              aria-hidden="true"
-              className={`absolute left-1/2 top-1/2 h-2.5 w-2.5 rounded-full ${particle.color}`}
-              initial={{ opacity: 0, scale: 0, x: 0, y: 8 }}
-              animate={{ opacity: [0, 1, 0], scale: [0, 1.15, 0.7], x: particle.x, y: particle.y }}
-              transition={{ duration: 1.15, delay: particle.delay, ease: 'easeOut' }}
-            />
-          ))}
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.45, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: 'spring', damping: 14, stiffness: 230, delay: 0.08 }}
-            className="relative z-10 mx-auto grid h-24 w-24 place-items-center rounded-full border-8 border-white bg-emerald-100 text-emerald-600 shadow-[0_16px_35px_-16px_rgba(16,185,129,0.65)]"
-          >
-            <motion.svg viewBox="0 0 24 24" className="h-12 w-12 fill-none stroke-current" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
-              <motion.path
-                d="M20 6 9 17l-5-5"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.4, delay: 0.36, ease: 'easeOut' }}
-              />
-            </motion.svg>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.2 }}
-            className="relative z-10"
-          >
-            <h4 className="mt-5 text-2xl font-extrabold tracking-tight text-emerald-700">Cảm ơn bạn đã lên tiếng</h4>
-            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-plum-600">
-              Báo cáo đã được ghi nhận và sẽ được đội ngũ quản trị xem xét.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.32 }}
-            className="relative z-10 mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/90 px-3.5 py-2 text-xs font-bold text-emerald-700 shadow-sm"
-          >
-            <Sparkles size={14} />
-            Trạng thái: đang chờ xử lý
-          </motion.div>
-        </div>
-      </Modal>
+      }
     )
   }
 

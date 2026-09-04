@@ -67,7 +67,7 @@ export const APP_ACCOUNT_NAV: NavItem[] = [
 export const APP_NAV: NavItem[] = [
   ...APP_PRIMARY_NAV,
   ...APP_MORE_NAV,
-  { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare, badge: '3' },
+  { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare },
   { label: 'Thông báo', to: '/app/notifications', icon: Bell },
   { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
 ]

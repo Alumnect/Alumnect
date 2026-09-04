@@ -3029,6 +3029,206 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "33. Direct Messaging (Chat 1-1)",
+            "description": "UC33: Nhắn tin trực tiếp 1-1, trao đổi văn bản và tệp đính kèm đa phương tiện",
+            "item": [
+                {
+                    "name": "33.1 Lấy danh sách cuộc trò chuyện của người dùng",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/conversations",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "conversations"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "33.2 Khởi tạo hoặc tìm cuộc trò chuyện 1-1 với user khác",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/conversations/direct/2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "conversations",
+                                "direct",
+                                "2"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "33.3 Gửi tin nhắn văn bản trực tiếp",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/messages",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "messages"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"recipientId\": 2,\n  \"content\": \"Xin chào bạn, mình kết nối trao đổi công việc nhé!\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "33.4 Gửi tin nhắn đính kèm hình ảnh và tài liệu",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/messages",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "messages"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"recipientId\": 2,\n  \"content\": \"Mình gửi bạn tài liệu và ảnh sơ đồ đính kèm.\",\n  \"attachments\": [\n    {\n      \"mediaType\": \"IMAGE\",\n      \"url\": \"https://pub.alumnect.edu.vn/chat/architecture_diagram.png\",\n      \"fileName\": \"architecture_diagram.png\",\n      \"fileSize\": 102400\n    }\n  ]\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "33.5 Lấy lịch sử tin nhắn trong cuộc trò chuyện (phân trang)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/conversations/1/messages?page=0&size=20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "conversations",
+                                "1",
+                                "messages"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "20"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "33.6 Đánh dấu cuộc trò chuyện đã đọc",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/conversations/1/read",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "conversations",
+                                "1",
+                                "read"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "33.7 Validate lỗi gửi tin nhắn rỗng (thất bại mong đợi 400)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/messages",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "messages"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"recipientId\": 2,\n  \"content\": \"   \"\n}"
+                        }
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

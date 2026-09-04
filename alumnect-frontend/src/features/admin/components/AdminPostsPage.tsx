@@ -19,7 +19,7 @@ import {
   CheckCircle2,
   Sparkles,
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -251,20 +251,25 @@ export function AdminPostsPage() {
   })
 
   const toggleMutation = useTogglePostHidden()
+  const [confirmPost, setConfirmPost] = useState<{ id: number; hidden: boolean } | null>(null)
 
   const posts = data?.content || []
   const totalPages = data?.totalPages || 0
   const totalElements = data?.totalElements || 0
 
-  const handleToggleHidden = async (e: React.MouseEvent, postId: number, isCurrentlyHidden: boolean) => {
+  const handleToggleHidden = (e: React.MouseEvent, postId: number, isCurrentlyHidden: boolean) => {
     e.stopPropagation()
-    const actionText = isCurrentlyHidden ? 'hiển thị lại' : 'ẩn'
-    if (window.confirm(`Bạn có chắc chắn muốn ${actionText} bài viết #${postId}?`)) {
-      try {
-        await toggleMutation.mutateAsync({ id: postId, hidden: !isCurrentlyHidden })
-      } catch (err) {
-        console.error('Lỗi thay đổi trạng thái:', err)
-      }
+    setConfirmPost({ id: postId, hidden: isCurrentlyHidden })
+  }
+
+  const handleConfirmToggle = async () => {
+    if (!confirmPost) return
+    try {
+      await toggleMutation.mutateAsync({ id: confirmPost.id, hidden: !confirmPost.hidden })
+      toast.success(confirmPost.hidden ? 'Đã hiển thị lại bài viết!' : 'Đã ẩn bài viết thành công!')
+      setConfirmPost(null)
+    } catch (err: any) {
+      toast.error(err?.message || 'Có lỗi khi cập nhật trạng thái bài viết.')
     }
   }
 
@@ -617,6 +622,35 @@ export function AdminPostsPage() {
           </div>
         )}
       </Reveal>
+
+      {/* Modal xác nhận ẩn / hiện bài viết */}
+      {confirmPost && (
+        <Modal
+          isOpen={!!confirmPost}
+          onClose={() => setConfirmPost(null)}
+          title={confirmPost.hidden ? 'Mở ẩn bài viết' : 'Ẩn bài viết'}
+          icon={confirmPost.hidden ? <Eye size={18} className="text-emerald-500" /> : <EyeOff size={18} className="text-rose-500" />}
+          footer={
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setConfirmPost(null)} disabled={toggleMutation.isPending}>
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmToggle}
+                disabled={toggleMutation.isPending}
+                className={confirmPost.hidden ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-rose-500 hover:bg-rose-600 text-white'}
+              >
+                {toggleMutation.isPending ? 'Đang xử lý...' : confirmPost.hidden ? 'Mở ẩn' : 'Ẩn bài viết'}
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-sm text-plum-600">
+            Bạn có chắc muốn {confirmPost.hidden ? 'mở ẩn lại' : 'ẩn'} bài viết #{confirmPost.id} không?
+          </p>
+        </Modal>
+      )}
     </div>
   )
 }

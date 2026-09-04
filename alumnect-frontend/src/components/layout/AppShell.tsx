@@ -8,6 +8,7 @@ import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
 import { useLogout } from '@/features/auth'
+import { useConversations } from '@/features/message'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -94,6 +95,12 @@ export function AppShell() {
   const user = useAuthStore((s) => s.user)
   const keyword = useSearchStore((s) => s.keyword)
   const setKeyword = useSearchStore((s) => s.setKeyword)
+
+  // Lấy dữ liệu hội thoại để tính số tin nhắn chưa đọc thực tế
+  const { data: conversations } = useConversations()
+  const unreadMessagesCount = isAuthenticated
+    ? (conversations?.reduce((acc, c) => acc + (c.unreadCount || 0), 0) ?? 0)
+    : 0
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
@@ -191,7 +198,12 @@ export function AppShell() {
 
             {isAuthenticated ? (
               <>
-                <IconLink to="/app/messages" label="Tin nhắn" icon={<MessagesSquare size={19} />} badge={3} />
+                <IconLink
+                  to="/app/messages"
+                  label="Tin nhắn"
+                  icon={<MessagesSquare size={19} />}
+                  badge={unreadMessagesCount > 0 ? unreadMessagesCount : undefined}
+                />
                 <IconLink to="/app/notifications" label="Thông báo" icon={<Bell size={19} />} dot />
 
                 {/* More apps (desktop) */}
@@ -319,6 +331,8 @@ export function AppShell() {
         "mx-auto w-full",
         location.pathname === '/app/map'
           ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
+          : location.pathname === '/app/messages'
+          ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100vh-3.85rem)] overflow-y-auto no-scrollbar"
           : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
         <motion.div
@@ -326,6 +340,7 @@ export function AppShell() {
           initial={{ opacity: 0, y: 12, filter: 'blur(5px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className={location.pathname === '/app/messages' ? "h-full" : undefined}
         >
           <Outlet />
         </motion.div>

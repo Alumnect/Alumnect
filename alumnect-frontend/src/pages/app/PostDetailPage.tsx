@@ -917,7 +917,6 @@ function CommentsSection({
   const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null)
   const [editingComment, setEditingComment] = useState<Comment | null>(null)
   const [deletingComment, setDeletingComment] = useState<Comment | null>(null)
-  const [commentSuccessMessage, setCommentSuccessMessage] = useState<string | null>(null)
   const currentUser = useAuthStore((s) => s.user)
   const {
     data,
@@ -963,12 +962,10 @@ function CommentsSection({
     currentUser.id === comment.authorId
 
   const openEditComment = (comment: Comment) => {
-    setCommentSuccessMessage(null)
     setEditingComment(comment)
   }
 
   const openDeleteComment = (comment: Comment) => {
-    setCommentSuccessMessage(null)
     setDeletingComment(comment)
   }
 
@@ -981,12 +978,6 @@ function CommentsSection({
           {compact(commentCount)}
         </span>
       </div>
-
-      {commentSuccessMessage && (
-        <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700">
-          {commentSuccessMessage}
-        </div>
-      )}
 
       {/* Ô soạn & đăng bình luận gốc (UC18) */}
       <div id="comments-box">
@@ -1077,14 +1068,14 @@ function CommentsSection({
       <EditCommentModal
         isOpen={editingComment !== null}
         onClose={() => setEditingComment(null)}
-        onUpdated={() => setCommentSuccessMessage('Chỉnh sửa bình luận thành công.')}
+        onUpdated={() => {}}
         postId={postId}
         comment={editingComment}
       />
       <DeleteCommentModal
         isOpen={deletingComment !== null}
         onClose={() => setDeletingComment(null)}
-        onDeleted={() => setCommentSuccessMessage('Xóa bình luận thành công.')}
+        onDeleted={() => {}}
         postId={postId}
         comment={deletingComment}
       />
