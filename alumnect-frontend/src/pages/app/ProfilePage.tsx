@@ -24,9 +24,10 @@ import {
   PlusSquare,
   ArrowLeft,
   Bookmark,
+  MessageCircle,
 } from 'lucide-react'
 import axios from 'axios'
-import { Avatar, Card, Skeleton, EmptyState, SmartImage } from '@/components/ui'
+import { Avatar, Card, Skeleton, EmptyState, SmartImage, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAuthStore } from '@/store/authStore'
@@ -153,11 +154,11 @@ export function ProfilePage() {
     if (!file || !profile) return
 
     if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn file định dạng hình ảnh hợp lệ (VD: JPG, PNG...)')
+      toast.warning('Vui lòng chọn file hình ảnh (JPG, PNG...)')
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('Kích thước ảnh không được vượt quá 5MB')
+      toast.warning('Kích thước ảnh không được vượt quá 5MB')
       return
     }
 
@@ -189,8 +190,10 @@ export function ProfilePage() {
           sortOrder: s.sortOrder
         }))
       })
+      toast.success('Cập nhật ảnh đại diện thành công!')
     } catch (err) {
       console.error('Lỗi đổi ảnh đại diện:', err)
+      toast.error('Không thể tải ảnh đại diện lên. Vui lòng thử lại.')
     } finally {
       setIsUploadingMedia(false)
     }
@@ -202,11 +205,11 @@ export function ProfilePage() {
     if (!file || !profile) return
 
     if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn file định dạng hình ảnh hợp lệ (VD: JPG, PNG...)')
+      toast.warning('Vui lòng chọn file hình ảnh (JPG, PNG...)')
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('Kích thước ảnh không được vượt quá 5MB')
+      toast.warning('Kích thước ảnh không được vượt quá 5MB')
       return
     }
 
@@ -238,8 +241,10 @@ export function ProfilePage() {
           sortOrder: s.sortOrder
         }))
       })
+      toast.success('Cập nhật ảnh bìa thành công!')
     } catch (err) {
       console.error('Lỗi đổi ảnh bìa:', err)
+      toast.error('Không thể tải ảnh bìa lên. Vui lòng thử lại.')
     } finally {
       setIsUploadingMedia(false)
     }
@@ -409,37 +414,49 @@ export function ProfilePage() {
                 {isOwnProfile ? (
                   <Button
                     variant={activeTab === 'about' ? 'primary' : 'secondary'}
-                    size="sm"
-                    leftIcon={activeTab === 'about' ? <User size={15} /> : <Edit3 size={15} />}
+                    size="md"
+                    leftIcon={activeTab === 'about' ? <User size={16} /> : <Edit3 size={16} />}
                     onClick={() => setActiveTab(activeTab === 'about' ? 'profile' : 'about')}
                     className="rounded-2xl font-bold px-5 border border-plum-900/10 shadow-sm"
                   >
                     {activeTab === 'about' ? 'Xem trang cá nhân' : 'Chỉnh sửa hồ sơ'}
                   </Button>
                 ) : (
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
-                      variant={profile.isFollowing ? 'secondary' : 'primary'}
-                      onClick={handleFollowToggle}
-                      disabled={followPending}
-                      className="rounded-2xl font-bold px-5 shadow-sm text-sm"
-                      leftIcon={
-                        followPending ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : profile.isFollowing ? (
-                          <UserMinus size={16} />
-                        ) : (
-                          <UserPlus size={16} />
-                        )
-                      }
+                      variant="secondary"
+                      size="md"
+                      leftIcon={<MessageCircle size={16} />}
+                      onClick={() => navigate(`/app/messages?userId=${profile.userId}`)}
+                      className="rounded-2xl font-bold px-5 border border-plum-900/10 shadow-sm text-sm hover:bg-brand-50 hover:text-brand-600 transition-colors"
                     >
-                      {profile.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
+                      Nhắn tin
                     </Button>
-                    {followError && (
-                      <p className="text-xs text-rose-500 font-medium max-w-[200px] text-right">
-                        {followError}
-                      </p>
-                    )}
+                    <div className="flex flex-col items-end gap-1">
+                      <Button
+                        variant={profile.isFollowing ? 'secondary' : 'primary'}
+                        size="md"
+                        onClick={handleFollowToggle}
+                        disabled={followPending}
+                        className="rounded-2xl font-bold px-5 shadow-sm text-sm"
+                        leftIcon={
+                          followPending ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : profile.isFollowing ? (
+                            <UserMinus size={16} />
+                          ) : (
+                            <UserPlus size={16} />
+                          )
+                        }
+                      >
+                        {profile.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
+                      </Button>
+                      {followError && (
+                        <p className="text-xs text-rose-500 font-medium max-w-[200px] text-right">
+                          {followError}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -828,10 +845,10 @@ export function ProfilePage() {
               <span className="p-2 rounded-2xl bg-coral-50 border border-coral-200/40">
                 <AlertTriangle size={20} />
               </span>
-              <h3 className="text-lg font-bold text-plum-900">Xác nhận xóa kinh nghiệm</h3>
+              <h3 className="text-lg font-bold text-plum-900">Xóa kinh nghiệm</h3>
             </div>
             <p className="text-sm text-plum-600">
-              Bạn có chắc chắn muốn xóa kinh nghiệm làm việc này không? Thao tác này không thể hoàn tác.
+              Bạn có chắc muốn xóa kinh nghiệm làm việc này không?
             </p>
             <div className="flex items-center justify-end gap-3 pt-2">
               <Button
@@ -851,7 +868,7 @@ export function ProfilePage() {
                 className="rounded-xl bg-coral-500 hover:bg-coral-600 text-white"
               >
                 {deleteExpMutation.isPending && <Loader2 size={14} className="animate-spin mr-1" />}
-                Xóa ngay
+                Xóa
               </Button>
             </div>
           </div>

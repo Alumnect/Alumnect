@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Sparkles, ChevronLeft, ChevronRight, UserCheck } from 'lucide-react'
+import { Users, ChevronLeft, ChevronRight, UserCheck } from 'lucide-react'
 import { PageHeader, Badge, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import {
@@ -68,7 +68,7 @@ export function AlumniDirectoryPage() {
       <PageHeader
         icon={<Users size={22} className="text-brand-500" />}
         title="Danh bạ thành viên AlumNect"
-        subtitle="Khám phá, tra cứu và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University trên toàn cầu."
+        subtitle="Khám phá, tra cứu và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University."
         actions={
           totalElements > 0 && (
             <Badge tone="brand" className="px-3.5 py-1 text-xs">
@@ -195,16 +195,6 @@ export function AlumniDirectoryPage() {
               </div>
             </div>
           )}
-
-          {/* Footer Tip */}
-          <div className="mt-8 flex items-center justify-center gap-2">
-            <Badge tone="brand" className="text-[10px]">
-              <Sparkles size={11} /> Mẹo kết nối
-            </Badge>
-            <span className="text-xs text-plum-400">
-              Nhấn vào thẻ thành viên để xem toàn bộ hồ sơ kinh nghiệm, học vấn và các dự án nổi bật.
-            </span>
-          </div>
         </>
       )}
     </div>

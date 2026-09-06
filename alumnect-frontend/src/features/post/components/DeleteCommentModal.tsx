@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
-import { Modal } from '@/components/ui'
+import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import type { Comment } from '../model/comment'
 import { useDeleteComment } from '../hooks/useDeleteComment'
@@ -37,9 +37,13 @@ export function DeleteCommentModal({
     if (!comment) return
     deleteComment.mutate(comment.id, {
       onSuccess: () => {
+        toast.success('Đã xóa bình luận thành công')
         onDeleted?.()
         onClose()
       },
+      onError: (err: any) => {
+        toast.error(err?.message || 'Không thể xóa bình luận')
+      }
     })
   }
 
@@ -64,7 +68,7 @@ export function DeleteCommentModal({
             leftIcon={deleteComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
             className="border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
           >
-            {deleteComment.isPending ? 'Đang xóa…' : 'Xóa bình luận'}
+            {deleteComment.isPending ? 'Đang xóa…' : 'Xóa'}
           </Button>
         </div>
       }
@@ -75,7 +79,7 @@ export function DeleteCommentModal({
         </div>
       )}
       <p className="text-sm leading-relaxed text-plum-600">
-        Bạn có chắc chắn muốn xóa bình luận này không? Bình luận sẽ không còn hiển thị sau khi xóa.
+        Bạn có chắc muốn xóa bình luận này không?
       </p>
     </Modal>
   )

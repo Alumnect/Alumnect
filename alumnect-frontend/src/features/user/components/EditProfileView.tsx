@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui'
+import { Card, toast } from '@/components/ui'
 import { ProvinceSelect } from './ProvinceSelect'
 import { useMajors } from '@/features/auth/hooks/useAuth'
 
@@ -199,6 +199,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
     try {
       await updateProfileMutation.mutateAsync(payload)
+      toast.success('Đã lưu thông tin hồ sơ thành công!')
       onSuccess()
     } catch (err: any) {
       setValidationError(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi cập nhật hồ sơ')

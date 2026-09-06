@@ -9,7 +9,7 @@ import {
   X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2, MapPin, Users, DollarSign, Link, Mail, Clock
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Avatar, ImageCarousel } from '@/components/ui'
+import { Avatar, ImageCarousel, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import type { AuthUser } from '@/store/authStore'
@@ -57,7 +57,6 @@ export function CreatePostModal({
   const editMutation = useEditPost()
   const activeMutation = editPost ? editMutation : createMutation
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [showSuccess, setShowSuccess] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadingCount, setUploadingCount] = useState(0)
 
@@ -164,24 +163,25 @@ export function CreatePostModal({
       if (editPost) {
         editMutation.mutate(
           { postId: editPost.id, input: payload },
-          { onSuccess: () => {
-              setShowSuccess(true)
-              setTimeout(() => {
-                setShowSuccess(false)
-                close()
-              }, 2200)
-            } 
+          {
+            onSuccess: () => {
+              toast.success('Đã cập nhật bài viết thành công!')
+              close()
+            },
+            onError: (err: any) => {
+              toast.error(err?.message || 'Không thể cập nhật bài viết.')
+            }
           }
         )
       } else {
         createMutation.mutate(payload, { 
           onSuccess: () => {
-            setShowSuccess(true)
-            setTimeout(() => {
-              setShowSuccess(false)
-              close()
-            }, 2200)
-          } 
+            toast.success('Đăng bài viết thành công!')
+            close()
+          },
+          onError: (err: any) => {
+            toast.error(err?.message || 'Không thể đăng bài viết, vui lòng thử lại.')
+          }
         })
       }
     } catch {
@@ -275,54 +275,11 @@ export function CreatePostModal({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="relative m-auto w-full max-w-xl rounded-3xl bg-white p-6 md:p-8 shadow-2xl border border-plum-900/5"
           >
-            {showSuccess ? (
-              <div className="flex h-72 flex-col items-center justify-center animate-fade-in text-center relative overflow-hidden rounded-3xl">
-                {/* Confetti Particles */}
-                {[...Array(16)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className={`absolute w-2.5 h-2.5 rounded-full ${['bg-rose-500', 'bg-blue-500', 'bg-amber-400', 'bg-emerald-500', 'bg-purple-500'][i % 5]}`}
-                    initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-                    animate={{
-                      opacity: 0,
-                      scale: [0, 1.2, 0.8],
-                      x: (Math.random() - 0.5) * 250,
-                      y: (Math.random() - 0.5) * 250 - 50,
-                    }}
-                    transition={{ duration: 1.2 + Math.random() * 0.5, ease: "easeOut" }}
-                  />
-                ))}
-                
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', damping: 15, stiffness: 250, delay: 0.1 }}
-                  className="h-24 w-24 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500 mb-2 z-10 relative shadow-inner"
-                >
-                  <motion.svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="48" height="48" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"
-                  >
-                    <motion.path
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 }}
-                      d="M20 6 9 17l-5-5"
-                    />
-                  </motion.svg>
-                </motion.div>
-
-                <h3 className="mt-4 text-2xl font-bold text-brand-600 z-10 relative">Đăng bài thành công!</h3>
-                <p className="text-plum-500 z-10 relative mt-1">Bài viết của bạn đã được chia sẻ.</p>
-              </div>
-            ) : (
-              <>
-                {/* Header */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-plum-900">
-            {editPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
-          </h3>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-plum-900">
+                {editPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
+              </h3>
           <button
             type="button"
             onClick={close}
@@ -740,9 +697,7 @@ export function CreatePostModal({
             </Button>
           </div>
         </form>
-              </>
-            )}
-          </motion.div>
+      </motion.div>
         </motion.div>
       )}
     </AnimatePresence>,

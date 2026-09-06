@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowUpRight, BadgeCheck, UserPlus, Activity, Inbox, Loader2 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -21,6 +21,7 @@ export function AdminOverviewPage() {
   const [selectedReq, setSelectedReq] = useState<{ id: number; fullName: string } | null>(null)
   const [reviewAction, setReviewAction] = useState<'APPROVED' | 'REJECTED' | null>(null)
   const [reviewNote, setReviewNote] = useState('')
+  const [previewProof, setPreviewProof] = useState<{ url: string; name: string } | null>(null)
 
   useEffect(() => {
     if (selectedReq && reviewAction) {
@@ -47,8 +48,9 @@ export function AdminOverviewPage() {
       setSelectedReq(null)
       setReviewAction(null)
       setReviewNote('')
+      toast.success(reviewAction === 'APPROVED' ? 'Đã duyệt hồ sơ xác thực thành công!' : 'Đã từ chối hồ sơ xác thực.')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra')
+      toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra khi duyệt hồ sơ')
     }
   }
 
@@ -229,14 +231,13 @@ export function AdminOverviewPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
-                    <a
-                      href={p.proofUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center rounded-xl bg-plum-900/[0.04] px-3.5 py-1.5 text-xs font-bold text-plum-600 ring-1 ring-inset ring-plum-900/10 hover:bg-plum-900/[0.08]"
+                    <button
+                      type="button"
+                      onClick={() => setPreviewProof({ url: p.proofUrl, name: p.fullName })}
+                      className="inline-flex items-center justify-center rounded-xl bg-plum-900/[0.04] px-3.5 py-1.5 text-xs font-bold text-plum-600 ring-1 ring-inset ring-plum-900/10 hover:bg-plum-900/[0.08] transition-colors cursor-pointer"
                     >
                       Xem minh chứng
-                    </a>
+                    </button>
                     <Button
                       size="sm"
                       variant="primary"
@@ -323,6 +324,16 @@ export function AdminOverviewPage() {
           </div>,
           document.body
         )}
+
+      {/* Xem minh chứng bằng ImageViewerModal chuẩn Messenger */}
+      {previewProof && (
+        <ImageViewerModal
+          isOpen={!!previewProof}
+          onClose={() => setPreviewProof(null)}
+          src={previewProof.url}
+          fileName={`Minh chứng tốt nghiệp - ${previewProof.name}`}
+        />
+      )}
     </div>
   )
 }

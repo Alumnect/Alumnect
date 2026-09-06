@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
-import { 
-  User, Mail, Eye, EyeOff, GraduationCap, Users, 
+import {
+  User, Mail, Eye, EyeOff, GraduationCap, Users,
   ArrowRight, BadgeCheck, Upload, Loader2, Sparkles, CheckCircle2, AlertCircle
 } from 'lucide-react'
 import { useMajors, useRegister, usePresignedUrl } from '../hooks/useAuth'
@@ -168,7 +168,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           <div>
             <p className="font-bold">Đăng ký qua Google</p>
             <p className="mt-0.5 text-plum-600">
-              Hệ thống đã nhận email xác thực <strong className="text-plum-900 font-semibold">{googleData.email}</strong>. Vui lòng điền nốt thông tin dưới đây để hoàn tất hồ sơ.
+              Hệ thống đã nhận email xác thực <strong className="text-plum-900 font-semibold">{googleData.email}</strong>. Vui lòng điền thông tin dưới đây để hoàn tất hồ sơ.
             </p>
           </div>
         </div>
@@ -211,19 +211,19 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
 
       <form className="mt-5 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         {/* Thông tin chung */}
-        <Field 
-          label="Họ và tên" 
-          placeholder="Nguyễn Văn A" 
-          trailing={<User size={16} />} 
+        <Field
+          label="Họ và tên"
+          placeholder="Nguyễn Văn A"
+          trailing={<User size={16} />}
           error={errors.fullName?.message}
           {...register('fullName')}
         />
-        
-        <Field 
-          label="Email FPT" 
-          type="email" 
-          placeholder="you@fpt.edu.vn" 
-          trailing={<Mail size={16} />} 
+
+        <Field
+          label="Email FPT"
+          type="email"
+          placeholder="you@fpt.edu.vn"
+          trailing={<Mail size={16} />}
           error={errors.email?.message}
           disabled={!!googleData}
           className={cn(googleData && 'bg-plum-900/[0.05] cursor-not-allowed')}
@@ -360,11 +360,11 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           </div>
         )}
 
-        <Button 
-          type="submit" 
-          variant="primary" 
-          size="lg" 
-          className="w-full mt-4" 
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          className="w-full mt-4"
           disabled={registerMutation.isPending || googleRegisterMutation.isPending || isUploading}
           rightIcon={registerMutation.isPending || googleRegisterMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
         >

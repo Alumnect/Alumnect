@@ -4,7 +4,7 @@ import {
   Inbox, Loader2, CheckCircle2, 
   Eye, X, MessageSquare, AlertTriangle, FileImage
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -79,8 +79,9 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
       if (detailReq?.id === selectedReq.id) {
         setDetailReq(null)
       }
+      toast.success(reviewAction === 'APPROVED' ? 'Đã phê duyệt hồ sơ cựu sinh viên thành công!' : 'Đã từ chối hồ sơ xác thực.')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi duyệt hồ sơ')
+      toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra khi duyệt hồ sơ')
     }
   }
 
@@ -452,26 +453,15 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
           document.body
         )}
 
-      {/* 2. Lightbox Xem Ảnh Minh Chứng Full-screen */}
-      {previewProofUrl &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/85 p-4 backdrop-blur-md animate-in fade-in duration-200">
-            <button
-              onClick={() => setPreviewProofUrl(null)}
-              className="absolute right-6 top-6 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-            >
-              <X size={22} />
-            </button>
-            <div className="max-w-4xl max-h-[90vh] flex flex-col items-center">
-              <img
-                src={previewProofUrl}
-                alt="Minh chứng tốt nghiệp full-size"
-                className="max-h-[85vh] w-auto rounded-xl object-contain shadow-2xl border border-white/10"
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+      {/* 2. Lightbox Xem Ảnh Minh Chứng Chuẩn Messenger */}
+      {previewProofUrl && (
+        <ImageViewerModal
+          isOpen={!!previewProofUrl}
+          onClose={() => setPreviewProofUrl(null)}
+          src={previewProofUrl}
+          fileName="Minh chứng tốt nghiệp"
+        />
+      )}
 
       {/* 3. Modal Phê duyệt / Từ chối (Review Confirmation Modal) */}
       {selectedReq && reviewAction &&

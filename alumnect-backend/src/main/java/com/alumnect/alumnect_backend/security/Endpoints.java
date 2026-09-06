@@ -1,5 +1,7 @@
 package com.alumnect.alumnect_backend.security;
 
+import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
+
 /**
  * Lớp hằng số tập trung toàn bộ danh sách URL của hệ thống.
  * Được sử dụng bởi {@link SecurityConfiguration} để cấu hình Spring Security:
@@ -19,6 +21,12 @@ public class Endpoints {
         "/swagger-resources/**",
         "/webjars/**",
         "/error"
+    };
+
+    // WebSocket Handshake endpoints — cho phép nâng cấp kết nối HTTP sang WebSocket
+    public static final String[] WEBSOCKET_ENDPOINTS = {
+        WebSocketDestinations.WS_ENDPOINT,
+        WebSocketDestinations.WS_ENDPOINT + "/**"
     };
 
     // Endpoint công khai — GET, không cần đăng nhập
