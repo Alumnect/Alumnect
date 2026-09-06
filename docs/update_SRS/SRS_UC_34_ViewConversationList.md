@@ -90,7 +90,7 @@ Module cung cấp giải pháp liên lạc thời gian thực giữa các thành
 * **Actors/Roles**: Tất cả người dùng đã đăng nhập và được kích hoạt tài khoản (`STUDENT`, `ALUMNI`).
 * **Purpose**: Cho phép người dùng theo dõi toàn bộ danh sách các cuộc hội thoại đã và đang diễn ra, nhận biết đối phương trò chuyện, nắm bắt nhanh nội dung tin nhắn mới nhất và phát hiện các tin nhắn chưa đọc cần phản hồi.
 * **Interface**:
-  * **Thanh tìm kiếm (Search Bar)**: Ô nhập liệu có biểu tượng kính lúp, hỗ trợ tìm kiếm theo tên hoặc chuyên ngành của đối phương.
+  * **Thanh tìm kiếm (Search Bar)**: Ô nhập liệu có biểu tượng kính lúp, hỗ trợ tìm kiếm nhanh theo họ và tên đối phương (lọc trực tiếp theo `recipientName` trên client).
   * **Danh sách thẻ hội thoại (Conversation Item List)**:
     * Ảnh đại diện hình tròn (Avatar 44px) kèm huy hiệu tích xanh xác thực.
     * Họ và tên đối phương (font đậm, màu mận chín `text-plum-900`).
@@ -182,7 +182,7 @@ classDiagram
 
     %% Tầng DTO & Response
     class ApiResponse~T~ {
-        +Integer status
+        +Integer error
         +String message
         +T data
     }
@@ -209,6 +209,7 @@ classDiagram
         -ConversationRepository conversationRepository
         -ConversationParticipantRepository conversationParticipantRepository
         -MessageRepository messageRepository
+        -MessageAttachmentRepository messageAttachmentRepository
         -UserRepository userRepository
         -UserProfileRepository userProfileRepository
         -MessageMapper messageMapper
@@ -226,11 +227,14 @@ classDiagram
         <<interface>>
         +findConversationsByUserId(userId: Long) List~Conversation~
         +findByDirectKey(directKey: String) Optional~Conversation~
+        +findDirectConversationBetween(user1Id: Long, user2Id: Long) Optional~Conversation~
     }
 
     class ConversationParticipantRepository {
         <<interface>>
         +findByConversationIdInWithUserAndLastRead(conversationIds: List~Long~) List~ConversationParticipant~
+        +findByConversationId(conversationId: Long) List~ConversationParticipant~
+        +findByConversationIdAndUserId(conversationId: Long, userId: Long) Optional~ConversationParticipant~
         +existsByConversationIdAndUserId(conversationId: Long, userId: Long) boolean
     }
 
@@ -239,6 +243,8 @@ classDiagram
         +findLatestMessageIdsByConversationIds(conversationIds: List~Long~) List~Long~
         +findMessagesWithAttachmentsByIdIn(messageIds: List~Long~) List~Message~
         +countUnreadGroupedByConversation(conversationIds: List~Long~, currentUserId: Long) List~Object[]~
+        +findTopByConversationIdOrderByCreatedAtDesc(conversationId: Long) Optional~Message~
+        +findByConversationIdOrderByCreatedAtDesc(conversationId: Long, pageable: Pageable) Page~Message~
     }
 
     %% Tầng Entity CSDL
@@ -430,7 +436,7 @@ sequenceDiagram
 * **Phản hồi thành công (HTTP 200 OK)**:
   ```json
   {
-    "status": 200,
+    "error": 0,
     "message": "Lấy danh sách hội thoại thành công.",
     "data": [
       {
@@ -450,7 +456,7 @@ sequenceDiagram
 * **Phản hồi lỗi xác thực (HTTP 401 Unauthorized)**:
   ```json
   {
-    "status": 401,
+    "error": -1,
     "message": "Yêu cầu đăng nhập để truy cập tài nguyên.",
     "data": null
   }

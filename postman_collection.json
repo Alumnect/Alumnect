@@ -3246,7 +3246,7 @@
                                     "});",
                                     "pm.test(\"Response format matches ApiResponse\", function () {",
                                     "    const jsonData = pm.response.json();",
-                                    "    pm.expect(jsonData.status).to.eql(200);",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
                                     "    pm.expect(jsonData.message).to.be.a('string');",
                                     "    pm.expect(jsonData.data).to.be.an('array');",
                                     "});"
