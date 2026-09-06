@@ -50,6 +50,7 @@ http.interceptors.response.use(
         return Promise.reject(new Error(data?.message ?? 'Yêu cầu đăng nhập'))
       }
 
+      isRefreshing = true
       try {
         const res = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken })
         const { accessToken, refreshToken: newRefresh } = res.data.data
