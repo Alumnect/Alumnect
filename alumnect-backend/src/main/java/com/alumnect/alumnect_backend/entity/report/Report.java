@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.entity.report;
 
 import com.alumnect.alumnect_backend.common.enums.ReportReason;
 import com.alumnect.alumnect_backend.common.enums.ReportStatus;
+import com.alumnect.alumnect_backend.entity.forum.Answer;
 import com.alumnect.alumnect_backend.entity.forum.Question;
 import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.user.User;
@@ -45,10 +46,15 @@ public class Report {
     @JoinColumn(name = "post_id")
     private Post post;
 
-    /** Câu hỏi bị báo cáo (null nếu báo cáo bài viết) */
+    /** Câu hỏi bị báo cáo (null nếu báo cáo bài viết hoặc câu trả lời) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private Question question;
+
+    /** Câu trả lời bị báo cáo (null nếu báo cáo bài viết hoặc câu hỏi) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "answer_id")
+    private Answer answer;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

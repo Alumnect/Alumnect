@@ -50,4 +50,7 @@ public final class WebSocketDestinations {
 
     /** Kênh phát sóng danh sách báo cáo câu hỏi vi phạm cho Admin real-time (UC78) */
     public static final String TOPIC_ADMIN_QUESTION_REPORTS = "/topic/admin/reports/questions";
+
+    /** Kênh phát sóng danh sách báo cáo câu trả lời vi phạm cho Admin real-time (UC79) */
+    public static final String TOPIC_ADMIN_ANSWER_REPORTS = "/topic/admin/reports/answers";
 }

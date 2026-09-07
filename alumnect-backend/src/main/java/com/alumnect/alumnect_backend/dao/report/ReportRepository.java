@@ -15,4 +15,7 @@ public interface ReportRepository extends JpaRepository<Report, Long>, JpaSpecif
 
     /** Kiểm tra người dùng đã báo cáo câu hỏi này trước đó hay chưa */
     boolean existsByQuestionIdAndReporterId(Long questionId, Long reporterId);
+
+    /** Kiểm tra người dùng đã báo cáo câu trả lời này trước đó hay chưa */
+    boolean existsByAnswerIdAndReporterId(Long answerId, Long reporterId);
 }

@@ -15,6 +15,8 @@ public interface QuestionReportMapper {
     @Mapping(target = "questionTitle", source = "question.title")
     @Mapping(target = "questionBody", source = "question.body")
     @Mapping(target = "questionStatus", source = "question.status")
+    @Mapping(target = "answerCount", source = "question.answerCount")
+    @Mapping(target = "voteCount", source = "question.voteCount")
     @Mapping(target = "topicId", source = "question.topic.id")
     @Mapping(target = "topicName", source = "question.topic.name")
     @Mapping(target = "questionAuthorId", source = "question.author.id")

@@ -123,6 +123,8 @@ export interface AdminQuestionReportDto {
   questionTitle: string
   questionBody: string
   questionStatus: 'ACTIVE' | 'HIDDEN' | 'DELETED'
+  answerCount?: number
+  voteCount?: number
   topicId?: number
   topicName?: string
   questionAuthorId: number
@@ -151,6 +153,43 @@ export interface UpdateQuestionReportStatusPayload {
   id: number
   status: 'RESOLVED' | 'DISMISSED'
   hideQuestion?: boolean
+}
+
+export interface AdminAnswerReportDto {
+  id: number
+  answerId: number
+  answerContent: string
+  answerStatus: 'ACTIVE' | 'HIDDEN' | 'DELETED'
+  questionId: number
+  questionTitle: string
+  questionBody?: string
+  questionAuthorName?: string
+  answerAuthorId: number
+  answerAuthorName: string
+  answerAuthorEmail: string
+  reporterId: number
+  reporterName: string
+  reporterEmail: string
+  reporterAvatarUrl?: string
+  reason: 'SPAM' | 'INAPPROPRIATE' | 'MISINFORMATION' | 'SCAM_OR_FRAUD' | 'OTHER'
+  description?: string
+  status: 'PENDING' | 'RESOLVED' | 'DISMISSED'
+  createdAt: string
+}
+
+export interface GetAnswerReportsParams {
+  query?: string
+  reason?: string
+  status?: 'PENDING' | 'RESOLVED' | 'DISMISSED'
+  questionId?: number
+  page?: number
+  size?: number
+}
+
+export interface UpdateAnswerReportStatusPayload {
+  id: number
+  status: 'RESOLVED' | 'DISMISSED'
+  hideAnswer?: boolean
 }
 
 export const adminApi = {
@@ -265,5 +304,20 @@ export const adminApi = {
     http.put<any, ApiResponse<void>>(`/admin/reports/questions/${payload.id}/status`, {
       status: payload.status,
       hideQuestion: payload.hideQuestion,
+    }),
+
+  /**
+   * Xem danh sách báo cáo câu trả lời vi phạm với bộ lọc động và phân trang (UC79)
+   */
+  getAnswerReports: (params: GetAnswerReportsParams) =>
+    http.get<any, ApiResponse<PageResponse<AdminAnswerReportDto>>>('/admin/reports/answers', { params }),
+
+  /**
+   * Cập nhật trạng thái xử lý báo cáo câu trả lời và ẩn/mở ẩn câu trả lời gốc (UC79)
+   */
+  updateAnswerReportStatus: (payload: UpdateAnswerReportStatusPayload) =>
+    http.put<any, ApiResponse<void>>(`/admin/reports/answers/${payload.id}/status`, {
+      status: payload.status,
+      hideAnswer: payload.hideAnswer,
     }),
 }

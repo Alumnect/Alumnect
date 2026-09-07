@@ -14,7 +14,7 @@ public interface AdminReportMapper {
     @Mapping(target = "id", source = "report.id")
     @Mapping(target = "postId", source = "report.post.id")
     @Mapping(target = "postContent", source = "report.post.content")
-    @Mapping(target = "postStatus", expression = "java(report.getPost().getStatus() != null ? report.getPost().getStatus().name() : null)")
+    @Mapping(target = "postStatus", expression = "java(report.getPost() != null && report.getPost().getStatus() != null ? report.getPost().getStatus().name() : null)")
     @Mapping(target = "postAuthorId", source = "report.post.author.id")
     @Mapping(target = "postAuthorName", source = "report.post.author.profile.fullName")
     @Mapping(target = "postAuthorEmail", source = "report.post.author.email")

@@ -12,7 +12,7 @@ import { ADMIN_SECTIONS } from './adminSectionsData'
 import { useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
 import type { AdminVerificationRequestDto } from '../api/adminApi'
 import { AdminReportsQueue } from './AdminReportsQueue'
-import { AdminViolatingQuestionsQueue } from './AdminViolatingQuestionsQueue'
+import { AdminForumModerationPage } from './AdminForumModerationPage'
 
 const REJECT_REASON_TEMPLATES = [
   'Ảnh minh chứng mờ, không nhìn rõ thông tin.',
@@ -30,7 +30,11 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
   }
 
   if (sectionKey === 'moderation') {
-    return <AdminViolatingQuestionsQueue />
+    return <AdminForumModerationPage />
+  }
+
+  if (sectionKey === 'violating-answers') {
+    return <AdminForumModerationPage defaultTab="answers" />
   }
 
   const isVerifications = sectionKey === 'verifications'

@@ -85,6 +85,7 @@ function App() {
             <Route path="broadcast" element={<AdminSectionPage sectionKey="broadcast" />} />
             <Route path="moderation" element={<AdminSectionPage sectionKey="moderation" />} />
             <Route path="violating-questions" element={<AdminSectionPage sectionKey="moderation" />} />
+            <Route path="violating-answers" element={<AdminSectionPage sectionKey="violating-answers" />} />
           </Route>
 
           {/* 404 */}

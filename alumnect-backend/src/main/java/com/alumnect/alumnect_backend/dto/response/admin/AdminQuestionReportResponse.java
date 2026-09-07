@@ -34,6 +34,12 @@ public class AdminQuestionReportResponse {
     /** Trạng thái hiện tại của câu hỏi (ACTIVE, HIDDEN, DELETED) */
     private QuestionStatus questionStatus;
 
+    /** Số lượng câu trả lời của câu hỏi */
+    private int answerCount;
+
+    /** Số lượt bình chọn / upvote của câu hỏi */
+    private int voteCount;
+
     /** ID chủ đề của câu hỏi (nếu có) */
     private Long topicId;
 

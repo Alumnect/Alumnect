@@ -56,4 +56,12 @@ export const ADMIN_SECTIONS: Record<string, Section> = {
     rows: [],
     primaryAction: 'Quản lý chủ đề',
   },
+  'violating-answers': {
+    title: 'Báo cáo câu trả lời vi phạm',
+    subtitle: 'Quản lý và xử lý các báo cáo vi phạm câu trả lời trên diễn đàn Q&A từ cộng đồng AlumNect.',
+    icon: ShieldCheck,
+    stats: [],
+    rows: [],
+    primaryAction: 'Hàng đợi báo cáo câu trả lời',
+  },
 }

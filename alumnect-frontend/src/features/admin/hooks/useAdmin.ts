@@ -1,5 +1,17 @@
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminApi } from '../api/adminApi'
+import { Client } from '@stomp/stompjs'
+import { useAuthStore } from '@/store/authStore'
+import { toast } from '@/components/ui'
+import {
+  adminApi,
+  type GetQuestionReportsParams,
+  type UpdateQuestionReportStatusPayload,
+  type GetAnswerReportsParams,
+  type UpdateAnswerReportStatusPayload,
+  type AdminQuestionReportDto,
+  type AdminAnswerReportDto,
+} from '../api/adminApi'
 
 /**
  * Hook lấy dữ liệu dashboard KPIs và thống kê đăng ký
@@ -205,4 +217,190 @@ export function useUpdateReportStatus() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
     },
   })
+}
+
+/**
+ * Hook lấy danh sách báo cáo câu hỏi vi phạm cho Admin với React Query (UC78).
+ */
+export function useAdminQuestionReports(params: GetQuestionReportsParams) {
+  return useQuery({
+    queryKey: ['admin-question-reports', params],
+    queryFn: async () => {
+      const res = await adminApi.getQuestionReports(params)
+      return res.data
+    },
+    placeholderData: (previousData) => previousData,
+  })
+}
+
+/**
+ * Hook cập nhật trạng thái xử lý báo cáo câu hỏi vi phạm (RESOLVED / DISMISSED) (UC78).
+ */
+export function useUpdateQuestionReportStatus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: UpdateQuestionReportStatusPayload) => adminApi.updateQuestionReportStatus(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-question-reports'] })
+      toast.success('Đã cập nhật trạng thái xử lý báo cáo câu hỏi thành công!')
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Lỗi khi cập nhật trạng thái báo cáo câu hỏi')
+    },
+  })
+}
+
+/**
+ * Hook lấy danh sách báo cáo câu trả lời vi phạm cho Admin với React Query (UC79).
+ */
+export function useAdminAnswerReports(params: GetAnswerReportsParams) {
+  return useQuery({
+    queryKey: ['admin-answer-reports', params],
+    queryFn: async () => {
+      const res = await adminApi.getAnswerReports(params)
+      return res.data
+    },
+    placeholderData: (previousData) => previousData,
+  })
+}
+
+/**
+ * Hook cập nhật trạng thái xử lý báo cáo câu trả lời vi phạm (RESOLVED / DISMISSED) (UC79).
+ */
+export function useUpdateAnswerReportStatus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: UpdateAnswerReportStatusPayload) => adminApi.updateAnswerReportStatus(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-answer-reports'] })
+      toast.success('Đã cập nhật trạng thái xử lý báo cáo câu trả lời thành công!')
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Lỗi khi cập nhật trạng thái báo cáo câu trả lời')
+    },
+  })
+}
+
+/**
+ * Custom hook lắng nghe sự kiện phát sóng báo cáo câu hỏi vi phạm real-time qua WebSocket STOMP (UC78).
+ */
+export function useWebSocketViolatingQuestions() {
+  const queryClient = useQueryClient()
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const clientRef = useRef<Client | null>(null)
+  const [isConnected, setIsConnected] = useState(false)
+
+  useEffect(() => {
+    if (!accessToken) return
+
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+    const wsUrl = apiBase.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '') + '/ws'
+
+    const client = new Client({
+      brokerURL: wsUrl,
+      connectHeaders: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+      onConnect: () => {
+        setIsConnected(true)
+        client.subscribe('/topic/admin/reports/questions', (stompMessage) => {
+          try {
+            const newReport: AdminQuestionReportDto = JSON.parse(stompMessage.body)
+            toast.info(`⚠️ Nhận báo cáo câu hỏi vi phạm mới: "${newReport.questionTitle?.slice(0, 30)}..."`)
+            queryClient.invalidateQueries({ queryKey: ['admin-question-reports'] })
+          } catch (e) {
+            console.error('Lỗi phân giải tin nhắn WebSocket báo cáo câu hỏi:', e)
+          }
+        })
+      },
+      onDisconnect: () => {
+        setIsConnected(false)
+      },
+      beforeConnect: () => {
+        const latestToken = useAuthStore.getState().accessToken
+        if (latestToken) {
+          client.connectHeaders = {
+            Authorization: `Bearer ${latestToken}`,
+          }
+        }
+      },
+    })
+
+    client.activate()
+    clientRef.current = client
+
+    return () => {
+      client.deactivate()
+      clientRef.current = null
+      setIsConnected(false)
+    }
+  }, [accessToken, queryClient])
+
+  return { isConnected }
+}
+
+/**
+ * Custom hook lắng nghe sự kiện phát sóng báo cáo câu trả lời vi phạm real-time qua WebSocket STOMP (UC79).
+ */
+export function useWebSocketViolatingAnswers() {
+  const queryClient = useQueryClient()
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const clientRef = useRef<Client | null>(null)
+  const [isConnected, setIsConnected] = useState(false)
+
+  useEffect(() => {
+    if (!accessToken) return
+
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+    const wsUrl = apiBase.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '') + '/ws'
+
+    const client = new Client({
+      brokerURL: wsUrl,
+      connectHeaders: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+      onConnect: () => {
+        setIsConnected(true)
+        client.subscribe('/topic/admin/reports/answers', (stompMessage) => {
+          try {
+            const newReport: AdminAnswerReportDto = JSON.parse(stompMessage.body)
+            toast.info(`⚠️ Nhận báo cáo câu trả lời vi phạm mới từ ${newReport.reporterName || 'Người dùng'}`)
+            queryClient.invalidateQueries({ queryKey: ['admin-answer-reports'] })
+          } catch (e) {
+            console.error('Lỗi phân giải tin nhắn WebSocket báo cáo câu trả lời:', e)
+          }
+        })
+      },
+      onDisconnect: () => {
+        setIsConnected(false)
+      },
+      beforeConnect: () => {
+        const latestToken = useAuthStore.getState().accessToken
+        if (latestToken) {
+          client.connectHeaders = {
+            Authorization: `Bearer ${latestToken}`,
+          }
+        }
+      },
+    })
+
+    client.activate()
+    clientRef.current = client
+
+    return () => {
+      client.deactivate()
+      clientRef.current = null
+      setIsConnected(false)
+    }
+  }, [accessToken, queryClient])
+
+  return { isConnected }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Inbox, Eye, EyeOff, X,
-  Flag, ArrowRight, ShieldAlert, Check, Ban,
+  Flag, ShieldAlert, Check, Ban,
   Filter, Sparkles, CheckCircle2, ChevronRight,
   Trash2, Info, UserX, HelpCircle, Radio, MessageSquare
 } from 'lucide-react'
@@ -11,11 +11,11 @@ import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import {
-  useAdminQuestionReports,
-  useUpdateQuestionReportStatus,
-  useWebSocketViolatingQuestions,
+  useAdminAnswerReports,
+  useUpdateAnswerReportStatus,
+  useWebSocketViolatingAnswers,
 } from '../hooks/useAdmin'
-import type { AdminQuestionReportDto } from '../api/adminApi'
+import type { AdminAnswerReportDto } from '../api/adminApi'
 
 /** Nhãn hiển thị cho các lý do báo cáo vi phạm */
 const REASON_LABELS: Record<string, { label: string; tone: 'brand' | 'gold' | 'success' | 'danger' | 'neutral' }> = {
@@ -180,20 +180,20 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
 }
 
 /**
- * Component giao diện kiểm duyệt danh sách câu hỏi vi phạm dành cho Admin (UC78).
- * Tích hợp STOMP WebSocket đẩy dữ liệu real-time khi người dùng gửi báo cáo câu hỏi mới.
+ * Component giao diện kiểm duyệt danh sách câu trả lời vi phạm dành cho Admin (UC79).
+ * Tích hợp STOMP WebSocket đẩy dữ liệu real-time khi người dùng gửi báo cáo câu trả lời mới.
  */
-export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeader?: boolean } = {}) {
+export function AdminViolatingAnswersQueue({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | 'DISMISSED'>('PENDING')
   const [reasonFilter, setReasonFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [page, setPage] = useState(0)
 
-  // Kích hoạt kết nối WebSocket STOMP real-time cho danh sách câu hỏi vi phạm
-  useWebSocketViolatingQuestions()
+  // Kích hoạt kết nối WebSocket STOMP real-time cho danh sách câu trả lời vi phạm
+  useWebSocketViolatingAnswers()
 
-  // Tải dữ liệu báo cáo câu hỏi từ backend
-  const { data: reportsData, isLoading, error } = useAdminQuestionReports({
+  // Tải dữ liệu báo cáo câu trả lời từ backend
+  const { data: reportsData, isLoading, error } = useAdminAnswerReports({
     status: statusFilter,
     reason: reasonFilter === 'ALL' ? undefined : reasonFilter,
     query: searchQuery || undefined,
@@ -201,12 +201,12 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
     size: 10,
   })
 
-  const updateStatusMutation = useUpdateQuestionReportStatus()
+  const updateStatusMutation = useUpdateAnswerReportStatus()
 
   // State quản lý modal chi tiết báo cáo được chọn
-  const [selectedReport, setSelectedReport] = useState<AdminQuestionReportDto | null>(null)
+  const [selectedReport, setSelectedReport] = useState<AdminAnswerReportDto | null>(null)
 
-  // Lưu trạng thái muốn ẩn câu hỏi hay không (true = sẽ ẩn, false = không ẩn)
+  // Lưu trạng thái muốn ẩn câu trả lời hay không (true = sẽ ẩn, false = không ẩn)
   const [willHideMap, setWillHideMap] = useState<Record<number, boolean>>({})
 
   // Popup xác nhận thao tác
@@ -234,16 +234,16 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
     setConfirmAction({ type: 'DISMISS', id })
   }
 
-  /** Lấy trạng thái muốn ẩn câu hỏi hiện tại cho modal được chọn */
+  /** Lấy trạng thái muốn ẩn câu trả lời hiện tại cho modal được chọn */
   const getSelectedReportWillHide = () => {
     if (!selectedReport) return false
     if (willHideMap[selectedReport.id] !== undefined) {
       return willHideMap[selectedReport.id]
     }
-    return selectedReport.questionStatus === 'HIDDEN'
+    return selectedReport.answerStatus === 'HIDDEN'
   }
 
-  /** Chuyển đổi trạng thái đánh dấu ẩn/mở ẩn câu hỏi trong local state modal */
+  /** Chuyển đổi trạng thái đánh dấu ẩn/mở ẩn câu trả lời trong local state modal */
   const toggleSelectedReportWillHide = () => {
     if (!selectedReport) return
     const current = getSelectedReportWillHide()
@@ -257,37 +257,30 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
   const executeConfirmAction = async () => {
     if (!confirmAction || !selectedReport) return
     const { type, id } = confirmAction
+    const willHide = getSelectedReportWillHide()
 
     try {
       if (type === 'RESOLVE') {
-        const targetWillHide = getSelectedReportWillHide()
         await updateStatusMutation.mutateAsync({
           id,
-          status: 'RESOLVED',
-          hideQuestion: targetWillHide,
+          payload: { status: 'RESOLVED', hideAnswer: willHide },
         })
-        setWillHideMap((prev) => {
-          const next = { ...prev }
-          delete next[id]
-          return next
-        })
-        setSelectedReport(null)
-      } else if (type === 'DISMISS') {
+        toast.success(
+          willHide
+            ? 'Đã giải quyết báo cáo và ẩn câu trả lời vi phạm.'
+            : 'Đã giải quyết báo cáo và công khai lại câu trả lời.'
+        )
+      } else {
         await updateStatusMutation.mutateAsync({
           id,
-          status: 'DISMISSED',
-          hideQuestion: false,
+          payload: { status: 'DISMISSED', hideAnswer: false },
         })
-        setWillHideMap((prev) => {
-          const next = { ...prev }
-          delete next[id]
-          return next
-        })
-        setSelectedReport(null)
+        toast.success('Đã bỏ qua báo cáo vi phạm câu trả lời này.')
       }
+      setSelectedReport(null)
       setConfirmAction(null)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra khi thực hiện thao tác')
+    } catch (err: any) {
+      toast.error(err?.message || 'Có lỗi xảy ra khi cập nhật trạng thái báo cáo.')
       setConfirmAction(null)
     }
   }
@@ -303,8 +296,8 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
       {!hideHeader && (
         <div className="mb-4">
           <PageHeader
-            title="Kiểm duyệt câu hỏi vi phạm"
-            subtitle="Quản lý và xử lý các báo cáo vi phạm câu hỏi trên diễn đàn Q&A từ cộng đồng AlumNect."
+            title="Kiểm duyệt câu trả lời vi phạm"
+            subtitle="Quản lý và xử lý các báo cáo vi phạm câu trả lời trên diễn đàn Q&A từ cộng đồng AlumNect."
           />
         </div>
       )}
@@ -350,7 +343,7 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
 
             <input
               type="text"
-              placeholder="Tìm câu hỏi, tác giả, người báo cáo..."
+              placeholder="Tìm câu trả lời, câu hỏi, tác giả, người báo cáo..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -363,7 +356,7 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
         </div>
 
         <div className="text-xs text-plum-500 font-semibold mt-3 text-right">
-          Tổng số: <strong className="text-plum-900 font-bold">{totalElements}</strong> báo cáo câu hỏi
+          Tổng số: <strong className="text-plum-900 font-bold">{totalElements}</strong> báo cáo câu trả lời
         </div>
       </Card>
 
@@ -386,14 +379,14 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
         ) : error ? (
           <EmptyState
             icon={<Inbox size={24} />}
-            title="Lỗi tải danh sách báo cáo câu hỏi"
+            title="Lỗi tải danh sách báo cáo câu trả lời"
             description={error instanceof Error ? error.message : 'Lỗi kết nối máy chủ.'}
           />
         ) : reports.length === 0 ? (
           <EmptyState
             icon={<Inbox size={24} />}
-            title="Không có báo cáo câu hỏi nào"
-            description={`Không tìm thấy báo cáo câu hỏi nào ở trạng thái ${statusFilter === 'PENDING' ? 'chờ xử lý' : statusFilter === 'RESOLVED' ? 'đã giải quyết' : 'đã bỏ qua'
+            title="Không có báo cáo câu trả lời nào"
+            description={`Không tìm thấy báo cáo câu trả lời nào ở trạng thái ${statusFilter === 'PENDING' ? 'chờ xử lý' : statusFilter === 'RESOLVED' ? 'đã giải quyết' : 'đã bỏ qua'
               }.`}
           />
         ) : (
@@ -404,8 +397,8 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
                   <tr className="border-b border-plum-900/8 text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
                     <th className="px-5 py-3.5 font-bold">Người gửi báo cáo</th>
                     <th className="px-5 py-3.5 font-bold">Lý do</th>
-                    <th className="px-5 py-3.5 font-bold">Tác giả & Tiêu đề câu hỏi</th>
-                    <th className="px-5 py-3.5 font-bold text-center">Trạng thái câu hỏi</th>
+                    <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung câu trả lời</th>
+                    <th className="px-5 py-3.5 font-bold text-center">Trạng thái câu trả lời</th>
                     <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
                   </tr>
                 </thead>
@@ -415,7 +408,7 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
                     const localWillHide = willHideMap[r.id]
                     const currentStatus = localWillHide !== undefined
                       ? (localWillHide ? 'HIDDEN' : 'ACTIVE')
-                      : r.questionStatus
+                      : r.answerStatus
 
                     return (
                       <tr key={r.id} className="transition-colors hover:bg-plum-900/[0.015]">
@@ -447,33 +440,24 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
                           </div>
                         </td>
 
-                        {/* Tác giả & Tiêu đề câu hỏi */}
+                        {/* Tác giả & Nội dung câu trả lời */}
                         <td className="px-5 py-4">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-plum-400 font-medium">Bởi:</span>
-                              <span className="text-xs font-bold text-plum-900 truncate">{r.questionAuthorName}</span>
-                              {r.topicName && (
-                                <span className="text-[10px] bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-bold">
-                                  {r.topicName}
-                                </span>
-                              )}
+                              <span className="text-xs font-bold text-plum-900 truncate">{r.answerAuthorName}</span>
                             </div>
-                            <p className="text-xs font-bold text-plum-900 truncate mt-1 max-w-[280px]">
-                              {r.questionTitle}
-                            </p>
-                            <p className="text-[11px] text-plum-600 truncate mt-0.5 max-w-[280px] font-medium bg-brand-50/50 p-1 rounded-md border border-brand-100/40">
-                              {r.questionBody}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">
-                                <MessageSquare size={10} /> {r.answerCount ?? 0} câu trả lời
-                              </span>
+                            <div className="flex items-center gap-1 mt-1 text-[11px] font-bold text-brand-600 truncate max-w-[280px]">
+                              <MessageSquare size={11} className="shrink-0" />
+                              <span className="truncate">{r.questionTitle}</span>
                             </div>
+                            <p className="text-xs font-medium text-plum-800 truncate mt-1 max-w-[280px] bg-brand-50/50 p-1.5 rounded-md border border-brand-100/40">
+                              {r.answerContent}
+                            </p>
                           </div>
                         </td>
 
-                        {/* Trạng thái câu hỏi */}
+                        {/* Trạng thái câu trả lời */}
                         <td className="px-5 py-4 text-center">
                           {currentStatus === 'HIDDEN' ? (
                             <Badge tone="danger">Đã ẩn{localWillHide !== undefined && ' *'}</Badge>
@@ -530,7 +514,7 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
         )}
       </Reveal>
 
-      {/* Modal chi tiết báo cáo câu hỏi vi phạm */}
+      {/* Modal chi tiết báo cáo câu trả lời vi phạm */}
       {selectedReport && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
@@ -550,7 +534,7 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
                   <Flag size={20} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white leading-none">Chi tiết báo cáo câu hỏi vi phạm</h3>
+                  <h3 className="text-lg font-bold text-white leading-none">Chi tiết báo cáo câu trả lời vi phạm</h3>
                   <p className="text-xs text-brand-50 mt-1 font-medium">Báo cáo #{selectedReport.id}</p>
                 </div>
               </div>
@@ -606,41 +590,57 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
                 )}
               </div>
 
-              {/* Thông tin câu hỏi bị báo cáo */}
+              {/* Thông tin câu hỏi gốc liên quan */}
+              <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-2.5">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600 flex items-center gap-1.5">
+                    <MessageSquare size={13} /> Câu hỏi liên quan
+                  </h4>
+                  {selectedReport.questionAuthorName && (
+                    <span className="text-[11px] text-plum-500 font-semibold">
+                      Người hỏi: <strong className="text-plum-900 font-bold">{selectedReport.questionAuthorName}</strong>
+                    </span>
+                  )}
+                </div>
+
+                <div className="bg-white p-3.5 rounded-xl border border-brand-100 space-y-1.5">
+                  <h5 className="text-xs font-extrabold text-plum-950 flex items-start gap-1.5">
+                    <span className="text-brand-500 font-black shrink-0">Hỏi:</span>
+                    <span>{selectedReport.questionTitle}</span>
+                  </h5>
+                  {selectedReport.questionBody && (
+                    <p className="text-xs text-plum-700 font-medium whitespace-pre-wrap leading-relaxed border-t border-plum-100/70 pt-2">
+                      {selectedReport.questionBody}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Thông tin câu trả lời bị báo cáo */}
               <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-3">
                 <div className="flex justify-between items-center">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">
-                    Câu hỏi bị báo cáo (Tác giả: {selectedReport.questionAuthorName})
+                    Câu trả lời bị báo cáo (Tác giả: {selectedReport.answerAuthorName})
                   </h4>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-brand-700 bg-brand-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      <MessageSquare size={12} /> {selectedReport.answerCount ?? 0} câu trả lời
-                    </span>
-                    {selectedReport.topicName && (
-                      <span className="text-xs font-bold text-brand-600 bg-brand-100 px-2.5 py-0.5 rounded-full">
-                        Chủ đề: {selectedReport.topicName}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
                 <div className="bg-white p-4 rounded-xl border border-brand-100 space-y-2 max-h-56 overflow-y-auto">
-                  <h5 className="text-sm font-extrabold text-plum-950">{selectedReport.questionTitle}</h5>
-                  <p className="text-xs text-plum-800 font-medium whitespace-pre-wrap leading-relaxed border-t border-plum-100 pt-2">
-                    {selectedReport.questionBody}
+                  <span className="text-xs text-plum-400 block font-medium">Nội dung câu trả lời:</span>
+                  <p className="text-xs text-plum-900 font-medium whitespace-pre-wrap leading-relaxed">
+                    {selectedReport.answerContent}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-medium border-t border-brand-100/50 pt-2">
                   <div>
-                    <span className="text-plum-400 block">Email tác giả câu hỏi</span>
-                    <span className="font-bold text-plum-900">{selectedReport.questionAuthorEmail}</span>
+                    <span className="text-plum-400 block">Email tác giả câu trả lời</span>
+                    <span className="font-bold text-plum-900">{selectedReport.answerAuthorEmail}</span>
                   </div>
                   <div>
-                    <span className="text-plum-400 block">Trạng thái câu hỏi gốc</span>
-                    {selectedReport.questionStatus === 'HIDDEN' ? (
+                    <span className="text-plum-400 block">Trạng thái câu trả lời gốc</span>
+                    {selectedReport.answerStatus === 'HIDDEN' ? (
                       <Badge tone="danger">Đang bị ẩn</Badge>
-                    ) : selectedReport.questionStatus === 'DELETED' ? (
+                    ) : selectedReport.answerStatus === 'DELETED' ? (
                       <Badge tone="neutral">Đã xóa</Badge>
                     ) : (
                       <Badge tone="success">Đang công khai</Badge>
@@ -652,8 +652,8 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
               {/* Nút thao tác xử lý báo cáo */}
               <div className="pt-4 border-t border-plum-900/8 flex flex-col sm:flex-row gap-2 justify-between items-center">
 
-                {/* Đánh dấu Ẩn / Mở ẩn câu hỏi */}
-                {selectedReport.questionStatus !== 'DELETED' && selectedReport.status === 'PENDING' && (
+                {/* Đánh dấu Ẩn / Mở ẩn câu trả lời */}
+                {selectedReport.answerStatus !== 'DELETED' && selectedReport.status === 'PENDING' && (
                   <Button
                     variant="secondary"
                     onClick={toggleSelectedReportWillHide}
@@ -665,9 +665,9 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
                     )}
                   >
                     {activeWillHide ? (
-                      <span className="inline-flex items-center gap-1"><Eye size={12} /> Hủy ẩn câu hỏi (Giữ công khai)</span>
+                      <span className="inline-flex items-center gap-1"><Eye size={12} /> Hủy ẩn câu trả lời (Giữ công khai)</span>
                     ) : (
-                      <span className="inline-flex items-center gap-1"><EyeOff size={12} /> Đánh dấu ẩn câu hỏi này</span>
+                      <span className="inline-flex items-center gap-1"><EyeOff size={12} /> Đánh dấu ẩn câu trả lời này</span>
                     )}
                   </Button>
                 )}
@@ -721,14 +721,14 @@ export function AdminViolatingQuestionsQueue({ hideHeader = false }: { hideHeade
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-plum-950">
-                  {confirmAction.type === 'RESOLVE' && 'Giải quyết báo cáo câu hỏi'}
-                  {confirmAction.type === 'DISMISS' && 'Bỏ qua báo cáo câu hỏi'}
+                  {confirmAction.type === 'RESOLVE' && 'Giải quyết báo cáo câu trả lời'}
+                  {confirmAction.type === 'DISMISS' && 'Bỏ qua báo cáo câu trả lời'}
                 </h3>
                 <p className="text-xs text-plum-500 font-semibold leading-relaxed">
                   {confirmAction.type === 'RESOLVE' && (
                     activeWillHide
-                      ? 'Bạn có chắc muốn ẩn câu hỏi vi phạm này không?'
-                      : 'Bạn có chắc muốn giữ công khai câu hỏi này không?'
+                      ? 'Bạn có chắc muốn ẩn câu trả lời vi phạm này không?'
+                      : 'Bạn có chắc muốn giữ công khai câu trả lời này không?'
                   )}
                   {confirmAction.type === 'DISMISS' && 'Bạn có chắc muốn bỏ qua báo cáo này không?'}
                 </p>

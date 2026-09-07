@@ -32,6 +32,9 @@ public class ReportSpecification {
         return (root, criteriaQuery, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            // 0. Bắt buộc phải là báo cáo bài viết (post_id IS NOT NULL)
+            predicates.add(cb.isNotNull(root.get("post")));
+
             // 1. Lọc theo trạng thái báo cáo
             if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
                 try {
