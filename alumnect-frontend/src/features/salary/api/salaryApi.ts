@@ -3,10 +3,12 @@ import { industrySchema, salaryContributionSchema, salaryStatisticsSchema } from
 import type { CreateSalaryContributionInput, Industry, SalaryContribution, SalaryStatistics } from '../model/salary'
 
 /**
- * Tầng gọi API cho Salary Board: UC50 (Contribute salary data) và UC53 (View salary statistics).
- * Gọi thật `GET /api/v1/industries` (danh mục ngành nghề), `POST /api/v1/salary-contributions`
- * (đóng góp dữ liệu lương), và `GET /api/v1/salary-contributions/statistics` (thống kê lương).
- * Interceptor `http` tự bóc envelope `response.data`.
+ * Tầng gọi API cho Salary Board: UC50 (Contribute salary data), UC51 (Edit salary contribution),
+ * UC53 (View salary statistics). Gọi thật `GET /api/v1/industries` (danh mục ngành nghề),
+ * `POST /api/v1/salary-contributions` (đóng góp), `GET /api/v1/salary-contributions/mine` (danh
+ * sách đóng góp của chính mình), `PUT /api/v1/salary-contributions/{id}` (sửa), và
+ * `GET /api/v1/salary-contributions/statistics` (thống kê). Interceptor `http` tự bóc envelope
+ * `response.data`.
  */
 
 /** Trích mảng phần tử thô từ phong bì (envelope) phản hồi — hỗ trợ `{ content }`/`{ items }`/mảng trực tiếp. */
@@ -45,6 +47,36 @@ export const salaryApi = {
    */
   createContribution: async (input: CreateSalaryContributionInput): Promise<SalaryContribution> => {
     const body = await http.post('/salary-contributions', input)
+    const b = body as unknown as Record<string, unknown> | undefined
+    const payload = (b?.data ?? b) as unknown
+    return salaryContributionSchema.parse(payload)
+  },
+
+  /**
+   * Lấy toàn bộ lượt đóng góp lương của chính người dùng đang đăng nhập (UC51 - Edit salary
+   * contribution) — để xem lại và chọn bản ghi cần sửa. Gọi `GET /api/v1/salary-contributions/mine`.
+   * @return Danh sách lượt đóng góp của chính mình, mới nhất trước
+   */
+  getMyContributions: async (): Promise<SalaryContribution[]> => {
+    const body = await http.get('/salary-contributions/mine')
+    const raw = extractRawItems(body)
+    const out: SalaryContribution[] = []
+    for (const r of raw) {
+      const res = salaryContributionSchema.safeParse(r)
+      if (res.success) out.push(res.data)
+    }
+    return out
+  },
+
+  /**
+   * Chỉnh sửa một lượt đóng góp lương đã có (UC51 - Edit salary contribution).
+   * Gọi `PUT /api/v1/salary-contributions/{id}`; chỉ chính chủ sửa được (BE chặn 403 người khác).
+   * @param id    ID lượt đóng góp cần sửa
+   * @param input Dữ liệu lương mới (cùng bộ trường với lúc tạo)
+   * @return Chi tiết lượt đóng góp sau khi sửa đã chuẩn hóa
+   */
+  updateContribution: async (id: string, input: CreateSalaryContributionInput): Promise<SalaryContribution> => {
+    const body = await http.put(`/salary-contributions/${id}`, input)
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return salaryContributionSchema.parse(payload)

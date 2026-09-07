@@ -36,6 +36,7 @@ public class SalaryMapper {
         Industry industry = contribution.getIndustry();
         return SalaryContributionResponse.builder()
                 .id(String.valueOf(contribution.getId()))
+                .industryId(industry != null ? industry.getId() : null)
                 .industry(industry != null ? industry.getName() : "")
                 .jobTitle(contribution.getJobTitle())
                 .company(contribution.getCompany() != null ? contribution.getCompany() : "")

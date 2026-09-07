@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.dao.salary.IndustryRepository;
 import com.alumnect.alumnect_backend.dao.salary.SalaryContributionRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.salary.CreateSalaryContributionRequest;
+import com.alumnect.alumnect_backend.dto.request.salary.UpdateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryContributionResponse;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryStatRowResponse;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryStatisticsResponse;
@@ -23,10 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Lớp dịch vụ thực thi logic nghiệp vụ Salary Board (UC50 - Contribute salary data).
- * Triển khai interface {@link SalaryService}.
+ * Lớp dịch vụ thực thi logic nghiệp vụ Salary Board: UC50 (Contribute salary data), UC51 (Edit
+ * salary contribution), UC53 (View salary statistics). Triển khai interface {@link SalaryService}.
  */
 @Service
 public class SalaryServiceImpl implements SalaryService {
@@ -100,6 +102,75 @@ public class SalaryServiceImpl implements SalaryService {
         }
 
         log.info("Đóng góp dữ liệu lương: id={}, industryId={}, tác giả={} (ẩn danh khi hiển thị)",
+                saved.getId(), request.getIndustryId(), email);
+
+        return salaryMapper.toResponse(saved);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404 nếu không có) → lấy toàn bộ đóng góp của chính user đó
+     * (mới nhất trước) → map từng bản ghi sang DTO.
+     */
+    @Override
+    public List<SalaryContributionResponse> getMyContributions(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        return salaryContributionRepository.findByUser_IdOrderByCreatedAtDesc(user.getId()).stream()
+                .map(salaryMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm lượt đóng góp theo id (404) → kiểm tra chính chủ
+     * (403 nếu khác) → nếu có industryId thì kiểm tra tồn tại (400 nếu không) → chuẩn hóa currency
+     * (400 nếu sai định dạng) → cập nhật các trường → lưu (JPA dirty-checking, `@PreUpdate` tự set
+     * lại `updatedAt`) → map trả về.
+     */
+    @Override
+    @Transactional
+    public SalaryContributionResponse updateContribution(String email, Long contributionId, UpdateSalaryContributionRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        SalaryContribution contribution = salaryContributionRepository.findById(contributionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lượt đóng góp với id: " + contributionId));
+
+        // Ownership (UC51): chỉ chính chủ mới được sửa lượt đóng góp của mình; người khác nhận 403.
+        if (!contribution.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ chính chủ mới được chỉnh sửa lượt đóng góp này");
+        }
+
+        // Ngành nghề tùy chọn: nếu có industryId thì phải tồn tại, ngược lại để null (bỏ chọn ngành).
+        Industry industry = null;
+        if (request.getIndustryId() != null) {
+            industry = industryRepository.findById(request.getIndustryId())
+                    .orElseThrow(() -> new BadRequestException("Ngành nghề không tồn tại"));
+        }
+
+        String currency = normalizeCurrency(request.getCurrency());
+
+        contribution.setIndustry(industry);
+        contribution.setJobTitle(request.getJobTitle().trim());
+        contribution.setCompany(sanitizeOptional(request.getCompany()));
+        contribution.setRegion(sanitizeOptional(request.getRegion()));
+        contribution.setYearsExperience(request.getYearsExperience());
+        contribution.setGrossAmount(request.getGrossAmount());
+        contribution.setCurrency(currency);
+
+        SalaryContribution saved;
+        try {
+            saved = salaryContributionRepository.save(contribution);
+        } catch (Exception ex) {
+            log.error("Lỗi khi cập nhật đóng góp lương id={} của user {}: ", contributionId, email, ex);
+            throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật dữ liệu lương");
+        }
+
+        log.info("Chỉnh sửa dữ liệu lương: id={}, industryId={}, tác giả={} (ẩn danh khi hiển thị)",
                 saved.getId(), request.getIndustryId(), email);
 
         return salaryMapper.toResponse(saved);

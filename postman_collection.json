@@ -1358,6 +1358,149 @@
                         },
                         "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller. Đúng theo Actors của UC53 (chỉ Student/Alumni, không có Guest)."
                     }
+                },
+                {
+                    "name": "5.14 Lấy danh sách đóng góp lương của tôi (UC51 - Thành công)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/mine",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "mine"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 — danh sách lượt đóng góp lương của chính {{accessToken}}, mới nhất trước. Mỗi phần tử có `id` + `industryId` (dùng để điền sẵn dropdown khi sửa) — vẫn KHÔNG có trường định danh người dùng."
+                    }
+                },
+                {
+                    "name": "5.15 Sửa đóng góp lương (UC51 - Thành công, đúng chính chủ)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"industryId\": 1,\n  \"jobTitle\": \"Senior Backend Developer\",\n  \"company\": \"FPT Software\",\n  \"region\": \"TP.HCM\",\n  \"yearsExperience\": 4,\n  \"grossAmount\": 28000000,\n  \"currency\": \"VND\"\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Cập nhật dữ liệu lương thành công\". Thay `1` trong URL bằng id lượt đóng góp thật do {{accessToken}} là chính chủ (lấy từ mục 5.14)."
+                    }
+                },
+                {
+                    "name": "5.16 Sửa đóng góp lương (UC51 - Không phải chính chủ, lỗi 403)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "2"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 20000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 403 \"Chỉ chính chủ mới được chỉnh sửa lượt đóng góp này\". Thay `2` bằng id lượt đóng góp KHÔNG thuộc về {{accessToken}}."
+                    }
+                },
+                {
+                    "name": "5.17 Sửa đóng góp lương không tồn tại (UC51 - Lỗi 404)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/999999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "999999"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 20000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy lượt đóng góp với id: 999999\"."
+                    }
+                },
+                {
+                    "name": "5.18 Sửa đóng góp lương (UC51 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 20000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
+                    }
                 }
             ]
         },

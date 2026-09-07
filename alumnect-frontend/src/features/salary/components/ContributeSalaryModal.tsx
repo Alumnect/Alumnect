@@ -1,9 +1,13 @@
 /**
- * ContributeSalaryModal — Modal đóng góp dữ liệu lương ẩn danh (UC50 - Contribute salary data).
+ * ContributeSalaryModal — Modal đóng góp dữ liệu lương ẩn danh (UC50 - Contribute salary data) HOẶC
+ * chỉnh sửa lượt đóng góp đã có (UC51 - Edit salary contribution).
  *
  * Trách nhiệm:
  *  - Form nhập chức danh + mức lương (bắt buộc), ngành nghề/công ty/khu vực/kinh nghiệm (tùy chọn).
- *  - Validate bằng Zod (khớp Backend), gửi lên `POST /salary-contributions`.
+ *  - Validate bằng Zod (khớp Backend), gửi lên `POST /salary-contributions` (tạo) hoặc
+ *    `PUT /salary-contributions/{id}` (sửa, truyền `editContribution`).
+ *  - Chế độ SỬA: điền sẵn dữ liệu từ `editContribution` — chỉ mở được từ `MyContributionsModal`
+ *    (đã đảm bảo chính chủ), Backend vẫn kiểm tra lại quyền sở hữu.
  *  - Nhấn mạnh cam kết ẩn danh — không hiển thị/thu thập tên, chỉ dùng để tổng hợp thống kê.
  */
 import { useForm } from 'react-hook-form'
@@ -12,17 +16,29 @@ import { AlertTriangle, Loader2, ShieldCheck, LayoutGrid } from 'lucide-react'
 import { Modal, Badge } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { createSalaryContributionSchema, MAX_GROSS_AMOUNT } from '../model/salary'
-import type { CreateSalaryContributionInput } from '../model/salary'
-import { useCreateSalaryContribution, useIndustries } from '../hooks/useSalary'
+import type { CreateSalaryContributionInput, SalaryContribution } from '../model/salary'
+import { useCreateSalaryContribution, useUpdateSalaryContribution, useIndustries } from '../hooks/useSalary'
 import { EntitySelectField } from '@/features/forum/components/EntitySelectField'
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
 const FIELD_CLASS =
   'w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30'
 
-export function ContributeSalaryModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+export function ContributeSalaryModal({
+  onClose,
+  onSuccess,
+  editContribution,
+}: {
+  onClose: () => void
+  onSuccess: () => void
+  /** Truyền vào để mở modal ở chế độ SỬA (UC51), điền sẵn dữ liệu; bỏ trống = chế độ TẠO mới (UC50). */
+  editContribution?: SalaryContribution
+}) {
+  const isEdit = !!editContribution
   const { data: industries } = useIndustries()
-  const { mutate, isPending, error } = useCreateSalaryContribution()
+  const createMut = useCreateSalaryContribution()
+  const updateMut = useUpdateSalaryContribution(editContribution?.id ?? '')
+  const { mutate, isPending, error } = isEdit ? updateMut : createMut
 
   const {
     register,
@@ -33,12 +49,12 @@ export function ContributeSalaryModal({ onClose, onSuccess }: { onClose: () => v
   } = useForm<CreateSalaryContributionInput>({
     resolver: zodResolver(createSalaryContributionSchema),
     defaultValues: {
-      industryId: null,
-      jobTitle: '',
-      company: '',
-      region: '',
-      yearsExperience: null,
-      grossAmount: undefined,
+      industryId: editContribution?.industryId ?? null,
+      jobTitle: editContribution?.jobTitle ?? '',
+      company: editContribution?.company ?? '',
+      region: editContribution?.region ?? '',
+      yearsExperience: editContribution?.yearsExperience ?? null,
+      grossAmount: editContribution?.grossAmount ?? undefined,
     },
   })
 
@@ -69,13 +85,19 @@ export function ContributeSalaryModal({ onClose, onSuccess }: { onClose: () => v
         disabled={isPending}
         leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
       >
-        {isPending ? 'Đang gửi…' : 'Gửi đóng góp'}
+        {isEdit ? (isPending ? 'Đang lưu…' : 'Lưu thay đổi') : isPending ? 'Đang gửi…' : 'Gửi đóng góp'}
       </Button>
     </div>
   )
 
   return (
-    <Modal isOpen onClose={isPending ? () => {} : onClose} title="Đóng góp dữ liệu lương" icon={<ShieldCheck size={18} className="text-brand-600" />} footer={footer}>
+    <Modal
+      isOpen
+      onClose={isPending ? () => {} : onClose}
+      title={isEdit ? 'Chỉnh sửa dữ liệu lương' : 'Đóng góp dữ liệu lương'}
+      icon={<ShieldCheck size={18} className="text-brand-600" />}
+      footer={footer}
+    >
       <div className="mb-4 flex items-start gap-2">
         <Badge tone="success" icon={<ShieldCheck size={13} />}>
           Ẩn danh 100%

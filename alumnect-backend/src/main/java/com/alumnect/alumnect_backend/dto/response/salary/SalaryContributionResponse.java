@@ -8,10 +8,11 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 /**
- * DTO chứa thông tin một lượt đóng góp lương trả về cho Client sau khi gửi thành công
- * (UC50 - Contribute salary data). Cố tình KHÔNG có trường nào định danh người đóng góp
- * (không {@code userId}/{@code author}) — Salary Board cam kết ẩn danh tuyệt đối, chỉ hiển thị
- * số liệu tổng hợp (thuộc UC53 - View salary statistics, ngoài phạm vi UC50).
+ * DTO chứa thông tin một lượt đóng góp lương — trả về cho Client sau khi tạo (UC50), khi xem danh
+ * sách đóng góp của chính mình (UC51 - Edit salary contribution), và sau khi chỉnh sửa. Cố tình
+ * KHÔNG có trường nào định danh người đóng góp (không {@code userId}/{@code author}) — Salary Board
+ * cam kết ẩn danh tuyệt đối với người khác (chỉ hiển thị số liệu tổng hợp — UC53). {@code industryId}
+ * KHÔNG phải thông tin định danh cá nhân nên được trả kèm để Frontend điền sẵn dropdown khi sửa.
  */
 @Data
 @Builder
@@ -21,6 +22,9 @@ public class SalaryContributionResponse {
 
     /** ID lượt đóng góp (dạng chuỗi để Frontend không mất độ chính xác số lớn) */
     private String id;
+
+    /** ID ngành nghề (null nếu chưa chọn) — dùng để điền sẵn dropdown khi chỉnh sửa (UC51) */
+    private Long industryId;
 
     /** Tên ngành nghề (chuỗi rỗng nếu chưa chọn) */
     private String industry;

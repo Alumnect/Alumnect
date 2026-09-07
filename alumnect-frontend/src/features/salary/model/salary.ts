@@ -1,9 +1,10 @@
 import { z } from 'zod'
 
 /**
- * Model & schema cho tính năng Salary Board: UC50 (Contribute salary data) và UC53 (View salary
- * statistics). Định nghĩa kiểu dữ liệu ngành nghề, lượt đóng góp lương, thống kê lương, và schema
- * Zod dùng để xác thực/chuẩn hóa dữ liệu trả về từ API cũng như dữ liệu form gửi lên.
+ * Model & schema cho tính năng Salary Board: UC50 (Contribute salary data), UC51 (Edit salary
+ * contribution), UC53 (View salary statistics). Định nghĩa kiểu dữ liệu ngành nghề, lượt đóng góp
+ * lương, thống kê lương, và schema Zod dùng để xác thực/chuẩn hóa dữ liệu trả về từ API cũng như
+ * dữ liệu form gửi lên.
  */
 
 /** Schema Zod cho một ngành nghề (dùng cho dropdown chọn ngành). */
@@ -14,11 +15,14 @@ export const industrySchema = z.object({
 export type Industry = z.infer<typeof industrySchema>
 
 /**
- * Schema Zod cho phản hồi sau khi đóng góp lương thành công. KHÔNG có trường định danh người
- * đóng góp (Salary Board ẩn danh) — khớp `SalaryContributionResponse` phía Backend.
+ * Schema Zod cho một lượt đóng góp lương — trả về sau khi tạo (UC50), khi xem danh sách đóng góp
+ * của chính mình (UC51 - Edit salary contribution), và sau khi sửa. KHÔNG có trường định danh
+ * người đóng góp (Salary Board ẩn danh với người khác) — khớp `SalaryContributionResponse` phía
+ * Backend. `industryId` dùng để điền sẵn dropdown khi mở form sửa.
  */
 export const salaryContributionSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
+  industryId: z.union([z.string(), z.number()]).transform(Number).nullable().catch(null),
   industry: z.string().default(''),
   jobTitle: z.string().default(''),
   company: z.string().default(''),
@@ -34,9 +38,11 @@ export type SalaryContribution = z.infer<typeof salaryContributionSchema>
 export const MAX_GROSS_AMOUNT = 9_999_999_999.99
 
 /**
- * Schema Zod cho form đóng góp dữ liệu lương (UC50). Thông điệp lỗi khớp với validation phía
- * Backend (CreateSalaryContributionRequest). Không có trường `currency` — form luôn gửi VND
- * (Backend tự mặc định VND khi bỏ trống), giữ form gọn cho MVP.
+ * Schema Zod dùng chung cho form đóng góp (UC50) VÀ form sửa (UC51 - Edit salary contribution) dữ
+ * liệu lương — cùng bộ trường, chỉ khác API gọi lúc submit (mirror pattern `createQuestionSchema`
+ * dùng chung cho cả tạo/sửa câu hỏi). Thông điệp lỗi khớp validation phía Backend (Create/Update
+ * SalaryContributionRequest). Không có trường `currency` — form luôn gửi VND (Backend tự mặc định
+ * VND khi bỏ trống), giữ form gọn cho MVP.
  */
 export const createSalaryContributionSchema = z.object({
   industryId: z.number().nullable(),

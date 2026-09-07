@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { salaryApi } from '../api/salaryApi'
 import type { CreateSalaryContributionInput } from '../model/salary'
 
@@ -16,14 +16,50 @@ export function useIndustries() {
 }
 
 /**
- * Hook đóng góp một mẫu lương ẩn danh (UC50 - Contribute salary data). Bọc `useMutation`;
- * không cần invalidate cache danh sách/thống kê vì UC50 không hiển thị lại dữ liệu đã đóng góp
- * (Salary Board chỉ hiển thị số liệu tổng hợp — thuộc UC53, ngoài phạm vi UC50).
+ * Hook đóng góp một mẫu lương ẩn danh (UC50 - Contribute salary data). Thành công thì làm mới cache
+ * thống kê (['salary-statistics'], UC53) và danh sách đóng góp của chính mình (['my-salary-contributions'],
+ * UC51) — Salary Board không còn chỉ ghi mà đã có nơi đọc lại dữ liệu này.
  * @return Đối tượng mutation (mutate, isPending, error...)
  */
 export function useCreateSalaryContribution() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateSalaryContributionInput) => salaryApi.createContribution(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['salary-statistics'] })
+      queryClient.invalidateQueries({ queryKey: ['my-salary-contributions'] })
+    },
+  })
+}
+
+/**
+ * Hook lấy toàn bộ lượt đóng góp lương của chính người dùng đang đăng nhập (UC51 - Edit salary
+ * contribution) — để họ xem lại và chọn bản ghi cần sửa. Cache ngắn (30 giây) vì cần phản ánh
+ * nhanh sau khi tự sửa/đóng góp thêm.
+ * @return Đối tượng query chứa danh sách đóng góp của chính mình, mới nhất trước
+ */
+export function useMyContributions() {
+  return useQuery({
+    queryKey: ['my-salary-contributions'],
+    queryFn: () => salaryApi.getMyContributions(),
+    staleTime: 30 * 1000,
+  })
+}
+
+/**
+ * Hook chỉnh sửa một lượt đóng góp lương đã có (UC51 - Edit salary contribution). Thành công thì
+ * làm mới cache thống kê (UC53) và danh sách đóng góp của chính mình.
+ * @param id ID lượt đóng góp cần sửa
+ * @return Đối tượng mutation (mutate, isPending, error...)
+ */
+export function useUpdateSalaryContribution(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateSalaryContributionInput) => salaryApi.updateContribution(id, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['salary-statistics'] })
+      queryClient.invalidateQueries({ queryKey: ['my-salary-contributions'] })
+    },
   })
 }
 
