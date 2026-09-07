@@ -90,6 +90,9 @@ public class AuthServiceImpl implements AuthService {
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
+    private com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+
+    @Autowired
     private AuthMapper authMapper;
 
     @Autowired
@@ -355,6 +358,9 @@ public class AuthServiceImpl implements AuthService {
 
         try {
             userRepository.save(user);
+            if (user.getAccountStatus() == AccountStatus.ACTIVE) {
+                notificationService.sendWelcomeNotification(user);
+            }
         } catch (Exception e) {
             log.error("Lỗi khi cập nhật trạng thái kích hoạt tài khoản: ", e);
             throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật trạng thái kích hoạt tài khoản");

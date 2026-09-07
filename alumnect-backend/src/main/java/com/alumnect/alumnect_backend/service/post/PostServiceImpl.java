@@ -80,6 +80,9 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private PostSaveRepository postSaveRepository;
 
+    @Autowired
+    private com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+
     @Override
     @Transactional
     public PostResponse createPost(String email, CreatePostRequest request) {
@@ -296,6 +299,7 @@ public class PostServiceImpl implements PostService {
         postRepository.save(post);
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        notificationService.sendCommentNotification(author, comment, post);
         return commentMapper.toResponse(comment, profile);
     }
 
@@ -390,6 +394,7 @@ public class PostServiceImpl implements PostService {
             postLikeRepository.save(PostLike.builder().post(post).user(user).build());
             post.setLikeCount(post.getLikeCount() + 1);
             postRepository.save(post);
+            notificationService.sendLikeNotification(user, post);
         }
         return LikeResponse.builder().liked(true).likeCount(post.getLikeCount()).build();
     }
@@ -403,6 +408,7 @@ public class PostServiceImpl implements PostService {
             postLikeRepository.deleteByPostIdAndUserId(postId, user.getId());
             post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
             postRepository.save(post);
+            notificationService.handleUnlikeNotification(user, post);
         }
         return LikeResponse.builder().liked(false).likeCount(post.getLikeCount()).build();
     }

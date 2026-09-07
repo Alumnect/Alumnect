@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
 import { useLogout } from '@/features/auth'
 import { useWebSocketChat } from '@/features/message'
+import { useWebSocketNotifications, useUnreadNotificationCount } from '@/features/notification'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -96,8 +97,12 @@ export function AppShell() {
   const keyword = useSearchStore((s) => s.keyword)
   const setKeyword = useSearchStore((s) => s.setKeyword)
 
-  // Duy trì kết nối WebSocket thời gian thực toàn cục để nhận tin nhắn
+  // Duy trì kết nối WebSocket thời gian thực toàn cục để nhận tin nhắn và thông báo
   useWebSocketChat()
+  useWebSocketNotifications()
+
+  // Số lượng thông báo chưa đọc
+  const { data: unreadNotifCount } = useUnreadNotificationCount()
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
@@ -200,7 +205,12 @@ export function AppShell() {
                   label="Tin nhắn"
                   icon={<MessagesSquare size={19} />}
                 />
-                <IconLink to="/app/notifications" label="Thông báo" icon={<Bell size={19} />} dot />
+                <IconLink
+                  to="/app/notifications"
+                  label="Thông báo"
+                  icon={<Bell size={19} />}
+                  badge={unreadNotifCount && unreadNotifCount > 0 ? unreadNotifCount : undefined}
+                />
 
                 {/* More apps (desktop) */}
                 <div className="hidden lg:block">
@@ -412,7 +422,7 @@ export function AppShell() {
               </div>
               <div className="grid grid-cols-3 gap-3" onClick={() => setSheet(false)}>
                 {(isAuthenticated 
-                  ? [...APP_MORE_NAV, { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare }, { label: 'Gói thành viên', to: '/app/subscription', icon: APP_ACCOUNT_NAV[2].icon }]
+                  ? [...APP_MORE_NAV, { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare }, { label: 'Thông báo', to: '/app/notifications', icon: Bell }, { label: 'Gói thành viên', to: '/app/subscription', icon: APP_ACCOUNT_NAV[2].icon }]
                   : APP_MORE_NAV.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')
                 ).map((item) => {
                   const Icon = item.icon

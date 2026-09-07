@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Users, ChevronLeft, ChevronRight, UserCheck } from 'lucide-react'
 import { PageHeader, Badge, EmptyState, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import {
   UserSearchFilterBar,
   UserDirectoryCard,
@@ -23,6 +24,31 @@ const INITIAL_FILTERS: FilterState = {
 }
 
 const PAGE_SIZE = 12
+
+function getPaginationItems(current: number, total: number) {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i)
+  }
+  const items: (number | 'ellipsis-start' | 'ellipsis-end')[] = []
+  if (current <= 3) {
+    for (let i = 0; i < 4; i++) items.push(i)
+    items.push('ellipsis-end')
+    items.push(total - 1)
+  } else if (current >= total - 4) {
+    items.push(0)
+    items.push('ellipsis-start')
+    for (let i = total - 4; i < total; i++) items.push(i)
+  } else {
+    items.push(0)
+    items.push('ellipsis-start')
+    items.push(current - 1)
+    items.push(current)
+    items.push(current + 1)
+    items.push('ellipsis-end')
+    items.push(total - 1)
+  }
+  return items
+}
 
 export function AlumniDirectoryPage() {
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS)
@@ -68,7 +94,7 @@ export function AlumniDirectoryPage() {
       <PageHeader
         icon={<Users size={22} className="text-brand-500" />}
         title="Danh bạ thành viên AlumNect"
-        subtitle="Khám phá, tra cứu và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University."
+        subtitle="Khám phá và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University."
         actions={
           totalElements > 0 && (
             <Badge tone="brand" className="px-3.5 py-1 text-xs">
@@ -157,42 +183,63 @@ export function AlumniDirectoryPage() {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-plum-900/10 pt-6 sm:flex-row">
-              <span className="text-xs font-medium text-plum-500">
-                Hiển thị trang <strong>{page + 1}</strong> trên tổng số <strong>{totalPages}</strong> trang ({totalElements} thành viên)
-              </span>
+            <div className="mt-10 flex items-center justify-center gap-2 border-t border-plum-900/10 pt-6">
+              <Button
+                size="sm"
+                variant="secondary"
+                leftIcon={<ChevronLeft size={15} />}
+                disabled={isFirstPage}
+                onClick={() => {
+                  setPage((prev) => Math.max(0, prev - 1))
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              >
+                Trang trước
+              </Button>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  leftIcon={<ChevronLeft size={15} />}
-                  disabled={isFirstPage}
-                  onClick={() => {
-                    setPage((prev) => Math.max(0, prev - 1))
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }}
-                >
-                  Trang trước
-                </Button>
-
-                <div className="flex items-center gap-1 px-1 text-xs font-semibold text-plum-700">
-                  {page + 1} / {totalPages}
-                </div>
-
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  rightIcon={<ChevronRight size={15} />}
-                  disabled={isLastPage}
-                  onClick={() => {
-                    setPage((prev) => prev + 1)
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }}
-                >
-                  Trang sau
-                </Button>
+              <div className="flex items-center gap-1.5 px-1">
+                {getPaginationItems(page, totalPages).map((item, idx) => {
+                  if (typeof item === 'string') {
+                    return (
+                      <span key={item + idx} className="px-1 text-xs text-plum-400">
+                        ...
+                      </span>
+                    )
+                  }
+                  const isCurrent = item === page
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => {
+                        setPage(item)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      className={cn(
+                        'grid h-8 min-w-[32px] place-items-center rounded-lg px-2 text-xs font-semibold transition-all',
+                        isCurrent
+                          ? 'bg-brand-500 text-white shadow-xs'
+                          : 'border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                      )}
+                    >
+                      {item + 1}
+                    </button>
+                  )
+                })}
               </div>
+
+              <Button
+                size="sm"
+                variant="secondary"
+                rightIcon={<ChevronRight size={15} />}
+                disabled={isLastPage}
+                onClick={() => {
+                  setPage((prev) => prev + 1)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              >
+                Trang sau
+              </Button>
             </div>
           )}
         </>

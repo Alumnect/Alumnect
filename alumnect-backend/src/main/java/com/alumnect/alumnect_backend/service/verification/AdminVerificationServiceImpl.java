@@ -43,6 +43,7 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final AdminVerificationMapper adminVerificationMapper;
+    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
 
     /**
      * Lấy danh sách các phiếu yêu cầu xác minh cựu sinh viên phân trang.
@@ -134,6 +135,7 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
             user.setAccountVerified(true);
             user.setAccountStatus(AccountStatus.ACTIVE);
             userRepository.save(user);
+            notificationService.sendWelcomeNotification(user);
         } else if (decision == VerificationStatus.REJECTED) {
             user.setAccountVerified(false);
             user.setAccountStatus(AccountStatus.LOCKED);
