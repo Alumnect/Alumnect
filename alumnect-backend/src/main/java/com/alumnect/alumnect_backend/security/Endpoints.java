@@ -32,6 +32,7 @@ public class Endpoints {
     // Endpoint công khai — GET, không cần đăng nhập
     public static final String[] PUBLIC_GET = {
         "/api/v1/majors",           // Lấy danh sách chuyên ngành (dùng lúc đăng ký)
+        "/api/v1/industries",       // Lấy danh mục ngành nghề cho dropdown Salary Board (UC50)
         "/api/v1/auth/verify-email",    // Xác nhận email qua mã OTP (click link hoặc nhập mã)
         "/api/v1/auth/verify-email/**",
         "/api/v1/files/presigned-url", // Sinh link ký sẵn để tải file

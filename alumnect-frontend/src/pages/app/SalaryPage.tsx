@@ -1,18 +1,27 @@
 import { useState } from 'react'
 import { LineChart, ShieldCheck, Plus, Filter } from 'lucide-react'
-import { PageHeader, Badge, Card, EmptyState } from '@/components/ui'
+import { PageHeader, Badge, Card, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
 import type { SalaryRow } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/authStore'
+import { ContributeSalaryModal } from '@/features/salary'
 
 const REGIONS = ['Tất cả khu vực', 'TP.HCM', 'Hà Nội', 'Đà Nẵng', 'Từ xa']
 
-// TODO(team): chưa có API Salary Board — thay SALARY bằng dữ liệu thật khi backend sẵn sàng.
+// TODO(team): chưa có API thống kê Salary Board (UC53 - View salary statistics) — thay SALARY bằng
+// dữ liệu thật khi backend sẵn sàng. UC50 (Contribute salary data) chỉ lo phần GHI dữ liệu, không
+// đọc/hiển thị lại — xem `ContributeSalaryModal`.
 const SALARY: SalaryRow[] = []
 
 export function SalaryPage() {
   const [region, setRegion] = useState('Tất cả khu vực')
+  const [contributeOpen, setContributeOpen] = useState(false)
+
+  // Quyền đóng góp (UC50): CHỈ Cựu sinh viên (ALUMNI) — khác các UC Q&A khác (Student + Alumni).
+  const user = useAuthStore((s) => s.user)
+  const canContribute = !!user && user.role === 'ALUMNI'
   // Giữ `max` tính trên TOÀN BỘ dữ liệu (không phải tập đã lọc) để thang đo
   // biểu đồ không nhảy khi đổi vùng — giúp so sánh trực quan giữa các lần lọc.
   // Fallback 1 khi chưa có dữ liệu để tránh Math.max() trả về -Infinity.
@@ -25,7 +34,13 @@ export function SalaryPage() {
         icon={<LineChart size={20} />}
         title="Bảng Lương Ẩn Danh"
         subtitle="Dữ liệu mức lương thực tế và ẩn danh từ cộng đồng cựu sinh viên FPTU."
-        actions={<Button variant="gold" size="sm" leftIcon={<Plus size={15} />}>Đóng góp dữ liệu</Button>}
+        actions={
+          canContribute ? (
+            <Button variant="gold" size="sm" leftIcon={<Plus size={15} />} onClick={() => setContributeOpen(true)}>
+              Đóng góp dữ liệu
+            </Button>
+          ) : undefined
+        }
       />
 
       <Reveal>
@@ -109,6 +124,17 @@ export function SalaryPage() {
       <p className="mt-4 text-center text-xs text-plum-400">
         Thống kê chỉ hiển thị khi đạt đủ số lượng mẫu khảo sát tối thiểu. Danh tính của bạn luôn được bảo mật tuyệt đối.
       </p>
+
+      {/* Modal đóng góp dữ liệu lương (UC50) — chỉ mở được khi canContribute (nút đã ẩn với người khác) */}
+      {contributeOpen && (
+        <ContributeSalaryModal
+          onClose={() => setContributeOpen(false)}
+          onSuccess={() => {
+            setContributeOpen(false)
+            toast.success('Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!')
+          }}
+        />
+      )}
     </div>
   )
 }
