@@ -17,14 +17,11 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Lớp dịch vụ thực thi StorageService kết nối tới Cloudflare R2 qua giao thức tương thích S3.
  * Sử dụng S3Presigner để sinh link ký sẵn (Presigned URL) cho phép tải tệp trực tiếp từ client.
  */
 @Service
-@Slf4j
 public class S3StorageServiceImpl implements StorageService {
 
     @Value("${app.r2.endpoint}")
@@ -49,17 +46,13 @@ public class S3StorageServiceImpl implements StorageService {
      */
     @PostConstruct
     public void init() {
-        try {
-            s3Presigner = S3Presigner.builder()
-                    .endpointOverride(URI.create(endpoint))
-                    .credentialsProvider(StaticCredentialsProvider.create(
-                            AwsBasicCredentials.create(accessKey, secretKey)
-                    ))
-                    .region(Region.US_EAST_1) // Cloudflare R2 bỏ qua Region, nhưng SDK yêu cầu nên gán mặc định US_EAST_1
-                    .build();
-        } catch (Exception e) {
-            log.warn("Không thể khởi tạo S3Presigner (endpoint={}): {}. Tính năng S3 R2 sẽ tạm thời không khả dụng.", endpoint, e.getMessage());
-        }
+        s3Presigner = S3Presigner.builder()
+                .endpointOverride(URI.create(endpoint))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKey, secretKey)
+                ))
+                .region(Region.US_EAST_1) // Cloudflare R2 bỏ qua Region, nhưng SDK yêu cầu nên gán mặc định US_EAST_1
+                .build();
     }
 
     /**
