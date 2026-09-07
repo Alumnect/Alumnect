@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 
 /**
  * Lớp dịch vụ thực thi logic nghiệp vụ Salary Board: UC50 (Contribute salary data), UC51 (Edit
- * salary contribution), UC53 (View salary statistics). Triển khai interface {@link SalaryService}.
+ * salary contribution), UC52 (Delete salary contribution), UC53 (View salary statistics). Triển
+ * khai interface {@link SalaryService}.
  */
 @Service
 public class SalaryServiceImpl implements SalaryService {
@@ -174,6 +175,32 @@ public class SalaryServiceImpl implements SalaryService {
                 saved.getId(), request.getIndustryId(), email);
 
         return salaryMapper.toResponse(saved);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm lượt đóng góp theo id (404) → kiểm tra chính chủ
+     * (403 nếu khác) → xóa cứng. Không cần dọn dữ liệu liên quan nào khác — không bảng nào tham
+     * chiếu tới {@code salary_contributions} (khác Answer cần dọn `votes` trước khi xóa ở UC49).
+     */
+    @Override
+    @Transactional
+    public void deleteContribution(String email, Long contributionId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        SalaryContribution contribution = salaryContributionRepository.findById(contributionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lượt đóng góp với id: " + contributionId));
+
+        // Ownership (UC52): chỉ chính chủ mới được xóa lượt đóng góp của mình; người khác nhận 403.
+        if (!contribution.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ chính chủ mới được xóa lượt đóng góp này");
+        }
+
+        salaryContributionRepository.delete(contribution);
+
+        log.info("Xóa dữ liệu lương: id={}, tác giả={} (ẩn danh khi hiển thị)", contributionId, email);
     }
 
     /**

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,15 +23,15 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Controller xử lý yêu cầu đóng góp (UC50), chỉnh sửa (UC51 - Edit salary contribution) và xem
- * thống kê lương (UC53 - View salary statistics) trên Salary Board. Được map tự động với prefix
- * global /api/v1/salary-contributions.
+ * Controller xử lý yêu cầu đóng góp (UC50), chỉnh sửa (UC51), xóa (UC52 - Delete salary
+ * contribution) và xem thống kê lương (UC53 - View salary statistics) trên Salary Board. Được map
+ * tự động với prefix global /api/v1/salary-contributions.
  * <p>
  * Mọi endpoint đều yêu cầu đăng nhập (JWT), Guest bị Spring Security chặn 401 trước khi vào Controller
  * (không nằm {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET}). Đóng góp (POST) chỉ
- * Cựu sinh viên (ALUMNI) được phép (RBAC tại tầng Service — Student/Admin nhận 403); sửa (PUT) chỉ chính
- * chủ được phép (kiểm tra sở hữu tại tầng Service — người khác nhận 403); xem thống kê (GET) mở cho mọi
- * vai trò đã đăng nhập (Student + Alumni theo ticket UC53, không hạn chế thêm ở Backend).
+ * Cựu sinh viên (ALUMNI) được phép (RBAC tại tầng Service — Student/Admin nhận 403); sửa (PUT) và xóa
+ * (DELETE) chỉ chính chủ được phép (kiểm tra sở hữu tại tầng Service — người khác nhận 403); xem thống
+ * kê (GET) mở cho mọi vai trò đã đăng nhập (Student + Alumni theo ticket UC53, không hạn chế thêm ở Backend).
  */
 @RestController
 @RequestMapping("/salary-contributions")
@@ -86,6 +87,20 @@ public class SalaryController {
 
         SalaryContributionResponse updated = salaryService.updateContribution(authentication.getName(), contributionId, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật dữ liệu lương thành công", updated));
+    }
+
+    /**
+     * API xóa một lượt đóng góp lương đã có (UC52 - Delete salary contribution). Xóa cứng, không
+     * thể hoàn tác. Chỉ chính chủ mới xóa được — người khác nhận 403.
+     *
+     * @param contributionId ID lượt đóng góp cần xóa
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email chính chủ
+     * @return {@link ApiResponse} rỗng, HTTP 200 OK
+     */
+    @DeleteMapping("/{contributionId}")
+    public ResponseEntity<ApiResponse<Void>> deleteContribution(@PathVariable Long contributionId, Authentication authentication) {
+        salaryService.deleteContribution(authentication.getName(), contributionId);
+        return ResponseEntity.ok(ApiResponse.success("Xóa dữ liệu lương thành công", null));
     }
 
     /**

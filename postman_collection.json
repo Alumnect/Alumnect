@@ -1501,6 +1501,93 @@
                         },
                         "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
                     }
+                },
+                {
+                    "name": "5.19 Xóa đóng góp lương (UC52 - Thành công, đúng chính chủ)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "1"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Xóa dữ liệu lương thành công\". Đây là XÓA CỨNG (DELETE FROM salary_contributions), không thể hoàn tác. Thay `1` bằng id lượt đóng góp thật do {{accessToken}} là chính chủ (lấy từ mục 5.14)."
+                    }
+                },
+                {
+                    "name": "5.20 Xóa đóng góp lương (UC52 - Không phải chính chủ, lỗi 403)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "2"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 403 \"Chỉ chính chủ mới được xóa lượt đóng góp này\". Thay `2` bằng id lượt đóng góp KHÔNG thuộc về {{accessToken}}."
+                    }
+                },
+                {
+                    "name": "5.21 Xóa đóng góp lương không tồn tại (UC52 - Lỗi 404)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/999999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "999999"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy lượt đóng góp với id: 999999\". Cũng dùng để test xóa 2 lần liên tiếp (lần 2 trả 404 vì bản ghi đã bị xóa cứng, không còn tồn tại)."
+                    }
+                },
+                {
+                    "name": "5.22 Xóa đóng góp lương (UC52 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "1"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
+                    }
                 }
             ]
         },
