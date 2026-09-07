@@ -47,4 +47,7 @@ public final class WebSocketDestinations {
 
     /** Kênh cập nhật trạng thái hoạt động người dùng */
     public static final String TOPIC_ONLINE_STATUS = "/topic/online-users";
+
+    /** Kênh phát sóng danh sách báo cáo câu hỏi vi phạm cho Admin real-time (UC78) */
+    public static final String TOPIC_ADMIN_QUESTION_REPORTS = "/topic/admin/reports/questions";
 }

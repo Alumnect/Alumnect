@@ -12,6 +12,7 @@ import { ADMIN_SECTIONS } from './adminSectionsData'
 import { useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
 import type { AdminVerificationRequestDto } from '../api/adminApi'
 import { AdminReportsQueue } from './AdminReportsQueue'
+import { AdminViolatingQuestionsQueue } from './AdminViolatingQuestionsQueue'
 
 const REJECT_REASON_TEMPLATES = [
   'Ảnh minh chứng mờ, không nhìn rõ thông tin.',
@@ -26,6 +27,10 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
 
   if (sectionKey === 'reports') {
     return <AdminReportsQueue />
+  }
+
+  if (sectionKey === 'moderation') {
+    return <AdminViolatingQuestionsQueue />
   }
 
   const isVerifications = sectionKey === 'verifications'
@@ -336,10 +341,15 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
       {/* 1. Modal Xem Chi Tiết Hồ Sơ (Full Detail Modal) */}
       {detailReq &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
-            <Card hover={false} className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100 rounded-2xl">
-              {/* Banner Header - FPT Corporate Orange-Gold Gradient */}
-              <div className="relative bg-gradient-to-r from-brand-500 via-brand-600 to-gold-500 p-6 text-white rounded-t-2xl shadow-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300 cursor-pointer"
+              onClick={() => setDetailReq(null)}
+            />
+            <Card hover={false} className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl flex flex-col pop">
+              {/* Banner Header - System Brand Gradient */}
+              <div className="relative bg-gradient-to-r from-brand-500 to-violet-500 p-6 text-white rounded-t-3xl shadow-md">
                 <button
                   onClick={() => setDetailReq(null)}
                   className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"

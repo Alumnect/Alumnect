@@ -12,4 +12,7 @@ import java.time.Instant;
 public interface ReportRepository extends JpaRepository<Report, Long>, JpaSpecificationExecutor<Report> {
 
     long countByReporterIdAndCreatedAtGreaterThanEqual(Long reporterId, Instant createdAt);
+
+    /** Kiểm tra người dùng đã báo cáo câu hỏi này trước đó hay chưa */
+    boolean existsByQuestionIdAndReporterId(Long questionId, Long reporterId);
 }

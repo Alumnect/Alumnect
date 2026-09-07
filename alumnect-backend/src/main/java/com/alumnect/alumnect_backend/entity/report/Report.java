@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.entity.report;
 
 import com.alumnect.alumnect_backend.common.enums.ReportReason;
 import com.alumnect.alumnect_backend.common.enums.ReportStatus;
+import com.alumnect.alumnect_backend.entity.forum.Question;
 import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.user.User;
 import jakarta.persistence.Column;
@@ -22,7 +23,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-/** Bản ghi báo cáo nội dung; UC24 hiện sử dụng loại nội dung POST. */
+/** Bản ghi báo cáo nội dung; hỗ trợ báo cáo bài viết (UC24) và câu hỏi (UC78). */
 @Entity
 @Table(name = "reports")
 @Data
@@ -39,9 +40,15 @@ public class Report {
     @JoinColumn(name = "reporter_id", nullable = false)
     private User reporter;
 
+    /** Bài viết bị báo cáo (null nếu báo cáo câu hỏi) */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "post_id")
     private Post post;
+
+    /** Câu hỏi bị báo cáo (null nếu báo cáo bài viết) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id")
+    private Question question;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

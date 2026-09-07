@@ -269,18 +269,23 @@ export function AdminUsersPage() {
       {/* User Profile Detail Drawer / Modal */}
       {selectedUserId !== null &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/45 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop - synchronized with report modals */}
+            <div
+              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300 cursor-pointer"
+              onClick={() => setSelectedUserId(null)}
+            />
             <Card
               hover={false}
-              className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100/30 rounded-2xl animate-pop"
+              className="relative z-10 w-full max-w-xl max-h-[90vh] overflow-hidden bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl flex flex-col pop"
             >
-              {/* Header Banner - Wrap avatar, name, and email with white text on gradient background */}
-              <div className="relative bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400 p-6 text-white rounded-t-2xl shadow-sm">
+              {/* Header Banner - System Brand Gradient */}
+              <div className="relative bg-gradient-to-r from-brand-500 to-violet-500 p-6 text-white shrink-0 shadow-md">
                 <button
                   onClick={() => setSelectedUserId(null)}
-                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-all border border-white/10 z-20 shadow-xs"
+                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-all border border-transparent hover:border-white/10 z-20 shadow-xs cursor-pointer"
                 >
-                  <X size={16} />
+                  <X size={18} />
                 </button>
 
                 {isLoadingDetail ? (
@@ -296,24 +301,24 @@ export function AdminUsersPage() {
                     <Avatar
                       src={userDetail.avatarUrl}
                       name={userDetail.fullName}
-                      size={80}
+                      size={72}
                       verified={userDetail.isAccountVerified}
                       className="rounded-full border-4 border-white ring-1 ring-plum-900/5 shadow-md shrink-0 bg-white"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-xl font-bold text-white tracking-tight">{userDetail.fullName}</h2>
+                        <h2 className="text-xl font-extrabold text-white tracking-tight">{userDetail.fullName}</h2>
                         <Badge
                           tone="neutral"
-                          className="bg-white/20 backdrop-blur-md px-2 py-0.5 text-[9px] rounded-full shrink-0 font-extrabold uppercase border border-white/30 text-white shadow-2xs"
+                          className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 text-[10px] rounded-full shrink-0 font-extrabold uppercase border border-white/30 text-white shadow-2xs"
                         >
                           {userDetail.role === 'ADMIN' ? 'Admin' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
                         </Badge>
                       </div>
                       <p className="text-white/80 text-xs mt-0.5 font-medium">{userDetail.email}</p>
                       {userDetail.headline && (
-                        <p className="text-gold-100 text-xs mt-2 italic font-semibold flex items-center gap-1.5 bg-black/10 px-2.5 py-1.5 rounded-lg border border-white/5 w-fit">
-                          <Award size={13} className="shrink-0 text-gold-400" />
+                        <p className="text-brand-50 text-xs mt-2 italic font-semibold flex items-center gap-1.5 bg-black/10 px-2.5 py-1.5 rounded-lg border border-white/10 w-fit">
+                          <Award size={13} className="shrink-0 text-white" />
                           <span>"{userDetail.headline}"</span>
                         </p>
                       )}
@@ -323,11 +328,11 @@ export function AdminUsersPage() {
               </div>
 
               {/* Body Content */}
-              <div className="p-6 space-y-4 bg-white">
+              <div className="p-6 space-y-4 bg-white overflow-y-auto max-h-[calc(90vh-130px)]">
                 {isLoadingDetail ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-16 w-full bg-plum-900/5 rounded-xl" />
+                      <Skeleton key={i} className="h-16 w-full bg-brand-50 rounded-xl" />
                     ))}
                   </div>
                 ) : userDetail ? (
@@ -335,21 +340,21 @@ export function AdminUsersPage() {
                     {/* Information Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Contact Column */}
-                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <div className="space-y-3.5 p-4 rounded-2xl bg-brand-50/40 border border-brand-100 shadow-2xs">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-brand-600 flex items-center gap-1.5">
                           <Mail size={12} className="text-brand-500" />
                           <span>Thông tin liên hệ</span>
                         </h4>
-                        
+
                         <div className="space-y-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Địa chỉ Email</span>
+                            <span className="text-[10px] text-plum-400 block mb-0.5">Địa chỉ Email</span>
                             <span className="font-semibold text-plum-900 break-all">{userDetail.email}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Số điện thoại</span>
+                            <span className="text-[10px] text-plum-400 block mb-0.5">Số điện thoại</span>
                             <span className="font-semibold text-plum-900 flex items-center gap-1">
-                              <Phone size={11} className="text-slate-400 shrink-0" />
+                              <Phone size={11} className="text-plum-400 shrink-0" />
                               {userDetail.phone || 'Chưa cập nhật'}
                             </span>
                           </div>
@@ -357,22 +362,22 @@ export function AdminUsersPage() {
                       </div>
 
                       {/* Education Column */}
-                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <div className="space-y-3.5 p-4 rounded-2xl bg-brand-50/40 border border-brand-100 shadow-2xs">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-brand-600 flex items-center gap-1.5">
                           <GraduationCap size={13} className="text-brand-500" />
                           <span>Học vấn & Mã số</span>
                         </h4>
-                        
+
                         <div className="space-y-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Chuyên ngành</span>
+                            <span className="text-[10px] text-plum-400 block mb-0.5">Chuyên ngành</span>
                             <span className="font-semibold text-plum-900 flex items-center gap-1">
-                              <BookOpen size={11} className="text-slate-400 shrink-0" />
+                              <BookOpen size={11} className="text-plum-400 shrink-0" />
                               {userDetail.majorName ? `${userDetail.majorName} (${userDetail.majorCode})` : 'Chưa chọn'}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Mã sinh viên / Khóa</span>
+                            <span className="text-[10px] text-plum-400 block mb-0.5">Mã sinh viên / Khóa</span>
                             <span className="font-semibold text-plum-900 flex items-center gap-1.5">
                               <span>{userDetail.studentCode || 'N/A'}</span>
                               {userDetail.cohort ? (
@@ -388,30 +393,30 @@ export function AdminUsersPage() {
 
                     {/* Biography block if present */}
                     {userDetail.biography && (
-                      <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 space-y-2">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-2">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-brand-600 flex items-center gap-1.5">
                           <FileText size={12} className="text-brand-500" />
                           <span>Tiểu sử bản thân</span>
                         </h4>
-                        <p className="text-xs text-plum-800 leading-relaxed whitespace-pre-line">{userDetail.biography}</p>
+                        <p className="text-xs text-plum-800 leading-relaxed whitespace-pre-line font-medium">{userDetail.biography}</p>
                       </div>
                     )}
 
                     {/* Account Status / Metadata */}
-                    <div className="p-4 rounded-xl bg-slate-50/30 border border-slate-100/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="p-4 rounded-2xl bg-brand-50/30 border border-brand-100/60 flex flex-wrap items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-1.5">
-                        <Calendar size={13} className="text-slate-400" />
-                        <span className="text-slate-400">Tham gia:</span>
+                        <Calendar size={13} className="text-plum-400" />
+                        <span className="text-plum-400">Tham gia:</span>
                         <span className="font-semibold text-plum-900">
                           {new Date(userDetail.createdAt).toLocaleDateString('vi-VN')}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
-                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] px-2 py-0.5">
+                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] px-2 py-0.5 font-bold">
                           {userDetail.accountStatus === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
                         </Badge>
-                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[9px] px-2 py-0.5">
+                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[9px] px-2 py-0.5 font-bold">
                           {userDetail.isAccountVerified ? 'Đã xác minh' : 'Chưa xác minh'}
                         </Badge>
                       </div>
@@ -419,7 +424,7 @@ export function AdminUsersPage() {
 
                     {/* Actions under Modal */}
                     {userDetail.role !== 'ADMIN' && (
-                      <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
+                      <div className="mt-6 flex justify-end gap-2.5 border-t border-plum-900/8 pt-4">
                         <Button
                           size="sm"
                           variant={userDetail.accountStatus === 'LOCKED' ? 'primary' : 'secondary'}
@@ -427,10 +432,10 @@ export function AdminUsersPage() {
                             handleToggleLock(userDetail.id, userDetail.accountStatus)
                           }}
                           className={cn(
-                            'font-bold text-xs shadow-3xs rounded-xl px-4 py-2 transition-all',
+                            'font-bold text-xs shadow-xs rounded-full px-4 py-2 transition-all cursor-pointer hover-sheen',
                             userDetail.accountStatus === 'LOCKED'
-                              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 hover:shadow-xs'
-                              : 'border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100/80 hover:text-red-700'
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700'
+                              : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
                           )}
                         >
                           {updateStatusMutation.isPending ? (
@@ -446,7 +451,7 @@ export function AdminUsersPage() {
                           size="sm"
                           variant="secondary"
                           onClick={() => setSelectedUserId(null)}
-                          className="font-bold text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl px-4 py-2"
+                          className="font-bold text-xs border border-plum-200 text-plum-700 hover:bg-plum-50 rounded-full px-4 py-2 cursor-pointer"
                         >
                           Đóng
                         </Button>
