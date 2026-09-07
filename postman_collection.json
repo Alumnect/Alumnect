@@ -1064,6 +1064,259 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "5.3 Lấy danh mục Ngành nghề cho Salary Board (UC50)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/industries",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "industries"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200, danh sách ngành nghề dùng để đổ vào dropdown khi đóng góp dữ liệu lương. Endpoint công khai, không cần đăng nhập."
+                    }
+                },
+                {
+                    "name": "5.4 Đóng góp dữ liệu lương (UC50 - Thành công, đầy đủ trường)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"industryId\": 1,\n  \"jobTitle\": \"Backend Developer\",\n  \"company\": \"FPT Software\",\n  \"region\": \"TP.HCM\",\n  \"yearsExperience\": 2,\n  \"grossAmount\": 20000000,\n  \"currency\": \"VND\"\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 201 \"Đóng góp dữ liệu lương thành công\". Yêu cầu {{accessToken}} là tài khoản vai trò ALUMNI. Phản hồi KHÔNG chứa bất kỳ trường định danh người đóng góp nào (ẩn danh 100%)."
+                    }
+                },
+                {
+                    "name": "5.5 Đóng góp dữ liệu lương (UC50 - Thành công, chỉ trường bắt buộc)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Business Analyst\",\n  \"grossAmount\": 15000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 201. Chỉ gửi jobTitle + grossAmount (2 trường bắt buộc); industryId/company/region/yearsExperience null, currency tự mặc định \"VND\" khi bỏ trống."
+                    }
+                },
+                {
+                    "name": "5.6 Đóng góp dữ liệu lương (UC50 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 20000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
+                    }
+                },
+                {
+                    "name": "5.7 Đóng góp dữ liệu lương (UC50 - Không phải Alumni, lỗi 403)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 20000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 403 \"Chỉ cựu sinh viên mới được đóng góp dữ liệu lương\". Dùng {{accessToken}} của tài khoản vai trò STUDENT (hoặc khác ALUMNI)."
+                    }
+                },
+                {
+                    "name": "5.8 Đóng góp dữ liệu lương (UC50 - jobTitle rỗng, lỗi 400)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"\",\n  \"grossAmount\": 20000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 400 \"Chức danh công việc không được để trống\" (Bean Validation @NotBlank)."
+                    }
+                },
+                {
+                    "name": "5.9 Đóng góp dữ liệu lương (UC50 - grossAmount <= 0, lỗi 400)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 0\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 400 \"Mức lương phải lớn hơn 0\" (Bean Validation @DecimalMin(0.01))."
+                    }
+                },
+                {
+                    "name": "5.10 Đóng góp dữ liệu lương (UC50 - industryId không tồn tại, lỗi 400)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"industryId\": 999999,\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 20000000\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 400 \"Ngành nghề không tồn tại\" — industryId gửi lên không có trong bảng industries."
+                    }
+                },
+                {
+                    "name": "5.11 Đóng góp dữ liệu lương (UC50 - currency sai định dạng, lỗi 400)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobTitle\": \"Backend Developer\",\n  \"grossAmount\": 20000000,\n  \"currency\": \"vnd123\"\n}"
+                        },
+                        "description": "Kỳ vọng: HTTP 400 \"Đơn vị tiền tệ phải là mã 3 chữ cái (VD: VND, USD)\" — validate ở tầng Service (không phải Bean Validation, vì currency được phép bỏ trống)."
+                    }
                 }
             ]
         },
