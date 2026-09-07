@@ -17,6 +17,15 @@ import java.util.List;
 public interface SalaryContributionRepository extends JpaRepository<SalaryContribution, Long> {
 
     /**
+     * Lấy toàn bộ lượt đóng góp của một người dùng, mới nhất trước — dùng cho UC51 (Edit salary
+     * contribution) để chính chủ xem lại và chọn bản ghi cần sửa.
+     *
+     * @param userId ID người dùng (chính chủ, lấy từ JWT)
+     * @return Danh sách lượt đóng góp của người dùng, sắp xếp theo thời điểm tạo giảm dần
+     */
+    List<SalaryContribution> findByUser_IdOrderByCreatedAtDesc(Long userId);
+
+    /**
      * Thống kê lương theo nhóm (chức danh + cấp bậc suy ra từ kinh nghiệm + khu vực), chỉ tính trên
      * dữ liệu VND (không quy đổi ngoại tệ — ngoài phạm vi UC53), chỉ trả nhóm đạt đủ số mẫu tối thiểu
      * ({@code minSamples}) để bảo vệ ẩn danh. Dùng {@code PERCENTILE_CONT} (hàm PostgreSQL) tính

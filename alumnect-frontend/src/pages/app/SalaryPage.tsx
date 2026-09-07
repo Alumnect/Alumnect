@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw } from 'lucide-react'
+import { LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw, ListChecks } from 'lucide-react'
 import { PageHeader, Badge, Card, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { ContributeSalaryModal, useSalaryStatistics } from '@/features/salary'
+import { ContributeSalaryModal, MyContributionsModal, useSalaryStatistics } from '@/features/salary'
+import type { SalaryContribution } from '@/features/salary'
 
 const ALL_REGIONS = 'Tất cả khu vực'
 
@@ -47,8 +48,11 @@ function SalaryStatsError({ message, onRetry }: { message?: string; onRetry: () 
 export function SalaryPage() {
   const [region, setRegion] = useState(ALL_REGIONS)
   const [contributeOpen, setContributeOpen] = useState(false)
+  const [myContributionsOpen, setMyContributionsOpen] = useState(false)
+  // Khác null = đang mở ContributeSalaryModal ở chế độ SỬA (UC51) cho đúng bản ghi này.
+  const [editingContribution, setEditingContribution] = useState<SalaryContribution | null>(null)
 
-  // Quyền đóng góp (UC50): CHỈ Cựu sinh viên (ALUMNI) — khác quyền XEM thống kê (UC53: Student + Alumni).
+  // Quyền đóng góp (UC50) + sửa (UC51): CHỈ Cựu sinh viên (ALUMNI) — khác quyền XEM thống kê (UC53: Student + Alumni).
   const user = useAuthStore((s) => s.user)
   const canContribute = !!user && user.role === 'ALUMNI'
 
@@ -73,9 +77,14 @@ export function SalaryPage() {
         subtitle="Dữ liệu mức lương thực tế và ẩn danh từ cộng đồng cựu sinh viên FPTU."
         actions={
           canContribute ? (
-            <Button variant="gold" size="sm" leftIcon={<Plus size={15} />} onClick={() => setContributeOpen(true)}>
-              Đóng góp dữ liệu
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" leftIcon={<ListChecks size={15} />} onClick={() => setMyContributionsOpen(true)}>
+                Đóng góp của tôi
+              </Button>
+              <Button variant="gold" size="sm" leftIcon={<Plus size={15} />} onClick={() => setContributeOpen(true)}>
+                Đóng góp dữ liệu
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -172,14 +181,31 @@ export function SalaryPage() {
         Thống kê chỉ hiển thị khi đạt đủ số lượng mẫu khảo sát tối thiểu. Danh tính của bạn luôn được bảo mật tuyệt đối.
       </p>
 
-      {/* Modal đóng góp dữ liệu lương (UC50) — chỉ mở được khi canContribute (nút đã ẩn với người khác) */}
-      {contributeOpen && (
+      {/* Modal danh sách đóng góp của chính mình (UC51) — bấm "Sửa" 1 dòng thì chuyển sang modal chỉnh sửa bên dưới */}
+      {myContributionsOpen && (
+        <MyContributionsModal
+          onClose={() => setMyContributionsOpen(false)}
+          onEdit={(contribution) => {
+            setMyContributionsOpen(false)
+            setEditingContribution(contribution)
+          }}
+        />
+      )}
+
+      {/* Modal đóng góp (UC50, contributeOpen) HOẶC chỉnh sửa (UC51, editingContribution) dữ liệu lương
+          — chỉ mở được khi canContribute (nút đã ẩn với người khác) */}
+      {(contributeOpen || editingContribution) && (
         <ContributeSalaryModal
-          onClose={() => setContributeOpen(false)}
-          onSuccess={() => {
+          editContribution={editingContribution ?? undefined}
+          onClose={() => {
             setContributeOpen(false)
-            toast.success('Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!')
-            refetch()
+            setEditingContribution(null)
+          }}
+          onSuccess={() => {
+            const wasEdit = !!editingContribution
+            setContributeOpen(false)
+            setEditingContribution(null)
+            toast.success(wasEdit ? 'Đã cập nhật dữ liệu lương thành công!' : 'Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!')
           }}
         />
       )}

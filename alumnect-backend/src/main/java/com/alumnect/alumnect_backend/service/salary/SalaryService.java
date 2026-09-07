@@ -1,8 +1,11 @@
 package com.alumnect.alumnect_backend.service.salary;
 
 import com.alumnect.alumnect_backend.dto.request.salary.CreateSalaryContributionRequest;
+import com.alumnect.alumnect_backend.dto.request.salary.UpdateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryContributionResponse;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryStatisticsResponse;
+
+import java.util.List;
 
 /**
  * Interface định nghĩa các dịch vụ liên quan tới Salary Board (UC50 - Contribute salary data).
@@ -25,6 +28,30 @@ public interface SalaryService {
      * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu industryId không tồn tại hoặc currency sai định dạng
      */
     SalaryContributionResponse createContribution(String email, CreateSalaryContributionRequest request);
+
+    /**
+     * Lấy toàn bộ lượt đóng góp lương của chính người dùng đang đăng nhập (UC51 - Edit salary
+     * contribution) — để họ xem lại và chọn bản ghi cần sửa. Không dành cho việc xem của người khác.
+     *
+     * @param email Email người dùng đang đăng nhập (lấy từ SecurityContext)
+     * @return Danh sách lượt đóng góp của chính người dùng, mới nhất trước
+     * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy tài khoản người dùng
+     */
+    List<SalaryContributionResponse> getMyContributions(String email);
+
+    /**
+     * Chỉnh sửa một lượt đóng góp lương đã có (UC51 - Edit salary contribution). Chỉ chính chủ (người
+     * đã tạo lượt đóng góp đó) mới được sửa; người khác bị từ chối 403.
+     *
+     * @param email          Email người dùng đang đăng nhập (lấy từ SecurityContext)
+     * @param contributionId ID lượt đóng góp cần sửa
+     * @param request        DTO chứa dữ liệu lương mới (cùng bộ trường với lúc tạo)
+     * @return Chi tiết lượt đóng góp sau khi sửa đã chuẩn hóa
+     * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy tài khoản hoặc lượt đóng góp
+     * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu không phải chính chủ
+     * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu industryId không tồn tại hoặc currency sai định dạng
+     */
+    SalaryContributionResponse updateContribution(String email, Long contributionId, UpdateSalaryContributionRequest request);
 
     /**
      * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics): số liệu tổng quan
