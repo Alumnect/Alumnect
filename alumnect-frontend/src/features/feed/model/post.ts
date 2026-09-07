@@ -32,11 +32,14 @@ export type JobInfo = z.infer<typeof jobSchema>
  * Schema cho dữ liệu sự kiện đính kèm bài viết.
  */
 export const eventSchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(String).optional().nullable(),
   title: z.string().optional(),
   location: z.string().optional().nullable(),
   startTime: z.string().optional().nullable(),
   endTime: z.string().optional().nullable(),
   capacity: z.number().optional().nullable(),
+  attendeeCount: z.number().nullable().optional().transform((v) => v ?? 0),
+  isRegistered: z.boolean().nullable().optional().transform((v) => Boolean(v)),
 })
 export type EventInfo = z.infer<typeof eventSchema>
 
@@ -65,6 +68,10 @@ export const postSchema = z.object({
   liked: z.boolean().default(false),
   /** Bài viết này đã được người dùng hiện tại lưu hay chưa (viewer-specific, UC20). */
   saved: z.boolean().default(false),
+  /** ID sự kiện gắn kèm (nếu có). */
+  eventId: z.union([z.string(), z.number()]).transform(String).optional().nullable(),
+  /** ID tin tuyển dụng gắn kèm (nếu có). */
+  jobId: z.union([z.string(), z.number()]).transform(String).optional().nullable(),
   /** Dữ liệu tuyển dụng (nếu là bài tuyển dụng). */
   job: jobSchema.nullable().default(null),
   /** Dữ liệu sự kiện (nếu là bài sự kiện). */

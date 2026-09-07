@@ -43,11 +43,13 @@ public interface AdminPostMapper {
     default com.alumnect.alumnect_backend.dto.response.post.EventDTO mapEvent(Event event) {
         if (event == null) return null;
         return com.alumnect.alumnect_backend.dto.response.post.EventDTO.builder()
+                .id(event.getId())
                 .title(event.getTitle())
                 .location(event.getLocation())
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
                 .capacity(event.getCapacity())
+                .attendeeCount(event.getAttendeeCount())
                 .build();
     }
 

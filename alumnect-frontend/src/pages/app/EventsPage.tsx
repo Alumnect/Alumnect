@@ -5,6 +5,7 @@ import { PageHeader, Card, Avatar, SmartImage, EmptyState } from '@/components/u
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { useFeed, useToggleSavePost } from '@/features/feed'
+import { EventRsvpButton } from '@/features/event'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { compact, cn } from '@/lib/utils'
@@ -13,7 +14,6 @@ const TABS = ['Sắp diễn ra', 'Trong tháng này']
 
 export function EventsPage() {
   const [tab, setTab] = useState('Sắp diễn ra')
-  const [rsvp, setRsvp] = useState<Record<string, boolean>>({})
   const [saved, setSaved] = useState<Record<string, boolean>>({})
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -188,14 +188,17 @@ export function EventsPage() {
                         </span>
                       )}
                     </div>
-                    <Button
+                    <EventRsvpButton
+                      eventId={event.id ?? post.eventId}
+                      eventTitle={event.title}
+                      initialRegistered={event.isRegistered ?? false}
+                      initialAttendeeCount={event.attendeeCount ?? 0}
+                      capacity={event.capacity}
+                      startTime={event.startTime}
                       size="sm"
+                      showCount={false}
                       className="shrink-0"
-                      variant={rsvp[post.id] ? 'secondary' : 'primary'}
-                      onClick={() => setRsvp((s) => ({ ...s, [post.id]: !s[post.id] }))}
-                    >
-                      {rsvp[post.id] ? 'Đã đăng ký ✓' : 'Tham gia'}
-                    </Button>
+                    />
                   </div>
                 </div>
               </Card>

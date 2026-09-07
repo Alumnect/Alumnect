@@ -1901,6 +1901,121 @@
                         }
                     },
                     "response": []
+                },
+                {
+                    "name": "6.17 [UC25] Đăng ký tham gia sự kiện (RSVP) - Thành công (201)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/events/1/rsvp",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "events",
+                                "1",
+                                "rsvp"
+                            ]
+                        },
+                        "description": "Đăng ký tham gia sự kiện (UC25). Yêu cầu JWT token của sinh viên hoặc cựu sinh viên."
+                    }
+                },
+                {
+                    "name": "6.18 [UC25] Đăng ký tham gia sự kiện (RSVP) - Thất bại do trùng lặp (409 Conflict)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/events/1/rsvp",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "events",
+                                "1",
+                                "rsvp"
+                            ]
+                        },
+                        "description": "Đăng ký tham gia sự kiện thất bại do người dùng đã RSVP trước đó (BR-12)."
+                    }
+                },
+                {
+                    "name": "6.19 [UC25] Hủy đăng ký tham gia sự kiện (Cancel RSVP) - Thành công (200)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/events/1/rsvp",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "events",
+                                "1",
+                                "rsvp"
+                            ]
+                        },
+                        "description": "Hủy đăng ký tham gia sự kiện trước thời điểm bắt đầu (BR-19)."
+                    }
+                },
+                {
+                    "name": "6.20 [UC25] Kiểm tra trạng thái RSVP của sự kiện (200)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/events/1/rsvp",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "events",
+                                "1",
+                                "rsvp"
+                            ]
+                        },
+                        "description": "Lấy trạng thái đăng ký của người dùng hiện tại và số lượng người tham gia."
+                    }
+                },
+                {
+                    "name": "6.21 [UC25] Lấy danh sách người tham gia sự kiện (Attendees) (200)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/events/1/attendees",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "events",
+                                "1",
+                                "attendees"
+                            ]
+                        },
+                        "description": "Lấy danh sách người tham gia sự kiện công khai (UC25)."
+                    }
                 }
             ]
         },
