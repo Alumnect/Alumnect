@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react'
-import { LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw, ListChecks } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw, ListChecks, Search, X, LayoutGrid } from 'lucide-react'
 import { PageHeader, Badge, Card, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { ContributeSalaryModal, MyContributionsModal, useSalaryStatistics } from '@/features/salary'
-import type { SalaryContribution } from '@/features/salary'
+import { ContributeSalaryModal, MyContributionsModal, useSalaryStatistics, useIndustries, SALARY_LEVELS } from '@/features/salary'
+import type { SalaryContribution, SalaryLevel } from '@/features/salary'
+import { EntitySelectField } from '@/features/forum/components/EntitySelectField'
 
 const ALL_REGIONS = 'Tất cả khu vực'
+const JOB_TITLE_SEARCH_MAX_LENGTH = 150
 
 /** Khung xương hiển thị trong lúc tải thống kê lần đầu (UC53). */
 function SalarySkeleton() {
@@ -46,28 +48,55 @@ function SalaryStatsError({ message, onRetry }: { message?: string; onRetry: () 
 }
 
 export function SalaryPage() {
-  const [region, setRegion] = useState(ALL_REGIONS)
   const [contributeOpen, setContributeOpen] = useState(false)
   const [myContributionsOpen, setMyContributionsOpen] = useState(false)
   // Khác null = đang mở ContributeSalaryModal ở chế độ SỬA (UC51) cho đúng bản ghi này.
   const [editingContribution, setEditingContribution] = useState<SalaryContribution | null>(null)
 
-  // Quyền đóng góp (UC50) + sửa (UC51): CHỈ Cựu sinh viên (ALUMNI) — khác quyền XEM thống kê (UC53: Student + Alumni).
+  // Quyền đóng góp (UC50) + sửa (UC51): CHỈ Cựu sinh viên (ALUMNI) — khác quyền XEM/LỌC thống kê (UC53/UC54: Student + Alumni).
   const user = useAuthStore((s) => s.user)
   const canContribute = !!user && user.role === 'ALUMNI'
 
-  const { data, isLoading, isError, error, refetch } = useSalaryStatistics()
-  const allRows = data?.rows ?? []
+  // === Bộ lọc (UC54 - Filter salary data) ===
+  const [region, setRegion] = useState(ALL_REGIONS)
+  const [industryId, setIndustryId] = useState<number | null>(null)
+  const [level, setLevel] = useState<SalaryLevel | null>(null)
+  // Ô nhập cập nhật ngay để gõ mượt, debounce 400ms mới gọi API tránh spam request (cùng cách UC44).
+  const [jobTitleInput, setJobTitleInput] = useState('')
+  const [jobTitle, setJobTitle] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setJobTitle(jobTitleInput), 400)
+    return () => clearTimeout(timer)
+  }, [jobTitleInput])
 
-  // Khu vực lọc suy ra từ chính dữ liệu thật (region là text tự do khi đóng góp ở UC50, không phải
-  // danh mục cố định) — đảm bảo bộ lọc luôn khớp với giá trị thực tế đang có, không lệch dữ liệu.
-  const regions = useMemo(() => [ALL_REGIONS, ...Array.from(new Set(allRows.map((r) => r.region))).sort()], [allRows])
+  const isFiltering = region !== ALL_REGIONS || industryId !== null || level !== null || jobTitle.trim().length > 0
+  const clearFilters = () => {
+    setRegion(ALL_REGIONS)
+    setIndustryId(null)
+    setLevel(null)
+    setJobTitleInput('')
+  }
 
-  // Giữ `max` tính trên TOÀN BỘ dữ liệu (không phải tập đã lọc) để thang đo
-  // biểu đồ không nhảy khi đổi vùng — giúp so sánh trực quan giữa các lần lọc.
+  const { data: industries } = useIndustries()
+  // Danh sách khu vực/cấp bậc KHÔNG lọc gì — chỉ để đổ chip (region là text tự do ở UC50, không phải
+  // danh mục cố định; level tuy cố định 3 giá trị nhưng chỉ nên gợi ý cấp bậc THỰC SỰ có dữ liệu, tránh
+  // chip bấm vào luôn ra rỗng), tách riêng khỏi query hiển thị để đổi bộ lọc khác không làm mất option.
+  const { data: baseStats } = useSalaryStatistics()
+  const regions = useMemo(() => [ALL_REGIONS, ...Array.from(new Set((baseStats?.rows ?? []).map((r) => r.region))).sort()], [baseStats])
+  const levels = useMemo(() => {
+    const present = new Set((baseStats?.rows ?? []).map((r) => r.level))
+    return SALARY_LEVELS.filter((lv) => present.has(lv))
+  }, [baseStats])
+
+  const { data, isLoading, isError, error, refetch } = useSalaryStatistics({
+    industryId,
+    region: region !== ALL_REGIONS ? region : undefined,
+    jobTitle: jobTitle.trim() || undefined,
+    level,
+  })
+  const rows = data?.rows ?? []
   // Fallback 1 khi chưa có dữ liệu để tránh Math.max() trả về -Infinity.
-  const max = allRows.length ? Math.max(...allRows.map((s) => s.p75)) : 1
-  const rows = allRows.filter((s) => region === ALL_REGIONS || s.region === region)
+  const max = rows.length ? Math.max(...rows.map((s) => s.p75)) : 1
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -105,9 +134,51 @@ export function SalaryPage() {
         </div>
       </Reveal>
 
-      {regions.length > 1 && (
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <Filter size={15} className="text-plum-400" />
+      {/* Bộ lọc (UC54): ngành nghề + chức danh + cấp bậc + khu vực. overflow-visible ghi đè
+          overflow-hidden mặc định của Card — nếu không, dropdown ngành nghề (EntitySelectField,
+          absolute + không portal) bị cắt cụt ở đúng viền dưới của Card khi sổ ra. */}
+      <Card hover={false} className="mb-5 space-y-3 overflow-visible p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="relative">
+            <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+            <input
+              value={jobTitleInput}
+              onChange={(e) => setJobTitleInput(e.target.value)}
+              placeholder="Tìm theo chức danh (VD: Backend Developer)…"
+              maxLength={JOB_TITLE_SEARCH_MAX_LENGTH}
+              className="h-10 w-full rounded-xl bg-plum-900/[0.04] pl-9 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            />
+            {jobTitleInput && (
+              <button
+                onClick={() => setJobTitleInput('')}
+                aria-label="Xóa tìm kiếm"
+                className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          <EntitySelectField
+            items={industries}
+            value={industryId}
+            onChange={setIndustryId}
+            placeholder="Tất cả ngành nghề"
+            buttonIcon={<LayoutGrid size={15} className="text-brand-600" />}
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Filter size={15} className="shrink-0 text-plum-400" />
+          {levels.map((lv) => (
+            <button
+              key={lv}
+              onClick={() => setLevel(level === lv ? null : lv)}
+              className={cn('rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all', level === lv ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]')}
+            >
+              {lv}
+            </button>
+          ))}
+          <span className="mx-1 h-4 w-px shrink-0 bg-plum-900/10" />
           {regions.map((r) => (
             <button
               key={r}
@@ -117,8 +188,13 @@ export function SalaryPage() {
               {r}
             </button>
           ))}
+          {isFiltering && (
+            <button onClick={clearFilters} className="ml-auto flex shrink-0 items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600">
+              <X size={13} /> Xóa bộ lọc
+            </button>
+          )}
         </div>
-      )}
+      </Card>
 
       <Reveal>
         <Card hover={false} className="overflow-hidden p-6">
@@ -134,13 +210,9 @@ export function SalaryPage() {
           ) : rows.length === 0 ? (
             <EmptyState
               icon={<LineChart size={24} />}
-              title="Chưa có dữ liệu lương cho khu vực này"
-              description="Hãy thử chọn khu vực khác hoặc là người đầu tiên đóng góp dữ liệu."
-              action={
-                region !== ALL_REGIONS ? (
-                  <Button size="sm" variant="secondary" onClick={() => setRegion(ALL_REGIONS)}>Xóa bộ lọc</Button>
-                ) : undefined
-              }
+              title={isFiltering ? 'Không có dữ liệu lương khớp bộ lọc này' : 'Chưa có dữ liệu lương'}
+              description={isFiltering ? 'Hãy thử đổi hoặc xóa bớt bộ lọc.' : 'Hãy là người đầu tiên đóng góp dữ liệu.'}
+              action={isFiltering ? <Button size="sm" variant="secondary" onClick={clearFilters}>Xóa bộ lọc</Button> : undefined}
             />
           ) : (
           <Stagger className="space-y-5" gap={0.07}>

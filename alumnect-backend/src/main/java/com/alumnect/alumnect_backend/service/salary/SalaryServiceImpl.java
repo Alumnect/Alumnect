@@ -24,12 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Lớp dịch vụ thực thi logic nghiệp vụ Salary Board: UC50 (Contribute salary data), UC51 (Edit
- * salary contribution), UC52 (Delete salary contribution), UC53 (View salary statistics). Triển
- * khai interface {@link SalaryService}.
+ * salary contribution), UC52 (Delete salary contribution), UC53 (View salary statistics), UC54
+ * (Filter salary data). Triển khai interface {@link SalaryService}.
  */
 @Service
 public class SalaryServiceImpl implements SalaryService {
@@ -41,6 +42,12 @@ public class SalaryServiceImpl implements SalaryService {
      * (UC53 - View salary statistics) — bảo vệ ẩn danh, tránh nhóm quá nhỏ lộ dữ liệu của 1-2 cá nhân.
      */
     private static final int MIN_SAMPLE_SIZE = 5;
+
+    /** Các giá trị cấp bậc hợp lệ cho bộ lọc "level" (UC54 - Filter salary data). */
+    private static final Set<String> VALID_LEVELS = Set.of("Junior", "Mid", "Senior");
+
+    /** Ký tự escape dùng cho mẫu LIKE — cùng quy ước với {@code QuestionServiceImpl} (UC44). */
+    private static final String LIKE_ESCAPE_CHAR = "\\";
 
     @Autowired
     private SalaryContributionRepository salaryContributionRepository;
@@ -206,16 +213,37 @@ public class SalaryServiceImpl implements SalaryService {
     /**
      * {@inheritDoc}
      * <p>
-     * Luồng: đếm tổng số lượt đóng góp (mọi loại tiền tệ) → lấy trung vị chung trên dữ liệu VND →
-     * lấy danh sách nhóm thống kê đạt đủ mẫu tối thiểu (chỉ VND) → map từng {@code Object[]} sang
-     * {@link SalaryStatRowResponse}.
+     * Luồng: nếu có industryId thì kiểm tra tồn tại (400 nếu không) → nếu có level thì validate thuộc
+     * {Junior, Mid, Senior} (400 nếu không) → chuẩn hóa region/jobTitle thành mẫu LIKE (tái dùng cách
+     * escape của UC44) → đếm tổng số lượt khớp bộ lọc (mọi loại tiền tệ) → lấy trung vị khớp bộ lọc
+     * trên dữ liệu VND → lấy danh sách nhóm thống kê khớp bộ lọc, đạt đủ mẫu tối thiểu (chỉ VND) →
+     * map từng {@code Object[]} sang {@link SalaryStatRowResponse}.
      */
     @Override
-    public SalaryStatisticsResponse getStatistics() {
-        long totalContributions = salaryContributionRepository.count();
-        BigDecimal overallMedian = salaryContributionRepository.findOverallMedianVnd();
+    public SalaryStatisticsResponse getStatistics(Long industryId, String region, String jobTitle, String level) {
+        if (industryId != null && !industryRepository.existsById(industryId)) {
+            throw new BadRequestException("Ngành nghề không tồn tại");
+        }
 
-        List<Object[]> rawRows = salaryContributionRepository.findGroupedStatistics(MIN_SAMPLE_SIZE);
+        String trimmedLevel = level != null ? level.trim() : null;
+        if (trimmedLevel != null && !trimmedLevel.isEmpty() && !VALID_LEVELS.contains(trimmedLevel)) {
+            throw new BadRequestException("Cấp bậc không hợp lệ (chỉ chấp nhận Junior/Mid/Senior)");
+        }
+
+        boolean filterByIndustry = industryId != null;
+        boolean filterByRegion = region != null && !region.trim().isEmpty();
+        boolean filterByJobTitle = jobTitle != null && !jobTitle.trim().isEmpty();
+        boolean filterByLevel = trimmedLevel != null && !trimmedLevel.isEmpty();
+        String regionPattern = filterByRegion ? buildLikePattern(region.trim()) : null;
+        String jobTitlePattern = filterByJobTitle ? buildLikePattern(jobTitle.trim()) : null;
+
+        long totalContributions = salaryContributionRepository.countFiltered(
+                filterByIndustry, industryId, filterByRegion, regionPattern, filterByJobTitle, jobTitlePattern, filterByLevel, trimmedLevel);
+        BigDecimal overallMedian = salaryContributionRepository.findOverallMedianVnd(
+                filterByIndustry, industryId, filterByRegion, regionPattern, filterByJobTitle, jobTitlePattern, filterByLevel, trimmedLevel);
+
+        List<Object[]> rawRows = salaryContributionRepository.findGroupedStatistics(
+                filterByIndustry, industryId, filterByRegion, regionPattern, filterByJobTitle, jobTitlePattern, filterByLevel, trimmedLevel, MIN_SAMPLE_SIZE);
         List<SalaryStatRowResponse> rows = new ArrayList<>();
         for (Object[] r : rawRows) {
             rows.add(SalaryStatRowResponse.builder()
@@ -235,6 +263,22 @@ public class SalaryServiceImpl implements SalaryService {
                 .overallMedian(overallMedian)
                 .rows(rows)
                 .build();
+    }
+
+    /**
+     * Chuẩn hóa từ khóa lọc (UC54 - Filter salary data: khu vực/chức danh) thành mẫu LIKE an toàn:
+     * chữ thường, escape các ký tự đặc biệt của LIKE, rồi bọc {@code %...%} để khớp substring không
+     * phân biệt hoa/thường — cùng cách làm với {@code QuestionServiceImpl.buildLikePattern} (UC44).
+     *
+     * @param rawKeyword Từ khóa đã trim, không rỗng
+     * @return Mẫu LIKE đã escape, sẵn sàng truyền cho các query native dùng {@code ESCAPE '\'}
+     */
+    private String buildLikePattern(String rawKeyword) {
+        String escaped = rawKeyword.toLowerCase()
+                .replace(LIKE_ESCAPE_CHAR, LIKE_ESCAPE_CHAR + LIKE_ESCAPE_CHAR)
+                .replace("%", LIKE_ESCAPE_CHAR + "%")
+                .replace("_", LIKE_ESCAPE_CHAR + "_");
+        return "%" + escaped + "%";
     }
 
     /** Cắt khoảng trắng thừa; chuỗi rỗng/blank chuẩn hóa thành null (tùy chọn, không lưu chuỗi rỗng). */

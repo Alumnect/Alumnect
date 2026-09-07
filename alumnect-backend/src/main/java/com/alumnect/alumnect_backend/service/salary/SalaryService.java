@@ -67,11 +67,18 @@ public interface SalaryService {
     void deleteContribution(String email, Long contributionId);
 
     /**
-     * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics): số liệu tổng quan
-     * (tổng lượt đóng góp, số vị trí đang theo dõi, trung vị chung) và danh sách dòng thống kê theo
-     * nhóm chức danh + cấp bậc + khu vực (chỉ nhóm đạt đủ số mẫu tối thiểu mới hiển thị).
+     * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics), có thể áp dụng
+     * thêm bộ lọc tùy chọn (UC54 - Filter salary data): số liệu tổng quan (tổng lượt đóng góp khớp bộ
+     * lọc, số vị trí đang theo dõi, trung vị khớp bộ lọc) và danh sách dòng thống kê theo nhóm chức
+     * danh + cấp bậc + khu vực (chỉ nhóm đạt đủ số mẫu tối thiểu mới hiển thị). Bỏ trống (null) mọi
+     * tham số lọc = xem toàn bộ, giống hành vi gốc của UC53.
      *
-     * @return Thống kê lương tổng hợp
+     * @param industryId ID ngành nghề cần lọc (tùy chọn, null = không lọc theo ngành)
+     * @param region     Khu vực cần lọc, khớp substring không phân biệt hoa/thường (tùy chọn, null/rỗng = không lọc)
+     * @param jobTitle   Từ khóa chức danh cần lọc, khớp substring không phân biệt hoa/thường (tùy chọn, null/rỗng = không lọc)
+     * @param level      Cấp bậc cần lọc — "Junior"/"Mid"/"Senior" (tùy chọn, null/rỗng = không lọc)
+     * @return Thống kê lương tổng hợp khớp bộ lọc
+     * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu industryId không tồn tại hoặc level không hợp lệ
      */
-    SalaryStatisticsResponse getStatistics();
+    SalaryStatisticsResponse getStatistics(Long industryId, String region, String jobTitle, String level);
 }

@@ -18,20 +18,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 /**
- * Controller xử lý yêu cầu đóng góp (UC50), chỉnh sửa (UC51), xóa (UC52 - Delete salary
- * contribution) và xem thống kê lương (UC53 - View salary statistics) trên Salary Board. Được map
+ * Controller xử lý yêu cầu đóng góp (UC50), chỉnh sửa (UC51), xóa (UC52), xem thống kê (UC53 - View
+ * salary statistics) và lọc dữ liệu lương (UC54 - Filter salary data) trên Salary Board. Được map
  * tự động với prefix global /api/v1/salary-contributions.
  * <p>
  * Mọi endpoint đều yêu cầu đăng nhập (JWT), Guest bị Spring Security chặn 401 trước khi vào Controller
  * (không nằm {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET}). Đóng góp (POST) chỉ
  * Cựu sinh viên (ALUMNI) được phép (RBAC tại tầng Service — Student/Admin nhận 403); sửa (PUT) và xóa
  * (DELETE) chỉ chính chủ được phép (kiểm tra sở hữu tại tầng Service — người khác nhận 403); xem thống
- * kê (GET) mở cho mọi vai trò đã đăng nhập (Student + Alumni theo ticket UC53, không hạn chế thêm ở Backend).
+ * kê/lọc (GET) mở cho mọi vai trò đã đăng nhập (Student + Alumni theo ticket UC53/UC54, không hạn chế
+ * thêm ở Backend).
  */
 @RestController
 @RequestMapping("/salary-contributions")
@@ -104,13 +106,24 @@ public class SalaryController {
     }
 
     /**
-     * API lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics).
+     * API lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics), có thể áp
+     * dụng thêm bộ lọc tùy chọn theo ngành/khu vực/chức danh/cấp bậc (UC54 - Filter salary data).
+     * Bỏ trống mọi query param = xem toàn bộ, giữ nguyên hành vi gốc của UC53.
      *
-     * @return Thống kê lương {@link SalaryStatisticsResponse} bọc trong {@link ApiResponse}, HTTP 200 OK
+     * @param industryId ID ngành nghề cần lọc (tùy chọn)
+     * @param region     Khu vực cần lọc, khớp substring không phân biệt hoa/thường (tùy chọn)
+     * @param jobTitle   Từ khóa chức danh cần lọc, khớp substring không phân biệt hoa/thường (tùy chọn)
+     * @param level      Cấp bậc cần lọc — "Junior"/"Mid"/"Senior" (tùy chọn)
+     * @return Thống kê lương khớp bộ lọc {@link SalaryStatisticsResponse} bọc trong {@link ApiResponse}, HTTP 200 OK
      */
     @GetMapping("/statistics")
-    public ResponseEntity<ApiResponse<SalaryStatisticsResponse>> getStatistics() {
-        SalaryStatisticsResponse statistics = salaryService.getStatistics();
+    public ResponseEntity<ApiResponse<SalaryStatisticsResponse>> getStatistics(
+            @RequestParam(required = false) Long industryId,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String jobTitle,
+            @RequestParam(required = false) String level) {
+
+        SalaryStatisticsResponse statistics = salaryService.getStatistics(industryId, region, jobTitle, level);
         return ResponseEntity.ok(ApiResponse.success("Lấy thống kê lương thành công", statistics));
     }
 }

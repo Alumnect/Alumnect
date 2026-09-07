@@ -1588,6 +1588,155 @@
                         },
                         "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
                     }
+                },
+                {
+                    "name": "5.23 Lọc thống kê lương theo Ngành nghề (UC54 - Thành công)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/statistics?industryId=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "industryId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 — `totalContributions`/`overallMedian`/`rows` chỉ tính trên các lượt đóng góp thuộc ngành nghề id=1."
+                    }
+                },
+                {
+                    "name": "5.24 Lọc thống kê lương theo Khu vực + Cấp bậc (UC54 - Kết hợp nhiều bộ lọc)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/statistics?region=TP.HCM&level=Mid",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "region",
+                                    "value": "TP.HCM"
+                                },
+                                {
+                                    "key": "level",
+                                    "value": "Mid"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 — nhiều bộ lọc kết hợp (AND): khu vực khớp substring không phân biệt hoa/thường 'TP.HCM' VÀ cấp bậc Mid (2-5 năm kinh nghiệm)."
+                    }
+                },
+                {
+                    "name": "5.25 Lọc thống kê lương theo Chức danh (UC54 - Tìm kiếm từ khóa)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/statistics?jobTitle=backend",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "jobTitle",
+                                    "value": "backend"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 — khớp substring không phân biệt hoa/thường trên `job_title` (VD 'Backend Developer', 'Senior Backend Engineer' đều khớp)."
+                    }
+                },
+                {
+                    "name": "5.26 Lọc thống kê lương (UC54 - industryId không tồn tại, lỗi 400)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/statistics?industryId=999999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "industryId",
+                                    "value": "999999"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 400 \"Ngành nghề không tồn tại\"."
+                    }
+                },
+                {
+                    "name": "5.27 Lọc thống kê lương (UC54 - level không hợp lệ, lỗi 400)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/statistics?level=Expert",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "level",
+                                    "value": "Expert"
+                                }
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 400 \"Cấp bậc không hợp lệ (chỉ chấp nhận Junior/Mid/Senior)\" — 'Expert' không nằm trong 3 giá trị hợp lệ."
+                    }
                 }
             ]
         },

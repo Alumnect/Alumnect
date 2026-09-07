@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { salaryApi } from '../api/salaryApi'
-import type { CreateSalaryContributionInput } from '../model/salary'
+import type { CreateSalaryContributionInput, SalaryStatisticsFilters } from '../model/salary'
 
 /**
  * Hook lấy danh mục ngành nghề cho dropdown chọn ngành (UC50). Dữ liệu ít thay đổi nên cache lâu,
@@ -80,15 +80,17 @@ export function useDeleteSalaryContribution() {
 }
 
 /**
- * Hook lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics). Dữ liệu tổng
- * hợp toàn hệ thống, không đổi theo từng giây nên cache vừa phải (2 phút) để tránh gọi lại quá dày
- * khi người dùng chuyển bộ lọc khu vực (lọc client-side trên cùng 1 lần fetch).
- * @return Đối tượng query chứa thống kê lương (KPI tổng quan + danh sách dòng theo nhóm)
+ * Hook lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics), có thể kèm bộ
+ * lọc tùy chọn (UC54 - Filter salary data) — mỗi tổ hợp bộ lọc khác nhau là 1 cache riêng (`filters`
+ * nằm trong `queryKey`) để đổi bộ lọc không làm mất cache của tổ hợp trước đó. Cache vừa phải
+ * (2 phút) vì dữ liệu tổng hợp toàn hệ thống không đổi theo từng giây.
+ * @param filters Bộ lọc tùy chọn (ngành/khu vực/chức danh/cấp bậc) — bỏ trống = xem toàn bộ
+ * @return Đối tượng query chứa thống kê lương (KPI tổng quan + danh sách dòng theo nhóm), khớp bộ lọc nếu có
  */
-export function useSalaryStatistics() {
+export function useSalaryStatistics(filters?: SalaryStatisticsFilters) {
   return useQuery({
-    queryKey: ['salary-statistics'],
-    queryFn: () => salaryApi.getStatistics(),
+    queryKey: ['salary-statistics', filters ?? {}],
+    queryFn: () => salaryApi.getStatistics(filters),
     staleTime: 2 * 60 * 1000,
   })
 }
