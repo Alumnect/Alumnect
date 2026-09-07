@@ -38,7 +38,8 @@ import {
 import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
-import { EVENTS, QUESTIONS } from '@/lib/constants'
+import { QUESTIONS } from '@/lib/constants'
+import { UpcomingEventsWidget } from '@/features/event'
 
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -869,24 +870,9 @@ export function FeedPage() {
         </Reveal>
 
 
-        {/* Mục 2: Sự kiện sắp tới */}
+        {/* Mục 2: Gợi ý sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>
-          <SidebarCard title="Sự kiện sắp diễn ra" action="Tất cả">
-            <ul className="space-y-3">
-              {EVENTS.slice(0, 2).map((e) => (
-                <li key={e.id} className="flex items-center gap-3">
-                  <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-plum-900/[0.04] py-1.5 text-center ring-1 ring-inset ring-plum-900/10">
-                    <span className="text-[9px] font-bold uppercase text-brand-600">{e.month}</span>
-                    <span className="text-base font-extrabold text-plum-900">{e.day}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-plum-900">{e.title}</p>
-                    <p className="truncate text-xs text-plum-400">{compact(e.attendees)} người tham gia</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
+          <UpcomingEventsWidget limit={3} />
         </Reveal>
 
         {/* Mục 3: Câu hỏi Q&A đang nổi bật */}

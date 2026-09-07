@@ -43,6 +43,7 @@ import { DeleteCommentModal, EditCommentModal, usePostDetail, useComments, useCr
 import type { Comment } from '@/features/post'
 import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, type Post } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
+import { EventRsvpButton } from '@/features/event'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -440,6 +441,26 @@ function PostDetailCard({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-plum-900">Đăng ký tham gia sự kiện (RSVP)</p>
+                <p className="text-xs text-plum-500">
+                  Xác nhận tham gia để nhận thông tin cập nhật và được ban tổ chức đón tiếp chu đáo nhất.
+                </p>
+              </div>
+              <EventRsvpButton
+                eventId={post.event.id ?? post.eventId}
+                eventTitle={post.event.title}
+                initialRegistered={post.event.isRegistered ?? false}
+                initialAttendeeCount={post.event.attendeeCount ?? 0}
+                capacity={post.event.capacity}
+                startTime={post.event.startTime}
+                size="md"
+                showCount={true}
+              />
             </div>
 
             {/* Mô tả sự kiện */}

@@ -90,11 +90,14 @@ public class PostMapper {
                         .contactEmail(job.getContactEmail())
                         .build() : null)
                 .event(event != null ? EventDTO.builder()
+                        .id(event.getId())
                         .title(event.getTitle())
                         .location(event.getLocation())
                         .startTime(event.getStartTime())
                         .endTime(event.getEndTime())
                         .capacity(event.getCapacity())
+                        .attendeeCount(event.getAttendeeCount())
+                        .isRegistered(false)
                         .build() : null)
                 .build();
     }
