@@ -65,6 +65,9 @@ public class AnswerServiceImpl implements AnswerService {
     @Autowired
     private VoteRepository voteRepository;
 
+    @Autowired
+    private com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+
     /**
      * {@inheritDoc}
      * <p>
@@ -187,6 +190,7 @@ public class AnswerServiceImpl implements AnswerService {
                 saved.getId(), questionId, request.getParentId(), email);
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        notificationService.sendAnswerNotification(author, question, saved);
         // Câu trả lời vừa tạo chắc chắn chưa ai bình chọn (kể cả chính tác giả).
         return answerMapper.toResponse(saved, profile, List.of(), false);
     }

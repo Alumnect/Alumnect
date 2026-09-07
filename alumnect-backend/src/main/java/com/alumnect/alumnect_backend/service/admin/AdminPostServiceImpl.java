@@ -36,6 +36,7 @@ public class AdminPostServiceImpl implements AdminPostService {
     private final AdminPostMapper adminPostMapper;
     private final JobPostingRepository jobPostingRepository;
     private final EventRepository eventRepository;
+    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
 
 
     @Override
@@ -95,6 +96,9 @@ public class AdminPostServiceImpl implements AdminPostService {
         
         post.setStatus(isHidden ? PostStatus.HIDDEN : PostStatus.ACTIVE);
         postRepository.save(post);
+        if (isHidden) {
+            notificationService.sendReportResolvedNotification(post);
+        }
     }
 
     /**

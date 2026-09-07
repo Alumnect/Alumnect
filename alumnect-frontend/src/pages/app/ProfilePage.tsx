@@ -74,7 +74,6 @@ const formatLocationCityOnly = (location?: string | null, locationCity?: string 
 }
 
 export function ProfilePage() {
-
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const userId = (() => {

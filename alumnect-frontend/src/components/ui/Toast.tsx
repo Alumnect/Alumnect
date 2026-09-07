@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Info, AlertTriangle, X, Bell } from 'lucide-react'
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning'
+export type ToastType = 'success' | 'error' | 'info' | 'warning' | 'notification'
 
 export interface ToastItem {
   id: string
@@ -49,6 +49,8 @@ export const toast = {
     useToastStore.getState().addToast('info', message, duration),
   warning: (message: string, duration?: number) =>
     useToastStore.getState().addToast('warning', message, duration),
+  notification: (message: string, duration?: number) =>
+    useToastStore.getState().addToast('notification', message, duration),
 }
 
 export function ToastContainer() {
@@ -81,6 +83,11 @@ export function ToastContainer() {
               icon: Info,
               border: 'border-brand-500/20 bg-white/95 text-plum-950',
               iconClass: 'text-brand-500 bg-brand-50',
+            },
+            notification: {
+              icon: Bell,
+              border: 'border-emerald-500/30 bg-white text-slate-900 shadow-xl shadow-emerald-950/5 ring-1 ring-emerald-500/20',
+              iconClass: 'text-emerald-600 bg-emerald-50 ring-1 ring-emerald-500/30',
             },
           }[item.type]
 

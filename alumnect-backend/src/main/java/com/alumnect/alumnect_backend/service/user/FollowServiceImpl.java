@@ -38,6 +38,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final UserProfileRepository userProfileRepository;
+    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
 
     /**
      * Thực hiện theo dõi một người dùng.
@@ -90,6 +91,7 @@ public class FollowServiceImpl implements FollowService {
 
         try {
             followRepository.saveAndFlush(follow);
+            notificationService.sendFollowNotification(follower, following);
         } catch (DataIntegrityViolationException e) {
             log.warn("Xảy ra xung đột dữ liệu khi follow (DataIntegrityViolationException): followerId={}, followingId={}", follower.getId(), following.getId());
             throw new ConflictException("Bạn đã theo dõi người dùng này từ trước.");

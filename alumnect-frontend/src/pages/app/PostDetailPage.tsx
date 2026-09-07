@@ -579,7 +579,10 @@ function CommentItem({
   // Bình luận trả lời (có parentId) được thụt lề để thể hiện 1 cấp phân cấp.
   const isReply = !!comment.parentId
   return (
-    <div className={cn('flex gap-3', isReply && 'ml-10')}>
+    <div
+      id={`comment-${comment.id}`}
+      className={cn('flex gap-3 transition-all duration-500 rounded-2xl', isReply && 'ml-10')}
+    >
       <Link to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'} className="shrink-0">
         <Avatar src={comment.avatar} name={comment.author} size={isReply ? 32 : 40} verified={comment.verified} />
       </Link>
@@ -968,6 +971,36 @@ function CommentsSection({
   const openDeleteComment = (comment: Comment) => {
     setDeletingComment(comment)
   }
+
+  const hasScrolledRef = useRef(false)
+
+  // Tự động cuộn và làm nổi bật bình luận nếu URL có định danh hash cụ thể (#comment-{id})
+  useEffect(() => {
+    if (window.location.hash && comments.length > 0 && !hasScrolledRef.current) {
+      const targetHash = window.location.hash.substring(1)
+      if (targetHash.startsWith('comment-')) {
+        const element = document.getElementById(targetHash)
+        if (element) {
+          hasScrolledRef.current = true
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            element.classList.add('bg-brand-500/15', 'p-2', 'ring-2', 'ring-brand-400/40')
+            setTimeout(() => {
+              element.classList.remove('bg-brand-500/15', 'p-2', 'ring-2', 'ring-brand-400/40')
+            }, 4000)
+          }, 300)
+        }
+      } else if (targetHash === 'comments') {
+        hasScrolledRef.current = true
+        const element = document.getElementById('comments')
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 300)
+        }
+      }
+    }
+  }, [comments])
 
   return (
     <section id="comments" className="space-y-4">

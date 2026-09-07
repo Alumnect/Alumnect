@@ -27,9 +27,9 @@ export function Reveal({
   className,
   direction = 'up',
   delay = 0,
-  duration = 0.7,
+  duration = 0.5,
   once = true,
-  blur = true,
+  blur = false,
 }: RevealProps) {
   const reduce = useReducedMotion()
   const { x, y } = offset[direction]
@@ -39,9 +39,9 @@ export function Reveal({
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, x, y, filter: blur ? 'blur(8px)' : 'blur(0px)' }}
+      initial={{ opacity: 0, x, y, filter: blur ? 'blur(6px)' : 'blur(0px)' }}
       whileInView={{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once, margin: '-80px' }}
+      viewport={{ once, margin: '0px' }}
       transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
@@ -57,15 +57,14 @@ type StaggerProps = {
 }
 
 /** Container that staggers the entrance of its <Reveal>-like children. */
-export function Stagger({ children, className, gap = 0.1, once = true }: StaggerProps) {
+export function Stagger({ children, className, gap = 0.06 }: StaggerProps) {
   const reduce = useReducedMotion()
   if (reduce) return <div className={className}>{children}</div>
   return (
     <motion.div
       className={className}
       initial="hidden"
-      whileInView="show"
-      viewport={{ once, margin: '-60px' }}
+      animate="show"
       variants={{
         hidden: {},
         show: { transition: { staggerChildren: gap } },
@@ -82,8 +81,8 @@ export function StaggerItem({ children, className }: { children: ReactNode; clas
     <motion.div
       className={className}
       variants={{
-        hidden: { opacity: 0, y: 26, filter: 'blur(6px)' },
-        show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+        hidden: { opacity: 0, y: 16 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
       }}
     >
       {children}
