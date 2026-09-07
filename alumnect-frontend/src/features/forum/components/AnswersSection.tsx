@@ -19,6 +19,7 @@ import { useLoginPrompt } from '@/store/loginPrompt'
 import { useAnswers, useCreateAnswer, useUpdateAnswer, useToggleVoteAnswer } from '../hooks/useAnswers'
 import { createAnswerSchema } from '../model/answer'
 import type { Answer, CreateAnswerInput } from '../model/answer'
+import { DeleteAnswerModal } from './DeleteAnswerModal'
 
 /** Giới hạn ký tự nội dung câu trả lời (khớp Backend @Size max=10000). */
 const MAX_BODY = 10000
@@ -160,6 +161,7 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
   const [editing, setEditing] = useState(false)
   const [replying, setReplying] = useState(false)
   const [showReplies, setShowReplies] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const profileLink = a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'
   const replyCount = a.replies.length
@@ -252,6 +254,11 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
                     Chỉnh sửa
                   </button>
                 )}
+                {canEdit && (
+                  <button type="button" onClick={() => setDeleting(true)} className="font-semibold text-plum-500 transition-colors hover:text-rose-600">
+                    Xóa
+                  </button>
+                )}
                 {a.edited && <span className="text-plum-400">Đã chỉnh sửa</span>}
               </div>
             </div>
@@ -298,6 +305,9 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
           </div>
         )}
       </div>
+
+      {/* Modal xác nhận xóa câu trả lời/reply (UC49) — mở khi tác giả bấm "Xóa" */}
+      {deleting && <DeleteAnswerModal questionId={questionId} answerId={a.id} onClose={() => setDeleting(false)} onDeleted={() => setDeleting(false)} />}
     </div>
   )
 }

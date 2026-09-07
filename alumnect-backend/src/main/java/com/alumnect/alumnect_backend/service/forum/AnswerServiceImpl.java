@@ -279,6 +279,40 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm câu trả lời ACTIVE thuộc đúng câu hỏi (404 nếu không, tái
+     * dùng {@link #findActiveAnswerInQuestion}) → kiểm tra người dùng chính là TÁC GIẢ (403 nếu không)
+     * → chuyển trạng thái sang DELETED → lưu → nếu là câu trả lời GỐC thì giảm {@code answer_count}
+     * của câu hỏi (đối xứng với {@link #createAnswer}, không âm).
+     */
+    @Override
+    @Transactional
+    public void deleteAnswer(String email, Long questionId, Long answerId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        Answer answer = findActiveAnswerInQuestion(questionId, answerId);
+
+        // Ownership (UC49): chỉ tác giả câu trả lời mới được xóa; người khác nhận 403.
+        if (!answer.getAuthor().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ tác giả mới được xóa câu trả lời này");
+        }
+
+        answer.setStatus(AnswerStatus.DELETED);
+        answerRepository.save(answer);
+
+        // Chỉ câu trả lời GỐC mới giảm bộ đếm answer_count (reply không tính vào số câu trả lời khi tạo).
+        if (answer.getParent() == null) {
+            Question question = answer.getQuestion();
+            question.setAnswerCount(Math.max(0, question.getAnswerCount() - 1));
+            questionRepository.save(question);
+        }
+
+        log.info("Xóa câu trả lời: id={}, questionId={}, tác giả={}", answerId, questionId, email);
+    }
+
+    /**
      * Xác thực người dùng theo email và kiểm tra vai trò Student/Alumni — dùng chung cho các thao tác
      * bình chọn (UC43). Mirror pattern {@code resolveMemberOrThrow} của QuestionServiceImpl (UC42)/PostServiceImpl (UC17).
      *

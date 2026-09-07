@@ -75,3 +75,21 @@ export function useToggleVoteAnswer(questionId: string) {
       vote ? forumApi.voteAnswer({ questionId, answerId }) : forumApi.unvoteAnswer({ questionId, answerId }),
   })
 }
+
+/**
+ * Hook xóa (mềm) một câu trả lời hoặc reply (UC49 - Delete an answer). Khi thành công làm mới danh sách
+ * câu trả lời (['answers', id]) để câu vừa xóa biến mất, và chi tiết câu hỏi (['question', id]) để cập
+ * nhật số câu trả lời (chỉ đổi khi xóa câu trả lời GỐC — reply không tính vào bộ đếm).
+ * @param questionId ID câu hỏi chứa câu trả lời
+ * @return Đối tượng mutation (mutate, isPending, error...)
+ */
+export function useDeleteAnswer(questionId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (answerId: string) => forumApi.deleteAnswer({ questionId, answerId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['answers', questionId] })
+      queryClient.invalidateQueries({ queryKey: ['question', questionId] })
+    },
+  })
+}

@@ -81,4 +81,19 @@ public interface AnswerService {
      * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu vai trò không phải Student/Alumni
      */
     VoteResponse unvoteAnswer(String email, Long questionId, Long answerId);
+
+    /**
+     * Xóa (mềm) một câu trả lời (hoặc reply) trên diễn đàn Q&A (UC49 - Delete an answer). Chỉ TÁC GIẢ
+     * của câu trả lời mới được xóa; người khác (kể cả Student/Alumni khác) bị từ chối với lỗi 403.
+     * Câu trả lời chuyển sang trạng thái {@link com.alumnect.alumnect_backend.common.enums.AnswerStatus#DELETED}
+     * — không xóa cứng dữ liệu. Nếu là câu trả lời GỐC, giảm {@code answer_count} của câu hỏi tương ứng
+     * (đối xứng với lúc tạo — reply không tính vào bộ đếm nên xóa reply cũng không đổi bộ đếm).
+     *
+     * @param email      Email của người dùng đang đăng nhập (lấy từ SecurityContext)
+     * @param questionId ID câu hỏi chứa câu trả lời (để xác thực đường dẫn)
+     * @param answerId   ID câu trả lời cần xóa
+     * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy câu trả lời ACTIVE thuộc đúng câu hỏi
+     * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu người dùng không phải tác giả câu trả lời
+     */
+    void deleteAnswer(String email, Long questionId, Long answerId);
 }

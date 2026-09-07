@@ -2419,6 +2419,101 @@
                         },
                         "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu trả lời với id: 999999\". Cũng dùng để test answerId có thật nhưng thuộc questionId khác (đổi questionId trong URL) — cùng trả 404."
                     }
+                },
+                {
+                    "name": "7.29 Xóa Câu trả lời (UC49 - Thành công, đúng tác giả)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "1"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 \"Xóa câu trả lời thành công\". Thay answerId=1 bằng câu trả lời thật do {{accessToken}} là tác giả. Nếu đây là câu trả lời GỐC, answer_count của câu hỏi giảm 1; nếu là reply thì không đổi."
+                    }
+                },
+                {
+                    "name": "7.30 Xóa Câu trả lời (UC49 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "1"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller."
+                    }
+                },
+                {
+                    "name": "7.31 Xóa Câu trả lời (UC49 - Không phải tác giả, lỗi 403)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "2"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 403 \"Chỉ tác giả mới được xóa câu trả lời này\". Thay answerId=2 bằng câu trả lời KHÔNG thuộc về user của {{accessToken}}."
+                    }
+                },
+                {
+                    "name": "7.32 Xóa Câu trả lời không tồn tại/khác câu hỏi (UC49 - Lỗi 404)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/questions/1/answers/999999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "questions",
+                                "1",
+                                "answers",
+                                "999999"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu trả lời với id: 999999\". Cũng dùng để test xóa 2 lần liên tiếp (lần 2 trả 404 vì đã DELETED), và test answerId thật nhưng thuộc questionId khác."
+                    }
                 }
             ]
         },
