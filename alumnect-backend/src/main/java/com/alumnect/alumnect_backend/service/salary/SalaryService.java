@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.service.salary;
 
 import com.alumnect.alumnect_backend.dto.request.salary.CreateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryContributionResponse;
+import com.alumnect.alumnect_backend.dto.response.salary.SalaryStatisticsResponse;
 
 /**
  * Interface định nghĩa các dịch vụ liên quan tới Salary Board (UC50 - Contribute salary data).
@@ -24,4 +25,13 @@ public interface SalaryService {
      * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu industryId không tồn tại hoặc currency sai định dạng
      */
     SalaryContributionResponse createContribution(String email, CreateSalaryContributionRequest request);
+
+    /**
+     * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics): số liệu tổng quan
+     * (tổng lượt đóng góp, số vị trí đang theo dõi, trung vị chung) và danh sách dòng thống kê theo
+     * nhóm chức danh + cấp bậc + khu vực (chỉ nhóm đạt đủ số mẫu tối thiểu mới hiển thị).
+     *
+     * @return Thống kê lương tổng hợp
+     */
+    SalaryStatisticsResponse getStatistics();
 }

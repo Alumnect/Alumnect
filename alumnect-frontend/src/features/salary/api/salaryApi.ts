@@ -1,11 +1,12 @@
 import http from '@/lib/http'
-import { industrySchema, salaryContributionSchema } from '../model/salary'
-import type { CreateSalaryContributionInput, Industry, SalaryContribution } from '../model/salary'
+import { industrySchema, salaryContributionSchema, salaryStatisticsSchema } from '../model/salary'
+import type { CreateSalaryContributionInput, Industry, SalaryContribution, SalaryStatistics } from '../model/salary'
 
 /**
- * Tầng gọi API cho UC50 - Contribute salary data (Salary Board).
- * Gọi thật `GET /api/v1/industries` (danh mục ngành nghề) và `POST /api/v1/salary-contributions`
- * (đóng góp dữ liệu lương). Interceptor `http` tự bóc envelope `response.data`.
+ * Tầng gọi API cho Salary Board: UC50 (Contribute salary data) và UC53 (View salary statistics).
+ * Gọi thật `GET /api/v1/industries` (danh mục ngành nghề), `POST /api/v1/salary-contributions`
+ * (đóng góp dữ liệu lương), và `GET /api/v1/salary-contributions/statistics` (thống kê lương).
+ * Interceptor `http` tự bóc envelope `response.data`.
  */
 
 /** Trích mảng phần tử thô từ phong bì (envelope) phản hồi — hỗ trợ `{ content }`/`{ items }`/mảng trực tiếp. */
@@ -47,5 +48,17 @@ export const salaryApi = {
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return salaryContributionSchema.parse(payload)
+  },
+
+  /**
+   * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics).
+   * Gọi `GET /api/v1/salary-contributions/statistics`; yêu cầu đã đăng nhập (Student/Alumni).
+   * @return Thống kê lương đã chuẩn hóa (KPI tổng quan + danh sách dòng theo nhóm)
+   */
+  getStatistics: async (): Promise<SalaryStatistics> => {
+    const body = await http.get('/salary-contributions/statistics')
+    const b = body as unknown as Record<string, unknown> | undefined
+    const payload = (b?.data ?? b) as unknown
+    return salaryStatisticsSchema.parse(payload)
   },
 }

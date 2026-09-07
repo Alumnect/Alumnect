@@ -5,6 +5,8 @@ import com.alumnect.alumnect_backend.dao.salary.SalaryContributionRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.salary.CreateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryContributionResponse;
+import com.alumnect.alumnect_backend.dto.response.salary.SalaryStatRowResponse;
+import com.alumnect.alumnect_backend.dto.response.salary.SalaryStatisticsResponse;
 import com.alumnect.alumnect_backend.entity.salary.Industry;
 import com.alumnect.alumnect_backend.entity.salary.SalaryContribution;
 import com.alumnect.alumnect_backend.entity.user.User;
@@ -18,6 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Lớp dịch vụ thực thi logic nghiệp vụ Salary Board (UC50 - Contribute salary data).
  * Triển khai interface {@link SalaryService}.
@@ -26,6 +32,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class SalaryServiceImpl implements SalaryService {
 
     private static final Logger log = LoggerFactory.getLogger(SalaryServiceImpl.class);
+
+    /**
+     * Số mẫu tối thiểu để 1 nhóm (chức danh + cấp bậc + khu vực) được hiển thị trong thống kê
+     * (UC53 - View salary statistics) — bảo vệ ẩn danh, tránh nhóm quá nhỏ lộ dữ liệu của 1-2 cá nhân.
+     */
+    private static final int MIN_SAMPLE_SIZE = 5;
 
     @Autowired
     private SalaryContributionRepository salaryContributionRepository;
@@ -91,6 +103,40 @@ public class SalaryServiceImpl implements SalaryService {
                 saved.getId(), request.getIndustryId(), email);
 
         return salaryMapper.toResponse(saved);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: đếm tổng số lượt đóng góp (mọi loại tiền tệ) → lấy trung vị chung trên dữ liệu VND →
+     * lấy danh sách nhóm thống kê đạt đủ mẫu tối thiểu (chỉ VND) → map từng {@code Object[]} sang
+     * {@link SalaryStatRowResponse}.
+     */
+    @Override
+    public SalaryStatisticsResponse getStatistics() {
+        long totalContributions = salaryContributionRepository.count();
+        BigDecimal overallMedian = salaryContributionRepository.findOverallMedianVnd();
+
+        List<Object[]> rawRows = salaryContributionRepository.findGroupedStatistics(MIN_SAMPLE_SIZE);
+        List<SalaryStatRowResponse> rows = new ArrayList<>();
+        for (Object[] r : rawRows) {
+            rows.add(SalaryStatRowResponse.builder()
+                    .role((String) r[0])
+                    .level((String) r[1])
+                    .region((String) r[2])
+                    .samples(((Number) r[3]).longValue())
+                    .p25((BigDecimal) r[4])
+                    .median((BigDecimal) r[5])
+                    .p75((BigDecimal) r[6])
+                    .build());
+        }
+
+        return SalaryStatisticsResponse.builder()
+                .totalContributions(totalContributions)
+                .trackedPositions(rows.size())
+                .overallMedian(overallMedian)
+                .rows(rows)
+                .build();
     }
 
     /** Cắt khoảng trắng thừa; chuỗi rỗng/blank chuẩn hóa thành null (tùy chọn, không lưu chuỗi rỗng). */
