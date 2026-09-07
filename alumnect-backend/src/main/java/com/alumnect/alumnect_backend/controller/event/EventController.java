@@ -48,14 +48,14 @@ public class EventController {
     }
 
     /**
-     * API hủy đăng ký tham gia sự kiện (Cancel RSVP) (UC25).
+     * API hủy đăng ký tham gia sự kiện (Cancel RSVP / Attendance) (UC26 - Cancel event attendance).
      * Yêu cầu JWT; chỉ dành cho Student hoặc Alumni đã đăng ký trước đó.
      *
      * @param eventId        ID của sự kiện
      * @param authentication Thông tin xác thực người dùng
      * @return Thông tin kết quả hủy đăng ký kèm số lượng người tham gia cập nhật
      */
-    @DeleteMapping("/{eventId}/rsvp")
+    @DeleteMapping(value = {"/{eventId}/rsvp", "/{eventId}/attendance"})
     public ResponseEntity<ApiResponse<EventRegistrationResponse>> cancelRsvp(
             @PathVariable Long eventId,
             Authentication authentication) {

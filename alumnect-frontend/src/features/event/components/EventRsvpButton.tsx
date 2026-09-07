@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { useToggleRsvp, useRsvpStatus } from '../hooks/useEventRsvp'
 import { EventAttendeesModal } from './EventAttendeesModal'
+import { CancelRsvpModal } from './CancelRsvpModal'
 import { compact } from '@/lib/utils'
 
 interface EventRsvpButtonProps {
@@ -40,6 +41,7 @@ export function EventRsvpButton({
   const [isRegistered, setIsRegistered] = useState(initialRegistered)
   const [attendeeCount, setAttendeeCount] = useState(initialAttendeeCount)
   const [isAttendeesOpen, setIsAttendeesOpen] = useState(false)
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
   // Sync with server data when available
@@ -63,6 +65,36 @@ export function EventRsvpButton({
   // Business logic validations
   const isPast = startTime ? new Date(startTime).getTime() < Date.now() : false
   const isFull = capacity ? attendeeCount >= capacity : false
+
+  const executeCancelRsvp = () => {
+    if (!eventId) return
+    const nextCount = Math.max(0, attendeeCount - 1)
+
+    setIsRegistered(false)
+    setAttendeeCount(nextCount)
+    setIsCancelModalOpen(false)
+
+    toggleRsvp.mutate(
+      { eventId, register: false },
+      {
+        onSuccess: (res) => {
+          setIsRegistered(res.registered)
+          setAttendeeCount(res.attendeeCount)
+          const msg = res.message || 'Đã hủy đăng ký tham gia sự kiện thành công!'
+          toast.success(msg)
+        },
+        onError: (err: any) => {
+          setIsRegistered(true)
+          setAttendeeCount(attendeeCount)
+          const errorMsg =
+            err.response?.data?.message ||
+            err.message ||
+            'Hủy đăng ký không thành công. Vui lòng thử lại.'
+          toast.error(errorMsg)
+        },
+      }
+    )
+  }
 
   const handleRsvpClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -88,34 +120,33 @@ export function EventRsvpButton({
       return
     }
 
-    if (!isRegistered && isFull) {
+    // Nếu đã đăng ký, mở modal xác nhận hủy tham dự
+    if (isRegistered) {
+      setIsCancelModalOpen(true)
+      return
+    }
+
+    if (isFull) {
       toast.warning('Sự kiện đã đủ số lượng người tham gia.')
       return
     }
 
-    const nextRegistered = !isRegistered
-    const nextCount = nextRegistered ? attendeeCount + 1 : Math.max(0, attendeeCount - 1)
-
-    // Optimistic UI update
-    setIsRegistered(nextRegistered)
+    // Luồng đăng ký tham gia mới
+    const nextCount = attendeeCount + 1
+    setIsRegistered(true)
     setAttendeeCount(nextCount)
 
     toggleRsvp.mutate(
-      { eventId, register: nextRegistered },
+      { eventId, register: true },
       {
         onSuccess: (res) => {
           setIsRegistered(res.registered)
           setAttendeeCount(res.attendeeCount)
-          const msg =
-            res.message ||
-            (nextRegistered
-              ? 'Đăng ký tham gia sự kiện thành công!'
-              : 'Đã hủy đăng ký tham gia sự kiện.')
+          const msg = res.message || 'Đăng ký tham gia sự kiện thành công!'
           toast.success(msg)
         },
         onError: (err: any) => {
-          // Rollback on error
-          setIsRegistered(!nextRegistered)
+          setIsRegistered(false)
           setAttendeeCount(attendeeCount)
           const errorMsg =
             err.response?.data?.message ||
@@ -221,6 +252,16 @@ export function EventRsvpButton({
           isOpen={isAttendeesOpen}
           onClose={() => setIsAttendeesOpen(false)}
           eventId={eventId}
+          eventTitle={eventTitle}
+        />
+      )}
+
+      {eventId && (
+        <CancelRsvpModal
+          isOpen={isCancelModalOpen}
+          onClose={() => setIsCancelModalOpen(false)}
+          onConfirm={executeCancelRsvp}
+          isPending={toggleRsvp.isPending}
           eventTitle={eventTitle}
         />
       )}
