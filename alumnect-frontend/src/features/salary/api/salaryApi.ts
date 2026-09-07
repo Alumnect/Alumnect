@@ -1,15 +1,15 @@
 import http from '@/lib/http'
 import { industrySchema, salaryContributionSchema, salaryStatisticsSchema } from '../model/salary'
-import type { CreateSalaryContributionInput, Industry, SalaryContribution, SalaryStatistics } from '../model/salary'
+import type { CreateSalaryContributionInput, Industry, SalaryContribution, SalaryStatistics, SalaryStatisticsFilters } from '../model/salary'
 
 /**
  * Tầng gọi API cho Salary Board: UC50 (Contribute salary data), UC51 (Edit salary contribution),
- * UC52 (Delete salary contribution), UC53 (View salary statistics). Gọi thật
- * `GET /api/v1/industries` (danh mục ngành nghề), `POST /api/v1/salary-contributions` (đóng góp),
- * `GET /api/v1/salary-contributions/mine` (danh sách đóng góp của chính mình),
+ * UC52 (Delete salary contribution), UC53 (View salary statistics), UC54 (Filter salary data). Gọi
+ * thật `GET /api/v1/industries` (danh mục ngành nghề), `POST /api/v1/salary-contributions` (đóng
+ * góp), `GET /api/v1/salary-contributions/mine` (danh sách đóng góp của chính mình),
  * `PUT /api/v1/salary-contributions/{id}` (sửa), `DELETE /api/v1/salary-contributions/{id}` (xóa),
- * và `GET /api/v1/salary-contributions/statistics` (thống kê). Interceptor `http` tự bóc envelope
- * `response.data`.
+ * và `GET /api/v1/salary-contributions/statistics` (thống kê, kèm query param lọc tùy chọn).
+ * Interceptor `http` tự bóc envelope `response.data`.
  */
 
 /** Trích mảng phần tử thô từ phong bì (envelope) phản hồi — hỗ trợ `{ content }`/`{ items }`/mảng trực tiếp. */
@@ -93,12 +93,20 @@ export const salaryApi = {
   },
 
   /**
-   * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics).
+   * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics), có thể kèm bộ lọc
+   * tùy chọn theo ngành/khu vực/chức danh/cấp bậc (UC54 - Filter salary data).
    * Gọi `GET /api/v1/salary-contributions/statistics`; yêu cầu đã đăng nhập (Student/Alumni).
-   * @return Thống kê lương đã chuẩn hóa (KPI tổng quan + danh sách dòng theo nhóm)
+   * @param filters Bộ lọc tùy chọn — bỏ trống = xem toàn bộ
+   * @return Thống kê lương đã chuẩn hóa (KPI tổng quan + danh sách dòng theo nhóm), khớp bộ lọc nếu có
    */
-  getStatistics: async (): Promise<SalaryStatistics> => {
-    const body = await http.get('/salary-contributions/statistics')
+  getStatistics: async (filters?: SalaryStatisticsFilters): Promise<SalaryStatistics> => {
+    const params: Record<string, string | number> = {}
+    if (filters?.industryId != null) params.industryId = filters.industryId
+    if (filters?.region) params.region = filters.region
+    if (filters?.jobTitle) params.jobTitle = filters.jobTitle
+    if (filters?.level) params.level = filters.level
+
+    const body = await http.get('/salary-contributions/statistics', { params })
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return salaryStatisticsSchema.parse(payload)

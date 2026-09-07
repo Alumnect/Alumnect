@@ -2,9 +2,9 @@ import { z } from 'zod'
 
 /**
  * Model & schema cho tính năng Salary Board: UC50 (Contribute salary data), UC51 (Edit salary
- * contribution), UC53 (View salary statistics). Định nghĩa kiểu dữ liệu ngành nghề, lượt đóng góp
- * lương, thống kê lương, và schema Zod dùng để xác thực/chuẩn hóa dữ liệu trả về từ API cũng như
- * dữ liệu form gửi lên.
+ * contribution), UC53 (View salary statistics), UC54 (Filter salary data). Định nghĩa kiểu dữ liệu
+ * ngành nghề, lượt đóng góp lương, thống kê lương, bộ lọc, và schema Zod dùng để xác thực/chuẩn hóa
+ * dữ liệu trả về từ API cũng như dữ liệu form gửi lên.
  */
 
 /** Schema Zod cho một ngành nghề (dùng cho dropdown chọn ngành). */
@@ -97,3 +97,19 @@ export const salaryStatisticsSchema = z.object({
   rows: z.array(salaryStatRowSchema).default([]),
 })
 export type SalaryStatistics = z.infer<typeof salaryStatisticsSchema>
+
+/** Cấp bậc hợp lệ cho bộ lọc (UC54 - Filter salary data) — khớp `VALID_LEVELS` phía Backend. */
+export const SALARY_LEVELS = ['Junior', 'Mid', 'Senior'] as const
+export type SalaryLevel = (typeof SALARY_LEVELS)[number]
+
+/**
+ * Bộ lọc thống kê lương (UC54 - Filter salary data) — mọi trường đều tùy chọn, bỏ trống = xem toàn
+ * bộ (giữ nguyên hành vi gốc của UC53). Gửi kèm `GET /salary-contributions/statistics` dưới dạng
+ * query param.
+ */
+export interface SalaryStatisticsFilters {
+  industryId?: number | null
+  region?: string
+  jobTitle?: string
+  level?: SalaryLevel | null
+}
