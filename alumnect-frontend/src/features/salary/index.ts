@@ -1,6 +1,7 @@
-export { useIndustries, useCreateSalaryContribution, useMyContributions, useUpdateSalaryContribution, useSalaryStatistics } from './hooks/useSalary'
+export { useIndustries, useCreateSalaryContribution, useMyContributions, useUpdateSalaryContribution, useDeleteSalaryContribution, useSalaryStatistics } from './hooks/useSalary'
 export { salaryApi } from './api/salaryApi'
 export { industrySchema, salaryContributionSchema, createSalaryContributionSchema, salaryStatisticsSchema, MAX_GROSS_AMOUNT } from './model/salary'
 export type { Industry, SalaryContribution, CreateSalaryContributionInput, SalaryStatRow, SalaryStatistics } from './model/salary'
 export { ContributeSalaryModal } from './components/ContributeSalaryModal'
 export { MyContributionsModal } from './components/MyContributionsModal'
+export { DeleteSalaryContributionModal } from './components/DeleteSalaryContributionModal'

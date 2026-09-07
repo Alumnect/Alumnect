@@ -1,17 +1,21 @@
 /**
  * MyContributionsModal — Modal xem lại các lượt đóng góp lương của chính mình (UC51 - Edit salary
  * contribution). Chỉ hiển thị được từ nút "Đóng góp của tôi" (chỉ Alumni thấy), liệt kê các lượt đã
- * đóng góp kèm nút "Sửa" mở `ContributeSalaryModal` ở chế độ chỉnh sửa.
+ * đóng góp kèm nút "Sửa" (mở `ContributeSalaryModal` ở chế độ chỉnh sửa) và "Xóa" (mở
+ * `DeleteSalaryContributionModal` xác nhận — UC52 - Delete salary contribution).
  */
-import { AlertTriangle, LineChart, Pencil, RefreshCw, ShieldCheck } from 'lucide-react'
-import { Modal, EmptyState } from '@/components/ui'
+import { useState } from 'react'
+import { AlertTriangle, LineChart, Pencil, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
+import { Modal, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useMyContributions } from '../hooks/useSalary'
 import type { SalaryContribution } from '../model/salary'
+import { DeleteSalaryContributionModal } from './DeleteSalaryContributionModal'
 
 export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void; onEdit: (contribution: SalaryContribution) => void }) {
   const { data, isLoading, isError, error, refetch } = useMyContributions()
   const contributions = data ?? []
+  const [deleting, setDeleting] = useState<SalaryContribution | null>(null)
 
   return (
     <Modal isOpen onClose={onClose} title="Đóng góp của tôi" icon={<ShieldCheck size={18} className="text-brand-600" />} maxWidthClassName="max-w-lg">
@@ -52,12 +56,33 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
                   {c.grossAmount.toLocaleString('vi-VN')} {c.currency} / tháng
                 </p>
               </div>
-              <Button size="sm" variant="secondary" leftIcon={<Pencil size={13} />} onClick={() => onEdit(c)} className="shrink-0">
-                Sửa
-              </Button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Button size="sm" variant="secondary" leftIcon={<Pencil size={13} />} onClick={() => onEdit(c)}>
+                  Sửa
+                </Button>
+                <button
+                  onClick={() => setDeleting(c)}
+                  aria-label="Xóa"
+                  className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modal xác nhận xóa (UC52) — chồng lên danh sách, danh sách tự cập nhật sau khi xóa (cache invalidate) */}
+      {deleting && (
+        <DeleteSalaryContributionModal
+          contribution={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => {
+            setDeleting(null)
+            toast.success('Đã xóa dữ liệu lương thành công')
+          }}
+        />
       )}
     </Modal>
   )

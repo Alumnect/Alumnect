@@ -4,10 +4,11 @@ import type { CreateSalaryContributionInput, Industry, SalaryContribution, Salar
 
 /**
  * Tầng gọi API cho Salary Board: UC50 (Contribute salary data), UC51 (Edit salary contribution),
- * UC53 (View salary statistics). Gọi thật `GET /api/v1/industries` (danh mục ngành nghề),
- * `POST /api/v1/salary-contributions` (đóng góp), `GET /api/v1/salary-contributions/mine` (danh
- * sách đóng góp của chính mình), `PUT /api/v1/salary-contributions/{id}` (sửa), và
- * `GET /api/v1/salary-contributions/statistics` (thống kê). Interceptor `http` tự bóc envelope
+ * UC52 (Delete salary contribution), UC53 (View salary statistics). Gọi thật
+ * `GET /api/v1/industries` (danh mục ngành nghề), `POST /api/v1/salary-contributions` (đóng góp),
+ * `GET /api/v1/salary-contributions/mine` (danh sách đóng góp của chính mình),
+ * `PUT /api/v1/salary-contributions/{id}` (sửa), `DELETE /api/v1/salary-contributions/{id}` (xóa),
+ * và `GET /api/v1/salary-contributions/statistics` (thống kê). Interceptor `http` tự bóc envelope
  * `response.data`.
  */
 
@@ -80,6 +81,15 @@ export const salaryApi = {
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return salaryContributionSchema.parse(payload)
+  },
+
+  /**
+   * Xóa (cứng) một lượt đóng góp lương đã có (UC52 - Delete salary contribution). Không thể hoàn tác.
+   * Gọi `DELETE /api/v1/salary-contributions/{id}`; chỉ chính chủ xóa được (BE chặn 403 người khác).
+   * @param id ID lượt đóng góp cần xóa
+   */
+  deleteContribution: async (id: string): Promise<void> => {
+    await http.delete(`/salary-contributions/${id}`)
   },
 
   /**

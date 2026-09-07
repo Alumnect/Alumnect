@@ -64,6 +64,22 @@ export function useUpdateSalaryContribution(id: string) {
 }
 
 /**
+ * Hook xóa (cứng) một lượt đóng góp lương đã có (UC52 - Delete salary contribution). Không thể
+ * hoàn tác. Thành công thì làm mới cache thống kê (UC53) và danh sách đóng góp của chính mình.
+ * @return Đối tượng mutation nhận `id` lượt đóng góp cần xóa (mutate, isPending, error...)
+ */
+export function useDeleteSalaryContribution() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => salaryApi.deleteContribution(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['salary-statistics'] })
+      queryClient.invalidateQueries({ queryKey: ['my-salary-contributions'] })
+    },
+  })
+}
+
+/**
  * Hook lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics). Dữ liệu tổng
  * hợp toàn hệ thống, không đổi theo từng giây nên cache vừa phải (2 phút) để tránh gọi lại quá dày
  * khi người dùng chuyển bộ lọc khu vực (lọc client-side trên cùng 1 lần fetch).

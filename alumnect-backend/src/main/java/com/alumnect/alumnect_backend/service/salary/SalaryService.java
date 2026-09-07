@@ -54,6 +54,19 @@ public interface SalaryService {
     SalaryContributionResponse updateContribution(String email, Long contributionId, UpdateSalaryContributionRequest request);
 
     /**
+     * Xóa (cứng) một lượt đóng góp lương đã có (UC52 - Delete salary contribution). Chỉ chính chủ
+     * (người đã tạo lượt đóng góp đó) mới được xóa; người khác bị từ chối 403. Xóa cứng — không có
+     * cột trạng thái để xóa mềm, và không có bản ghi nào khác tham chiếu tới lượt đóng góp này
+     * (khác Answer/Comment không có khái niệm "vote" hay "reply" gắn vào 1 lượt đóng góp lương).
+     *
+     * @param email          Email người dùng đang đăng nhập (lấy từ SecurityContext)
+     * @param contributionId ID lượt đóng góp cần xóa
+     * @throws com.alumnect.alumnect_backend.exception.ResourceNotFoundException nếu không tìm thấy tài khoản hoặc lượt đóng góp
+     * @throws com.alumnect.alumnect_backend.exception.ForbiddenException nếu không phải chính chủ
+     */
+    void deleteContribution(String email, Long contributionId);
+
+    /**
      * Lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics): số liệu tổng quan
      * (tổng lượt đóng góp, số vị trí đang theo dõi, trung vị chung) và danh sách dòng thống kê theo
      * nhóm chức danh + cấp bậc + khu vực (chỉ nhóm đạt đủ số mẫu tối thiểu mới hiển thị).
