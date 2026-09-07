@@ -2442,7 +2442,7 @@
                                 "1"
                             ]
                         },
-                        "description": "Kỳ vọng: HTTP 200 \"Xóa câu trả lời thành công\". Thay answerId=1 bằng câu trả lời thật do {{accessToken}} là tác giả. Nếu đây là câu trả lời GỐC, answer_count của câu hỏi giảm 1; nếu là reply thì không đổi."
+                        "description": "Kỳ vọng: HTTP 200 \"Xóa câu trả lời thành công\". Đây là XÓA CỨNG (không phải đổi status) — bản ghi biến mất khỏi bảng answers. Thay answerId=1 bằng câu trả lời thật do {{accessToken}} là tác giả. Nếu đây là câu trả lời GỐC: mọi reply trực tiếp của nó cũng bị xóa cứng theo (DB cascade), answer_count của câu hỏi giảm 1; nếu là reply thì answer_count không đổi."
                     }
                 },
                 {
@@ -2512,7 +2512,7 @@
                                 "999999"
                             ]
                         },
-                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu trả lời với id: 999999\". Cũng dùng để test xóa 2 lần liên tiếp (lần 2 trả 404 vì đã DELETED), và test answerId thật nhưng thuộc questionId khác."
+                        "description": "Kỳ vọng: HTTP 404 \"Không tìm thấy câu trả lời với id: 999999\". Cũng dùng để test xóa 2 lần liên tiếp (lần 2 trả 404 vì bản ghi đã bị xóa cứng, không còn tồn tại), và test answerId thật nhưng thuộc questionId khác."
                     }
                 }
             ]
