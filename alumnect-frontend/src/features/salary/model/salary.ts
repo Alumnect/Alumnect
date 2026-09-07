@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
 /**
- * Model & schema cho tính năng UC50 - Contribute salary data (Salary Board).
- * Định nghĩa kiểu dữ liệu ngành nghề, lượt đóng góp lương, và schema Zod dùng để xác thực/chuẩn hóa
- * dữ liệu trả về từ API cũng như dữ liệu form gửi lên.
+ * Model & schema cho tính năng Salary Board: UC50 (Contribute salary data) và UC53 (View salary
+ * statistics). Định nghĩa kiểu dữ liệu ngành nghề, lượt đóng góp lương, thống kê lương, và schema
+ * Zod dùng để xác thực/chuẩn hóa dữ liệu trả về từ API cũng như dữ liệu form gửi lên.
  */
 
 /** Schema Zod cho một ngành nghề (dùng cho dropdown chọn ngành). */
@@ -60,3 +60,34 @@ export const createSalaryContributionSchema = z.object({
     .max(MAX_GROSS_AMOUNT, 'Mức lương không hợp lệ'),
 })
 export type CreateSalaryContributionInput = z.infer<typeof createSalaryContributionSchema>
+
+/**
+ * Schema Zod cho một dòng thống kê lương theo nhóm (chức danh + cấp bậc + khu vực) — UC53 View
+ * salary statistics. Khớp `SalaryStatRowResponse` phía Backend.
+ */
+export const salaryStatRowSchema = z.object({
+  role: z.string().default(''),
+  level: z.string().default(''),
+  region: z.string().default(''),
+  median: z.union([z.string(), z.number()]).transform(Number).default(0),
+  p25: z.union([z.string(), z.number()]).transform(Number).default(0),
+  p75: z.union([z.string(), z.number()]).transform(Number).default(0),
+  samples: z.union([z.string(), z.number()]).transform(Number).default(0),
+})
+export type SalaryStatRow = z.infer<typeof salaryStatRowSchema>
+
+/**
+ * Schema Zod cho thống kê lương tổng hợp (UC53) — số liệu tổng quan (KPI cards) + danh sách dòng
+ * thống kê theo nhóm. Khớp `SalaryStatisticsResponse` phía Backend.
+ */
+export const salaryStatisticsSchema = z.object({
+  totalContributions: z.union([z.string(), z.number()]).transform(Number).default(0),
+  trackedPositions: z.union([z.string(), z.number()]).transform(Number).default(0),
+  overallMedian: z
+    .union([z.string(), z.number()])
+    .transform(Number)
+    .nullable()
+    .catch(null),
+  rows: z.array(salaryStatRowSchema).default([]),
+})
+export type SalaryStatistics = z.infer<typeof salaryStatisticsSchema>

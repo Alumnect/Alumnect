@@ -1,32 +1,69 @@
-import { useState } from 'react'
-import { LineChart, ShieldCheck, Plus, Filter } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw } from 'lucide-react'
 import { PageHeader, Badge, Card, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
-import type { SalaryRow } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { ContributeSalaryModal } from '@/features/salary'
+import { ContributeSalaryModal, useSalaryStatistics } from '@/features/salary'
 
-const REGIONS = ['Tất cả khu vực', 'TP.HCM', 'Hà Nội', 'Đà Nẵng', 'Từ xa']
+const ALL_REGIONS = 'Tất cả khu vực'
 
-// TODO(team): chưa có API thống kê Salary Board (UC53 - View salary statistics) — thay SALARY bằng
-// dữ liệu thật khi backend sẵn sàng. UC50 (Contribute salary data) chỉ lo phần GHI dữ liệu, không
-// đọc/hiển thị lại — xem `ContributeSalaryModal`.
-const SALARY: SalaryRow[] = []
+/** Khung xương hiển thị trong lúc tải thống kê lần đầu (UC53). */
+function SalarySkeleton() {
+  return (
+    <div className="space-y-5">
+      {[0, 1, 2].map((i) => (
+        <div key={i}>
+          <div className="mb-2 flex items-center justify-between">
+            <div className="h-3.5 w-40 animate-pulse rounded bg-plum-900/[0.06]" />
+            <div className="h-3 w-20 animate-pulse rounded bg-plum-900/[0.05]" />
+          </div>
+          <div className="h-7 w-full animate-pulse rounded-full bg-plum-900/[0.04]" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Trạng thái lỗi khi tải thống kê lương thất bại (UC53). */
+function SalaryStatsError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  return (
+    <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+        <AlertTriangle size={24} />
+      </span>
+      <div>
+        <p className="font-bold text-plum-900">Không tải được thống kê lương</p>
+        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+      </div>
+      <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} onClick={onRetry}>
+        Thử lại
+      </Button>
+    </Card>
+  )
+}
 
 export function SalaryPage() {
-  const [region, setRegion] = useState('Tất cả khu vực')
+  const [region, setRegion] = useState(ALL_REGIONS)
   const [contributeOpen, setContributeOpen] = useState(false)
 
-  // Quyền đóng góp (UC50): CHỈ Cựu sinh viên (ALUMNI) — khác các UC Q&A khác (Student + Alumni).
+  // Quyền đóng góp (UC50): CHỈ Cựu sinh viên (ALUMNI) — khác quyền XEM thống kê (UC53: Student + Alumni).
   const user = useAuthStore((s) => s.user)
   const canContribute = !!user && user.role === 'ALUMNI'
+
+  const { data, isLoading, isError, error, refetch } = useSalaryStatistics()
+  const allRows = data?.rows ?? []
+
+  // Khu vực lọc suy ra từ chính dữ liệu thật (region là text tự do khi đóng góp ở UC50, không phải
+  // danh mục cố định) — đảm bảo bộ lọc luôn khớp với giá trị thực tế đang có, không lệch dữ liệu.
+  const regions = useMemo(() => [ALL_REGIONS, ...Array.from(new Set(allRows.map((r) => r.region))).sort()], [allRows])
+
   // Giữ `max` tính trên TOÀN BỘ dữ liệu (không phải tập đã lọc) để thang đo
   // biểu đồ không nhảy khi đổi vùng — giúp so sánh trực quan giữa các lần lọc.
   // Fallback 1 khi chưa có dữ liệu để tránh Math.max() trả về -Infinity.
-  const max = SALARY.length ? Math.max(...SALARY.map((s) => s.p75)) : 1
-  const rows = SALARY.filter((s) => region === 'Tất cả khu vực' || s.region === region)
+  const max = allRows.length ? Math.max(...allRows.map((s) => s.p75)) : 1
+  const rows = allRows.filter((s) => region === ALL_REGIONS || s.region === region)
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -46,9 +83,9 @@ export function SalaryPage() {
       <Reveal>
         <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { k: 6400, s: '+', v: 'Lượt khảo sát' },
-            { k: 40, s: '+', v: 'Vị trí theo dõi' },
-            { k: 32, s: 'Tr', v: 'Trung vị (VND)' },
+            { k: data?.totalContributions ?? 0, s: '+', v: 'Lượt khảo sát' },
+            { k: data?.trackedPositions ?? 0, s: '', v: 'Vị trí theo dõi' },
+            { k: data?.overallMedian ?? 0, s: 'Tr', v: 'Trung vị (VND)' },
             { k: 100, s: '%', v: 'Bảo mật ẩn danh' },
           ].map((x) => (
             <Card key={x.v} hover={false} className="p-4 text-center">
@@ -59,18 +96,20 @@ export function SalaryPage() {
         </div>
       </Reveal>
 
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        <Filter size={15} className="text-plum-400" />
-        {REGIONS.map((r) => (
-          <button
-            key={r}
-            onClick={() => setRegion(r)}
-            className={cn('rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all', region === r ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]')}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
+      {regions.length > 1 && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <Filter size={15} className="text-plum-400" />
+          {regions.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRegion(r)}
+              className={cn('rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all', region === r ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]')}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      )}
 
       <Reveal>
         <Card hover={false} className="overflow-hidden p-6">
@@ -79,12 +118,20 @@ export function SalaryPage() {
             <Badge tone="success" icon={<ShieldCheck size={13} />}>Ẩn danh 100%</Badge>
           </div>
 
-          {rows.length === 0 ? (
+          {isLoading ? (
+            <SalarySkeleton />
+          ) : isError ? (
+            <SalaryStatsError message={(error as Error)?.message} onRetry={() => refetch()} />
+          ) : rows.length === 0 ? (
             <EmptyState
               icon={<LineChart size={24} />}
               title="Chưa có dữ liệu lương cho khu vực này"
               description="Hãy thử chọn khu vực khác hoặc là người đầu tiên đóng góp dữ liệu."
-              action={<Button size="sm" variant="secondary" onClick={() => setRegion('Tất cả khu vực')}>Xóa bộ lọc</Button>}
+              action={
+                region !== ALL_REGIONS ? (
+                  <Button size="sm" variant="secondary" onClick={() => setRegion(ALL_REGIONS)}>Xóa bộ lọc</Button>
+                ) : undefined
+              }
             />
           ) : (
           <Stagger className="space-y-5" gap={0.07}>
@@ -132,6 +179,7 @@ export function SalaryPage() {
           onSuccess={() => {
             setContributeOpen(false)
             toast.success('Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!')
+            refetch()
           }}
         />
       )}

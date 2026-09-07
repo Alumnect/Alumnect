@@ -1317,6 +1317,47 @@
                         },
                         "description": "Kỳ vọng: HTTP 400 \"Đơn vị tiền tệ phải là mã 3 chữ cái (VD: VND, USD)\" — validate ở tầng Service (không phải Bean Validation, vì currency được phép bỏ trống)."
                     }
+                },
+                {
+                    "name": "5.12 Xem thống kê lương (UC53 - Thành công, Student/Alumni)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/statistics",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "statistics"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 200 — trả về `totalContributions`, `trackedPositions`, `overallMedian` (Triệu VNĐ, null nếu chưa có dữ liệu VND), và `rows` (danh sách nhóm chức danh + cấp bậc + khu vực, CHỈ gồm nhóm đạt đủ tối thiểu 5 mẫu). Dùng chung cho cả Student và Alumni — không phân biệt vai trò, chỉ cần đã đăng nhập."
+                    }
+                },
+                {
+                    "name": "5.13 Xem thống kê lương (UC53 - Guest chưa đăng nhập, lỗi 401)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/salary-contributions/statistics",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "salary-contributions",
+                                "statistics"
+                            ]
+                        },
+                        "description": "Kỳ vọng: HTTP 401 — không gửi Authorization header, bị Spring Security chặn trước khi vào Controller. Đúng theo Actors của UC53 (chỉ Student/Alumni, không có Guest)."
+                    }
                 }
             ]
         },

@@ -26,3 +26,17 @@ export function useCreateSalaryContribution() {
     mutationFn: (input: CreateSalaryContributionInput) => salaryApi.createContribution(input),
   })
 }
+
+/**
+ * Hook lấy thống kê lương tổng hợp cho Salary Board (UC53 - View salary statistics). Dữ liệu tổng
+ * hợp toàn hệ thống, không đổi theo từng giây nên cache vừa phải (2 phút) để tránh gọi lại quá dày
+ * khi người dùng chuyển bộ lọc khu vực (lọc client-side trên cùng 1 lần fetch).
+ * @return Đối tượng query chứa thống kê lương (KPI tổng quan + danh sách dòng theo nhóm)
+ */
+export function useSalaryStatistics() {
+  return useQuery({
+    queryKey: ['salary-statistics'],
+    queryFn: () => salaryApi.getStatistics(),
+    staleTime: 2 * 60 * 1000,
+  })
+}
