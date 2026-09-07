@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controller xử lý các yêu cầu liên quan đến câu trả lời của một câu hỏi diễn đàn Q&A
- * (UC41 - Answer a question, UC43 - Vote on an answer). Map với prefix global
+ * (UC41 - Answer a question, UC43 - Vote on an answer, UC49 - Delete an answer). Map với prefix global
  * /api/v1/questions/{questionId}/answers.
  * <p>
  * GET là công khai (xem {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET})
@@ -101,6 +101,26 @@ public class AnswerController {
 
         AnswerResponse updated = answerService.updateAnswer(authentication.getName(), questionId, answerId, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật câu trả lời thành công", updated));
+    }
+
+    /**
+     * API xóa (mềm) một câu trả lời (hoặc reply) trên diễn đàn Q&A (UC49 - Delete an answer).
+     * Yêu cầu đăng nhập (JWT); chỉ TÁC GIẢ của câu trả lời mới được xóa — người khác nhận 403.
+     * Guest chưa đăng nhập bị Spring Security chặn với 401 trước khi vào Controller.
+     *
+     * @param questionId     ID câu hỏi chứa câu trả lời
+     * @param answerId       ID câu trả lời cần xóa
+     * @param authentication Thông tin xác thực do Spring Security cung cấp — dùng lấy email người xóa
+     * @return {@link ApiResponse} rỗng với thông báo thành công, HTTP 200 OK
+     */
+    @DeleteMapping("/{answerId}")
+    public ResponseEntity<ApiResponse<Void>> deleteAnswer(
+            @PathVariable Long questionId,
+            @PathVariable Long answerId,
+            Authentication authentication) {
+
+        answerService.deleteAnswer(authentication.getName(), questionId, answerId);
+        return ResponseEntity.ok(ApiResponse.success("Xóa câu trả lời thành công", null));
     }
 
     /**

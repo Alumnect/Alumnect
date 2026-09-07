@@ -279,6 +279,58 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm câu trả lời ACTIVE thuộc đúng câu hỏi (404 nếu không, tái
+     * dùng {@link #findActiveAnswerInQuestion}) → kiểm tra người dùng chính là TÁC GIẢ (403 nếu không)
+     * → dọn lượt bình chọn (bảng {@code votes} không có FK cứng nên không tự cascade) của câu trả lời
+     * và các reply trực tiếp (nếu là câu trả lời gốc) → <b>xóa cứng</b> câu trả lời — reply tự bị xóa
+     * theo qua ràng buộc DB {@code answers.parent_id ... ON DELETE CASCADE} → nếu là câu trả lời GỐC
+     * thì giảm {@code answer_count} của câu hỏi (đối xứng với {@link #createAnswer}, không âm).
+     * <p>
+     * Xóa cứng (không phải xóa mềm) để nhất quán với cách {@code PostServiceImpl.deleteComment} (UC20)
+     * xử lý bình luận — Answer đóng vai trò tương tự Comment (phản hồi dưới nội dung chính), khác với
+     * Question/Post (nội dung chính) vốn xóa mềm để giữ lịch sử.
+     */
+    @Override
+    @Transactional
+    public void deleteAnswer(String email, Long questionId, Long answerId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        Answer answer = findActiveAnswerInQuestion(questionId, answerId);
+
+        // Ownership (UC49): chỉ tác giả câu trả lời mới được xóa; người khác nhận 403.
+        if (!answer.getAuthor().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ tác giả mới được xóa câu trả lời này");
+        }
+
+        boolean isTopLevel = answer.getParent() == null;
+
+        // Nếu là câu trả lời GỐC: các reply trực tiếp sẽ bị xóa cứng theo (DB cascade parent_id).
+        // Gom ID (câu trả lời + reply) để dọn vote polymorphic trước — votes không có FK nên không tự cascade.
+        List<Long> deletedAnswerIds = new ArrayList<>();
+        deletedAnswerIds.add(answerId);
+        if (isTopLevel) {
+            answerRepository.findActiveRepliesByParentIds(List.of(answerId))
+                    .forEach(reply -> deletedAnswerIds.add(reply.getId()));
+        }
+        voteRepository.deleteByTargetTypeAndTargetIdIn(VoteTargetType.ANSWER, deletedAnswerIds);
+
+        answerRepository.delete(answer);
+
+        // Chỉ câu trả lời GỐC mới giảm bộ đếm answer_count (reply không tính vào số câu trả lời khi tạo).
+        if (isTopLevel) {
+            Question question = answer.getQuestion();
+            question.setAnswerCount(Math.max(0, question.getAnswerCount() - 1));
+            questionRepository.save(question);
+        }
+
+        log.info("Xóa cứng câu trả lời: id={}, questionId={}, số reply bị xóa theo={}, tác giả={}",
+                answerId, questionId, deletedAnswerIds.size() - 1, email);
+    }
+
+    /**
      * Xác thực người dùng theo email và kiểm tra vai trò Student/Alumni — dùng chung cho các thao tác
      * bình chọn (UC43). Mirror pattern {@code resolveMemberOrThrow} của QuestionServiceImpl (UC42)/PostServiceImpl (UC17).
      *

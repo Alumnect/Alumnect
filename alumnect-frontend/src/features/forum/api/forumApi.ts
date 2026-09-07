@@ -296,4 +296,14 @@ export const forumApi = {
     const body = await http.delete(`/questions/${questionId}/answers/${answerId}/vote`)
     return normalizeVote(body)
   },
+
+  /**
+   * Xóa (mềm) một câu trả lời (hoặc reply) (UC49 - Delete an answer).
+   * Gọi `DELETE /api/v1/questions/{questionId}/answers/{answerId}`; chỉ tác giả xóa được (BE chặn 403).
+   * @param questionId ID câu hỏi chứa câu trả lời
+   * @param answerId ID câu trả lời cần xóa
+   */
+  deleteAnswer: async ({ questionId, answerId }: { questionId: string | number; answerId: string | number }): Promise<void> => {
+    await http.delete(`/questions/${questionId}/answers/${answerId}`)
+  },
 }

@@ -45,4 +45,15 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
      */
     @Query("SELECT v.targetId FROM Vote v WHERE v.user.id = :userId AND v.targetType = :targetType AND v.targetId IN :targetIds")
     List<Long> findVotedTargetIds(@Param("userId") Long userId, @Param("targetType") VoteTargetType targetType, @Param("targetIds") List<Long> targetIds);
+
+    /**
+     * Xóa toàn bộ lượt bình chọn của một tập đối tượng (dùng khi XÓA CỨNG câu trả lời — UC49). Vì
+     * {@code target_id} là cột đa hình (không có FK cứng tới bảng {@code questions}/{@code answers}),
+     * xóa cứng câu trả lời KHÔNG tự động dọn theo bản ghi {@code votes} liên quan — phải gọi tường minh
+     * trước khi xóa câu trả lời để tránh vote "mồ côi" trỏ tới answerId không còn tồn tại.
+     *
+     * @param targetType Loại đối tượng (dùng {@code ANSWER} cho UC49)
+     * @param targetIds  Tập ID đối tượng cần xóa toàn bộ lượt bình chọn (câu trả lời gốc + các reply bị xóa cascade theo)
+     */
+    void deleteByTargetTypeAndTargetIdIn(VoteTargetType targetType, List<Long> targetIds);
 }
