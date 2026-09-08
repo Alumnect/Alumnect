@@ -1,14 +1,18 @@
 package com.alumnect.alumnect_backend.service.event;
 
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dao.event.EventRegistrationRepository;
 import com.alumnect.alumnect_backend.dao.event.EventRepository;
+import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
 import com.alumnect.alumnect_backend.entity.event.Event;
 import com.alumnect.alumnect_backend.entity.event.EventRegistration;
+import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
@@ -17,6 +21,9 @@ import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +46,7 @@ public class EventServiceImpl implements EventService {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final PostRepository postRepository;
 
     @Override
     @Transactional
@@ -244,6 +252,118 @@ public class EventServiceImpl implements EventService {
                 .eventId(eventId)
                 .status("CANCELLED")
                 .message("Hủy sự kiện thành công!")
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<EventHistoryResponse> getEventHistory(String email, int page, int size, String filter) {
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới có lịch sử tham gia sự kiện");
+
+        String normalizedFilter = (filter == null || filter.isBlank()) ? "all" : filter.trim().toLowerCase();
+        if (!normalizedFilter.equals("all") && !normalizedFilter.equals("upcoming")
+                && !normalizedFilter.equals("past") && !normalizedFilter.equals("cancelled")) {
+            normalizedFilter = "all";
+        }
+
+        int validPage = Math.max(0, page);
+        int validSize = (size <= 0 || size > 50) ? 10 : size;
+        Pageable pageable = PageRequest.of(validPage, validSize);
+
+        Page<EventRegistration> regPage = eventRegistrationRepository.findUserEventHistory(
+                user.getId(), normalizedFilter, pageable);
+
+        if (regPage.isEmpty()) {
+            return PageResponse.<EventHistoryResponse>builder()
+                    .content(List.of())
+                    .pageNumber(validPage)
+                    .pageSize(validSize)
+                    .totalElements(regPage.getTotalElements())
+                    .totalPages(regPage.getTotalPages())
+                    .last(true)
+                    .build();
+        }
+
+        // Lấy danh sách ID các sự kiện để batch fetch bài viết
+        List<Long> eventIds = regPage.getContent().stream()
+                .map(r -> r.getEvent().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Post> postMap = postRepository.findActiveByEventIdIn(eventIds).stream()
+                .collect(Collectors.toMap(Post::getEventId, Function.identity(), (p1, p2) -> p1));
+
+        // Lấy danh sách ID người tổ chức để batch fetch hồ sơ
+        List<Long> organizerIds = regPage.getContent().stream()
+                .map(r -> r.getEvent().getOrganizer().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, UserProfile> profileMap = userProfileRepository.findAllById(organizerIds).stream()
+                .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+        Instant now = Instant.now();
+        List<EventHistoryResponse> content = regPage.getContent().stream().map(reg -> {
+            Event event = reg.getEvent();
+            User organizer = event.getOrganizer();
+            UserProfile orgProfile = profileMap.get(organizer.getId());
+            Post post = postMap.get(event.getId());
+
+            String orgName = (orgProfile != null && orgProfile.getFullName() != null && !orgProfile.getFullName().isBlank())
+                    ? orgProfile.getFullName()
+                    : organizer.getEmail();
+            String orgAvatar = orgProfile != null ? orgProfile.getAvatarUrl() : "";
+
+            String coverUrl = (post != null && post.getMediaList() != null && !post.getMediaList().isEmpty())
+                    ? post.getMediaList().get(0).getUrl()
+                    : null;
+            Long postId = post != null ? post.getId() : null;
+
+            // Tính toán trạng thái thực tế phục vụ UI
+            String attendanceState;
+            if ("CANCELLED".equalsIgnoreCase(event.getStatus())) {
+                attendanceState = "EVENT_CANCELLED";
+            } else if ("CANCELLED".equalsIgnoreCase(reg.getStatus())) {
+                attendanceState = "REGISTRATION_CANCELLED";
+            } else if (event.getStartTime() != null && event.getStartTime().isAfter(now)) {
+                attendanceState = "UPCOMING";
+            } else if (event.getEndTime() != null && event.getEndTime().isBefore(now)) {
+                attendanceState = "PAST";
+            } else if (event.getStartTime() != null && event.getStartTime().isBefore(now)
+                    && event.getEndTime() != null && event.getEndTime().isAfter(now)) {
+                attendanceState = "ONGOING";
+            } else {
+                attendanceState = "PAST";
+            }
+
+            return EventHistoryResponse.builder()
+                    .registrationId(reg.getId())
+                    .registrationStatus(reg.getStatus())
+                    .registeredAt(reg.getCreatedAt())
+                    .eventId(event.getId())
+                    .title(event.getTitle())
+                    .location(event.getLocation())
+                    .startTime(event.getStartTime())
+                    .endTime(event.getEndTime())
+                    .capacity(event.getCapacity())
+                    .attendeeCount(event.getAttendeeCount())
+                    .eventStatus(event.getStatus())
+                    .postId(postId)
+                    .coverUrl(coverUrl)
+                    .organizerId(organizer.getId())
+                    .organizerName(orgName)
+                    .organizerAvatar(orgAvatar)
+                    .attendanceState(attendanceState)
+                    .build();
+        }).collect(Collectors.toList());
+
+        return PageResponse.<EventHistoryResponse>builder()
+                .content(content)
+                .pageNumber(regPage.getNumber())
+                .pageSize(regPage.getSize())
+                .totalElements(regPage.getTotalElements())
+                .totalPages(regPage.getTotalPages())
+                .last(regPage.isLast())
                 .build();
     }
 

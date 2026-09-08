@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -41,4 +42,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             "WHERE u.id = :authorId AND p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
             "AND (:category IS NULL OR p.category = :category)")
     Page<Post> findByAuthorIdAndCategory(@Param("authorId") Long authorId, @Param("category") PostCategory category, Pageable pageable);
+
+    @Query("SELECT p FROM Post p LEFT JOIN FETCH p.mediaList WHERE p.eventId IN :eventIds AND p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE")
+    List<Post> findActiveByEventIdIn(@Param("eventIds") List<Long> eventIds);
 }

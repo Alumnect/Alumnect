@@ -3,9 +3,12 @@ import {
   eventRegistrationResultSchema,
   eventAttendeeSchema,
   eventCancelResultSchema,
+  eventHistoryPageSchema,
   type EventRegistrationResult,
   type EventAttendee,
   type EventCancelResult,
+  type EventHistoryPage,
+  type EventHistoryFilter,
 } from '../model/event'
 
 function extractData(body: unknown): unknown {
@@ -14,7 +17,7 @@ function extractData(body: unknown): unknown {
 }
 
 /**
- * Tầng gọi API cho UC25 - Register to attend an event (RSVP).
+ * Tầng gọi API cho Event (UC25, UC27, UC28).
  */
 export const eventApi = {
   /**
@@ -65,4 +68,19 @@ export const eventApi = {
     const body = await http.delete(`/events/${encodeURIComponent(String(eventId))}`)
     return eventCancelResultSchema.parse(extractData(body))
   },
+
+  /**
+   * Xem lịch sử tham gia sự kiện của người dùng hiện tại (UC28 - View attended-event history)
+   */
+  getEventHistory: async (
+    page = 0,
+    size = 10,
+    filter: EventHistoryFilter = 'all'
+  ): Promise<EventHistoryPage> => {
+    const body = await http.get('/events/my-history', {
+      params: { page, size, filter },
+    })
+    return eventHistoryPageSchema.parse(extractData(body))
+  },
 }
+

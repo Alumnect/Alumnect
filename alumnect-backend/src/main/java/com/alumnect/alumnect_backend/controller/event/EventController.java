@@ -1,8 +1,10 @@
 package com.alumnect.alumnect_backend.controller.event;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
 import com.alumnect.alumnect_backend.service.event.EventService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,6 +33,27 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+
+    /**
+     * API lấy lịch sử tham gia sự kiện của người dùng hiện tại (UC28 - View attended-event history).
+     * Yêu cầu JWT; chỉ dành cho Student hoặc Alumni.
+     *
+     * @param page           Số trang (0-indexed, mặc định 0)
+     * @param size           Kích thước trang (mặc định 10)
+     * @param filter         Bộ lọc: all (mặc định), upcoming, past, cancelled
+     * @param authentication Thông tin xác thực người dùng
+     * @return Danh sách phân trang lịch sử sự kiện đã tham gia
+     */
+    @GetMapping(value = {"/my-history", "/history"})
+    public ResponseEntity<ApiResponse<PageResponse<EventHistoryResponse>>> getEventHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "all") String filter,
+            Authentication authentication) {
+        PageResponse<EventHistoryResponse> history = eventService.getEventHistory(
+                authentication.getName(), page, size, filter);
+        return ResponseEntity.ok(ApiResponse.success("Lấy lịch sử tham gia sự kiện thành công", history));
+    }
 
     /**
      * API đăng ký tham gia sự kiện (RSVP) (UC25).
