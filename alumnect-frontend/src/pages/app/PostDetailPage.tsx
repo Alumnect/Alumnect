@@ -31,9 +31,10 @@ import {
   Briefcase,
   Trash2,
   CalendarPlus,
+  Ban,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel } from '@/components/ui'
+import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel, toast } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
@@ -43,7 +44,7 @@ import { DeleteCommentModal, EditCommentModal, usePostDetail, useComments, useCr
 import type { Comment } from '@/features/post'
 import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, type Post } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
-import { EventRsvpButton } from '@/features/event'
+import { EventRsvpButton, CancelEventModal, useCancelEvent } from '@/features/event'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -160,6 +161,7 @@ function PostDetailCard({
   canReport,
   onReport,
   onShare,
+  onCancelEvent,
 }: {
   post: Post
   canInteract: boolean
@@ -170,6 +172,7 @@ function PostDetailCard({
   canReport: boolean
   onReport?: () => void
   onShare?: () => void
+  onCancelEvent?: () => void
 }) {
 
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
@@ -389,12 +392,35 @@ function PostDetailCard({
       {post.type === 'event' && post.event && (
         <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all">
           {/* Header Sự kiện */}
-          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4">
             <h3 className="flex items-center gap-2 font-bold text-violet-900 text-lg">
               <CalendarPlus size={20} className="text-violet-600" />
               <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
             </h3>
+            {post.event.status === 'CANCELLED' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
+                <Ban size={13} /> Đã hủy
+              </span>
+            ) : isAuthor && onCancelEvent ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onCancelEvent}
+                className="border-rose-200 text-rose-600 hover:bg-rose-50 text-xs px-3 h-8 font-semibold"
+                title="Hủy tổ chức sự kiện này"
+              >
+                <Ban size={13} className="mr-1" /> Hủy sự kiện
+              </Button>
+            ) : null}
           </div>
+
+          {post.event.status === 'CANCELLED' && (
+            <div className="mx-6 mt-5 flex items-center gap-2.5 rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm font-medium text-rose-800">
+              <Ban size={18} className="text-rose-600 shrink-0" />
+              <span>Sự kiện này đã bị ban tổ chức hủy bỏ. Toàn bộ danh sách đăng ký tham dự đã bị hủy tự động.</span>
+            </div>
+          )}
 
           <div className="p-6">
             {/* Thời gian & Địa điểm */}
@@ -458,6 +484,7 @@ function PostDetailCard({
                 initialAttendeeCount={post.event.attendeeCount ?? 0}
                 capacity={post.event.capacity}
                 startTime={post.event.startTime}
+                status={post.event.status}
                 size="md"
                 showCount={true}
               />
@@ -832,6 +859,9 @@ export function PostDetailPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [cancelEventModalOpen, setCancelEventModalOpen] = useState(false)
+
+  const cancelEventMutation = useCancelEvent()
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
@@ -872,6 +902,7 @@ export function PostDetailPage() {
               onDelete={() => setDeleteModalOpen(true)}
               onReport={() => setReportModalOpen(true)}
               onShare={() => setShareModalOpen(true)}
+              onCancelEvent={() => setCancelEventModalOpen(true)}
             />
           </Reveal>
 
@@ -905,12 +936,40 @@ export function PostDetailPage() {
             />
           )}
 
-          {/* Modal chia sẻ (UC21) */}
-          {shareModalOpen && (
-            <ShareModal
-              isOpen={shareModalOpen}
-              onClose={() => setShareModalOpen(false)}
-              post={post}
+          {/* Modal chia sẻ bài viết (UC21) */}
+          <ShareModal
+            isOpen={shareModalOpen}
+            onClose={() => setShareModalOpen(false)}
+            post={post}
+          />
+
+          {post.event && (
+            <CancelEventModal
+              isOpen={cancelEventModalOpen}
+              onClose={() => setCancelEventModalOpen(false)}
+              onConfirm={() => {
+                const eventId = post.event?.id ?? post.eventId ?? post.id
+                if (!eventId) return
+                cancelEventMutation.mutate(
+                  { eventId },
+                  {
+                    onSuccess: (res) => {
+                      toast.success(res.message || 'Đã hủy sự kiện thành công!')
+                      setCancelEventModalOpen(false)
+                      refetch()
+                    },
+                    onError: (err: any) => {
+                      toast.error(
+                        err.response?.data?.message ||
+                          err.message ||
+                          'Không thể hủy sự kiện. Vui lòng thử lại.'
+                      )
+                    },
+                  }
+                )
+              }}
+              isPending={cancelEventMutation.isPending}
+              eventTitle={post.event.title}
             />
           )}
 

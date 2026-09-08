@@ -25,4 +25,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     @Query("SELECT er.event.id FROM EventRegistration er WHERE er.user.id = :userId AND er.status = 'REGISTERED' AND er.event.id IN :eventIds")
     List<Long> findRegisteredEventIds(@Param("userId") Long userId, @Param("eventIds") List<Long> eventIds);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE EventRegistration er SET er.status = 'CANCELLED' WHERE er.event.id = :eventId AND er.status = 'REGISTERED'")
+    void cancelAllByEventId(@Param("eventId") Long eventId);
 }

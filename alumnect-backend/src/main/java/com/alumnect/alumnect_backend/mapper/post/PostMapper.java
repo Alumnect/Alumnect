@@ -97,6 +97,7 @@ public class PostMapper {
                         .endTime(event.getEndTime())
                         .capacity(event.getCapacity())
                         .attendeeCount(event.getAttendeeCount())
+                        .status(event.getStatus() != null ? event.getStatus() : "ACTIVE")
                         .isRegistered(false)
                         .build() : null)
                 .build();

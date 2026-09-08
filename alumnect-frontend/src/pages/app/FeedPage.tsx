@@ -33,13 +33,14 @@ import {
   Clock,
   Users,
   Trash2,
-  Share2
+  Share2,
+  Ban,
 } from 'lucide-react'
-import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
+import { Avatar, Badge, Card, ImageCarousel, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { QUESTIONS } from '@/lib/constants'
-import { UpcomingEventsWidget } from '@/features/event'
+import { UpcomingEventsWidget, CancelEventModal, useCancelEvent } from '@/features/event'
 
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -126,6 +127,7 @@ export function PostCard({
   canReport,
   onReport,
   onShare,
+  onCancelEvent,
 }: {
   post: Post
   canInteract: boolean
@@ -136,6 +138,7 @@ export function PostCard({
   canReport: boolean
   onReport?: (post: Post) => void
   onShare?: (post: Post) => void
+  onCancelEvent?: (post: Post) => void
 }) {
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
@@ -384,12 +387,37 @@ export function PostCard({
       {post.type === 'event' && post.event && (
         <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all hover:shadow-md">
           {/* Header Sự kiện */}
-          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-5 py-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-5 py-3.5">
             <h3 className="flex items-center gap-2 font-bold text-violet-900">
               <CalendarPlus size={18} className="text-violet-600" />
               <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
             </h3>
+            {post.event.status === 'CANCELLED' ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
+                <Ban size={12} /> Đã hủy
+              </span>
+            ) : isAuthor && onCancelEvent ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onCancelEvent(post)
+                }}
+                className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                title="Hủy tổ chức sự kiện này"
+              >
+                <Ban size={12} /> Hủy sự kiện
+              </button>
+            ) : null}
           </div>
+
+          {post.event.status === 'CANCELLED' && (
+            <div className="mx-5 mt-4 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs font-medium text-rose-800">
+              <Ban size={15} className="text-rose-600 shrink-0" />
+              <span>Sự kiện này đã bị ban tổ chức hủy. Các lượt đăng ký tham gia trước đó đã bị hủy tự động.</span>
+            </div>
+          )}
 
           <div className="p-5">
             {/* Thời gian & Địa điểm */}
@@ -671,8 +699,11 @@ export function FeedPage() {
   const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [deletingPost, setDeletingPost] = useState<Post | null>(null)
-  const [sharingPost, setSharingPost] = useState<Post | null>(null)
   const [reportingPost, setReportingPost] = useState<Post | null>(null)
+  const [sharingPost, setSharingPost] = useState<Post | null>(null)
+  const [cancellingEventPost, setCancellingEventPost] = useState<Post | null>(null)
+
+  const cancelEventMutation = useCancelEvent()
 
   const globalKeyword = useSearchStore((s) => s.keyword)
   const [debouncedKeyword, setDebouncedKeyword] = useState(globalKeyword)
@@ -809,6 +840,7 @@ export function FeedPage() {
                     onDelete={setDeletingPost}
                     onReport={setReportingPost}
                     onShare={setSharingPost}
+                    onCancelEvent={setCancellingEventPost}
                   />
                 </Reveal>
               ))}
@@ -854,6 +886,35 @@ export function FeedPage() {
                 isOpen={!!sharingPost}
                 onClose={() => setSharingPost(null)}
                 post={sharingPost}
+              />
+            )}
+            {cancellingEventPost && (
+              <CancelEventModal
+                isOpen={!!cancellingEventPost}
+                onClose={() => setCancellingEventPost(null)}
+                onConfirm={() => {
+                  const eventId = cancellingEventPost.event?.id ?? cancellingEventPost.eventId ?? cancellingEventPost.id
+                  if (!eventId) return
+                  cancelEventMutation.mutate(
+                    { eventId },
+                    {
+                      onSuccess: (res) => {
+                        toast.success(res.message || 'Đã hủy sự kiện thành công!')
+                        setCancellingEventPost(null)
+                        refetch()
+                      },
+                      onError: (err: any) => {
+                        toast.error(
+                          err.response?.data?.message ||
+                            err.message ||
+                            'Không thể hủy sự kiện. Vui lòng thử lại.'
+                        )
+                      },
+                    }
+                  )
+                }}
+                isPending={cancelEventMutation.isPending}
+                eventTitle={cancellingEventPost.event?.title}
               />
             )}
           </>

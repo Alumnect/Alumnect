@@ -24,3 +24,14 @@ export const eventAttendeeSchema = z.object({
 })
 
 export type EventAttendee = z.infer<typeof eventAttendeeSchema>
+
+/**
+ * Model cho UC27 - Cancel an event.
+ */
+export const eventCancelResultSchema = z.object({
+  eventId: z.number(),
+  status: z.string(),
+  message: z.string().optional(),
+})
+
+export type EventCancelResult = z.infer<typeof eventCancelResultSchema>

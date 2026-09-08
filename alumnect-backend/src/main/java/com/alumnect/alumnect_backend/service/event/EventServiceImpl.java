@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.dao.event.EventRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
 import com.alumnect.alumnect_backend.entity.event.Event;
 import com.alumnect.alumnect_backend.entity.event.EventRegistration;
@@ -46,6 +47,11 @@ public class EventServiceImpl implements EventService {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
+
+        // Kiểm tra sự kiện có bị hủy không
+        if ("CANCELLED".equalsIgnoreCase(event.getStatus())) {
+            throw new BadRequestException("Sự kiện này đã bị hủy, không thể đăng ký.");
+        }
 
         // Kiểm tra thời gian: nếu sự kiện đã bắt đầu hoặc đã qua thì không cho đăng ký
         if (event.getStartTime() != null && event.getStartTime().isBefore(Instant.now())) {
@@ -98,7 +104,11 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
-        // Không cho phép hủy sau khi sự kiện đã bắt đầu
+        // Không cho phép hủy sau khi sự kiện đã bắt đầu hoặc đã bị hủy
+        if ("CANCELLED".equalsIgnoreCase(event.getStatus())) {
+            throw new BadRequestException("Sự kiện này đã bị hủy.");
+        }
+
         if (event.getStartTime() != null && event.getStartTime().isBefore(Instant.now())) {
             throw new BadRequestException("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy đăng ký.");
         }
@@ -190,6 +200,51 @@ public class EventServiceImpl implements EventService {
                     .registeredAt(r.getCreatedAt())
                     .build();
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public EventCancelResponse cancelEvent(Long eventId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        String role = user.getRole() != null ? user.getRole().getName().toUpperCase() : "";
+        if (!"ALUMNI".equals(role)) {
+            throw new ForbiddenException("Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện.");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
+
+        // Kiểm tra quyền sở hữu: chỉ người tạo (organizer) mới được hủy sự kiện
+        if (event.getOrganizer() == null || !event.getOrganizer().getId().equals(user.getId())) {
+            throw new ForbiddenException("Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức.");
+        }
+
+        // Kiểm tra nếu sự kiện đã bị hủy trước đó
+        if ("CANCELLED".equalsIgnoreCase(event.getStatus())) {
+            throw new BadRequestException("Sự kiện này đã bị hủy trước đó.");
+        }
+
+        // Kiểm tra nếu sự kiện đã kết thúc hoặc đang diễn ra
+        if (event.getStartTime() != null && event.getStartTime().isBefore(Instant.now())) {
+            throw new BadRequestException("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy.");
+        }
+
+        // Cập nhật trạng thái sự kiện thành CANCELLED
+        event.setStatus("CANCELLED");
+        eventRepository.save(event);
+
+        // Chuyển toàn bộ đăng ký đang REGISTERED sang CANCELLED
+        eventRegistrationRepository.cancelAllByEventId(eventId);
+
+        log.info("Sự kiện id={} đã bị hủy bởi organizer email={}", eventId, email);
+
+        return EventCancelResponse.builder()
+                .eventId(eventId)
+                .status("CANCELLED")
+                .message("Hủy sự kiện thành công!")
+                .build();
     }
 
     private User resolveMemberOrThrow(String email, String forbiddenMessage) {

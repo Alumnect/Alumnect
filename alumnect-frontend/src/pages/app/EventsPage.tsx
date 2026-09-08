@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark } from 'lucide-react'
-import { PageHeader, Card, Avatar, SmartImage, EmptyState } from '@/components/ui'
+import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban } from 'lucide-react'
+import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { useFeed, useToggleSavePost } from '@/features/feed'
-import { EventRsvpButton } from '@/features/event'
+import { EventRsvpButton, CancelEventModal, useCancelEvent } from '@/features/event'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { compact, cn } from '@/lib/utils'
@@ -15,10 +15,13 @@ const TABS = ['Sắp diễn ra', 'Trong tháng này']
 export function EventsPage() {
   const [tab, setTab] = useState('Sắp diễn ra')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
+  const [cancelEventTarget, setCancelEventTarget] = useState<{ id: string | number; title?: string } | null>(null)
 
+  const currentUser = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const promptLogin = useLoginPrompt((s) => s.open)
   const toggleSave = useToggleSavePost()
+  const cancelEventMutation = useCancelEvent()
 
   // Fetch event posts from backend
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('event')
@@ -112,6 +115,11 @@ export function EventsPage() {
                       <span className="text-[10px] font-bold uppercase text-gold-600">{dateInfo.month}</span>
                       <span className="text-xl font-extrabold text-plum-900">{dateInfo.day}</span>
                     </div>
+                    {event.status === 'CANCELLED' && (
+                      <div className="absolute left-20 top-3 flex items-center gap-1 rounded-xl bg-rose-600/95 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-xs">
+                        <Ban size={13} /> Đã hủy
+                      </div>
+                    )}
                   </Link>
 
                   {/* Nút Bookmark lưu sự kiện */}
@@ -188,17 +196,39 @@ export function EventsPage() {
                         </span>
                       )}
                     </div>
-                    <EventRsvpButton
-                      eventId={event.id ?? post.eventId}
-                      eventTitle={event.title}
-                      initialRegistered={event.isRegistered ?? false}
-                      initialAttendeeCount={event.attendeeCount ?? 0}
-                      capacity={event.capacity}
-                      startTime={event.startTime}
-                      size="sm"
-                      showCount={false}
-                      className="shrink-0"
-                    />
+                    <div className="flex items-center gap-2 shrink-0">
+                      {Boolean(currentUser?.id && post.authorId && String(currentUser.id) === String(post.authorId)) &&
+                        event.status !== 'CANCELLED' && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setCancelEventTarget({
+                                id: event.id ?? post.eventId ?? post.id,
+                                title: event.title,
+                              })
+                            }}
+                            className="border-rose-200 text-rose-600 hover:bg-rose-50 text-xs px-2.5 h-8 font-semibold"
+                            title="Hủy tổ chức sự kiện này"
+                          >
+                            <Ban size={13} className="mr-1" /> Hủy
+                          </Button>
+                        )}
+                      <EventRsvpButton
+                        eventId={event.id ?? post.eventId}
+                        eventTitle={event.title}
+                        initialRegistered={event.isRegistered ?? false}
+                        initialAttendeeCount={event.attendeeCount ?? 0}
+                        capacity={event.capacity}
+                        startTime={event.startTime}
+                        status={event.status}
+                        size="sm"
+                        showCount={false}
+                        className="shrink-0"
+                      />
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -221,6 +251,34 @@ export function EventsPage() {
             </Button>
           </div>
         </Reveal>
+      )}
+
+      {cancelEventTarget && (
+        <CancelEventModal
+          isOpen={Boolean(cancelEventTarget)}
+          onClose={() => setCancelEventTarget(null)}
+          onConfirm={() => {
+            if (!cancelEventTarget.id) return
+            cancelEventMutation.mutate(
+              { eventId: cancelEventTarget.id },
+              {
+                onSuccess: (res) => {
+                  toast.success(res.message || 'Đã hủy sự kiện thành công!')
+                  setCancelEventTarget(null)
+                },
+                onError: (err: any) => {
+                  toast.error(
+                    err.response?.data?.message ||
+                      err.message ||
+                      'Không thể hủy sự kiện. Vui lòng thử lại.'
+                  )
+                },
+              }
+            )
+          }}
+          isPending={cancelEventMutation.isPending}
+          eventTitle={cancelEventTarget.title}
+        />
       )}
     </div>
   )
