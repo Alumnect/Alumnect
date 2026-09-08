@@ -131,10 +131,10 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer',
                 statusFilter === tab.key
-                  ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md'
-                  : 'bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-100'
+                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-sm'
+                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
               )}
             >
               {tab.label}
@@ -336,10 +336,15 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
       {/* 1. Modal Xem Chi Tiết Hồ Sơ (Full Detail Modal) */}
       {detailReq &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
-            <Card hover={false} className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100 rounded-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
+              onClick={() => setDetailReq(null)}
+            />
+            <Card hover={false} className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl pop">
               {/* Banner Header - FPT Corporate Orange-Gold Gradient */}
-              <div className="relative bg-gradient-to-r from-brand-500 via-brand-600 to-gold-500 p-6 text-white rounded-t-2xl shadow-sm">
+              <div className="relative bg-gradient-to-r from-brand-500 via-brand-600 to-gold-500 p-6 text-white rounded-t-3xl shadow-sm">
                 <button
                   onClick={() => setDetailReq(null)}
                   className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
@@ -466,8 +471,16 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
       {/* 3. Modal Phê duyệt / Từ chối (Review Confirmation Modal) */}
       {selectedReq && reviewAction &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-            <Card hover={false} className="w-full max-w-md bg-white p-6 shadow-2xl rounded-2xl border border-plum-900/10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
+              onClick={() => {
+                setSelectedReq(null)
+                setReviewAction(null)
+              }}
+            />
+            <Card hover={false} className="relative z-10 w-full max-w-md bg-white p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
               <div className="flex items-center gap-2 mb-2">
                 {reviewAction === 'APPROVED' ? (
                   <CheckCircle2 size={22} className="text-emerald-600" />

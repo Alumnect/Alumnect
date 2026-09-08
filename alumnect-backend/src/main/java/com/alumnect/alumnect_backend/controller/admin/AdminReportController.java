@@ -26,6 +26,7 @@ public class AdminReportController {
      * @param query Từ khóa tìm kiếm nội dung bài viết, người báo cáo, hoặc tác giả (tùy chọn)
      * @param reason Lý do báo cáo vi phạm: SPAM, INAPPROPRIATE, MISINFORMATION, SCAM_OR_FRAUD, OTHER (tùy chọn)
      * @param status Trạng thái xử lý báo cáo: PENDING, RESOLVED, DISMISSED (tùy chọn)
+     * @param type Loại bài viết: GENERAL, ACHIEVEMENT, RECRUITMENT, EVENT (tùy chọn)
      * @param postId ID bài viết bị báo cáo (tùy chọn)
      * @param page Số trang hiển thị, mặc định 0
      * @param size Số lượng phần tử mỗi trang, mặc định 10
@@ -34,13 +35,15 @@ public class AdminReportController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<AdminReportResponse>>> getReports(
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) String author,
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String type,
             @RequestParam(required = false) Long postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        PageResponse<AdminReportResponse> reports = adminReportService.getReports(query, reason, status, postId, page, size);
+        PageResponse<AdminReportResponse> reports = adminReportService.getReports(query, author, reason, status, type, postId, page, size);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách báo cáo vi phạm thành công", reports));
     }
 

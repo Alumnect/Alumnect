@@ -22,7 +22,7 @@ import { NotificationsPage } from '@/pages/app/NotificationsPage'
 import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
 import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
-import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage } from '@/features/admin'
+import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
 function App() {
@@ -82,8 +82,7 @@ function App() {
             <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />
             <Route path="reports" element={<AdminSectionPage sectionKey="reports" />} />
             <Route path="revenue" element={<AdminSectionPage sectionKey="revenue" />} />
-            <Route path="broadcast" element={<AdminSectionPage sectionKey="broadcast" />} />
-            <Route path="moderation" element={<AdminSectionPage sectionKey="moderation" />} />
+            <Route path="broadcast" element={<AdminBroadcastPage />} />
           </Route>
 
           {/* 404 */}

@@ -48,7 +48,7 @@ export function Modal({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Lớp nền mờ (Backdrop) phủ toàn màn hình */}
           <motion.div
-            className="absolute inset-0 bg-plum-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

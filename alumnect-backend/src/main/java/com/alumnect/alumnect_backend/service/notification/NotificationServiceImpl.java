@@ -49,7 +49,7 @@ public class NotificationServiceImpl implements NotificationService {
         User user = getUserByEmail(email);
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
 
-        Page<Notification> notifPage = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(user.getId(), pageable);
+        Page<Notification> notifPage = notificationRepository.findValidByRecipientId(user.getId(), Instant.now(), pageable);
         List<NotificationResponse> dtoList = notifPage.getContent().stream()
                 .map(notificationMapper::toDto)
                 .collect(Collectors.toList());
@@ -68,7 +68,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(readOnly = true)
     public UnreadNotificationCountResponse getUnreadCount(String email) {
         User user = getUserByEmail(email);
-        long count = notificationRepository.countByRecipientIdAndIsReadFalse(user.getId());
+        long count = notificationRepository.countValidUnreadByRecipientId(user.getId(), Instant.now());
         return UnreadNotificationCountResponse.builder()
                 .unreadCount(count)
                 .build();

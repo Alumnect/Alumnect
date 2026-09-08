@@ -52,6 +52,16 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     long countByAccountStatus(AccountStatus accountStatus);
 
     /**
+     * Lấy danh sách người dùng theo vai trò và trạng thái tài khoản.
+     */
+    List<User> findByRoleNameAndAccountStatus(String roleName, AccountStatus accountStatus);
+
+    /**
+     * Lấy danh sách người dùng theo trạng thái tài khoản.
+     */
+    List<User> findByAccountStatus(AccountStatus accountStatus);
+
+    /**
      * Thống kê số lượng đăng ký tài khoản mới theo ngày trong khoảng thời gian.
      *
      * @param startDate Ngày bắt đầu

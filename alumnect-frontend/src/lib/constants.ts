@@ -19,7 +19,6 @@ import {
   UserCog,
   Lock,
   FileText,
-  MessageCircleQuestion,
 } from 'lucide-react'
 
 export const BRAND = {
@@ -76,7 +75,6 @@ export const APP_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Tổng quan', to: '/admin', icon: LayoutDashboard },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
-  { label: 'Kiểm duyệt', to: '/admin/moderation', icon: MessageCircleQuestion },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
   { label: 'Xác minh', to: '/admin/verifications', icon: BadgeCheck },

@@ -28,12 +28,30 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> findByRecipientIdOrderByCreatedAtDesc(Long recipientId, Pageable pageable);
 
     /**
+     * Lấy danh sách thông báo còn hiệu lực của người nhận (chưa hết hạn) theo thứ tự thời gian mới nhất.
+     */
+    @Query("SELECT n FROM Notification n " +
+           "WHERE n.recipient.id = :recipientId " +
+           "  AND (n.expiresAt IS NULL OR n.expiresAt > :now) " +
+           "ORDER BY n.createdAt DESC")
+    Page<Notification> findValidByRecipientId(@Param("recipientId") Long recipientId, @Param("now") java.time.Instant now, Pageable pageable);
+
+    /**
      * Đếm số lượng thông báo chưa đọc của người dùng.
      *
      * @param recipientId ID người nhận
      * @return Số lượng thông báo chưa đọc
      */
     long countByRecipientIdAndIsReadFalse(Long recipientId);
+
+    /**
+     * Đếm số lượng thông báo chưa đọc và còn hiệu lực của người dùng.
+     */
+    @Query("SELECT COUNT(n) FROM Notification n " +
+           "WHERE n.recipient.id = :recipientId " +
+           "  AND n.isRead = false " +
+           "  AND (n.expiresAt IS NULL OR n.expiresAt > :now)")
+    long countValidUnreadByRecipientId(@Param("recipientId") Long recipientId, @Param("now") java.time.Instant now);
 
     /**
      * Tìm thông báo chưa đọc theo loại, target_type và target_id để gom nhóm (ví dụ: thông báo Like bài viết).

@@ -4,7 +4,8 @@ import {
   Inbox, Eye, EyeOff, X, 
   Flag, ArrowRight, ShieldAlert, Check, Ban,
   Filter, Sparkles, CheckCircle2, ChevronRight,
-  Trash2, Info, UserX, HelpCircle
+  Trash2, Info, UserX, HelpCircle,
+  Search, User
 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -12,6 +13,8 @@ import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAdminReports, useUpdateReportStatus, useTogglePostHidden } from '../hooks/useAdmin'
 import type { AdminReportDto } from '../api/adminApi'
+import { CATEGORY_MAP, getCategoryConfig } from './AdminPostsPage'
+import type { CategoryKey } from './AdminPostsPage'
 
 const REASON_LABELS: Record<string, { label: string; tone: 'brand' | 'gold' | 'success' | 'danger' | 'neutral' }> = {
   SPAM: { label: 'Spam / Rác', tone: 'neutral' },
@@ -36,8 +39,8 @@ export const REASON_CONFIG: Record<ReasonKey, ReasonConfig> = {
     value: 'ALL',
     label: 'Tất cả lý do',
     icon: Filter,
-    colorHex: '#F27024',
-    hoverBg: 'hover:bg-brand-50 hover:text-brand-900',
+    colorHex: '#4A1525',
+    hoverBg: 'hover:bg-plum-900/10 hover:text-plum-950',
   },
   SPAM: {
     value: 'SPAM',
@@ -104,22 +107,22 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex h-9 items-center justify-between gap-2 rounded-full border bg-brand-50/80 px-3.5 text-xs font-bold text-brand-900 shadow-2xs transition-all duration-200 hover:border-brand-300 focus:outline-none cursor-pointer min-w-[170px]',
-          isOpen ? 'ring-2 ring-brand-400/30 border-brand-400 bg-white' : 'border-brand-100 hover:bg-white'
+          'flex h-10 items-center justify-between gap-2.5 rounded-2xl border bg-white px-3.5 text-xs font-bold text-plum-900 shadow-2xs transition-all duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[190px]',
+          isOpen ? 'ring-2 ring-gold-400/40 border-gold-400 bg-plum-900/[0.02]' : 'border-plum-900/15 hover:bg-plum-900/[0.02]'
         )}
       >
         <div className="flex items-center gap-2 truncate">
           <span
-            className="flex h-5 w-5 items-center justify-center rounded-full text-white shadow-2xs shrink-0"
+            className="flex h-5 w-5 items-center justify-center rounded-md text-white shadow-2xs shrink-0"
             style={{ backgroundColor: selectedConfig.colorHex }}
           >
-            <SelectedIcon size={11} />
+            <SelectedIcon size={12} />
           </span>
           <span className="truncate">{selectedConfig.label}</span>
         </div>
         <ChevronRight
           size={14}
-          className={cn('text-brand-400 transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-brand-600' : 'rotate-0')}
+          className={cn('text-plum-400 transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-plum-600' : 'rotate-0')}
         />
       </button>
 
@@ -146,7 +149,7 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
                   className={cn(
                     'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 text-left cursor-pointer',
                     isSelected
-                      ? 'bg-brand-500 text-white shadow-sm font-bold'
+                      ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-sm font-bold'
                       : cn('text-plum-800', cfg.hoverBg)
                   )}
                 >
@@ -154,7 +157,7 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
                     <span
                       className={cn(
                         'flex h-5.5 w-5.5 items-center justify-center rounded-lg text-white shadow-2xs shrink-0 transition-transform',
-                        isSelected ? 'scale-105 bg-white/20' : 'opacity-90'
+                        isSelected ? 'scale-105 bg-plum-950/20 text-plum-950' : 'opacity-90'
                       )}
                       style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
                     >
@@ -162,7 +165,7 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
                     </span>
                     <span>{cfg.label}</span>
                   </div>
-                  {isSelected && <CheckCircle2 size={14} className="text-white shrink-0 ml-2" />}
+                  {isSelected && <CheckCircle2 size={14} className="text-plum-950 shrink-0 ml-2" />}
                 </button>
               )
             })}
@@ -176,14 +179,18 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
 export function AdminReportsQueue() {
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | 'DISMISSED'>('PENDING')
   const [reasonFilter, setReasonFilter] = useState<string>('ALL')
+  const [typeFilter, setTypeFilter] = useState<CategoryKey>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [authorQuery, setAuthorQuery] = useState<string>('')
   const [page, setPage] = useState(0)
 
   // Fetch reports from backend
   const { data: reportsData, isLoading, error } = useAdminReports({
     status: statusFilter,
     reason: reasonFilter === 'ALL' ? undefined : reasonFilter,
+    type: typeFilter === 'ALL' ? undefined : typeFilter,
     query: searchQuery || undefined,
+    author: authorQuery || undefined,
     page,
     size: 10,
   })
@@ -299,63 +306,122 @@ export function AdminReportsQueue() {
         subtitle="Quản lý và giải quyết các báo cáo vi phạm bài viết từ cộng đồng AlumNect." 
       />
 
-      {/* Bộ lọc và Tìm kiếm */}
-      <Card hover={false} className="mb-6 p-4 border border-plum-900/10 bg-white !overflow-visible relative z-20">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          
-          {/* Tabs Trạng thái */}
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            {[
-              { key: 'PENDING', label: 'Đang chờ xử lý' },
-              { key: 'RESOLVED', label: 'Đã giải quyết' },
-              { key: 'DISMISSED', label: 'Đã bỏ qua' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setStatusFilter(tab.key as any)
-                  setPage(0)
-                }}
-                className={cn(
-                  'rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer',
-                  statusFilter === tab.key
-                    ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md'
-                    : 'bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-100'
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
+      {/* --- Bộ lọc theo Loại bài viết (Color-coded Category Bar) --- */}
+      <Card hover={false} className="mb-4 p-4 bg-white/80 backdrop-blur border border-plum-900/10 shadow-sm !overflow-visible relative z-20">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-plum-900">
+              <Filter size={14} className="text-gold-500" />
+              <span>Phân loại bài viết</span>
+            </div>
+            {totalElements > 0 && (
+              <span className="text-xs font-semibold text-plum-500">
+                Hiển thị <strong className="text-plum-900">{reports.length}</strong> / <strong>{totalElements}</strong> báo cáo
+              </span>
+            )}
           </div>
 
-          {/* Ô lọc lý do & Tìm kiếm */}
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <CustomReasonDropdown
-              value={reasonFilter}
-              onChange={(val) => {
-                setReasonFilter(val)
+          {/* Type Filter Buttons */}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            {(Object.keys(CATEGORY_MAP) as CategoryKey[]).map((catKey) => {
+              const cfg = CATEGORY_MAP[catKey]
+              const Icon = cfg.icon
+              const isSelected = typeFilter === catKey
+
+              return (
+                <button
+                  key={catKey}
+                  onClick={() => {
+                    setTypeFilter(catKey)
+                    setPage(0)
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 border cursor-pointer',
+                    isSelected ? cfg.pillActiveBg : cfg.pillInactiveBg
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex h-5 w-5 items-center justify-center rounded-md shrink-0 transition-all',
+                      isSelected ? 'bg-white/20 text-current' : 'text-white'
+                    )}
+                    style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
+                  >
+                    <Icon size={12} />
+                  </span>
+                  <span>{cfg.shortLabel}</span>
+                  {isSelected && <CheckCircle2 size={13} className="ml-0.5 shrink-0 opacity-80" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </Card>
+
+      {/* --- Controls: Tabs trạng thái & Bộ lọc lý do & Thanh tìm kiếm --- */}
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        {/* Status Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { key: 'PENDING', label: 'Đang chờ xử lý' },
+            { key: 'RESOLVED', label: 'Đã giải quyết' },
+            { key: 'DISMISSED', label: 'Đã bỏ qua' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setStatusFilter(tab.key as any)
                 setPage(0)
               }}
-            />
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer',
+                statusFilter === tab.key
+                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-sm'
+                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
+        {/* Custom Reason Dropdown & Tìm kiếm */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <CustomReasonDropdown
+            value={reasonFilter}
+            onChange={(newReason) => {
+              setReasonFilter(newReason)
+              setPage(0)
+            }}
+          />
+
+          <div className="relative flex items-center sm:w-48">
+            <Search size={15} className="pointer-events-none absolute left-3 text-plum-400" />
             <input
-              type="text"
-              placeholder="Tìm kiếm tác giả, nội dung..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
                 setPage(0)
               }}
-              className="bg-brand-50 border border-brand-100 rounded-full px-4 py-1.5 text-xs font-medium text-plum-900 placeholder-plum-300 outline-none focus:ring-2 focus:ring-brand-500/20 w-full sm:w-60"
+              placeholder="Tìm nội dung..."
+              className="h-10 w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] pl-9 pr-3 text-xs text-plum-900 placeholder:text-plum-400 focus:border-gold-400 focus:bg-white focus:outline-none transition-all shadow-2xs"
             />
           </div>
 
+          <div className="relative flex items-center sm:w-48">
+            <User size={15} className="pointer-events-none absolute left-3 text-plum-400" />
+            <input
+              value={authorQuery}
+              onChange={(e) => {
+                setAuthorQuery(e.target.value)
+                setPage(0)
+              }}
+              placeholder="Tìm tác giả, email..."
+              className="h-10 w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] pl-9 pr-3 text-xs text-plum-900 placeholder:text-plum-400 focus:border-gold-400 focus:bg-white focus:outline-none transition-all shadow-2xs"
+            />
+          </div>
         </div>
-
-        <div className="text-xs text-plum-500 font-semibold mt-3 text-right">
-          Tổng số: <strong className="text-plum-900 font-bold">{totalElements}</strong> báo cáo
-        </div>
-      </Card>
+      </div>
 
       <Reveal>
         {isLoading ? (
@@ -382,18 +448,23 @@ export function AdminReportsQueue() {
           <EmptyState
             icon={<Inbox size={24} />}
             title="Không có báo cáo nào"
-            description={`Không tìm thấy báo cáo nào ở trạng thái ${
-              statusFilter === 'PENDING' ? 'chờ xử lý' : statusFilter === 'RESOLVED' ? 'đã giải quyết' : 'đã bỏ qua'
-            }.`}
+            description={
+              typeFilter !== 'ALL'
+                ? `Không tìm thấy báo cáo nào cho bài viết loại "${CATEGORY_MAP[typeFilter]?.label}".`
+                : `Không tìm thấy báo cáo nào ở trạng thái ${
+                    statusFilter === 'PENDING' ? 'chờ xử lý' : statusFilter === 'RESOLVED' ? 'đã giải quyết' : 'đã bỏ qua'
+                  }.`
+            }
           />
         ) : (
           <div className="space-y-4">
             <Card hover={false} className="overflow-x-auto border border-plum-900/10 bg-white rounded-3xl">
-              <table className="w-full min-w-[720px] text-sm text-left">
+              <table className="w-full min-w-[760px] text-sm text-left">
                 <thead>
                   <tr className="border-b border-plum-900/8 text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
                     <th className="px-5 py-3.5 font-bold">Người gửi báo cáo</th>
                     <th className="px-5 py-3.5 font-bold">Lý do</th>
+                    <th className="px-5 py-3.5 font-bold">Loại bài</th>
                     <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung bài viết</th>
                     <th className="px-5 py-3.5 font-bold text-center">Trạng thái bài</th>
                     <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
@@ -402,6 +473,8 @@ export function AdminReportsQueue() {
                 <tbody className="divide-y divide-plum-900/5">
                   {reports.map((r) => {
                     const reasonInfo = REASON_LABELS[r.reason] || { label: r.reason, tone: 'neutral' }
+                    const catCfg = getCategoryConfig(r.postType)
+                    const CatIcon = catCfg.icon
                     
                     // Show real-time local indicator if marked to hide
                     const localWillHide = willHideMap[r.id]
@@ -410,7 +483,7 @@ export function AdminReportsQueue() {
                       : r.postStatus
 
                     return (
-                      <tr key={r.id} className="transition-colors hover:bg-plum-900/[0.015]">
+                      <tr key={r.id} className={cn('transition-colors hover:bg-plum-900/[0.015] border-l-4', catCfg.rowBorderLeft, catCfg.bgHoverRow)}>
                         {/* Người báo cáo */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
@@ -432,11 +505,26 @@ export function AdminReportsQueue() {
                           <div className="space-y-1">
                             <Badge tone={reasonInfo.tone}>{reasonInfo.label}</Badge>
                             {r.description && (
-                              <p className="text-xs text-plum-500 font-medium truncate max-w-[200px]" title={r.description}>
+                              <p className="text-xs text-plum-500 font-medium truncate max-w-[180px]" title={r.description}>
                                 {r.description}
                               </p>
                             )}
                           </div>
+                        </td>
+
+                        {/* Loại bài viết */}
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span
+                            className={cn(
+                              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border shadow-2xs',
+                              catCfg.badgeBg,
+                              catCfg.badgeText,
+                              catCfg.badgeBorder
+                            )}
+                          >
+                            <CatIcon size={12} style={{ color: catCfg.colorHex }} />
+                            <span>{catCfg.shortLabel}</span>
+                          </span>
                         </td>
 
                         {/* Tác giả & Nội dung bài viết */}
@@ -587,10 +675,29 @@ export function AdminReportsQueue() {
 
               {/* Thông tin bài viết bị báo cáo */}
               <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">
-                    Bài viết bị báo cáo (Tác giả: {selectedReport.postAuthorName})
-                  </h4>
+                <div className="flex justify-between items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">
+                      Bài viết bị báo cáo
+                    </h4>
+                    {(() => {
+                      const selCatCfg = getCategoryConfig(selectedReport.postType)
+                      const SelCatIcon = selCatCfg.icon
+                      return (
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[11px] font-bold border shadow-2xs',
+                            selCatCfg.badgeBg,
+                            selCatCfg.badgeText,
+                            selCatCfg.badgeBorder
+                          )}
+                        >
+                          <SelCatIcon size={12} style={{ color: selCatCfg.colorHex }} />
+                          <span>{selCatCfg.label}</span>
+                        </span>
+                      )
+                    })()}
+                  </div>
                   <a
                     href={`/admin/posts/${selectedReport.postId}`}
                     target="_blank"
@@ -607,20 +714,36 @@ export function AdminReportsQueue() {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between text-xs font-medium border-t border-brand-100/50 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium border-t border-brand-100/50 pt-2">
                   <div>
                     <span className="text-plum-400 block">Tác giả bài viết</span>
-                    <span className="font-bold text-plum-900">{selectedReport.postAuthorEmail}</span>
+                    <span className="font-bold text-plum-900 truncate block">{selectedReport.postAuthorName}</span>
+                    <span className="text-[11px] text-plum-500 truncate block">{selectedReport.postAuthorEmail}</span>
+                  </div>
+                  <div>
+                    <span className="text-plum-400 block">Phân loại bài viết</span>
+                    {(() => {
+                      const selCatCfg = getCategoryConfig(selectedReport.postType)
+                      const SelCatIcon = selCatCfg.icon
+                      return (
+                        <span className="inline-flex items-center gap-1.5 font-bold text-plum-900 mt-0.5">
+                          <SelCatIcon size={13} style={{ color: selCatCfg.colorHex }} />
+                          {selCatCfg.shortLabel}
+                        </span>
+                      )
+                    })()}
                   </div>
                   <div>
                     <span className="text-plum-400 block">Trạng thái bài viết gốc</span>
-                    {selectedReport.postStatus === 'HIDDEN' ? (
-                      <Badge tone="danger">Đang bị ẩn</Badge>
-                    ) : selectedReport.postStatus === 'DELETED' ? (
-                      <Badge tone="neutral">Đã xóa</Badge>
-                    ) : (
-                      <Badge tone="success">Đang công khai</Badge>
-                    )}
+                    <div className="mt-0.5">
+                      {selectedReport.postStatus === 'HIDDEN' ? (
+                        <Badge tone="danger">Đang bị ẩn</Badge>
+                      ) : selectedReport.postStatus === 'DELETED' ? (
+                        <Badge tone="neutral">Đã xóa</Badge>
+                      ) : (
+                        <Badge tone="success">Đang công khai</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

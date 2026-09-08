@@ -8,6 +8,7 @@ export type NotificationType =
   | 'FORUM_ANSWER'
   | 'REPORT_RESOLVED'
   | 'WELCOME'
+  | 'SYSTEM_BROADCAST'
 
 /**
  * Interface cấu trúc dữ liệu của một thông báo trả về từ máy chủ.

@@ -30,6 +30,9 @@ public class AdminReportResponse {
     /** Trạng thái hiện tại của bài viết bị báo cáo */
     private String postStatus;
 
+    /** Loại bài viết bị báo cáo (GENERAL, ACHIEVEMENT, RECRUITMENT, EVENT) */
+    private String postType;
+
     /** ID của tác giả bài viết bị báo cáo */
     private Long postAuthorId;
 
