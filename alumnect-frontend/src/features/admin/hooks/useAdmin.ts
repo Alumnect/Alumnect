@@ -174,8 +174,10 @@ export function useAdminPostDetail(id: number | null) {
  */
 export function useAdminReports(filters: {
   query?: string
+  author?: string
   reason?: string
   status?: string
+  type?: string
   postId?: number
   page: number
   size: number
@@ -206,3 +208,74 @@ export function useUpdateReportStatus() {
     },
   })
 }
+
+/**
+ * Hook lấy lịch sử thông báo hệ thống của Admin (phân trang và lọc thời gian/trạng thái)
+ */
+export function useAdminSystemNotifications(filters: {
+  timeFilter?: string
+  status?: string
+  page: number
+  size: number
+}) {
+  return useQuery({
+    queryKey: ['admin', 'notifications', filters],
+    queryFn: async () => {
+      const response = await adminApi.getSystemNotifications(filters)
+      return response.data
+    },
+    refetchInterval: 5000, // Tự động làm mới mỗi 5 giây
+  })
+}
+
+/**
+ * Hook tạo mới hoặc hẹn giờ gửi thông báo hệ thống
+ */
+export function useCreateSystemNotification() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: Parameters<typeof adminApi.createSystemNotification>[0]) => {
+      const response = await adminApi.createSystemNotification(payload)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+}
+
+/**
+ * Hook hủy thông báo hệ thống đã lên lịch
+ */
+export function useCancelSystemNotification() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await adminApi.cancelScheduledNotification(id)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] })
+    },
+  })
+}
+
+/**
+ * Hook lưu trữ thông báo hệ thống vào kho lưu trữ (Archive)
+ */
+export function useArchiveSystemNotification() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await adminApi.archiveNotification(id)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+}
+
+

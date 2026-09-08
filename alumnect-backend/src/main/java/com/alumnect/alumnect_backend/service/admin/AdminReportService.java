@@ -11,15 +11,17 @@ public interface AdminReportService {
     /**
      * Lấy danh sách báo cáo vi phạm phân trang và lọc động.
      *
-     * @param query Từ khóa tìm kiếm (trong nội dung bài viết, người báo cáo, hoặc tác giả bài viết)
+     * @param query Từ khóa tìm kiếm nội dung bài viết
+     * @param author Từ khóa tìm kiếm tác giả hoặc người báo cáo
      * @param reason Lý do báo cáo
      * @param status Trạng thái của báo cáo (PENDING, RESOLVED, DISMISSED)
+     * @param type Loại bài viết (GENERAL, ACHIEVEMENT, RECRUITMENT, EVENT)
      * @param postId ID bài viết bị báo cáo (tùy chọn)
      * @param page Số trang hiển thị (0-based)
      * @param size Số lượng phần tử mỗi trang
      * @return Trang danh sách báo cáo vi phạm dạng DTO bọc trong PageResponse
      */
-    PageResponse<AdminReportResponse> getReports(String query, String reason, String status, Long postId, int page, int size);
+    PageResponse<AdminReportResponse> getReports(String query, String author, String reason, String status, String type, Long postId, int page, int size);
 
     /**
      * Cập nhật trạng thái của báo cáo vi phạm (RESOLVED hoặc DISMISSED).

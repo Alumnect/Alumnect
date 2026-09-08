@@ -4391,6 +4391,244 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "15. Admin Notifications & Broadcast (UC87)",
+            "description": "Quản trị thông báo hệ thống, bộ lọc thời gian, hẹn giờ gửi và phát thanh Realtime",
+            "item": [
+                {
+                    "name": "87.1 Lấy lịch sử thông báo hệ thống phân trang - 200 OK",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Response format has error=0\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data).to.have.property('content');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/notifications?timeFilter=ALL&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "notifications"
+                            ],
+                            "query": [
+                                {
+                                    "key": "timeFilter",
+                                    "value": "ALL"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "87.2 Gửi thông báo ngay cho tất cả người dùng (All Users) - 200 OK",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Status is SENT\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data.status).to.eql('SENT');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Thông báo bảo trì hệ thống toàn diện\",\n    \"content\": \"Hệ thống sẽ bảo trì nâng cấp máy chủ vào lúc 23:00 tối nay. Vui lòng lưu lại công việc của bạn.\",\n    \"recipientType\": \"ALL_USERS\",\n    \"durationType\": \"ONE_WEEK\",\n    \"isScheduled\": false\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/notifications",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "notifications"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "87.3 Hẹn giờ gửi thông báo cho Sinh viên (STUDENT) - 200 OK",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Status is SCHEDULED\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data.status).to.eql('SCHEDULED');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Workshop Hướng nghiệp FPTU 2026\",\n    \"content\": \"Buổi chia sẻ kinh nghiệm phỏng vấn dành riêng cho sinh viên sẽ bắt đầu vào 20:00 ngày mai.\",\n    \"recipientType\": \"USER_ROLE\",\n    \"recipientRole\": \"STUDENT\",\n    \"durationType\": \"ONE_MONTH\",\n    \"isScheduled\": true,\n    \"scheduledAt\": \"2026-09-09T13:00:00Z\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/notifications",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "notifications"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "87.4 Hủy thông báo đã lên lịch hẹn giờ - 200 OK",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/notifications/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "notifications",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "87.5 Lỗi khi tạo thông báo thiếu tiêu đề - 400 Bad Request",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 400 Bad Request\", function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"\",\n    \"content\": \"Nội dung không có tiêu đề\",\n    \"recipientType\": \"ALL_USERS\",\n    \"durationType\": \"ONE_WEEK\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/notifications",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "notifications"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

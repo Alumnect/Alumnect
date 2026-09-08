@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BadgeCheck, Flag, CreditCard, Megaphone, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, Flag, CreditCard, Megaphone } from 'lucide-react'
 
 export type Section = {
   title: string
@@ -12,7 +12,7 @@ export type Section = {
 
 /**
  * Cấu hình các trang con của Admin Console (verifications, reports, revenue,
- * broadcast, moderation). `stats`/`rows` để rỗng — TODO(team): nối dữ liệu
+ * broadcast). `stats`/`rows` để rỗng — TODO(team): nối dữ liệu
  * thật từ backend khi API tương ứng sẵn sàng.
  */
 export const ADMIN_SECTIONS: Record<string, Section> = {
@@ -47,13 +47,5 @@ export const ADMIN_SECTIONS: Record<string, Section> = {
     stats: [],
     rows: [],
     primaryAction: 'Tạo thông báo mới',
-  },
-  moderation: {
-    title: 'Kiểm duyệt Diễn đàn',
-    subtitle: 'Quản lý chủ đề và kiểm duyệt các câu hỏi & câu trả lời trên diễn đàn.',
-    icon: ShieldCheck,
-    stats: [],
-    rows: [],
-    primaryAction: 'Quản lý chủ đề',
   },
 }

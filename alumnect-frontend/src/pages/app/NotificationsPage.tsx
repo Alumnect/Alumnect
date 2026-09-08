@@ -9,6 +9,7 @@ import {
   HelpCircle,
   ShieldAlert,
   PartyPopper,
+  Megaphone,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -32,6 +33,7 @@ const ICONS: Record<NotificationType, any> = {
   FORUM_ANSWER: HelpCircle,
   REPORT_RESOLVED: ShieldAlert,
   WELCOME: PartyPopper,
+  SYSTEM_BROADCAST: Megaphone,
 }
 
 const TONES: Record<NotificationType, string> = {
@@ -41,6 +43,7 @@ const TONES: Record<NotificationType, string> = {
   FORUM_ANSWER: 'bg-violet-600 text-white shadow-md shadow-violet-500/30',
   REPORT_RESOLVED: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
   WELCOME: 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30',
+  SYSTEM_BROADCAST: 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/30',
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -197,8 +200,11 @@ export function NotificationsPage() {
                   </div>
 
                   <div className="min-w-0 flex-1">
+                    {n.title && (
+                      <p className="text-sm font-bold text-slate-950 mb-0.5">{n.title}</p>
+                    )}
                     <p className="text-sm leading-snug text-slate-800">
-                      {n.senderName && (
+                      {n.senderName && !n.title && (
                         <span className="font-bold text-slate-950 mr-1.5">
                           {n.senderName}
                         </span>

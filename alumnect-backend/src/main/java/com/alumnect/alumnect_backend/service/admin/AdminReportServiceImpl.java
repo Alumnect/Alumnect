@@ -34,9 +34,9 @@ public class AdminReportServiceImpl implements AdminReportService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AdminReportResponse> getReports(String query, String reason, String status, Long postId, int page, int size) {
+    public PageResponse<AdminReportResponse> getReports(String query, String author, String reason, String status, String type, Long postId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Specification<Report> spec = ReportSpecification.filterReports(query, reason, status, postId);
+        Specification<Report> spec = ReportSpecification.filterReports(query, author, reason, status, type, postId);
 
         Page<Report> reportPage = reportRepository.findAll(spec, pageable);
         List<Report> reports = reportPage.getContent();

@@ -269,13 +269,19 @@ export function AdminUsersPage() {
       {/* User Profile Detail Drawer / Modal */}
       {selectedUserId !== null &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/45 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
+              onClick={() => setSelectedUserId(null)}
+            />
+
             <Card
               hover={false}
-              className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100/30 rounded-2xl animate-pop"
+              className="relative z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl pop"
             >
               {/* Header Banner - Wrap avatar, name, and email with white text on gradient background */}
-              <div className="relative bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400 p-6 text-white rounded-t-2xl shadow-sm">
+              <div className="relative bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400 p-6 text-white rounded-t-3xl shadow-sm">
                 <button
                   onClick={() => setSelectedUserId(null)}
                   className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-all border border-white/10 z-20 shadow-xs"

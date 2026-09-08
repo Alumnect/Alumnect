@@ -271,8 +271,16 @@ export function AdminOverviewPage() {
       {/* Review Confirmation Modal */}
       {selectedReq && reviewAction &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4 backdrop-blur-sm">
-            <Card hover={false} className="w-full max-w-md bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
+              onClick={() => {
+                setSelectedReq(null)
+                setReviewAction(null)
+              }}
+            />
+            <Card hover={false} className="relative z-10 w-full max-w-md bg-white p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
               <h3 className="text-lg font-bold text-plum-900">
                 {reviewAction === 'APPROVED' ? 'Duyệt hồ sơ cựu sinh viên' : 'Từ chối hồ sơ cựu sinh viên'}
               </h3>

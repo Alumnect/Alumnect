@@ -32,5 +32,10 @@ public enum NotificationType {
     /**
      * Thông báo chào mừng khi tài khoản chuyển sang trạng thái ACTIVE.
      */
-    WELCOME
+    WELCOME,
+
+    /**
+     * Thông báo hệ thống / Thông báo phát thanh từ Admin.
+     */
+    SYSTEM_BROADCAST
 }

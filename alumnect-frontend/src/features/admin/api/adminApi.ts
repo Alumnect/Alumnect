@@ -90,6 +90,7 @@ export interface AdminReportDto {
   postId: number
   postContent: string
   postStatus: string
+  postType?: string
   postAuthorId: number
   postAuthorName: string
   postAuthorEmail: string
@@ -202,8 +203,10 @@ export const adminApi = {
    */
   getReports: (params: {
     query?: string
+    author?: string
     reason?: string
     status?: string
+    type?: string
     postId?: number
     page: number
     size: number
@@ -215,4 +218,89 @@ export const adminApi = {
    */
   updateReportStatus: (id: number, status: 'RESOLVED' | 'DISMISSED') =>
     http.put<any, ApiResponse<void>>(`/admin/reports/${id}/status`, { status }),
+
+  /**
+   * Lấy lịch sử thông báo hệ thống của Admin (phân trang, lọc theo thời gian & trạng thái)
+   */
+  getSystemNotifications: (params: {
+    timeFilter?: string
+    status?: string
+    page: number
+    size: number
+  }) =>
+    http.get<any, ApiResponse<PageResponse<SystemNotificationDto>>>('/admin/notifications', { params }),
+
+  /**
+   * Tạo mới hoặc hẹn giờ gửi thông báo hệ thống
+   */
+  createSystemNotification: (payload: CreateSystemNotificationPayload) =>
+    http.post<any, ApiResponse<SystemNotificationDto>>('/admin/notifications', payload),
+
+  /**
+   * Hủy thông báo hệ thống đã lên lịch
+   */
+  cancelScheduledNotification: (id: number) =>
+    http.delete<any, ApiResponse<void>>(`/admin/notifications/${id}`),
+
+  /**
+   * Lưu trữ thông báo hệ thống vào lịch sử (Archive)
+   */
+  archiveNotification: (id: number) =>
+    http.put<any, ApiResponse<void>>(`/admin/notifications/${id}/archive`),
 }
+
+export type SystemNotificationStatus =
+  | 'DRAFT'
+  | 'SCHEDULED'
+  | 'SENDING'
+  | 'SENT'
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'ARCHIVED'
+  | 'CANCELLED'
+
+export type RecipientType = 'SPECIFIC_USER' | 'USER_ROLE' | 'ALL_USERS'
+export type NotificationDuration = 'ONE_DAY' | 'ONE_WEEK' | 'ONE_MONTH' | 'ONE_YEAR' | 'FOREVER' | 'CUSTOM'
+
+export interface SystemNotificationDto {
+  id: number
+  title: string
+  content: string
+  recipientType: RecipientType
+  recipientRole?: string
+  recipientUser?: {
+    id: number
+    fullName: string
+    email: string
+    studentCode?: string
+    avatarUrl?: string
+    role?: string
+  }
+  status: SystemNotificationStatus
+  durationType: NotificationDuration
+  scheduledAt?: string
+  sentAt?: string
+  expiresAt?: string
+  archivedAt?: string
+  createdBy?: {
+    id: number
+    fullName: string
+    email: string
+    avatarUrl?: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateSystemNotificationPayload {
+  title: string
+  content: string
+  recipientType: RecipientType
+  recipientRole?: string
+  recipientUserId?: number
+  durationType: NotificationDuration
+  isScheduled?: boolean
+  scheduledAt?: string
+  expiresAt?: string
+}
+

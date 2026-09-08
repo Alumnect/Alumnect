@@ -108,6 +108,18 @@ public class Notification {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /**
+     * Thời điểm thông báo hết hạn hiệu lực (null nếu không có thời hạn).
+     */
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
+    /**
+     * ID của thông báo hệ thống liên kết (nếu thông báo này xuất phát từ một broadcast của Admin).
+     */
+    @Column(name = "system_notification_id")
+    private Long systemNotificationId;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
