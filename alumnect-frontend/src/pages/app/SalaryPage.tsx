@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw, ListChecks, Search, X, LayoutGrid } from 'lucide-react'
+import {
+  LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw, ListChecks, Search, X, LayoutGrid,
+  TrendingUp, ArrowRight, MapPin, Code2, Megaphone, Users, Palette, Briefcase,
+} from 'lucide-react'
 import { PageHeader, Badge, Card, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
+import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { ContributeSalaryModal, MyContributionsModal, useSalaryStatistics, useIndustries, SALARY_LEVELS } from '@/features/salary'
@@ -11,6 +14,20 @@ import { EntitySelectField } from '@/features/forum/components/EntitySelectField
 
 const ALL_REGIONS = 'Tất cả khu vực'
 const JOB_TITLE_SEARCH_MAX_LENGTH = 150
+/** Số vị trí nổi bật hiển thị (đã sắp theo số mẫu khảo sát giảm dần từ Backend). */
+const FEATURED_COUNT = 6
+
+/** Bộ icon + màu xoay vòng cho card "vị trí nổi bật" và icon từng dòng trong danh sách chi tiết —
+ * chỉ mang tính trang trí (không có dữ liệu ngành nghề thật cho từng nhóm thống kê), dùng đúng bảng
+ * màu sẵn có của design system (brand/violet/mint/coral/gold/sky) thay vì màu tự chế. */
+const FEATURE_STYLES = [
+  { icon: Code2, bg: 'bg-brand-100', text: 'text-brand-600' },
+  { icon: Megaphone, bg: 'bg-violet-200/50', text: 'text-violet-600' },
+  { icon: LayoutGrid, bg: 'bg-sky-300/40', text: 'text-sky-600' },
+  { icon: Users, bg: 'bg-mint-300/50', text: 'text-mint-700' },
+  { icon: Palette, bg: 'bg-gold-300/50', text: 'text-gold-700' },
+  { icon: Briefcase, bg: 'bg-coral-300/50', text: 'text-coral-700' },
+]
 
 /** Khung xương hiển thị trong lúc tải thống kê lần đầu (UC53). */
 function SalarySkeleton() {
@@ -87,6 +104,8 @@ export function SalaryPage() {
     const present = new Set((baseStats?.rows ?? []).map((r) => r.level))
     return SALARY_LEVELS.filter((lv) => present.has(lv))
   }, [baseStats])
+  // Vị trí nổi bật = N nhóm có nhiều mẫu khảo sát nhất (Backend đã ORDER BY samples DESC sẵn).
+  const featured = (baseStats?.rows ?? []).slice(0, FEATURED_COUNT)
 
   const { data, isLoading, isError, error, refetch } = useSalaryStatistics({
     industryId,
@@ -118,21 +137,44 @@ export function SalaryPage() {
         }
       />
 
-      <Reveal>
-        <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { k: data?.totalContributions ?? 0, s: '+', v: 'Lượt khảo sát' },
-            { k: data?.trackedPositions ?? 0, s: '', v: 'Vị trí theo dõi' },
-            { k: data?.overallMedian ?? 0, s: 'Tr', v: 'Trung vị (VND)' },
-            { k: 100, s: '%', v: 'Bảo mật ẩn danh' },
-          ].map((x) => (
-            <Card key={x.v} hover={false} className="p-4 text-center">
-              <p className="text-2xl font-extrabold text-plum-900"><Counter value={x.k} suffix={x.s} /></p>
-              <p className="mt-1 text-xs text-plum-400">{x.v}</p>
-            </Card>
-          ))}
-        </div>
-      </Reveal>
+      {/* Vị trí nổi bật — N nhóm nhiều mẫu khảo sát nhất, tính từ chính dữ liệu thống kê đã có (không
+          cần API mới). Không có dữ liệu ngành nghề thật theo từng nhóm nên dòng phụ hiện cấp bậc +
+          khu vực thay vì tên ngành; icon/màu chỉ mang tính trang trí, xoay vòng FEATURE_STYLES. */}
+      {featured.length > 0 && (
+        <Card hover={false} className="mb-5 p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold-300/50 text-gold-700">
+                <TrendingUp size={16} />
+              </span>
+              <div>
+                <h2 className="font-bold text-plum-900">Mức lương theo vị trí nổi bật</h2>
+                <p className="text-xs text-plum-500">Khám phá mức lương trung vị theo các vị trí phổ biến tại FPTU</p>
+              </div>
+            </div>
+            <a href="#salary-detail" className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
+              Xem tất cả <ArrowRight size={14} />
+            </a>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {featured.map((s, i) => {
+              const style = FEATURE_STYLES[i % FEATURE_STYLES.length]
+              const Icon = style.icon
+              return (
+                <div key={`${s.role}-${s.level}-${s.region}`} className={cn('rounded-2xl border border-plum-900/5 p-3.5 transition-transform hover:-translate-y-0.5', style.bg)}>
+                  <span className={cn('grid h-9 w-9 place-items-center rounded-xl bg-white/70', style.text)}>
+                    <Icon size={16} />
+                  </span>
+                  <p className="mt-2.5 truncate text-sm font-bold text-plum-900">{s.role}</p>
+                  <p className="truncate text-xs text-plum-500">{s.level} · {s.region}</p>
+                  <p className={cn('mt-2 text-sm font-extrabold', style.text)}>{Math.round(s.median * 1_000_000).toLocaleString('vi-VN')} VNĐ</p>
+                  <p className="text-[11px] text-plum-400">Trung vị / tháng</p>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Bộ lọc (UC54): ngành nghề + chức danh + cấp bậc + khu vực. overflow-visible ghi đè
           overflow-hidden mặc định của Card — nếu không, dropdown ngành nghề (EntitySelectField,
@@ -197,7 +239,7 @@ export function SalaryPage() {
       </Card>
 
       <Reveal>
-        <Card hover={false} className="overflow-hidden p-6">
+        <Card id="salary-detail" hover={false} className="scroll-mt-4 overflow-hidden p-6">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-bold text-plum-900">Dải lương theo vị trí <span className="text-plum-400">(Triệu VNĐ / tháng)</span></h2>
             <Badge tone="success" icon={<ShieldCheck size={13} />}>Ẩn danh 100%</Badge>
@@ -216,34 +258,42 @@ export function SalaryPage() {
             />
           ) : (
           <Stagger className="space-y-5" gap={0.07}>
-            {rows.map((s) => (
+            {rows.map((s, i) => {
+              const style = FEATURE_STYLES[i % FEATURE_STYLES.length]
+              return (
               <StaggerItem key={`${s.role}-${s.level}-${s.region}`}>
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-plum-900">
-                      {s.role} <span className="text-plum-400">· {s.level} · {s.region}</span>
-                    </span>
-                    <span className="text-plum-400">{s.samples} mẫu khảo sát</span>
-                  </div>
-                  {/* range bar: p25 — median — p75 */}
-                  <div className="relative h-7 rounded-full bg-plum-900/[0.04]">
-                    <div
-                      className="absolute top-0 h-full rounded-full bg-gradient-to-r from-brand-600/40 to-violet-600/40"
-                      style={{ left: `${(s.p25 / max) * 100}%`, width: `${((s.p75 - s.p25) / max) * 100}%` }}
-                    />
-                    <div
-                      className="absolute top-1/2 h-7 w-1.5 -translate-y-1/2 rounded-full bg-gold-400 shadow-glow-gold"
-                      style={{ left: `${(s.median / max) * 100}%` }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-between px-3 text-[11px] font-semibold">
-                      <span className="text-plum-500">{s.p25}Tr</span>
-                      <span className="text-gold-600">trung vị {s.median}Tr</span>
-                      <span className="text-plum-500">{s.p75}Tr</span>
+                <div className="flex items-center gap-3">
+                  <span className={cn('hidden h-9 w-9 shrink-0 place-items-center rounded-xl sm:grid', style.bg, style.text)}>
+                    <MapPin size={15} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="truncate font-semibold text-plum-900">
+                        {s.role} <span className="text-plum-400">· {s.level} · {s.region}</span>
+                      </span>
+                      <span className="shrink-0 text-plum-400">{s.samples} mẫu khảo sát</span>
+                    </div>
+                    {/* range bar: p25 — median — p75 */}
+                    <div className="relative h-7 rounded-full bg-plum-900/[0.04]">
+                      <div
+                        className="absolute top-0 h-full rounded-full bg-gradient-to-r from-brand-600/40 to-violet-600/40"
+                        style={{ left: `${(s.p25 / max) * 100}%`, width: `${((s.p75 - s.p25) / max) * 100}%` }}
+                      />
+                      <div
+                        className="absolute top-1/2 h-7 w-1.5 -translate-y-1/2 rounded-full bg-gold-400 shadow-glow-gold"
+                        style={{ left: `${(s.median / max) * 100}%` }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-between px-3 text-[11px] font-semibold">
+                        <span className="text-plum-500">{s.p25}Tr</span>
+                        <span className="text-gold-600">trung vị {s.median}Tr</span>
+                        <span className="text-plum-500">{s.p75}Tr</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </StaggerItem>
-            ))}
+              )
+            })}
           </Stagger>
           )}
         </Card>
@@ -278,6 +328,9 @@ export function SalaryPage() {
             setContributeOpen(false)
             setEditingContribution(null)
             toast.success(wasEdit ? 'Đã cập nhật dữ liệu lương thành công!' : 'Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!')
+            // Không cần mở gì thêm — modal "Đóng góp của tôi" tự làm mới nhờ cache
+            // ['my-salary-contributions'] đã được invalidate sẵn trong
+            // useCreateSalaryContribution/useUpdateSalaryContribution.
           }}
         />
       )}

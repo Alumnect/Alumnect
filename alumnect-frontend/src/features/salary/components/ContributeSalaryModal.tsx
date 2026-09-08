@@ -3,14 +3,14 @@
  * chỉnh sửa lượt đóng góp đã có (UC51 - Edit salary contribution).
  *
  * Trách nhiệm:
- *  - Form nhập chức danh + mức lương (bắt buộc), ngành nghề/công ty/khu vực/kinh nghiệm (tùy chọn).
+ *  - Form nhập chức danh + mức lương (bắt buộc), ngành nghề/công ty/địa điểm/kinh nghiệm (tùy chọn).
  *  - Validate bằng Zod (khớp Backend), gửi lên `POST /salary-contributions` (tạo) hoặc
  *    `PUT /salary-contributions/{id}` (sửa, truyền `editContribution`).
  *  - Chế độ SỬA: điền sẵn dữ liệu từ `editContribution` — chỉ mở được từ `MyContributionsModal`
  *    (đã đảm bảo chính chủ), Backend vẫn kiểm tra lại quyền sở hữu.
  *  - Nhấn mạnh cam kết ẩn danh — không hiển thị/thu thập tên, chỉ dùng để tổng hợp thống kê.
  */
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertTriangle, Loader2, ShieldCheck, LayoutGrid } from 'lucide-react'
 import { Modal, Badge } from '@/components/ui'
@@ -19,6 +19,7 @@ import { createSalaryContributionSchema, MAX_GROSS_AMOUNT } from '../model/salar
 import type { CreateSalaryContributionInput, SalaryContribution } from '../model/salary'
 import { useCreateSalaryContribution, useUpdateSalaryContribution, useIndustries } from '../hooks/useSalary'
 import { EntitySelectField } from '@/features/forum/components/EntitySelectField'
+import { PlaceAutocomplete } from '@/features/user/components/PlaceAutocomplete'
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
 const FIELD_CLASS =
@@ -45,6 +46,7 @@ export function ContributeSalaryModal({
     handleSubmit,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<CreateSalaryContributionInput>({
     resolver: zodResolver(createSalaryContributionSchema),
@@ -144,6 +146,27 @@ export function ContributeSalaryModal({
           />
         </div>
 
+        {/* Địa điểm để riêng 1 hàng full-width — ô input này rộng bằng đúng khung gợi ý autocomplete
+            (PlaceAutocomplete dùng w-full), nhét chung 2 cột với Công ty sẽ làm khung gợi ý bị bóp
+            hẹp, dễ xuống dòng xấu. */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-plum-600">Địa điểm</label>
+          <Controller
+            control={control}
+            name="region"
+            render={({ field }) => (
+              <PlaceAutocomplete
+                value={field.value || ''}
+                onChange={(val) => field.onChange(val)}
+                onSelect={(place) => field.onChange(place?.location || '')}
+                placeholder="VD: TP.HCM, Hà Nội..."
+                inputClassName="!rounded-xl !py-0 h-11 text-sm"
+              />
+            )}
+          />
+          {errors.region && <p className="mt-1 text-xs text-rose-500">{errors.region.message}</p>}
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-plum-600">Công ty</label>
@@ -151,24 +174,18 @@ export function ContributeSalaryModal({
             {errors.company && <p className="mt-1 text-xs text-rose-500">{errors.company.message}</p>}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-plum-600">Khu vực</label>
-            <input {...register('region')} placeholder="VD: TP.HCM" className={`${FIELD_CLASS} h-11`} />
-            {errors.region && <p className="mt-1 text-xs text-rose-500">{errors.region.message}</p>}
+            <label className="mb-1.5 block text-xs font-semibold text-plum-600">Số năm kinh nghiệm</label>
+            <input
+              type="number"
+              step="1"
+              min={0}
+              max={60}
+              {...register('yearsExperience', { valueAsNumber: true })}
+              placeholder="Tùy chọn"
+              className={`${FIELD_CLASS} h-11`}
+            />
+            {errors.yearsExperience && <p className="mt-1 text-xs text-rose-500">{errors.yearsExperience.message}</p>}
           </div>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-plum-600">Số năm kinh nghiệm</label>
-          <input
-            type="number"
-            step="1"
-            min={0}
-            max={60}
-            {...register('yearsExperience', { valueAsNumber: true })}
-            placeholder="Tùy chọn"
-            className={`${FIELD_CLASS} h-11`}
-          />
-          {errors.yearsExperience && <p className="mt-1 text-xs text-rose-500">{errors.yearsExperience.message}</p>}
         </div>
       </form>
     </Modal>
