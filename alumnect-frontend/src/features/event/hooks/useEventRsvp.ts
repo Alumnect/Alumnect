@@ -15,14 +15,17 @@ export function useRsvpStatus(eventId?: number | string) {
 }
 
 /**
- * Hook lấy danh sách người tham gia sự kiện (UC25).
+ * Hook lấy danh sách người tham gia sự kiện (UC25, UC29 - View event attendee list).
  */
-export function useEventAttendees(eventId?: number | string) {
+export function useEventAttendees(
+  eventId?: number | string,
+  params?: { search?: string; role?: string }
+) {
   return useQuery<EventAttendee[], Error>({
-    queryKey: ['event-attendees', String(eventId)],
-    queryFn: () => eventApi.getAttendees(eventId!),
+    queryKey: ['event-attendees', String(eventId), params?.search ?? '', params?.role ?? ''],
+    queryFn: () => eventApi.getAttendees(eventId!, params),
     enabled: Boolean(eventId),
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 30, // 30 giây
   })
 }
 

@@ -171,6 +171,12 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventAttendeeResponse> getEventAttendees(Long eventId) {
+        return getEventAttendees(eventId, null, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventAttendeeResponse> getEventAttendees(Long eventId, String search, String role) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
@@ -189,7 +195,12 @@ public class EventServiceImpl implements EventService {
         Map<Long, UserProfile> profileMap = userProfileRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
 
-        return registrations.stream().map(r -> {
+        String normalizedSearch = (search != null) ? search.trim().toLowerCase() : null;
+        String normalizedRole = (role != null && !role.isBlank() && !role.equalsIgnoreCase("ALL"))
+                ? role.trim().toUpperCase()
+                : null;
+
+        List<EventAttendeeResponse> list = registrations.stream().map(r -> {
             User u = r.getUser();
             UserProfile profile = profileMap.get(u.getId());
             String fullName = profile != null && profile.getFullName() != null && !profile.getFullName().isBlank()
@@ -197,17 +208,35 @@ public class EventServiceImpl implements EventService {
                     : u.getEmail();
             String avatarUrl = profile != null ? profile.getAvatarUrl() : "";
             String headline = profile != null ? profile.getHeadline() : "";
-            String role = u.getRole() != null ? u.getRole().getName() : "";
+            if ((headline == null || headline.isBlank()) && profile != null && profile.getMajor() != null) {
+                headline = profile.getMajor().getName();
+            }
+            String uRole = u.getRole() != null ? u.getRole().getName() : "";
 
             return EventAttendeeResponse.builder()
                     .userId(u.getId())
                     .fullName(fullName)
                     .avatarUrl(avatarUrl)
-                    .headline(headline)
-                    .role(role)
+                    .headline(headline != null ? headline : "")
+                    .role(uRole)
                     .registeredAt(r.getCreatedAt())
                     .build();
         }).collect(Collectors.toList());
+
+        if (normalizedRole != null) {
+            list = list.stream()
+                    .filter(a -> a.getRole() != null && a.getRole().equalsIgnoreCase(normalizedRole))
+                    .collect(Collectors.toList());
+        }
+
+        if (normalizedSearch != null && !normalizedSearch.isBlank()) {
+            list = list.stream()
+                    .filter(a -> (a.getFullName() != null && a.getFullName().toLowerCase().contains(normalizedSearch))
+                            || (a.getHeadline() != null && a.getHeadline().toLowerCase().contains(normalizedSearch)))
+                    .collect(Collectors.toList());
+        }
+
+        return list;
     }
 
     @Override

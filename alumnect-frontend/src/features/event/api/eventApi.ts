@@ -45,10 +45,15 @@ export const eventApi = {
   },
 
   /**
-   * Lấy danh sách người tham gia sự kiện
+   * Lấy danh sách người tham gia sự kiện (UC25, UC29 - View event attendee list)
    */
-  getAttendees: async (eventId: number | string): Promise<EventAttendee[]> => {
-    const body = await http.get(`/events/${encodeURIComponent(String(eventId))}/attendees`)
+  getAttendees: async (
+    eventId: number | string,
+    params?: { search?: string; role?: string }
+  ): Promise<EventAttendee[]> => {
+    const body = await http.get(`/events/${encodeURIComponent(String(eventId))}/attendees`, {
+      params,
+    })
     const data = extractData(body)
     const rawItems = Array.isArray(data) ? data : []
     const items: EventAttendee[] = []

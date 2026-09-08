@@ -5,7 +5,7 @@ import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast } from '@/compo
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { useFeed, useToggleSavePost } from '@/features/feed'
-import { EventRsvpButton, CancelEventModal, useCancelEvent, EventHistoryView } from '@/features/event'
+import { EventRsvpButton, CancelEventModal, useCancelEvent, EventHistoryView, EventAttendeesModal } from '@/features/event'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { compact, cn } from '@/lib/utils'
@@ -16,6 +16,12 @@ export function EventsPage() {
   const [tab, setTab] = useState('Sắp diễn ra')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
   const [cancelEventTarget, setCancelEventTarget] = useState<{ id: string | number; title?: string } | null>(null)
+  const [attendeeModalTarget, setAttendeeModalTarget] = useState<{
+    id: string | number
+    title?: string
+    capacity?: number | null
+    status?: string | null
+  } | null>(null)
 
   const currentUser = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -218,11 +224,27 @@ export function EventsPage() {
                               {post.author}
                             </span>
                           </Link>
-                          {event.capacity && (
-                            <span className="shrink-0 inline-flex items-center gap-1 text-xs text-plum-400">
-                              <Users size={12} /> Tối đa {compact(event.capacity)}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setAttendeeModalTarget({
+                                id: event.id ?? post.eventId ?? post.id,
+                                title: event.title,
+                                capacity: event.capacity,
+                                status: event.status,
+                              })
+                            }}
+                            className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-plum-500 hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                            title="Bấm để xem danh sách người tham gia"
+                          >
+                            <Users size={12} className="text-brand-500" />
+                            <span>
+                              {event.attendeeCount ?? 0}
+                              {event.capacity ? ` / ${compact(event.capacity)}` : ''}
                             </span>
-                          )}
+                          </button>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {Boolean(currentUser?.id && post.authorId && String(currentUser.id) === String(post.authorId)) &&
@@ -308,6 +330,17 @@ export function EventsPage() {
           }}
           isPending={cancelEventMutation.isPending}
           eventTitle={cancelEventTarget.title}
+        />
+      )}
+
+      {attendeeModalTarget && (
+        <EventAttendeesModal
+          isOpen={Boolean(attendeeModalTarget)}
+          onClose={() => setAttendeeModalTarget(null)}
+          eventId={attendeeModalTarget.id}
+          eventTitle={attendeeModalTarget.title}
+          capacity={attendeeModalTarget.capacity}
+          status={attendeeModalTarget.status}
         />
       )}
     </div>

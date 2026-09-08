@@ -28,9 +28,14 @@ public interface EventService {
     EventRegistrationResponse getRsvpStatus(Long eventId, String email);
 
     /**
-     * Lấy danh sách những người đã đăng ký tham gia sự kiện (UC25).
+     * Lấy danh sách những người đã đăng ký tham gia sự kiện (UC25, UC29 - View event attendee list).
+     * Hỗ trợ tìm kiếm theo từ khóa họ tên/tiêu đề và lọc theo vai trò (STUDENT, ALUMNI).
      */
-    List<EventAttendeeResponse> getEventAttendees(Long eventId);
+    List<EventAttendeeResponse> getEventAttendees(Long eventId, String search, String role);
+
+    default List<EventAttendeeResponse> getEventAttendees(Long eventId) {
+        return getEventAttendees(eventId, null, null);
+    }
 
     /**
      * Hủy sự kiện (UC27 - Cancel an event).

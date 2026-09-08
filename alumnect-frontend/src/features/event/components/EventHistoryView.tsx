@@ -17,6 +17,7 @@ import { Card, Avatar, SmartImage, EmptyState, Badge } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { EventRsvpButton } from './EventRsvpButton'
+import { EventAttendeesModal } from './EventAttendeesModal'
 import { useEventHistory } from '../hooks/useEventHistory'
 import type { EventHistoryFilter, EventHistoryItem } from '../model/event'
 import { compact, cn } from '@/lib/utils'
@@ -30,6 +31,12 @@ const FILTER_OPTIONS: { key: EventHistoryFilter; label: string }[] = [
 
 export function EventHistoryView() {
   const [filter, setFilter] = useState<EventHistoryFilter>('all')
+  const [attendeeModalTarget, setAttendeeModalTarget] = useState<{
+    id: string | number
+    title?: string
+    capacity?: number | null
+    status?: string | null
+  } | null>(null)
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage, refetch } =
     useEventHistory(filter)
 
@@ -282,14 +289,27 @@ export function EventHistoryView() {
                             {item.organizerName || 'Ban tổ chức'}
                           </span>
                         </Link>
-                        {item.capacity && (
-                          <span
-                            className="shrink-0 hidden sm:inline-flex items-center gap-1 text-[11px] text-plum-400"
-                            title={`Sức chứa tối đa: ${item.capacity}`}
-                          >
-                            <Users size={11} /> {compact(item.capacity)}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setAttendeeModalTarget({
+                              id: item.eventId,
+                              title: item.title,
+                              capacity: item.capacity,
+                              status: item.eventStatus,
+                            })
+                          }}
+                          className="shrink-0 hidden sm:inline-flex items-center gap-1 text-[11px] text-plum-500 hover:text-brand-600 hover:bg-brand-50/50 py-0.5 px-1.5 rounded transition-colors"
+                          title="Bấm để xem danh sách người tham gia"
+                        >
+                          <Users size={11} className="text-brand-500" />
+                          <span>
+                            {item.attendeeCount}
+                            {item.capacity ? ` / ${compact(item.capacity)}` : ''}
                           </span>
-                        )}
+                        </button>
                       </div>
 
                       {/* Action buttons */}
@@ -342,6 +362,17 @@ export function EventHistoryView() {
             </Button>
           </div>
         </Reveal>
+      )}
+
+      {attendeeModalTarget && (
+        <EventAttendeesModal
+          isOpen={Boolean(attendeeModalTarget)}
+          onClose={() => setAttendeeModalTarget(null)}
+          eventId={attendeeModalTarget.id}
+          eventTitle={attendeeModalTarget.title}
+          capacity={attendeeModalTarget.capacity}
+          status={attendeeModalTarget.status}
+        />
       )}
     </div>
   )
