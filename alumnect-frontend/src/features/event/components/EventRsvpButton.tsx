@@ -264,6 +264,8 @@ export function EventRsvpButton({
           onClose={() => setIsAttendeesOpen(false)}
           eventId={eventId}
           eventTitle={eventTitle}
+          capacity={capacity}
+          status={status}
         />
       )}
 

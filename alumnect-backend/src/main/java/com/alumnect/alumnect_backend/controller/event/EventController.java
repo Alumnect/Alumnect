@@ -122,16 +122,20 @@ public class EventController {
     }
 
     /**
-     * API lấy danh sách người tham gia sự kiện (Attendees) (UC25).
-     * Công khai cho mọi đối tượng xem danh sách người tham gia.
+     * API lấy danh sách người tham gia sự kiện (Attendees) (UC25, UC29 - View event attendee list).
+     * Hỗ trợ tìm kiếm theo từ khóa họ tên/tiêu đề và lọc theo vai trò (STUDENT, ALUMNI).
      *
      * @param eventId ID của sự kiện
+     * @param search  Từ khóa tìm kiếm (tùy chọn)
+     * @param role    Bộ lọc vai trò (tùy chọn: ALL, STUDENT, ALUMNI)
      * @return Danh sách người tham gia sự kiện
      */
     @GetMapping("/{eventId}/attendees")
     public ResponseEntity<ApiResponse<List<EventAttendeeResponse>>> getEventAttendees(
-            @PathVariable Long eventId) {
-        List<EventAttendeeResponse> attendees = eventService.getEventAttendees(eventId);
+            @PathVariable Long eventId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role) {
+        List<EventAttendeeResponse> attendees = eventService.getEventAttendees(eventId, search, role);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người tham gia thành công", attendees));
     }
 
