@@ -16,6 +16,7 @@ interface EventRsvpButtonProps {
   initialAttendeeCount?: number
   capacity?: number | null
   startTime?: string | null
+  status?: string | null
   size?: 'sm' | 'md'
   showCount?: boolean
   className?: string
@@ -28,6 +29,7 @@ export function EventRsvpButton({
   initialAttendeeCount = 0,
   capacity,
   startTime,
+  status,
   size = 'sm',
   showCount = true,
   className = '',
@@ -115,6 +117,11 @@ export function EventRsvpButton({
       return
     }
 
+    if (status === 'CANCELLED') {
+      toast.warning('Sự kiện này đã bị ban tổ chức hủy.')
+      return
+    }
+
     if (isPast) {
       toast.warning('Sự kiện đã kết thúc hoặc đang diễn ra, không thể thay đổi đăng ký.')
       return
@@ -179,7 +186,11 @@ export function EventRsvpButton({
         </button>
       )}
 
-      {isPast ? (
+      {status === 'CANCELLED' ? (
+        <span className="inline-flex items-center rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 border border-rose-200">
+          Đã hủy
+        </span>
+      ) : isPast ? (
         <Button
           size={size}
           variant="secondary"

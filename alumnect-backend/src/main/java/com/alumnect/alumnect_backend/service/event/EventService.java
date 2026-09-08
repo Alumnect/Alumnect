@@ -31,4 +31,10 @@ public interface EventService {
      * Lấy danh sách những người đã đăng ký tham gia sự kiện (UC25).
      */
     List<EventAttendeeResponse> getEventAttendees(Long eventId);
+
+    /**
+     * Hủy sự kiện (UC27 - Cancel an event).
+     * Chỉ dành cho ALUMNI là người tổ chức (organizer).
+     */
+    com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse cancelEvent(Long eventId, String email);
 }

@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.controller.event;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
 import com.alumnect.alumnect_backend.service.event.EventService;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,22 @@ public class EventController {
             Authentication authentication) {
         EventRegistrationResponse response = eventService.cancelRsvp(eventId, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Hủy đăng ký tham gia sự kiện thành công!", response));
+    }
+
+    /**
+     * API hủy sự kiện (UC27 - Cancel an event).
+     * Yêu cầu JWT; chỉ dành cho Alumni là người tổ chức (organizer) của sự kiện.
+     *
+     * @param eventId        ID của sự kiện
+     * @param authentication Thông tin xác thực người dùng
+     * @return Thông tin kết quả hủy sự kiện
+     */
+    @DeleteMapping(value = {"/{eventId}", "/{eventId}/cancel"})
+    public ResponseEntity<ApiResponse<EventCancelResponse>> cancelEvent(
+            @PathVariable Long eventId,
+            Authentication authentication) {
+        EventCancelResponse response = eventService.cancelEvent(eventId, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Hủy sự kiện thành công!", response));
     }
 
     /**

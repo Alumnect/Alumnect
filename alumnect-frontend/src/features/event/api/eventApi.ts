@@ -2,8 +2,10 @@ import http from '@/lib/http'
 import {
   eventRegistrationResultSchema,
   eventAttendeeSchema,
+  eventCancelResultSchema,
   type EventRegistrationResult,
   type EventAttendee,
+  type EventCancelResult,
 } from '../model/event'
 
 function extractData(body: unknown): unknown {
@@ -54,5 +56,13 @@ export const eventApi = {
       }
     }
     return items
+  },
+
+  /**
+   * Hủy sự kiện (UC27 - Cancel an event)
+   */
+  cancelEvent: async (eventId: number | string): Promise<EventCancelResult> => {
+    const body = await http.delete(`/events/${encodeURIComponent(String(eventId))}`)
+    return eventCancelResultSchema.parse(extractData(body))
   },
 }

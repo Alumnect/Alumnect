@@ -23,4 +23,6 @@ public class EventDTO {
     private Integer capacity;
     private Integer attendeeCount;
     private Boolean isRegistered;
+    @Builder.Default
+    private String status = "ACTIVE";
 }

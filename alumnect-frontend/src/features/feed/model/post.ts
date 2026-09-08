@@ -40,6 +40,7 @@ export const eventSchema = z.object({
   capacity: z.number().optional().nullable(),
   attendeeCount: z.number().nullable().optional().transform((v) => v ?? 0),
   isRegistered: z.boolean().nullable().optional().transform((v) => Boolean(v)),
+  status: z.string().optional().nullable().default('ACTIVE'),
 })
 export type EventInfo = z.infer<typeof eventSchema>
 
