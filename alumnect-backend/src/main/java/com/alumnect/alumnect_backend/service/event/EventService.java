@@ -37,4 +37,12 @@ public interface EventService {
      * Chỉ dành cho ALUMNI là người tổ chức (organizer).
      */
     com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse cancelEvent(Long eventId, String email);
+
+    /**
+     * Lấy lịch sử tham gia sự kiện của người dùng (UC28 - View attended-event history).
+     * Chỉ dành cho STUDENT và ALUMNI.
+     */
+    com.alumnect.alumnect_backend.common.api.PageResponse<com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse> getEventHistory(
+            String email, int page, int size, String filter);
 }
+
