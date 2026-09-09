@@ -314,15 +314,6 @@ export function EventHistoryView() {
 
                       {/* Action buttons */}
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {postLink && (
-                          <Link
-                            to={postLink}
-                            className="inline-flex items-center justify-center h-8 px-2.5 text-xs font-semibold text-plum-600 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                            title="Xem bài viết chi tiết"
-                          >
-                            <ExternalLink size={13} className="mr-1" /> Chi tiết
-                          </Link>
-                        )}
 
                         {/* If upcoming & active, allow cancelling RSVP or viewing attendees */}
                         {item.eventStatus !== 'CANCELLED' && (
@@ -333,6 +324,7 @@ export function EventHistoryView() {
                             initialAttendeeCount={item.attendeeCount}
                             capacity={item.capacity}
                             startTime={item.startTime}
+                            endTime={item.endTime}
                             status={item.eventStatus}
                             size="sm"
                             showCount={false}

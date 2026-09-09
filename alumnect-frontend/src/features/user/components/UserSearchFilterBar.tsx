@@ -249,7 +249,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500">
-                Khóa nhập học (Cohort)
+                Khóa nhập học
               </label>
               <select
                 value={filters.cohort || ''}

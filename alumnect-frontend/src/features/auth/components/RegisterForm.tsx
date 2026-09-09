@@ -284,7 +284,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
 
           {/* Khóa học */}
           <Field
-            label="Khóa học (Cohort)"
+            label="Khóa học"
             type="number"
             placeholder="Ví dụ: 18"
             error={errors.cohort?.message}

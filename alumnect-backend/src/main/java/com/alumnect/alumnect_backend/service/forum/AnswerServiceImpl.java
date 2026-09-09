@@ -21,6 +21,7 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.forum.AnswerMapper;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +67,7 @@ public class AnswerServiceImpl implements AnswerService {
     private VoteRepository voteRepository;
 
     @Autowired
-    private com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+    private NotificationService notificationService;
 
     /**
      * {@inheritDoc}
@@ -250,8 +251,8 @@ public class AnswerServiceImpl implements AnswerService {
                     .targetId(answerId)
                     .value((short) 1)
                     .build());
+            answerRepository.incrementVoteCount(answerId);
             answer.setVoteCount(answer.getVoteCount() + 1);
-            answerRepository.save(answer);
             log.info("Bình chọn câu trả lời: id={}, questionId={}, người bình chọn={}", answerId, questionId, email);
         }
         return VoteResponse.builder().voted(true).voteCount(answer.getVoteCount()).build();
@@ -271,8 +272,8 @@ public class AnswerServiceImpl implements AnswerService {
 
         if (voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId)) {
             voteRepository.deleteByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId);
+            answerRepository.decrementVoteCount(answerId);
             answer.setVoteCount(Math.max(0, answer.getVoteCount() - 1));
-            answerRepository.save(answer);
             log.info("Bỏ bình chọn câu trả lời: id={}, questionId={}, người bỏ bình chọn={}", answerId, questionId, email);
         }
         return VoteResponse.builder().voted(false).voteCount(answer.getVoteCount()).build();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Search, Lock, Unlock, Users, X, Loader2, Mail, Phone, BookOpen, GraduationCap, Calendar, FileText, Award } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -181,7 +181,7 @@ export function AdminUsersPage() {
                           }
                           className="px-2.5 py-0.5"
                         >
-                          {u.role === 'ADMIN' ? 'Admin' : u.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                          {u.role === 'ADMIN' ? 'Quản trị viên' : u.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
                         </Badge>
                       </td>
                       <td className="px-5 py-3.5">
@@ -237,31 +237,11 @@ export function AdminUsersPage() {
             </Card>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-2">
-                <p className="text-xs text-plum-400">
-                  Hiển thị trang <strong>{page + 1}</strong> trên tổng số <strong>{totalPages}</strong> trang
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    Trước
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </Reveal>
@@ -280,21 +260,22 @@ export function AdminUsersPage() {
               hover={false}
               className="relative z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl pop"
             >
-              {/* Header Banner - Wrap avatar, name, and email with white text on gradient background */}
-              <div className="relative bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400 p-6 text-white rounded-t-3xl shadow-sm">
+              {/* Header Banner - Clean white matching user modals */}
+              <div className="relative bg-white p-6 border-b border-slate-100 rounded-t-3xl">
                 <button
                   onClick={() => setSelectedUserId(null)}
-                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-all border border-white/10 z-20 shadow-xs"
+                  className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors z-20 cursor-pointer"
+                  title="Đóng cửa sổ"
                 >
-                  <X size={16} />
+                  <X size={18} />
                 </button>
 
                 {isLoadingDetail ? (
                   <div className="flex items-center gap-4">
-                    <Skeleton className="h-20 w-20 rounded-full border-4 border-white/30 shadow-md bg-white/10 shrink-0" />
+                    <Skeleton className="h-20 w-20 rounded-full border-2 border-slate-100 shadow-sm shrink-0" />
                     <div className="space-y-2 flex-1 pb-1">
-                      <Skeleton className="h-5 w-40 bg-white/20" />
-                      <Skeleton className="h-4 w-48 bg-white/20" />
+                      <Skeleton className="h-5 w-40" />
+                      <Skeleton className="h-4 w-48" />
                     </div>
                   </div>
                 ) : userDetail ? (
@@ -302,24 +283,24 @@ export function AdminUsersPage() {
                     <Avatar
                       src={userDetail.avatarUrl}
                       name={userDetail.fullName}
-                      size={80}
+                      size={72}
                       verified={userDetail.isAccountVerified}
-                      className="rounded-full border-4 border-white ring-1 ring-plum-900/5 shadow-md shrink-0 bg-white"
+                      className="rounded-full border-2 border-slate-100 ring-2 ring-slate-100/80 shadow-sm shrink-0 bg-white"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-xl font-bold text-white tracking-tight">{userDetail.fullName}</h2>
+                        <h2 className="text-xl font-bold text-plum-900 tracking-tight">{userDetail.fullName}</h2>
                         <Badge
-                          tone="neutral"
-                          className="bg-white/20 backdrop-blur-md px-2 py-0.5 text-[9px] rounded-full shrink-0 font-extrabold uppercase border border-white/30 text-white shadow-2xs"
+                          tone={userDetail.role === 'ADMIN' ? 'neutral' : userDetail.role === 'ALUMNI' ? 'brand' : 'info'}
+                          className="px-2.5 py-0.5 text-[10px] rounded-full shrink-0 font-bold uppercase border"
                         >
-                          {userDetail.role === 'ADMIN' ? 'Admin' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                          {userDetail.role === 'ADMIN' ? 'Quản trị viên' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
                         </Badge>
                       </div>
-                      <p className="text-white/80 text-xs mt-0.5 font-medium">{userDetail.email}</p>
+                      <p className="text-slate-500 text-xs mt-0.5 font-medium">{userDetail.email}</p>
                       {userDetail.headline && (
-                        <p className="text-gold-100 text-xs mt-2 italic font-semibold flex items-center gap-1.5 bg-black/10 px-2.5 py-1.5 rounded-lg border border-white/5 w-fit">
-                          <Award size={13} className="shrink-0 text-gold-400" />
+                        <p className="text-slate-700 text-xs mt-2 italic font-medium flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1.5 rounded-xl w-fit">
+                          <Award size={13} className="shrink-0 text-amber-500" />
                           <span>"{userDetail.headline}"</span>
                         </p>
                       )}
@@ -341,20 +322,20 @@ export function AdminUsersPage() {
                     {/* Information Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Contact Column */}
-                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                          <Mail size={12} className="text-brand-500" />
+                      <div className="space-y-3.5 p-4.5 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+                        <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <Mail size={13} className="text-brand-500" />
                           <span>Thông tin liên hệ</span>
                         </h4>
                         
                         <div className="space-y-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Địa chỉ Email</span>
-                            <span className="font-semibold text-plum-900 break-all">{userDetail.email}</span>
+                            <span className="text-[10px] font-medium text-slate-500 block mb-0.5">Địa chỉ Email</span>
+                            <span className="font-semibold text-plum-950 break-all">{userDetail.email}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Số điện thoại</span>
-                            <span className="font-semibold text-plum-900 flex items-center gap-1">
+                            <span className="text-[10px] font-medium text-slate-500 block mb-0.5">Số điện thoại</span>
+                            <span className="font-semibold text-plum-950 flex items-center gap-1">
                               <Phone size={11} className="text-slate-400 shrink-0" />
                               {userDetail.phone || 'Chưa cập nhật'}
                             </span>
@@ -363,23 +344,23 @@ export function AdminUsersPage() {
                       </div>
 
                       {/* Education Column */}
-                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                          <GraduationCap size={13} className="text-brand-500" />
+                      <div className="space-y-3.5 p-4.5 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+                        <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <GraduationCap size={14} className="text-brand-500" />
                           <span>Học vấn & Mã số</span>
                         </h4>
                         
                         <div className="space-y-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Chuyên ngành</span>
-                            <span className="font-semibold text-plum-900 flex items-center gap-1">
+                            <span className="text-[10px] font-medium text-slate-500 block mb-0.5">Chuyên ngành</span>
+                            <span className="font-semibold text-plum-950 flex items-center gap-1">
                               <BookOpen size={11} className="text-slate-400 shrink-0" />
                               {userDetail.majorName ? `${userDetail.majorName} (${userDetail.majorCode})` : 'Chưa chọn'}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Mã sinh viên / Khóa</span>
-                            <span className="font-semibold text-plum-900 flex items-center gap-1.5">
+                            <span className="text-[10px] font-medium text-slate-500 block mb-0.5">Mã sinh viên / Khóa</span>
+                            <span className="font-semibold text-plum-950 flex items-center gap-1.5">
                               <span>{userDetail.studentCode || 'N/A'}</span>
                               {userDetail.cohort ? (
                                 <Badge tone="neutral" className="px-1.5 py-0 text-[9px] font-bold border border-plum-900/10">
@@ -394,38 +375,38 @@ export function AdminUsersPage() {
 
                     {/* Biography block if present */}
                     {userDetail.biography && (
-                      <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 space-y-2">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                          <FileText size={12} className="text-brand-500" />
+                      <div className="p-4.5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
+                        <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <FileText size={13} className="text-brand-500" />
                           <span>Tiểu sử bản thân</span>
                         </h4>
-                        <p className="text-xs text-plum-800 leading-relaxed whitespace-pre-line">{userDetail.biography}</p>
+                        <p className="text-xs text-plum-900 leading-relaxed whitespace-pre-line font-normal">{userDetail.biography}</p>
                       </div>
                     )}
 
                     {/* Account Status / Metadata */}
-                    <div className="p-4 rounded-xl bg-slate-50/30 border border-slate-100/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/60 flex flex-wrap items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-1.5">
                         <Calendar size={13} className="text-slate-400" />
-                        <span className="text-slate-400">Tham gia:</span>
-                        <span className="font-semibold text-plum-900">
+                        <span className="text-slate-500">Tham gia:</span>
+                        <span className="font-semibold text-plum-950">
                           {new Date(userDetail.createdAt).toLocaleDateString('vi-VN')}
                         </span>
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] px-2 py-0.5">
+                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[10px] px-2.5 py-0.5 font-bold">
                           {userDetail.accountStatus === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
                         </Badge>
-                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[9px] px-2 py-0.5">
+                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[10px] px-2.5 py-0.5 font-bold">
                           {userDetail.isAccountVerified ? 'Đã xác minh' : 'Chưa xác minh'}
                         </Badge>
                       </div>
                     </div>
 
                     {/* Actions under Modal */}
-                    {userDetail.role !== 'ADMIN' && (
-                      <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
+                    <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
+                      {userDetail.role !== 'ADMIN' && (
                         <Button
                           size="sm"
                           variant={userDetail.accountStatus === 'LOCKED' ? 'primary' : 'secondary'}
@@ -433,10 +414,10 @@ export function AdminUsersPage() {
                             handleToggleLock(userDetail.id, userDetail.accountStatus)
                           }}
                           className={cn(
-                            'font-bold text-xs shadow-3xs rounded-xl px-4 py-2 transition-all',
+                            'font-bold text-xs rounded-xl px-4 py-2 transition-all',
                             userDetail.accountStatus === 'LOCKED'
-                              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 hover:shadow-xs'
-                              : 'border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100/80 hover:text-red-700'
+                              ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'
+                              : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100/80 hover:text-red-700'
                           )}
                         >
                           {updateStatusMutation.isPending ? (
@@ -448,16 +429,16 @@ export function AdminUsersPage() {
                           )}
                           {userDetail.accountStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setSelectedUserId(null)}
-                          className="font-bold text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl px-4 py-2"
-                        >
-                          Đóng
-                        </Button>
-                      </div>
-                    )}
+                      )}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setSelectedUserId(null)}
+                        className="font-bold text-xs border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl px-4 py-2"
+                      >
+                        Đóng
+                      </Button>
+                    </div>
                   </>
                 ) : null}
               </div>

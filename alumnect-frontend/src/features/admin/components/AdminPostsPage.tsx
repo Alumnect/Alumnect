@@ -7,7 +7,6 @@ import {
   Clock,
   ThumbsUp,
   MessageSquare,
-  Repeat,
   Trophy,
   Briefcase,
   Calendar,
@@ -19,7 +18,7 @@ import {
   CheckCircle2,
   Sparkles,
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, Modal, toast } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, Modal, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -68,7 +67,7 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
   },
   GENERAL: {
     value: 'GENERAL',
-    label: 'Bình thường (General)',
+    label: 'Bình thường',
     shortLabel: 'Bình thường',
     icon: Newspaper,
     colorHex: '#475569',
@@ -83,7 +82,7 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
   },
   ACHIEVEMENT: {
     value: 'ACHIEVEMENT',
-    label: 'Thành tựu (Achievement)',
+    label: 'Thành tựu',
     shortLabel: 'Thành tựu',
     icon: Trophy,
     colorHex: '#D97706',
@@ -98,7 +97,7 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
   },
   RECRUITMENT: {
     value: 'RECRUITMENT',
-    label: 'Tuyển dụng (Recruitment)',
+    label: 'Tuyển dụng',
     shortLabel: 'Tuyển dụng',
     icon: Briefcase,
     colorHex: '#0284C7',
@@ -113,7 +112,7 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
   },
   EVENT: {
     value: 'EVENT',
-    label: 'Sự kiện (Event)',
+    label: 'Sự kiện',
     shortLabel: 'Sự kiện',
     icon: Calendar,
     colorHex: '#7C3AED',
@@ -532,9 +531,6 @@ export function AdminPostsPage() {
                               <span className="flex items-center gap-1.5">
                                 <MessageSquare size={12} className="text-plum-400" /> <strong>{p.commentCount}</strong> bình luận
                               </span>
-                              <span className="flex items-center gap-1.5">
-                                <Repeat size={12} className="text-sky-500" /> <strong>{p.repostCount}</strong> đăng lại
-                              </span>
                             </div>
                           </td>
 
@@ -552,22 +548,24 @@ export function AdminPostsPage() {
                           {/* 6. Action Column */}
                           <td className="px-4 py-4 align-top text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={(e) => handleToggleHidden(e, p.id, p.hidden)}
-                                disabled={toggleMutation.isPending}
-                                className={cn(
-                                  'h-7 px-2 text-[11px] font-bold border transition-colors',
-                                  p.hidden
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                    : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                                )}
-                                title={p.hidden ? 'Mở hiển thị bài viết' : 'Ẩn bài viết vi phạm'}
-                              >
-                                {p.hidden ? <Eye size={12} /> : <EyeOff size={12} />}
-                                <span>{p.hidden ? 'Mở' : 'Ẩn'}</span>
-                              </Button>
+                              {!p.deleted && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={(e) => handleToggleHidden(e, p.id, p.hidden)}
+                                  disabled={toggleMutation.isPending}
+                                  className={cn(
+                                    'h-7 px-2 text-[11px] font-bold border transition-colors',
+                                    p.hidden
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                      : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                                  )}
+                                  title={p.hidden ? 'Mở hiển thị bài viết' : 'Ẩn bài viết vi phạm'}
+                                >
+                                  {p.hidden ? <Eye size={12} /> : <EyeOff size={12} />}
+                                  <span>{p.hidden ? 'Mở' : 'Ẩn'}</span>
+                                </Button>
+                              )}
 
                               <Button
                                 variant="secondary"
@@ -592,33 +590,11 @@ export function AdminPostsPage() {
             </Card>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-2 py-4">
-                <p className="text-xs text-plum-500">
-                  Trang <strong className="text-plum-900">{page + 1}</strong> / <strong>{totalPages}</strong> (Tổng {totalElements} bài)
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    className="text-xs font-bold"
-                  >
-                    Trước
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                    className="text-xs font-bold"
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </Reveal>

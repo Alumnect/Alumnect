@@ -20,11 +20,13 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.notification.NotificationMapper;
 import com.alumnect.alumnect_backend.mapper.notification.SystemNotificationMapper;
+import com.alumnect.alumnect_backend.specification.notification.SystemNotificationSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,8 +87,8 @@ public class AdminNotificationServiceImpl implements AdminNotificationService {
             endDate = endOfMonth.plusDays(1).atStartOfDay(VN_ZONE).toInstant();
         }
 
-        org.springframework.data.jpa.domain.Specification<SystemNotification> spec =
-                com.alumnect.alumnect_backend.specification.notification.SystemNotificationSpecification.filter(startDate, endDate, status);
+        Specification<SystemNotification> spec =
+                SystemNotificationSpecification.filter(startDate, endDate, status);
         Page<SystemNotification> resultPage = systemNotificationRepository.findAll(spec, pageable);
         List<SystemNotificationResponse> dtoList = resultPage.getContent().stream()
                 .map(systemNotificationMapper::toDto)

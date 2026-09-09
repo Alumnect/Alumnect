@@ -293,7 +293,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               {/* Headline */}
               <div>
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Dòng giới thiệu ngắn (Headline)
+                  Dòng giới thiệu ngắn
                 </label>
                 <input
                   type="text"
@@ -309,7 +309,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               {/* Avatar Upload / URL */}
               <div>
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Ảnh đại diện (Avatar)
+                  Ảnh đại diện
                 </label>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-plum-50/50 border border-plum-900/5">
                   <Avatar
@@ -352,7 +352,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               {/* Cover Upload / URL */}
               <div>
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Ảnh bìa hồ sơ (Cover Photo)
+                  Ảnh bìa hồ sơ
                 </label>
                 <div className="p-4 rounded-2xl bg-plum-50/50 border border-plum-900/5 space-y-3">
                   {coverUrl ? (
@@ -417,7 +417,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Cơ sở đào tạo (Campus)
+                  Cơ sở đào tạo
                 </label>
                 <select
                   value={campus}
@@ -436,7 +436,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
 
               <div>
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Chuyên ngành học (Major)
+                  Chuyên ngành học
                 </label>
                 <select
                   value={majorId || ''}
@@ -456,7 +456,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                    Khóa học (Cohort)
+                    Khóa học
                   </label>
                   <input
                     type="number"

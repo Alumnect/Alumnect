@@ -1,6 +1,8 @@
 package com.alumnect.alumnect_backend.mapper.admin;
 
 import com.alumnect.alumnect_backend.dto.response.admin.AdminPostResponse;
+import com.alumnect.alumnect_backend.dto.response.post.EventDTO;
+import com.alumnect.alumnect_backend.dto.response.post.JobDTO;
 import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.job.JobPosting;
 import com.alumnect.alumnect_backend.entity.event.Event;
@@ -40,9 +42,9 @@ public interface AdminPostMapper {
         return toDto(post, null, null);
     }
 
-    default com.alumnect.alumnect_backend.dto.response.post.EventDTO mapEvent(Event event) {
+    default EventDTO mapEvent(Event event) {
         if (event == null) return null;
-        return com.alumnect.alumnect_backend.dto.response.post.EventDTO.builder()
+        return EventDTO.builder()
                 .id(event.getId())
                 .title(event.getTitle())
                 .location(event.getLocation())
@@ -54,9 +56,9 @@ public interface AdminPostMapper {
                 .build();
     }
 
-    default com.alumnect.alumnect_backend.dto.response.post.JobDTO mapJob(JobPosting job) {
+    default JobDTO mapJob(JobPosting job) {
         if (job == null) return null;
-        return com.alumnect.alumnect_backend.dto.response.post.JobDTO.builder()
+        return JobDTO.builder()
                 .title(job.getTitle())
                 .company(job.getCompany())
                 .location(job.getLocation())

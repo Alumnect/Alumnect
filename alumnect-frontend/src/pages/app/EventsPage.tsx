@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban } from 'lucide-react'
 import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast } from '@/components/ui'
@@ -29,26 +29,14 @@ export function EventsPage() {
   const toggleSave = useToggleSavePost()
   const cancelEventMutation = useCancelEvent()
 
-  // Fetch event posts from backend
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('event')
-  const posts = useMemo(() => data?.pages.flatMap((page) => page.items) || [], [data])
+  const currentEventFilter = tab === 'Sắp diễn ra' ? 'upcoming' : tab === 'Trong tháng này' ? 'this_month' : undefined
 
-  const CURRENT_MONTH_INDEX = new Date().getMonth()
-  const CURRENT_YEAR = new Date().getFullYear()
-
-  const filteredEvents = posts.filter((post) => {
-    const event = post.event
-    if (!event || !event.startTime) return false
-    
-    const eventDate = new Date(event.startTime)
-    
-    if (tab === 'Trong tháng này') {
-      return eventDate.getMonth() === CURRENT_MONTH_INDEX && eventDate.getFullYear() === CURRENT_YEAR
-    }
-    
-    // Default 'Sắp diễn ra'
-    return true
-  })
+  // Lấy danh sách sự kiện đã được Backend lọc trực tiếp từ Database (chỉ lấy sự kiện hợp lệ, chưa kết thúc, chưa hủy)
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('event', '', 12, currentEventFilter)
+  const filteredEvents = useMemo(
+    () => data?.pages.flatMap((page) => page.items).filter((post) => Boolean(post.event && post.event.startTime)) || [],
+    [data]
+  )
 
   const getEventDateInfo = (isoString?: string | null) => {
     if (!isoString) return { month: 'TH--', day: '--', dateStr: 'Chưa xác định', timeStr: '' }
@@ -140,10 +128,10 @@ export function EventsPage() {
               
               return (
                 <StaggerItem key={post.id}>
-                  <Card hover={false} className="group h-full flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-glow">
-                    <div className="relative h-44 shrink-0 overflow-hidden">
+                  <Card hover={false} className="group h-full flex flex-col overflow-hidden transition-shadow duration-200 hover:shadow-xl">
+                    <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden">
                       <Link to={`/app/posts/${post.id}`} className="block h-full w-full">
-                        <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-500 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
                         <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
                           <span className="text-[10px] font-bold uppercase text-gold-600">{dateInfo.month}</span>
@@ -218,9 +206,9 @@ export function EventsPage() {
                             className="flex items-center gap-2 min-w-0 hover:text-brand-600 transition-colors group/author"
                           >
                             <div className="shrink-0">
-                              <Avatar src={post.avatar} name={post.author} size={26} />
+                              <Avatar src={post.avatar} name={post.author} size={24} />
                             </div>
-                            <span className="text-sm font-medium text-plum-900 truncate group-hover/author:underline group-hover/author:text-brand-600" title={post.author}>
+                            <span className="text-[13px] font-medium text-plum-900 truncate group-hover/author:underline group-hover/author:text-brand-600" title={post.author}>
                               {post.author}
                             </span>
                           </Link>
@@ -246,7 +234,7 @@ export function EventsPage() {
                             </span>
                           </button>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {Boolean(currentUser?.id && post.authorId && String(currentUser.id) === String(post.authorId)) &&
                             event.status !== 'CANCELLED' && (
                               <Button
@@ -260,10 +248,10 @@ export function EventsPage() {
                                     title: event.title,
                                   })
                                 }}
-                                className="border-rose-200 text-rose-600 hover:bg-rose-50 text-xs px-2.5 h-8 font-semibold"
+                                className="h-8 px-3 text-xs gap-1.5 rounded-xl font-semibold border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300"
                                 title="Hủy tổ chức sự kiện này"
                               >
-                                <Ban size={13} className="mr-1" /> Hủy
+                                <Ban size={13} /> Hủy
                               </Button>
                             )}
                           <EventRsvpButton
@@ -273,6 +261,7 @@ export function EventsPage() {
                             initialAttendeeCount={event.attendeeCount ?? 0}
                             capacity={event.capacity}
                             startTime={event.startTime}
+                            endTime={event.endTime}
                             status={event.status}
                             size="sm"
                             showCount={false}

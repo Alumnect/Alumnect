@@ -9,7 +9,7 @@
  */
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Search,
   Image as ImageIcon,
@@ -40,14 +40,14 @@ import { Avatar, Badge, Card, ImageCarousel, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { QUESTIONS } from '@/lib/constants'
-import { UpcomingEventsWidget, CancelEventModal, useCancelEvent } from '@/features/event'
+import { UpcomingEventsWidget, CancelEventModal, useCancelEvent, EventRsvpButton } from '@/features/event'
 
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal } from '@/features/feed'
+import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, PostActionMenu } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
@@ -214,8 +214,24 @@ export function PostCard({
     ? !!currentUserId && post.authorId === currentUserId
     : !!currentUserName && post.author === currentUserName
 
+  const navigate = useNavigate()
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, select, [role="button"], .interactive, [data-interactive]')) {
+      return
+    }
+    navigate(`/app/posts/${post.id}`)
+  }
+
   return (
-    <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white")}>
+    <Card
+      hover={false}
+      onClick={handleCardClick}
+      className={cn(
+        "overflow-hidden relative transition-all duration-300 cursor-pointer hover:shadow-md",
+        post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white"
+      )}
+    >
       {post.type === 'achievement' && (
         <div className="absolute -top-4 -right-4 p-6 opacity-[0.04] pointer-events-none -rotate-12">
           <Trophy size={160} className="text-amber-600" />
@@ -255,33 +271,15 @@ export function PostCard({
               {post.role ? `${post.role} · ` : ''}{post.time}
             </Link>
           </div>
-          {/* Nút Chỉnh sửa (UC22) và Xóa (UC23) chỉ hiển thị cho chính tác giả bài viết */}
-          {isAuthor && onEdit && onDelete ? (
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => onEdit(post)}
-                aria-label="Chỉnh sửa bài viết"
-                title="Chỉnh sửa bài viết"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-              >
-                <Pencil size={13} /> Sửa
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(post)}
-                aria-label="Xóa bài viết"
-                title="Xóa bài viết"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
-              >
-                <Trash2 size={13} /> Xóa
-              </button>
-            </div>
-          ) : (
-            <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
-              <MoreHorizontal size={18} />
-            </button>
-          )}
+          <PostActionMenu
+            post={post}
+            isAuthor={isAuthor}
+            canInteract={canInteract}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onCancelEvent={onCancelEvent}
+            onReport={onReport}
+          />
         </div>
 
         {/* --- Phần 2: Nội dung văn bản (Ẩn đi nếu là bài event hoặc recruitment, vì văn bản đã được gom vào khung riêng) --- */}
@@ -387,37 +385,32 @@ export function PostCard({
       {post.type === 'event' && post.event && (
         <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all hover:shadow-md">
           {/* Header Sự kiện */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-5 py-3.5">
-            <h3 className="flex items-center gap-2 font-bold text-violet-900">
-              <CalendarPlus size={18} className="text-violet-600" />
-              <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-5 py-3.5">
+            <h3 className="flex items-center gap-2 font-bold text-violet-900 min-w-0">
+              <CalendarPlus size={18} className="text-violet-600 shrink-0" />
+              <span className="truncate">Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
             </h3>
             {post.event.status === 'CANCELLED' ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
                 <Ban size={12} /> Đã hủy
               </span>
-            ) : isAuthor && onCancelEvent ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onCancelEvent(post)
-                }}
-                className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
-                title="Hủy tổ chức sự kiện này"
-              >
-                <Ban size={12} /> Hủy sự kiện
-              </button>
-            ) : null}
+            ) : (
+              <div className="shrink-0 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <EventRsvpButton
+                  eventId={post.event.id ?? post.eventId}
+                  eventTitle={post.event.title}
+                  initialRegistered={post.event.isRegistered ?? false}
+                  initialAttendeeCount={post.event.attendeeCount ?? 0}
+                  capacity={post.event.capacity}
+                  startTime={post.event.startTime}
+                  endTime={post.event.endTime}
+                  status={post.event.status}
+                  size="sm"
+                  showCount={true}
+                />
+              </div>
+            )}
           </div>
-
-          {post.event.status === 'CANCELLED' && (
-            <div className="mx-5 mt-4 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs font-medium text-rose-800">
-              <Ban size={15} className="text-rose-600 shrink-0" />
-              <span>Sự kiện này đã bị ban tổ chức hủy. Các lượt đăng ký tham gia trước đó đã bị hủy tự động.</span>
-            </div>
-          )}
 
           <div className="p-5">
             {/* Thời gian & Địa điểm */}

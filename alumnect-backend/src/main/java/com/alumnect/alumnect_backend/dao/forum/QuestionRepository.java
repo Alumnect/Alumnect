@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.entity.forum.Question;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -87,4 +88,12 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
             "WHERE q.id = :id " +
             "AND q.status = com.alumnect.alumnect_backend.common.enums.QuestionStatus.ACTIVE")
     Optional<Question> findActiveDetailById(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Question q SET q.voteCount = q.voteCount + 1 WHERE q.id = :id")
+    void incrementVoteCount(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Question q SET q.voteCount = CASE WHEN q.voteCount > 0 THEN q.voteCount - 1 ELSE 0 END WHERE q.id = :id")
+    void decrementVoteCount(@Param("id") Long id);
 }

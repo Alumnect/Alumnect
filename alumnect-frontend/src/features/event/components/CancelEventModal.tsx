@@ -64,14 +64,11 @@ export function CancelEventModal({
       }
     >
       <div className="space-y-3">
-        <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/70 p-3.5 text-rose-900">
-          <AlertTriangle size={18} className="shrink-0 text-rose-600 mt-0.5" />
-          <div className="text-xs leading-5">
-            <p className="font-semibold text-rose-950">Lưu ý quan trọng</p>
-            <p className="mt-0.5 text-rose-800">
-              Hành động này sẽ hủy bỏ sự kiện này. Danh sách đăng ký của tất cả người tham gia sẽ bị hủy và bạn không thể mở lại sự kiện sau khi đã hủy.
-            </p>
-          </div>
+        <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50/70 p-3 text-xs text-rose-900">
+          <AlertTriangle size={16} className="shrink-0 text-rose-600" />
+          <p className="text-rose-800">
+            <strong>Lưu ý:</strong> Sự kiện và danh sách đăng ký sẽ bị hủy vĩnh viễn, không thể mở lại.
+          </p>
         </div>
 
         <p className="text-sm leading-relaxed text-plum-700">

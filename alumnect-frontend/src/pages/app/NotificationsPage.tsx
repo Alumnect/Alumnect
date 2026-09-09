@@ -14,8 +14,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react'
-import { PageHeader, Avatar, Card, EmptyState, Skeleton } from '@/components/ui'
+import { PageHeader, Avatar, Card, EmptyState, Skeleton, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import {
@@ -43,7 +45,7 @@ const TONES: Record<NotificationType, string> = {
   FORUM_ANSWER: 'bg-violet-600 text-white shadow-md shadow-violet-500/30',
   REPORT_RESOLVED: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
   WELCOME: 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30',
-  SYSTEM_BROADCAST: 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/30',
+  SYSTEM_BROADCAST: 'bg-gradient-to-r from-amber-500 to-brand-600 text-white shadow-md shadow-brand-500/30',
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -57,31 +59,6 @@ function formatRelativeTime(dateString: string): string {
   } catch {
     return 'Gần đây'
   }
-}
-
-function getPaginationItems(current: number, total: number) {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i)
-  }
-  const items: (number | 'ellipsis-start' | 'ellipsis-end')[] = []
-  if (current <= 3) {
-    for (let i = 0; i < 4; i++) items.push(i)
-    items.push('ellipsis-end')
-    items.push(total - 1)
-  } else if (current >= total - 4) {
-    items.push(0)
-    items.push('ellipsis-start')
-    for (let i = total - 4; i < total; i++) items.push(i)
-  } else {
-    items.push(0)
-    items.push('ellipsis-start')
-    items.push(current - 1)
-    items.push(current)
-    items.push(current + 1)
-    items.push('ellipsis-end')
-    items.push(total - 1)
-  }
-  return items
 }
 
 export function NotificationsPage() {
@@ -165,6 +142,8 @@ export function NotificationsPage() {
             const Icon = ICONS[n.type] || Bell
             const toneClass = TONES[n.type] || 'bg-brand-500/15 text-brand-600'
             const avatarName = n.senderName || 'Hệ thống AlumNect'
+            const isSystemBroadcast = n.type === 'SYSTEM_BROADCAST'
+            const isReportResolved = n.type === 'REPORT_RESOLVED'
 
             return (
               <motion.div
@@ -183,21 +162,48 @@ export function NotificationsPage() {
                       : 'bg-white/95 opacity-90 hover:opacity-100'
                   )}
                 >
-                  <div className="relative shrink-0">
-                    <Avatar src={n.senderAvatarUrl || undefined} name={avatarName} size={46} />
-                    <span
-                      className={cn(
-                        'absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full ring-2 ring-white',
-                        toneClass
-                      )}
-                    >
-                      <Icon
-                        size={14}
-                        strokeWidth={2.5}
-                        className={n.type === 'POST_LIKE' ? 'fill-white' : ''}
-                      />
-                    </span>
-                  </div>
+                  {/* Logo / Avatar: Thông báo hệ thống và Vi phạm tiêu chuẩn có logo riêng biệt */}
+                  {isSystemBroadcast ? (
+                    <div className="relative shrink-0">
+                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-amber-500 via-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-white">
+                        <Megaphone size={22} className="drop-shadow-xs" />
+                      </div>
+                      <span
+                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white shadow-xs"
+                        title="Thông báo chính thức từ hệ thống"
+                      >
+                        <ShieldCheck size={12} strokeWidth={3} />
+                      </span>
+                    </div>
+                  ) : isReportResolved ? (
+                    <div className="relative shrink-0">
+                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-amber-500 text-white shadow-md shadow-rose-500/25 ring-2 ring-white">
+                        <ShieldAlert size={22} className="drop-shadow-xs" />
+                      </div>
+                      <span
+                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-amber-500 text-white ring-2 ring-white shadow-xs"
+                        title="Vi phạm tiêu chuẩn cộng đồng"
+                      >
+                        <AlertTriangle size={11} strokeWidth={3} />
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="relative shrink-0">
+                      <Avatar src={n.senderAvatarUrl || undefined} name={avatarName} size={46} />
+                      <span
+                        className={cn(
+                          'absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full ring-2 ring-white',
+                          toneClass
+                        )}
+                      >
+                        <Icon
+                          size={14}
+                          strokeWidth={2.5}
+                          className={n.type === 'POST_LIKE' ? 'fill-white' : ''}
+                        />
+                      </span>
+                    </div>
+                  )}
 
                   <div className="min-w-0 flex-1">
                     {n.title && (
@@ -228,66 +234,11 @@ export function NotificationsPage() {
           })}
 
           {/* Phân trang */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-2 border-t border-slate-200/60 pt-4">
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<ChevronLeft size={16} />}
-                disabled={page <= 0}
-                onClick={() => {
-                  setPage((p) => Math.max(0, p - 1))
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
-                }}
-              >
-                Trang trước
-              </Button>
-
-              <div className="flex items-center gap-1.5 px-1">
-                {getPaginationItems(page, totalPages).map((item, idx) => {
-                  if (typeof item === 'string') {
-                    return (
-                      <span key={item + idx} className="px-1 text-xs text-slate-400">
-                        ...
-                      </span>
-                    )
-                  }
-                  const isCurrent = item === page
-                  return (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => {
-                        setPage(item)
-                        window.scrollTo({ top: 0, behavior: 'smooth' })
-                      }}
-                      className={cn(
-                        'grid h-8 min-w-[32px] place-items-center rounded-lg px-2 text-xs font-semibold transition-all',
-                        isCurrent
-                          ? 'bg-brand-500 text-white shadow-xs'
-                          : 'border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50'
-                      )}
-                    >
-                      {item + 1}
-                    </button>
-                  )
-                })}
-              </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                rightIcon={<ChevronRight size={16} />}
-                disabled={page >= totalPages - 1}
-                onClick={() => {
-                  setPage((p) => p + 1)
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
-                }}
-              >
-                Trang sau
-              </Button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </div>
       )}
     </div>

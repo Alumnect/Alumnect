@@ -8,6 +8,7 @@ import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
+import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
 
 /**
  * Interface định nghĩa các dịch vụ liên quan tới bài viết cộng đồng
@@ -43,6 +44,8 @@ public interface PostService {
      * @return Trang kết quả bài viết đã được chuẩn hóa, sẵn sàng trả về Client
      */
     PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, boolean isAuthenticated, String viewerEmail);
+
+    PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, String eventFilter, boolean isAuthenticated, String viewerEmail);
 
     /**
      * Lấy chi tiết một bài viết theo ID (UC16 - View Post Detail), áp dụng quy tắc quyền xem:
@@ -156,7 +159,7 @@ public interface PostService {
      * @param postId ID bài viết cần lưu
      * @return Trạng thái lưu mới ({@code saved=true})
      */
-    com.alumnect.alumnect_backend.dto.response.post.SavePostResponse savePost(String email, Long postId);
+    SavePostResponse savePost(String email, Long postId);
 
     /**
      * Bỏ lưu/bỏ đánh dấu một bài viết (UC20 - Save Post).
@@ -167,7 +170,7 @@ public interface PostService {
      * @param postId ID bài viết cần bỏ lưu
      * @return Trạng thái lưu mới ({@code saved=false})
      */
-    com.alumnect.alumnect_backend.dto.response.post.SavePostResponse unsavePost(String email, Long postId);
+    SavePostResponse unsavePost(String email, Long postId);
 
     /**
      * Lấy danh sách các bài viết đã lưu của người dùng hiện tại (UC20 - View Saved Posts).

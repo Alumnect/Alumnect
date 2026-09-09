@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.entity.event.EventRegistration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,10 +26,12 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     List<EventRegistration> findByEventIdAndStatusOrderByCreatedAtAsc(Long eventId, String status);
 
+    List<EventRegistration> findByEventIdOrderByCreatedAtAsc(Long eventId);
+
     @Query("SELECT er.event.id FROM EventRegistration er WHERE er.user.id = :userId AND er.status = 'REGISTERED' AND er.event.id IN :eventIds")
     List<Long> findRegisteredEventIds(@Param("userId") Long userId, @Param("eventIds") List<Long> eventIds);
 
-    @org.springframework.data.jpa.repository.Modifying
+    @Modifying
     @Query("UPDATE EventRegistration er SET er.status = 'CANCELLED' WHERE er.event.id = :eventId AND er.status = 'REGISTERED'")
     void cancelAllByEventId(@Param("eventId") Long eventId);
 

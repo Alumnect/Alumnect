@@ -114,6 +114,17 @@ export function CreatePostModal({
   const imageUrl = watch('imageUrl') // legacy, keep for compat
   const allImages = mediaUrls.length > 0 ? mediaUrls : (imageUrl ? [imageUrl] : [])
   const content = watch('content') ?? ''
+  const currentAttendees = editPost?.event?.attendeeCount ?? 0
+
+  const isEventCancelled = editPost?.type === 'event' && editPost.event?.status === 'CANCELLED'
+  const isEventEnded =
+    editPost?.type === 'event' &&
+    editPost.event != null &&
+    Boolean(
+      (editPost.event.endTime && new Date(editPost.event.endTime).getTime() < Date.now()) ||
+      (!editPost.event.endTime && editPost.event.startTime && new Date(editPost.event.startTime).getTime() < Date.now())
+    )
+  const isEventImmutable = isEventCancelled || isEventEnded
 
   useEffect(() => {
     if (open) {
@@ -152,6 +163,18 @@ export function CreatePostModal({
       }
 
       if (payload.type === 'event' && payload.event) {
+        if (payload.event.capacity !== undefined && payload.event.capacity !== null && !isNaN(payload.event.capacity)) {
+          if (payload.event.capacity < 1) {
+            toast.error('Sức chứa sự kiện tối thiểu là 1 người.')
+            return
+          }
+          if (currentAttendees > 0 && payload.event.capacity < currentAttendees) {
+            toast.error(
+              `Sức chứa tối đa (${payload.event.capacity}) không thể nhỏ hơn số người đã đăng ký tham gia (${currentAttendees} người).`
+            )
+            return
+          }
+        }
         if (payload.event.startTime) {
           payload.event.startTime = new Date(payload.event.startTime).toISOString()
         }
@@ -559,11 +582,13 @@ export function CreatePostModal({
                   </label>
                   <input
                     type="number"
-                    min={1}
+                    min={currentAttendees > 0 ? currentAttendees : 1}
                     {...register('event.capacity', { valueAsNumber: true })}
                     className="w-full h-[38px] rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
-                    placeholder="100 (Để trống = không giới hạn)"
                   />
+                  {errors.event?.capacity && (
+                    <p className="mt-1 text-xs text-coral-500">{errors.event.capacity.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -669,6 +694,18 @@ export function CreatePostModal({
           )}
           {uploadError && <p className="text-xs font-medium text-coral-500">{uploadError}</p>}
 
+          {/* Cảnh báo sự kiện đã kết thúc hoặc bị hủy không thể sửa */}
+          {isEventImmutable && (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800">
+              <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-600" />
+              <span>
+                {isEventCancelled
+                  ? 'Sự kiện đã bị hủy, không thể chỉnh sửa thông tin.'
+                  : 'Sự kiện đã kết thúc, không thể chỉnh sửa thông tin.'}
+              </span>
+            </div>
+          )}
+
           {/* Thông điệp lỗi nghiệp vụ từ Backend */}
           {activeMutation.isError && (
             <div className="flex items-start gap-2 rounded-xl border border-coral-200/50 bg-coral-50 p-3 text-xs text-coral-600">
@@ -684,7 +721,7 @@ export function CreatePostModal({
             </Button>
             <Button
               type="submit"
-              disabled={activeMutation.isPending || isUploading}
+              disabled={activeMutation.isPending || isUploading || isEventImmutable}
               leftIcon={activeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
             >
               {editPost

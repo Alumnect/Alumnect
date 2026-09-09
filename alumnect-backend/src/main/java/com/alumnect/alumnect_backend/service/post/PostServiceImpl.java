@@ -4,6 +4,9 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.CommentStatus;
 import com.alumnect.alumnect_backend.common.enums.PostCategory;
 import com.alumnect.alumnect_backend.common.enums.PostStatus;
+import com.alumnect.alumnect_backend.dao.event.EventRegistrationRepository;
+import com.alumnect.alumnect_backend.dao.event.EventRepository;
+import com.alumnect.alumnect_backend.dao.job.JobPostingRepository;
 import com.alumnect.alumnect_backend.dao.post.CommentRepository;
 import com.alumnect.alumnect_backend.dao.post.PostLikeRepository;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
@@ -18,6 +21,8 @@ import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
+import com.alumnect.alumnect_backend.entity.event.Event;
+import com.alumnect.alumnect_backend.entity.job.JobPosting;
 import com.alumnect.alumnect_backend.entity.post.Comment;
 import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.post.PostLike;
@@ -30,6 +35,7 @@ import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.post.CommentMapper;
 import com.alumnect.alumnect_backend.mapper.post.PostMapper;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +44,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +64,13 @@ public class PostServiceImpl implements PostService {
     private PostRepository postRepository;
 
     @Autowired
-    private com.alumnect.alumnect_backend.dao.event.EventRepository eventRepository;
+    private EventRepository eventRepository;
 
     @Autowired
-    private com.alumnect.alumnect_backend.dao.job.JobPostingRepository jobPostingRepository;
+    private EventRegistrationRepository eventRegistrationRepository;
+
+    @Autowired
+    private JobPostingRepository jobPostingRepository;
 
     @Autowired
     private UserProfileRepository userProfileRepository;
@@ -81,7 +94,7 @@ public class PostServiceImpl implements PostService {
     private PostSaveRepository postSaveRepository;
 
     @Autowired
-    private com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+    private NotificationService notificationService;
 
     @Override
     @Transactional
@@ -98,20 +111,31 @@ public class PostServiceImpl implements PostService {
 
         Long eventId = null;
         if (category == PostCategory.EVENT && request.getEvent() != null) {
-            com.alumnect.alumnect_backend.entity.event.Event event = com.alumnect.alumnect_backend.entity.event.Event.builder()
+            if (request.getEvent().getStartTime() != null && request.getEvent().getStartTime().isBefore(Instant.now())) {
+                throw new BadRequestException("Thời gian bắt đầu sự kiện không thể ở trong quá khứ.");
+            }
+            if (request.getEvent().getStartTime() != null && request.getEvent().getEndTime() != null
+                    && request.getEvent().getEndTime().isBefore(request.getEvent().getStartTime())) {
+                throw new BadRequestException("Thời gian kết thúc phải sau thời gian bắt đầu.");
+            }
+            Integer capacity = request.getEvent().getCapacity();
+            if (capacity != null && capacity <= 0) {
+                throw new BadRequestException("Sức chứa sự kiện phải lớn hơn hoặc bằng 1.");
+            }
+            Event event = Event.builder()
                     .organizer(author)
                     .title(request.getEvent().getTitle() != null ? request.getEvent().getTitle() : "")
                     .startTime(request.getEvent().getStartTime())
                     .endTime(request.getEvent().getEndTime())
                     .location(request.getEvent().getLocation())
-                    .capacity(request.getEvent().getCapacity())
+                    .capacity(capacity)
                     .build();
             eventId = eventRepository.save(event).getId();
         }
 
         Long jobId = null;
         if (category == PostCategory.RECRUITMENT && request.getJob() != null) {
-            com.alumnect.alumnect_backend.entity.job.JobPosting job = com.alumnect.alumnect_backend.entity.job.JobPosting.builder()
+            JobPosting job = JobPosting.builder()
                     .poster(author)
                     .title(request.getJob().getTitle() != null ? request.getJob().getTitle() : "")
                     .company(request.getJob().getCompany() != null ? request.getJob().getCompany() : "")
@@ -168,13 +192,18 @@ public class PostServiceImpl implements PostService {
         log.info("Tạo bài viết mới: id={}, tác giả={}, loại={}", saved.getId(), email, saved.getCategory());
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
-        com.alumnect.alumnect_backend.entity.job.JobPosting savedJob = jobId != null ? jobPostingRepository.findById(jobId).orElse(null) : null;
-        com.alumnect.alumnect_backend.entity.event.Event savedEvent = eventId != null ? eventRepository.findById(eventId).orElse(null) : null;
-        return postMapper.toResponse(saved, profile, false, false, savedJob, savedEvent);
+        JobPosting savedJob = jobId != null ? jobPostingRepository.findById(jobId).orElse(null) : null;
+        Event savedEvent = eventId != null ? eventRepository.findById(eventId).orElse(null) : null;
+        return postMapper.toResponse(saved, profile, false, false, savedJob, savedEvent, false);
     }
 
     @Override
     public PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, boolean isAuthenticated, String viewerEmail) {
+        return getFeed(page, size, type, keyword, null, isAuthenticated, viewerEmail);
+    }
+
+    @Override
+    public PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, String eventFilter, boolean isAuthenticated, String viewerEmail) {
         if (page < 0) {
             throw new BadRequestException("Tham số page phải là số nguyên không âm");
         }
@@ -187,8 +216,71 @@ public class PostServiceImpl implements PostService {
         
         String searchKeyword = keyword == null || keyword.isBlank() ? "" : "%" + keyword.trim().toLowerCase() + "%";
 
+        if (category == PostCategory.EVENT && ("upcoming".equalsIgnoreCase(eventFilter) || "this_month".equalsIgnoreCase(eventFilter))) {
+            Page<Event> eventsPage;
+            if ("this_month".equalsIgnoreCase(eventFilter)) {
+                java.time.ZonedDateTime nowZoned = java.time.ZonedDateTime.now();
+                Instant fromTime = nowZoned.withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant();
+                Instant toTime = nowZoned.withDayOfMonth(nowZoned.toLocalDate().lengthOfMonth()).plusDays(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant();
+                eventsPage = eventRepository.findEventsInRange(fromTime, toTime, searchKeyword, PageRequest.of(page, size));
+            } else {
+                eventsPage = eventRepository.findUpcomingEvents(Instant.now(), searchKeyword, PageRequest.of(page, size));
+            }
+            log.info("Lấy sự kiện: page={}, size={}, eventFilter={}, tổng kết quả={}", page, size, eventFilter, eventsPage.getTotalElements());
+
+            if (eventsPage.isEmpty()) {
+                return PageResponse.<PostResponse>builder()
+                        .content(Collections.emptyList())
+                        .pageNumber(eventsPage.getNumber())
+                        .pageSize(eventsPage.getSize())
+                        .totalElements(eventsPage.getTotalElements())
+                        .totalPages(eventsPage.getTotalPages())
+                        .last(eventsPage.isLast())
+                        .build();
+            }
+
+            List<Long> eventIds = eventsPage.getContent().stream().map(Event::getId).collect(Collectors.toList());
+            List<Post> posts = postRepository.findActiveByEventIdIn(eventIds);
+            Map<Long, Post> postByEventId = posts.stream()
+                    .collect(Collectors.toMap(Post::getEventId, Function.identity(), (p1, p2) -> p1));
+
+            List<Long> authorIds = posts.stream().map(p -> p.getAuthor().getId()).distinct().collect(Collectors.toList());
+            Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
+                    .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+            List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+            Set<Long> likedPostIds = computeLikedPostIds(viewerEmail, postIds);
+            Set<Long> savedPostIds = computeSavedPostIds(viewerEmail, postIds);
+            Set<Long> registeredEventIds = computeRegisteredEventIds(viewerEmail, eventIds);
+
+            List<PostResponse> content = new ArrayList<>();
+            for (Event event : eventsPage.getContent()) {
+                Post post = postByEventId.get(event.getId());
+                if (post != null) {
+                    content.add(postMapper.toResponse(
+                            post,
+                            profileByUserId.get(post.getAuthor().getId()),
+                            likedPostIds.contains(post.getId()),
+                            savedPostIds.contains(post.getId()),
+                            null,
+                            event,
+                            registeredEventIds.contains(event.getId())
+                    ));
+                }
+            }
+
+            return PageResponse.<PostResponse>builder()
+                    .content(content)
+                    .pageNumber(eventsPage.getNumber())
+                    .pageSize(eventsPage.getSize())
+                    .totalElements(eventsPage.getTotalElements())
+                    .totalPages(eventsPage.getTotalPages())
+                    .last(eventsPage.isLast())
+                    .build();
+        }
+
         Page<Post> postsPage = postRepository.findFeed(guestMode, category, searchKeyword, PageRequest.of(page, size));
-        log.info("Lấy bảng tin: page={}, size={}, category={}, tổng kết quả={}", page, size, type, postsPage.getTotalElements());
+        log.info("Lấy bảng tin: page={}, size={}, category={}, eventFilter={}, tổng kết quả={}", page, size, type, eventFilter, postsPage.getTotalElements());
 
         List<Long> authorIds = postsPage.getContent().stream()
                 .map(p -> p.getAuthor().getId())
@@ -206,12 +298,13 @@ public class PostServiceImpl implements PostService {
                 .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
         List<Long> eventIds = postsPage.getContent().stream()
                 .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
-        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
+        Map<Long, JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
                 jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
-        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
+                        JobPosting::getId, Function.identity()));
+        Map<Long, Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
                 eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
+                        Event::getId, Function.identity()));
+        Set<Long> registeredEventIds = computeRegisteredEventIds(viewerEmail, eventIds);
 
         List<PostResponse> content = postsPage.getContent().stream()
                 .map(post -> postMapper.toResponse(
@@ -220,7 +313,8 @@ public class PostServiceImpl implements PostService {
                         likedPostIds.contains(post.getId()),
                         savedPostIds.contains(post.getId()),
                         post.getJobId() != null ? jobById.get(post.getJobId()) : null,
-                        post.getEventId() != null ? eventById.get(post.getEventId()) : null))
+                        post.getEventId() != null ? eventById.get(post.getEventId()) : null,
+                        post.getEventId() != null && registeredEventIds.contains(post.getEventId())))
                 .collect(Collectors.toList());
 
         return PageResponse.<PostResponse>builder()
@@ -239,10 +333,14 @@ public class PostServiceImpl implements PostService {
         UserProfile profile = userProfileRepository.findById(post.getAuthor().getId()).orElse(null);
         boolean liked = !computeLikedPostIds(viewerEmail, List.of(post.getId())).isEmpty();
         boolean saved = !computeSavedPostIds(viewerEmail, List.of(post.getId())).isEmpty();
-        com.alumnect.alumnect_backend.entity.job.JobPosting job = post.getJobId() != null ? jobPostingRepository.findById(post.getJobId()).orElse(null) : null;
-        com.alumnect.alumnect_backend.entity.event.Event event = post.getEventId() != null ? eventRepository.findById(post.getEventId()).orElse(null) : null;
+        JobPosting job = post.getJobId() != null ? jobPostingRepository.findById(post.getJobId()).orElse(null) : null;
+        Event event = post.getEventId() != null ? eventRepository.findById(post.getEventId()).orElse(null) : null;
+        boolean registered = false;
+        if (event != null && viewerEmail != null) {
+            registered = !computeRegisteredEventIds(viewerEmail, List.of(event.getId())).isEmpty();
+        }
         log.info("Xem chi tiết bài viết: id={}", id);
-        return postMapper.toResponse(post, profile, liked, saved, job, event);
+        return postMapper.toResponse(post, profile, liked, saved, job, event, registered);
     }
 
     @Override
@@ -295,8 +393,7 @@ public class PostServiceImpl implements PostService {
                 .status(CommentStatus.ACTIVE)
                 .build());
 
-        post.setCommentCount(post.getCommentCount() + 1);
-        postRepository.save(post);
+        postRepository.incrementCommentCount(postId);
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         notificationService.sendCommentNotification(author, comment, post);
@@ -367,8 +464,7 @@ public class PostServiceImpl implements PostService {
         }
 
         commentRepository.delete(comment);
-        post.setCommentCount(Math.max(0, post.getCommentCount() - deletedCommentCount));
-        postRepository.save(post);
+        postRepository.decrementCommentCount(postId, deletedCommentCount);
         log.info("Xóa cứng bình luận: id={}, postId={}, số bình luận đã xóa={}, tác giả={}",
                 commentId, postId, deletedCommentCount, email);
     }
@@ -392,8 +488,8 @@ public class PostServiceImpl implements PostService {
         Post post = loadViewablePost(postId, true);
         if (!postLikeRepository.existsByPostIdAndUserId(postId, user.getId())) {
             postLikeRepository.save(PostLike.builder().post(post).user(user).build());
+            postRepository.incrementLikeCount(postId);
             post.setLikeCount(post.getLikeCount() + 1);
-            postRepository.save(post);
             notificationService.sendLikeNotification(user, post);
         }
         return LikeResponse.builder().liked(true).likeCount(post.getLikeCount()).build();
@@ -406,8 +502,8 @@ public class PostServiceImpl implements PostService {
         Post post = loadViewablePost(postId, true);
         if (postLikeRepository.existsByPostIdAndUserId(postId, user.getId())) {
             postLikeRepository.deleteByPostIdAndUserId(postId, user.getId());
+            postRepository.decrementLikeCount(postId);
             post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
-            postRepository.save(post);
             notificationService.handleUnlikeNotification(user, post);
         }
         return LikeResponse.builder().liked(false).likeCount(post.getLikeCount()).build();
@@ -453,6 +549,19 @@ public class PostServiceImpl implements PostService {
             throw new ForbiddenException("Bạn chỉ được chỉnh sửa bài viết của chính mình");
         }
 
+        if (post.getEventId() != null) {
+            Event currentEvent = eventRepository.findById(post.getEventId()).orElse(null);
+            if (currentEvent != null) {
+                if ("CANCELLED".equalsIgnoreCase(currentEvent.getStatus())) {
+                    throw new BadRequestException("Sự kiện đã bị hủy, không thể chỉnh sửa thông tin.");
+                }
+                Instant deadline = currentEvent.getEndTime() != null ? currentEvent.getEndTime() : currentEvent.getStartTime();
+                if (deadline != null && deadline.isBefore(Instant.now())) {
+                    throw new BadRequestException("Sự kiện đã kết thúc, không thể chỉnh sửa thông tin sự kiện.");
+                }
+            }
+        }
+
         post.setContent(request.getContent().trim());
 
         PostCategory newCategory = parsePostCategory(request.getCategory());
@@ -465,23 +574,51 @@ public class PostServiceImpl implements PostService {
         // Handle Event Update
         if (newCategory == PostCategory.EVENT && request.getEvent() != null) {
             if (post.getEventId() != null) {
-                com.alumnect.alumnect_backend.entity.event.Event existingEvent = eventRepository.findById(post.getEventId()).orElse(null);
+                Event existingEvent = eventRepository.findById(post.getEventId()).orElse(null);
                 if (existingEvent != null) {
+                    if (request.getEvent().getStartTime() != null && request.getEvent().getStartTime().isBefore(Instant.now())) {
+                        throw new BadRequestException("Thời gian bắt đầu sự kiện không thể ở trong quá khứ.");
+                    }
+                    if (request.getEvent().getStartTime() != null && request.getEvent().getEndTime() != null
+                            && request.getEvent().getEndTime().isBefore(request.getEvent().getStartTime())) {
+                        throw new BadRequestException("Thời gian kết thúc phải sau thời gian bắt đầu.");
+                    }
+                    Integer newCapacity = request.getEvent().getCapacity();
+                    if (newCapacity != null) {
+                        if (newCapacity <= 0) {
+                            throw new BadRequestException("Sức chứa sự kiện phải lớn hơn hoặc bằng 1.");
+                        }
+                        int currentAttendees = existingEvent.getAttendeeCount();
+                        if (newCapacity < currentAttendees) {
+                            throw new BadRequestException("Sức chứa tối đa không thể nhỏ hơn số người đã đăng ký tham gia (" + currentAttendees + " người). Vui lòng nhập từ " + currentAttendees + " người trở lên hoặc để trống.");
+                        }
+                    }
                     existingEvent.setTitle(request.getEvent().getTitle() != null ? request.getEvent().getTitle() : "");
                     existingEvent.setStartTime(request.getEvent().getStartTime());
                     existingEvent.setEndTime(request.getEvent().getEndTime());
                     existingEvent.setLocation(request.getEvent().getLocation());
-                    existingEvent.setCapacity(request.getEvent().getCapacity());
+                    existingEvent.setCapacity(newCapacity);
                     eventRepository.save(existingEvent);
                 }
             } else {
-                com.alumnect.alumnect_backend.entity.event.Event newEvent = com.alumnect.alumnect_backend.entity.event.Event.builder()
+                if (request.getEvent().getStartTime() != null && request.getEvent().getStartTime().isBefore(Instant.now())) {
+                    throw new BadRequestException("Thời gian bắt đầu sự kiện không thể ở trong quá khứ.");
+                }
+                if (request.getEvent().getStartTime() != null && request.getEvent().getEndTime() != null
+                        && request.getEvent().getEndTime().isBefore(request.getEvent().getStartTime())) {
+                    throw new BadRequestException("Thời gian kết thúc phải sau thời gian bắt đầu.");
+                }
+                Integer capacity = request.getEvent().getCapacity();
+                if (capacity != null && capacity <= 0) {
+                    throw new BadRequestException("Sức chứa sự kiện phải lớn hơn hoặc bằng 1.");
+                }
+                Event newEvent = Event.builder()
                         .organizer(author)
                         .title(request.getEvent().getTitle() != null ? request.getEvent().getTitle() : "")
                         .startTime(request.getEvent().getStartTime())
                         .endTime(request.getEvent().getEndTime())
                         .location(request.getEvent().getLocation())
-                        .capacity(request.getEvent().getCapacity())
+                        .capacity(capacity)
                         .build();
                 post.setEventId(eventRepository.save(newEvent).getId());
             }
@@ -492,7 +629,7 @@ public class PostServiceImpl implements PostService {
         // Handle Job Update
         if (newCategory == PostCategory.RECRUITMENT && request.getJob() != null) {
             if (post.getJobId() != null) {
-                com.alumnect.alumnect_backend.entity.job.JobPosting existingJob = jobPostingRepository.findById(post.getJobId()).orElse(null);
+                JobPosting existingJob = jobPostingRepository.findById(post.getJobId()).orElse(null);
                 if (existingJob != null) {
                     existingJob.setTitle(request.getJob().getTitle() != null ? request.getJob().getTitle() : "");
                     existingJob.setCompany(request.getJob().getCompany() != null ? request.getJob().getCompany() : "");
@@ -504,7 +641,7 @@ public class PostServiceImpl implements PostService {
                     jobPostingRepository.save(existingJob);
                 }
             } else {
-                com.alumnect.alumnect_backend.entity.job.JobPosting newJob = com.alumnect.alumnect_backend.entity.job.JobPosting.builder()
+                JobPosting newJob = JobPosting.builder()
                         .poster(author)
                         .title(request.getJob().getTitle() != null ? request.getJob().getTitle() : "")
                         .company(request.getJob().getCompany() != null ? request.getJob().getCompany() : "")
@@ -545,9 +682,10 @@ public class PostServiceImpl implements PostService {
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         boolean liked = !computeLikedPostIds(email, List.of(saved.getId())).isEmpty();
         boolean savedFlag = !computeSavedPostIds(email, List.of(saved.getId())).isEmpty();
-        com.alumnect.alumnect_backend.entity.job.JobPosting editedJob = saved.getJobId() != null ? jobPostingRepository.findById(saved.getJobId()).orElse(null) : null;
-        com.alumnect.alumnect_backend.entity.event.Event editedEvent = saved.getEventId() != null ? eventRepository.findById(saved.getEventId()).orElse(null) : null;
-        return postMapper.toResponse(saved, profile, liked, savedFlag, editedJob, editedEvent);
+        JobPosting editedJob = saved.getJobId() != null ? jobPostingRepository.findById(saved.getJobId()).orElse(null) : null;
+        Event editedEvent = saved.getEventId() != null ? eventRepository.findById(saved.getEventId()).orElse(null) : null;
+        boolean registered = editedEvent != null && !computeRegisteredEventIds(email, List.of(editedEvent.getId())).isEmpty();
+        return postMapper.toResponse(saved, profile, liked, savedFlag, editedJob, editedEvent, registered);
     }
 
     private PostCategory parsePostCategory(String category) {
@@ -573,6 +711,14 @@ public class PostServiceImpl implements PostService {
 
         if (!post.getAuthor().getId().equals(author.getId())) {
             throw new ForbiddenException("Bạn chỉ được xóa bài viết của chính mình");
+        }
+
+        if (post.getEventId() != null) {
+            eventRepository.findById(post.getEventId()).ifPresent(evt -> {
+                evt.setStatus("CANCELLED");
+                eventRepository.save(evt);
+                eventRegistrationRepository.cancelAllByEventId(evt.getId());
+            });
         }
 
         post.setStatus(PostStatus.DELETED);
@@ -634,12 +780,13 @@ public class PostServiceImpl implements PostService {
                 .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
         List<Long> eventIds = posts.stream()
                 .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
-        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
+        Map<Long, JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
                 jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
-        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
+                        JobPosting::getId, Function.identity()));
+        Map<Long, Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
                 eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
+                        Event::getId, Function.identity()));
+        Set<Long> registeredEventIds = computeRegisteredEventIds(email, eventIds);
 
         List<PostResponse> content = posts.stream()
                 .map(post -> postMapper.toResponse(
@@ -648,7 +795,8 @@ public class PostServiceImpl implements PostService {
                         likedPostIds.contains(post.getId()),
                         true,
                         post.getJobId() != null ? jobById.get(post.getJobId()) : null,
-                        post.getEventId() != null ? eventById.get(post.getEventId()) : null))
+                        post.getEventId() != null ? eventById.get(post.getEventId()) : null,
+                        post.getEventId() != null && registeredEventIds.contains(post.getEventId())))
                 .collect(Collectors.toList());
 
         return PageResponse.<PostResponse>builder()
@@ -698,12 +846,13 @@ public class PostServiceImpl implements PostService {
                 .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
         List<Long> eventIds = posts.stream()
                 .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
-        Map<Long, com.alumnect.alumnect_backend.entity.job.JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
+        Map<Long, JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
                 jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.job.JobPosting::getId, Function.identity()));
-        Map<Long, com.alumnect.alumnect_backend.entity.event.Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
+                        JobPosting::getId, Function.identity()));
+        Map<Long, Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
                 eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
-                        com.alumnect.alumnect_backend.entity.event.Event::getId, Function.identity()));
+                        Event::getId, Function.identity()));
+        Set<Long> registeredEventIds = isAuthenticated ? computeRegisteredEventIds(viewerEmail, eventIds) : new java.util.HashSet<>();
 
         List<PostResponse> content = posts.stream()
                 .map(post -> postMapper.toResponse(
@@ -712,7 +861,8 @@ public class PostServiceImpl implements PostService {
                         likedPostIds.contains(post.getId()),
                         savedPostIds.contains(post.getId()),
                         post.getJobId() != null ? jobById.get(post.getJobId()) : null,
-                        post.getEventId() != null ? eventById.get(post.getEventId()) : null
+                        post.getEventId() != null ? eventById.get(post.getEventId()) : null,
+                        post.getEventId() != null && registeredEventIds.contains(post.getEventId())
                 ))
                 .collect(Collectors.toList());
 
@@ -732,6 +882,15 @@ public class PostServiceImpl implements PostService {
         }
         return userRepository.findByEmail(viewerEmail)
                 .<Set<Long>>map(u -> new HashSet<>(postSaveRepository.findSavedPostIds(u.getId(), postIds)))
+                .orElseGet(HashSet::new);
+    }
+
+    private Set<Long> computeRegisteredEventIds(String viewerEmail, List<Long> eventIds) {
+        if (viewerEmail == null || eventIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return userRepository.findByEmail(viewerEmail)
+                .<Set<Long>>map(u -> new HashSet<>(eventRegistrationRepository.findRegisteredEventIds(u.getId(), eventIds)))
                 .orElseGet(HashSet::new);
     }
 }

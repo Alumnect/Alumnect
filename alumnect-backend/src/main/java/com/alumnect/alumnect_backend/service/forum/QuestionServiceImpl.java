@@ -348,8 +348,8 @@ public class QuestionServiceImpl implements QuestionService {
                     .targetId(questionId)
                     .value((short) 1)
                     .build());
+            questionRepository.incrementVoteCount(questionId);
             question.setVoteCount(question.getVoteCount() + 1);
-            questionRepository.save(question);
             log.info("Bình chọn câu hỏi: id={}, người bình chọn={}", questionId, email);
         }
         return VoteResponse.builder().voted(true).voteCount(question.getVoteCount()).build();
@@ -370,8 +370,8 @@ public class QuestionServiceImpl implements QuestionService {
 
         if (voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.QUESTION, questionId)) {
             voteRepository.deleteByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.QUESTION, questionId);
+            questionRepository.decrementVoteCount(questionId);
             question.setVoteCount(Math.max(0, question.getVoteCount() - 1));
-            questionRepository.save(question);
             log.info("Bỏ bình chọn câu hỏi: id={}, người bỏ bình chọn={}", questionId, email);
         }
         return VoteResponse.builder().voted(false).voteCount(question.getVoteCount()).build();

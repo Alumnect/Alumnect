@@ -144,7 +144,7 @@ export function AppShell() {
             <input
               value={keyword}
               onChange={handleSearchChange}
-              placeholder="Tìm kiếm bài viết, cựu sinh viên…"
+              placeholder="Tìm kiếm bài viết…"
               className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56"
             />
           </label>
@@ -323,7 +323,7 @@ export function AppShell() {
                   autoFocus
                   value={keyword}
                   onChange={handleSearchChange}
-                  placeholder="Tìm kiếm bài viết, cựu sinh viên…"
+                  placeholder="Tìm kiếm bài viết…"
                   className="h-11 w-full rounded-xl border border-plum-900/10 bg-white pl-10 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
                 />
               </label>

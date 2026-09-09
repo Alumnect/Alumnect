@@ -61,9 +61,9 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException("Sự kiện này đã bị hủy, không thể đăng ký.");
         }
 
-        // Kiểm tra thời gian: nếu sự kiện đã bắt đầu hoặc đã qua thì không cho đăng ký
+        // Kiểm tra thời gian: không được đăng ký sau khi sự kiện đã bắt đầu
         if (event.getStartTime() != null && event.getStartTime().isBefore(Instant.now())) {
-            throw new BadRequestException("Sự kiện đã kết thúc hoặc đang diễn ra, không thể đăng ký.");
+            throw new BadRequestException("Sự kiện đã bắt đầu, không thể đăng ký tham gia.");
         }
 
         // Kiểm tra số lượng người tham gia tối đa (capacity)
@@ -90,7 +90,10 @@ public class EventServiceImpl implements EventService {
             eventRegistrationRepository.save(newReg);
         }
 
-        eventRepository.incrementAttendeeCount(eventId);
+        int rowsUpdated = eventRepository.incrementAttendeeCountSafe(eventId);
+        if (rowsUpdated == 0) {
+            throw new BadRequestException("Sự kiện đã đủ số lượng người tham gia.");
+        }
         int updatedCount = event.getAttendeeCount() + 1;
 
         log.info("Người dùng {} đã đăng ký tham gia sự kiện id={}", email, eventId);
@@ -117,8 +120,9 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException("Sự kiện này đã bị hủy.");
         }
 
+        // Không cho phép hủy sau khi sự kiện đã bắt đầu hoặc đã kết thúc
         if (event.getStartTime() != null && event.getStartTime().isBefore(Instant.now())) {
-            throw new BadRequestException("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy đăng ký.");
+            throw new BadRequestException("Sự kiện đã bắt đầu hoặc đã kết thúc, không thể hủy đăng ký.");
         }
 
         EventRegistration reg = eventRegistrationRepository.findByEventIdAndUserId(eventId, user.getId())
@@ -180,8 +184,13 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
-        List<EventRegistration> registrations = eventRegistrationRepository
-                .findByEventIdAndStatusOrderByCreatedAtAsc(eventId, "REGISTERED");
+        List<EventRegistration> registrations;
+        if ("CANCELLED".equalsIgnoreCase(event.getStatus())) {
+            registrations = eventRegistrationRepository.findByEventIdOrderByCreatedAtAsc(eventId);
+        } else {
+            registrations = eventRegistrationRepository
+                    .findByEventIdAndStatusOrderByCreatedAtAsc(eventId, "REGISTERED");
+        }
 
         if (registrations.isEmpty()) {
             return List.of();
@@ -246,15 +255,16 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
 
         String role = user.getRole() != null ? user.getRole().getName().toUpperCase() : "";
-        if (!"ALUMNI".equals(role)) {
+        if (!"ALUMNI".equals(role) && !"ADMIN".equals(role)) {
             throw new ForbiddenException("Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện.");
         }
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
 
-        // Kiểm tra quyền sở hữu: chỉ người tạo (organizer) mới được hủy sự kiện
-        if (event.getOrganizer() == null || !event.getOrganizer().getId().equals(user.getId())) {
+        // Kiểm tra quyền sở hữu: người tạo (organizer) hoặc ADMIN mới được hủy sự kiện
+        boolean isOrganizer = event.getOrganizer() != null && event.getOrganizer().getId().equals(user.getId());
+        if (!isOrganizer && !"ADMIN".equals(role)) {
             throw new ForbiddenException("Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức.");
         }
 

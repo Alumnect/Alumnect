@@ -6,9 +6,9 @@ import { PACKAGES } from '@/lib/constants'
 import { vnd, cn } from '@/lib/utils'
 
 const HISTORY = [
-  { id: 'TXN-10421', pkg: 'Nhà tuyển dụng (Recruiter)', amount: 990000, date: '12/06/2026', status: 'Thành công' },
-  { id: 'TXN-10310', pkg: 'Nhà tuyển dụng (Recruiter)', amount: 990000, date: '12/05/2026', status: 'Thành công' },
-  { id: 'TXN-10188', pkg: 'Cơ bản (Starter)', amount: 0, date: '02/04/2026', status: 'Miễn phí' },
+  { id: 'TXN-10421', pkg: 'Gói Nhà tuyển dụng', amount: 990000, date: '12/06/2026', status: 'Thành công' },
+  { id: 'TXN-10310', pkg: 'Gói Nhà tuyển dụng', amount: 990000, date: '12/05/2026', status: 'Thành công' },
+  { id: 'TXN-10188', pkg: 'Gói Cơ bản', amount: 0, date: '02/04/2026', status: 'Miễn phí' },
 ]
 
 export function SubscriptionPage() {

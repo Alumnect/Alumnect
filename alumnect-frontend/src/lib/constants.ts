@@ -132,7 +132,7 @@ export const FEED_POSTS = [
 export const JOBS = [
   { id: 'j1', title: 'Senior Frontend Engineer', company: 'FPT Software', location: 'Đà Nẵng · Hybrid', type: 'Toàn thời gian', salary: '$1,800 – $2,800', tags: ['React', 'TypeScript', 'Tailwind'], featured: true, logo: '🟧' },
   { id: 'j2', title: 'Product Designer', company: 'Momo', location: 'TP.HCM · Trực tiếp', type: 'Toàn thời gian', salary: '$1,500 – $2,400', tags: ['Figma', 'Design System'], featured: true, logo: '🟣' },
-  { id: 'j3', title: 'Data Analyst Intern', company: 'Shopee', location: 'Từ xa (Remote)', type: 'Thực tập', salary: '$500 – $800', tags: ['SQL', 'Python', 'Tableau'], featured: false, logo: '🟠' },
+  { id: 'j3', title: 'Data Analyst Intern', company: 'Shopee', location: 'Từ xa', type: 'Thực tập', salary: '$500 – $800', tags: ['SQL', 'Python', 'Tableau'], featured: false, logo: '🟠' },
   { id: 'j4', title: 'Backend Engineer (Java)', company: 'Techcombank', location: 'Hà Nội · Hybrid', type: 'Toàn thời gian', salary: '$2,000 – $3,200', tags: ['Spring Boot', 'PostgreSQL', 'AWS'], featured: false, logo: '🔵' },
   { id: 'j5', title: 'Mobile Engineer (Flutter)', company: 'VNG', location: 'TP.HCM · Trực tiếp', type: 'Toàn thời gian', salary: '$1,600 – $2,600', tags: ['Flutter', 'Dart'], featured: false, logo: '🟢' },
   { id: 'j6', title: 'AI Research Engineer', company: 'Viettel AI', location: 'Hà Nội · Trực tiếp', type: 'Toàn thời gian', salary: '$2,400 – $4,000', tags: ['PyTorch', 'NLP', 'LLM'], featured: true, logo: '🔴' },
@@ -176,7 +176,7 @@ export const SALARY = [
   { role: 'Software Engineer', level: 'Senior', region: 'TP.HCM', median: 42, p25: 34, p75: 58, samples: 96 },
   { role: 'Product Manager', level: 'Mid', region: 'TP.HCM', median: 38, p25: 30, p75: 50, samples: 54 },
   { role: 'Data Analyst', level: 'Mid', region: 'Hà Nội', median: 28, p25: 22, p75: 36, samples: 71 },
-  { role: 'UX Designer', level: 'Mid', region: 'Từ xa (Remote)', median: 26, p25: 20, p75: 34, samples: 48 },
+  { role: 'UX Designer', level: 'Mid', region: 'Từ xa', median: 26, p25: 20, p75: 34, samples: 48 },
   { role: 'DevOps Engineer', level: 'Senior', region: 'TP.HCM', median: 50, p25: 40, p75: 66, samples: 39 },
 ]
 export type SalaryRow = (typeof SALARY)[number]
@@ -205,7 +205,7 @@ export type MapMarker = (typeof MAP_MARKERS)[number]
 /** Pricing / posting packages. */
 export const PACKAGES = [
   {
-    name: 'Cơ bản (Starter)',
+    name: 'Gói Cơ bản',
     price: 0,
     period: 'miễn phí',
     highlight: false,
@@ -213,7 +213,7 @@ export const PACKAGES = [
     cta: 'Gói hiện tại',
   },
   {
-    name: 'Nhà tuyển dụng (Recruiter)',
+    name: 'Gói Nhà tuyển dụng',
     price: 990000,
     period: '/ tháng',
     highlight: true,
@@ -221,7 +221,7 @@ export const PACKAGES = [
     cta: 'Nâng cấp ngay',
   },
   {
-    name: 'Doanh nghiệp (Enterprise)',
+    name: 'Gói Doanh nghiệp',
     price: 4900000,
     period: '/ tháng',
     highlight: false,

@@ -14,6 +14,7 @@ import com.alumnect.alumnect_backend.entity.verification.VerificationRequest;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.verification.AdminVerificationMapper;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -43,7 +44,7 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final AdminVerificationMapper adminVerificationMapper;
-    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+    private final NotificationService notificationService;
 
     /**
      * Lấy danh sách các phiếu yêu cầu xác minh cựu sinh viên phân trang.

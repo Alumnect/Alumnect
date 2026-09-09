@@ -7,8 +7,9 @@ import { useAuthStore } from '@/store/authStore'
 import { useUserPosts } from '../hooks/useUserPosts'
 import { PostCard } from '@/pages/app/FeedPage'
 import type { FeedFilter, Post } from '../model/post'
-import { DeletePostModal, ShareModal } from '..'
+import { DeletePostModal, ShareModal, CreatePostModal } from '..'
 import { ReportPostModal } from '@/features/report'
+import { CancelEventModal, useCancelEvent } from '@/features/event'
 
 interface UserPostsViewProps {
   userId: number
@@ -23,9 +24,13 @@ const FILTER_TABS: { id: FeedFilter; label: string; tone: 'brand' | 'gold' | 'aq
 
 export function UserPostsView({ userId }: UserPostsViewProps) {
   const [filter, setFilter] = useState<FeedFilter>('all')
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [deletingPost, setDeletingPost] = useState<Post | null>(null)
   const [sharingPost, setSharingPost] = useState<Post | null>(null)
   const [reportingPost, setReportingPost] = useState<Post | null>(null)
+  const [cancelEventTarget, setCancelEventTarget] = useState<{ id: string | number; title?: string } | null>(null)
+
+  const cancelEventMutation = useCancelEvent()
 
   const viewer = useAuthStore((s) => s.user)
   const isGuest = !viewer
@@ -103,8 +108,17 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
                     canInteract={canInteract}
                     currentUserId={viewer?.id}
                     currentUserName={viewer?.name}
+                    onEdit={setEditingPost}
                     onDelete={setDeletingPost}
                     onShare={setSharingPost}
+                    onCancelEvent={(p) => {
+                      if (p.event) {
+                        setCancelEventTarget({
+                          id: p.event.id ?? p.eventId ?? p.id,
+                          title: p.event.title,
+                        })
+                      }
+                    }}
                     canReport={canInteract && viewer?.id !== post.authorId}
                     onReport={setReportingPost}
                   />
@@ -133,6 +147,14 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
         )}
       </div>
 
+      {editingPost && viewer && (
+        <CreatePostModal
+          open={!!editingPost}
+          onClose={() => setEditingPost(null)}
+          viewer={viewer}
+          editPost={editingPost}
+        />
+      )}
       {deletingPost && (
         <DeletePostModal
           open={!!deletingPost}
@@ -142,6 +164,24 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
             setDeletingPost(null)
             refetch()
           }}
+        />
+      )}
+      {cancelEventTarget && (
+        <CancelEventModal
+          isOpen={!!cancelEventTarget}
+          onClose={() => setCancelEventTarget(null)}
+          onConfirm={() => {
+            if (cancelEventTarget) {
+              cancelEventMutation.mutate({ eventId: cancelEventTarget.id }, {
+                onSuccess: () => {
+                  setCancelEventTarget(null)
+                  refetch()
+                },
+              })
+            }
+          }}
+          isPending={cancelEventMutation.isPending}
+          eventTitle={cancelEventTarget.title}
         />
       )}
       {sharingPost && (

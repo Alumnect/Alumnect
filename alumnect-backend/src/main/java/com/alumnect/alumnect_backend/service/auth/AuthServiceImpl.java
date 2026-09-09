@@ -37,6 +37,7 @@ import org.springframework.http.HttpStatus;
 import java.util.Map;
 import com.alumnect.alumnect_backend.mapper.auth.AuthMapper;
 import com.alumnect.alumnect_backend.service.mail.MailService;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.slf4j.Logger;
@@ -90,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    private com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+    private NotificationService notificationService;
 
     @Autowired
     private AuthMapper authMapper;

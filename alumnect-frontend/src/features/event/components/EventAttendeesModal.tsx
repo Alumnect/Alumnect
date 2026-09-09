@@ -123,13 +123,7 @@ export function EventAttendeesModal({
           )}
         </div>
 
-        {/* Warning if event is cancelled */}
-        {status === 'CANCELLED' && (
-          <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-100">
-            <Ban size={14} className="shrink-0 text-rose-600" />
-            <span>Sự kiện này đã bị ban tổ chức hủy. Danh sách hiển thị những người đã giữ chỗ trước đó.</span>
-          </div>
-        )}
+
 
         {/* Search Bar & Role Filter Pills */}
         <div className="space-y-2.5">
@@ -223,9 +217,13 @@ export function EventAttendeesModal({
             <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-brand-50 text-brand-600">
               <Users size={22} />
             </div>
-            <h5 className="text-sm font-bold text-plum-900">Chưa có ai đăng ký tham gia</h5>
+            <h5 className="text-sm font-bold text-plum-900">
+              {status === 'CANCELLED' ? 'Không có người đăng ký trước khi hủy' : 'Chưa có ai đăng ký tham gia'}
+            </h5>
             <p className="mt-1 text-xs text-slate-500 max-w-xs mx-auto">
-              Hãy là người đầu tiên đăng ký tham gia sự kiện này!
+              {status === 'CANCELLED'
+                ? 'Sự kiện chưa ghi nhận lượt giữ chỗ nào trước thời điểm bị hủy.'
+                : 'Hãy là người đầu tiên đăng ký tham gia sự kiện này!'}
             </p>
           </div>
         ) : filteredAttendees.length === 0 ? (

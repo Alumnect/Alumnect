@@ -206,24 +206,26 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
         className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl flex flex-col pop"
       >
         {/* Modal Header */}
-        <div className="relative bg-gradient-to-r from-brand-500 via-brand-600 to-gold-500 p-6 text-white rounded-t-3xl">
-          <button
-            onClick={onClose}
-            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors cursor-pointer"
-          >
-            <X size={18} />
-          </button>
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white rounded-t-3xl shrink-0">
           <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/20 backdrop-blur-md ring-2 ring-white/30">
-              <Megaphone size={22} className="text-white" />
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-600 border border-brand-100">
+              <Megaphone size={20} />
             </span>
             <div>
-              <h2 className="text-xl font-black tracking-tight text-white">Tạo thông báo hệ thống</h2>
-              <p className="text-xs text-brand-100 mt-0.5">
-                Quản lý lịch gửi (Schedule), thời hạn hiệu lực (Expiration) và phát thanh realtime tới người dùng.
+              <h2 className="text-lg font-bold text-plum-900 tracking-tight">Tạo thông báo hệ thống</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Quản lý lịch gửi, thời hạn hiệu lực và phát sóng trực tiếp tới người dùng.
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
+            aria-label="Đóng"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Modal Form Body */}
@@ -259,10 +261,10 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
             </div>
           </div>
 
-          {/* Đối tượng nhận (Recipients) */}
+          {/* Đối tượng nhận */}
           <div className="rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 space-y-3">
             <label className="block text-xs font-bold uppercase tracking-wider text-plum-700">
-              Đối tượng nhận (Recipients) <span className="text-red-500">*</span>
+              Đối tượng nhận <span className="text-red-500">*</span>
             </label>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -360,11 +362,11 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
 
           <hr className="border-plum-900/10" />
 
-          {/* 1. Schedule Notification - Hẹn giờ gửi */}
+          {/* 1. Hẹn giờ gửi */}
           <div className="rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-plum-700 flex items-center gap-1.5">
-                <Clock size={14} className="text-gold-500" /> 1. Gửi thông báo (Send)
+                <Clock size={14} className="text-gold-500" /> 1. Thời điểm phát thông báo
               </label>
               <span className="text-[11px] text-plum-400 font-medium">Hẹn giờ gửi hoặc phát ngay</span>
             </div>
@@ -387,8 +389,8 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                   className="accent-gold-500"
                 />
                 <div>
-                  <span className="text-xs font-bold block">Gửi ngay (Send Now)</span>
-                  <span className="text-[10px] text-plum-400">Phát realtime ngay lập tức</span>
+                  <span className="text-xs font-bold block">Gửi ngay</span>
+                  <span className="text-[10px] text-plum-400">Phát sóng ngay lập tức</span>
                 </div>
               </label>
 
@@ -409,7 +411,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                   className="accent-gold-500"
                 />
                 <div>
-                  <span className="text-xs font-bold block">Hẹn giờ (Schedule)</span>
+                  <span className="text-xs font-bold block">Hẹn giờ</span>
                   <span className="text-[10px] text-plum-400">Tự động phát khi đến giờ</span>
                 </div>
               </label>
@@ -422,7 +424,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[11px] text-plum-500 font-medium block mb-1">
-                      Ngày gửi (Date):
+                      Ngày gửi:
                     </label>
                     <input
                       type="date"
@@ -434,7 +436,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                   </div>
                   <div>
                     <label className="text-[11px] text-plum-500 font-medium block mb-1">
-                      Giờ gửi (Time):
+                      Giờ gửi:
                     </label>
                     <input
                       type="time"
@@ -455,19 +457,19 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
           <div className="rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-plum-700 flex items-center gap-1.5">
-                <Hourglass size={14} className="text-gold-500" /> 2. Thời gian hết hiệu lực (Expiration)
+                <Hourglass size={14} className="text-gold-500" /> 2. Thời hạn hiệu lực
               </label>
-              <span className="text-[11px] text-plum-400 font-medium">Tách biệt hoàn toàn với Schedule</span>
+              <span className="text-[11px] text-plum-400 font-medium">Thời hạn hiển thị của thông báo</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {[
-                { id: 'FOREVER', label: 'Không bao giờ hết hạn (Never)' },
-                { id: 'ONE_DAY', label: '1 Ngày (1 Day)' },
-                { id: 'ONE_WEEK', label: '1 Tuần (1 Week)' },
-                { id: 'ONE_MONTH', label: '1 Tháng (1 Month)' },
-                { id: 'ONE_YEAR', label: '1 Năm (1 Year)' },
-                { id: 'CUSTOM', label: 'Tùy chỉnh (Custom)' },
+                { id: 'FOREVER', label: 'Không giới hạn (Vĩnh viễn)' },
+                { id: 'ONE_DAY', label: '1 ngày' },
+                { id: 'ONE_WEEK', label: '1 tuần' },
+                { id: 'ONE_MONTH', label: '1 tháng' },
+                { id: 'ONE_YEAR', label: '1 năm' },
+                { id: 'CUSTOM', label: 'Tùy chỉnh thời gian' },
               ].map((item) => {
                 const isSelected = expirationType === item.id
                 return (
@@ -501,7 +503,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[11px] text-plum-500 font-medium block mb-1">
-                      Ngày hết hạn (Expiration Date):
+                      Ngày hết hạn:
                     </label>
                     <input
                       type="date"
@@ -513,7 +515,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                   </div>
                   <div>
                     <label className="text-[11px] text-plum-500 font-medium block mb-1">
-                      Giờ hết hạn (Expiration Time):
+                      Giờ hết hạn:
                     </label>
                     <input
                       type="time"
@@ -531,7 +533,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
           {/* Footer Actions */}
           <div className="flex items-center justify-end gap-3 border-t border-plum-900/8 pt-4">
             <Button type="button" variant="secondary" onClick={onClose} disabled={createMutation.isPending}>
-              Hủy bỏ (Cancel)
+              Hủy bỏ
             </Button>
             <Button
               type="submit"
@@ -539,7 +541,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
               className="bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 font-bold shadow-sm"
             >
               {createMutation.isPending && <Loader2 size={15} className="mr-1.5 animate-spin" />}
-              {sendType === 'SCHEDULE' ? 'Lên lịch phát hành (Schedule)' : 'Tạo & Gửi ngay (Send Now)'}
+              {sendType === 'SCHEDULE' ? 'Lên lịch phát hành' : 'Tạo & Gửi ngay'}
             </Button>
           </div>
         </form>
