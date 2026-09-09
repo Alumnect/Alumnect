@@ -161,22 +161,25 @@ export function AppShell() {
                   aria-label={item.label}
                   className={({ isActive }) =>
                     cn(
-                      'group relative flex h-15 items-center justify-center px-5 transition-colors',
+                      'group relative flex h-15 items-center justify-center gap-2 px-3 xl:px-4 transition-colors',
                       isActive ? 'text-[#F27024] font-bold' : 'text-slate-500 hover:text-slate-900',
                     )
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      {Icon && <Icon size={22} className={cn('transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'text-[#F27024]')} />}
-                      {/* hover tooltip label */}
-                      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+                      {Icon && <Icon size={20} className={cn('transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'text-[#F27024]')} />}
+                      <span className={cn('hidden xl:inline text-xs transition-colors', isActive ? 'font-bold text-[#F27024]' : 'font-medium text-slate-600 group-hover:text-slate-900')}>
+                        {item.label}
+                      </span>
+                      {/* hover tooltip label on screens without text */}
+                      <span className="xl:hidden pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
                         {item.label}
                       </span>
                       {isActive && (
                         <motion.span
                           layoutId="app-tab"
-                          className="absolute inset-x-3 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#F27024] to-[#FF8C38]"
+                          className="absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#F27024] to-[#FF8C38]"
                           transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                         />
                       )}

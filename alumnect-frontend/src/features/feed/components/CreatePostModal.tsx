@@ -296,32 +296,33 @@ export function CreatePostModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative m-auto w-full max-w-xl rounded-3xl bg-white p-6 md:p-8 shadow-2xl border border-plum-900/5"
+            className="relative m-auto w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-plum-900/10 overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-100 bg-white shrink-0">
               <h3 className="text-xl font-bold text-plum-900">
                 {editPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
               </h3>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Đóng"
-            className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900"
-          >
-            <X size={18} />
-          </button>
-        </div>
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Đóng"
+                className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-        {/* Tác giả */}
-        <div className="mt-4 flex items-center gap-3">
-          <Avatar src={viewer.avatarUrl ?? ''} name={viewer.name} size={44} verified={viewer.verified} />
-          <div className="min-w-0">
-            <p className="truncate font-bold text-plum-900">{viewer.name}</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4" noValidate>
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0" noValidate>
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
+                {/* Tác giả */}
+                <div className="flex items-center gap-3">
+                  <Avatar src={viewer.avatarUrl ?? ''} name={viewer.name} size={44} verified={viewer.verified} />
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-plum-900">{viewer.name}</p>
+                  </div>
+                </div>
           {/* Nội dung (Ẩn đi nếu là Sự kiện, vì Sự kiện sẽ có form mô tả riêng bên trong khối sự kiện) */}
           {type !== 'event' && (
             <div>
@@ -714,27 +715,29 @@ export function CreatePostModal({
             </div>
           )}
 
-          {/* Nút hành động */}
-          <div className="flex justify-end gap-3 pt-1">
-            <Button type="button" variant="secondary" onClick={close}>
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              disabled={activeMutation.isPending || isUploading || isEventImmutable}
-              leftIcon={activeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
-            >
-              {editPost
-                ? activeMutation.isPending
-                  ? 'Đang lưu…'
-                  : 'Lưu thay đổi'
-                : activeMutation.isPending
-                  ? 'Đang đăng…'
-                  : 'Đăng bài'}
-            </Button>
-          </div>
-        </form>
-      </motion.div>
+              </div>
+
+              {/* Sticky Action Footer */}
+              <div className="shrink-0 border-t border-slate-100 bg-white px-6 md:px-8 py-4 flex items-center justify-end gap-3">
+                <Button type="button" variant="secondary" onClick={close}>
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={activeMutation.isPending || isUploading || isEventImmutable}
+                  leftIcon={activeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
+                >
+                  {editPost
+                    ? activeMutation.isPending
+                      ? 'Đang lưu…'
+                      : 'Lưu thay đổi'
+                    : activeMutation.isPending
+                      ? 'Đang đăng…'
+                      : 'Đăng bài'}
+                </Button>
+              </div>
+            </form>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>,

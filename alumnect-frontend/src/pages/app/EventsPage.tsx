@@ -251,7 +251,7 @@ export function EventsPage() {
                                 className="h-8 px-3 text-xs gap-1.5 rounded-xl font-semibold border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300"
                                 title="Hủy tổ chức sự kiện này"
                               >
-                                <Ban size={13} /> Hủy
+                                <Ban size={13} /> Hủy sự kiện
                               </Button>
                             )}
                           <EventRsvpButton
