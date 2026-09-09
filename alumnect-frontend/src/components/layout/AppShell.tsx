@@ -150,7 +150,7 @@ export function AppShell() {
           </label>
 
           {/* primary nav (centre) */}
-          <nav className="hidden flex-1 items-center justify-center lg:flex">
+          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex h-full">
             {APP_PRIMARY_NAV.map((item) => {
               const Icon = item.icon
               return (
@@ -161,25 +161,28 @@ export function AppShell() {
                   aria-label={item.label}
                   className={({ isActive }) =>
                     cn(
-                      'group relative flex h-15 items-center justify-center gap-2 px-3 xl:px-4 transition-colors',
-                      isActive ? 'text-[#F27024] font-bold' : 'text-slate-500 hover:text-slate-900',
+                      'group relative flex h-full w-20 xl:w-24 items-center justify-center transition-colors',
+                      isActive ? 'text-[#F27024]' : 'text-slate-500 hover:text-slate-900',
                     )
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      {Icon && <Icon size={20} className={cn('transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'text-[#F27024]')} />}
-                      <span className={cn('hidden xl:inline text-xs transition-colors', isActive ? 'font-bold text-[#F27024]' : 'font-medium text-slate-600 group-hover:text-slate-900')}>
-                        {item.label}
-                      </span>
-                      {/* hover tooltip label on screens without text */}
-                      <span className="xl:hidden pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+                      <div className={cn(
+                        'flex h-11 w-full items-center justify-center rounded-xl transition-all duration-200',
+                        isActive ? 'bg-[#F27024]/10 text-[#F27024]' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-900'
+                      )}>
+                        {Icon && <Icon size={22} className={cn('transition-transform duration-200 group-hover:scale-110', isActive && 'text-[#F27024]')} />}
+                      </div>
+
+                      {/* hover tooltip label */}
+                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0.5">
                         {item.label}
                       </span>
                       {isActive && (
                         <motion.span
                           layoutId="app-tab"
-                          className="absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#F27024] to-[#FF8C38]"
+                          className="absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-[#F27024]"
                           transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                         />
                       )}
