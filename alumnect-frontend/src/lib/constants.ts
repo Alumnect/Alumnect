@@ -41,7 +41,7 @@ export type NavItem = {
  */
 export const APP_PRIMARY_NAV: NavItem[] = [
   { label: 'Bảng tin', to: '/app', icon: Home },
-  { label: 'Cựu sinh viên', to: '/app/alumni', icon: Users },
+  { label: 'Thành viên', to: '/app/alumni', icon: Users },
   { label: 'Tuyển dụng', to: '/app/jobs', icon: Briefcase },
   { label: 'Sự kiện', to: '/app/events', icon: CalendarDays },
   { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: HelpCircle },

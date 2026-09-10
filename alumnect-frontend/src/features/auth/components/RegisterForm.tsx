@@ -15,6 +15,7 @@ import { GoogleLogin } from '@react-oauth/google'
 import { useNavigate } from 'react-router-dom'
 import type { RegisterFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
+import { toast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 interface RegisterFormProps {
@@ -146,6 +147,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           proofUrl: data.proofUrl || undefined,
           note: data.note || undefined,
         })
+        toast.success('Đăng ký thành công! Vui lòng nhập mã OTP gửi tới email.')
         onSuccess(data.email, data.role)
       }
     } catch (err: any) {
@@ -368,7 +370,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           disabled={registerMutation.isPending || googleRegisterMutation.isPending || isUploading}
           rightIcon={registerMutation.isPending || googleRegisterMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
         >
-          {registerMutation.isPending || googleRegisterMutation.isPending ? 'Đang đăng ký...' : 'Đăng ký tài khoản'}
+          {registerMutation.isPending || googleRegisterMutation.isPending ? 'Đang khởi tạo tài khoản & gửi mã...' : 'Đăng ký tài khoản'}
         </Button>
       </form>
 

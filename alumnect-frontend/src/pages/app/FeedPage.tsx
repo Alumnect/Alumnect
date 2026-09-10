@@ -8,7 +8,7 @@
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Search,
@@ -35,11 +35,11 @@ import {
   Trash2,
   Share2,
   Ban,
+  DollarSign,
 } from 'lucide-react'
-import { Avatar, Badge, Card, ImageCarousel, toast } from '@/components/ui'
+import { Avatar, Badge, Card, ImageCarousel, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
-import { QUESTIONS } from '@/lib/constants'
 import { UpcomingEventsWidget, CancelEventModal, useCancelEvent, EventRsvpButton } from '@/features/event'
 
 import { compact, cn } from '@/lib/utils'
@@ -47,7 +47,7 @@ import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, PostActionMenu } from '@/features/feed'
+import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, PostActionMenu, InlineComments } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
@@ -77,36 +77,52 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
  * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
  */
 function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostType) => void }) {
+  const firstName = viewer.name ? viewer.name.trim().split(' ').slice(-1)[0] : 'bạn'
   return (
-    <Card hover={false} className="p-4">
-      <div className="flex gap-3">
-        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={44} verified={viewer.verified} />
+    <Card hover={false} className="p-4 border border-slate-200/80 shadow-xs bg-white rounded-2xl">
+      <div className="flex items-center gap-3">
+        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={42} verified={viewer.verified} />
         <button
           type="button"
           onClick={() => onOpen()}
-          className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]"
+          className="h-11 flex-1 rounded-full border border-slate-200/80 bg-slate-50 px-4 text-left text-sm text-slate-400 transition-all hover:bg-slate-100 hover:border-slate-300"
         >
-          Bạn muốn chia sẻ thành tựu, đặt câu hỏi hay đăng tin tuyển dụng?…
+          {firstName} ơi, bạn đang nghĩ gì thế?
         </button>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-plum-900/8 pt-3">
-        {[
-          { icon: Award, label: 'Thành tựu', tone: 'text-gold-600', type: 'achievement' },
-          { icon: ImageIcon, label: 'Hình ảnh', tone: 'text-aqua-500', type: 'normal' },
-          { icon: Briefcase, label: 'Tuyển dụng', tone: 'text-brand-600', type: 'recruitment' },
-          { icon: CalendarPlus, label: 'Sự kiện', tone: 'text-violet-600', type: 'event' },
-        ].map((a) => (
-          <button
-            key={a.label}
-            type="button"
-            onClick={() => onOpen(a.type as PostType)}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04]"
-          >
-            <a.icon size={17} className={a.tone} />
-            <span className="hidden sm:inline">{a.label}</span>
-          </button>
-        ))}
-        <Button size="sm" className="ml-auto" onClick={() => onOpen()}>Đăng bài</Button>
+      <div className="mt-3 flex items-center justify-around border-t border-slate-100 pt-2.5 sm:justify-start sm:gap-2">
+        <button
+          type="button"
+          onClick={() => onOpen('normal')}
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-600"
+        >
+          <ImageIcon size={18} className="text-sky-500" />
+          <span>Ảnh / Video</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onOpen('recruitment')}
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-orange-50 hover:text-[#F27024]"
+        >
+          <Briefcase size={18} className="text-[#F27024]" />
+          <span>Tuyển dụng</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onOpen('event')}
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
+        >
+          <CalendarPlus size={18} className="text-indigo-500" />
+          <span>Sự kiện</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onOpen('achievement')}
+          className="hidden sm:inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-amber-50 hover:text-amber-600"
+        >
+          <Award size={18} className="text-amber-500" />
+          <span>Thành tựu</span>
+        </button>
       </div>
     </Card>
   )
@@ -145,6 +161,13 @@ export function PostCard({
   const [likeCount, setLikeCount] = useState<number>(post.likes)
   // Trạng thái lưu bài viết cục bộ (UC20 - Save Post)
   const [saved, setSaved] = useState(post.saved ?? false)
+  // Trạng thái mở khung bình luận trực tiếp (Inline Comments)
+  const [showComments, setShowComments] = useState(false)
+  const [commentCount, setCommentCount] = useState(post.comments)
+  // Trạng thái xem ảnh phóng to toàn màn hình (Lightbox)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+  const viewer = useAuthStore((s) => s.user)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
 
   // Đồng bộ lại state khi post props thay đổi (ví dụ sau khi refetch hoặc đổi tab)
@@ -152,7 +175,8 @@ export function PostCard({
     setLiked(post.liked)
     setLikeCount(post.likes)
     setSaved(post.saved ?? false)
-  }, [post.liked, post.likes, post.saved])
+    setCommentCount(post.comments)
+  }, [post.liked, post.likes, post.saved, post.comments])
 
   // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
   const promptLogin = useLoginPrompt((s) => s.open)
@@ -228,8 +252,8 @@ export function PostCard({
       hover={false}
       onClick={handleCardClick}
       className={cn(
-        "overflow-hidden relative transition-all duration-300 cursor-pointer hover:shadow-md",
-        post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white"
+        "overflow-hidden relative transition-all duration-200 cursor-pointer border border-slate-200/80 shadow-xs hover:shadow-md bg-white rounded-2xl",
+        post.type === 'achievement' && "border-amber-300/80 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/40 via-white to-white"
       )}
     >
       {post.type === 'achievement' && (
@@ -245,14 +269,13 @@ export function PostCard({
             className="shrink-0 transition-transform duration-200 hover:scale-105"
             title={`Xem hồ sơ của ${post.author}`}
           >
-            <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
+            <Avatar src={post.avatar} name={post.author} size={44} verified={post.verified} />
           </Link>
-          {/* Tên tác giả chuyển qua Profile, Badge và Thời gian chuyển qua chi tiết bài viết */}
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 font-bold text-plum-900">
+            <div className="flex items-center gap-2">
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-                className="truncate hover:underline hover:text-brand-600 transition-colors"
+                className="truncate font-bold text-slate-900 hover:underline hover:text-[#F27024] transition-colors text-sm sm:text-base"
                 title={`Xem hồ sơ của ${post.author}`}
               >
                 {post.author}
@@ -262,12 +285,12 @@ export function PostCard({
                   <Badge tone={meta.tone} className="px-2.5 py-0.5 text-[10px] cursor-pointer hover:opacity-85 shadow-sm shadow-amber-200/50 border border-amber-300/50 flex items-center gap-1 font-extrabold uppercase tracking-wide">
                     <Sparkles size={10} className="text-amber-600" /> {meta.label}
                   </Badge>
-                ) : (
+                ) : post.type !== 'normal' ? (
                   <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
-                )}
+                ) : null}
               </Link>
-            </p>
-            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-plum-400 hover:text-plum-600 transition-colors">
+            </div>
+            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-slate-400 hover:text-slate-600 transition-colors mt-0.5">
               {post.role ? `${post.role} · ` : ''}{post.time}
             </Link>
           </div>
@@ -282,29 +305,37 @@ export function PostCard({
           />
         </div>
 
-        {/* --- Phần 2: Nội dung văn bản (Ẩn đi nếu là bài event hoặc recruitment, vì văn bản đã được gom vào khung riêng) --- */}
-        {post.type !== 'event' && post.type !== 'recruitment' && (
-          <Link to={`/app/posts/${post.id}`} className="mt-4 block">
-            <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">{post.text}</p>
+        {/* --- Phần 2: Nội dung văn bản bài viết --- */}
+        {post.text && (
+          <Link to={`/app/posts/${post.id}`} className="mt-3.5 block">
+            <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-700 transition-colors hover:text-slate-900">
+              {post.text}
+            </p>
           </Link>
         )}
       </div>
 
-      {/* --- Phần 3: Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
+      {/* --- Phần 3: Khối thông tin Tuyển dụng (nếu là bài recruitment) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all hover:shadow-md">
-          {/* Header Tuyển dụng */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-5 py-3.5">
-            <h3 className="flex items-center gap-2 font-bold text-brand-900">
-              <Briefcase size={18} className="text-brand-600" />
-              <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
-            </h3>
+        <div className="mx-5 mb-4 rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50/50 to-amber-50/20 p-4 transition-all hover:border-orange-300">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-[#F27024]/10 px-2 py-0.5 text-[11px] font-bold text-[#F27024]">
+                  <Briefcase size={12} /> Tuyển dụng
+                </span>
+                <span className="text-xs text-slate-600 font-semibold truncate">{post.job.company}</span>
+              </div>
+              <h4 className="mt-1.5 text-base font-bold text-slate-900 truncate">
+                {post.job.title}
+              </h4>
+            </div>
             {post.job.applyUrl && (
               <a
                 href={post.job.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#d96010] transition-colors"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#F27024] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#d96010] transition-all"
                 onClick={(e) => e.stopPropagation()}
               >
                 Ứng tuyển <ExternalLink size={12} />
@@ -312,90 +343,54 @@ export function PostCard({
             )}
           </div>
 
-          <div className="p-5">
-            <div className="mb-5 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <p className="text-base font-bold text-plum-900 mb-3">
-                Công ty: {post.job.company}
-              </p>
-              
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                 <div>
-                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
-                   <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
-                     {post.job.location && (
-                       <span className="inline-flex items-center gap-1">
-                         <MapPin size={14} className="text-brand-500" /> {post.job.location}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-                 <div>
-                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
-                   <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
-                     {(post.job.salaryMin || post.job.salaryMax) ? (
-                       <span className="inline-flex items-center gap-1">
-                          <span className="font-semibold text-emerald-600">
-                            {post.job.salaryMin && post.job.salaryMax
-                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
-                              : post.job.salaryMin
-                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
-                              : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
-                          </span>
-                       </span>
-                     ) : (
-                       <span className="text-slate-400 font-normal">Thỏa thuận</span>
-                     )}
-                     {post.job.contactEmail && (
-                       <span className="inline-flex items-center gap-1 text-xs">
-                         <Inbox size={12} className="text-plum-400" /> {post.job.contactEmail}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-              </div>
-            </div>
-
-            {/* Mô tả tuyển dụng */}
-            {post.text && (
-              <div className="mb-5">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc:</p>
-                <Link to={`/app/posts/${post.id}`} className="block">
-                  <p className="whitespace-pre-line text-[14px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900 line-clamp-4">
-                    {post.text}
-                  </p>
-                </Link>
-              </div>
+          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-orange-200/50 pt-2.5 text-xs text-slate-600">
+            {post.job.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={13} className="text-[#F27024]" /> {post.job.location}
+              </span>
             )}
-
-            {/* Ảnh tuyển dụng (nếu có) */}
-            {(() => {
-              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
-              if (imgs.length === 0) return null
-              return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
-                  <ImageCarousel images={imgs} height={380} altPrefix="Ảnh tuyển dụng" />
-                </div>
-              )
-            })()}
+            {(post.job.salaryMin || post.job.salaryMax) ? (
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-600">
+                <DollarSign size={13} />
+                {post.job.salaryMin && post.job.salaryMax
+                  ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                  : post.job.salaryMin
+                  ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
+                  : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
+              </span>
+            ) : (
+              <span className="text-slate-400">Lương thỏa thuận</span>
+            )}
+            {post.job.contactEmail && (
+              <span className="inline-flex items-center gap-1 text-slate-500">
+                <Inbox size={13} className="text-slate-400" /> {post.job.contactEmail}
+              </span>
+            )}
           </div>
         </div>
       )}
 
-      {/* --- Phần 3b: Thẻ thông tin Sự kiện (nếu là bài event) --- */}
+      {/* --- Phần 3b: Khối thông tin Sự kiện (nếu là bài event) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all hover:shadow-md">
-          {/* Header Sự kiện */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-5 py-3.5">
-            <h3 className="flex items-center gap-2 font-bold text-violet-900 min-w-0">
-              <CalendarPlus size={18} className="text-violet-600 shrink-0" />
-              <span className="truncate">Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
-            </h3>
-            {post.event.status === 'CANCELLED' ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
-                <Ban size={12} /> Đã hủy
-              </span>
-            ) : (
-              <div className="shrink-0 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="mx-5 mb-4 rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/40 to-violet-50/20 p-4 transition-all hover:border-indigo-300">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100 px-2 py-0.5 text-[11px] font-bold text-indigo-700">
+                  <CalendarPlus size={12} /> Sự kiện
+                </span>
+                {post.event.status === 'CANCELLED' && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                    <Ban size={10} /> Đã hủy
+                  </span>
+                )}
+              </div>
+              <h4 className="mt-1.5 text-base font-bold text-slate-900 truncate">
+                {post.event.title}
+              </h4>
+            </div>
+            {post.event.status !== 'CANCELLED' && (
+              <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
                 <EventRsvpButton
                   eventId={post.event.id ?? post.eventId}
                   eventTitle={post.event.title}
@@ -406,100 +401,60 @@ export function PostCard({
                   endTime={post.event.endTime}
                   status={post.event.status}
                   size="sm"
-                  showCount={true}
+                  showCount={false}
                 />
               </div>
             )}
           </div>
 
-          <div className="p-5">
-            {/* Thời gian & Địa điểm */}
-            <div className="mb-5 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2">
-              {post.event.startTime && (
-                <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={14} className="text-violet-500" />
-                    {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
-                    {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              )}
-              {post.event.endTime ? (
-                <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={14} className="text-coral-500" />
-                    {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
-                    {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="text-sm font-semibold text-slate-400">—</p>
-                </div>
-              )}
-              {(post.event.location || post.event.capacity) && (
-                <div className="col-span-1 sm:col-span-2 mt-1 border-t border-slate-200/60 pt-3">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm & Sức chứa</p>
-                  <div className="flex flex-wrap items-center gap-4">
-                    {post.event.location && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
-                        <MapPin size={14} className="text-brand-500" /> {post.event.location}
-                      </p>
-                    )}
-                    {post.event.capacity && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
-                        <Users size={14} className="text-aqua-600" /> Tối đa {post.event.capacity} người
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Mô tả sự kiện */}
-            {post.text && (
-              <div className="mb-5">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện:</p>
-                <Link to={`/app/posts/${post.id}`} className="block">
-                  <p className="whitespace-pre-line text-[14px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">
-                    {post.text}
-                  </p>
-                </Link>
-              </div>
+          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-indigo-200/40 pt-2.5 text-xs text-slate-600">
+            {post.event.startTime && (
+              <span className="inline-flex items-center gap-1 font-medium text-slate-700">
+                <Clock size={13} className="text-indigo-500" />
+                {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'short' })}{' '}
+                · {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
             )}
-
-            {/* Ảnh sự kiện */}
-            {(() => {
-              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
-              if (imgs.length === 0) return null
-              return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
-                  <ImageCarousel images={imgs} height={380} altPrefix="Ảnh sự kiện" />
-                </div>
-              )
-            })()}
+            {post.event.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={13} className="text-indigo-500" /> {post.event.location}
+              </span>
+            )}
+            {post.event.capacity && (
+              <span className="inline-flex items-center gap-1 text-slate-500">
+                <Users size={13} className="text-slate-400" /> Tối đa {post.event.capacity} người
+              </span>
+            )}
           </div>
         </div>
       )}
 
-      {/* --- Phần 4: Ảnh đính kèm (Ẩn nếu là Sự kiện hoặc Tuyển dụng, vì ảnh đã ở trong khung riêng) --- */}
-      {post.type !== 'event' && post.type !== 'recruitment' && (() => {
+      {/* --- Phần 4: Ảnh đính kèm (áp dụng cho tất cả loại bài viết nếu có ảnh) --- */}
+      {(() => {
         const imgs = post.images && post.images.length > 0
           ? post.images
           : post.image ? [post.image] : []
         if (imgs.length === 0) return null
-        return <ImageCarousel images={imgs} height={480} altPrefix="Ảnh bài viết" />
+        return (
+          <ImageCarousel
+            images={imgs}
+            height={460}
+            altPrefix="Ảnh bài viết"
+            onImageClick={(url) => setPreviewImage(url)}
+          />
+        )
       })()}
 
-      {/* --- Phần 4: Thanh hành động — Thích / Bình luận / Đăng lại / Báo cáo / Lưu.
+      {/* --- Phần 5: Thanh hành động — Thích (hoặc Chúc mừng) / Bình luận / Đăng lại / Báo cáo / Lưu.
           Guest bấm bất kỳ nút nào sẽ mở popup mời đăng nhập (kiểu Facebook) theo BR-12 --- */}
       <div className="flex items-center gap-1 p-3 border-t border-slate-100">
         {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
         <button
-          onClick={handleLike}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleLike()
+          }}
           aria-pressed={liked}
           className={cn(
             'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-slate-100',
@@ -519,22 +474,30 @@ export function PostCard({
           )}
           {compact(likeCount)}
         </button>
-        {canInteract ? (
-          <Link
-            to={`/app/posts/${post.id}#comments`}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F27024]/10 hover:text-[#F27024]"
-            title="Xem và viết bình luận"
-          >
-            <MessageCircle size={18} /> {compact(post.comments)}
-          </Link>
-        ) : (
-          <button
-            onClick={() => promptLogin('Đăng nhập để bình luận về bài viết.')}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-          >
-            <MessageCircle size={18} /> {compact(post.comments)}
-          </button>
-        )}
+
+        {/* Nút Bình luận: Bấm để mở/đóng inline quick comment trực tiếp trên thẻ bài viết */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (!canInteract) {
+              promptLogin('Đăng nhập để bình luận về bài viết.')
+              return
+            }
+            setShowComments((prev) => !prev)
+          }}
+          className={cn(
+            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
+            showComments
+              ? 'text-[#F27024] bg-orange-50 font-bold'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+          )}
+          title={showComments ? 'Thu gọn bình luận' : 'Xem và viết bình luận'}
+        >
+          <MessageCircle size={18} className={showComments ? 'fill-[#F27024]/20 text-[#F27024]' : ''} />
+          {compact(commentCount)}
+        </button>
+
         <button
           onClick={(e) => {
             e.preventDefault()
@@ -552,7 +515,10 @@ export function PostCard({
         {!isAuthor && (canReport ? (
           <button
             type="button"
-            onClick={() => onReport?.(post)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onReport?.(post)
+            }}
             aria-label="Báo cáo bài viết"
             title="Báo cáo bài viết"
             className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
@@ -561,7 +527,10 @@ export function PostCard({
           </button>
         ) : !canInteract ? (
           <button
-            onClick={() => promptLogin('Đăng nhập để báo cáo bài viết.')}
+            onClick={(e) => {
+              e.stopPropagation()
+              promptLogin('Đăng nhập để báo cáo bài viết.')
+            }}
             className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <Flag size={17} />
@@ -570,7 +539,10 @@ export function PostCard({
         <button
           aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
-          onClick={handleSave}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleSave()
+          }}
           className={cn(
             'grid h-9 w-9 place-items-center rounded-lg transition-all duration-200',
             saved
@@ -591,6 +563,39 @@ export function PostCard({
           )}
         </button>
       </div>
+
+      {/* --- Phần 6: Khung bình luận trực tiếp trên bài viết (Inline Quick Comments) --- */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <InlineComments
+              postId={post.id}
+              totalComments={commentCount}
+              viewer={viewer}
+              canInteract={canInteract}
+              onCommentAdded={() => setCommentCount((c) => c + 1)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- Phần 7: Lightbox xem ảnh toàn màn hình với zoom/pan/rotate --- */}
+      <ImageViewerModal
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage || ''}
+        alt={post.text?.slice(0, 50) || 'Ảnh bài viết'}
+        senderName={post.author}
+        senderAvatar={post.avatar}
+        time={post.time}
+      />
     </Card>
   )
 }
@@ -661,23 +666,6 @@ function FeedEmpty() {
   )
 }
 
-/**
- * Thẻ khung cho các mục ở cột phải (gợi ý theo dõi, sự kiện, Q&A nổi bật).
- * @param title Tiêu đề của mục
- * @param action Nhãn liên kết hành động phụ (tùy chọn, vd "See all")
- * @param children Nội dung bên trong thẻ
- */
-function SidebarCard({ title, action, children }: { title: string; action?: string; children: React.ReactNode }) {
-  return (
-    <Card hover={false} className="p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-bold text-plum-900">{title}</h3>
-        {action && <Link to="#" className="text-xs font-semibold text-brand-600 hover:text-brand-600">{action}</Link>}
-      </div>
-      {children}
-    </Card>
-  )
-}
 
 /**
  * Trang bảng tin cộng đồng (UC15 - View community Feed).
@@ -772,21 +760,25 @@ export function FeedPage() {
         )}
 
         {/* Khối B: Tabs lọc theo loại bài viết */}
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={cn(
-                'rounded-full px-4 py-1.5 text-sm font-semibold transition-colors',
-                filter === f.key
-                  ? 'bg-gradient-to-r from-[#F27024] to-[#FF8C38] text-white shadow-xs font-bold'
-                  : 'bg-slate-200/60 text-slate-600 hover:bg-slate-200 hover:text-slate-900',
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/50 backdrop-blur-xs w-fit">
+          {FILTERS.map((f) => {
+            const isActive = filter === f.key
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setFilter(f.key)}
+                className={cn(
+                  'rounded-xl px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200',
+                  isActive
+                    ? 'bg-white text-[#F27024] shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                )}
+              >
+                {f.label}
+              </button>
+            )
+          })}
         </div>
 
         {/* Khối C: Vùng nội dung theo trạng thái, xét lần lượt:
@@ -923,28 +915,9 @@ export function FeedPage() {
           <ConnectionSuggestionsWidget limit={4} />
         </Reveal>
 
-
         {/* Mục 2: Gợi ý sự kiện sắp tới */}
         <Reveal direction="left" delay={0.1}>
           <UpcomingEventsWidget limit={3} />
-        </Reveal>
-
-        {/* Mục 3: Câu hỏi Q&A đang nổi bật */}
-        <Reveal direction="left" delay={0.2}>
-          <SidebarCard title="Hỏi đáp nổi bật" action="Diễn đàn">
-            <ul className="space-y-3">
-              {QUESTIONS.slice(0, 3).map((q) => (
-                <li key={q.id}>
-                  <Link to="/app/forum" className="group block">
-                    <p className="line-clamp-2 text-sm font-semibold text-plum-800 group-hover:text-brand-600">{q.title}</p>
-                    <p className="mt-1 flex items-center gap-2 text-xs text-plum-400">
-                      <TrendingUp size={12} /> {q.votes} bình chọn · {q.answers} câu trả lời
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
         </Reveal>
       </aside>
     </div>
