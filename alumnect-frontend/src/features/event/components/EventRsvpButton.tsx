@@ -7,7 +7,7 @@ import { useLoginPrompt } from '@/store/loginPrompt'
 import { useToggleRsvp, useRsvpStatus } from '../hooks/useEventRsvp'
 import { EventAttendeesModal } from './EventAttendeesModal'
 import { CancelRsvpModal } from './CancelRsvpModal'
-import { compact } from '@/lib/utils'
+import { compact, cn } from '@/lib/utils'
 
 interface EventRsvpButtonProps {
   eventId: number | string | null | undefined
@@ -16,6 +16,7 @@ interface EventRsvpButtonProps {
   initialAttendeeCount?: number
   capacity?: number | null
   startTime?: string | null
+  endTime?: string | null
   status?: string | null
   size?: 'sm' | 'md'
   showCount?: boolean
@@ -29,6 +30,7 @@ export function EventRsvpButton({
   initialAttendeeCount = 0,
   capacity,
   startTime,
+  endTime,
   status,
   size = 'sm',
   showCount = true,
@@ -46,26 +48,25 @@ export function EventRsvpButton({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
-  // Sync with server data when available
+  const toggleRsvp = useToggleRsvp()
+
+  // Sync with server data or initial props
   useEffect(() => {
+    if (toggleRsvp.isPending) return
     if (serverRsvp) {
       setIsRegistered(serverRsvp.registered)
       setAttendeeCount(serverRsvp.attendeeCount)
+    } else {
+      setIsRegistered(initialRegistered)
+      setAttendeeCount(initialAttendeeCount)
     }
-  }, [serverRsvp])
+  }, [serverRsvp, initialRegistered, initialAttendeeCount, toggleRsvp.isPending])
 
-  useEffect(() => {
-    setIsRegistered(initialRegistered)
-  }, [initialRegistered])
-
-  useEffect(() => {
-    setAttendeeCount(initialAttendeeCount)
-  }, [initialAttendeeCount])
-
-  const toggleRsvp = useToggleRsvp()
-
-  // Business logic validations
-  const isPast = startTime ? new Date(startTime).getTime() < Date.now() : false
+  // Business logic validations:
+  const hasStarted = startTime ? new Date(startTime).getTime() <= Date.now() : false
+  const isPast = endTime
+    ? new Date(endTime).getTime() < Date.now()
+    : hasStarted
   const isFull = capacity ? attendeeCount >= capacity : false
 
   const executeCancelRsvp = () => {
@@ -123,7 +124,12 @@ export function EventRsvpButton({
     }
 
     if (isPast) {
-      toast.warning('Sự kiện đã kết thúc hoặc đang diễn ra, không thể thay đổi đăng ký.')
+      toast.warning('Sự kiện đã kết thúc, không thể thay đổi đăng ký.')
+      return
+    }
+
+    if (hasStarted) {
+      toast.warning('Sự kiện đã bắt đầu, không thể đăng ký hoặc hủy tham gia.')
       return
     }
 
@@ -165,8 +171,14 @@ export function EventRsvpButton({
     )
   }
 
+  const sizeClasses =
+    size === 'sm'
+      ? 'h-8 px-3 text-xs gap-1.5 rounded-xl font-semibold'
+      : 'h-9 px-4 text-sm gap-2 rounded-xl font-semibold'
+  const iconSize = size === 'sm' ? 13 : 14
+
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`inline-flex items-center gap-2 ${className}`}>
       {showCount && (
         <button
           type="button"
@@ -187,7 +199,12 @@ export function EventRsvpButton({
       )}
 
       {status === 'CANCELLED' ? (
-        <span className="inline-flex items-center rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 border border-rose-200">
+        <span
+          className={cn(
+            'inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600',
+            sizeClasses
+          )}
+        >
           Đã hủy
         </span>
       ) : isPast ? (
@@ -195,34 +212,66 @@ export function EventRsvpButton({
           size={size}
           variant="secondary"
           disabled
-          className="cursor-not-allowed opacity-60 text-xs font-medium bg-slate-100 text-slate-400 border-none"
+          className={cn(
+            'cursor-not-allowed opacity-60 bg-slate-100 text-slate-400 border-none',
+            sizeClasses
+          )}
         >
           Đã kết thúc
         </Button>
+      ) : hasStarted ? (
+        isRegistered ? (
+          <Button
+            size={size}
+            variant="secondary"
+            disabled
+            className={cn(
+              'cursor-not-allowed border-emerald-200 bg-emerald-50 text-emerald-700',
+              sizeClasses
+            )}
+          >
+            <Check size={iconSize} className="text-emerald-600" />
+            <span>Đã đăng ký</span>
+          </Button>
+        ) : (
+          <Button
+            size={size}
+            variant="secondary"
+            disabled
+            className={cn(
+              'cursor-not-allowed opacity-75 bg-slate-100 text-slate-500 border-slate-200',
+              sizeClasses
+            )}
+          >
+            Đã bắt đầu
+          </Button>
+        )
       ) : isRegistered ? (
         <Button
           size={size}
-          variant={isHovered ? 'secondary' : 'secondary'}
+          variant="secondary"
           onClick={handleRsvpClick}
           disabled={toggleRsvp.isPending}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className={`transition-all font-semibold ${
+          className={cn(
+            'transition-all',
+            sizeClasses,
             isHovered
-              ? 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100'
-              : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-          }`}
+              ? 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:border-rose-300'
+              : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300'
+          )}
         >
           {toggleRsvp.isPending ? (
             <>
-              <Loader2 size={14} className="animate-spin" />
+              <Loader2 size={iconSize} className="animate-spin" />
               <span>Đang xử lý...</span>
             </>
           ) : isHovered ? (
             <span>Hủy đăng ký</span>
           ) : (
             <>
-              <Check size={14} className="text-emerald-600" />
+              <Check size={iconSize} className="text-emerald-600" />
               <span>Đã đăng ký</span>
             </>
           )}
@@ -232,7 +281,10 @@ export function EventRsvpButton({
           size={size}
           variant="secondary"
           disabled
-          className="cursor-not-allowed opacity-75 text-xs font-semibold bg-amber-50 text-amber-700 border-amber-200"
+          className={cn(
+            'cursor-not-allowed opacity-80 bg-amber-50 text-amber-700 border-amber-200',
+            sizeClasses
+          )}
         >
           Hết chỗ
         </Button>
@@ -242,16 +294,16 @@ export function EventRsvpButton({
           variant="primary"
           onClick={handleRsvpClick}
           disabled={toggleRsvp.isPending}
-          className="shadow-sm font-semibold transition-all hover:scale-105 active:scale-95"
+          className={cn('shadow-sm transition-all hover:scale-105 active:scale-95', sizeClasses)}
         >
           {toggleRsvp.isPending ? (
             <>
-              <Loader2 size={14} className="animate-spin" />
+              <Loader2 size={iconSize} className="animate-spin" />
               <span>Đang xử lý...</span>
             </>
           ) : (
             <>
-              <CalendarCheck size={14} />
+              <CalendarCheck size={iconSize} />
               <span>Tham gia</span>
             </>
           )}

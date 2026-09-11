@@ -1,16 +1,19 @@
 package com.alumnect.alumnect_backend.mapper.post;
 
-import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
-import com.alumnect.alumnect_backend.entity.post.Post;
-import com.alumnect.alumnect_backend.entity.user.User;
-import com.alumnect.alumnect_backend.entity.user.UserProfile;
-import com.alumnect.alumnect_backend.entity.job.JobPosting;
-import com.alumnect.alumnect_backend.entity.event.Event;
+import com.alumnect.alumnect_backend.common.enums.PostCategory;
 import com.alumnect.alumnect_backend.dto.response.post.JobDTO;
 import com.alumnect.alumnect_backend.dto.response.post.EventDTO;
+import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
+import com.alumnect.alumnect_backend.entity.event.Event;
+import com.alumnect.alumnect_backend.entity.job.JobPosting;
+import com.alumnect.alumnect_backend.entity.post.Post;
+import com.alumnect.alumnect_backend.entity.post.PostMedia;
+import com.alumnect.alumnect_backend.entity.user.User;
+import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +42,7 @@ public class PostMapper {
      * @param event         Thông tin sự kiện (có thể null)
      * @return DTO phẳng khớp schema Zod {@code postSchema} phía Frontend
      */
-    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event) {
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event, boolean isRegistered) {
         User author = post.getAuthor();
 
         // Tên hiển thị & avatar: lấy từ UserProfile nếu có, fallback về email khi hồ sơ chưa được tạo.
@@ -58,7 +61,7 @@ public class PostMapper {
         return PostResponse.builder()
                 .id(String.valueOf(post.getId()))
                 .authorId(author != null && author.getId() != null ? String.valueOf(author.getId()) : null)
-                .type(post.getCategory() == com.alumnect.alumnect_backend.common.enums.PostCategory.GENERAL ? "normal" : post.getCategory().name().toLowerCase())
+                .type(post.getCategory() == PostCategory.GENERAL ? "normal" : post.getCategory().name().toLowerCase())
                 .author(authorName)
                 .role(role)
                 .avatar(avatarUrl != null ? avatarUrl : "")
@@ -67,8 +70,8 @@ public class PostMapper {
                 .text(post.getContent())
                 .images(post.getMediaList() != null
                         ? post.getMediaList().stream()
-                                .sorted(java.util.Comparator.comparingInt(com.alumnect.alumnect_backend.entity.post.PostMedia::getSortOrder))
-                                .map(com.alumnect.alumnect_backend.entity.post.PostMedia::getUrl)
+                                .sorted(Comparator.comparingInt(PostMedia::getSortOrder))
+                                .map(PostMedia::getUrl)
                                 .collect(Collectors.toList())
                         : List.of())
                 .likes(post.getLikeCount())
@@ -98,9 +101,13 @@ public class PostMapper {
                         .capacity(event.getCapacity())
                         .attendeeCount(event.getAttendeeCount())
                         .status(event.getStatus() != null ? event.getStatus() : "ACTIVE")
-                        .isRegistered(false)
+                        .isRegistered(isRegistered)
                         .build() : null)
                 .build();
+    }
+
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event) {
+        return toResponse(post, authorProfile, liked, saved, job, event, false);
     }
 
     /**

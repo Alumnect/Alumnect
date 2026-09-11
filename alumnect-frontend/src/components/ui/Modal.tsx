@@ -60,7 +60,7 @@ export function Modal({
             role="dialog"
             aria-modal="true"
             className={cn(
-              "relative w-full rounded-3xl bg-cream-50 border border-plum-900/5 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]",
+              "relative w-full rounded-3xl bg-white border border-plum-900/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]",
               maxWidthClassName,
               className
             )}

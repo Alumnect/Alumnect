@@ -276,13 +276,6 @@ function SavedFeedCard({
           <MessageCircle size={15} />
           <span>{compact(post.comments)} bình luận</span>
         </Link>
-
-        <Link
-          to={`/app/posts/${post.id}`}
-          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-[#F27024] hover:underline"
-        >
-          Xem chi tiết →
-        </Link>
       </div>
     </Card>
   )

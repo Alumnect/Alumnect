@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,7 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
 
-    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u LEFT JOIN u.profile up LEFT JOIN FETCH p.mediaList " +
+    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u LEFT JOIN u.profile up " +
             "WHERE p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
             "AND (:category IS NULL OR p.category = :category) " +
             "AND (:keyword = '' " +
@@ -34,7 +35,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     @Query("SELECT p FROM Post p JOIN FETCH p.author u LEFT JOIN FETCH p.mediaList WHERE p.id = :id")
     Optional<Post> findDetailById(@Param("id") Long id);
 
-    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u LEFT JOIN FETCH p.mediaList " +
+    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u " +
             "WHERE u.id = :authorId AND p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
             "AND (:category IS NULL OR p.category = :category) " +
             "ORDER BY p.createdAt DESC",
@@ -45,4 +46,20 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
 
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.mediaList WHERE p.eventId IN :eventIds AND p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE")
     List<Post> findActiveByEventIdIn(@Param("eventIds") List<Long> eventIds);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount + 1 WHERE p.id = :id")
+    void incrementLikeCount(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.likeCount = CASE WHEN p.likeCount > 0 THEN p.likeCount - 1 ELSE 0 END WHERE p.id = :id")
+    void decrementLikeCount(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.commentCount = p.commentCount + 1 WHERE p.id = :id")
+    void incrementCommentCount(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.commentCount = CASE WHEN p.commentCount >= :count THEN p.commentCount - :count ELSE 0 END WHERE p.id = :id")
+    void decrementCommentCount(@Param("id") Long id, @Param("count") int count);
 }

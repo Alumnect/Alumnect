@@ -42,7 +42,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { DeleteCommentModal, EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
-import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, type Post } from '@/features/feed'
+import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, PostActionMenu, type Post } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
 import { EventRsvpButton, CancelEventModal, useCancelEvent } from '@/features/event'
 import { useNavigate } from 'react-router-dom'
@@ -272,28 +272,15 @@ function PostDetailCard({
             </p>
             <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>
           </div>
-          {isAuthor && onEdit && onDelete && (
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={onEdit}
-                aria-label="Chỉnh sửa bài viết"
-                title="Chỉnh sửa bài viết"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-3 py-1.5 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-              >
-                <Pencil size={14} /> Chỉnh sửa
-              </button>
-              <button
-                type="button"
-                onClick={onDelete}
-                aria-label="Xóa bài viết"
-                title="Xóa bài viết"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
-              >
-                <Trash2 size={14} /> Xóa
-              </button>
-            </div>
-          )}
+          <PostActionMenu
+            post={post}
+            isAuthor={isAuthor}
+            canInteract={canInteract}
+            onEdit={onEdit ? () => onEdit() : undefined}
+            onDelete={onDelete ? () => onDelete() : undefined}
+            onCancelEvent={onCancelEvent ? () => onCancelEvent() : undefined}
+            onReport={onReport ? () => onReport() : undefined}
+          />
         </div>
 
         {/* Nội dung đầy đủ (không cắt dòng như thẻ ở bảng tin) */}
@@ -415,14 +402,26 @@ function PostDetailCard({
             ) : null}
           </div>
 
-          {post.event.status === 'CANCELLED' && (
-            <div className="mx-6 mt-5 flex items-center gap-2.5 rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm font-medium text-rose-800">
-              <Ban size={18} className="text-rose-600 shrink-0" />
-              <span>Sự kiện này đã bị ban tổ chức hủy bỏ. Toàn bộ danh sách đăng ký tham dự đã bị hủy tự động.</span>
-            </div>
-          )}
-
           <div className="p-6">
+            {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-plum-900">Đăng ký tham gia sự kiện</p>
+              </div>
+              <EventRsvpButton
+                eventId={post.event.id ?? post.eventId}
+                eventTitle={post.event.title}
+                initialRegistered={post.event.isRegistered ?? false}
+                initialAttendeeCount={post.event.attendeeCount ?? 0}
+                capacity={post.event.capacity}
+                startTime={post.event.startTime}
+                endTime={post.event.endTime}
+                status={post.event.status}
+                size="md"
+                showCount={true}
+              />
+            </div>
+
             {/* Thời gian & Địa điểm */}
             <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2">
               {post.event.startTime && (
@@ -467,27 +466,6 @@ function PostDetailCard({
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs">
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-plum-900">Đăng ký tham gia sự kiện (RSVP)</p>
-                <p className="text-xs text-plum-500">
-                  Xác nhận tham gia để nhận thông tin cập nhật và được ban tổ chức đón tiếp chu đáo nhất.
-                </p>
-              </div>
-              <EventRsvpButton
-                eventId={post.event.id ?? post.eventId}
-                eventTitle={post.event.title}
-                initialRegistered={post.event.isRegistered ?? false}
-                initialAttendeeCount={post.event.attendeeCount ?? 0}
-                capacity={post.event.capacity}
-                startTime={post.event.startTime}
-                status={post.event.status}
-                size="md"
-                showCount={true}
-              />
             </div>
 
             {/* Mô tả sự kiện */}

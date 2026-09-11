@@ -64,14 +64,11 @@ export function CancelRsvpModal({
       }
     >
       <div className="space-y-3">
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-amber-900">
-          <AlertTriangle size={18} className="shrink-0 text-amber-600 mt-0.5" />
-          <div className="text-xs leading-5">
-            <p className="font-semibold text-amber-950">Lưu ý về sức chứa</p>
-            <p className="mt-0.5 text-amber-800">
-              Nếu sự kiện có giới hạn số lượng người tham gia, việc hủy đăng ký có thể khiến bạn mất suất tham dự nếu sau này bạn muốn đăng ký lại.
-            </p>
-          </div>
+        <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900">
+          <AlertTriangle size={16} className="shrink-0 text-amber-600" />
+          <p className="text-amber-800">
+            <strong>Lưu ý:</strong> Bạn có thể mất suất tham dự nếu sự kiện hết chỗ khi đăng ký lại.
+          </p>
         </div>
 
         <p className="text-sm leading-relaxed text-plum-700">

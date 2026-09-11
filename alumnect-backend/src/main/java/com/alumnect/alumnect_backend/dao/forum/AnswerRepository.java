@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.entity.forum.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -52,4 +53,12 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "AND a.status = com.alumnect.alumnect_backend.common.enums.AnswerStatus.ACTIVE " +
             "ORDER BY a.createdAt ASC")
     List<Answer> findActiveRepliesByParentIds(@Param("parentIds") List<Long> parentIds);
+
+    @Modifying
+    @Query("UPDATE Answer a SET a.voteCount = a.voteCount + 1 WHERE a.id = :id")
+    void incrementVoteCount(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Answer a SET a.voteCount = CASE WHEN a.voteCount > 0 THEN a.voteCount - 1 ELSE 0 END WHERE a.id = :id")
+    void decrementVoteCount(@Param("id") Long id);
 }

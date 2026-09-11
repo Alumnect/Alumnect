@@ -14,12 +14,17 @@ import {
   Star,
   ExternalLink,
   ChevronRight,
+  SlidersHorizontal,
+  RotateCcw,
+  GraduationCap,
+  BookOpen,
 } from 'lucide-react'
 import { PageHeader, Card, Avatar, Skeleton, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useNavigate } from 'react-router-dom'
 import { useCareerPaths, useCareerPathDetail } from '@/features/careerpath/hooks/useCareerPath'
+import { useMajors } from '@/features/auth/hooks/useAuth'
 import type { CareerPathSummaryResponse, ExperienceTimelineResponse } from '@/features/careerpath/api/careerPathApi'
 import { formatPeriodDate } from '@/utils/date'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -37,15 +42,24 @@ const formatLocationCityOnly = (location?: string | null): string => {
 
 export function CareerPage() {
 
+  const { data: majors = [] } = useMajors()
   const [search, setSearch] = useState('')
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [location, setLocation] = useState('')
   const [cohort, setCohort] = useState<number | ''>('')
-  const [majorId] = useState<number | ''>('')
+  const [majorId, setMajorId] = useState<number | ''>('')
   const [page, setPage] = useState(0)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [mounted, setMounted] = useState(false)
+
+  const activeFilterCount =
+    (title ? 1 : 0) +
+    (company ? 1 : 0) +
+    (location ? 1 : 0) +
+    (cohort !== '' ? 1 : 0) +
+    (majorId !== '' ? 1 : 0)
 
   useEffect(() => {
     setMounted(true)
@@ -109,7 +123,7 @@ export function CareerPage() {
   }, [selectedAlumni, handleKeyDown])
 
   const handleClearFilters = () => {
-    setSearch(''); setTitle(''); setCompany(''); setLocation(''); setCohort(''); setPage(0)
+    setSearch(''); setTitle(''); setCompany(''); setLocation(''); setCohort(''); setMajorId(''); setPage(0)
   }
 
   return (
@@ -120,44 +134,146 @@ export function CareerPage() {
         subtitle="Khám phá hành trình thực tế các cựu sinh viên FPTU đã đi qua để đạt được vị trí hiện tại."
       />
 
-      {/* Filter */}
+      {/* Search & Filter */}
       <Reveal>
-        <Card hover={false} className="mb-6 p-5 border border-plum-900/10 shadow-soft bg-white rounded-3xl">
-          <div className="flex items-center gap-2 text-xs font-bold text-plum-400 uppercase tracking-wider mb-4">
-            <Search size={14} className="text-brand-500" />
-            <span>Bộ lọc nâng cao</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-            {[
-              { ph: 'Tìm tên, chức danh, công ty...', val: search, set: setSearch, type: 'text' },
-              { ph: 'Lọc chức danh công việc...', val: title, set: setTitle, type: 'text' },
-              { ph: 'Lọc công ty / tổ chức...', val: company, set: setCompany, type: 'text' },
-              { ph: 'Lọc thành phố / địa điểm...', val: location, set: setLocation, type: 'text' },
-            ].map(({ ph, val, set, type }) => (
+        <Card hover={false} className="mb-6 p-4 sm:p-5 border border-plum-900/10 shadow-soft bg-white rounded-3xl">
+          {/* Main search bar + Filter toggle button */}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-plum-400" />
               <input
-                key={ph}
-                type={type}
-                placeholder={ph}
-                value={val}
-                onChange={(e) => set(e.target.value)}
-                className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3.5 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                type="text"
+                placeholder="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-12 rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] pl-11 pr-10 text-sm text-plum-900 placeholder:text-plum-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               />
-            ))}
-            <input
-              type="number"
-              placeholder="Lọc khóa học (VD: 14)..."
-              value={cohort}
-              onChange={(e) => setCohort(e.target.value ? Number(e.target.value) : '')}
-              className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3.5 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-            <div className="flex justify-end items-center">
-              {!!(search || title || company || location || cohort) && (
-                <button onClick={handleClearFilters} className="text-xs font-semibold text-plum-500 hover:text-brand-600 transition-colors">
-                  Xóa tất cả bộ lọc
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-plum-400 hover:bg-plum-900/10 hover:text-plum-700 transition-colors"
+                  title="Xóa từ khóa tìm kiếm"
+                >
+                  <X size={15} />
                 </button>
               )}
             </div>
+
+            <Button
+              type="button"
+              variant={showAdvanced || activeFilterCount > 0 ? 'primary' : 'secondary'}
+              size="md"
+              leftIcon={<SlidersHorizontal size={16} />}
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="h-12 px-5 rounded-2xl shrink-0 w-full sm:w-auto flex items-center justify-center gap-2 font-semibold"
+            >
+              <span>Bộ lọc nâng cao</span>
+              {activeFilterCount > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-bold text-brand-600 shadow-sm">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
           </div>
+
+          {/* Advanced collapsible filter section */}
+          <AnimatePresence>
+            {showAdvanced && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-4 pt-4 border-t border-plum-900/10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
+                        <BookOpen size={12} className="text-blue-500" /> Chuyên ngành
+                      </label>
+                      <select
+                        value={majorId}
+                        onChange={(e) => setMajorId(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-2.5 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      >
+                        <option value="">Tất cả chuyên ngành</option>
+                        {majors.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
+                        <Briefcase size={12} className="text-brand-500" /> Chức danh
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Frontend Developer..."
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
+                        <Building2 size={12} className="text-violet-500" /> Công ty
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: FPT Software, VNG..."
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
+                        <MapPin size={12} className="text-emerald-500" /> Địa điểm
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Hà Nội, TP.HCM..."
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
+                        <GraduationCap size={12} className="text-amber-500" /> Khóa học
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="VD: 14, 15, 16..."
+                        value={cohort}
+                        onChange={(e) => setCohort(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-xs text-plum-400">
+                      Kết hợp các tiêu chí để lọc lộ trình chính xác nhất.
+                    </p>
+                    {!!(search || title || company || location || cohort || majorId) && (
+                      <button
+                        type="button"
+                        onClick={handleClearFilters}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors"
+                      >
+                        <RotateCcw size={12} /> Xóa tất cả bộ lọc
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Card>
       </Reveal>
 

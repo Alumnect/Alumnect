@@ -463,7 +463,7 @@ export function ExperienceFormModal({
                     disabled={loading}
                     className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
                   />
-                  <span className="text-sm font-semibold text-plum-700">Công việc chính (Primary)</span>
+                  <span className="text-sm font-semibold text-plum-700">Công việc chính</span>
                 </label>
               )}
             </div>

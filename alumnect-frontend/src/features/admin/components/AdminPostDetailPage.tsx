@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Repeat, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Inbox } from 'lucide-react'
+import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Inbox, Trash2 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel, Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -295,10 +295,6 @@ export default function AdminPostDetailPage() {
                   <MessageSquare size={16} className="text-plum-400" />
                   <span>{post.commentCount} bình luận</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs font-medium">
-                  <Repeat size={16} className="text-plum-400" />
-                  <span>{post.repostCount} đăng lại</span>
-                </div>
               </div>
             </Card>
           </Reveal>
@@ -319,7 +315,14 @@ export default function AdminPostDetailPage() {
                     Trạng thái hiển thị
                   </label>
                   <div className="flex items-center gap-2">
-                    {post.hidden ? (
+                    {post.deleted ? (
+                      <>
+                        <Trash2 size={16} className="text-rose-500" />
+                        <span className="text-sm font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                          Đã xóa
+                        </span>
+                      </>
+                    ) : post.hidden ? (
                       <>
                         <EyeOff size={16} className="text-red-500" />
                         <span className="text-sm font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
@@ -365,39 +368,37 @@ export default function AdminPostDetailPage() {
               </div>
 
               {/* Nút hành động */}
-              <div className="mt-6 border-t border-plum-900/5 pt-4">
-                <Button
-                  onClick={() => setShowConfirmModal(true)}
-                  disabled={toggleMutation.isPending}
-                  className={`w-full justify-center gap-2 text-xs font-bold transition-all shadow-sm ${
-                    post.hidden
-                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                      : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-                  }`}
-                >
-                  {post.hidden ? (
-                    <>
-                      <Eye size={14} />
-                      Mở ẩn bài viết
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff size={14} />
-                      Ẩn bài viết vi phạm
-                    </>
-                  )}
-                </Button>
-
-                {/* Cảnh báo kiểm duyệt */}
-                {!post.hidden && (
-                  <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-[11px] text-amber-800 border border-amber-100">
-                    <ShieldAlert size={14} className="mt-0.5 shrink-0 text-amber-600" />
-                    <p className="leading-normal">
-                      Nếu phát hiện bài viết này chứa nội dung vi phạm tiêu chuẩn cộng đồng, nhấp nút ẩn phía trên để gỡ bỏ bài viết khỏi bảng tin lập tức.
-                    </p>
+              {!post.deleted ? (
+                <div className="mt-6 border-t border-plum-900/5 pt-4">
+                  <Button
+                    onClick={() => setShowConfirmModal(true)}
+                    disabled={toggleMutation.isPending}
+                    className={`w-full justify-center gap-2 text-xs font-bold transition-all shadow-sm ${
+                      post.hidden
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                    }`}
+                  >
+                    {post.hidden ? (
+                      <>
+                        <Eye size={14} />
+                        Mở ẩn bài viết
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff size={14} />
+                        Ẩn bài viết vi phạm
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="mt-6 border-t border-plum-900/5 pt-4">
+                  <div className="rounded-xl bg-rose-50 border border-rose-200/60 p-3 text-center text-xs font-semibold text-rose-700">
+                    Bài viết này đã bị xóa khỏi hệ thống
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </Card>
           </Reveal>
         </div>

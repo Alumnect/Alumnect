@@ -155,7 +155,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
     if (cohort) {
       if (cohort < 1 || cohort > 50) {
-        setValidationError('Khóa học (Cohort) không hợp lệ (nhập số từ 1 đến 50)')
+        setValidationError('Khóa học không hợp lệ (nhập số từ 1 đến 50)')
         return
       }
     }
@@ -314,7 +314,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
               <div>
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Cơ sở đào tạo (Campus)
+                  Cơ sở đào tạo
                 </label>
                 <select
                   value={campus}
@@ -333,7 +333,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
               <div>
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Chuyên ngành học (Major)
+                  Chuyên ngành học
                 </label>
                 <select
                   value={majorId || ''}
@@ -353,7 +353,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                    Khóa học (Cohort)
+                    Khóa học
                   </label>
                   <input
                     type="number"

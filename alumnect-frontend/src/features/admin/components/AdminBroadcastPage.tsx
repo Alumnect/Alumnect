@@ -15,7 +15,7 @@ import {
   Archive,
   Hourglass,
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -28,34 +28,34 @@ import type { SystemNotificationDto, SystemNotificationStatus } from '../api/adm
 import { CreateNotificationModal } from './CreateNotificationModal'
 
 const DURATION_LABELS: Record<string, string> = {
-  ONE_DAY: '1 Ngày',
-  ONE_WEEK: '1 Tuần',
-  ONE_MONTH: '1 Tháng',
-  ONE_YEAR: '1 Năm',
-  FOREVER: 'Vĩnh viễn (Không thời hạn)',
-  CUSTOM: 'Tùy chỉnh (Custom)',
+  ONE_DAY: '1 ngày',
+  ONE_WEEK: '1 tuần',
+  ONE_MONTH: '1 tháng',
+  ONE_YEAR: '1 năm',
+  FOREVER: 'Vĩnh viễn',
+  CUSTOM: 'Tùy chỉnh',
 }
 
 const STATUS_CONFIG: Record<
   string,
   { label: string; tone: 'success' | 'gold' | 'danger' | 'neutral' }
 > = {
-  SENT: { label: 'Đang hoạt động (ACTIVE)', tone: 'success' },
-  ACTIVE: { label: 'Đang hoạt động (ACTIVE)', tone: 'success' },
-  SCHEDULED: { label: 'Đang hẹn giờ (SCHEDULED)', tone: 'gold' },
-  SENDING: { label: 'Đang phát sóng (SENDING)', tone: 'gold' },
-  EXPIRED: { label: 'Đã hết hạn (EXPIRED)', tone: 'neutral' },
-  ARCHIVED: { label: 'Đã lưu trữ (ARCHIVED)', tone: 'neutral' },
-  CANCELLED: { label: 'Đã hủy lịch (CANCELLED)', tone: 'danger' },
-  DRAFT: { label: 'Bản nháp (DRAFT)', tone: 'neutral' },
+  SENT: { label: 'Đang hoạt động', tone: 'success' },
+  ACTIVE: { label: 'Đang hoạt động', tone: 'success' },
+  SCHEDULED: { label: 'Đang hẹn giờ', tone: 'gold' },
+  SENDING: { label: 'Đang gửi', tone: 'gold' },
+  EXPIRED: { label: 'Đã hết hạn', tone: 'neutral' },
+  ARCHIVED: { label: 'Đã lưu trữ', tone: 'neutral' },
+  CANCELLED: { label: 'Đã hủy lịch', tone: 'danger' },
+  DRAFT: { label: 'Bản nháp', tone: 'neutral' },
 }
 
 const STATUS_TABS: { label: string; value: SystemNotificationStatus | '' }[] = [
-  { label: 'Tất cả [All]', value: '' },
-  { label: 'Đang hẹn giờ [Scheduled]', value: 'SCHEDULED' },
-  { label: 'Đang hoạt động [Active]', value: 'ACTIVE' },
-  { label: 'Đã hết hạn [Expired]', value: 'EXPIRED' },
-  { label: 'Kho lưu trữ [Archived]', value: 'ARCHIVED' },
+  { label: 'Tất cả', value: '' },
+  { label: 'Đang hẹn giờ', value: 'SCHEDULED' },
+  { label: 'Đang hoạt động', value: 'ACTIVE' },
+  { label: 'Đã hết hạn', value: 'EXPIRED' },
+  { label: 'Kho lưu trữ', value: 'ARCHIVED' },
 ]
 
 const TIME_TABS = [
@@ -121,7 +121,7 @@ export function AdminBroadcastPage() {
   const handleArchive = async (id: number) => {
     try {
       await archiveMutation.mutateAsync(id)
-      toast.success('Đã lưu trữ thông báo vào kho lưu trữ (Archived) thành công!')
+      toast.success('Đã lưu trữ thông báo vào kho lưu trữ thành công!')
       setArchiveTargetId(null)
       if (detailItem?.id === id) {
         setDetailItem(null)
@@ -135,7 +135,7 @@ export function AdminBroadcastPage() {
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Quản lý thông báo hệ thống"
-        subtitle="Hẹn giờ phát sóng (Schedule), kiểm soát thời hạn hiệu lực (Expiration) và quản lý lưu trữ (Archive) độc lập."
+        subtitle="Hẹn giờ thông báo, kiểm soát thời hạn hiệu lực và quản lý kho lưu trữ độc lập."
         actions={
           <Button
             onClick={() => setIsCreateModalOpen(true)}
@@ -272,16 +272,16 @@ export function AdminBroadcastPage() {
                                 item.recipientRole === 'STUDENT'
                                   ? 'brand'
                                   : item.recipientRole === 'ALUMNI'
-                                  ? 'gold'
-                                  : 'neutral'
+                                    ? 'gold'
+                                    : 'neutral'
                               }
                               className="px-2.5 py-0.5 text-xs font-bold self-start"
                             >
                               {item.recipientRole === 'STUDENT'
                                 ? 'Sinh viên'
                                 : item.recipientRole === 'ALUMNI'
-                                ? 'Cựu sinh viên'
-                                : 'Quản trị viên'}
+                                  ? 'Cựu sinh viên'
+                                  : 'Quản trị viên'}
                             </Badge>
                           </div>
                         ) : (
@@ -308,10 +308,10 @@ export function AdminBroadcastPage() {
                             item.status === 'SCHEDULED' || item.status === 'SENDING'
                               ? 'gold'
                               : item.status === 'SENT' || item.status === 'ACTIVE'
-                              ? 'success'
-                              : item.status === 'EXPIRED' || item.status === 'ARCHIVED'
-                              ? 'neutral'
-                              : 'danger'
+                                ? 'success'
+                                : item.status === 'EXPIRED' || item.status === 'ARCHIVED'
+                                  ? 'neutral'
+                                  : 'danger'
                           }
                           className="px-2.5 py-0.5 text-xs font-bold"
                         >
@@ -336,7 +336,7 @@ export function AdminBroadcastPage() {
                           <div className="text-plum-400">
                             <span>Hết hạn: </span>
                             {item.durationType === 'FOREVER' || !item.expiresAt ? (
-                              <span className="font-semibold text-plum-500">Vĩnh viễn (Never)</span>
+                              <span className="font-semibold text-plum-500">Vĩnh viễn</span>
                             ) : (
                               <span>[{formatDateTime(item.expiresAt)}]</span>
                             )}
@@ -349,7 +349,7 @@ export function AdminBroadcastPage() {
                         </div>
                       </td>
 
-                      {/* Thao tác chuẩn Section 10 */}
+                      {/* Thao tác */}
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {/* View - có cho mọi status */}
@@ -383,7 +383,7 @@ export function AdminBroadcastPage() {
                               size="sm"
                               onClick={() => setArchiveTargetId(item.id)}
                               className="h-8 px-2 text-xs font-bold border border-plum-900/15 bg-plum-900/[0.03] text-plum-700 hover:bg-plum-900/[0.07]"
-                              title="Lưu trữ thông báo (Archive)"
+                              title="Lưu trữ thông báo"
                             >
                               <Archive size={13} />
                             </Button>
@@ -397,32 +397,11 @@ export function AdminBroadcastPage() {
             </Card>
 
             {/* Phân trang chuẩn */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-2 py-2">
-                <p className="text-xs text-plum-500">
-                  Hiển thị trang <strong className="text-plum-900">{page + 1}</strong> /{' '}
-                  <strong className="text-plum-900">{totalPages}</strong>
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  >
-                    Trước
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </Reveal>
@@ -446,23 +425,23 @@ export function AdminBroadcastPage() {
             className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-white max-h-[90vh] flex flex-col pop"
           >
             {/* Header Modal */}
-            <div className="relative bg-gradient-to-r from-brand-500 via-brand-600 to-gold-500 p-5 text-white flex items-center justify-between shrink-0 shadow-md">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white rounded-t-3xl shrink-0">
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/20 backdrop-blur-md ring-1 ring-white/30">
-                  <Megaphone size={20} className="text-white" />
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-600 border border-brand-100">
+                  <Megaphone size={20} />
                 </span>
                 <div>
-                  <h3 className="text-lg font-black tracking-tight text-white leading-tight">
+                  <h3 className="text-lg font-bold text-plum-900 tracking-tight leading-tight">
                     Chi tiết thông báo hệ thống
                   </h3>
-                  <p className="text-xs text-brand-100 font-medium mt-0.5">
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
                     Mã #{detailItem.id} · Tạo lúc {formatDateTime(detailItem.createdAt)}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setDetailItem(null)}
-                className="rounded-full hover:bg-white/20 p-1.5 transition-colors text-white cursor-pointer"
+                className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
                 title="Đóng cửa sổ"
               >
                 <X size={18} />
@@ -520,15 +499,27 @@ export function AdminBroadcastPage() {
                           detailItem.recipientRole === 'STUDENT'
                             ? 'brand'
                             : detailItem.recipientRole === 'ALUMNI'
-                            ? 'gold'
-                            : 'neutral'
+                              ? 'gold'
+                              : 'neutral'
                         }
                         className="text-xs font-bold"
                       >
-                        Nhóm: {detailItem.recipientRole}
+                        Nhóm: {
+                          detailItem.recipientRole === 'STUDENT'
+                            ? 'Sinh viên'
+                            : detailItem.recipientRole === 'ALUMNI'
+                              ? 'Cựu sinh viên'
+                              : 'Quản trị viên'
+                        }
                       </Badge>
                       <p className="text-xs text-plum-500 mt-1">
-                        Gửi tới tất cả {detailItem.recipientRole?.toLowerCase()} trong hệ thống
+                        Gửi tới tất cả {
+                          detailItem.recipientRole === 'STUDENT'
+                            ? 'sinh viên'
+                            : detailItem.recipientRole === 'ALUMNI'
+                              ? 'cựu sinh viên'
+                              : 'quản trị viên'
+                        } trong hệ thống
                       </p>
                     </div>
                   ) : (
@@ -553,7 +544,7 @@ export function AdminBroadcastPage() {
                 {/* Thời hạn hiệu lực */}
                 <div className="p-4 rounded-2xl bg-plum-900/[0.02] border border-plum-900/8 space-y-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 flex items-center gap-1.5">
-                    <Hourglass size={14} className="text-gold-500" /> Thời hạn hiệu lực (Expiration)
+                    <Hourglass size={14} className="text-gold-500" /> Thời hạn hiệu lực
                   </span>
                   <div>
                     <span className="text-sm font-bold text-plum-900 block">
@@ -562,7 +553,7 @@ export function AdminBroadcastPage() {
                     <p className="text-xs text-plum-500 mt-1">
                       {detailItem.expiresAt
                         ? `Hết hiệu lực: ${formatDateTime(detailItem.expiresAt)}`
-                        : 'Thông báo duy trì vĩnh viễn không hết hạn (Never expires)'}
+                        : 'Thông báo duy trì vĩnh viễn không giới hạn thời gian'}
                     </p>
                   </div>
                 </div>
@@ -615,7 +606,7 @@ export function AdminBroadcastPage() {
                   <div className="flex items-center gap-3 pt-0.5">
                     <Avatar
                       src={detailItem.createdBy?.avatarUrl}
-                      name={detailItem.createdBy?.fullName || 'Admin'}
+                      name={detailItem.createdBy?.fullName || 'Quản trị viên'}
                       size={36}
                     />
                     <div className="min-w-0 flex-1">
@@ -657,7 +648,7 @@ export function AdminBroadcastPage() {
                     className="font-bold bg-plum-900/5 hover:bg-plum-900/10 text-plum-800"
                     leftIcon={<Archive size={15} />}
                   >
-                    Lưu trữ thông báo (Archive)
+                    Lưu trữ thông báo
                   </Button>
                 )}
               </div>
@@ -680,7 +671,7 @@ export function AdminBroadcastPage() {
           <Card hover={false} className="relative z-10 w-full max-w-sm bg-white p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
             <h3 className="text-base font-bold text-plum-950">Xác nhận hủy thông báo hẹn giờ?</h3>
             <p className="text-xs text-plum-500 mt-2 leading-relaxed">
-              Thông báo này sẽ không được phát hành tự động nữa. Trạng thái sẽ chuyển sang ĐÃ HỦY (CANCELLED).
+              Thông báo này sẽ không được phát hành tự động nữa. Trạng thái sẽ chuyển sang ĐÃ HỦY.
             </p>
             <div className="mt-5 flex justify-end gap-2.5">
               <Button variant="secondary" size="sm" onClick={() => setCancelTargetId(null)}>
@@ -716,8 +707,7 @@ export function AdminBroadcastPage() {
               <h3 className="text-base font-bold text-plum-950">Lưu trữ thông báo?</h3>
             </div>
             <p className="text-xs text-plum-600 mt-2 leading-relaxed">
-              Thông báo sẽ được chuyển vào mục <strong>Kho lưu trữ (Archived)</strong> và không còn hiển thị trong danh sách thông báo đang hoạt động.
-              Dữ liệu lịch sử vẫn được bảo toàn nguyên vẹn trong hệ thống.
+              Thông báo sẽ được chuyển vào <strong>Kho lưu trữ</strong> và ngừng hiển thị.
             </p>
             <div className="mt-5 flex justify-end gap-2.5">
               <Button variant="secondary" size="sm" onClick={() => setArchiveTargetId(null)}>

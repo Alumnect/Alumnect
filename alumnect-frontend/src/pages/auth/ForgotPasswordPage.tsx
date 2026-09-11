@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Loader2, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react'
+import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Loader2, ArrowRight, Eye, EyeOff, Sparkles, ShieldCheck } from 'lucide-react'
 import {
   AuthScaffold,
   Field,
@@ -15,6 +16,7 @@ import {
 } from '@/features/auth'
 import type { ForgotInput, OtpFormInput, PasswordFormInput } from '@/features/auth'
 import { Button } from '@/components/ui/Button'
+import { toast } from '@/components/ui'
 
 export function ForgotPasswordPage() {
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email')
@@ -25,11 +27,24 @@ export function ForgotPasswordPage() {
   const [cooldown, setCooldown] = useState(300)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [isResetSuccess, setIsResetSuccess] = useState(false)
+  const [resetCountdown, setResetCountdown] = useState(3)
 
   const forgotM = useForgotPassword()
   const verifyOtpM = useVerifyResetOtp()
   const resetPasswordM = useResetPassword()
   const navigate = useNavigate()
+
+  // Đếm ngược chuyển trang khi đổi mật khẩu thành công
+  useEffect(() => {
+    if (!isResetSuccess) return
+    if (resetCountdown <= 0) {
+      navigate('/login')
+      return
+    }
+    const timer = setTimeout(() => setResetCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [isResetSuccess, resetCountdown, navigate])
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -121,6 +136,7 @@ export function ForgotPasswordPage() {
       setCooldown(300)
 
       setSuccessMsg(res.message)
+      toast.success(res.message || 'Đã gửi mã OTP đến email của bạn!')
       changeStep('otp')
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi gửi yêu cầu khôi phục mật khẩu')
@@ -138,6 +154,7 @@ export function ForgotPasswordPage() {
       setOtp(data.otp.trim())
       localStorage.setItem('forgot_password_otp', data.otp.trim())
       setSuccessMsg(res.message)
+      toast.success('Xác thực mã OTP thành công!')
       changeStep('password')
     } catch (err: any) {
       setErrorMsg(err.message || 'Mã xác thực không hợp lệ')
@@ -158,10 +175,10 @@ export function ForgotPasswordPage() {
         newPassword: data.newPassword,
       })
       setSuccessMsg(res.message || 'Đặt lại mật khẩu thành công!')
+      setIsResetSuccess(true)
+      setResetCountdown(3)
       clearLocalStorage()
-      setTimeout(() => {
-        navigate('/login')
-      }, 3000)
+      toast.success('Đặt lại mật khẩu thành công!')
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi đặt lại mật khẩu')
     }
@@ -173,6 +190,7 @@ export function ForgotPasswordPage() {
     try {
       const res = await forgotM.mutateAsync({ email })
       setSuccessMsg(res.message)
+      toast.success('Đã gửi lại mã OTP mới đến email!')
 
       const expiry = Date.now() + 300000 // 5 minutes
       localStorage.setItem('forgot_password_cooldown_expiry', expiry.toString())
@@ -313,80 +331,129 @@ export function ForgotPasswordPage() {
       )}
 
       {step === 'password' && (
-        <div className="animate-pop">
-          <div className="flex items-center gap-2">
-            <Sparkles size={20} className="text-brand-500 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Bước cuối cùng</span>
-          </div>
-
-          <h2 className="mt-1 text-3xl font-extrabold text-plum-900 tracking-tight">Thiết lập mật khẩu mới</h2>
-          <p className="mt-2 text-sm text-plum-500 leading-relaxed">
-            Xác thực OTP thành công. Vui lòng nhập mật khẩu mới của bạn dưới đây.
-          </p>
-
-          {errorMsg && (
-            <div className="mt-4 rounded-xl bg-coral-50 border border-coral-200/50 p-3 text-xs text-coral-600 flex items-start gap-2">
-              <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
+        isResetSuccess ? (
+          <div className="animate-pop text-center py-4 space-y-6">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-inner">
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: [1.25, 1], opacity: 1 }}
+                transition={{ duration: 0.45, type: 'spring', bounce: 0.55 }}
+              >
+                <CheckCircle2 size={46} className="text-emerald-500" />
+              </motion.div>
             </div>
-          )}
 
-          {successMsg && (
-            <div className="mt-4 rounded-xl bg-mint-50 border border-mint-200/50 p-3 text-xs text-mint-700 flex items-start gap-2">
-              <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
-              <span>{successMsg}</span>
+            <div>
+              <h2 className="text-2xl font-extrabold text-plum-900 tracking-tight">
+                Đặt lại mật khẩu thành công!
+              </h2>
+              <p className="mt-2 text-sm text-plum-600 leading-relaxed max-w-sm mx-auto">
+                Mật khẩu mới của bạn đã được cập nhật an toàn. Vui lòng đăng nhập bằng mật khẩu mới.
+              </p>
             </div>
-          )}
 
-          <form className="mt-6 space-y-4" onSubmit={handleSubmitPassword(handleResetPassword)} noValidate>
-            <Field
-              label="Mật khẩu mới"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
-              trailing={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
-                  aria-label="Ẩn/hiện mật khẩu"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              }
-              error={passwordErrors.newPassword?.message}
-              {...registerPassword('newPassword')}
-            />
+            {/* Khối loading chuyển trang kèm thanh tiến trình */}
+            <div className="rounded-2xl bg-cream-100 p-4 border border-plum-900/[0.06] text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 text-xs font-semibold text-plum-600">
+                <Loader2 size={15} className="animate-spin text-brand-600" />
+                <span>
+                  Đang chuyển hướng về trang Đăng nhập trong{' '}
+                  <strong className="text-brand-600 font-bold">{resetCountdown}s</strong>...
+                </span>
+              </div>
 
-            <Field
-              label="Xác nhận mật khẩu mới"
-              type={showConfirmPassword ? 'text' : 'password'}
-              placeholder="Nhập lại mật khẩu mới"
-              trailing={
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
-                  aria-label="Ẩn/hiện mật khẩu"
-                >
-                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              }
-              error={passwordErrors.confirmPassword?.message}
-              {...registerPassword('confirmPassword')}
-            />
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-plum-900/[0.08]">
+                <motion.div
+                  className="h-full bg-brand-500 rounded-full"
+                  initial={{ width: '100%' }}
+                  animate={{ width: `${(resetCountdown / 3) * 100}%` }}
+                  transition={{ duration: 1, ease: 'linear' }}
+                />
+              </div>
+            </div>
 
             <Button
-              type="submit"
+              type="button"
               variant="primary"
               size="lg"
-              className="w-full mt-4"
-              disabled={resetPasswordM.isPending}
-              rightIcon={resetPasswordM.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
+              onClick={() => navigate('/login')}
+              className="w-full"
+              rightIcon={<ArrowRight size={18} />}
             >
-              {resetPasswordM.isPending ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
+              Đăng nhập ngay
             </Button>
-          </form>
-        </div>
+          </div>
+        ) : (
+          <div className="animate-pop">
+            <div className="flex items-center gap-2">
+              <Sparkles size={20} className="text-brand-500 animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Bước cuối cùng</span>
+            </div>
+
+            <h2 className="mt-1 text-3xl font-extrabold text-plum-900 tracking-tight">Thiết lập mật khẩu mới</h2>
+            <p className="mt-2 text-sm text-plum-500 leading-relaxed">
+              Xác thực OTP thành công. Vui lòng nhập mật khẩu mới của bạn dưới đây.
+            </p>
+
+            {errorMsg && (
+              <div className="mt-4 rounded-xl bg-coral-50 border border-coral-200/50 p-3 text-xs text-coral-600 flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            <form className="mt-6 space-y-4" onSubmit={handleSubmitPassword(handleResetPassword)} noValidate>
+              <Field
+                label="Mật khẩu mới"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
+                disabled={resetPasswordM.isPending}
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+                    aria-label="Ẩn/hiện mật khẩu"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                }
+                error={passwordErrors.newPassword?.message}
+                {...registerPassword('newPassword')}
+              />
+
+              <Field
+                label="Xác nhận mật khẩu mới"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Nhập lại mật khẩu mới"
+                disabled={resetPasswordM.isPending}
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+                    aria-label="Ẩn/hiện mật khẩu"
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                }
+                error={passwordErrors.confirmPassword?.message}
+                {...registerPassword('confirmPassword')}
+              />
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full mt-4"
+                disabled={resetPasswordM.isPending}
+                rightIcon={resetPasswordM.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
+              >
+                {resetPasswordM.isPending ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
+              </Button>
+            </form>
+          </div>
+        )
       )}
     </AuthScaffold>
   )

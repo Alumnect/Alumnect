@@ -11,11 +11,16 @@ export function useDeletePost() {
   return useMutation({
     mutationFn: (postId: string) => feedApi.deletePost(postId),
     onSuccess: (_, deletedPostId) => {
-      // Làm mới dữ liệu bảng tin để loại bỏ bài viết bị xóa khỏi UI ngay lập tức
+      // Invalidate tất cả các queries liên quan để đồng bộ cache UI tức thì
       queryClient.invalidateQueries({ queryKey: ['feed'] })
-
-      // Nếu đang xem chi tiết bài viết, làm mới cache của bài viết đó (mặc dù nó sẽ trả về 404 sau khi xóa)
-      queryClient.invalidateQueries({ queryKey: ['post', deletedPostId] })
+      queryClient.invalidateQueries({ queryKey: ['post'] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['savedPosts'] })
+      queryClient.invalidateQueries({ queryKey: ['userPosts'] })
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event-history'] })
+      queryClient.invalidateQueries({ queryKey: ['upcoming-events'] })
+      queryClient.removeQueries({ queryKey: ['post', deletedPostId] })
     },
   })
 }

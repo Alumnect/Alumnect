@@ -1,6 +1,9 @@
 package com.alumnect.alumnect_backend.service.event;
 
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
 
 import java.util.List;
@@ -41,13 +44,13 @@ public interface EventService {
      * Hủy sự kiện (UC27 - Cancel an event).
      * Chỉ dành cho ALUMNI là người tổ chức (organizer).
      */
-    com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse cancelEvent(Long eventId, String email);
+    EventCancelResponse cancelEvent(Long eventId, String email);
 
     /**
      * Lấy lịch sử tham gia sự kiện của người dùng (UC28 - View attended-event history).
      * Chỉ dành cho STUDENT và ALUMNI.
      */
-    com.alumnect.alumnect_backend.common.api.PageResponse<com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse> getEventHistory(
+    PageResponse<EventHistoryResponse> getEventHistory(
             String email, int page, int size, String filter);
 }
 

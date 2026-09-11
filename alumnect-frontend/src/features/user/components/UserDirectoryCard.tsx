@@ -4,7 +4,7 @@ import { MapPin, Briefcase, GraduationCap, MessageCircle, UserPlus, UserCheck, L
 import { Avatar, Badge, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { TiltCard } from '@/components/motion'
-import { compact } from '@/lib/utils'
+import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { useFollowUser, useUnfollowUser } from '../hooks/useUserMutations'
@@ -183,14 +183,17 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
               <>
                 <Button
                   size="sm"
-                  variant={isFollowingLocal ? 'secondary' : 'primary'}
-                  className="flex-1 text-xs font-semibold"
+                  variant={isFollowingLocal ? 'secondary' : 'outline'}
+                  className={cn(
+                    'flex-1 text-xs font-semibold transition-all duration-200',
+                    !isFollowingLocal && 'text-[#F27024] border-[#F27024]/40 bg-[#F27024]/5 hover:bg-[#F27024] hover:text-white shadow-xs'
+                  )}
                   disabled={isPending}
                   leftIcon={
                     isPending ? (
                       <Loader2 size={13} className="animate-spin" />
                     ) : isFollowingLocal ? (
-                      <UserCheck size={13} />
+                      <UserCheck size={13} className="text-emerald-600" />
                     ) : (
                       <UserPlus size={13} />
                     )
@@ -203,7 +206,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="border border-plum-900/10 text-xs px-2.5 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 transition-colors"
+                  className="border border-slate-200/90 text-slate-600 text-xs px-2.5 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 transition-colors"
                   onClick={handleMessage}
                   title="Nhắn tin"
                 >

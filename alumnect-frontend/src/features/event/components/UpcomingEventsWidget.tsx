@@ -12,26 +12,25 @@ interface UpcomingEventsWidgetProps {
 }
 
 export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWidgetProps) {
-  const { data, isLoading, isError } = useFeed('event')
+  const { data, isLoading, isError } = useFeed('event', '', limit, 'upcoming')
 
   const events = useMemo(() => {
     const allPosts = data?.pages.flatMap((page) => page.items) || []
     const now = Date.now()
 
-    // Filter posts that have event metadata
-    const eventPosts = allPosts.filter((post) => post.event && post.event.id)
+    // Filter posts that have valid event metadata, not cancelled, and not started yet
+    const eventPosts = allPosts.filter((post) => {
+      const evt = post.event
+      if (!evt || !evt.id || !evt.startTime) return false
+      if (evt.status === 'CANCELLED') return false
+      const startTime = new Date(evt.startTime).getTime()
+      return startTime >= now
+    })
 
     // Sort: upcoming events first, then by earliest startTime
     const sorted = [...eventPosts].sort((a, b) => {
       const timeA = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0
       const timeB = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0
-
-      // Put future events before past events
-      const isFutureA = timeA >= now
-      const isFutureB = timeB >= now
-      if (isFutureA && !isFutureB) return -1
-      if (!isFutureA && isFutureB) return 1
-
       return timeA - timeB
     })
 
@@ -118,11 +117,11 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
           return (
             <li
               key={post.id}
-              className="group flex items-start gap-3 rounded-xl p-1.5 -mx-1.5 transition-colors hover:bg-plum-900/[0.03]"
+              className="group/event flex items-start gap-3 rounded-xl p-1.5 -mx-1.5 transition-colors hover:bg-plum-900/[0.03]"
             >
               <Link
                 to={`/app/posts/${post.id}`}
-                className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-plum-900/[0.04] py-1.5 text-center ring-1 ring-inset ring-plum-900/10 transition-colors group-hover:bg-brand-50 group-hover:ring-brand-200"
+                className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-plum-900/[0.04] py-1.5 text-center ring-1 ring-inset ring-plum-900/10 transition-colors group-hover/event:bg-brand-50 group-hover/event:ring-brand-200"
                 title={`Xem chi tiết ${eventTitle}`}
               >
                 <span className="text-[10px] font-bold uppercase text-brand-600">
@@ -136,7 +135,7 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
               <div className="min-w-0 flex-1">
                 <Link
                   to={`/app/posts/${post.id}`}
-                  className="block truncate text-sm font-semibold text-plum-900 group-hover:text-brand-600 transition-colors"
+                  className="block truncate text-sm font-semibold text-plum-900 group-hover/event:text-brand-600 transition-colors"
                   title={eventTitle}
                 >
                   {eventTitle}
@@ -166,6 +165,7 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
                   initialAttendeeCount={event.attendeeCount}
                   capacity={event.capacity}
                   startTime={event.startTime}
+                  endTime={event.endTime}
                   size="sm"
                   showCount={false}
                 />

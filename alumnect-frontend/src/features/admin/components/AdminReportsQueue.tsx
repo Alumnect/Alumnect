@@ -7,7 +7,7 @@ import {
   Trash2, Info, UserX, HelpCircle,
   Search, User
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -570,29 +570,11 @@ export function AdminReportsQueue() {
             </Card>
 
             {/* Phân trang */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
-                <Button
-                  variant="secondary"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
-                  size="sm"
-                >
-                  Trước
-                </Button>
-                <span className="flex items-center px-4 text-xs font-bold text-plum-600">
-                  Trang {page + 1} / {totalPages}
-                </span>
-                <Button
-                  variant="secondary"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => p + 1)}
-                  size="sm"
-                >
-                  Sau
-                </Button>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </Reveal>
@@ -611,19 +593,20 @@ export function AdminReportsQueue() {
           <Card hover={false} className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-white max-h-[90vh] flex flex-col pop">
             
             {/* Header Modal */}
-            <div className="relative bg-gradient-to-r from-brand-500 to-violet-500 p-5 text-white flex items-center justify-between shrink-0 shadow-md">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white rounded-t-3xl shrink-0">
               <div className="flex items-center gap-3">
-                <div className="rounded-full bg-white/20 p-2 border border-white/25">
-                  <Flag size={20} className="text-white" />
+                <div className="rounded-xl bg-red-50 p-2.5 border border-red-100 text-red-600">
+                  <Flag size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white leading-none">Chi tiết báo cáo vi phạm</h3>
-                  <p className="text-xs text-brand-50 mt-1 font-medium">Báo cáo #{selectedReport.id}</p>
+                  <h3 className="text-lg font-bold text-plum-900 leading-none">Chi tiết báo cáo vi phạm</h3>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">Báo cáo #{selectedReport.id}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedReport(null)}
-                className="rounded-full hover:bg-white/20 p-1.5 transition-colors border border-transparent hover:border-white/10 text-white cursor-pointer"
+                className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
+                title="Đóng cửa sổ"
               >
                 <X size={18} />
               </button>

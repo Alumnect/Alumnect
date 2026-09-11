@@ -12,6 +12,7 @@ import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -38,7 +39,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final UserProfileRepository userProfileRepository;
-    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+    private final NotificationService notificationService;
 
     /**
      * Thực hiện theo dõi một người dùng.

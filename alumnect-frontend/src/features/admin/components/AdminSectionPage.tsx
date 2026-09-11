@@ -4,7 +4,7 @@ import {
   Inbox, Loader2, CheckCircle2, 
   Eye, X, MessageSquare, AlertTriangle, FileImage
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, ImageViewerModal } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, ImageViewerModal, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -304,31 +304,11 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
             </Card>
 
             {/* Phân trang */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-2 py-2">
-                <p className="text-xs text-plum-500">
-                  Hiển thị trang <strong className="text-plum-900">{page + 1}</strong> / <strong className="text-plum-900">{totalPages}</strong>
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  >
-                    Trước
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </Reveal>
@@ -343,11 +323,12 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
               onClick={() => setDetailReq(null)}
             />
             <Card hover={false} className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl pop">
-              {/* Banner Header - FPT Corporate Orange-Gold Gradient */}
-              <div className="relative bg-gradient-to-r from-brand-500 via-brand-600 to-gold-500 p-6 text-white rounded-t-3xl shadow-sm">
+              {/* Banner Header - Clean white style matching user modals */}
+              <div className="relative bg-white p-6 border-b border-slate-100 rounded-t-3xl">
                 <button
                   onClick={() => setDetailReq(null)}
-                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                  className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
+                  title="Đóng cửa sổ"
                 >
                   <X size={18} />
                 </button>
@@ -357,16 +338,21 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                     src={detailReq.avatarUrl} 
                     name={detailReq.fullName} 
                     size={64} 
-                    className="border-2 border-white ring-4 ring-white/30 shadow-lg shrink-0" 
+                    className="border-2 border-slate-100 ring-2 ring-slate-100 shadow-sm shrink-0 bg-white" 
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-xl font-black text-white tracking-tight">{detailReq.fullName}</h2>
-                      <span className="rounded-full bg-white/20 backdrop-blur-md px-3 py-0.5 text-xs font-bold text-white border border-white/30 shadow-2xs">
+                      <h2 className="text-xl font-bold text-plum-900 tracking-tight">{detailReq.fullName}</h2>
+                      <span className={cn(
+                        "rounded-full px-3 py-0.5 text-xs font-bold border",
+                        detailReq.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        detailReq.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                        'bg-amber-50 text-amber-700 border-amber-200'
+                      )}>
                         {detailReq.status === 'APPROVED' ? 'Đã phê duyệt' : detailReq.status === 'REJECTED' ? 'Đã từ chối' : 'Chờ duyệt'}
                       </span>
                     </div>
-                    <p className="text-brand-50 text-xs mt-1 truncate">{detailReq.email || 'Chưa cập nhật email'}</p>
+                    <p className="text-slate-500 text-xs mt-1 truncate font-medium">{detailReq.email || 'Chưa cập nhật email'}</p>
                   </div>
                 </div>
               </div>

@@ -2,15 +2,19 @@ package com.alumnect.alumnect_backend.controller.auth;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.dto.request.auth.RegisterRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.LoginRequest;
+import com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleLoginRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.GoogleRegisterRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.LogoutRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.ForgotPasswordRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.ResetPasswordRequest;
 import com.alumnect.alumnect_backend.dto.request.auth.VerifyResetOtpRequest;
+import com.alumnect.alumnect_backend.dto.response.auth.LoginResponse;
 import com.alumnect.alumnect_backend.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -78,12 +82,12 @@ public class AuthController {
      * @return Response chứa thông tin đăng nhập thành công kèm cặp Access/Refresh Token
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> login(
-            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.auth.LoginRequest request,
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @Valid @RequestBody LoginRequest request,
             @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         String ipAddress = httpRequest.getRemoteAddr();
-        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.login(request, userAgent, ipAddress);
+        LoginResponse response = authService.login(request, userAgent, ipAddress);
         return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", response));
     }
 
@@ -96,12 +100,12 @@ public class AuthController {
      * @return Response chứa cặp Access/Refresh Token mới
      */
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> refresh(
-            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.auth.RefreshRequest request,
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
+            @Valid @RequestBody RefreshRequest request,
             @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         String ipAddress = httpRequest.getRemoteAddr();
-        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.refresh(request, userAgent, ipAddress);
+        LoginResponse response = authService.refresh(request, userAgent, ipAddress);
         return ResponseEntity.ok(ApiResponse.success("Làm mới token thành công!", response));
     }
 
@@ -115,12 +119,12 @@ public class AuthController {
      * @return Response chứa cặp Access/Refresh Token và thông tin tài khoản
      */
     @PostMapping("/google")
-    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> loginWithGoogle(
+    public ResponseEntity<ApiResponse<LoginResponse>> loginWithGoogle(
             @Valid @RequestBody GoogleLoginRequest request,
             @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         String ipAddress = httpRequest.getRemoteAddr();
-        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.loginWithGoogle(request, userAgent, ipAddress);
+        LoginResponse response = authService.loginWithGoogle(request, userAgent, ipAddress);
         return ResponseEntity.ok(ApiResponse.success("Đăng nhập bằng Google thành công!", response));
     }
 
@@ -134,13 +138,13 @@ public class AuthController {
      * @return Response chứa cặp Access/Refresh Token và thông tin tài khoản
      */
     @PostMapping("/google/register")
-    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.auth.LoginResponse>> registerWithGoogle(
+    public ResponseEntity<ApiResponse<LoginResponse>> registerWithGoogle(
             @Valid @RequestBody GoogleRegisterRequest request,
             @RequestHeader(value = "User-Agent", defaultValue = "") String userAgent,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         String ipAddress = httpRequest.getRemoteAddr();
-        com.alumnect.alumnect_backend.dto.response.auth.LoginResponse response = authService.registerWithGoogle(request, userAgent, ipAddress);
-        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+        LoginResponse response = authService.registerWithGoogle(request, userAgent, ipAddress);
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng ký tài khoản qua Google thành công!", response));
     }
 

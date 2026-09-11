@@ -12,6 +12,7 @@ import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
 import com.alumnect.alumnect_backend.dto.response.report.ReportResponse;
+import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.service.post.PostService;
 import com.alumnect.alumnect_backend.service.report.ReportService;
 import jakarta.validation.Valid;
@@ -70,11 +71,12 @@ public class PostController {
             @RequestParam(defaultValue = "recent") String sort,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String eventFilter,
             Authentication authentication) {
 
         boolean authenticated = isAuthenticated(authentication);
         String viewerEmail = authenticated ? authentication.getName() : null;
-        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, keyword, authenticated, viewerEmail);
+        PageResponse<PostResponse> feed = postService.getFeed(page, size, type, keyword, eventFilter, authenticated, viewerEmail);
         return ResponseEntity.ok(ApiResponse.success("Lấy bảng tin thành công", feed));
     }
 
@@ -303,7 +305,7 @@ public class PostController {
             Authentication authentication) {
 
         if (!isAuthenticated(authentication)) {
-            throw new com.alumnect.alumnect_backend.exception.ForbiddenException("Vui lòng đăng nhập để xem danh sách bài viết đã lưu");
+            throw new ForbiddenException("Vui lòng đăng nhập để xem danh sách bài viết đã lưu");
         }
         PageResponse<PostResponse> savedPosts = postService.getSavedPosts(authentication.getName(), page, size);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bài viết đã lưu thành công", savedPosts));
@@ -324,7 +326,7 @@ public class PostController {
             Authentication authentication) {
 
         if (!isAuthenticated(authentication)) {
-            throw new com.alumnect.alumnect_backend.exception.ForbiddenException("Vui lòng đăng nhập để lưu bài viết");
+            throw new ForbiddenException("Vui lòng đăng nhập để lưu bài viết");
         }
         SavePostResponse result = postService.savePost(authentication.getName(), id);
         return ResponseEntity.ok(ApiResponse.success("Đã lưu bài viết thành công", result));
@@ -345,7 +347,7 @@ public class PostController {
             Authentication authentication) {
 
         if (!isAuthenticated(authentication)) {
-            throw new com.alumnect.alumnect_backend.exception.ForbiddenException("Vui lòng đăng nhập để bỏ lưu bài viết");
+            throw new ForbiddenException("Vui lòng đăng nhập để bỏ lưu bài viết");
         }
         SavePostResponse result = postService.unsavePost(authentication.getName(), id);
         return ResponseEntity.ok(ApiResponse.success("Đã bỏ lưu bài viết thành công", result));

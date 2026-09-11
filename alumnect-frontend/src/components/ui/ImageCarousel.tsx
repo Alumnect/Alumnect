@@ -6,7 +6,7 @@
  *  - Kéo chuột / vuốt tay chuyển ảnh
  */
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ImageCarouselProps {
@@ -14,6 +14,7 @@ interface ImageCarouselProps {
   height?: number
   className?: string
   altPrefix?: string
+  onImageClick?: (url: string, index: number) => void
 }
 
 function isVideoUrl(url?: string): boolean {
@@ -34,10 +35,12 @@ export function ImageCarousel({
   height = 460,
   className,
   altPrefix = 'Phương tiện',
+  onImageClick,
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
   const dragStartX = useRef<number | null>(null)
+  const wasDragged = useRef(false)
   const currentRef = useRef(current)
   const imagesLen = useRef(images.length)
   const DRAG_THRESHOLD = 40
@@ -61,8 +64,7 @@ export function ImageCarousel({
       ? 'transform 0.28s cubic-bezier(0.4,0,0.2,1)'
       : 'none'
     const containerW = trackRef.current.parentElement?.offsetWidth ?? 560
-    const base = -(idx * containerW)
-    trackRef.current.style.transform = `translate3d(${base + extraPx}px, 0, 0)`
+    trackRef.current.style.transform = `translate3d(-${idx * containerW - extraPx}px, 0, 0)`
   }, [])
 
   const goTo = useCallback(
@@ -81,10 +83,14 @@ export function ImageCarousel({
     (e: React.MouseEvent) => {
       e.preventDefault()
       dragStartX.current = e.clientX
+      wasDragged.current = false
 
       const onMove = (me: MouseEvent) => {
         if (dragStartX.current === null) return
         const dx = me.clientX - dragStartX.current
+        if (Math.abs(dx) > 6) {
+          wasDragged.current = true
+        }
         // Giới hạn: không kéo quá ảnh đầu/cuối
         const c = currentRef.current
         const isFirst = c === 0 && dx > 0
@@ -101,7 +107,12 @@ export function ImageCarousel({
         if (dragStartX.current !== null) {
           const dx = me.clientX - dragStartX.current
           const c = currentRef.current
-          if (Math.abs(dx) > DRAG_THRESHOLD) {
+          if (!wasDragged.current) {
+            // Click without drag -> Mở lightbox xem ảnh to
+            if (!isVideoUrl(images[c])) {
+              onImageClick?.(images[c], c)
+            }
+          } else if (Math.abs(dx) > DRAG_THRESHOLD) {
             if (dx < 0) goTo(c + 1)
             else goTo(c - 1)
           } else {
@@ -120,7 +131,7 @@ export function ImageCarousel({
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     },
-    [applyTransform, goTo],
+    [applyTransform, goTo, images, onImageClick],
   )
 
   // ── Touch swipe ─────────────────────────────────────────
@@ -153,7 +164,18 @@ export function ImageCarousel({
 
   return (
     <div
-      className={cn('relative w-full overflow-hidden select-none group', className)}
+      data-interactive="true"
+      onClick={(e) => {
+        e.stopPropagation()
+        if (wasDragged.current) {
+          wasDragged.current = false
+          return
+        }
+        if (!isVideoUrl(images[current])) {
+          onImageClick?.(images[current], current)
+        }
+      }}
+      className={cn('relative w-full overflow-hidden select-none group cursor-pointer', className)}
       style={{ height }}
     >
       {/* Blur background tĩnh — chỉ đổi khi current thay đổi */}
@@ -225,13 +247,32 @@ export function ImageCarousel({
         ))}
       </div>
 
-      {/* Controls */}
+      {/* Nút phóng to xem toàn màn hình (hiện cả khi có 1 ảnh lẫn nhiều ảnh khi hover) */}
+      {onImageClick && !isVideoUrl(images[current]) && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onImageClick(images[current], current)
+          }}
+          aria-label="Phóng to ảnh"
+          title="Xem ảnh toàn màn hình"
+          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/90 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-all hover:bg-black/65 hover:text-white hover:scale-105 active:scale-95 shadow-sm"
+        >
+          <Maximize2 size={16} />
+        </button>
+      )}
+
+      {/* Controls khi có nhiều ảnh */}
       {images.length > 1 && (
         <>
           {current > 0 && (
             <button
               type="button"
-              onClick={prev}
+              onClick={(e) => {
+                e.stopPropagation()
+                prev()
+              }}
               aria-label="Ảnh trước"
               className="absolute left-2.5 top-1/2 z-20 -translate-y-1/2
                          grid h-8 w-8 place-items-center rounded-full
@@ -245,7 +286,10 @@ export function ImageCarousel({
           {current < images.length - 1 && (
             <button
               type="button"
-              onClick={next}
+              onClick={(e) => {
+                e.stopPropagation()
+                next()
+              }}
               aria-label="Ảnh tiếp theo"
               className="absolute right-2.5 top-1/2 z-20 -translate-y-1/2
                          grid h-8 w-8 place-items-center rounded-full
@@ -262,7 +306,10 @@ export function ImageCarousel({
               <button
                 key={idx}
                 type="button"
-                onClick={() => goTo(idx)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  goTo(idx)
+                }}
                 aria-label={`Ảnh ${idx + 1}`}
                 className={cn(
                   'h-1.5 rounded-full transition-all duration-200',
@@ -274,7 +321,7 @@ export function ImageCarousel({
             ))}
           </div>
 
-          <div className="absolute right-3 top-3 z-20 rounded-full bg-black/40 px-2.5 py-0.5 text-xs font-semibold text-white backdrop-blur-sm">
+          <div className="absolute left-3 top-3 z-20 rounded-full bg-black/40 px-2.5 py-0.5 text-xs font-semibold text-white backdrop-blur-sm shadow-xs">
             {current + 1} / {images.length}
           </div>
         </>

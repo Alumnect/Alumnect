@@ -60,9 +60,10 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
 
   // Danh mục chuyên ngành gợi ý nhanh được sinh động từ DB
   const quickCategories = [
-    { label: 'Tất cả', value: 'ALL', majorId: null },
+    { label: 'Tất cả', fullName: 'Tất cả', value: 'ALL', majorId: null },
     ...majors.slice(0, 6).map((m) => ({
-      label: m.name,
+      label: m.name.replace(/\s*\([^)]*\)/g, '').trim(),
+      fullName: m.name,
       value: m.code,
       majorId: m.id,
     })),
@@ -168,6 +169,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             <button
               key={cat.value}
               type="button"
+              title={cat.fullName || cat.label}
               onClick={() => handleSelectCategory(cat)}
               className={cn(
                 'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all shadow-xs',
@@ -249,7 +251,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500">
-                Khóa nhập học (Cohort)
+                Khóa nhập học
               </label>
               <select
                 value={filters.cohort || ''}
