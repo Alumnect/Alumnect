@@ -4,13 +4,17 @@ import type { CreateSalaryContributionInput, Industry, SalaryContribution, Salar
 
 /**
  * Tầng gọi API cho Salary Board: UC50 (Contribute salary data), UC51 (Edit salary contribution),
- * UC52 (Delete salary contribution), UC53 (View salary statistics), UC54 (Filter salary data). Gọi
- * thật `GET /api/v1/industries` (danh mục ngành nghề), `POST /api/v1/salary-contributions` (đóng
- * góp), `GET /api/v1/salary-contributions/mine` (danh sách đóng góp của chính mình),
- * `PUT /api/v1/salary-contributions/{id}` (sửa), `DELETE /api/v1/salary-contributions/{id}` (xóa),
- * và `GET /api/v1/salary-contributions/statistics` (thống kê, kèm query param lọc tùy chọn).
- * Interceptor `http` tự bóc envelope `response.data`.
+ * UC52 (Delete salary contribution), UC53 (View salary statistics), UC54 (Filter salary data), và
+ * feed từng lượt đóng góp ẩn danh. Gọi thật `GET /api/v1/industries` (danh mục ngành nghề),
+ * `POST /api/v1/salary-contributions` (đóng góp), `GET /api/v1/salary-contributions/mine` (danh
+ * sách đóng góp của chính mình), `PUT /api/v1/salary-contributions/{id}` (sửa),
+ * `DELETE /api/v1/salary-contributions/{id}` (xóa), `GET /api/v1/salary-contributions/statistics`
+ * (thống kê, kèm query param lọc tùy chọn), và `GET /api/v1/salary-contributions/feed` (từng lượt
+ * đóng góp, phân trang, ẩn danh). Interceptor `http` tự bóc envelope `response.data`.
  */
+
+/** Kích thước trang mặc định cho feed từng lượt đóng góp (khớp default phía Backend). */
+export const FEED_PAGE_SIZE = 12
 
 /** Trích mảng phần tử thô từ phong bì (envelope) phản hồi — hỗ trợ `{ content }`/`{ items }`/mảng trực tiếp. */
 function extractRawItems(body: unknown): unknown[] {
@@ -20,6 +24,18 @@ function extractRawItems(body: unknown): unknown[] {
   const obj = d as Record<string, unknown> | undefined
   const candidate = obj?.content ?? obj?.items
   return Array.isArray(candidate) ? candidate : []
+}
+
+/** Suy ra còn trang tiếp theo hay không từ `PageResponse` (`last`/`hasMore`/`pageNumber`+`totalPages`) — cùng cách làm `forumApi.inferHasMore` (UC38). */
+function inferHasMore(body: unknown, received: number): boolean {
+  const b = body as Record<string, unknown> | undefined
+  const d = (b?.data ?? b) as Record<string, unknown> | undefined
+  if (typeof d?.last === 'boolean') return !d.last
+  if (typeof d?.hasMore === 'boolean') return d.hasMore
+  if (typeof d?.pageNumber === 'number' && typeof d?.totalPages === 'number') {
+    return d.pageNumber + 1 < d.totalPages
+  }
+  return received >= FEED_PAGE_SIZE
 }
 
 export const salaryApi = {
@@ -110,5 +126,24 @@ export const salaryApi = {
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return salaryStatisticsSchema.parse(payload)
+  },
+
+  /**
+   * Lấy TỪNG lượt đóng góp lương trong toàn hệ thống (không lọc theo chủ sở hữu), phân trang, mới
+   * nhất trước — khác `getStatistics` (chỉ số liệu tổng hợp theo nhóm, có ngưỡng mẫu tối thiểu).
+   * Vẫn ẩn danh tuyệt đối — `SalaryContributionResponse` không có trường định danh người đóng góp.
+   * Gọi `GET /api/v1/salary-contributions/feed`; yêu cầu đã đăng nhập (Student/Alumni).
+   * @param page Số trang (0-indexed)
+   * @return Danh sách lượt đóng góp của trang này + cờ còn trang tiếp theo hay không
+   */
+  getFeed: async (page: number): Promise<{ items: SalaryContribution[]; page: number; hasMore: boolean }> => {
+    const body = await http.get(`/salary-contributions/feed?page=${page}&size=${FEED_PAGE_SIZE}`)
+    const raw = extractRawItems(body)
+    const items: SalaryContribution[] = []
+    for (const r of raw) {
+      const res = salaryContributionSchema.safeParse(r)
+      if (res.success) items.push(res.data)
+    }
+    return { items, page, hasMore: inferHasMore(body, items.length) }
   },
 }

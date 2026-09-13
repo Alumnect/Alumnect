@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.service.salary;
 
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dao.salary.IndustryRepository;
 import com.alumnect.alumnect_backend.dao.salary.SalaryContributionRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
@@ -18,6 +19,8 @@ import com.alumnect.alumnect_backend.mapper.salary.SalaryMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -262,6 +265,41 @@ public class SalaryServiceImpl implements SalaryService {
                 .trackedPositions(rows.size())
                 .overallMedian(overallMedian)
                 .rows(rows)
+                .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: validate page/size (400 nếu sai — tránh {@code PageRequest.of} ném lỗi rồi bị trả về
+     * nhầm HTTP 500, cùng cách làm {@code QuestionServiceImpl.getQuestions}) → truy vấn TOÀN BỘ bảng
+     * (không lọc theo user) → map từng bản ghi qua {@link SalaryMapper} (không lộ danh tính) → đóng
+     * gói {@link PageResponse}.
+     */
+    @Override
+    public PageResponse<SalaryContributionResponse> getFeed(int page, int size) {
+        if (page < 0) {
+            throw new BadRequestException("Tham số page phải là số nguyên không âm");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("Tham số size phải là số nguyên dương");
+        }
+
+        // Method name (findAllByOrderByCreatedAtDesc) đã tự quy định thứ tự sắp xếp — Pageable ở đây
+        // chỉ dùng cho phân trang, không cần truyền thêm Sort để tránh xung đột không cần thiết.
+        Page<SalaryContribution> contributionsPage = salaryContributionRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
+
+        List<SalaryContributionResponse> content = contributionsPage.getContent().stream()
+                .map(salaryMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return PageResponse.<SalaryContributionResponse>builder()
+                .content(content)
+                .pageNumber(contributionsPage.getNumber())
+                .pageSize(contributionsPage.getSize())
+                .totalElements(contributionsPage.getTotalElements())
+                .totalPages(contributionsPage.getTotalPages())
+                .last(contributionsPage.isLast())
                 .build();
     }
 

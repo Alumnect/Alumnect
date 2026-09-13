@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.controller.salary;
 
 import com.alumnect.alumnect_backend.common.api.ApiResponse;
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.salary.CreateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.request.salary.UpdateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryContributionResponse;
@@ -25,15 +26,16 @@ import java.util.List;
 
 /**
  * Controller xử lý yêu cầu đóng góp (UC50), chỉnh sửa (UC51), xóa (UC52), xem thống kê (UC53 - View
- * salary statistics) và lọc dữ liệu lương (UC54 - Filter salary data) trên Salary Board. Được map
- * tự động với prefix global /api/v1/salary-contributions.
+ * salary statistics), lọc dữ liệu lương (UC54 - Filter salary data), và xem từng lượt đóng góp ẩn
+ * danh (feed) trên Salary Board. Được map tự động với prefix global /api/v1/salary-contributions.
  * <p>
  * Mọi endpoint đều yêu cầu đăng nhập (JWT), Guest bị Spring Security chặn 401 trước khi vào Controller
  * (không nằm {@link com.alumnect.alumnect_backend.security.Endpoints#PUBLIC_GET}). Đóng góp (POST) chỉ
  * Cựu sinh viên (ALUMNI) được phép (RBAC tại tầng Service — Student/Admin nhận 403); sửa (PUT) và xóa
  * (DELETE) chỉ chính chủ được phép (kiểm tra sở hữu tại tầng Service — người khác nhận 403); xem thống
- * kê/lọc (GET) mở cho mọi vai trò đã đăng nhập (Student + Alumni theo ticket UC53/UC54, không hạn chế
- * thêm ở Backend).
+ * kê/lọc/feed (GET) mở cho mọi vai trò đã đăng nhập (Student + Alumni, không hạn chế thêm ở Backend) —
+ * riêng feed ({@code GET /feed}) trả về TỪNG bản ghi (không nhóm/không ngưỡng mẫu tối thiểu như
+ * thống kê) nhưng vẫn tuyệt đối ẩn danh vì {@link SalaryContributionResponse} không có trường định danh.
  */
 @RestController
 @RequestMapping("/salary-contributions")
@@ -125,5 +127,25 @@ public class SalaryController {
 
         SalaryStatisticsResponse statistics = salaryService.getStatistics(industryId, region, jobTitle, level);
         return ResponseEntity.ok(ApiResponse.success("Lấy thống kê lương thành công", statistics));
+    }
+
+    /**
+     * API lấy danh sách TỪNG lượt đóng góp lương trong toàn hệ thống (không lọc theo chủ sở hữu),
+     * phân trang, mới nhất trước. Khác {@link #getStatistics}/UC53/UC54 (chỉ số liệu tổng hợp theo
+     * nhóm, có ngưỡng mẫu tối thiểu) — endpoint này trả về từng bản ghi thô để Student/Alumni "xem
+     * qua" các lượt đóng góp thực tế, nhưng vẫn ẩn danh tuyệt đối (không trường nào định danh người
+     * đóng góp, dù ai gọi cũng không biết bản ghi là của ai).
+     *
+     * @param page Số trang (0-indexed, mặc định 0)
+     * @param size Kích thước trang (mặc định 12)
+     * @return Trang lượt đóng góp {@link PageResponse}&lt;{@link SalaryContributionResponse}&gt; bọc trong {@link ApiResponse}, HTTP 200 OK
+     */
+    @GetMapping("/feed")
+    public ResponseEntity<ApiResponse<PageResponse<SalaryContributionResponse>>> getFeed(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        PageResponse<SalaryContributionResponse> feed = salaryService.getFeed(page, size);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách đóng góp lương thành công", feed));
     }
 }
