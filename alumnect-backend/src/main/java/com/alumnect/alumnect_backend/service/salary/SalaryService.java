@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.service.salary;
 
+import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.salary.CreateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.request.salary.UpdateSalaryContributionRequest;
 import com.alumnect.alumnect_backend.dto.response.salary.SalaryContributionResponse;
@@ -81,4 +82,17 @@ public interface SalaryService {
      * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu industryId không tồn tại hoặc level không hợp lệ
      */
     SalaryStatisticsResponse getStatistics(Long industryId, String region, String jobTitle, String level);
+
+    /**
+     * Lấy danh sách TỪNG lượt đóng góp lương trong toàn hệ thống (không lọc theo chủ sở hữu), phân
+     * trang, mới nhất trước — cho phép Student/Alumni xem từng bản ghi lương thô (khác thống kê nhóm
+     * ở UC53/UC54), nhưng vẫn giữ đúng cam kết ẩn danh: {@link SalaryContributionResponse} không bao
+     * giờ chứa trường định danh người đóng góp, dù ai gọi API này cũng không biết bản ghi là của ai.
+     *
+     * @param page Số trang (0-indexed)
+     * @param size Kích thước trang
+     * @return Trang lượt đóng góp đã ẩn danh, mới nhất trước
+     * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu page/size không hợp lệ
+     */
+    PageResponse<SalaryContributionResponse> getFeed(int page, int size);
 }

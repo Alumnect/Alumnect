@@ -1,6 +1,8 @@
 package com.alumnect.alumnect_backend.dao.salary;
 
 import com.alumnect.alumnect_backend.entity.salary.SalaryContribution;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,6 +34,18 @@ public interface SalaryContributionRepository extends JpaRepository<SalaryContri
      * @return Danh sách lượt đóng góp của người dùng, sắp xếp theo thời điểm tạo giảm dần
      */
     List<SalaryContribution> findByUser_IdOrderByCreatedAtDesc(Long userId);
+
+    /**
+     * Lấy TOÀN BỘ lượt đóng góp lương trong hệ thống (không lọc theo chủ sở hữu), phân trang, mới
+     * nhất trước — dùng cho luồng "xem từng lượt đóng góp ẩn danh" (khác thống kê nhóm ở UC53/UC54):
+     * Student/Alumni đăng nhập xem được TỪNG bản ghi lương thô, nhưng vẫn qua {@code SalaryMapper}
+     * nên KHÔNG có trường nào định danh người đóng góp — chỉ chính chủ mới biết bản ghi nào là của
+     * mình (qua {@code findByUser_IdOrderByCreatedAtDesc} ở trên).
+     *
+     * @param pageable Thông tin phân trang + sắp xếp (Service luôn set sort theo {@code createdAt} giảm dần)
+     * @return Trang kết quả các lượt đóng góp, mới nhất trước
+     */
+    Page<SalaryContribution> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     /**
      * Điều kiện WHERE dùng chung cho bộ lọc UC54 (industry/region/jobTitle/level), tái dùng ở cả 3

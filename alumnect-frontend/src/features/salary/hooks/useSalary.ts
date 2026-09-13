@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { salaryApi } from '../api/salaryApi'
 import type { CreateSalaryContributionInput, SalaryStatisticsFilters } from '../model/salary'
 
@@ -28,6 +28,7 @@ export function useCreateSalaryContribution() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salary-statistics'] })
       queryClient.invalidateQueries({ queryKey: ['my-salary-contributions'] })
+      queryClient.invalidateQueries({ queryKey: ['salary-feed'] })
     },
   })
 }
@@ -59,6 +60,7 @@ export function useUpdateSalaryContribution(id: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salary-statistics'] })
       queryClient.invalidateQueries({ queryKey: ['my-salary-contributions'] })
+      queryClient.invalidateQueries({ queryKey: ['salary-feed'] })
     },
   })
 }
@@ -75,6 +77,7 @@ export function useDeleteSalaryContribution() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salary-statistics'] })
       queryClient.invalidateQueries({ queryKey: ['my-salary-contributions'] })
+      queryClient.invalidateQueries({ queryKey: ['salary-feed'] })
     },
   })
 }
@@ -92,5 +95,21 @@ export function useSalaryStatistics(filters?: SalaryStatisticsFilters) {
     queryKey: ['salary-statistics', filters ?? {}],
     queryFn: () => salaryApi.getStatistics(filters),
     staleTime: 2 * 60 * 1000,
+  })
+}
+
+/**
+ * Hook lấy TỪNG lượt đóng góp lương trong toàn hệ thống theo phân trang vô hạn (infinite scroll) —
+ * khác `useSalaryStatistics` (chỉ số liệu tổng hợp theo nhóm, có ngưỡng mẫu tối thiểu). Vẫn ẩn danh
+ * tuyệt đối; mở cho mọi người dùng đã đăng nhập (Student + Alumni). Mirror pattern `useQuestions`
+ * (forum, UC38) — cùng cách dùng `useInfiniteQuery`.
+ * @return Đối tượng query (pages, isLoading, isError, fetchNextPage, hasNextPage...)
+ */
+export function useSalaryFeed() {
+  return useInfiniteQuery({
+    queryKey: ['salary-feed'],
+    queryFn: ({ pageParam }) => salaryApi.getFeed(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
   })
 }

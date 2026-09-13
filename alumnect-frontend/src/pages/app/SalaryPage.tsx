@@ -1,25 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   LineChart, ShieldCheck, Plus, Filter, AlertTriangle, RefreshCw, ListChecks, Search, X, LayoutGrid,
-  TrendingUp, ArrowRight, MapPin, Code2, Megaphone, Users, Palette, Briefcase,
+  MapPin, Code2, Megaphone, Users, Palette, Briefcase,
 } from 'lucide-react'
 import { PageHeader, Badge, Card, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { ContributeSalaryModal, MyContributionsModal, useSalaryStatistics, useIndustries, SALARY_LEVELS } from '@/features/salary'
+import { ContributeSalaryModal, MyContributionsModal, SalaryContributionsFeed, useSalaryStatistics, useIndustries, SALARY_LEVELS } from '@/features/salary'
 import type { SalaryContribution, SalaryLevel } from '@/features/salary'
 import { EntitySelectField } from '@/features/forum/components/EntitySelectField'
 
 const ALL_REGIONS = 'Tất cả khu vực'
 const JOB_TITLE_SEARCH_MAX_LENGTH = 150
-/** Số vị trí nổi bật hiển thị (đã sắp theo số mẫu khảo sát giảm dần từ Backend). */
-const FEATURED_COUNT = 6
 
-/** Bộ icon + màu xoay vòng cho card "vị trí nổi bật" và icon từng dòng trong danh sách chi tiết —
- * chỉ mang tính trang trí (không có dữ liệu ngành nghề thật cho từng nhóm thống kê), dùng đúng bảng
- * màu sẵn có của design system (brand/violet/mint/coral/gold/sky) thay vì màu tự chế. */
+/** Bộ icon + màu xoay vòng cho icon từng dòng trong danh sách "Dải lương theo vị trí" — chỉ mang
+ * tính trang trí (không có dữ liệu ngành nghề thật cho từng nhóm thống kê), dùng đúng bảng màu sẵn
+ * có của design system (brand/violet/mint/coral/gold/sky) thay vì màu tự chế. */
 const FEATURE_STYLES = [
   { icon: Code2, bg: 'bg-brand-100', text: 'text-brand-600' },
   { icon: Megaphone, bg: 'bg-violet-200/50', text: 'text-violet-600' },
@@ -104,8 +102,6 @@ export function SalaryPage() {
     const present = new Set((baseStats?.rows ?? []).map((r) => r.level))
     return SALARY_LEVELS.filter((lv) => present.has(lv))
   }, [baseStats])
-  // Vị trí nổi bật = N nhóm có nhiều mẫu khảo sát nhất (Backend đã ORDER BY samples DESC sẵn).
-  const featured = (baseStats?.rows ?? []).slice(0, FEATURED_COUNT)
 
   const { data, isLoading, isError, error, refetch } = useSalaryStatistics({
     industryId,
@@ -136,45 +132,6 @@ export function SalaryPage() {
           ) : undefined
         }
       />
-
-      {/* Vị trí nổi bật — N nhóm nhiều mẫu khảo sát nhất, tính từ chính dữ liệu thống kê đã có (không
-          cần API mới). Không có dữ liệu ngành nghề thật theo từng nhóm nên dòng phụ hiện cấp bậc +
-          khu vực thay vì tên ngành; icon/màu chỉ mang tính trang trí, xoay vòng FEATURE_STYLES. */}
-      {featured.length > 0 && (
-        <Card hover={false} className="mb-5 p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold-300/50 text-gold-700">
-                <TrendingUp size={16} />
-              </span>
-              <div>
-                <h2 className="font-bold text-plum-900">Mức lương theo vị trí nổi bật</h2>
-                <p className="text-xs text-plum-500">Khám phá mức lương trung vị theo các vị trí phổ biến tại FPTU</p>
-              </div>
-            </div>
-            <a href="#salary-detail" className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
-              Xem tất cả <ArrowRight size={14} />
-            </a>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {featured.map((s, i) => {
-              const style = FEATURE_STYLES[i % FEATURE_STYLES.length]
-              const Icon = style.icon
-              return (
-                <div key={`${s.role}-${s.level}-${s.region}`} className={cn('rounded-2xl border border-plum-900/5 p-3.5 transition-transform hover:-translate-y-0.5', style.bg)}>
-                  <span className={cn('grid h-9 w-9 place-items-center rounded-xl bg-white/70', style.text)}>
-                    <Icon size={16} />
-                  </span>
-                  <p className="mt-2.5 truncate text-sm font-bold text-plum-900">{s.role}</p>
-                  <p className="truncate text-xs text-plum-500">{s.level} · {s.region}</p>
-                  <p className={cn('mt-2 text-sm font-extrabold', style.text)}>{Math.round(s.median * 1_000_000).toLocaleString('vi-VN')} VNĐ</p>
-                  <p className="text-[11px] text-plum-400">Trung vị / tháng</p>
-                </div>
-              )
-            })}
-          </div>
-        </Card>
-      )}
 
       {/* Bộ lọc (UC54): ngành nghề + chức danh + cấp bậc + khu vực. overflow-visible ghi đè
           overflow-hidden mặc định của Card — nếu không, dropdown ngành nghề (EntitySelectField,
@@ -239,7 +196,7 @@ export function SalaryPage() {
       </Card>
 
       <Reveal>
-        <Card id="salary-detail" hover={false} className="scroll-mt-4 overflow-hidden p-6">
+        <Card hover={false} className="mb-5 overflow-hidden p-6">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-bold text-plum-900">Dải lương theo vị trí <span className="text-plum-400">(Triệu VNĐ / tháng)</span></h2>
             <Badge tone="success" icon={<ShieldCheck size={13} />}>Ẩn danh 100%</Badge>
@@ -298,6 +255,10 @@ export function SalaryPage() {
           )}
         </Card>
       </Reveal>
+
+      {/* Feed từng lượt đóng góp ẩn danh (mới) — khác khối thống kê nhóm ở trên (có ngưỡng mẫu tối
+          thiểu), khối này cho Student/Alumni xem TỪNG bản ghi thô nhưng vẫn không lộ danh tính ai. */}
+      <SalaryContributionsFeed />
 
       <p className="mt-4 text-center text-xs text-plum-400">
         Thống kê chỉ hiển thị khi đạt đủ số lượng mẫu khảo sát tối thiểu. Danh tính của bạn luôn được bảo mật tuyệt đối.
