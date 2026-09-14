@@ -46,9 +46,13 @@ public class SalaryContribution {
     @Column(length = 150)
     private String company;
 
-    /** Khu vực làm việc (tùy chọn, VD: "TP.HCM") */
+    /** Khu vực làm việc (tùy chọn, địa chỉ chi tiết, VD: "Fpt Trần Quang Diệu, Q.3, TP.HCM") */
     @Column(length = 120)
     private String region;
+
+    /** Tên Thành phố / Tỉnh (tùy chọn, dùng để gom nhóm thống kê, VD: "Thành phố Hồ Chí Minh") */
+    @Column(name = "location_city", length = 120)
+    private String locationCity;
 
     /** Số năm kinh nghiệm (tùy chọn) */
     @Column(name = "years_experience")

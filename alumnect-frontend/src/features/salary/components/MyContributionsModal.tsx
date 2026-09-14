@@ -10,6 +10,7 @@ import { Modal, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useMyContributions } from '../hooks/useSalary'
 import type { SalaryContribution } from '../model/salary'
+import { getIndustryIcon } from '../model/salary'
 import { DeleteSalaryContributionModal } from './DeleteSalaryContributionModal'
 
 export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void; onEdit: (contribution: SalaryContribution) => void }) {
@@ -19,7 +20,6 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
 
   return (
     <Modal isOpen onClose={onClose} title="Đóng góp của tôi" icon={<ShieldCheck size={18} className="text-brand-600" />} maxWidthClassName="max-w-lg">
-      <p className="mb-4 text-xs text-plum-500">Chỉ bạn thấy được danh sách này — người khác không biết đây là dữ liệu của bạn.</p>
 
       {isLoading ? (
         <div className="space-y-3">
@@ -49,9 +49,20 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
             <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-plum-900/8 bg-white p-3.5">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-plum-900">{c.jobTitle}</p>
-                <p className="mt-0.5 truncate text-xs text-plum-400">
-                  {[c.industry, c.company, c.region].filter(Boolean).join(' · ') || 'Chưa có thêm chi tiết'}
-                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-plum-500">
+                  {c.industry && (() => {
+                    const IndIcon = getIndustryIcon(c.industry)
+                    return (
+                      <span className="inline-flex items-center gap-1 font-medium text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded">
+                        <IndIcon size={11} className="shrink-0" />
+                        <span>{c.industry}</span>
+                      </span>
+                    )
+                  })()}
+                  {[c.company, c.region].filter(Boolean).map((text, i) => (
+                    <span key={i} className="text-plum-400">· {text}</span>
+                  ))}
+                </div>
                 <p className="mt-1 text-xs font-semibold text-brand-600">
                   {c.grossAmount.toLocaleString('vi-VN')} {c.currency} / tháng
                 </p>

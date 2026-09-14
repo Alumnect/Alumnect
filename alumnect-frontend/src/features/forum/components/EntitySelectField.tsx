@@ -5,15 +5,15 @@
  * thể loại và một ngành, độc lập nhau. Hỗ trợ ô tìm kiếm (khi danh sách dài như ngành) và
  * icon riêng cho từng mục (tùy chọn).
  */
-import { useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, useEffect, type ReactNode } from 'react'
 import { ChevronDown, Check, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 /** Một lựa chọn phẳng trong field. */
-export type SelectOption = { id: number; name: string }
+export type SelectOption<T = number | string> = { id: T; name: string }
 
-export function EntitySelectField({
+export function EntitySelectField<T extends number | string = number>({
   items,
   value,
   onChange,
@@ -22,29 +22,55 @@ export function EntitySelectField({
   buttonIcon,
   searchable = false,
   itemIcon,
+  disabled = false,
+  direction = 'auto',
 }: {
-  items: SelectOption[] | undefined
-  value: number | null
-  onChange: (id: number | null) => void
+  items: SelectOption<T>[] | undefined
+  value: T | null
+  onChange: (id: T | null) => void
   placeholder: string
   searchPlaceholder?: string
   buttonIcon?: ReactNode
   searchable?: boolean
   itemIcon?: (name: string) => ReactNode
+  disabled?: boolean
+  direction?: 'auto' | 'top' | 'bottom'
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [actualDirection, setActualDirection] = useState<'top' | 'bottom'>(direction === 'top' ? 'top' : 'bottom')
   const ref = useRef<HTMLDivElement>(null)
 
   // Đóng khi bấm ra ngoài. (Dropdown nằm trong modal đã có portal riêng.)
   useClickOutside(ref, () => setOpen(false), open)
+
+  // Tự động tính toán hướng mở dropdown thông minh (bung lên hoặc bung xuống)
+  useEffect(() => {
+    if (!open || !ref.current) return
+    if (direction === 'top') {
+      setActualDirection('top')
+      return
+    }
+    if (direction === 'bottom') {
+      setActualDirection('bottom')
+      return
+    }
+    const rect = ref.current.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+    if (spaceBelow < 250 && spaceAbove > spaceBelow) {
+      setActualDirection('top')
+    } else {
+      setActualDirection('bottom')
+    }
+  }, [open, direction])
 
   const list = items ?? []
   const q = query.trim().toLowerCase()
   const filtered = q ? list.filter((it) => it.name.toLowerCase().includes(q)) : list
   const selected = list.find((it) => it.id === value) ?? null
 
-  const pick = (id: number | null) => {
+  const pick = (id: T | null) => {
     onChange(id)
     setQuery('')
     setOpen(false)
@@ -55,10 +81,15 @@ export function EntitySelectField({
       {/* Nút mở field — hiển thị mục đang chọn */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        onClick={() => !disabled && setOpen((o) => !o)}
         className={cn(
-          'flex h-11 w-full items-center gap-2.5 rounded-xl border bg-plum-900/[0.03] px-4 text-sm transition-colors',
-          open ? 'border-brand-400/60 ring-2 ring-brand-500/30' : 'border-plum-900/10 hover:border-plum-900/20',
+          'flex h-11 w-full items-center gap-2.5 rounded-xl border px-4 text-sm transition-colors',
+          disabled
+            ? 'border-plum-900/10 bg-plum-900/[0.03] text-plum-400/70 cursor-not-allowed opacity-60'
+            : open
+              ? 'border-brand-400/60 bg-plum-900/[0.03] ring-2 ring-brand-500/30'
+              : 'border-plum-900/10 bg-plum-900/[0.03] hover:border-plum-900/20',
         )}
       >
         {selected && itemIcon ? itemIcon(selected.name) : buttonIcon}
@@ -67,7 +98,12 @@ export function EntitySelectField({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-plum-900/10 bg-cream-50 p-2 shadow-xl">
+        <div
+          className={cn(
+            'absolute left-0 right-0 z-40 overflow-hidden rounded-xl border border-plum-900/10 bg-cream-50 p-2 shadow-xl',
+            actualDirection === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
+          )}
+        >
           {searchable && (
             <div className="mb-1 flex items-center gap-2 rounded-lg bg-plum-900/[0.04] px-3">
               <Search size={14} className="shrink-0 text-plum-400" />
@@ -81,7 +117,7 @@ export function EntitySelectField({
             </div>
           )}
 
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-52 overflow-y-auto">
             {/* Bỏ chọn */}
             <button
               type="button"

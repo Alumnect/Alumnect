@@ -35,8 +35,11 @@ public class SalaryContributionResponse {
     /** Tên công ty (chuỗi rỗng nếu không có) */
     private String company;
 
-    /** Khu vực làm việc (chuỗi rỗng nếu không có) */
+    /** Khu vực làm việc (chuỗi rỗng nếu không có, địa chỉ đầy đủ) */
     private String region;
+
+    /** Tên Thành phố / Tỉnh (chuỗi rỗng nếu không có) */
+    private String locationCity;
 
     /** Số năm kinh nghiệm (null nếu không có) */
     private Short yearsExperience;

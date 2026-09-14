@@ -42,15 +42,12 @@ public class SalaryServiceImpl implements SalaryService {
 
     /**
      * Số mẫu tối thiểu để 1 nhóm (chức danh + cấp bậc + khu vực) được hiển thị trong thống kê
-     * (UC53 - View salary statistics) — bảo vệ ẩn danh, tránh nhóm quá nhỏ lộ dữ liệu của 1-2 cá nhân.
+     * (UC53 - View salary statistics). Đặt = 1 để mọi đóng góp hợp lệ đều hiển thị ngay lập tức trên biểu đồ.
      */
-    private static final int MIN_SAMPLE_SIZE = 5;
+    private static final int MIN_SAMPLE_SIZE = 1;
 
     /** Các giá trị cấp bậc hợp lệ cho bộ lọc "level" (UC54 - Filter salary data). */
     private static final Set<String> VALID_LEVELS = Set.of("Junior", "Mid", "Senior");
-
-    /** Ký tự escape dùng cho mẫu LIKE — cùng quy ước với {@code QuestionServiceImpl} (UC44). */
-    private static final String LIKE_ESCAPE_CHAR = "\\";
 
     @Autowired
     private SalaryContributionRepository salaryContributionRepository;
@@ -93,12 +90,18 @@ public class SalaryServiceImpl implements SalaryService {
 
         String currency = normalizeCurrency(request.getCurrency());
 
+        String locationCity = sanitizeOptional(request.getLocationCity());
+        if (locationCity == null && request.getRegion() != null) {
+            locationCity = extractCityFromRegion(request.getRegion());
+        }
+
         SalaryContribution contribution = SalaryContribution.builder()
                 .user(user)
                 .industry(industry)
                 .jobTitle(request.getJobTitle().trim())
                 .company(sanitizeOptional(request.getCompany()))
                 .region(sanitizeOptional(request.getRegion()))
+                .locationCity(locationCity)
                 .yearsExperience(request.getYearsExperience())
                 .grossAmount(request.getGrossAmount())
                 .currency(currency)
@@ -165,10 +168,20 @@ public class SalaryServiceImpl implements SalaryService {
 
         String currency = normalizeCurrency(request.getCurrency());
 
+        String locationCity = sanitizeOptional(request.getLocationCity());
+        if (locationCity == null) {
+            if (contribution.getLocationCity() != null && !contribution.getLocationCity().isBlank()) {
+                locationCity = contribution.getLocationCity();
+            } else if (request.getRegion() != null) {
+                locationCity = extractCityFromRegion(request.getRegion());
+            }
+        }
+
         contribution.setIndustry(industry);
         contribution.setJobTitle(request.getJobTitle().trim());
         contribution.setCompany(sanitizeOptional(request.getCompany()));
         contribution.setRegion(sanitizeOptional(request.getRegion()));
+        contribution.setLocationCity(locationCity);
         contribution.setYearsExperience(request.getYearsExperience());
         contribution.setGrossAmount(request.getGrossAmount());
         contribution.setCurrency(currency);
@@ -304,18 +317,17 @@ public class SalaryServiceImpl implements SalaryService {
     }
 
     /**
-     * Chuẩn hóa từ khóa lọc (UC54 - Filter salary data: khu vực/chức danh) thành mẫu LIKE an toàn:
-     * chữ thường, escape các ký tự đặc biệt của LIKE, rồi bọc {@code %...%} để khớp substring không
-     * phân biệt hoa/thường — cùng cách làm với {@code QuestionServiceImpl.buildLikePattern} (UC44).
+     * Chuẩn hóa từ khóa lọc (UC54 - Filter salary data: khu vực/chức danh) thành mẫu ILIKE:
+     * bọc {@code %...%} để khớp substring không phân biệt hoa/thường.
      *
      * @param rawKeyword Từ khóa đã trim, không rỗng
-     * @return Mẫu LIKE đã escape, sẵn sàng truyền cho các query native dùng {@code ESCAPE '\'}
+     * @return Mẫu ILIKE sẵn sàng truyền cho các query native
      */
     private String buildLikePattern(String rawKeyword) {
-        String escaped = rawKeyword.toLowerCase()
-                .replace(LIKE_ESCAPE_CHAR, LIKE_ESCAPE_CHAR + LIKE_ESCAPE_CHAR)
-                .replace("%", LIKE_ESCAPE_CHAR + "%")
-                .replace("_", LIKE_ESCAPE_CHAR + "_");
+        String escaped = rawKeyword.trim()
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
         return "%" + escaped + "%";
     }
 
@@ -345,5 +357,50 @@ public class SalaryServiceImpl implements SalaryService {
             throw new BadRequestException("Đơn vị tiền tệ phải là mã 3 chữ cái (VD: VND, USD)");
         }
         return trimmed;
+    }
+
+    /**
+     * Tự động trích xuất tên Tỉnh/Thành phố chuẩn từ chuỗi địa chỉ chi tiết (đề phòng trường hợp
+     * Frontend không gửi kèm hoặc bị mất locationCity khi sửa dữ liệu).
+     */
+    private String extractCityFromRegion(String region) {
+        if (region == null || region.isBlank()) {
+            return null;
+        }
+        String lower = region.toLowerCase();
+        if (lower.contains("hồ chí minh") || lower.contains("hcm") || lower.contains("sài gòn") || lower.contains("saigon")) {
+            return "Thành Phố Hồ Chí Minh";
+        }
+        if (lower.contains("hà nội") || lower.contains("ha noi")) {
+            return "Hà Nội";
+        }
+        if (lower.contains("đà nẵng") || lower.contains("da nang")) {
+            return "Đà Nẵng";
+        }
+        if (lower.contains("cần thơ") || lower.contains("can tho")) {
+            return "Cần Thơ";
+        }
+        if (lower.contains("hải phòng") || lower.contains("hai phong")) {
+            return "Hải Phòng";
+        }
+        if (lower.contains("bình dương") || lower.contains("binh duong")) {
+            return "Bình Dương";
+        }
+        if (lower.contains("bình định") || lower.contains("quy nhơn") || lower.contains("binh dinh") || lower.contains("quy nhon")) {
+            return "Bình Định";
+        }
+        if (lower.contains("huế") || lower.contains("thừa thiên")) {
+            return "Thừa Thiên Huế";
+        }
+        if (lower.contains("đồng nai") || lower.contains("dong nai")) {
+            return "Đồng Nai";
+        }
+        String[] parts = region.split(",");
+        if (parts.length > 0) {
+            String last = parts[parts.length - 1].trim();
+            String cleaned = last.replaceAll("(?i)^(thành phố|tỉnh|tp\\.?)\\s+", "").trim();
+            return cleaned.isEmpty() ? last : cleaned;
+        }
+        return region.trim();
     }
 }
