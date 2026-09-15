@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Filter, Loader2, AlertCircle, FileText } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -48,6 +48,33 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
 
   const pages = data?.pages ?? []
   const posts = pages.flatMap((page) => page.items)
+
+  // Tự động tải thêm bài viết (Infinite Scroll) khi cuộn tới cuối
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage()
+        }
+      },
+      { rootMargin: '300px', threshold: 0.1 }
+    )
+
+    const currentTarget = loadMoreRef.current
+    if (currentTarget) {
+      observer.observe(currentTarget)
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget)
+      }
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -126,23 +153,18 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
               ))}
             </Stagger>
 
-            {hasNextPage ? (
-              <div className="pt-2 text-center pb-6">
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  leftIcon={isFetchingNextPage ? <Loader2 size={16} className="animate-spin" /> : undefined}
-                >
-                  {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm bài viết'}
-                </Button>
-              </div>
-            ) : (
-              <div className="py-6 text-center">
+            {/* Vùng tự động tải thêm bài viết (Infinite scroll sentinel) */}
+            <div ref={loadMoreRef} className="py-4 text-center">
+              {isFetchingNextPage && (
+                <div className="flex items-center justify-center gap-2 text-sm text-plum-500">
+                  <Loader2 size={18} className="animate-spin text-brand-600" />
+                  <span>Đang tải thêm bài viết…</span>
+                </div>
+              )}
+              {!hasNextPage && posts.length > 0 && (
                 <p className="text-sm text-plum-400">Đã hiển thị tất cả bài viết 🎉</p>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
       </div>
