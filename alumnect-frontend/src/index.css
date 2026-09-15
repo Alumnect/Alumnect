@@ -486,3 +486,14 @@
   width: 84px !important;
 }
 
+/* Ẩn các nút tăng giảm số (spinner arrows) mặc định của trình duyệt cho input type=number */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+

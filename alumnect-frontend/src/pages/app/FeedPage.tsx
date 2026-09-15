@@ -7,7 +7,7 @@
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / rỗng / lỗi (retry) / phân quyền / thành công.
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -736,6 +736,33 @@ export function FeedPage() {
   // === Bước 4: Gộp tất cả trang đã tải thành một danh sách bài viết phẳng ===
   const posts = data?.pages.flatMap((p) => p.items) ?? []
 
+  // Tự động tải thêm bài viết (Infinite Scroll kiểu Facebook) khi người dùng cuộn tới cuối trang
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage()
+        }
+      },
+      { rootMargin: '300px', threshold: 0.1 }
+    )
+
+    const currentTarget = loadMoreRef.current
+    if (currentTarget) {
+      observer.observe(currentTarget)
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget)
+      }
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
   // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
     <div className="mx-auto flex max-w-6xl items-start justify-center gap-8">
@@ -831,19 +858,15 @@ export function FeedPage() {
               ))}
             </div>
 
-            {/* Điều khiển tải thêm trang (infinite/paged loading) */}
-            <div className="pt-1 text-center">
-              {hasNextPage ? (
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  leftIcon={isFetchingNextPage ? <Loader2 size={16} className="animate-spin" /> : undefined}
-                >
-                  {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm bài viết'}
-                </Button>
-              ) : (
+            {/* Vùng tự động tải thêm trang (Infinite scroll sentinel kiểu Facebook) */}
+            <div ref={loadMoreRef} className="py-4 text-center">
+              {isFetchingNextPage && (
+                <div className="flex items-center justify-center gap-2 text-sm text-plum-500">
+                  <Loader2 size={18} className="animate-spin text-brand-600" />
+                  <span>Đang tải thêm bài viết…</span>
+                </div>
+              )}
+              {!hasNextPage && posts.length > 0 && (
                 <p className="text-sm text-plum-400">Bạn đã xem hết bảng tin 🎉</p>
               )}
             </div>

@@ -13,7 +13,7 @@ import {
   Radio,
   ExternalLink,
 } from 'lucide-react'
-import { Card, Avatar, SmartImage, EmptyState, Badge } from '@/components/ui'
+import { Card, Avatar, SmartImage, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { EventRsvpButton } from './EventRsvpButton'
@@ -76,39 +76,44 @@ export function EventHistoryView() {
     switch (item.attendanceState) {
       case 'UPCOMING':
         return (
-          <Badge tone="aqua" icon={<Clock size={12} />} className="shadow-xs font-semibold">
-            Sắp diễn ra
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-600/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+            <Clock size={12} className="text-sky-100 shrink-0" />
+            <span>Sắp diễn ra</span>
+          </span>
         )
       case 'ONGOING':
         return (
-          <Badge tone="gold" icon={<Radio size={12} className="animate-pulse" />} className="shadow-xs font-semibold">
-            Đang diễn ra
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+            <Radio size={12} className="animate-pulse text-amber-100 shrink-0" />
+            <span>Đang diễn ra</span>
+          </span>
         )
       case 'PAST':
         return (
-          <Badge tone="success" icon={<CheckCircle2 size={12} />} className="shadow-xs font-semibold">
-            Đã tham gia
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+            <CheckCircle2 size={12} className="text-emerald-100 shrink-0" />
+            <span>Đã tham gia</span>
+          </span>
         )
       case 'REGISTRATION_CANCELLED':
         return (
-          <Badge tone="danger" icon={<XCircle size={12} />} className="shadow-xs font-semibold">
-            Đã hủy đăng ký
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+            <XCircle size={12} className="text-rose-100 shrink-0" />
+            <span>Đã hủy đăng ký</span>
+          </span>
         )
       case 'EVENT_CANCELLED':
         return (
-          <Badge tone="danger" icon={<Ban size={12} />} className="shadow-xs font-semibold">
-            Sự kiện bị hủy
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-700/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+            <Ban size={12} className="text-red-100 shrink-0" />
+            <span>Sự kiện bị hủy</span>
+          </span>
         )
       default:
         return (
-          <Badge tone="neutral" className="shadow-xs font-semibold">
-            {item.registrationStatus}
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-plum-800/90 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+            <span>{item.registrationStatus}</span>
+          </span>
         )
     }
   }

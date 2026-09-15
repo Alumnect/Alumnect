@@ -32,9 +32,13 @@ public class CreateSalaryContributionRequest {
     @Size(max = 150, message = "Tên công ty không được vượt quá 150 ký tự")
     private String company;
 
-    /** Khu vực làm việc (tùy chọn, tối đa 120 ký tự) */
+    /** Khu vực làm việc (tùy chọn, tối đa 120 ký tự, địa chỉ đầy đủ) */
     @Size(max = 120, message = "Khu vực làm việc không được vượt quá 120 ký tự")
     private String region;
+
+    /** Tên Thành phố / Tỉnh (tùy chọn, tối đa 120 ký tự, dùng gom nhóm thống kê) */
+    @Size(max = 120, message = "Thành phố không được vượt quá 120 ký tự")
+    private String locationCity;
 
     /** Số năm kinh nghiệm (tùy chọn, 0-60) */
     @Min(value = 0, message = "Số năm kinh nghiệm không được âm")

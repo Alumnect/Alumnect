@@ -41,6 +41,7 @@ public class SalaryMapper {
                 .jobTitle(contribution.getJobTitle())
                 .company(contribution.getCompany() != null ? contribution.getCompany() : "")
                 .region(contribution.getRegion() != null ? contribution.getRegion() : "")
+                .locationCity(contribution.getLocationCity() != null ? contribution.getLocationCity() : "")
                 .yearsExperience(contribution.getYearsExperience())
                 .grossAmount(contribution.getGrossAmount())
                 .currency(contribution.getCurrency())

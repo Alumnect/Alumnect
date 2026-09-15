@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Briefcase, MapPin, Search, Bookmark, Building2, Loader2 } from 'lucide-react'
+import { Briefcase, MapPin, Search, Bookmark, Building2, Loader2, X } from 'lucide-react'
 import { PageHeader, Card, EmptyState, Avatar } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
@@ -8,6 +8,46 @@ import { useFeed, useToggleSavePost } from '@/features/feed'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { cn } from '@/lib/utils'
+import { EntitySelectField, type SelectOption } from '@/features/forum/components/EntitySelectField'
+
+/** Bóc tách tên tỉnh/thành phố chuẩn từ chuỗi địa chỉ để gom nhóm lọc thông minh */
+function extractCity(address?: string | null): string {
+  if (!address) return ''
+  const lower = address.toLowerCase()
+  if (lower.includes('hồ chí minh') || lower.includes('hcm') || lower.includes('sài gòn') || lower.includes('saigon')) {
+    return 'Thành phố Hồ Chí Minh'
+  }
+  if (lower.includes('hà nội') || lower.includes('ha noi')) {
+    return 'Hà Nội'
+  }
+  if (lower.includes('đà nẵng') || lower.includes('da nang')) {
+    return 'Đà Nẵng'
+  }
+  if (lower.includes('cần thơ') || lower.includes('can tho')) {
+    return 'Cần Thơ'
+  }
+  if (lower.includes('hải phòng') || lower.includes('hai phong')) {
+    return 'Hải Phòng'
+  }
+  if (lower.includes('bình dương') || lower.includes('binh duong')) {
+    return 'Bình Dương'
+  }
+  if (lower.includes('bình định') || lower.includes('quy nhơn') || lower.includes('binh dinh') || lower.includes('quy nhon')) {
+    return 'Bình Định'
+  }
+  if (lower.includes('huế') || lower.includes('thừa thiên')) {
+    return 'Thừa Thiên Huế'
+  }
+  if (lower.includes('đồng nai') || lower.includes('dong nai')) {
+    return 'Đồng Nai'
+  }
+  const parts = address.split(',').map((p) => p.trim()).filter(Boolean)
+  if (parts.length > 0) {
+    const last = parts[parts.length - 1]
+    return last.replace(/^(thành phố|tỉnh|tp\.?)\s+/i, '').trim() || address
+  }
+  return address.trim()
+}
 
 export function JobsPage() {
   const [keyword, setKeyword] = useState('')
@@ -22,6 +62,18 @@ export function JobsPage() {
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('recruitment')
   const posts = data?.pages.flatMap((page) => page.items) || []
 
+  // Danh sách các địa điểm / tỉnh thành tự động bóc tách từ các tin tuyển dụng thực tế
+  const locationOptions: SelectOption<string>[] = useMemo(() => {
+    const citiesSet = new Set<string>()
+    for (const post of posts) {
+      if (post.job?.location) {
+        const city = extractCity(post.job.location)
+        if (city) citiesSet.add(city)
+      }
+    }
+    return Array.from(citiesSet).sort().map((c) => ({ id: c, name: c }))
+  }, [posts])
+
   // Filter jobs based on search inputs
   const kw = keyword.trim().toLowerCase()
   const loc = location.trim().toLowerCase()
@@ -35,8 +87,10 @@ export function JobsPage() {
       (post.author?.toLowerCase().includes(kw)) ||
       (post.text?.toLowerCase().includes(kw))
 
-    const matchesLocation = !loc ||
-      (job.location?.toLowerCase().includes(loc))
+    const matchesLocation = !loc || (() => {
+      const city = extractCity(job.location).toLowerCase()
+      return city === loc || (job.location?.toLowerCase().includes(loc) ?? false)
+    })()
 
     return matchesKeyword && matchesLocation
   })
@@ -56,28 +110,43 @@ export function JobsPage() {
         subtitle="Khám phá cơ hội nghề nghiệp dành riêng cho cộng đồng FPTU."
       />
 
-      {/* search bar */}
-      <Reveal>
-        <Card hover={false} className="mb-6 p-4">
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <label className="relative flex flex-1 items-center">
-              <Search size={17} className="pointer-events-none absolute left-3.5 text-plum-400" />
+      {/* Search bar đồng bộ dạng dropdown */}
+      <Reveal className="overflow-visible relative z-20">
+        <Card hover={false} className="mb-6 p-4 overflow-visible relative z-20">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            {/* Chức danh công việc / từ khóa */}
+            <div className="relative flex-1">
+              <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
               <input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="Chức danh công việc hoặc từ khóa..."
-                className="h-11 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-10 pr-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                className="h-11 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-10 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-colors"
               />
-            </label>
-            <label className="relative flex flex-1 items-center">
-              <MapPin size={17} className="pointer-events-none absolute left-3.5 text-plum-400" />
-              <input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Địa điểm (Hà Nội, TP.HCM, Đà Nẵng...)"
-                className="h-11 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-10 pr-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              {keyword && (
+                <button
+                  onClick={() => setKeyword('')}
+                  aria-label="Xóa từ khóa"
+                  className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            {/* Dropdown chọn Tỉnh / Thành phố */}
+            <div className="w-full sm:w-72">
+              <EntitySelectField<string>
+                items={locationOptions}
+                value={location || null}
+                onChange={(val) => setLocation(val || '')}
+                placeholder="Tất cả địa điểm"
+                searchPlaceholder="Tìm tỉnh / thành phố…"
+                searchable
+                buttonIcon={<MapPin size={15} className="text-[#F27024]" />}
               />
-            </label>
+            </div>
+
             {(keyword || location) && (
               <Button
                 variant="secondary"
@@ -86,8 +155,9 @@ export function JobsPage() {
                   setKeyword('')
                   setLocation('')
                 }}
+                className="shrink-0"
               >
-                Xóa tìm kiếm
+                Xóa lọc
               </Button>
             )}
           </div>
@@ -210,9 +280,15 @@ export function JobsPage() {
                       </span>
 
                       {job.location && (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700">
+                        <span
+                          className="inline-flex max-w-full sm:max-w-md items-center gap-1.5 rounded-lg bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700"
+                          title={job.location}
+                        >
                           <MapPin size={13} className="text-[#F27024] shrink-0" />
-                          <span><strong className="text-slate-800">Địa điểm:</strong> {job.location}</span>
+                          <span className="truncate">
+                            <strong className="text-slate-800">Địa điểm:</strong>{' '}
+                            {extractCity(job.location) || job.location}
+                          </span>
                         </span>
                       )}
 

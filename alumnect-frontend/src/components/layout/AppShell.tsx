@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink, Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Search, Bell, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown } from 'lucide-react'
+import { Search, Bell, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown, ArrowUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
@@ -111,6 +111,25 @@ export function AppShell() {
     }
   }
 
+  // Trạng thái hiển thị nút "Cuộn lên đầu trang" (Back to top)
+  const [showBackToTop, setShowBackToTop] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 350)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleClearSearch = () => {
+    setKeyword('')
+  }
+
   // Đóng popover khi đổi trang
   useEffect(() => {
     setActivePopover(null)
@@ -145,8 +164,18 @@ export function AppShell() {
               value={keyword}
               onChange={handleSearchChange}
               placeholder="Tìm kiếm bài viết…"
-              className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56"
+              className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-8 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56"
             />
+            {keyword && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                aria-label="Xóa tìm kiếm"
+                className="absolute right-2.5 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+              >
+                <X size={12} />
+              </button>
+            )}
           </label>
 
           {/* primary nav (centre) */}
@@ -224,7 +253,7 @@ export function AppShell() {
                     isOpen={activePopover === 'apps'}
                     onToggle={() => setActivePopover((prev) => (prev === 'apps' ? null : 'apps'))}
                     onClose={() => setActivePopover(null)}
-                    panelClass="w-72"
+                    panelClass="w-auto p-2"
                     button={
                       <span className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
                         <span className="transition-transform duration-200 group-hover:-translate-y-0.5"><LayoutGrid size={19} /></span>
@@ -234,22 +263,26 @@ export function AppShell() {
                       </span>
                     }
                   >
-                    <p className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-plum-400">Khám phá thêm</p>
-                    <div className="grid grid-cols-3 gap-1">
+                    <p className="px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-plum-400">Khám phá thêm</p>
+                    <div className="flex items-center gap-1.5">
                       {APP_MORE_NAV.map((item) => {
                         const Icon = item.icon
                         return (
                           <Link
                             key={item.to}
                             to={item.to}
-                            className="flex flex-col items-center gap-1.5 rounded-xl p-3 text-center text-xs font-semibold text-plum-600 transition-colors hover:bg-brand-50"
+                            aria-label={item.label}
+                            className="group relative grid h-12 w-12 place-items-center rounded-2xl text-brand-600 transition-all hover:bg-brand-50 active:scale-95"
                           >
                             {Icon && (
-                              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100 text-brand-600">
-                                <Icon size={18} />
+                              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100/80 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:bg-brand-100">
+                                <Icon size={20} />
                               </span>
                             )}
-                            {item.label}
+                            {/* Tooltip khi hover giống hệt icon ở ngoài */}
+                            <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
+                              {item.label}
+                            </span>
                           </Link>
                         )
                       })}
@@ -330,8 +363,18 @@ export function AppShell() {
                   value={keyword}
                   onChange={handleSearchChange}
                   placeholder="Tìm kiếm bài viết…"
-                  className="h-11 w-full rounded-xl border border-plum-900/10 bg-white pl-10 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
+                  className="h-11 w-full rounded-xl border border-plum-900/10 bg-white pl-10 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
                 />
+                {keyword && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    aria-label="Xóa tìm kiếm"
+                    className="absolute right-7 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 hover:bg-plum-100 hover:text-plum-700 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </label>
             </motion.div>
           )}
@@ -466,6 +509,25 @@ export function AppShell() {
 
       {/* Popup mời đăng nhập (kiểu Facebook) — hiện khi Guest cố tương tác */}
       <LoginPromptModal />
+
+      {/* Nút Cuộn nhanh lên đầu trang (Back to top) */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            type="button"
+            onClick={scrollToTop}
+            initial={{ opacity: 0, scale: 0.6, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.6, y: 15 }}
+            transition={{ duration: 0.2 }}
+            aria-label="Cuộn lên đầu trang"
+            title="Cuộn lên đầu trang"
+            className="fixed bottom-20 right-6 z-30 lg:bottom-7 lg:right-7 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-[#F27024] shadow-lg shadow-orange-500/10 backdrop-blur-md transition-all hover:bg-orange-50 hover:border-orange-300 hover:scale-110 active:scale-95 cursor-pointer"
+          >
+            <ArrowUp size={20} strokeWidth={2.5} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

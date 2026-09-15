@@ -208,17 +208,14 @@ export function EventRsvpButton({
           Đã hủy
         </span>
       ) : isPast ? (
-        <Button
-          size={size}
-          variant="secondary"
-          disabled
+        <span
           className={cn(
-            'cursor-not-allowed opacity-60 bg-slate-100 text-slate-400 border-none',
+            'inline-flex items-center justify-center rounded-xl bg-plum-900/[0.06] text-plum-600 font-semibold border border-plum-900/10 select-none',
             sizeClasses
           )}
         >
           Đã kết thúc
-        </Button>
+        </span>
       ) : hasStarted ? (
         isRegistered ? (
           <Button
@@ -226,7 +223,7 @@ export function EventRsvpButton({
             variant="secondary"
             disabled
             className={cn(
-              'cursor-not-allowed border-emerald-200 bg-emerald-50 text-emerald-700',
+              'cursor-not-allowed border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold',
               sizeClasses
             )}
           >
@@ -234,17 +231,14 @@ export function EventRsvpButton({
             <span>Đã đăng ký</span>
           </Button>
         ) : (
-          <Button
-            size={size}
-            variant="secondary"
-            disabled
+          <span
             className={cn(
-              'cursor-not-allowed opacity-75 bg-slate-100 text-slate-500 border-slate-200',
+              'inline-flex items-center justify-center rounded-xl bg-plum-900/[0.06] text-plum-600 font-semibold border border-plum-900/10 select-none',
               sizeClasses
             )}
           >
             Đã bắt đầu
-          </Button>
+          </span>
         )
       ) : isRegistered ? (
         <Button
