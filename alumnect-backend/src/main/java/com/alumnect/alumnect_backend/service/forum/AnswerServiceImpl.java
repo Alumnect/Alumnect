@@ -244,6 +244,11 @@ public class AnswerServiceImpl implements AnswerService {
         User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được bình chọn câu trả lời");
         Answer answer = findActiveAnswerInQuestion(questionId, answerId);
 
+        // KHÔNG gọi answer.setVoteCount(...) — answer đang managed trong persistence context, set lại
+        // field sẽ khiến Hibernate coi entity "dirty" và tự flush thêm 1 UPDATE khi transaction commit,
+        // vô tình đụng vào updated_at (qua @PreUpdate) dù nội dung chưa hề bị sửa. Chỉ tính giá trị mới
+        // ở biến cục bộ để trả về, còn DB đã được cập nhật đúng qua bulk query incrementVoteCount.
+        int newVoteCount = answer.getVoteCount();
         if (!voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId)) {
             voteRepository.save(Vote.builder()
                     .user(user)
@@ -252,10 +257,10 @@ public class AnswerServiceImpl implements AnswerService {
                     .value((short) 1)
                     .build());
             answerRepository.incrementVoteCount(answerId);
-            answer.setVoteCount(answer.getVoteCount() + 1);
+            newVoteCount = newVoteCount + 1;
             log.info("Bình chọn câu trả lời: id={}, questionId={}, người bình chọn={}", answerId, questionId, email);
         }
-        return VoteResponse.builder().voted(true).voteCount(answer.getVoteCount()).build();
+        return VoteResponse.builder().voted(true).voteCount(newVoteCount).build();
     }
 
     /**
@@ -270,13 +275,15 @@ public class AnswerServiceImpl implements AnswerService {
         User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được bình chọn câu trả lời");
         Answer answer = findActiveAnswerInQuestion(questionId, answerId);
 
+        // Không set lại field trên entity managed — xem giải thích ở voteAnswer() phía trên.
+        int newVoteCount = answer.getVoteCount();
         if (voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId)) {
             voteRepository.deleteByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId);
             answerRepository.decrementVoteCount(answerId);
-            answer.setVoteCount(Math.max(0, answer.getVoteCount() - 1));
+            newVoteCount = Math.max(0, newVoteCount - 1);
             log.info("Bỏ bình chọn câu trả lời: id={}, questionId={}, người bỏ bình chọn={}", answerId, questionId, email);
         }
-        return VoteResponse.builder().voted(false).voteCount(answer.getVoteCount()).build();
+        return VoteResponse.builder().voted(false).voteCount(newVoteCount).build();
     }
 
     /**
@@ -285,9 +292,12 @@ public class AnswerServiceImpl implements AnswerService {
      * Luồng: tìm user theo email (404) → tìm câu trả lời ACTIVE thuộc đúng câu hỏi (404 nếu không, tái
      * dùng {@link #findActiveAnswerInQuestion}) → kiểm tra người dùng chính là TÁC GIẢ (403 nếu không)
      * → dọn lượt bình chọn (bảng {@code votes} không có FK cứng nên không tự cascade) của câu trả lời
-     * và các reply trực tiếp (nếu là câu trả lời gốc) → <b>xóa cứng</b> câu trả lời — reply tự bị xóa
-     * theo qua ràng buộc DB {@code answers.parent_id ... ON DELETE CASCADE} → nếu là câu trả lời GỐC
-     * thì giảm {@code answer_count} của câu hỏi (đối xứng với {@link #createAnswer}, không âm).
+     * và các reply trực tiếp (nếu là câu trả lời gốc) → nếu là câu trả lời GỐC thì <b>xóa cứng tường
+     * minh</b> các reply trước bằng bulk query ({@link AnswerRepository#deleteByParentId}) — KHÔNG dựa
+     * vào ràng buộc DB {@code ON DELETE CASCADE}, vì persistence context vẫn còn đang giữ managed các
+     * reply nạp ở bước trên, xóa ngầm dưới DB sẽ khiến Hibernate lệch trạng thái khi flush → sau đó xóa
+     * cứng chính câu trả lời → nếu là câu trả lời GỐC thì giảm {@code answer_count} của câu hỏi (đối
+     * xứng với {@link #createAnswer}, không âm).
      * <p>
      * Xóa cứng (không phải xóa mềm) để nhất quán với cách {@code PostServiceImpl.deleteComment} (UC20)
      * xử lý bình luận — Answer đóng vai trò tương tự Comment (phản hồi dưới nội dung chính), khác với
@@ -308,16 +318,19 @@ public class AnswerServiceImpl implements AnswerService {
 
         boolean isTopLevel = answer.getParent() == null;
 
-        // Nếu là câu trả lời GỐC: các reply trực tiếp sẽ bị xóa cứng theo (DB cascade parent_id).
-        // Gom ID (câu trả lời + reply) để dọn vote polymorphic trước — votes không có FK nên không tự cascade.
+        // Nếu là câu trả lời GỐC: gom ID reply trực tiếp (chỉ lấy ID, không nạp entity) để dọn vote
+        // polymorphic trước — votes không có FK nên không tự cascade.
         List<Long> deletedAnswerIds = new ArrayList<>();
         deletedAnswerIds.add(answerId);
         if (isTopLevel) {
-            answerRepository.findActiveRepliesByParentIds(List.of(answerId))
-                    .forEach(reply -> deletedAnswerIds.add(reply.getId()));
+            deletedAnswerIds.addAll(answerRepository.findActiveReplyIdsByParentId(answerId));
         }
         voteRepository.deleteByTargetTypeAndTargetIdIn(VoteTargetType.ANSWER, deletedAnswerIds);
 
+        // Xóa reply TRƯỚC bằng bulk query tường minh (không dựa cascade DB ngầm), rồi mới xóa câu trả lời gốc.
+        if (isTopLevel) {
+            answerRepository.deleteByParentId(answerId);
+        }
         answerRepository.delete(answer);
 
         // Chỉ câu trả lời GỐC mới giảm bộ đếm answer_count (reply không tính vào số câu trả lời khi tạo).

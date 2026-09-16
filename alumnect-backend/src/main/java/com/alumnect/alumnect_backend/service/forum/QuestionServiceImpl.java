@@ -341,6 +341,11 @@ public class QuestionServiceImpl implements QuestionService {
         Question question = questionRepository.findActiveDetailById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu hỏi với id: " + questionId));
 
+        // KHÔNG gọi question.setVoteCount(...) — question đang managed trong persistence context, set
+        // lại field sẽ khiến Hibernate coi entity "dirty" và tự flush thêm 1 UPDATE khi transaction
+        // commit, vô tình đụng updated_at dù nội dung chưa hề bị sửa. Chỉ tính giá trị mới ở biến cục
+        // bộ để trả về, còn DB đã được cập nhật đúng qua bulk query incrementVoteCount.
+        int newVoteCount = question.getVoteCount();
         if (!voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.QUESTION, questionId)) {
             voteRepository.save(Vote.builder()
                     .user(user)
@@ -349,10 +354,10 @@ public class QuestionServiceImpl implements QuestionService {
                     .value((short) 1)
                     .build());
             questionRepository.incrementVoteCount(questionId);
-            question.setVoteCount(question.getVoteCount() + 1);
+            newVoteCount = newVoteCount + 1;
             log.info("Bình chọn câu hỏi: id={}, người bình chọn={}", questionId, email);
         }
-        return VoteResponse.builder().voted(true).voteCount(question.getVoteCount()).build();
+        return VoteResponse.builder().voted(true).voteCount(newVoteCount).build();
     }
 
     /**
@@ -368,13 +373,15 @@ public class QuestionServiceImpl implements QuestionService {
         Question question = questionRepository.findActiveDetailById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu hỏi với id: " + questionId));
 
+        // Không set lại field trên entity managed — xem giải thích ở voteQuestion() phía trên.
+        int newVoteCount = question.getVoteCount();
         if (voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.QUESTION, questionId)) {
             voteRepository.deleteByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.QUESTION, questionId);
             questionRepository.decrementVoteCount(questionId);
-            question.setVoteCount(Math.max(0, question.getVoteCount() - 1));
+            newVoteCount = Math.max(0, newVoteCount - 1);
             log.info("Bỏ bình chọn câu hỏi: id={}, người bỏ bình chọn={}", questionId, email);
         }
-        return VoteResponse.builder().voted(false).voteCount(question.getVoteCount()).build();
+        return VoteResponse.builder().voted(false).voteCount(newVoteCount).build();
     }
 
     /**
