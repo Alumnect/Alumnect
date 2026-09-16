@@ -394,10 +394,9 @@ export function MapPage() {
               </div>
 
               {isMajorMenuOpen && (
-                <div className="absolute left-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-plum-900/10 bg-white/95 p-2 shadow-xl backdrop-blur-xl">
-                  <div className="border-b border-plum-900/[0.07] px-2 pb-2 pt-1">
-                    <p className="text-xs font-extrabold text-plum-900">Lọc theo ngành</p>
-                    <p className="mt-0.5 text-[10px] text-plum-400">Chọn một ngành để khám phá mạng lưới</p>
+                <div className="absolute left-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-plum-900/10 bg-white/95 dark:border-[#393a3b] dark:bg-[#242526] p-2 shadow-xl backdrop-blur-xl z-20">
+                  <div className="border-b border-plum-900/[0.07] dark:border-[#393a3b] px-2 pb-2 pt-1">
+                    <p className="text-xs font-extrabold text-plum-900 dark:text-[#f0f2f5]">Lọc theo ngành</p>
                   </div>
                   <div className="mt-1 max-h-64 overflow-y-auto pr-0.5">
                     <button
@@ -406,8 +405,8 @@ export function MapPage() {
                       aria-selected={selectedMajorId === null}
                       onClick={() => handleMajorChange(null)}
                       className={cn(
-                        'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-colors',
-                        selectedMajorId === null ? 'bg-brand-50 text-brand-700' : 'text-plum-600 hover:bg-plum-900/[0.04]',
+                        'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-colors cursor-pointer',
+                        selectedMajorId === null ? 'bg-brand-50 dark:bg-brand-500/20 text-brand-700 dark:text-brand-400' : 'text-plum-600 dark:text-[#b0b3b8] hover:bg-plum-900/[0.04] dark:hover:bg-[#3a3b3c] hover:text-plum-900 dark:hover:text-[#f0f2f5]',
                       )}
                     >
                       <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-brand-100 px-1.5 text-[10px] font-extrabold text-brand-600">
@@ -426,15 +425,17 @@ export function MapPage() {
                           aria-selected={active}
                           onClick={() => handleMajorChange(major.id)}
                           className={cn(
-                            'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition-colors',
-                            active ? 'bg-brand-50 text-brand-700' : 'text-plum-600 hover:bg-plum-900/[0.04]',
+                            'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition-colors cursor-pointer',
+                            active
+                              ? 'bg-brand-50 dark:bg-brand-500/20 text-brand-700 dark:text-brand-400'
+                              : 'text-plum-600 dark:text-[#b0b3b8] hover:bg-plum-900/[0.04] dark:hover:bg-[#3a3b3c] hover:text-plum-900 dark:hover:text-[#f0f2f5]',
                           )}
                         >
-                          <span className={cn('grid h-7 min-w-7 place-items-center rounded-lg px-1.5 text-[10px] font-extrabold', active ? 'bg-brand-100 text-brand-600' : 'bg-plum-900/[0.05] text-plum-400')}>
+                          <span className={cn('grid h-7 min-w-7 place-items-center rounded-lg px-1.5 text-[10px] font-extrabold', active ? 'bg-brand-100 dark:bg-brand-500/30 text-brand-600 dark:text-brand-400' : 'bg-plum-900/[0.05] dark:bg-[#3a3b3c] text-plum-400 dark:text-[#b0b3b8]')}>
                             {majorCounts[major.id] ?? 0}
                           </span>
                           <span className="flex-1 truncate text-xs font-semibold">{major.name}</span>
-                          {active && <Check size={14} className="shrink-0 text-brand-600" />}
+                          {active && <Check size={14} className="shrink-0 text-brand-600 dark:text-brand-400" />}
                         </button>
                       )
                     })}

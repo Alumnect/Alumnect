@@ -296,18 +296,18 @@ export function CreatePostModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative m-auto w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-plum-900/10 overflow-hidden"
+            className="relative m-auto w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-plum-900/10 overflow-hidden dark:bg-[#242526] dark:border-[#393a3b]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-100 bg-white shrink-0">
-              <h3 className="text-xl font-bold text-plum-900">
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-100 bg-white shrink-0 dark:bg-[#242526] dark:border-[#393a3b]">
+              <h3 className="text-xl font-bold text-plum-900 dark:text-[#f0f2f5]">
                 {editPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
               </h3>
               <button
                 type="button"
                 onClick={close}
                 aria-label="Đóng"
-                className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
+                className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5]"
               >
                 <X size={18} />
               </button>
@@ -320,7 +320,7 @@ export function CreatePostModal({
                 <div className="flex items-center gap-3">
                   <Avatar src={viewer.avatarUrl ?? ''} name={viewer.name} size={44} verified={viewer.verified} />
                   <div className="min-w-0">
-                    <p className="truncate font-bold text-plum-900">{viewer.name}</p>
+                    <p className="truncate font-bold text-plum-900 dark:text-[#f0f2f5]">{viewer.name}</p>
                   </div>
                 </div>
                 {/* Nội dung (Ẩn đi nếu là Sự kiện, vì Sự kiện sẽ có form mô tả riêng bên trong khối sự kiện) */}
@@ -331,7 +331,7 @@ export function CreatePostModal({
                       rows={5}
                       maxLength={POST_CONTENT_MAX}
                       placeholder={type === 'recruitment' ? "Mô tả chi tiết công việc tuyển dụng..." : "Bạn muốn chia sẻ điều gì với cộng đồng?"}
-                      className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 text-[15px] leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-[#F27024] transition-all duration-300 focus:bg-white"
+                      className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-4 text-[15px] leading-relaxed text-plum-800 outline-none transition-colors placeholder:text-plum-400 focus:border-[#F27024] transition-all duration-300 focus:bg-white dark:border-[#505254] dark:bg-[#1c1d1e] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024] dark:focus:bg-[#1c1d1e]"
                     />
                     <div className="mt-1 flex items-center justify-between">
                       {errors.content ? (
@@ -339,7 +339,7 @@ export function CreatePostModal({
                       ) : (
                         <span />
                       )}
-                      <span className="text-xs text-plum-400">
+                      <span className="text-xs text-plum-400 dark:text-[#9ca3af]">
                         {content.length}/{POST_CONTENT_MAX}
                       </span>
                     </div>
@@ -360,7 +360,7 @@ export function CreatePostModal({
                           'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed',
                           type === t
                             ? 'bg-brand-600 text-white shadow-sm enabled:hover:bg-brand-700'
-                            : 'bg-white text-slate-600 border border-slate-200 enabled:hover:border-brand-300 enabled:hover:text-brand-600'
+                            : 'bg-white text-slate-600 border border-slate-200 enabled:hover:border-brand-300 enabled:hover:text-brand-600 dark:bg-[#3a3b3c] dark:border-[#505254] dark:text-[#e4e6eb] dark:enabled:hover:border-brand-400 dark:enabled:hover:text-brand-400'
                         )}
                       >
                         <Icon size={15} /> {POST_TYPE_LABELS[t]}
@@ -371,30 +371,30 @@ export function CreatePostModal({
 
                 {/* Form Tuyển dụng */}
                 {type === 'recruitment' && (
-                  <div className="space-y-4 rounded-xl border border-brand-500/10 bg-brand-50/40 p-4 animate-fade-in">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-brand-700">
+                  <div className="space-y-4 rounded-xl border border-brand-500/10 bg-brand-50/40 p-4 animate-fade-in dark:border-brand-500/25 dark:bg-[#18191a]">
+                    <h4 className="flex items-center gap-2 text-sm font-bold text-brand-700 dark:text-brand-400">
                       <Briefcase size={16} /> Thông tin tuyển dụng
                     </h4>
                     {/* Chức danh + Công ty */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           Chức vụ <span className="text-coral-500">*</span>
                         </label>
                         <input
                           {...register('job.title')}
-                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                           placeholder="VD: Frontend Developer"
                         />
                         {errors.job?.title && <p className="mt-1 text-xs text-coral-500">{errors.job.title.message}</p>}
                       </div>
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           Công ty <span className="text-coral-500">*</span>
                         </label>
                         <input
                           {...register('job.company')}
-                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                           placeholder="VD: FPT Software"
                         />
                         {errors.job?.company && <p className="mt-1 text-xs text-coral-500">{errors.job.company.message}</p>}
@@ -404,7 +404,7 @@ export function CreatePostModal({
                     {/* Địa điểm */}
                     <div className="grid grid-cols-1 gap-4">
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           <MapPin size={13} /> Địa điểm
                         </label>
                         <Controller
@@ -416,7 +416,7 @@ export function CreatePostModal({
                               onChange={(val) => field.onChange(val)}
                               onSelect={(place) => field.onChange(place?.location || '')}
                               placeholder="Hà Nội, Remote..."
-                              inputClassName="!rounded-lg !py-2 h-[38px] text-sm"
+                              inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-[#55575a] dark:!bg-[#242526] dark:!text-[#f0f2f5]"
                             />
                           )}
                         />
@@ -425,8 +425,8 @@ export function CreatePostModal({
 
                     {/* Mức lương */}
                     <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
-                        <DollarSign size={13} /> Mức lương (VNĐ) <span className="font-normal text-plum-400">— Để trống nếu thỏa thuận</span>
+                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
+                        <DollarSign size={13} /> Mức lương (VNĐ) <span className="font-normal text-plum-400 dark:text-[#9ca3af]">— Để trống nếu thỏa thuận</span>
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="relative">
@@ -435,10 +435,10 @@ export function CreatePostModal({
                             min={0}
                             step={500000}
                             {...register('job.salaryMin', { valueAsNumber: true })}
-                            className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                            className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                             placeholder="Tối thiểu"
                           />
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VNĐ</span>
+                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 dark:text-[#9ca3af]">VNĐ</span>
                         </div>
                         <div className="relative">
                           <input
@@ -446,10 +446,10 @@ export function CreatePostModal({
                             min={0}
                             step={500000}
                             {...register('job.salaryMax', { valueAsNumber: true })}
-                            className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                            className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 pr-14 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                             placeholder="Tối đa"
                           />
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VNĐ</span>
+                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 dark:text-[#9ca3af]">VNĐ</span>
                         </div>
                       </div>
                     </div>
@@ -457,25 +457,25 @@ export function CreatePostModal({
                     {/* Email + Link */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           <Mail size={13} /> Email liên hệ
                         </label>
                         <input
                           {...register('job.contactEmail')}
                           type="email"
-                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                           placeholder="hr@company.com"
                         />
                         {errors.job?.contactEmail && <p className="mt-1 text-xs text-coral-500">{errors.job.contactEmail.message}</p>}
                       </div>
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           <Link size={13} /> Link ứng tuyển
                         </label>
                         <input
                           {...register('job.applyUrl')}
                           type="url"
-                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                          className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                           placeholder="https://..."
                         />
                       </div>
@@ -484,18 +484,18 @@ export function CreatePostModal({
                 )}
 
                 {type === 'event' && (
-                  <div className="space-y-4 rounded-xl border border-violet-500/10 bg-violet-50/40 p-4 animate-fade-in">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-violet-700">
+                  <div className="space-y-4 rounded-xl border border-violet-500/10 bg-violet-50/40 p-4 animate-fade-in dark:border-violet-500/25 dark:bg-[#18191a]">
+                    <h4 className="flex items-center gap-2 text-sm font-bold text-violet-700 dark:text-violet-400">
                       <CalendarPlus size={16} /> Thông tin sự kiện
                     </h4>
                     {/* Tên sự kiện */}
                     <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                         Tên sự kiện <span className="text-coral-500">*</span>
                       </label>
                       <input
                         {...register('event.title')}
-                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                        className="w-full rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                         placeholder="VD: Hội thảo công nghệ 2024"
                       />
                       {errors.event?.title && <p className="mt-1 text-xs text-coral-500">{errors.event.title.message}</p>}
@@ -504,7 +504,7 @@ export function CreatePostModal({
                     {/* Thời gian */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           <Clock size={13} /> Bắt đầu <span className="text-coral-500">*</span>
                         </label>
                         <Controller
@@ -525,14 +525,14 @@ export function CreatePostModal({
                               placeholderText="Chọn ngày giờ"
                               wrapperClassName="w-full"
                               popperPlacement="bottom-start"
-                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5]"
                             />
                           )}
                         />
                         {errors.event?.startTime && <p className="mt-1 text-xs text-coral-500">{errors.event.startTime.message}</p>}
                       </div>
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           <Clock size={13} /> Kết thúc
                         </label>
                         <Controller
@@ -553,7 +553,7 @@ export function CreatePostModal({
                               placeholderText="Chọn ngày giờ"
                               wrapperClassName="w-full"
                               popperPlacement="bottom-end"
-                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5]"
                             />
                           )}
                         />
@@ -564,7 +564,7 @@ export function CreatePostModal({
                     {/* Địa điểm + Sức chứa */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           <MapPin size={13} /> Địa điểm
                         </label>
                         <Controller
@@ -576,20 +576,20 @@ export function CreatePostModal({
                               onChange={(val) => field.onChange(val)}
                               onSelect={(place) => field.onChange(place?.location || '')}
                               placeholder="Tòa nhà Alpha, ĐH FPT"
-                              inputClassName="!rounded-lg !py-2 h-[38px] text-sm"
+                              inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-[#55575a] dark:!bg-[#242526] dark:!text-[#f0f2f5]"
                             />
                           )}
                         />
                       </div>
                       <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                           <Users size={13} /> Sức chứa (người)
                         </label>
                         <input
                           type="number"
                           min={currentAttendees > 0 ? currentAttendees : 1}
                           {...register('event.capacity', { valueAsNumber: true })}
-                          className="w-full h-[38px] rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20"
+                          className="w-full h-[38px] rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm focus:border-[#F27024] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:focus:border-[#F27024]"
                         />
                         {errors.event?.capacity && (
                           <p className="mt-1 text-xs text-coral-500">{errors.event.capacity.message}</p>
@@ -598,8 +598,8 @@ export function CreatePostModal({
                     </div>
 
                     {/* Mô tả sự kiện */}
-                    <div className="pt-2 border-t border-violet-500/10 mt-4">
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                    <div className="pt-2 border-t border-violet-500/10 dark:border-violet-500/20 mt-4">
+                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                         <FileText size={13} /> Mô tả chi tiết sự kiện
                       </label>
                       <textarea
@@ -607,13 +607,13 @@ export function CreatePostModal({
                         rows={4}
                         maxLength={POST_CONTENT_MAX}
                         placeholder="Giới thiệu về nội dung sự kiện, khách mời, lịch trình..."
-                        className="w-full resize-none rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm leading-relaxed text-plum-800 outline-none focus:border-[#F27024] transition-all duration-300 focus:ring-2 focus:ring-[#F27024]/20"
+                        className="w-full resize-none rounded-lg border border-plum-900/10 bg-white px-3 py-2 text-sm leading-relaxed text-plum-800 outline-none focus:border-[#F27024] transition-all duration-300 focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#55575a] dark:bg-[#242526] dark:text-[#f0f2f5] dark:placeholder-[#9ca3af] dark:focus:border-[#F27024]"
                       />
                     </div>
 
                     {/* Ảnh sự kiện */}
                     <div className="pt-2">
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900">
+                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
                         <ImageIcon size={13} /> Ảnh sự kiện
                       </label>
                       {allImages.length > 0 && (
@@ -623,7 +623,7 @@ export function CreatePostModal({
                             {allImages.map((url, idx) => {
                               const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
                               return (
-                                <div key={idx} className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-black/10">
+                                <div key={idx} className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-black/10 dark:border-[#55575a]">
                                   {isVid ? (
                                     <video src={url} className="h-full w-full object-cover" />
                                   ) : (
@@ -643,11 +643,11 @@ export function CreatePostModal({
                         </div>
                       )}
                       {allImages.length < 10 && (
-                        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-plum-900/15 px-4 py-2 text-xs font-semibold text-plum-500 transition-colors hover:bg-white">
+                        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-plum-900/15 px-4 py-2 text-xs font-semibold text-plum-500 transition-colors hover:bg-white dark:border-[#55575a] dark:bg-[#242526] dark:text-[#b0b3b8] dark:hover:bg-[#2a2b2d]">
                           {isUploading ? (
                             <><Loader2 size={14} className="animate-spin" /> Đang tải {uploadingCount} phương tiện lên…</>
                           ) : (
-                            <><ImageIcon size={14} className="text-violet-500" /> {allImages.length > 0 ? 'Thêm ảnh/video khác' : 'Tải ảnh hoặc video lên'}</>
+                            <><ImageIcon size={14} className="text-violet-500 dark:text-violet-400" /> {allImages.length > 0 ? 'Thêm ảnh/video khác' : 'Tải ảnh hoặc video lên'}</>
                           )}
                           <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
                         </label>
@@ -722,7 +722,7 @@ export function CreatePostModal({
               </div>
 
               {/* Sticky Action Footer */}
-              <div className="shrink-0 border-t border-slate-100 bg-white px-6 md:px-8 py-4 flex items-center justify-end gap-3">
+              <div className="shrink-0 border-t border-slate-100 bg-white px-6 md:px-8 py-4 flex items-center justify-end gap-3 dark:bg-[#242526] dark:border-[#393a3b]">
                 <Button type="button" variant="secondary" onClick={close}>
                   Hủy
                 </Button>

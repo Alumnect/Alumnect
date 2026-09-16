@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================================================
    AlumNect — Warm Pastel Design System (Tailwind CSS v4, CSS-first @theme)
    Direction: a soft, human, premium community — warm ivory canvas, pillowy
@@ -225,6 +227,68 @@
     outline: 2px solid var(--color-brand-400);
     outline-offset: 2px;
     border-radius: 8px;
+  }
+
+  html.dark {
+    color-scheme: dark;
+
+    /* Facebook / Instagram Dark Theme Color Tokens */
+    --color-ink-950: #18191a;
+    --color-ink-900: #18191a;
+    --color-ink-850: #242526;
+    --color-ink-800: #242526;
+    --color-ink-700: #393a3b;
+    --color-ink-600: #3a3b3c;
+
+    --color-cream-50: #242526;
+    --color-cream-100: #18191a;
+    --color-cream-200: #242526;
+    --color-cream-300: #393a3b;
+
+    --color-brand-50: #2d2621;
+    --color-brand-100: #3a2e26;
+    --color-brand-200: #4a382b;
+    --color-orange-50: #2d2621;
+    --color-amber-50: #2d2a21;
+    --color-indigo-50: #252838;
+    --color-violet-50: #292636;
+
+    --color-plum-300: #393a3b;
+    --color-plum-400: #b0b3b8;
+    --color-plum-500: #b0b3b8;
+    --color-plum-600: #e4e6eb;
+    --color-plum-700: #f0f2f5;
+    --color-plum-800: #ffffff;
+    --color-plum-900: #ffffff;
+
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  html.dark * {
+    border-color: #393a3b;
+  }
+
+  html.dark body {
+    color: #e4e6eb;
+    background-color: #18191a;
+    background-image: none;
+  }
+
+  html.dark h1,
+  html.dark h2,
+  html.dark h3,
+  html.dark h4,
+  html.dark h5 {
+    color: #ffffff;
+  }
+
+  html.dark ::-webkit-scrollbar-track {
+    background: #18191a;
+  }
+  html.dark ::-webkit-scrollbar-thumb {
+    background: #4e4f50;
+    border: 3px solid #18191a;
   }
 }
 
@@ -497,3 +561,300 @@ input[type='number'] {
   appearance: textfield;
 }
 
+/* ============================================================================
+   Facebook & Instagram Dark Mode: ĐEN NGOÀI (#18191a), XÁM LÀ COMPONENT (#242526)
+   ========================================================================== */
+
+/* 1. ĐEN NGOÀI: Toàn bộ nền canvas, body, wrapper trang ngoài cùng */
+html.dark,
+html.dark body,
+html.dark #root,
+html.dark .min-h-screen,
+html.dark div.min-h-screen {
+  background-color: #18191a !important;
+  color: #e4e6eb;
+}
+
+/* 2. XÁM LÀ CÁC COMPONENT: Header, Card bài viết, Khung lớn */
+html.dark header,
+html.dark .card-surface,
+html.dark [class*="card-surface"],
+html.dark .bg-white,
+html.dark [class*="bg-white"],
+html.dark [class*="bg-white/"] {
+  background: #242526 !important;
+  background-image: none !important;
+  border-color: #393a3b !important;
+}
+
+html.dark .card-surface {
+  background: #242526 !important;
+  background-image: none !important;
+  border-color: #393a3b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .glass {
+  background: rgba(36, 37, 38, 0.88) !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-color: #393a3b !important;
+  box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.7) !important;
+}
+
+html.dark .glass-strong {
+  background: rgba(36, 37, 38, 0.96) !important;
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  border-color: #4e4f50 !important;
+  box-shadow: 0 16px 44px -22px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3. Ô CON BÊN TRONG COMPONENT: Ô mô tả, Ô tìm kiếm, Pills badge (Xám #3a3b3c) */
+html.dark .bg-slate-50:not(.min-h-screen),
+html.dark [class*="bg-slate-50/"]:not(.min-h-screen),
+html.dark .bg-slate-100,
+html.dark [class*="bg-slate-100/"],
+html.dark .bg-slate-200,
+html.dark [class*="bg-slate-200/"],
+html.dark .bg-gray-50,
+html.dark [class*="bg-gray-50/"],
+html.dark .bg-gray-100,
+html.dark [class*="bg-gray-100/"],
+html.dark .bg-cream-100,
+html.dark .bg-cream-200,
+html.dark .bg-cream-300,
+html.dark .bg-brand-50,
+html.dark [class*="bg-brand-50/"],
+html.dark .bg-brand-100,
+html.dark .bg-amber-50,
+html.dark [class*="bg-amber-50/"],
+html.dark .bg-violet-50,
+html.dark [class*="bg-violet-50/"],
+html.dark .bg-indigo-50,
+html.dark [class*="bg-indigo-50/"] {
+  background-color: #3a3b3c !important;
+}
+
+/* Translucent tinted chip backgrounds in dark mode */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark ::selection {
+  background-color: rgba(242, 112, 36, 0.35);
+  color: #ffffff;
+}
+
+/* Custom Sleek Dark Scrollbars */
+html.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #18191a;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3a3b3c;
+  border-radius: 9999px;
+  border: 2px solid #18191a;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4e4f50;
+}
+
+html.dark .bg-rose-50,
+html.dark [class*="bg-rose-50/"],
+html.dark .bg-coral-50,
+html.dark [class*="bg-coral-50/"],
+html.dark [class*="bg-coral-300"],
+html.dark .bg-coral-500\/10 {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+}
+
+html.dark .text-coral-500,
+html.dark .text-coral-600,
+html.dark .text-coral-700,
+html.dark .text-coral-800,
+html.dark .text-rose-600,
+html.dark .text-rose-700,
+html.dark .text-rose-800 {
+  color: #fecdd3 !important;
+}
+
+html.dark .border-coral-200,
+html.dark [class*="border-coral-200"],
+html.dark .border-rose-200,
+html.dark [class*="border-rose-200"] {
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+html.dark .bg-orange-50,
+html.dark [class*="bg-orange-50/"] {
+  background-color: rgba(242, 112, 36, 0.15) !important;
+}
+
+/* Gradients that use light pastel tints: replace with sleek dark gradients */
+html.dark .from-brand-50,
+html.dark [class*="from-brand-50/"],
+html.dark .from-brand-100,
+html.dark [class*="from-brand-100/"],
+html.dark .from-orange-50,
+html.dark [class*="from-orange-50/"],
+html.dark .from-amber-50,
+html.dark [class*="from-amber-50/"],
+html.dark .from-violet-50,
+html.dark [class*="from-violet-50/"],
+html.dark .from-indigo-50,
+html.dark [class*="from-indigo-50/"],
+html.dark .to-brand-50,
+html.dark [class*="to-brand-50/"],
+html.dark .to-brand-100,
+html.dark [class*="to-brand-100/"],
+html.dark .to-amber-50,
+html.dark [class*="to-amber-50/"],
+html.dark .to-violet-50,
+html.dark [class*="to-violet-50/"],
+html.dark .via-brand-50,
+html.dark [class*="via-brand-50/"],
+html.dark .via-violet-50,
+html.dark [class*="via-violet-50/"] {
+  --tw-gradient-from: #2a2b2c !important;
+  --tw-gradient-to: #242526 !important;
+  --tw-gradient-stops: #2a2b2c, #242526 !important;
+}
+
+html.dark .text-emerald-950,
+html.dark .text-rose-950,
+html.dark .text-amber-950,
+html.dark .text-plum-950 {
+  color: #f0f2f5 !important;
+}
+
+/* High Contrast Facebook Dark Mode Text (Pure White & Bright Light Gray) */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark [class*="text-slate-900"],
+html.dark [class*="text-slate-800"],
+html.dark [class*="text-slate-700"],
+html.dark .text-brand-900,
+html.dark .text-violet-900,
+html.dark .text-indigo-900 {
+  color: #f0f2f5 !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark [class*="text-slate-600"],
+html.dark [class*="text-slate-500"] {
+  color: #e4e6eb !important;
+}
+
+html.dark .text-slate-400,
+html.dark [class*="text-slate-400"] {
+  color: #b0b3b8 !important;
+}
+
+/* Borders */
+html.dark .border-slate-200,
+html.dark [class*="border-slate-200"],
+html.dark .border-slate-100,
+html.dark [class*="border-slate-100"],
+html.dark .border-slate-300,
+html.dark [class*="border-slate-300"],
+html.dark .border-brand-100,
+html.dark .border-brand-200,
+html.dark .border-violet-100,
+html.dark .border-violet-200,
+html.dark .border-orange-100,
+html.dark .border-orange-200,
+html.dark [class*="border-brand-100"],
+html.dark [class*="border-brand-200"],
+html.dark [class*="border-violet-100"],
+html.dark [class*="border-violet-200"],
+html.dark [class*="border-orange-200"] {
+  border-color: #393a3b !important;
+}
+
+/* Hover States (Facebook #4e4f50) */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-plum-900\/\[0\.05\]:hover,
+html.dark .hover\:bg-plum-900\/\[0\.04\]:hover {
+  background-color: #4e4f50 !important;
+}
+
+/* Action button hover states in dark mode */
+html.dark .hover\:bg-rose-50:hover {
+  background-color: rgba(244, 63, 94, 0.2) !important;
+  color: #fda4af !important;
+}
+html.dark .hover\:bg-amber-50:hover {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: #fcd34d !important;
+}
+html.dark .hover\:bg-plum-50:hover {
+  background-color: #3a3b3c !important;
+  color: #f0f2f5 !important;
+}
+
+/* Inputs, Textareas & Search Bars: High contrast borders and distinct surface */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
+  background-color: #242526 !important;
+  color: #f0f2f5 !important;
+  border: 1px solid #55575a !important;
+}
+html.dark input:not([type="checkbox"]):not([type="radio"]):focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #f27024 !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(242, 112, 36, 0.25) !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Avatar Offset in Dark Mode */
+html.dark .ring-offset-cream-50 {
+  --tw-ring-offset-color: #242526 !important;
+}
+
+/* Datepicker dark theme */
+html.dark .react-datepicker {
+  background-color: #242526 !important;
+  border-color: #393a3b !important;
+}
+html.dark .react-datepicker__header {
+  background-color: #18191a !important;
+  border-bottom-color: #393a3b !important;
+}
+html.dark .react-datepicker__current-month,
+html.dark .react-datepicker-time__header {
+  color: #ffffff !important;
+}
+html.dark .react-datepicker__day {
+  color: #e4e6eb !important;
+}
+html.dark .react-datepicker__day:hover {
+  background-color: #3a3b3c !important;
+  color: #f27024 !important;
+}
+
+/* Floating Form Labels: When input is empty (placeholder-shown), label inside MUST be transparent without dark boxes */
+html.dark .peer:placeholder-shown ~ label,
+html.dark label.peer-placeholder-shown {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Select option elements in dark mode */
+html.dark option {
+  background-color: #242526 !important;
+  color: #f0f2f5 !important;
+}

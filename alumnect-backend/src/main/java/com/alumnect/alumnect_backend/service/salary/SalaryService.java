@@ -95,4 +95,17 @@ public interface SalaryService {
      * @throws com.alumnect.alumnect_backend.exception.BadRequestException nếu page/size không hợp lệ
      */
     PageResponse<SalaryContributionResponse> getFeed(int page, int size);
+
+    /**
+     * Lấy danh sách lượt đóng góp lương có hỗ trợ bộ lọc động phía máy chủ (Server-side Filtering & Pagination).
+     *
+     * @param page       Số trang (0-indexed)
+     * @param size       Kích thước trang
+     * @param industryId ID ngành nghề cần lọc (tùy chọn)
+     * @param region     Khu vực hoặc tỉnh thành cần lọc (tùy chọn)
+     * @param search     Từ khóa tìm kiếm theo chức danh hoặc công ty (tùy chọn)
+     * @param sortBy     Tiêu chí sắp xếp ("latest", "salaryDesc", "salaryAsc")
+     * @return Trang lượt đóng góp khớp bộ lọc
+     */
+    PageResponse<SalaryContributionResponse> getFeed(int page, int size, Long industryId, String region, String search, String sortBy);
 }

@@ -55,7 +55,7 @@ export function DeletePostModal({
       icon={<AlertTriangle size={18} className="text-rose-500" />}
       footer={footer}
     >
-      <p className="text-sm text-plum-600">
+      <p className="text-sm text-plum-600 dark:text-[#e4e6eb]">
         Bạn có chắc muốn xóa bài viết này không?
       </p>
     </Modal>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { AuthScaffold, Field, GoogleButton, useLogin, loginSchema } from '@/features/auth'
 import type { LoginInput } from '@/features/auth'
 import { Button } from '@/components/ui/Button'
@@ -75,9 +75,13 @@ export function LoginPage() {
         </div>
 
         {loginM.isError && (
-          <p className="rounded-lg bg-coral-300/30 px-3 py-2 text-sm font-medium text-coral-700">
-            {(loginM.error as Error).message}
-          </p>
+          <div
+            role="alert"
+            className="flex items-center gap-2.5 rounded-xl border border-rose-200/60 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200 animate-pop"
+          >
+            <AlertCircle size={16} className="shrink-0 text-rose-500 dark:text-rose-400" />
+            <span className="text-rose-700 dark:text-rose-200 font-medium">{(loginM.error as Error).message}</span>
+          </div>
         )}
 
         <Button

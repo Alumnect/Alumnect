@@ -137,15 +137,23 @@ public class SalaryController {
      * đóng góp, dù ai gọi cũng không biết bản ghi là của ai).
      *
      * @param page Số trang (0-indexed, mặc định 0)
-     * @param size Kích thước trang (mặc định 12)
+     * @param size       Kích thước trang (mặc định 6)
+     * @param industryId ID ngành nghề cần lọc (tùy chọn)
+     * @param region     Khu vực hoặc tỉnh thành cần lọc (tùy chọn)
+     * @param search     Từ khóa tìm kiếm theo chức danh hoặc công ty (tùy chọn)
+     * @param sortBy     Tiêu chí sắp xếp ("latest", "salaryDesc", "salaryAsc")
      * @return Trang lượt đóng góp {@link PageResponse}&lt;{@link SalaryContributionResponse}&gt; bọc trong {@link ApiResponse}, HTTP 200 OK
      */
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<PageResponse<SalaryContributionResponse>>> getFeed(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) Long industryId,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "latest") String sortBy) {
 
-        PageResponse<SalaryContributionResponse> feed = salaryService.getFeed(page, size);
+        PageResponse<SalaryContributionResponse> feed = salaryService.getFeed(page, size, industryId, region, search, sortBy);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách đóng góp lương thành công", feed));
     }
 }

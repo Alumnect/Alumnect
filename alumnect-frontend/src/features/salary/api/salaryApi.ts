@@ -13,8 +13,8 @@ import type { CreateSalaryContributionInput, Industry, SalaryContribution, Salar
  * đóng góp, phân trang, ẩn danh). Interceptor `http` tự bóc envelope `response.data`.
  */
 
-/** Kích thước trang mặc định cho feed từng lượt đóng góp (khớp default phía Backend). */
-export const FEED_PAGE_SIZE = 12
+/** Kích thước trang mặc định cho feed (lấy toàn bộ các lượt đóng góp để phục vụ lọc toàn diện). */
+export const FEED_PAGE_SIZE = 100
 
 /** Trích mảng phần tử thô từ phong bì (envelope) phản hồi — hỗ trợ `{ content }`/`{ items }`/mảng trực tiếp. */
 function extractRawItems(body: unknown): unknown[] {
@@ -129,21 +129,54 @@ export const salaryApi = {
   },
 
   /**
-   * Lấy TỪNG lượt đóng góp lương trong toàn hệ thống (không lọc theo chủ sở hữu), phân trang, mới
-   * nhất trước — khác `getStatistics` (chỉ số liệu tổng hợp theo nhóm, có ngưỡng mẫu tối thiểu).
-   * Vẫn ẩn danh tuyệt đối — `SalaryContributionResponse` không có trường định danh người đóng góp.
+   * Lấy TỪNG lượt đóng góp lương có hỗ trợ bộ lọc và phân trang chuẩn Server-side.
    * Gọi `GET /api/v1/salary-contributions/feed`; yêu cầu đã đăng nhập (Student/Alumni).
    * @param page Số trang (0-indexed)
-   * @return Danh sách lượt đóng góp của trang này + cờ còn trang tiếp theo hay không
+   * @param filters Bộ lọc tùy chọn (ngành, khu vực, tìm kiếm chức danh/công ty, sắp xếp)
+   * @param size Kích thước trang (mặc định 6)
+   * @return Danh sách lượt đóng góp của trang này + thông tin phân trang (totalPages, totalElements)
    */
-  getFeed: async (page: number): Promise<{ items: SalaryContribution[]; page: number; hasMore: boolean }> => {
-    const body = await http.get(`/salary-contributions/feed?page=${page}&size=${FEED_PAGE_SIZE}`)
+  getFeed: async (
+    page = 0,
+    filters?: {
+      industryId?: number | null
+      region?: string
+      search?: string
+      sortBy?: 'latest' | 'salaryDesc' | 'salaryAsc'
+    },
+    size = 6
+  ): Promise<{
+    items: SalaryContribution[]
+    page: number
+    totalPages: number
+    totalElements: number
+    hasMore: boolean
+  }> => {
+    const params: Record<string, string | number> = { page, size }
+    if (filters?.industryId != null) params.industryId = filters.industryId
+    if (filters?.region && filters.region.trim()) params.region = filters.region.trim()
+    if (filters?.search && filters.search.trim()) params.search = filters.search.trim()
+    if (filters?.sortBy) params.sortBy = filters.sortBy
+
+    const body = await http.get('/salary-contributions/feed', { params })
     const raw = extractRawItems(body)
     const items: SalaryContribution[] = []
     for (const r of raw) {
       const res = salaryContributionSchema.safeParse(r)
       if (res.success) items.push(res.data)
     }
-    return { items, page, hasMore: inferHasMore(body, items.length) }
+
+    const b = body as unknown as Record<string, unknown> | undefined
+    const d = (b?.data ?? b) as Record<string, unknown> | undefined
+    const totalPages = typeof d?.totalPages === 'number' ? d.totalPages : Math.ceil(items.length / size) || 1
+    const totalElements = typeof d?.totalElements === 'number' ? d.totalElements : items.length
+
+    return {
+      items,
+      page,
+      totalPages,
+      totalElements,
+      hasMore: inferHasMore(body, items.length),
+    }
   },
 }

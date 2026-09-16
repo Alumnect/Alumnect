@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { salaryApi } from '../api/salaryApi'
 import type { CreateSalaryContributionInput, SalaryStatisticsFilters } from '../model/salary'
 
@@ -99,17 +99,21 @@ export function useSalaryStatistics(filters?: SalaryStatisticsFilters) {
 }
 
 /**
- * Hook lấy TỪNG lượt đóng góp lương trong toàn hệ thống theo phân trang vô hạn (infinite scroll) —
- * khác `useSalaryStatistics` (chỉ số liệu tổng hợp theo nhóm, có ngưỡng mẫu tối thiểu). Vẫn ẩn danh
- * tuyệt đối; mở cho mọi người dùng đã đăng nhập (Student + Alumni). Mirror pattern `useQuestions`
- * (forum, UC38) — cùng cách dùng `useInfiniteQuery`.
- * @return Đối tượng query (pages, isLoading, isError, fetchNextPage, hasNextPage...)
+ * Hook lấy danh sách lượt đóng góp lương phân trang kèm bộ lọc phía Server (Server-side Filtering & Pagination).
  */
-export function useSalaryFeed() {
-  return useInfiniteQuery({
-    queryKey: ['salary-feed'],
-    queryFn: ({ pageParam }) => salaryApi.getFeed(pageParam),
-    initialPageParam: 0,
-    getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
+export function useSalaryFeed(
+  page = 0,
+  filters?: {
+    industryId?: number | null
+    region?: string
+    search?: string
+    sortBy?: 'latest' | 'salaryDesc' | 'salaryAsc'
+  },
+  size = 6
+) {
+  return useQuery({
+    queryKey: ['salary-feed', page, filters, size],
+    queryFn: () => salaryApi.getFeed(page, filters, size),
+    placeholderData: keepPreviousData,
   })
 }

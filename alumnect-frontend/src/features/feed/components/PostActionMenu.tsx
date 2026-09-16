@@ -83,7 +83,7 @@ export function PostActionMenu({
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15 }}
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-0 z-30 mt-1 w-44 origin-top-right rounded-xl border border-plum-900/10 bg-white py-1.5 shadow-lg shadow-plum-950/10 ring-1 ring-black/5 focus:outline-none"
+            className="absolute right-0 z-30 mt-1 w-44 origin-top-right rounded-xl border border-plum-900/10 bg-white py-1.5 shadow-lg shadow-plum-950/10 ring-1 ring-black/5 focus:outline-none dark:border-[#393a3b] dark:bg-[#242526] dark:shadow-black/50"
           >
             {/* Chỉnh sửa bài viết */}
             {onEdit && (
@@ -98,8 +98,8 @@ export function PostActionMenu({
                 }}
                 className={`flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold transition-colors ${
                   isEventImmutable
-                    ? 'cursor-not-allowed text-plum-300'
-                    : 'text-plum-700 hover:bg-plum-50 hover:text-plum-900'
+                    ? 'cursor-not-allowed text-plum-300 dark:text-[#505255]'
+                    : 'text-plum-700 hover:bg-plum-50 hover:text-plum-900 dark:text-[#e4e6eb] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5]'
                 }`}
                 title={
                   isEventCancelled
@@ -109,7 +109,7 @@ export function PostActionMenu({
                     : 'Chỉnh sửa bài viết'
                 }
               >
-                <Pencil size={14} className={isEventImmutable ? 'text-plum-300' : 'text-plum-500'} />
+                <Pencil size={14} className={isEventImmutable ? 'text-plum-300 dark:text-[#505255]' : 'text-plum-500 dark:text-[#b0b3b8]'} />
                 <span>Chỉnh sửa bài viết</span>
               </button>
             )}
@@ -124,15 +124,15 @@ export function PostActionMenu({
                   setIsOpen(false)
                   onCancelEvent(post)
                 }}
-                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-50 hover:text-amber-800"
+                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-50 hover:text-amber-800 dark:text-amber-400 dark:hover:bg-amber-500/15 dark:hover:text-amber-300"
               >
-                <Ban size={14} className="text-amber-600" />
+                <Ban size={14} className="text-amber-600 dark:text-amber-400" />
                 <span>Hủy tổ chức sự kiện</span>
               </button>
             )}
 
             {/* Phân cách trước nút Xóa */}
-            {onDelete && <div className="my-1 border-t border-plum-900/10" />}
+            {onDelete && <div className="my-1 border-t border-plum-900/10 dark:border-[#393a3b]" />}
 
             {/* Xóa bài viết */}
             {onDelete && (
@@ -144,9 +144,9 @@ export function PostActionMenu({
                   setIsOpen(false)
                   onDelete(post)
                 }}
-                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
+                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/20 dark:hover:text-rose-300"
               >
-                <Trash2 size={14} className="text-rose-500" />
+                <Trash2 size={14} className="text-rose-500 dark:text-rose-400" />
                 <span>Xóa bài viết</span>
               </button>
             )}

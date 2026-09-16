@@ -122,8 +122,8 @@ function SavedFeedCard({
     <Card
       hover={false}
       className={cn(
-        'overflow-hidden relative transition-all duration-300 rounded-2xl border border-plum-900/10 shadow-sm hover:shadow-md bg-white text-left mb-6',
-        post.type === 'achievement' && 'border-amber-200 bg-gradient-to-br from-amber-50/50 via-white to-white shadow-amber-100/30'
+        'overflow-hidden relative transition-all duration-300 rounded-2xl border border-plum-900/10 shadow-sm hover:shadow-md bg-white text-left mb-6 dark:bg-[#242526] dark:border-[#393a3b]',
+        post.type === 'achievement' && 'border-amber-200 bg-gradient-to-br from-amber-50/50 via-white to-white shadow-amber-100/30 dark:from-[#242526] dark:via-[#242526] dark:to-[#242526] dark:border-amber-500/40'
       )}
     >
       {post.type === 'achievement' && (
@@ -186,10 +186,10 @@ function SavedFeedCard({
 
       {/* Tuyển dụng (nếu là bài recruitment) */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-5 mb-4 overflow-hidden rounded-xl border border-brand-100 bg-brand-50/30 p-4">
+        <div className="mx-5 mb-4 overflow-hidden rounded-xl border border-brand-100 bg-brand-50/30 p-4 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <h3 className="font-bold text-plum-900 text-sm flex items-center gap-1.5">
-              <Briefcase size={15} className="text-brand-600 shrink-0" />
+            <h3 className="font-bold text-plum-900 dark:text-[#f0f2f5] text-sm flex items-center gap-1.5">
+              <Briefcase size={15} className="text-brand-600 dark:text-brand-400 shrink-0" />
               <span>{post.job.title}</span>
             </h3>
             {post.job.applyUrl && (
@@ -204,15 +204,15 @@ function SavedFeedCard({
               </a>
             )}
           </div>
-          <p className="text-xs font-semibold text-plum-600 mb-2">🏢 {post.job.company}</p>
+          <p className="text-xs font-semibold text-plum-600 dark:text-[#b0b3b8] mb-2">🏢 {post.job.company}</p>
           {post.job.location && (
-            <p className="text-xs text-plum-500 flex items-center gap-1 mb-2">
+            <p className="text-xs text-plum-500 dark:text-[#b0b3b8] flex items-center gap-1 mb-2">
               <MapPin size={12} className="text-brand-500" /> {post.job.location}
             </p>
           )}
           {post.text && (
             <Link to={`/app/posts/${post.id}`} className="block">
-              <p className="text-xs text-plum-700 line-clamp-2 mt-2 pt-2 border-t border-brand-100/60">
+              <p className="text-xs text-plum-700 dark:text-[#b0b3b8] line-clamp-2 mt-2 pt-2 border-t border-brand-100/60 dark:border-[#4e4f50]">
                 {post.text}
               </p>
             </Link>
@@ -222,25 +222,25 @@ function SavedFeedCard({
 
       {/* Sự kiện (nếu là bài event) */}
       {post.type === 'event' && post.event && (
-        <div className="mx-5 mb-4 overflow-hidden rounded-xl border border-violet-100 bg-violet-50/30 p-4">
+        <div className="mx-5 mb-4 overflow-hidden rounded-xl border border-violet-100 bg-violet-50/30 p-4 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
           <div className="flex items-center gap-2 mb-2">
-            <CalendarPlus size={16} className="text-violet-600 shrink-0" />
-            <h3 className="font-bold text-plum-900 text-sm">{post.event.title}</h3>
+            <CalendarPlus size={16} className="text-violet-600 dark:text-violet-400 shrink-0" />
+            <h3 className="font-bold text-plum-900 dark:text-[#f0f2f5] text-sm">{post.event.title}</h3>
           </div>
           {post.event.startTime && (
-            <p className="text-xs font-medium text-plum-600 flex items-center gap-1.5 mb-1.5">
+            <p className="text-xs font-medium text-plum-600 dark:text-[#b0b3b8] flex items-center gap-1.5 mb-1.5">
               <Clock size={12} className="text-violet-500" />
               {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'full' })}
             </p>
           )}
           {post.event.location && (
-            <p className="text-xs text-plum-500 flex items-center gap-1.5 mb-2">
+            <p className="text-xs text-plum-500 dark:text-[#b0b3b8] flex items-center gap-1.5 mb-2">
               <MapPin size={12} className="text-violet-500" /> {post.event.location}
             </p>
           )}
           {post.text && (
             <Link to={`/app/posts/${post.id}`} className="block">
-              <p className="text-xs text-plum-700 line-clamp-2 mt-2 pt-2 border-t border-violet-100/60">
+              <p className="text-xs text-plum-700 dark:text-[#b0b3b8] line-clamp-2 mt-2 pt-2 border-t border-violet-100/60 dark:border-[#4e4f50]">
                 {post.text}
               </p>
             </Link>
@@ -256,22 +256,24 @@ function SavedFeedCard({
       )}
 
       {/* Action footer */}
-      <div className="flex items-center gap-1 px-4 py-2.5 border-t border-plum-900/5 bg-slate-50/50">
+      <div className="flex items-center gap-1.5 px-4 py-2.5 border-t border-slate-100 dark:border-[#393a3b] bg-slate-50/50 dark:bg-[#242526]">
         <button
           onClick={handleLike}
           aria-pressed={liked}
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors hover:bg-slate-200/60 cursor-pointer',
-            liked ? 'text-rose-500 bg-rose-50' : 'text-slate-600',
+            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 cursor-pointer',
+            liked
+              ? 'text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15 hover:bg-rose-500/20'
+              : 'text-slate-600 dark:text-[#b0b3b8] hover:bg-slate-200/60 dark:hover:bg-[#3a3b3c] hover:text-slate-900 dark:hover:text-[#f0f2f5]',
           )}
         >
-          <Heart size={15} className={liked ? 'fill-rose-500 text-rose-500' : ''} />
+          <Heart size={15} className={liked ? 'fill-rose-500 text-rose-500 dark:fill-rose-400 dark:text-rose-400' : ''} />
           <span>{compact(likeCount)}</span>
         </button>
 
         <Link
           to={`/app/posts/${post.id}#comments`}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-[#F27024]/10 hover:text-[#F27024]"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 hover:bg-[#F27024]/10 dark:hover:bg-[#F27024]/15 hover:text-[#F27024] dark:hover:text-[#FF8C38]"
         >
           <MessageCircle size={15} />
           <span>{compact(post.comments)} bình luận</span>

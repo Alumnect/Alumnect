@@ -5,7 +5,6 @@ import { Avatar, Skeleton, toast } from '@/components/ui'
 import { useComments, useCreateComment } from '@/features/post'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import type { AuthUser } from '@/store/authStore'
-import { cn } from '@/lib/utils'
 
 interface InlineCommentsProps {
   postId: string

@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.entity.salary.SalaryContribution;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -24,7 +25,7 @@ import java.util.List;
  * ("Junior"/"Mid"/"Senior", đã validate ở tầng Service).
  */
 @Repository
-public interface SalaryContributionRepository extends JpaRepository<SalaryContribution, Long> {
+public interface SalaryContributionRepository extends JpaRepository<SalaryContribution, Long>, JpaSpecificationExecutor<SalaryContribution> {
 
     /**
      * Lấy toàn bộ lượt đóng góp của một người dùng, mới nhất trước — dùng cho UC51 (Edit salary

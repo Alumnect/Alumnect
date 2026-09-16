@@ -69,30 +69,33 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
 ) {
   return (
     <div className="relative">
-      {icon && <span className="absolute top-3.5 left-3 text-gray-400 z-10 pointer-events-none">{icon}</span>}
+      {icon && <span className="absolute top-3.5 left-3 text-gray-400 dark:text-[#b0b3b8] z-10 pointer-events-none">{icon}</span>}
       <input
         ref={ref}
         {...rest}
         placeholder=" "
         className={cn(
-          'peer block w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 pb-2.5 pt-4 text-sm text-gray-900 focus:border-[#F27024] focus:outline-none focus:ring-0 [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white]',
+          'peer block w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 pb-2.5 pt-4 text-sm text-gray-900 focus:border-[#F27024] focus:outline-none focus:ring-0 dark:border-[#4e4f50] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:focus:border-[#F27024] [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white] dark:[&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_#3a3b3c]',
           icon && 'pl-10',
-          error && 'border-red-500 focus:border-red-500',
+          error && 'border-red-500 focus:border-red-500 dark:border-rose-500',
           trailing && 'pr-10',
           className,
         )}
       />
       <label
         className={cn(
-          'absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform bg-white px-1 text-xs font-medium text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-[#F27024]',
+          'pointer-events-none absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform px-1 text-xs font-medium text-gray-500 duration-300',
+          'bg-white dark:bg-[#242526] dark:text-[#b0b3b8]',
+          'peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:!bg-transparent dark:peer-placeholder-shown:!bg-transparent',
+          'peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:bg-white peer-focus:text-[#F27024] dark:peer-focus:bg-[#242526] dark:peer-focus:text-[#F27024]',
           icon && 'left-9',
-          error && 'peer-focus:text-red-500'
+          error && 'peer-focus:text-red-500 dark:peer-focus:text-rose-400'
         )}
       >
         {label}
       </label>
-      {trailing && <span className="absolute top-3.5 right-3 text-gray-500">{trailing}</span>}
-      {error && <span className="mt-1 block text-xs text-red-500">{error}</span>}
+      {trailing && <span className="absolute top-3.5 right-3 text-gray-500 dark:text-[#b0b3b8]">{trailing}</span>}
+      {error && <span className="mt-1 block text-xs text-red-500 dark:text-rose-400">{error}</span>}
     </div>
   )
 })

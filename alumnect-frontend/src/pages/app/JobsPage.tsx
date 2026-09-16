@@ -201,7 +201,7 @@ export function JobsPage() {
             const job = post.job!
             return (
               <StaggerItem key={post.id}>
-                <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md">
+                <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md dark:bg-[#242526] dark:border-[#393a3b] dark:hover:border-[#4e4f50]">
                   <Link to={`/app/posts/${post.id}`} className="absolute inset-0 z-0" aria-label={`Xem chi tiết tin tuyển dụng ${job.title}`} />
                   
                   <div className="relative z-10 flex flex-col gap-3.5">
@@ -209,16 +209,16 @@ export function JobsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       {/* Left: Job Title & Company */}
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 text-[#F27024] ring-1 ring-orange-200/70 font-bold shadow-xs">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 text-[#F27024] ring-1 ring-orange-200/70 font-bold shadow-xs dark:from-[#3a3b3c] dark:to-[#3a3b3c] dark:text-[#f27024] dark:ring-[#4e4f50]">
                           <Building2 size={22} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h2 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-[#F27024] transition-colors leading-snug">
-                            <span className="text-slate-500 font-semibold">Tuyển dụng: </span>
+                          <h2 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-[#F27024] transition-colors leading-snug dark:text-[#e4e6eb] dark:group-hover:text-[#f27024]">
+                            <span className="text-slate-500 font-semibold dark:text-[#b0b3b8]">Tuyển dụng: </span>
                             <span className="capitalize">{job.title || 'Chưa cập nhật'}</span>
                           </h2>
-                          <p className="mt-0.5 text-sm font-semibold text-slate-600">
-                            Công ty: <span className="text-[#004F9E] font-bold">{job.company || 'Chưa cập nhật'}</span>
+                          <p className="mt-0.5 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8]">
+                            Công ty: <span className="text-[#004F9E] font-bold dark:text-[#4599ff]">{job.company || 'Chưa cập nhật'}</span>
                           </p>
                         </div>
                       </div>
@@ -250,7 +250,9 @@ export function JobsPage() {
                           }}
                           className={cn(
                             'grid h-9.5 w-9.5 place-items-center rounded-xl border transition-colors',
-                            (saved[post.id] ?? post.saved) ? 'border-orange-200 bg-orange-50 text-[#F27024]' : 'border-slate-200 text-slate-400 hover:bg-slate-50'
+                            (saved[post.id] ?? post.saved)
+                              ? 'border-orange-200 bg-orange-50 text-[#F27024] dark:border-orange-500/40 dark:bg-orange-500/10'
+                              : 'border-slate-200 text-slate-400 hover:bg-slate-50 dark:border-[#393a3b] dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c]'
                           )}
                           aria-label="Lưu công việc"
                           title={(saved[post.id] ?? post.saved) ? 'Bỏ lưu tin tuyển dụng' : 'Lưu tin tuyển dụng'}
@@ -274,19 +276,19 @@ export function JobsPage() {
 
                     {/* Metadata Badges: Salary (Green Pill), Location & Author */}
                     <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200/70">
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:border-emerald-800/50 dark:text-emerald-400">
                         <span>💰</span>
                         <span>{formatSalary(job.salaryMin, job.salaryMax)}</span>
                       </span>
 
                       {job.location && (
                         <span
-                          className="inline-flex max-w-full sm:max-w-md items-center gap-1.5 rounded-lg bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700"
+                          className="inline-flex max-w-full sm:max-w-md items-center gap-1.5 rounded-lg bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700 dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:border dark:border-[#393a3b]"
                           title={job.location}
                         >
                           <MapPin size={13} className="text-[#F27024] shrink-0" />
                           <span className="truncate">
-                            <strong className="text-slate-800">Địa điểm:</strong>{' '}
+                            <strong className="text-slate-800 dark:text-white">Địa điểm:</strong>{' '}
                             {extractCity(job.location) || job.location}
                           </span>
                         </span>
@@ -295,17 +297,17 @@ export function JobsPage() {
                       <Link
                         to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/90 hover:bg-orange-50 hover:text-[#F27024] px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors relative z-10"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/90 hover:bg-orange-50 hover:text-[#F27024] px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors relative z-10 dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50] dark:border dark:border-[#393a3b]"
                       >
                         <Avatar src={post.avatar} name={post.author} size={18} />
-                        <span>Đăng bởi: <strong className="text-slate-800 hover:text-[#F27024] hover:underline">{post.author}</strong></span>
+                        <span>Đăng bởi: <strong className="text-slate-800 hover:text-[#F27024] hover:underline dark:text-white">{post.author}</strong></span>
                       </Link>
                     </div>
 
                     {/* Description Box */}
                     {post.text && (
-                      <div className="rounded-xl bg-slate-50/80 p-3 border border-slate-100 text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                        <span className="font-semibold text-slate-700">Mô tả: </span>
+                      <div className="rounded-xl bg-slate-50/80 p-3 border border-slate-100 text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed dark:bg-[#3a3b3c] dark:border-[#393a3b] dark:text-[#e4e6eb]">
+                        <span className="font-semibold text-slate-700 dark:text-white">Mô tả: </span>
                         {post.text}
                       </div>
                     )}

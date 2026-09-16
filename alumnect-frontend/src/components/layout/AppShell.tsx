@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink, Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Search, Bell, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown, ArrowUp } from 'lucide-react'
+import { Search, Bell, MessagesSquare, LayoutGrid, LogOut, X, ChevronDown, ArrowUp, Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
+import { useThemeStore } from '@/store/themeStore'
 import { useLogout } from '@/features/auth'
 import { useWebSocketChat } from '@/features/message'
 import { useWebSocketNotifications, useUnreadNotificationCount } from '@/features/notification'
@@ -49,7 +50,7 @@ function Popover({
             transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             onClick={onClose}
             className={cn(
-              'absolute right-0 z-50 mt-2 origin-top-right rounded-2xl border border-plum-900/[0.07] bg-white p-2 shadow-soft',
+              'absolute right-0 z-50 mt-2 origin-top-right rounded-2xl border border-plum-900/[0.07] bg-white p-2 shadow-soft dark:bg-[#242526] dark:border-[#393a3b]',
               panelClass,
             )}
           >
@@ -67,19 +68,19 @@ function IconLink({ to, label, icon, badge, dot }: { to: string; label: string; 
     <Link
       to={to}
       aria-label={badge ? `${label} (${badge} unread)` : label}
-      className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 active:scale-95"
+      className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 active:scale-95 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
     >
       <span className="transition-transform duration-200 group-hover:-translate-y-0.5">{icon}</span>
       {/* hover tooltip label */}
-      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100 dark:bg-black dark:text-white">
         {label}
       </span>
       {badge ? (
-        <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-coral-500 px-1 text-[10px] font-bold text-white ring-2 ring-cream-50">
+        <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-coral-500 px-1 text-[10px] font-bold text-white ring-2 ring-cream-50 dark:ring-[#242526]">
           {badge}
         </span>
       ) : dot ? (
-        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral-400 ring-2 ring-cream-50" />
+        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral-400 ring-2 ring-cream-50 dark:ring-[#242526]" />
       ) : null}
     </Link>
   )
@@ -96,6 +97,7 @@ export function AppShell() {
   const user = useAuthStore((s) => s.user)
   const keyword = useSearchStore((s) => s.keyword)
   const setKeyword = useSearchStore((s) => s.setKeyword)
+  const { theme, setTheme } = useThemeStore()
 
   // Duy trì kết nối WebSocket thời gian thực toàn cục để nhận tin nhắn và thông báo
   useWebSocketChat()
@@ -143,15 +145,15 @@ export function AppShell() {
   const roleLabel = user ? (user.role === 'STUDENT' ? 'Sinh viên' : 'Cựu sinh viên') : ''
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-600">
-      {/* ambient FPT brand wash */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
+    <div className="relative min-h-screen bg-slate-50 text-slate-600 dark:!bg-[#18191a] dark:text-[#e4e6eb]">
+      {/* ambient FPT brand wash (hidden in dark mode for pure Facebook look) */}
+      <div className="pointer-events-none fixed inset-0 -z-10 dark:hidden">
         <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-[#F27024]/10 blur-[160px]" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-[#004F9E]/10 blur-[160px]" />
       </div>
 
       {/* ===== top header ===== */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl shadow-xs">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl shadow-xs dark:bg-[#242526] dark:border-[#393a3b]">
         {/* Top FPT Brand Accent Bar */}
         <div className="h-1 bg-gradient-to-r from-[#F27024] via-[#004F9E] to-[#009A3E]" />
         <div className="mx-auto flex h-15 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
@@ -159,19 +161,19 @@ export function AppShell() {
 
           {/* desktop search */}
           <label className="relative ml-2 hidden items-center md:flex">
-            <Search size={16} className="pointer-events-none absolute left-3 text-slate-400" />
+            <Search size={16} className="pointer-events-none absolute left-3 text-slate-400 dark:text-[#b0b3b8]" />
             <input
               value={keyword}
               onChange={handleSearchChange}
               placeholder="Tìm kiếm bài viết…"
-              className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-8 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56"
+              className="h-9.5 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-8 text-sm text-slate-900 placeholder:text-slate-400 transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F27024]/20 lg:w-56 dark:bg-[#3a3b3c] dark:border-[#393a3b] dark:text-[#f0f2f5] dark:placeholder:text-[#b0b3b8] dark:focus:bg-[#3a3b3c]"
             />
             {keyword && (
               <button
                 type="button"
                 onClick={handleClearSearch}
                 aria-label="Xóa tìm kiếm"
-                className="absolute right-2.5 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                className="absolute right-2.5 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors dark:text-[#b0b3b8] dark:hover:bg-[#4e4f50] dark:hover:text-white"
               >
                 <X size={12} />
               </button>
@@ -191,7 +193,7 @@ export function AppShell() {
                   className={({ isActive }) =>
                     cn(
                       'group relative flex h-full w-20 xl:w-24 items-center justify-center transition-colors',
-                      isActive ? 'text-[#F27024]' : 'text-slate-500 hover:text-slate-900',
+                      isActive ? 'text-[#F27024]' : 'text-slate-500 hover:text-slate-900 dark:text-[#b0b3b8] dark:hover:text-white',
                     )
                   }
                 >
@@ -199,13 +201,13 @@ export function AppShell() {
                     <>
                       <div className={cn(
                         'flex h-11 w-full items-center justify-center rounded-xl transition-all duration-200',
-                        isActive ? 'bg-[#F27024]/10 text-[#F27024]' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-900'
+                        isActive ? 'bg-[#F27024]/10 text-[#F27024]' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-900 dark:hover:bg-[#3a3b3c] dark:text-[#b0b3b8] dark:hover:text-white'
                       )}>
                         {Icon && <Icon size={22} className={cn('transition-transform duration-200 group-hover:scale-110', isActive && 'text-[#F27024]')} />}
                       </div>
 
                       {/* hover tooltip label */}
-                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0.5">
+                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0.5 dark:bg-black dark:text-white">
                         {item.label}
                       </span>
                       {isActive && (
@@ -223,12 +225,31 @@ export function AppShell() {
           </nav>
 
           {/* right actions */}
-          <div className="ml-auto flex items-center gap-1 lg:ml-0">
+          <div className="ml-auto flex items-center gap-1 sm:gap-1.5 lg:ml-0">
+            {/* Nút chuyển chế độ Sáng / Tối trực tiếp cho cả User đăng nhập & Khách (Guest) */}
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+              title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+              className="group relative grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-2xl text-plum-500 hover:bg-plum-900/[0.05] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-colors cursor-pointer"
+            >
+              {theme === 'dark' ? (
+                <Sun size={19} className="text-amber-400 transition-transform duration-200 group-hover:rotate-45" />
+              ) : (
+                <Moon size={19} className="text-slate-600 transition-transform duration-200 group-hover:-rotate-12" />
+              )}
+              {/* Tooltip khi hover */}
+              <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100 dark:bg-white dark:text-slate-900">
+                {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
+              </span>
+            </button>
+
             {/* mobile search toggle */}
             <button
               onClick={() => setSearchOpen((v) => !v)}
               aria-label="Tìm kiếm"
-              className="grid h-11 w-11 place-items-center rounded-2xl text-plum-500 hover:bg-plum-900/[0.05] md:hidden"
+              className="grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-2xl text-plum-500 hover:bg-plum-900/[0.05] md:hidden"
             >
               <Search size={19} />
             </button>
@@ -297,21 +318,21 @@ export function AppShell() {
                   onClose={() => setActivePopover(null)}
                   panelClass="w-64"
                   button={
-                    <span className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-plum-900/[0.05]">
+                    <span className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 transition-colors hover:bg-plum-900/[0.05] dark:hover:bg-[#3a3b3c]">
                       <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={36} ring />
-                      <ChevronDown size={15} className="hidden text-plum-400 sm:block" />
+                      <ChevronDown size={15} className="hidden text-plum-400 sm:block dark:text-[#b0b3b8]" />
                     </span>
                   }
                 >
-                  <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-plum-900/[0.04] transition-colors">
+                  <Link to="/app/profile" className="mb-1 flex items-center gap-3 rounded-xl p-2.5 hover:bg-plum-900/[0.04] transition-colors dark:hover:bg-[#3a3b3c]">
                     <Avatar src={user?.avatarUrl} name={user?.name ?? ''} size={42} />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-plum-900">{user?.name}</p>
-                      <p className="truncate text-xs text-plum-500">{user?.verified ? 'Đã xác minh · ' : ''}{roleLabel}</p>
+                      <p className="truncate text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">{user?.name}</p>
+                      <p className="truncate text-xs text-plum-500 dark:text-[#b0b3b8]">{user?.verified ? 'Đã xác minh · ' : ''}{roleLabel}</p>
                     </div>
                   </Link>
 
-                  <div className="my-1 h-px bg-plum-900/[0.07]" />
+                  <div className="my-1 h-px bg-plum-900/[0.07] dark:bg-[#393a3b]" />
                   {APP_ACCOUNT_NAV
                     .filter((item) => item.to !== '/admin' || user?.role === 'ADMIN')
                     .map((item) => {
@@ -320,29 +341,31 @@ export function AppShell() {
                         <Link
                           key={item.to}
                           to={item.to}
-                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 dark:text-[#e4e6eb] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
                         >
-                          {Icon && <Icon size={16} className="text-plum-400" />}
+                          {Icon && <Icon size={16} className="text-plum-400 dark:text-[#b0b3b8]" />}
                           {item.label}
                         </Link>
                       )
                     })}
-                  <div className="my-1 h-px bg-plum-900/[0.07]" />
+                  <div className="my-1 h-px bg-plum-900/[0.07] dark:bg-[#393a3b]" />
                   <button
                     type="button"
                     onClick={() => logoutM.mutate()}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-coral-600 transition-colors hover:bg-coral-300/25"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-coral-600 transition-colors hover:bg-coral-300/25 dark:text-rose-400 dark:hover:bg-rose-500/15"
                   >
                     <LogOut size={16} /> Đăng xuất
                   </button>
                 </Popover>
               </>
             ) : (
-              <Link to="/login" className="ml-2">
-                <Button size="sm" variant="primary" className="rounded-xl font-bold bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm">
-                  Đăng nhập
-                </Button>
-              </Link>
+              <div className="flex items-center gap-1">
+                <Link to="/login" className="ml-1">
+                  <Button size="sm" variant="primary" className="rounded-xl font-bold bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm">
+                    Đăng nhập
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -471,14 +494,14 @@ export function AppShell() {
               </div>
               <div className="grid grid-cols-3 gap-3" onClick={() => setSheet(false)}>
                 {(isAuthenticated 
-                  ? [...APP_MORE_NAV, { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare }, { label: 'Thông báo', to: '/app/notifications', icon: Bell }, { label: 'Gói thành viên', to: '/app/subscription', icon: APP_ACCOUNT_NAV[2].icon }]
-                  : APP_MORE_NAV.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')
+                  ? [...APP_MORE_NAV, { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare }, { label: 'Thông báo', to: '/app/notifications', icon: Bell }]
+                  : [...APP_MORE_NAV.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')]
                 ).map((item) => {
                   const Icon = item.icon
                   return (
-                    <Link key={item.to} to={item.to} className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center text-xs font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]">
+                    <Link key={item.to} to={item.to} className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center text-xs font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06] dark:bg-slate-800 dark:text-slate-200 dark:ring-white/10">
                       {Icon && (
-                        <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-100 text-brand-600">
+                        <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
                           <Icon size={20} />
                         </span>
                       )}
@@ -487,12 +510,14 @@ export function AppShell() {
                   )
                 })}
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
+
+
+              <div className="mt-3 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 {isAuthenticated ? (
                   <>
                     <Link
                       to="/app/profile"
-                      className="col-span-2 rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06]"
+                      className="col-span-2 rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-plum-700 ring-1 ring-inset ring-plum-900/[0.06] dark:bg-slate-800 dark:text-slate-200 dark:ring-white/10"
                     >
                       Trang cá nhân
                     </Link>

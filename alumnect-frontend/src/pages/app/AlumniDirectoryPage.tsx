@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Users, ChevronLeft, ChevronRight, UserCheck } from 'lucide-react'
+import { Users, UserCheck } from 'lucide-react'
 import { PageHeader, Badge, EmptyState, Skeleton, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { cn } from '@/lib/utils'
 import {
   UserSearchFilterBar,
   UserDirectoryCard,
@@ -50,8 +49,6 @@ export function AlumniDirectoryPage() {
   const users = data?.content || []
   const totalElements = data?.totalElements || 0
   const totalPages = data?.totalPages || 0
-  const isFirstPage = page === 0
-  const isLastPage = data?.last ?? true
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters)
