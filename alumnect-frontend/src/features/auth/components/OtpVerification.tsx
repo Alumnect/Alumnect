@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Loader2, ArrowRight, AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useVerifyEmail, useResendOtp } from '../hooks/useAuth'
 import { Button } from '@/components/ui/Button'
 import { toast } from '@/components/ui'

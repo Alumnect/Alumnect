@@ -11,8 +11,6 @@ import {
   PartyPopper,
   Megaphone,
   Check,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   ShieldCheck,
   AlertTriangle,
@@ -156,35 +154,35 @@ export function NotificationsPage() {
                   hover
                   onClick={() => handleNotificationClick(n)}
                   className={cn(
-                    'group flex cursor-pointer items-center gap-4 p-4 transition-all duration-200 hover:shadow-md',
+                    'group flex cursor-pointer items-center gap-4 p-4 transition-all duration-200 hover:shadow-md dark:border-[#393a3b]',
                     !n.isRead
-                      ? 'bg-brand-500/[0.05] ring-1 ring-inset ring-brand-400/30'
-                      : 'bg-white/95 opacity-90 hover:opacity-100'
+                      ? 'bg-brand-500/[0.05] ring-1 ring-inset ring-brand-400/30 dark:bg-[#3a3b3c]/60 dark:ring-brand-500/40'
+                      : 'bg-white/95 dark:bg-[#242526] opacity-90 hover:opacity-100'
                   )}
                 >
                   {/* Logo / Avatar: Thông báo hệ thống và Vi phạm tiêu chuẩn có logo riêng biệt */}
                   {isSystemBroadcast ? (
                     <div className="relative shrink-0">
-                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-amber-500 via-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-white">
-                        <Megaphone size={22} className="drop-shadow-xs" />
+                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-amber-500 via-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/30 ring-2 ring-white dark:ring-[#242526] dark:from-amber-500 dark:via-brand-500 dark:to-brand-600">
+                        <Megaphone size={22} className="text-white drop-shadow-sm" />
                       </div>
                       <span
-                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white shadow-xs"
+                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white dark:ring-[#242526] shadow-xs"
                         title="Thông báo chính thức từ hệ thống"
                       >
-                        <ShieldCheck size={12} strokeWidth={3} />
+                        <ShieldCheck size={12} strokeWidth={3} className="text-white" />
                       </span>
                     </div>
                   ) : isReportResolved ? (
                     <div className="relative shrink-0">
-                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-amber-500 text-white shadow-md shadow-rose-500/25 ring-2 ring-white">
-                        <ShieldAlert size={22} className="drop-shadow-xs" />
+                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-amber-500 text-white shadow-lg shadow-rose-500/30 ring-2 ring-white dark:ring-[#242526] dark:from-rose-500 dark:via-red-500 dark:to-orange-500">
+                        <ShieldAlert size={22} className="text-white drop-shadow-sm" />
                       </div>
                       <span
-                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-amber-500 text-white ring-2 ring-white shadow-xs"
+                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-amber-500 text-white ring-2 ring-white dark:ring-[#242526] shadow-xs"
                         title="Vi phạm tiêu chuẩn cộng đồng"
                       >
-                        <AlertTriangle size={11} strokeWidth={3} />
+                        <AlertTriangle size={11} strokeWidth={3} className="text-white" />
                       </span>
                     </div>
                   ) : (
@@ -192,7 +190,7 @@ export function NotificationsPage() {
                       <Avatar src={n.senderAvatarUrl || undefined} name={avatarName} size={46} />
                       <span
                         className={cn(
-                          'absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full ring-2 ring-white',
+                          'absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full ring-2 ring-white dark:ring-[#242526]',
                           toneClass
                         )}
                       >
@@ -207,17 +205,17 @@ export function NotificationsPage() {
 
                   <div className="min-w-0 flex-1">
                     {n.title && (
-                      <p className="text-sm font-bold text-slate-950 mb-0.5">{n.title}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-[#f0f2f5] mb-0.5">{n.title}</p>
                     )}
-                    <p className="text-sm leading-snug text-slate-800">
+                    <p className="text-sm leading-snug text-slate-800 dark:text-[#e4e6eb]">
                       {n.senderName && !n.title && (
-                        <span className="font-bold text-slate-950 mr-1.5">
+                        <span className="font-bold text-slate-900 dark:text-[#f0f2f5] mr-1.5">
                           {n.senderName}
                         </span>
                       )}
-                      <span className="text-slate-700">{n.content}</span>
+                      <span className="text-slate-700 dark:text-[#b0b3b8]">{n.content}</span>
                     </p>
-                    <span className="mt-1 block text-xs text-slate-400">
+                    <span className="mt-1 block text-xs text-slate-400 dark:text-[#8a8d91]">
                       {formatRelativeTime(n.createdAt)}
                     </span>
                   </div>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban } from 'lucide-react'
 import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast } from '@/components/ui'

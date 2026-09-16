@@ -41,7 +41,7 @@ import { EntitySelectField, type SelectOption } from '@/features/forum/component
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
 const FIELD_CLASS =
-  'w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.02] text-sm text-plum-900 placeholder:text-plum-400/80 transition-all focus:border-brand-400/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 hover:border-plum-900/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
+  'w-full rounded-xl border border-plum-900/10 bg-white text-sm text-plum-900 placeholder:text-plum-400/80 transition-all focus:border-brand-400/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 hover:border-plum-900/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:placeholder-[#b0b3b8] dark:hover:border-[#4e4f50] dark:focus:bg-[#3a3b3c]'
 
 /** Hàm hỗ trợ hiển thị mức lương thành chữ dễ đọc (triệu/tỷ). */
 function formatVndText(num: number): string {
@@ -240,7 +240,7 @@ export function ContributeSalaryModal({
       <form id="contribute-salary-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* 1. Ngành nghề */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-plum-700">
+          <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">
             Ngành nghề <span className="text-rose-500">*</span>
           </label>
           <EntitySelectField
@@ -260,7 +260,7 @@ export function ContributeSalaryModal({
 
         {/* 2. Chức danh công việc */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-plum-700">
+          <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">
             Chức danh công việc <span className="text-rose-500">*</span>
           </label>
           <EntitySelectField<string>
@@ -293,11 +293,11 @@ export function ContributeSalaryModal({
 
         {/* 3. Mức lương / tháng */}
         <div>
-          <label className="mb-1.5 flex items-center justify-between text-xs font-semibold text-plum-700">
+          <label className="mb-1.5 flex items-center justify-between text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">
             <span>
               Mức lương / tháng <span className="text-rose-500">*</span>
             </span>
-            <span className="text-[11px] font-normal text-plum-400">VNĐ / tháng</span>
+            <span className="text-[11px] font-normal text-plum-400 dark:text-[#b0b3b8]">VNĐ / tháng</span>
           </label>
           <div className="relative">
             <Coins size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
@@ -347,7 +347,7 @@ export function ContributeSalaryModal({
           <div className="space-y-3.5">
             {/* Địa điểm làm việc */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-plum-700">Địa điểm làm việc</label>
+              <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">Địa điểm làm việc</label>
               <EntitySelectField<string>
                 items={cityOptions}
                 value={selectedCityId}
@@ -365,9 +365,9 @@ export function ContributeSalaryModal({
             {/* 2 Cột: Công ty & Kinh nghiệm */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-plum-700">Công ty</label>
+                <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">Công ty</label>
                 <div className="relative">
-                  <Building2 size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+                  <Building2 size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400 dark:text-[#b0b3b8]" />
                   <input
                     {...register('company')}
                     placeholder="VD: FPT Software..."
@@ -378,9 +378,9 @@ export function ContributeSalaryModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-plum-700">Kinh nghiệm</label>
+                <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">Kinh nghiệm</label>
                 <div className="relative">
-                  <Clock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+                  <Clock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400 dark:text-[#b0b3b8]" />
                   <input
                     type="number"
                     step="1"

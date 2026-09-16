@@ -409,36 +409,34 @@ export function CareerPage() {
                 animate={{ x: 0, y: 0 }}
                 exit={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
                 transition={{ type: 'spring', stiffness: 360, damping: 40, mass: 0.85 }}
-                className={`fixed z-[110] flex flex-col bg-white ${
+                className={`fixed z-[110] flex flex-col bg-white dark:bg-[#242526] dark:border-[#393a3b] ${
                   isMobile
                     ? 'bottom-0 left-0 right-0 top-auto h-[85vh] w-full rounded-t-3xl border-t'
                     : 'top-0 right-0 bottom-0 h-full w-full max-w-[460px] rounded-l-3xl border-l'
                 }`}
                 style={{
                   boxShadow: isMobile
-                    ? '0 -10px 40px -12px rgb(50 44 63 / 0.16)'
-                    : '-20px 0 60px -16px rgb(50 44 63 / 0.22)',
-                  borderColor: 'rgb(50 44 63 / 0.07)'
+                    ? '0 -10px 40px -12px rgb(0 0 0 / 0.4)'
+                    : '-20px 0 60px -16px rgb(0 0 0 / 0.5)',
                 }}
               >
                 {isMobile && (
-                  <div className="shrink-0 flex justify-center py-2 bg-gradient-to-b from-[#f2f3ff] to-transparent">
-                    <div className="w-10 h-1 rounded-full bg-plum-300/40" />
+                  <div className="shrink-0 flex justify-center py-2 bg-gradient-to-b from-[#f2f3ff] to-transparent dark:from-[#242526]">
+                    <div className="w-10 h-1 rounded-full bg-plum-300/40 dark:bg-slate-600" />
                   </div>
                 )}
                 {/* ── Gradient Header ── */}
                 <div
-                  className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden"
-                  style={{ background: 'linear-gradient(140deg, #f2f3ff 0%, #faf4ec 60%, #fff0f8 100%)', borderBottom: '1px solid rgb(50 44 63 / 0.06)' }}
+                  className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden border-b border-plum-900/[0.06] bg-gradient-to-r from-[#f2f3ff] via-[#faf4ec] to-[#fff0f8] dark:bg-none dark:bg-[#242526] dark:border-[#393a3b]"
                 >
-                  {/* Decorative glow blobs */}
-                  <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle, #bcc0fb, transparent 70%)' }} />
-                  <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
+                  {/* Decorative glow blobs (light mode only) */}
+                  <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full opacity-25 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #bcc0fb, transparent 70%)' }} />
+                  <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
 
                   {/* Close */}
                   <button
                     onClick={() => setSelectedAlumni(null)}
-                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-plum-400 hover:text-plum-900 hover:bg-white/80 active:scale-90 transition-all duration-150 cursor-pointer"
+                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-plum-400 hover:text-plum-900 hover:bg-white/80 dark:text-[#b0b3b8] dark:hover:text-white dark:hover:bg-[#3a3b3c] active:scale-90 transition-all duration-150 cursor-pointer"
                   >
                     <X size={16} strokeWidth={2.5} />
                   </button>
@@ -454,22 +452,22 @@ export function CareerPage() {
                       ring
                     />
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <h2 className="text-lg font-extrabold text-plum-900 leading-tight">{selectedAlumni.fullName}</h2>
+                      <h2 className="text-lg font-extrabold text-plum-900 dark:text-[#f0f2f5] leading-tight">{selectedAlumni.fullName}</h2>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
-                        <span className="inline-block text-[11px] font-bold text-brand-700 bg-brand-100 border border-brand-200/50 px-2.5 py-0.5 rounded-full">
+                        <span className="inline-block text-[11px] font-bold text-brand-700 bg-brand-100 border border-brand-200/50 px-2.5 py-0.5 rounded-full dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500/30">
                           {selectedAlumni.major || 'Đại học FPT'}
                         </span>
                         {selectedAlumni.cohort && (
-                          <span className="text-[11px] text-plum-500 font-semibold">Khóa K{selectedAlumni.cohort}</span>
+                          <span className="text-[11px] text-plum-500 dark:text-[#b0b3b8] font-semibold">Khóa K{selectedAlumni.cohort}</span>
                         )}
                       </div>
                       {(selectedAlumni.currentTitle || selectedAlumni.currentCompany) && (
                         <div className="mt-2 flex items-start gap-1.5">
                           <Briefcase size={11} className="text-brand-500 mt-0.5 shrink-0" />
-                          <p className="text-[11px] text-plum-600 leading-snug">
-                            <span className="font-bold text-plum-800">{selectedAlumni.currentTitle}</span>
+                          <p className="text-[11px] text-plum-600 dark:text-[#b0b3b8] leading-snug">
+                            <span className="font-bold text-plum-800 dark:text-[#f0f2f5]">{selectedAlumni.currentTitle}</span>
                             {selectedAlumni.currentCompany && <> · <span className="font-medium">{selectedAlumni.currentCompany}</span></>}
-                            {selectedAlumni.currentLocation && <span className="text-plum-400"> · {selectedAlumni.currentLocation}</span>}
+                            {selectedAlumni.currentLocation && <span className="text-plum-400 dark:text-[#b0b3b8]"> · {selectedAlumni.currentLocation}</span>}
                           </p>
                         </div>
                       )}
@@ -478,14 +476,14 @@ export function CareerPage() {
 
                   {/* Stat chips */}
                   <div className="flex items-center gap-2 mt-4">
-                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
+                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm dark:bg-[#3a3b3c] dark:border-[#393a3b]">
                       <Star size={11} className="text-gold-500" />
-                      <span className="text-[11px] font-bold text-plum-700">{selectedAlumni.totalExperiences} vai trò</span>
+                      <span className="text-[11px] font-bold text-plum-700 dark:text-[#f0f2f5]">{selectedAlumni.totalExperiences} vai trò</span>
                     </div>
                     {selectedAlumni.cohort && (
-                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
+                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm dark:bg-[#3a3b3c] dark:border-[#393a3b]">
                         <Calendar size={11} className="text-brand-400" />
-                        <span className="text-[11px] font-bold text-plum-700">Khóa K{selectedAlumni.cohort}</span>
+                        <span className="text-[11px] font-bold text-plum-700 dark:text-[#f0f2f5]">Khóa K{selectedAlumni.cohort}</span>
                       </div>
                     )}
                   </div>
@@ -498,10 +496,9 @@ export function CareerPage() {
 
                 {/* ── Footer CTA ── */}
                 <div
-                  className="shrink-0 px-6 py-4 flex items-center justify-between gap-3"
-                  style={{ borderTop: '1px solid rgb(50 44 63 / 0.06)', background: 'linear-gradient(to top, #fff 70%, transparent)' }}
+                  className="shrink-0 px-6 py-4 flex items-center justify-between gap-3 border-t border-plum-900/[0.06] bg-white dark:bg-[#242526] dark:border-[#393a3b]"
                 >
-                  <p className="text-[10px] text-plum-400 font-medium">Nhấn Esc để đóng</p>
+                  <p className="text-[10px] text-plum-400 dark:text-[#b0b3b8] font-medium">Nhấn Esc để đóng</p>
                   <ViewProfileButton userId={selectedAlumni.userId} />
                 </div>
               </motion.aside>
@@ -580,10 +577,13 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
   return (
     <div className="text-left">
       {/* Label divider */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-plum-900/[0.05]" />
-        <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-plum-300 px-1">Lộ trình sự nghiệp</span>
-        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-plum-900/[0.05]" />
+      <div className="flex items-center gap-3 my-5">
+        <div className="h-px flex-1 bg-slate-200 dark:bg-[#393a3b]" />
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 px-3 py-1 rounded-full bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 shadow-xs">
+          <RouteIcon size={13} />
+          Lộ trình sự nghiệp
+        </span>
+        <div className="h-px flex-1 bg-slate-200 dark:bg-[#393a3b]" />
       </div>
 
       {/* Timeline */}
@@ -598,15 +598,15 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
               )}
 
               {/* Company node icon */}
-              <div className="absolute left-0 top-1 w-7 h-7 rounded-xl flex items-center justify-center shadow-sm border border-brand-200/60" style={{ background: 'linear-gradient(135deg, #e8e9ff, #f2f3ff)' }}>
+              <div className="absolute left-0 top-1 w-7 h-7 rounded-xl flex items-center justify-center shadow-sm border border-brand-200/60 bg-gradient-to-br from-[#e8e9ff] to-[#f2f3ff] dark:from-[#3a3b3c] dark:to-[#242526] dark:border-[#393a3b]">
                 <Building2 size={13} className="text-brand-500" />
               </div>
 
               <div className="mb-5">
                 {/* Company header */}
-                <p className="font-bold text-sm text-plum-900 leading-snug">{group.company}</p>
+                <p className="font-bold text-sm text-plum-900 dark:text-[#f0f2f5] leading-snug">{group.company}</p>
                 {group.location && (
-                  <span className="flex items-center gap-1 text-[10px] text-plum-400 mt-0.5">
+                  <span className="flex items-center gap-1 text-[10px] text-plum-400 dark:text-[#b0b3b8] mt-0.5">
                     <MapPin size={9} />{group.location}
                   </span>
                 )}
@@ -621,8 +621,8 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
                       transition={{ delay: gIdx * 0.05 + rIdx * 0.03, duration: 0.3 }}
                       className={`relative rounded-xl px-3.5 py-2.5 border transition-colors ${
                         role.isCurrent
-                          ? 'bg-gradient-to-br from-brand-50/80 to-white border-brand-200/60'
-                          : 'bg-plum-50/25 border-plum-900/[0.05]'
+                          ? 'bg-gradient-to-br from-brand-50/80 to-white border-brand-200/60 dark:from-[#3a3b3c] dark:to-[#242526] dark:border-brand-500/40'
+                          : 'bg-plum-50/25 border-plum-900/[0.05] dark:bg-[#3a3b3c]/40 dark:border-[#393a3b]'
                       }`}
                     >
                       {/* Pulsing dot for current role */}
@@ -634,7 +634,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
                       )}
 
                       <div className="flex items-start justify-between gap-2 pr-5">
-                        <p className="text-xs font-bold text-plum-800 leading-snug">{role.title}</p>
+                        <p className="text-xs font-bold text-plum-800 dark:text-[#f0f2f5] leading-snug">{role.title}</p>
                         {role.isPrimary && (
                           <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-gold-700 border border-gold-300/50">
                             <Star size={7} className="fill-gold-600 text-gold-600" />

@@ -291,7 +291,7 @@ export function AdminUsersPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h2 className="text-xl font-bold text-plum-900 tracking-tight">{userDetail.fullName}</h2>
                         <Badge
-                          tone={userDetail.role === 'ADMIN' ? 'neutral' : userDetail.role === 'ALUMNI' ? 'brand' : 'info'}
+                          tone={userDetail.role === 'ADMIN' ? 'neutral' : userDetail.role === 'ALUMNI' ? 'brand' : 'aqua'}
                           className="px-2.5 py-0.5 text-[10px] rounded-full shrink-0 font-bold uppercase border"
                         >
                           {userDetail.role === 'ADMIN' ? 'Quản trị viên' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}

@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from '@/lib/queryClient'
 import './index.css'
 import '../node_modules/@vietmap/vietmap-gl-js/dist/vietmap-gl.css'
+import '@/store/themeStore'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

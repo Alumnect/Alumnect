@@ -12,7 +12,6 @@ import {
   RefreshCw,
   X,
   ArrowUpDown,
-  Building2,
   Briefcase,
   AlertTriangle,
 } from 'lucide-react'
@@ -52,72 +51,60 @@ export function SalaryContributionsFeed({
 
   // Bộ lọc
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedIndustry, setSelectedIndustry] = useState('')
   const [selectedRegion, setSelectedRegion] = useState('')
   const [sortBy, setSortBy] = useState<'latest' | 'salaryDesc' | 'salaryAsc'>('latest')
 
-  const { data: industriesData } = useIndustries()
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useSalaryFeed()
-
-  const allItems = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data])
-
-  // Lọc danh sách
-  const filteredItems = useMemo(() => {
-    return allItems
-      .filter((item) => {
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase().trim()
-          const matchTitle = item.jobTitle?.toLowerCase().includes(q)
-          const matchCompany = item.company?.toLowerCase().includes(q)
-          if (!matchTitle && !matchCompany) return false
-        }
-        if (selectedIndustry) {
-          if ((item.industry || '').trim().toLowerCase() !== selectedIndustry.trim().toLowerCase()) {
-            return false
-          }
-        }
-        if (selectedRegion) {
-          if ((item.region || '').trim().toLowerCase() !== selectedRegion.trim().toLowerCase()) {
-            return false
-          }
-        }
-        return true
-      })
-      .sort((a, b) => {
-        if (sortBy === 'salaryDesc') return b.grossAmount - a.grossAmount
-        if (sortBy === 'salaryAsc') return a.grossAmount - b.grossAmount
-        return 0
-      })
-  }, [allItems, searchQuery, selectedIndustry, selectedRegion, sortBy])
-
-  const isFiltering = Boolean(searchQuery.trim() || selectedIndustry || selectedRegion || sortBy !== 'latest')
-
-  // Phân trang trong popup: 6 thẻ / trang (3 hàng x 2 cột vừa vặn)
+  // Phân trang chuẩn Server-side: 6 thẻ / trang (3 hàng x 2 cột vừa vặn)
   const FEED_PAGE_SIZE = 6
   const [feedPage, setFeedPage] = useState(0)
 
-  // Tự động trở về trang đầu khi đổi bộ lọc
+  // Debounce tìm kiếm 350ms để không gửi request liên tục khi đang gõ phím
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 350)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Tự động trở về trang 0 khi thay đổi bất kỳ tiêu chí lọc nào
   useEffect(() => {
     setFeedPage(0)
-  }, [searchQuery, selectedIndustry, selectedRegion, sortBy])
+  }, [debouncedSearch, selectedIndustry, selectedRegion, sortBy])
 
-  const totalFeedPages = Math.ceil(filteredItems.length / FEED_PAGE_SIZE)
-  const paginatedFeedItems = useMemo(() => {
-    const start = feedPage * FEED_PAGE_SIZE
-    return filteredItems.slice(start, start + FEED_PAGE_SIZE)
-  }, [filteredItems, feedPage])
+  const { data: industriesData } = useIndustries()
+
+  // Ánh xạ tên ngành nghề sang industryId để lọc chuẩn dưới Database
+  const selectedIndustryId = useMemo(() => {
+    if (!selectedIndustry) return null
+    const found = (industriesData ?? []).find(
+      (ind) => ind.name.trim().toLowerCase() === selectedIndustry.trim().toLowerCase()
+    )
+    return found ? found.id : null
+  }, [selectedIndustry, industriesData])
+
+  // Gom bộ lọc gửi xuống Server
+  const filters = useMemo(
+    () => ({
+      industryId: selectedIndustryId,
+      region: selectedRegion || undefined,
+      search: debouncedSearch || undefined,
+      sortBy,
+    }),
+    [selectedIndustryId, selectedRegion, debouncedSearch, sortBy]
+  )
+
+  // Gọi hook lấy danh sách theo phân trang và bộ lọc trực tiếp từ Backend
+  const { data, isLoading, isError, error, refetch } = useSalaryFeed(feedPage, filters, FEED_PAGE_SIZE)
+
+  const feedItems = useMemo(() => data?.items ?? [], [data])
+  const totalFeedPages = data?.totalPages ?? 1
+  const totalElements = data?.totalElements ?? 0
+
+  const isFiltering = Boolean(searchQuery.trim() || selectedIndustry || selectedRegion || sortBy !== 'latest')
 
   const clearFilters = () => {
     setSearchQuery('')
+    setDebouncedSearch('')
     setSelectedIndustry('')
     setSelectedRegion('')
     setSortBy('latest')
@@ -129,11 +116,8 @@ export function SalaryContributionsFeed({
     return (industriesData ?? []).filter((ind) => ind.name.trim().toLowerCase() !== 'khác')
   }, [industriesData])
 
-  // Danh mục khu vực
-  const regionList = useMemo(() => {
-    const fromItems = allItems.map((i) => i.region).filter(Boolean) as string[]
-    return Array.from(new Set([...fromItems, ...VIETNAM_CITIES])).sort()
-  }, [allItems])
+  // Danh mục khu vực theo 63 tỉnh thành chuẩn Việt Nam
+  const regionList = VIETNAM_CITIES
 
   return (
     <>
@@ -148,9 +132,9 @@ export function SalaryContributionsFeed({
           >
             <History size={15} className="text-brand-600 transition-transform group-hover:-rotate-45" />
             <span>Đóng góp gần đây</span>
-            {allItems.length > 0 && (
+            {totalElements > 0 && (
               <span className="rounded-full bg-brand-100 px-1.5 py-0.2 text-[10px] font-bold text-brand-800">
-                {allItems.length}
+                {totalElements}
               </span>
             )}
           </button>
@@ -194,7 +178,7 @@ export function SalaryContributionsFeed({
               <select
                 value={selectedIndustry}
                 onChange={(e) => setSelectedIndustry(e.target.value)}
-                className="h-9 w-full truncate rounded-lg border border-plum-900/10 bg-white px-2.5 text-xs text-plum-800 font-medium focus:border-brand-500 focus:outline-none cursor-pointer"
+                className="h-9 w-full truncate rounded-lg border border-plum-900/10 bg-white px-2.5 text-xs text-plum-800 font-medium focus:border-brand-500 focus:outline-none cursor-pointer dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
               >
                 <option value="">Tất cả ngành nghề</option>
                 {industryList.map((ind) => (
@@ -208,7 +192,7 @@ export function SalaryContributionsFeed({
               <select
                 value={selectedRegion}
                 onChange={(e) => setSelectedRegion(e.target.value)}
-                className="h-9 w-full truncate rounded-lg border border-plum-900/10 bg-white px-2.5 text-xs text-plum-800 font-medium focus:border-brand-500 focus:outline-none cursor-pointer"
+                className="h-9 w-full truncate rounded-lg border border-plum-900/10 bg-white px-2.5 text-xs text-plum-800 font-medium focus:border-brand-500 focus:outline-none cursor-pointer dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
               >
                 <option value="">Tất cả khu vực</option>
                 {regionList.map((city) => (
@@ -221,13 +205,13 @@ export function SalaryContributionsFeed({
 
             {/* Hàng 2: Sắp xếp & Nút xóa lọc */}
             <div className="flex items-center justify-between text-xs pt-0.5">
-              <div className="flex items-center gap-1.5 text-plum-500">
-                <ArrowUpDown size={12} className="text-plum-400" />
-                <span className="text-[11px] text-plum-400">Sắp xếp:</span>
+              <div className="flex items-center gap-1.5 text-plum-500 dark:text-[#b0b3b8]">
+                <ArrowUpDown size={12} className="text-plum-400 dark:text-[#b0b3b8]" />
+                <span className="text-[11px] text-plum-400 dark:text-[#b0b3b8]">Sắp xếp:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="bg-transparent font-semibold text-plum-800 focus:outline-none cursor-pointer text-xs"
+                  className="bg-transparent font-semibold text-plum-800 focus:outline-none cursor-pointer text-xs dark:text-[#f0f2f5] dark:bg-[#242526]"
                 >
                   <option value="latest">Mới nhất</option>
                   <option value="salaryDesc">Lương: Cao → Thấp</option>
@@ -267,7 +251,7 @@ export function SalaryContributionsFeed({
                   Thử lại
                 </Button>
               </div>
-            ) : filteredItems.length === 0 ? (
+            ) : feedItems.length === 0 ? (
               <EmptyState
                 icon={<Briefcase size={22} />}
                 title={isFiltering ? 'Không có dữ liệu khớp bộ lọc' : 'Chưa có lượt đóng góp nào'}
@@ -281,7 +265,7 @@ export function SalaryContributionsFeed({
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {paginatedFeedItems.map((c) => {
+                  {feedItems.map((c) => {
                     const timeAgo = c.createdAt
                       ? (() => {
                           try {

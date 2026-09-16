@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MapPin, Briefcase, GraduationCap, MessageCircle, UserPlus, UserCheck, Loader2 } from 'lucide-react'
-import { Avatar, Badge, Card } from '@/components/ui'
+import { Avatar, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { TiltCard } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
@@ -72,16 +72,6 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
   return (
     <TiltCard className="group h-full" max={5}>
       <Card hover={false} className="relative flex h-full flex-col justify-between p-6 text-center transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/10 border border-plum-900/10 bg-white/80 backdrop-blur-sm">
-        {/* Top-Right Role Badge */}
-        <div className="absolute top-4 right-4 z-10">
-          <Badge
-            tone={user.role === 'ALUMNI' ? 'brand' : 'aqua'}
-            className="text-[10px] font-bold tracking-wide shadow-xs whitespace-nowrap"
-          >
-            {user.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
-          </Badge>
-        </div>
-
         <div>
           {/* Avatar Section */}
           <div className="mx-auto mt-2 mb-4 inline-block">

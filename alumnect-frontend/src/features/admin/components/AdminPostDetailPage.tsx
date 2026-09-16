@@ -138,11 +138,11 @@ export default function AdminPostDetailPage() {
               <div className="space-y-4">
                 {/* --- Thẻ thông tin Tuyển dụng (nếu là bài RECRUITMENT) --- */}
                 {post.type === 'RECRUITMENT' && post.job && (
-                  <div className="mb-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4">
-                      <h3 className="flex items-center gap-2 font-bold text-brand-900 text-base">
-                        <Briefcase size={18} className="text-brand-600 animate-pulse" />
-                        <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
+                  <div className="mb-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
+                      <h3 className="flex items-center gap-2 font-bold text-brand-900 text-base dark:text-[#f0f2f5]">
+                        <Briefcase size={18} className="text-brand-600 dark:text-brand-400 animate-pulse" />
+                        <span>Tuyển dụng: <span className="text-plum-900 dark:text-[#f0f2f5]">{post.job.title}</span></span>
                       </h3>
                       {post.job.applyUrl && (
                         <a
@@ -156,24 +156,24 @@ export default function AdminPostDetailPage() {
                       )}
                     </div>
                     <div className="p-5 space-y-4">
-                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                        <p className="text-sm font-bold text-plum-900 mb-2">Công ty: {post.job.company}</p>
-                        <div className="grid gap-3 sm:grid-cols-2 text-xs font-medium text-plum-800">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
+                        <p className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5] mb-2">Công ty: {post.job.company}</p>
+                        <div className="grid gap-3 sm:grid-cols-2 text-xs font-medium text-plum-800 dark:text-[#f0f2f5]">
                           <div>
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Địa điểm</p>
                             {post.job.location ? (
                               <span className="inline-flex items-center gap-1">
                                 <MapPin size={14} className="text-brand-500" /> {post.job.location}
                               </span>
                             ) : (
-                              <span className="text-slate-400 font-normal">Chưa cập nhật</span>
+                              <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">Chưa cập nhật</span>
                             )}
                           </div>
                           <div>
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Mức lương & Liên hệ</p>
                             <div className="flex flex-col gap-1">
                               {(post.job.salaryMin || post.job.salaryMax) ? (
-                                <span className="font-semibold text-emerald-600">
+                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                   {post.job.salaryMin && post.job.salaryMax
                                     ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
                                     : post.job.salaryMin
@@ -181,11 +181,11 @@ export default function AdminPostDetailPage() {
                                     : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
                                 </span>
                               ) : (
-                                <span className="text-slate-400 font-normal">Thỏa thuận</span>
+                                <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">Thỏa thuận</span>
                               )}
                               {post.job.contactEmail && (
-                                <span className="inline-flex items-center gap-1 text-slate-600">
-                                  <Inbox size={14} className="text-plum-400" /> {post.job.contactEmail}
+                                <span className="inline-flex items-center gap-1 text-slate-600 dark:text-[#b0b3b8]">
+                                  <Inbox size={14} className="text-plum-400 dark:text-[#b0b3b8]" /> {post.job.contactEmail}
                                 </span>
                               )}
                             </div>
@@ -194,8 +194,8 @@ export default function AdminPostDetailPage() {
                       </div>
                       {post.content && (
                         <div>
-                          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc</p>
-                          <p className="whitespace-pre-line text-sm leading-relaxed text-plum-800">{post.content}</p>
+                          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Mô tả công việc</p>
+                          <p className="whitespace-pre-line text-sm leading-relaxed text-plum-800 dark:text-[#e4e6eb]">{post.content}</p>
                         </div>
                       )}
                     </div>
@@ -204,19 +204,19 @@ export default function AdminPostDetailPage() {
 
                 {/* --- Thẻ thông tin Sự kiện (nếu là bài EVENT) --- */}
                 {post.type === 'EVENT' && post.event && (
-                  <div className="mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all">
-                    <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4">
-                      <h3 className="flex items-center gap-2 font-bold text-violet-900 text-base">
-                        <CalendarPlus size={18} className="text-violet-600" />
-                        <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
+                  <div className="mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
+                    <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
+                      <h3 className="flex items-center gap-2 font-bold text-violet-900 text-base dark:text-[#f0f2f5]">
+                        <CalendarPlus size={18} className="text-violet-600 dark:text-violet-400" />
+                        <span>Sự kiện: <span className="text-plum-900 dark:text-[#f0f2f5]">{post.event.title}</span></span>
                       </h3>
                     </div>
                     <div className="p-5 space-y-4">
-                      <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2 text-xs">
+                      <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2 text-xs dark:border-[#393a3b] dark:bg-[#3a3b3c]">
                         {post.event.startTime && (
                           <div>
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
-                            <p className="flex items-center gap-1.5 font-semibold text-plum-900">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Bắt đầu</p>
+                            <p className="flex items-center gap-1.5 font-semibold text-plum-900 dark:text-[#f0f2f5]">
                               <Clock size={14} className="text-violet-500" />
                               {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
                               {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
@@ -225,8 +225,8 @@ export default function AdminPostDetailPage() {
                         )}
                         {post.event.endTime ? (
                           <div>
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                            <p className="flex items-center gap-1.5 font-semibold text-plum-900">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Kết thúc</p>
+                            <p className="flex items-center gap-1.5 font-semibold text-plum-900 dark:text-[#f0f2f5]">
                               <Clock size={14} className="text-coral-500" />
                               {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
                               {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
@@ -234,8 +234,8 @@ export default function AdminPostDetailPage() {
                           </div>
                         ) : (
                           <div>
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                            <p className="font-semibold text-slate-400">—</p>
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Kết thúc</p>
+                            <p className="font-semibold text-slate-400 dark:text-[#b0b3b8]">—</p>
                           </div>
                         )}
                         {(post.event.location || post.event.capacity) && (

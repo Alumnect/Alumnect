@@ -21,8 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.alumnect.alumnect_backend.specification.salary.SalarySpecification;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -291,6 +295,17 @@ public class SalaryServiceImpl implements SalaryService {
      */
     @Override
     public PageResponse<SalaryContributionResponse> getFeed(int page, int size) {
+        return getFeed(page, size, null, null, null, "latest");
+    }
+
+    @Override
+    public PageResponse<SalaryContributionResponse> getFeed(
+            int page,
+            int size,
+            Long industryId,
+            String region,
+            String search,
+            String sortBy) {
         if (page < 0) {
             throw new BadRequestException("Tham số page phải là số nguyên không âm");
         }
@@ -298,9 +313,21 @@ public class SalaryServiceImpl implements SalaryService {
             throw new BadRequestException("Tham số size phải là số nguyên dương");
         }
 
-        // Method name (findAllByOrderByCreatedAtDesc) đã tự quy định thứ tự sắp xếp — Pageable ở đây
-        // chỉ dùng cho phân trang, không cần truyền thêm Sort để tránh xung đột không cần thiết.
-        Page<SalaryContribution> contributionsPage = salaryContributionRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        if ("salaryDesc".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Direction.DESC, "grossAmount");
+        } else if ("salaryAsc".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Direction.ASC, "grossAmount");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Specification<SalaryContribution> spec = SalarySpecification.filterFeed(
+                industryId,
+                sanitizeOptional(region),
+                sanitizeOptional(search)
+        );
+
+        Page<SalaryContribution> contributionsPage = salaryContributionRepository.findAll(spec, pageable);
 
         List<SalaryContributionResponse> content = contributionsPage.getContent().stream()
                 .map(salaryMapper::toResponse)

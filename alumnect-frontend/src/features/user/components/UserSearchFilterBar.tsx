@@ -214,11 +214,11 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                   className={cn(
                     'flex items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-semibold transition-all',
                     filters.role === r.value
-                      ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
-                      : 'border-plum-900/10 bg-white text-plum-600 hover:border-plum-900/20',
+                      ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500'
+                      : 'border-plum-900/10 bg-white text-plum-600 hover:border-plum-900/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:border-[#4e4f50]',
                   )}
                 >
-                  {filters.role === r.value && <Check size={13} className="text-brand-500" />}
+                  {filters.role === r.value && <Check size={13} className="text-brand-500 dark:text-brand-400" />}
                   {r.label}
                 </button>
               ))}
@@ -227,7 +227,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
 
           {/* Chuyên ngành FPTU */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">
               Chuyên ngành học
             </label>
             <select
@@ -236,7 +236,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                 const val = e.target.value ? Number(e.target.value) : null
                 onChange({ ...filters, majorId: val, category: 'ALL' })
               }}
-              className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
             >
               <option value="">Tất cả chuyên ngành</option>
               {majors.map((m) => (
@@ -250,13 +250,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           {/* Niên khóa & Tỉnh thành */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">
                 Khóa nhập học
               </label>
               <select
                 value={filters.cohort || ''}
                 onChange={(e) => onChange({ ...filters, cohort: e.target.value ? Number(e.target.value) : null })}
-                className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
               >
                 <option value="">Tất cả các khóa</option>
                 {cohorts.map((c) => (
@@ -268,13 +268,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">
                 Tỉnh / Thành phố
               </label>
               <select
                 value={filters.city}
                 onChange={(e) => onChange({ ...filters, city: e.target.value })}
-                className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
               >
                 <option value="">Tất cả địa điểm</option>
                 {cities.map((c) => (

@@ -66,28 +66,28 @@ export function ToastContainer() {
           const config = {
             success: {
               icon: CheckCircle2,
-              border: 'border-emerald-500/20 bg-white/95 text-emerald-950',
-              iconClass: 'text-emerald-500 bg-emerald-50',
+              border: 'border-emerald-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-emerald-500/40 dark:text-[#f0f2f5]',
+              iconClass: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400',
             },
             error: {
               icon: AlertCircle,
-              border: 'border-rose-500/20 bg-white/95 text-rose-950',
-              iconClass: 'text-rose-500 bg-rose-50',
+              border: 'border-rose-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-rose-500/40 dark:text-[#f0f2f5]',
+              iconClass: 'text-rose-500 bg-rose-50 dark:bg-rose-500/20 dark:text-rose-400',
             },
             warning: {
               icon: AlertTriangle,
-              border: 'border-amber-500/20 bg-white/95 text-amber-950',
-              iconClass: 'text-amber-500 bg-amber-50',
+              border: 'border-amber-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-amber-500/40 dark:text-[#f0f2f5]',
+              iconClass: 'text-amber-500 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400',
             },
             info: {
               icon: Info,
-              border: 'border-brand-500/20 bg-white/95 text-plum-950',
-              iconClass: 'text-brand-500 bg-brand-50',
+              border: 'border-brand-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-brand-500/40 dark:text-[#f0f2f5]',
+              iconClass: 'text-brand-500 bg-brand-50 dark:bg-brand-500/20 dark:text-brand-400',
             },
             notification: {
               icon: Bell,
-              border: 'border-emerald-500/30 bg-white text-slate-900 shadow-xl shadow-emerald-950/5 ring-1 ring-emerald-500/20',
-              iconClass: 'text-emerald-600 bg-emerald-50 ring-1 ring-emerald-500/30',
+              border: 'border-emerald-500/30 bg-white text-slate-900 shadow-xl shadow-emerald-950/5 ring-1 ring-emerald-500/20 dark:bg-[#242526] dark:border-emerald-500/40 dark:text-[#f0f2f5] dark:ring-emerald-500/30',
+              iconClass: 'text-emerald-600 bg-emerald-50 ring-1 ring-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-400 dark:ring-emerald-500/40',
             },
           }[item.type]
 
@@ -101,18 +101,18 @@ export function ToastContainer() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12, scale: 0.95 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-3.5 shadow-lg shadow-black/5 backdrop-blur-md ${config.border}`}
+              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-3.5 shadow-lg shadow-black/10 backdrop-blur-md dark:shadow-black/50 ${config.border}`}
             >
               <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${config.iconClass}`}>
                 <Icon size={18} />
               </div>
               <div className="flex-1 pt-0.5">
-                <p className="text-xs font-semibold leading-relaxed break-words">{item.message}</p>
+                <p className="text-xs font-semibold leading-relaxed break-words text-slate-900 dark:text-[#f0f2f5]">{item.message}</p>
               </div>
               <button
                 type="button"
                 onClick={() => removeToast(item.id)}
-                className="shrink-0 rounded-lg p-1 text-plum-400 transition-colors hover:bg-plum-900/5 hover:text-plum-700"
+                className="shrink-0 rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white transition-colors cursor-pointer"
               >
                 <X size={14} />
               </button>

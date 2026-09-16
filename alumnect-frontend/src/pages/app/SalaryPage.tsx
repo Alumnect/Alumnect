@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   LineChart, Plus, Filter, AlertTriangle, RefreshCw, ListChecks, Search, X, LayoutGrid,
-  MapPin, Code2, Megaphone, Users, Palette, Briefcase, HelpCircle, ChevronDown, ChevronUp,
-  TrendingUp, BarChart3, History,
+  MapPin, Code2, Megaphone, Users, Palette, Briefcase,
+  BarChart3, History,
 } from 'lucide-react'
 import { PageHeader, Card, EmptyState, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -176,7 +176,7 @@ export function SalaryPage() {
                   Đóng góp của tôi
                 </Button>
                 <Button
-                  variant="gold"
+                  variant="primary"
                   size="sm"
                   leftIcon={<Plus size={15} />}
                   onClick={() => setContributeOpen(true)}
@@ -200,13 +200,13 @@ export function SalaryPage() {
               onChange={(e) => setJobTitleInput(e.target.value)}
               placeholder="Tìm theo chức danh..."
               maxLength={JOB_TITLE_SEARCH_MAX_LENGTH}
-              className="h-11 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] pl-10 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-colors"
+              className="h-11 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] pl-10 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-colors dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:placeholder-[#b0b3b8]"
             />
             {jobTitleInput && (
               <button
                 onClick={() => setJobTitleInput('')}
                 aria-label="Xóa tìm kiếm"
-                className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700"
+                className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5]"
               >
                 <X size={13} />
               </button>
@@ -241,10 +241,10 @@ export function SalaryPage() {
         </div>
 
         {/* Hàng lọc Cấp bậc & Nút Xóa bộ lọc */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-plum-900/5">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-plum-900/5 dark:border-[#393a3b]">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-plum-500 mr-1 flex items-center gap-1">
-              <Filter size={12} className="text-plum-400" /> Cấp bậc:
+            <span className="text-xs font-semibold text-plum-500 dark:text-[#b0b3b8] mr-1 flex items-center gap-1">
+              <Filter size={12} className="text-plum-400 dark:text-[#b0b3b8]" /> Cấp bậc:
             </span>
             <button
               type="button"
@@ -252,8 +252,8 @@ export function SalaryPage() {
               className={cn(
                 'rounded-full px-3 py-1 text-xs font-semibold transition-all',
                 level === null
-                  ? 'bg-plum-900 text-white shadow-xs'
-                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                  ? 'bg-plum-900 text-white shadow-xs dark:bg-white dark:text-[#18191a]'
+                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50]'
               )}
             >
               Tất cả
@@ -267,7 +267,7 @@ export function SalaryPage() {
                   'rounded-full px-3 py-1 text-xs font-semibold transition-all',
                   level === lv
                     ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white shadow-xs'
-                    : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                    : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50]'
                 )}
               >
                 {lv}

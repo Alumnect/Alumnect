@@ -13,6 +13,7 @@ import { Link, useParams } from 'react-router-dom'
 import {
   Heart,
   MessageCircle,
+  Share2,
   Bookmark,
   Flag,
   ArrowLeft,
@@ -291,12 +292,12 @@ function PostDetailCard({
 
       {/* --- Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all">
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
           {/* Header Tuyển dụng */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4">
-            <h3 className="flex items-center gap-2 font-bold text-brand-900 text-lg">
-              <Briefcase size={20} className="text-brand-600" />
-              <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
+            <h3 className="flex items-center gap-2 font-bold text-brand-900 text-lg dark:text-[#f0f2f5]">
+              <Briefcase size={20} className="text-brand-600 dark:text-brand-400" />
+              <span>Tuyển dụng: <span className="text-plum-900 dark:text-[#f0f2f5]">{post.job.title}</span></span>
             </h3>
             {post.job.applyUrl && (
               <a
@@ -311,13 +312,13 @@ function PostDetailCard({
           </div>
 
           <div className="p-6">
-            <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 p-5">
-              <p className="text-base font-bold text-plum-900 mb-3">Công ty: {post.job.company}</p>
+            <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 p-5 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
+              <p className="text-base font-bold text-plum-900 dark:text-[#f0f2f5] mb-3">Công ty: {post.job.company}</p>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
-                  <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Địa điểm</p>
+                  <div className="flex flex-wrap gap-2 text-sm text-plum-800 dark:text-[#f0f2f5] font-medium">
                     {post.job.location && (
                       <span className="inline-flex items-center gap-1">
                         <MapPin size={15} className="text-brand-500" /> {post.job.location}
@@ -326,11 +327,11 @@ function PostDetailCard({
                   </div>
                 </div>
                 <div>
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
-                  <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Mức lương & Liên hệ</p>
+                  <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800 dark:text-[#f0f2f5]">
                     {(post.job.salaryMin || post.job.salaryMax) ? (
                       <span className="inline-flex items-center gap-1">
-                        <span className="font-semibold text-emerald-600">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                           {post.job.salaryMin && post.job.salaryMax
                             ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
                             : post.job.salaryMin
@@ -339,11 +340,11 @@ function PostDetailCard({
                         </span>
                       </span>
                     ) : (
-                      <span className="text-slate-400 font-normal">Thỏa thuận</span>
+                      <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">Thỏa thuận</span>
                     )}
                     {post.job.contactEmail && (
-                      <span className="inline-flex items-center gap-1.5 text-sm">
-                        <Inbox size={15} className="text-plum-400" /> {post.job.contactEmail}
+                      <span className="inline-flex items-center gap-1.5 text-sm dark:text-[#b0b3b8]">
+                        <Inbox size={15} className="text-plum-400 dark:text-[#b0b3b8]" /> {post.job.contactEmail}
                       </span>
                     )}
                   </div>
@@ -354,8 +355,8 @@ function PostDetailCard({
             {/* Mô tả tuyển dụng */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc:</p>
-                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Mô tả công việc:</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 dark:text-[#e4e6eb]">
                   {post.text}
                 </p>
               </div>
@@ -366,7 +367,7 @@ function PostDetailCard({
               const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
               if (imgs.length === 0) return null
               return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+                <div className="overflow-hidden rounded-xl border border-plum-900/10 dark:border-[#393a3b] shadow-sm">
                   <ImageCarousel images={imgs} height={420} altPrefix="Ảnh tuyển dụng" />
                 </div>
               )
@@ -377,15 +378,15 @@ function PostDetailCard({
 
       {/* --- Thẻ thông tin Sự kiện (nếu là bài event) --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all">
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
           {/* Header Sự kiện */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4">
-            <h3 className="flex items-center gap-2 font-bold text-violet-900 text-lg">
-              <CalendarPlus size={20} className="text-violet-600" />
-              <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
+            <h3 className="flex items-center gap-2 font-bold text-violet-900 text-lg dark:text-[#f0f2f5]">
+              <CalendarPlus size={20} className="text-violet-600 dark:text-violet-400" />
+              <span>Sự kiện: <span className="text-plum-900 dark:text-[#f0f2f5]">{post.event.title}</span></span>
             </h3>
             {post.event.status === 'CANCELLED' ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 dark:bg-rose-500/20 dark:text-rose-400">
                 <Ban size={13} /> Đã hủy
               </span>
             ) : isAuthor && onCancelEvent ? (
@@ -394,7 +395,7 @@ function PostDetailCard({
                 variant="secondary"
                 size="sm"
                 onClick={onCancelEvent}
-                className="border-rose-200 text-rose-600 hover:bg-rose-50 text-xs px-3 h-8 font-semibold"
+                className="border-rose-200 text-rose-600 hover:bg-rose-50 text-xs px-3 h-8 font-semibold dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10"
                 title="Hủy tổ chức sự kiện này"
               >
                 <Ban size={13} className="mr-1" /> Hủy sự kiện
@@ -404,9 +405,9 @@ function PostDetailCard({
 
           <div className="p-6">
             {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs dark:border-[#393a3b] dark:bg-none dark:bg-[#3a3b3c]">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-plum-900">Đăng ký tham gia sự kiện</p>
+                <p className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">Đăng ký tham gia sự kiện</p>
               </div>
               <EventRsvpButton
                 eventId={post.event.id ?? post.eventId}
@@ -423,7 +424,7 @@ function PostDetailCard({
             </div>
 
             {/* Thời gian & Địa điểm */}
-            <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2">
+            <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
               {post.event.startTime && (
                 <div>
                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
@@ -502,18 +503,20 @@ function PostDetailCard({
 
       {/* Thanh hành động — số liệu tương tác. Đăng like/comment/repost thuộc UC17/18/21,
           ở UC16 chỉ hiển thị số đếm (nút vô hiệu hóa với Guest theo BR-12). */}
-      <div className="flex items-center gap-1 border-t border-plum-900/[0.06] px-6 py-3">
+      <div className="flex items-center gap-1.5 border-t border-slate-100 dark:border-[#393a3b] px-6 py-3">
         <button
           disabled={!canInteract}
           onClick={handleLike}
           aria-pressed={liked}
           title={guardTitle}
           className={cn(
-            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors enabled:hover:bg-plum-900/[0.04] disabled:cursor-not-allowed disabled:opacity-60',
-            liked ? 'text-rose-500 enabled:hover:text-rose-600' : 'text-plum-500 enabled:hover:text-plum-900',
+            'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
+            liked
+              ? 'text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15 enabled:hover:bg-rose-500/20'
+              : 'text-slate-600 dark:text-[#b0b3b8] enabled:hover:bg-slate-100 dark:enabled:hover:bg-[#3a3b3c] enabled:hover:text-slate-900 dark:enabled:hover:text-[#f0f2f5]',
           )}
         >
-          <Heart size={18} className={liked ? 'fill-rose-400' : ''} /> {compact(likeCount)}
+          <Heart size={18} className={liked ? 'fill-rose-500 text-rose-500 dark:fill-rose-400 dark:text-rose-400' : ''} /> {compact(likeCount)}
         </button>
         <button
           disabled={!canInteract}
@@ -522,7 +525,7 @@ function PostDetailCard({
             window.location.hash = 'comments'
             document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
           }}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-brand-500/[0.08] enabled:hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:bg-[#F27024]/10 dark:enabled:hover:bg-[#F27024]/15 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
           <MessageCircle size={18} /> {compact(post.comments)}
         </button>
@@ -530,9 +533,9 @@ function PostDetailCard({
           disabled={!canInteract}
           title={guardTitle}
           onClick={onShare}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:bg-slate-100 dark:enabled:hover:bg-[#3a3b3c] enabled:hover:text-slate-900 dark:enabled:hover:text-[#f0f2f5] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+          <Share2 size={18} />
         </button>
         {!isAuthor && (canReport ? (
           <button
@@ -540,18 +543,18 @@ function PostDetailCard({
             onClick={onReport}
             aria-label="Báo cáo bài viết"
             title="Báo cáo bài viết"
-            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors hover:bg-plum-900/[0.04] hover:text-plum-900"
+            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
           >
-            <Flag size={17} />
+            <Flag size={18} />
           </button>
         ) : !canInteract ? (
           <button
             disabled
             title={guardTitle}
             aria-label="Đăng nhập để báo cáo bài viết"
-            className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Flag size={17} />
+            <Flag size={18} />
           </button>
         ) : null)}
         <button
@@ -559,10 +562,11 @@ function PostDetailCard({
           title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           onClick={handleSave}
           className={cn(
-            'grid h-9 w-9 place-items-center rounded-lg transition-all duration-200',
+            'inline-flex items-center justify-center rounded-xl p-2 transition-all duration-200 cursor-pointer',
+            isAuthor ? 'ml-auto' : '',
             saved
-              ? 'text-[#F27024] bg-orange-50 hover:bg-orange-100'
-              : 'text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900',
+              ? 'text-[#F27024] dark:text-[#FF8C38] bg-[#F27024]/10 dark:bg-[#F27024]/15 hover:bg-[#F27024]/20'
+              : 'text-slate-400 dark:text-[#8a8d91] hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-[#F27024] dark:hover:text-[#FF8C38]',
           )}
         >
           {saved ? (
@@ -571,7 +575,7 @@ function PostDetailCard({
               animate={{ scale: [1.25, 1] }}
               transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
             >
-              <Bookmark size={18} className="fill-[#F27024] text-[#F27024]" />
+              <Bookmark size={18} className="fill-[#F27024] text-[#F27024] dark:fill-[#FF8C38] dark:text-[#FF8C38]" />
             </motion.div>
           ) : (
             <Bookmark size={18} />

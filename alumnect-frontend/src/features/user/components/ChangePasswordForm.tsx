@@ -95,17 +95,17 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-xl rounded-3xl bg-white p-6 md:p-8 shadow-sm border border-plum-900/5">
+    <div className="w-full max-w-xl rounded-3xl bg-white p-6 md:p-8 shadow-sm border border-plum-900/5 dark:bg-[#242526] dark:border-[#393a3b]">
       <div className="flex items-center gap-2">
         <KeyRound className="text-brand-500 animate-pulse" size={24} />
-        <h2 className="text-2xl font-extrabold text-plum-900 tracking-tight">Đổi mật khẩu</h2>
+        <h2 className="text-2xl font-extrabold text-plum-900 dark:text-[#f0f2f5] tracking-tight">Đổi mật khẩu</h2>
       </div>
-      <p className="mt-1 text-sm text-plum-500">Bảo vệ tài khoản của bạn bằng cách cập nhật mật khẩu định kỳ.</p>
+      <p className="mt-1 text-sm text-plum-500 dark:text-[#b0b3b8]">Bảo vệ tài khoản của bạn bằng cách cập nhật mật khẩu định kỳ.</p>
 
       {/* Thông báo lỗi */}
       {errorMessage && (
-        <div className="mt-4 rounded-xl bg-coral-50 border border-coral-200/50 p-3 text-xs text-coral-600 flex items-start gap-2 animate-pop">
-          <AlertCircle size={16} className="shrink-0 mt-0.5 text-coral-600" />
+        <div className="mt-4 rounded-xl bg-coral-50 border border-coral-200/50 p-3 text-xs text-coral-600 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-400 flex items-start gap-2 animate-pop">
+          <AlertCircle size={16} className="shrink-0 mt-0.5 text-coral-600 dark:text-rose-400" />
           <span>{errorMessage}</span>
         </div>
       )}
@@ -122,7 +122,7 @@ export function ChangePasswordForm() {
             <button
               type="button"
               onClick={() => setShowOldPassword((v) => !v)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-colors"
               aria-label="Ẩn/hiện mật khẩu cũ"
             >
               {showOldPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -141,7 +141,7 @@ export function ChangePasswordForm() {
             <button
               type="button"
               onClick={() => setShowNewPassword((v) => !v)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-colors"
               aria-label="Ẩn/hiện mật khẩu mới"
             >
               {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -160,7 +160,7 @@ export function ChangePasswordForm() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((v) => !v)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-colors"
               aria-label="Ẩn/hiện mật khẩu xác nhận"
             >
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -188,7 +188,7 @@ export function ChangePasswordForm() {
         icon={<LogOut size={18} />}
         maxWidthClassName="max-w-md"
       >
-        <p className="text-sm leading-relaxed text-plum-600">
+        <p className="text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
           Bạn có muốn đăng xuất khỏi tài khoản trên tất cả các thiết bị sau khi đổi mật khẩu thành công không?
         </p>
 
@@ -208,7 +208,7 @@ export function ChangePasswordForm() {
             type="button"
             onClick={() => executeChangePassword(false)}
             disabled={changePasswordMutation.isPending}
-            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] transition-colors cursor-pointer disabled:opacity-50"
+            className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-plum-700 bg-plum-900/[0.04] hover:bg-plum-900/[0.08] active:bg-plum-900/[0.12] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:hover:bg-[#4e4f50] transition-colors cursor-pointer disabled:opacity-50"
           >
             Duy trì đăng nhập
           </button>

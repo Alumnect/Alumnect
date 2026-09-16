@@ -11,7 +11,6 @@ import {
   XCircle,
   Ban,
   Radio,
-  ExternalLink,
 } from 'lucide-react'
 import { Card, Avatar, SmartImage, EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'

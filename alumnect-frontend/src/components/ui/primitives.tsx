@@ -57,7 +57,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-3xl',
+        'group relative overflow-hidden rounded-3xl dark:bg-[#242526] dark:border-[#393a3b] dark:text-[#e4e6eb]',
         glass ? 'glass' : 'card-surface',
         hover && 'hover-lift',
         className,

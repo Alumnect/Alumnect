@@ -86,49 +86,56 @@ export function EntitySelectField<T extends number | string = number>({
         className={cn(
           'flex h-11 w-full items-center gap-2.5 rounded-xl border px-4 text-sm transition-colors',
           disabled
-            ? 'border-plum-900/10 bg-plum-900/[0.03] text-plum-400/70 cursor-not-allowed opacity-60'
+            ? 'border-plum-900/10 bg-plum-900/[0.03] text-plum-400/70 cursor-not-allowed opacity-60 dark:border-[#393a3b] dark:bg-[#3a3b3c]/40 dark:text-[#b0b3b8]'
             : open
-              ? 'border-brand-400/60 bg-plum-900/[0.03] ring-2 ring-brand-500/30'
-              : 'border-plum-900/10 bg-plum-900/[0.03] hover:border-plum-900/20',
+              ? 'border-brand-500/60 bg-white ring-2 ring-brand-500/25 dark:border-brand-500 dark:bg-[#3a3b3c] dark:ring-brand-500/25'
+              : 'border-plum-900/10 bg-white hover:border-plum-900/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:hover:border-[#4e4f50]',
         )}
       >
         {selected && itemIcon ? itemIcon(selected.name) : buttonIcon}
-        <span className={cn('flex-1 truncate text-left', selected ? 'text-plum-900' : 'text-plum-400')}>{selected ? selected.name : placeholder}</span>
-        <ChevronDown size={16} className={cn('shrink-0 text-plum-400 transition-transform', open && 'rotate-180')} />
+        <span className={cn('flex-1 truncate text-left font-medium', selected ? 'text-plum-900 dark:text-[#f0f2f5]' : 'text-plum-400 dark:text-[#b0b3b8]')}>
+          {selected ? selected.name : placeholder}
+        </span>
+        <ChevronDown size={16} className={cn('shrink-0 text-plum-400 dark:text-[#b0b3b8] transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (
         <div
           className={cn(
-            'absolute left-0 right-0 z-40 overflow-hidden rounded-xl border border-plum-900/10 bg-cream-50 p-2 shadow-xl',
+            'absolute left-0 right-0 z-40 overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-2 shadow-xl dark:border-[#393a3b] dark:bg-[#242526] dark:shadow-2xl',
             actualDirection === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
           )}
         >
           {searchable && (
-            <div className="mb-1 flex items-center gap-2 rounded-lg bg-plum-900/[0.04] px-3">
-              <Search size={14} className="shrink-0 text-plum-400" />
+            <div className="mb-2 flex items-center gap-2 rounded-xl border border-plum-900/10 bg-slate-50 px-3 py-1.5 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
+              <Search size={14} className="shrink-0 text-plum-400 dark:text-[#b0b3b8]" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder ?? 'Tìm…'}
-                className="h-9 w-full bg-transparent text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none"
+                className="h-8 w-full bg-transparent text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none dark:text-[#f0f2f5] dark:placeholder:text-[#b0b3b8] !bg-transparent"
                 autoFocus
               />
             </div>
           )}
 
-          <div className="max-h-52 overflow-y-auto">
+          <div className="max-h-56 overflow-y-auto space-y-0.5 scrollbar-thin">
             {/* Bỏ chọn */}
             <button
               type="button"
               onClick={() => pick(null)}
-              className={cn('flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors', value == null ? 'bg-brand-500/10 font-semibold text-brand-700' : 'text-plum-600 hover:bg-plum-900/[0.04]')}
+              className={cn(
+                'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors',
+                value == null
+                  ? 'bg-brand-500/10 font-semibold text-brand-600 dark:bg-brand-500/20 dark:text-brand-400'
+                  : 'text-plum-700 hover:bg-plum-900/[0.04] dark:text-[#e4e6eb] dark:hover:bg-[#3a3b3c]'
+              )}
             >
-              <span className="flex-1">{placeholder}</span>
-              {value == null && <Check size={15} className="text-brand-600" />}
+              <span className="flex-1 truncate">{placeholder}</span>
+              {value == null && <Check size={15} className="text-brand-600 dark:text-brand-400 shrink-0" />}
             </button>
 
-            <div className="my-1 h-px bg-plum-900/[0.06]" />
+            <div className="my-1 h-px bg-plum-900/[0.06] dark:bg-[#393a3b]" />
 
             {filtered.map((it) => {
               const isSel = value === it.id
@@ -137,16 +144,23 @@ export function EntitySelectField<T extends number | string = number>({
                   type="button"
                   key={it.id}
                   onClick={() => pick(it.id)}
-                  className={cn('flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors', isSel ? 'bg-brand-500/10 font-medium text-brand-700' : 'text-plum-600 hover:bg-plum-900/[0.04]')}
+                  className={cn(
+                    'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors',
+                    isSel
+                      ? 'bg-brand-500/10 font-semibold text-brand-600 dark:bg-brand-500/20 dark:text-brand-400'
+                      : 'text-plum-700 hover:bg-plum-900/[0.04] dark:text-[#e4e6eb] dark:hover:bg-[#3a3b3c]'
+                  )}
                 >
                   {itemIcon?.(it.name)}
-                  <span className="flex-1">{it.name}</span>
-                  {isSel && <Check size={15} className="text-brand-600" />}
+                  <span className="flex-1 truncate">{it.name}</span>
+                  {isSel && <Check size={15} className="text-brand-600 dark:text-brand-400 shrink-0" />}
                 </button>
               )
             })}
 
-            {filtered.length === 0 && <p className="px-3 py-4 text-center text-xs text-plum-400">Không tìm thấy</p>}
+            {filtered.length === 0 && (
+              <p className="px-3 py-4 text-center text-xs text-plum-400 dark:text-[#b0b3b8]">Không tìm thấy kết quả phù hợp</p>
+            )}
           </div>
         </div>
       )}
