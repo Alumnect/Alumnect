@@ -72,6 +72,12 @@ public class ConnectionSuggestionResponse {
     /** Lý do gợi ý kết nối trực quan (ví dụ: "Cùng chuyên ngành SE", "Cùng niên khóa K15", "Ở cùng Đà Nẵng") */
     private String suggestionReason;
 
+    /** Danh sách các huy hiệu lý do gợi ý chi tiết (ví dụ: "Cùng FPT Software", "2 kết nối chung") */
+    private List<String> reasonBadges;
+
+    /** Số lượng kết nối / bạn chung giữa 2 người dùng */
+    private Long mutualFollowsCount;
+
     /** Điểm số độ tương đồng / gợi ý (dùng để sắp xếp độ ưu tiên) */
     private Integer matchScore;
 }

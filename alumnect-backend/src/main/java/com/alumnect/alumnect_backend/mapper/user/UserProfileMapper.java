@@ -46,6 +46,7 @@ public interface UserProfileMapper {
     @Mapping(target = "followersCount", ignore = true)
     @Mapping(target = "followingCount", ignore = true)
     @Mapping(target = "isFollowing", ignore = true)
+    @Mapping(target = "mutualFollowsCount", ignore = true)
     UserDirectoryResponse toDirectoryResponse(UserProfile userProfile);
 
     /**

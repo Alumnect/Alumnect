@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, SlidersHorizontal, X, RotateCcw, Check, Sparkles } from 'lucide-react'
+import { Search, SlidersHorizontal, X, RotateCcw, Check, Compass } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/lib/utils'
@@ -161,7 +161,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
       {/* Quick Category Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-plum-400 mr-1">
-          <Sparkles size={13} className="text-brand-500" /> Gợi ý:
+          <Compass size={13} className="text-brand-500" /> Ngành:
         </span>
         {quickCategories.map((cat) => {
           const isSelected = filters.category === cat.value

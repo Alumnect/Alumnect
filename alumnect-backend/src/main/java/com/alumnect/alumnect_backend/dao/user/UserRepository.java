@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.dao.user;
 
 import com.alumnect.alumnect_backend.common.enums.AccountStatus;
 import com.alumnect.alumnect_backend.entity.user.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -76,30 +77,31 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     List<Object[]> countRegistrationsByDayInRange(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
     /**
-     * Tìm kiếm danh sách ứng viên đề xuất kết nối cho người dùng đã đăng nhập.
-     * Chỉ gợi ý các cựu sinh viên (ALUMNI), tài khoản ACTIVE, không phải chính mình và chưa theo dõi.
-     *
-     * @param currentUserId ID người dùng hiện tại
-     * @param excludedIds Danh sách ID cần loại trừ (đã theo dõi)
-     * @return Danh sách User kèm Profile
+     * Tìm kiếm danh sách ứng viên đề xuất kết nối cho người dùng đã đăng nhập (Có phân trang / Limit).
+     * Loại bỏ tài khoản không hoạt động, chính mình và các tài khoản đã follow.
      */
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile up " +
+           "LEFT JOIN FETCH up.major m " +
            "WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE " +
-           "AND u.role.name = 'ALUMNI' " +
            "AND u.id != :currentUserId " +
-           "AND (COALESCE(:excludedIds, NULL) IS NULL OR u.id NOT IN :excludedIds)")
-    List<User> findCandidatesForSuggestions(@Param("currentUserId") Long currentUserId, @Param("excludedIds") Collection<Long> excludedIds);
+           "AND u.role.name != 'ADMIN' " +
+           "AND u.id NOT IN :excludedIds " +
+           "ORDER BY u.isAccountVerified DESC, u.createdAt DESC")
+    List<User> findCandidatesForSuggestions(
+            @Param("currentUserId") Long currentUserId,
+            @Param("excludedIds") Collection<Long> excludedIds,
+            Pageable pageable
+    );
 
     /**
-     * Tìm kiếm danh sách cựu sinh viên (ALUMNI) đề xuất tiêu biểu cho khách vãng lai (chưa đăng nhập).
-     *
-     * @return Danh sách User kèm Profile
+     * Tìm kiếm danh sách cựu sinh viên tiêu biểu cho khách vãng lai (Có phân trang / Limit).
      */
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile up " +
+           "LEFT JOIN FETCH up.major m " +
            "WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE " +
-           "AND u.role.name = 'ALUMNI' " +
+           "AND u.role.name != 'ADMIN' " +
            "ORDER BY u.isAccountVerified DESC, u.createdAt DESC")
-    List<User> findGuestCandidates();
+    List<User> findGuestCandidates(Pageable pageable);
 
 }
 

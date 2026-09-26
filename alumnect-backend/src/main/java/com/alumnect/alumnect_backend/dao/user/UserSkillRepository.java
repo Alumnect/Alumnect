@@ -25,6 +25,14 @@ public interface UserSkillRepository extends JpaRepository<UserSkill, Long> {
     List<UserSkill> findByUserIdOrderBySortOrderAscSkillNameAsc(Long userId);
 
     /**
+     * Tìm tất cả kỹ năng của danh sách người dùng (Batch fetch tránh N+1).
+     *
+     * @param userIds Danh sách ID người dùng
+     * @return Danh sách kỹ năng
+     */
+    List<UserSkill> findByUserIdIn(java.util.Collection<Long> userIds);
+
+    /**
      * Xóa toàn bộ kỹ năng của người dùng theo ID tài khoản.
      *
      * @param userId ID người dùng

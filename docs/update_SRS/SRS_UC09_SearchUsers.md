@@ -75,8 +75,9 @@ stateDiagram-v2
     * **BR-01**: Chỉ hiển thị các tài khoản ở trạng thái hoạt động (`accountStatus = ACTIVE`).
     * **BR-02**: Loại trừ tài khoản quản trị viên (`ADMIN`) khỏi danh bạ thành viên công khai.
     * **BR-03**: Khách vãng lai chưa đăng nhập vẫn có quyền tìm kiếm và xem danh bạ; khi bấm "Theo dõi" hoặc "Nhắn tin" hệ thống sẽ mở Modal yêu cầu đăng nhập.
-    * **BR-04**: Với thành viên đã đăng nhập, hệ thống tự động xác định trạng thái `isFollowing` và ẩn nút Theo dõi đối với hồ sơ của chính mình (hiển thị "Hồ sơ của bạn").
-    * **BR-05**: Tìm kiếm từ khóa không phân biệt hoa thường và so khớp mờ trên nhiều trường dữ liệu (họ tên, chức danh, mã SV, kỹ năng, công ty, chuyên ngành).
+    * **BR-04**: Với thành viên đã đăng nhập, hệ thống tự động xác định trạng thái `isFollowing` và loại trừ hồ sơ của chính người xem khỏi kết quả tìm kiếm/danh bạ để đảm bảo trải nghiệm người dùng tự nhiên và không sinh ra ô trống trong lưới.
+    * **BR-05**: Tìm kiếm từ khóa không phân biệt hoa thường và so khớp mờ trên nhiều trường dữ liệu (họ tên, chức danh, mã SV, kỹ năng, công ty, chuyên ngành). Hỗ trợ tiếng Việt không dấu (PostgreSQL `unaccent`) cho phép gõ từ khóa không dấu vẫn tìm thấy nội dung có dấu và ngược lại.
+    * **BR-06**: Loại trừ hoàn toàn hồ sơ của chính mình tại cả tầng truy vấn cơ sở dữ liệu (`UserSpecification.filterUsers`) lẫn tầng hiển thị giao diện Client (`displayedUsers`), đảm bảo lưới CSS Grid 3 cột luôn được xếp khít liền mạch, không bị lủng ô trống.
   * **Error Handling**:
     * Trả về HTTP 400 Bad Request kèm thông điệp tiếng Việt nếu `page < 0` hoặc `size` vượt quá giới hạn.
     * Trả về HTTP 500 Internal Server Error nếu xảy ra lỗi kết nối cơ sở dữ liệu.
@@ -96,6 +97,8 @@ stateDiagram-v2
 | BR-03 | API tìm kiếm `/api/v1/users/search` là công khai (Public GET); không bắt buộc Token xác thực. |
 | BR-04 | Khi người dùng đã đăng nhập, hệ thống tự động ánh xạ quan hệ `follows` để trả về cờ `isFollowing = true/false`. |
 | BR-05 | Giá trị phân trang mặc định là `page = 0`, `size = 12`; `size` tối đa không vượt quá 100 bản ghi mỗi trang. |
+| BR-06 | Tự động loại trừ ID của người dùng đang đăng nhập khỏi kết quả tìm kiếm (`id != currentViewerId`) để tránh kết nối chính mình và không tạo ô trống trong layout. |
+| BR-07 | Tích hợp tìm kiếm tiếng Việt toàn diện không dấu qua hàm `unaccent()` của PostgreSQL trên các trường họ tên, thành phố, chuyên ngành. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 * Giao diện tuân thủ tiêu chuẩn Pastel Premium: Canvas `#faf4ec`, Card bề mặt trắng bo góc lớn `rounded-3xl`, viền `border-plum-900/10`, hiệu ứng kính mờ `glassmorphism`, bóng đổ mềm và chuyển động mượt mà bằng Framer Motion.

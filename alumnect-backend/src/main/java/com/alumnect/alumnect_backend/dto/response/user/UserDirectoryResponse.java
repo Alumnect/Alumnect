@@ -69,6 +69,9 @@ public class UserDirectoryResponse {
     /** Trạng thái đã xác thực hồ sơ cựu sinh viên / sinh viên */
     private Boolean isAccountVerified;
 
+    /** Số lượng kết nối / bạn chung giữa người xem và người này */
+    private Long mutualFollowsCount;
+
     /** Thời điểm đăng ký tham gia AlumNect */
     private Instant createdAt;
 }

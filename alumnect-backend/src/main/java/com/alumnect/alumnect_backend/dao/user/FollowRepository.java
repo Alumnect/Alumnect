@@ -113,4 +113,24 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
      */
     @EntityGraph(attributePaths = { "following" })
     Page<Follow> findByFollowerId(Long followerId, Pageable pageable);
+
+    /**
+     * Đếm số lượng kết nối chung (mutual follows / connections) giữa người dùng hiện tại và danh sách ứng viên.
+     * Tính theo 2 chiều: (1) Cả 2 cùng follow một người, hoặc (2) Người A follow một người và người đó follow B.
+     * Trả về danh sách Object[] gồm [candidateId (Long), mutualCount (Long)].
+     */
+    @Query(value = "SELECT candidate_id, COUNT(DISTINCT intermediate_user_id) AS mutual_count " +
+            "FROM (" +
+            "    SELECT f2.following_id AS candidate_id, f1.following_id AS intermediate_user_id " +
+            "    FROM follows f1 " +
+            "    JOIN follows f2 ON f1.following_id = f2.follower_id " +
+            "    WHERE f1.follower_id = :currentUserId AND f2.following_id IN :candidateIds " +
+            "    UNION " +
+            "    SELECT f2.follower_id AS candidate_id, f1.following_id AS intermediate_user_id " +
+            "    FROM follows f1 " +
+            "    JOIN follows f2 ON f1.following_id = f2.following_id " +
+            "    WHERE f1.follower_id = :currentUserId AND f2.follower_id IN :candidateIds " +
+            ") mutual_records " +
+            "GROUP BY candidate_id", nativeQuery = true)
+    List<Object[]> countMutualFollowsBatch(@Param("currentUserId") Long currentUserId, @Param("candidateIds") Collection<Long> candidateIds);
 }
