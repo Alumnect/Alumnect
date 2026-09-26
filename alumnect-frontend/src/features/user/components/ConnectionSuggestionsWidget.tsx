@@ -44,6 +44,12 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
     }
   }
 
+  const subtitle = user.mutualFollowsCount && user.mutualFollowsCount > 0
+    ? `${user.mutualFollowsCount} bạn chung`
+    : user.cohort
+    ? `K${user.cohort}${user.major?.code ? ` • ${user.major.code}` : ''}`
+    : user.major?.code || (user.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên')
+
   return (
     <li className="flex items-center gap-3">
       <Link
@@ -62,17 +68,14 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
       <div className="min-w-0 flex-1">
         <Link
           to={`/app/profile?userId=${user.userId}`}
-          className="block truncate text-sm font-bold text-plum-900 hover:underline"
+          className="block truncate text-sm font-bold text-plum-900 dark:text-plum-100 hover:underline"
           title={user.fullName}
         >
           {user.fullName}
         </Link>
-        <p className="truncate text-xs text-plum-400">
-          {user.cohort
-            ? `Khóa K${user.cohort}${user.major?.code ? ` • ${user.major.code}` : ''}`
-            : user.major?.code || (user.role === 'ALUMNI' ? 'Cựu sinh viên FPTU' : 'Sinh viên FPTU')}
+        <p className="truncate text-xs text-plum-500 dark:text-plum-400">
+          {subtitle}
         </p>
-
       </div>
 
       <Button
@@ -105,7 +108,16 @@ interface ConnectionSuggestionsWidgetProps {
 }
 
 export function ConnectionSuggestionsWidget({ limit = 4, className }: ConnectionSuggestionsWidgetProps) {
-  const { data: suggestions = [], isLoading, isError } = useConnectionSuggestions(limit)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const currentUserId = useAuthStore((s) => s.user?.id)
+  const { data: suggestions = [], isLoading, isError } = useConnectionSuggestions(limit, {
+    enabled: isAuthenticated,
+  })
+
+  // Người dùng chưa đăng nhập thì không hiển thị widget gợi ý kết nối cá nhân
+  if (!isAuthenticated) {
+    return null
+  }
 
   if (isLoading) {
     return (
@@ -130,7 +142,11 @@ export function ConnectionSuggestionsWidget({ limit = 4, className }: Connection
     )
   }
 
-  if (isError || suggestions.length === 0) {
+  const displayedSuggestions = currentUserId
+    ? suggestions.filter((s) => Number(s.userId) !== Number(currentUserId))
+    : suggestions
+
+  if (isError || displayedSuggestions.length === 0) {
     return null
   }
 
@@ -147,7 +163,7 @@ export function ConnectionSuggestionsWidget({ limit = 4, className }: Connection
       </div>
 
       <ul className="space-y-4">
-        {suggestions.map((user) => (
+        {displayedSuggestions.map((user) => (
           <ConnectionSuggestionItem key={user.userId} user={user} />
         ))}
       </ul>

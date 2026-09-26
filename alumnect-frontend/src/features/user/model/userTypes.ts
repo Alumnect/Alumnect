@@ -153,6 +153,7 @@ export interface UserDirectoryResponse {
   followingCount?: number
   isFollowing?: boolean
   isAccountVerified: boolean
+  mutualFollowsCount?: number
   createdAt: string
 }
 
@@ -193,6 +194,8 @@ export interface ConnectionSuggestionResponse {
   isAccountVerified: boolean
   createdAt: string
   suggestionReason: string
+  reasonBadges?: string[]
+  mutualFollowsCount?: number
   matchScore: number
 }
 

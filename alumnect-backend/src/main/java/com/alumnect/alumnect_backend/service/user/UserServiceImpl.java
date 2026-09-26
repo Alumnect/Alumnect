@@ -41,6 +41,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -315,7 +316,13 @@ public class UserServiceImpl implements UserService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, property));
 
-        Specification<User> spec = UserSpecification.filterUsers(query, role, majorId, cohort, city, skill, company);
+        String currentViewerEmail = getAuthenticatedUserEmailOrNull();
+        Long currentViewerId = null;
+        if (currentViewerEmail != null) {
+            currentViewerId = userRepository.findByEmail(currentViewerEmail).map(User::getId).orElse(null);
+        }
+
+        Specification<User> spec = UserSpecification.filterUsers(query, role, majorId, cohort, city, skill, company, currentViewerId);
         Page<User> userPage = userRepository.findAll(spec, pageable);
 
         List<User> users = userPage.getContent();
@@ -364,17 +371,19 @@ public class UserServiceImpl implements UserService {
                         row -> ((Number) row[1]).longValue()
                 ));
 
-        // 4. Batch fetch trạng thái isFollowing nếu người xem đã đăng nhập (1 Query)
-        String currentViewerEmail = getAuthenticatedUserEmailOrNull();
+        // 4. Batch fetch trạng thái isFollowing và Mutual Follows nếu người xem đã đăng nhập
         Set<Long> followedUserIds = new HashSet<>();
-        if (currentViewerEmail != null) {
-            Long currentViewerId = userRepository.findByEmail(currentViewerEmail).map(User::getId).orElse(null);
-            if (currentViewerId != null) {
-                List<Follow> follows = followRepository.findByFollowerIdAndFollowingIdIn(currentViewerId, userIds);
+        Map<Long, Long> mutualFollowsMap = new HashMap<>();
+        if (currentViewerId != null) {
+            List<Follow> follows = followRepository.findByFollowerIdAndFollowingIdIn(currentViewerId, userIds);
                 followedUserIds = follows.stream()
                         .map(f -> f.getFollowing().getId())
                         .collect(Collectors.toSet());
-            }
+
+                List<Object[]> mutualResults = followRepository.countMutualFollowsBatch(currentViewerId, userIds);
+                for (Object[] row : mutualResults) {
+                    mutualFollowsMap.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                }
         }
 
         final Set<Long> finalFollowedUserIds = followedUserIds;
@@ -403,6 +412,9 @@ public class UserServiceImpl implements UserService {
 
             // Gán trạng thái theo dõi đối với người xem
             item.setIsFollowing(finalFollowedUserIds.contains(user.getId()));
+
+            // Gán số lượng kết nối / bạn chung
+            item.setMutualFollowsCount(mutualFollowsMap.getOrDefault(user.getId(), 0L));
 
             return item;
         }).toList();
@@ -435,11 +447,12 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Lấy danh sách thành viên đề xuất kết nối (UC10 - View Connection Suggestions).
-     * Dựa trên thuật toán tính điểm tương đồng (cùng chuyên ngành, cùng niên khóa, cùng địa điểm, tài khoản verified).
+     * Dựa trên ma trận điểm số thông minh: Bạn chung (Mutual Connections), Cùng công ty, Cùng chuyên ngành,
+     * Cùng/Sát niên khóa, Kỹ năng tương đồng, Cùng địa điểm và tài khoản xác thực.
      *
      * @param email Email tài khoản người xem (nếu đã đăng nhập, null nếu là khách vãng lai)
      * @param limit Số lượng đề xuất tối đa
-     * @return Danh sách thành viên được gợi ý kèm lý do trực quan
+     * @return Danh sách thành viên được gợi ý kèm danh sách huy hiệu và lý do trực quan
      */
     @Override
     @Transactional(readOnly = true)
@@ -457,15 +470,21 @@ public class UserServiceImpl implements UserService {
         }
 
         List<User> candidateUsers;
-        List<Long> followedIds = Collections.emptyList();
+        List<Long> followedIds;
+
+        Pageable candidatePageable = PageRequest.of(0, Math.min(150, Math.max(limit * 15, 30)));
 
         if (currentUser != null) {
             followedIds = followRepository.findFollowingIdsByFollowerId(currentUser.getId());
             Set<Long> excludedSet = new HashSet<>(followedIds);
             excludedSet.add(currentUser.getId());
-            candidateUsers = userRepository.findCandidatesForSuggestions(currentUser.getId(), excludedSet);
+
+            // Tải danh sách ứng viên (đã loại trừ chính mình và người đã follow, sắp xếp ưu tiên theo uy tín/thời gian)
+            candidateUsers = userRepository.findCandidatesForSuggestions(
+                    currentUser.getId(), excludedSet, candidatePageable
+            );
         } else {
-            candidateUsers = userRepository.findGuestCandidates();
+            candidateUsers = userRepository.findGuestCandidates(candidatePageable);
         }
 
         if (candidateUsers.isEmpty()) {
@@ -494,7 +513,7 @@ public class UserServiceImpl implements UserService {
         Map<Long, Long> followersCountMap = followersCountResults.stream()
                 .collect(Collectors.toMap(
                         row -> (Long) row[0],
-                        row -> (Long) row[1]
+                        row -> ((Number) row[1]).longValue()
                 ));
 
         // 3. Batch Fetch Following Count
@@ -502,84 +521,165 @@ public class UserServiceImpl implements UserService {
         Map<Long, Long> followingCountMap = followingCountResults.stream()
                 .collect(Collectors.toMap(
                         row -> (Long) row[0],
-                        row -> (Long) row[1]
+                        row -> ((Number) row[1]).longValue()
                 ));
 
+        // 4. Batch Fetch Mutual Follows (Kết nối chung)
+        Map<Long, Long> mutualFollowsMap = new HashMap<>();
+        if (currentUser != null && !candidateUserIds.isEmpty()) {
+            List<Object[]> mutualResults = followRepository.countMutualFollowsBatch(currentUser.getId(), candidateUserIds);
+            for (Object[] row : mutualResults) {
+                mutualFollowsMap.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+            }
+        }
+
+        // 5. Batch Fetch Candidate Skills
+        List<UserSkill> allCandidateSkills = userSkillRepository.findByUserIdIn(candidateUserIds);
+        Map<Long, Set<String>> candidateSkillMap = new HashMap<>();
+        for (UserSkill us : allCandidateSkills) {
+            if (us.getSkillName() != null && !us.getSkillName().trim().isEmpty()) {
+                candidateSkillMap.computeIfAbsent(us.getUser().getId(), k -> new HashSet<>())
+                        .add(us.getSkillName().trim().toLowerCase());
+            }
+        }
+
+        // 6. Chuẩn bị dữ liệu đối chiếu từ tài khoản người dùng hiện tại
         UserProfile currentProfile = (currentUser != null) ? currentUser.getProfile() : null;
         Long currentMajorId = (currentProfile != null && currentProfile.getMajor() != null) ? currentProfile.getMajor().getId() : null;
         String currentMajorName = (currentProfile != null && currentProfile.getMajor() != null) ? currentProfile.getMajor().getName() : null;
         Integer currentCohort = (currentProfile != null) ? currentProfile.getCohort() : null;
         String currentCity = (currentProfile != null && currentProfile.getCity() != null) ? currentProfile.getCity().trim() : null;
 
+        Set<String> currentUserSkills = new HashSet<>();
+        Set<String> currentUserCompanies = new HashSet<>();
+        if (currentUser != null) {
+            if (currentProfile != null && currentProfile.getSkills() != null) {
+                for (UserSkill s : currentProfile.getSkills()) {
+                    if (s.getSkillName() != null) {
+                        currentUserSkills.add(s.getSkillName().trim().toLowerCase());
+                    }
+                }
+            }
+            List<Experience> userExps = experienceRepository.findByUserIdOrderByStartDateDesc(currentUser.getId());
+            for (Experience exp : userExps) {
+                if (exp.getCompany() != null && !exp.getCompany().trim().isEmpty()) {
+                    currentUserCompanies.add(exp.getCompany().trim().toLowerCase());
+                }
+            }
+        }
+
         List<ConnectionSuggestionResponse> scoredList = new ArrayList<>();
 
         for (User user : candidateUsers) {
             UserProfile profile = user.getProfile();
             int score = 0;
-            String reason = "Cựu sinh viên tiêu biểu";
+            List<String> reasonBadges = new ArrayList<>();
             PrimaryExperienceResponse primaryExp = expMap.get(user.getId());
+
             boolean hasExperience = (primaryExp != null && primaryExp.getCompany() != null && !primaryExp.getCompany().trim().isEmpty())
                     || (profile != null && profile.getHeadline() != null && !profile.getHeadline().trim().isEmpty());
 
-
             if (currentUser != null && profile != null) {
-                boolean hasMajorMatch = false;
-                boolean hasCohortMatch = false;
-                boolean hasCityMatch = false;
-
-                if (currentMajorId != null && profile.getMajor() != null && currentMajorId.equals(profile.getMajor().getId())) {
-                    score += 40;
-                    hasMajorMatch = true;
+                // (1) Kết nối chung (Mutual Connections / Friends of friends) - Trọng số ưu tiên hàng đầu
+                long mutualCount = mutualFollowsMap.getOrDefault(user.getId(), 0L);
+                if (mutualCount > 0) {
+                    score += (int) Math.min(80, 50 + (mutualCount - 1) * 5);
+                    reasonBadges.add(mutualCount + " kết nối chung");
                 }
+
+                // (2) Cùng công ty / cơ quan làm việc
+                if (primaryExp != null && primaryExp.getCompany() != null && !primaryExp.getCompany().trim().isEmpty()) {
+                    String candidateCompany = primaryExp.getCompany().trim().toLowerCase();
+                    boolean sameCompany = currentUserCompanies.stream().anyMatch(c ->
+                            c.equals(candidateCompany) || candidateCompany.contains(c) || c.contains(candidateCompany)
+                    );
+                    if (sameCompany) {
+                        score += 35;
+                        reasonBadges.add("Cùng làm tại " + primaryExp.getCompany().trim());
+                    }
+                }
+
+                // (3) Cùng chuyên ngành đào tạo
+                if (currentMajorId != null && profile.getMajor() != null && currentMajorId.equals(profile.getMajor().getId())) {
+                    score += 30;
+                    String majorCode = profile.getMajor().getCode() != null ? profile.getMajor().getCode() : currentMajorName;
+                    reasonBadges.add("Cùng ngành " + majorCode);
+                }
+
+                // (4) Đồng môn cùng niên khóa hoặc sát khóa
                 if (currentCohort != null && profile.getCohort() != null) {
                     int diff = Math.abs(currentCohort - profile.getCohort());
                     if (diff == 0) {
-                        score += 30;
-                        hasCohortMatch = true;
+                        score += 25;
+                        reasonBadges.add("Cùng khóa K" + profile.getCohort());
                     } else if (diff == 1) {
                         score += 15;
+                        reasonBadges.add("Sát khóa (K" + profile.getCohort() + ")");
+                    } else if (diff == 2) {
+                        score += 8;
                     }
                 }
+
+                // (5) Kỹ năng tương đồng (Skill Overlap)
+                Set<String> candidateSkills = candidateSkillMap.getOrDefault(user.getId(), Collections.emptySet());
+                long sharedSkillsCount = candidateSkills.stream().filter(currentUserSkills::contains).count();
+                if (sharedSkillsCount > 0) {
+                    score += (int) Math.min(20, sharedSkillsCount * 5);
+                    reasonBadges.add(sharedSkillsCount + " kỹ năng chung");
+                }
+
+                // (6) Cùng tỉnh / thành phố sinh sống
                 if (currentCity != null && !currentCity.isEmpty() && profile.getCity() != null && currentCity.equalsIgnoreCase(profile.getCity().trim())) {
-                    score += 20;
-                    hasCityMatch = true;
+                    score += 15;
+                    reasonBadges.add("Đang ở " + profile.getCity().trim());
                 }
-                // Ưu tiên cựu sinh viên đã có kinh nghiệm làm việc / chức danh công ty (+20 điểm)
+
+                // (7) Cựu sinh viên có chức danh & kinh nghiệm
                 if (hasExperience) {
-                    score += 20;
+                    score += 15;
                 }
+
+                // (8) Đã xác thực cựu sinh viên
                 if (user.isAccountVerified()) {
                     score += 10;
                 }
+
+                // (9) Mức độ uy tín mạng xã hội (Followers)
                 long followers = followersCountMap.getOrDefault(user.getId(), 0L);
                 score += (int) Math.min(followers, 10);
 
-                if (hasMajorMatch && currentMajorName != null) {
-                    reason = "Cùng chuyên ngành " + (profile.getMajor().getCode() != null ? profile.getMajor().getCode() : currentMajorName);
-                } else if (hasCohortMatch) {
-                    reason = "Cùng niên khóa K" + profile.getCohort();
-                } else if (hasCityMatch) {
-                    reason = "Đang ở " + profile.getCity();
-                } else if (hasExperience && primaryExp != null && primaryExp.getCompany() != null) {
-                    reason = primaryExp.getTitle() + " @ " + primaryExp.getCompany();
-                } else if (user.isAccountVerified()) {
-                    reason = "Tài khoản đã xác minh";
-                } else {
-                    reason = "Thành viên cộng đồng FPTU";
+                // Fallback nếu chưa có huy hiệu nào nổi bật
+                if (reasonBadges.isEmpty()) {
+                    if (hasExperience && primaryExp != null && primaryExp.getTitle() != null && primaryExp.getCompany() != null) {
+                        reasonBadges.add(primaryExp.getTitle() + " @ " + primaryExp.getCompany());
+                    } else if (user.isAccountVerified()) {
+                        reasonBadges.add("Tài khoản đã xác minh");
+                    } else {
+                        reasonBadges.add("Thành viên cộng đồng FPTU");
+                    }
                 }
             } else {
-                // Ưu tiên hàng đầu cho Guest: Cựu sinh viên đã có kinh nghiệm làm việc / công ty (+40 điểm)
+                // Khách vãng lai chưa đăng nhập
                 if (hasExperience) {
                     score += 40;
+                    if (primaryExp != null && primaryExp.getTitle() != null && primaryExp.getCompany() != null) {
+                        reasonBadges.add(primaryExp.getTitle() + " @ " + primaryExp.getCompany());
+                    }
                 }
                 if (user.isAccountVerified()) {
                     score += 30;
-                    reason = "Cựu sinh viên tiêu biểu đã xác minh";
+                    reasonBadges.add("Cựu sinh viên tiêu biểu");
                 }
                 long followers = followersCountMap.getOrDefault(user.getId(), 0L);
                 score += (int) Math.min(followers, 20);
+
+                if (reasonBadges.isEmpty()) {
+                    reasonBadges.add("Cựu sinh viên FPTU");
+                }
             }
 
+            // Tạo chuỗi lý do tổng hợp ngắn gọn
+            String combinedReason = String.join(" • ", reasonBadges.stream().limit(2).toList());
 
             ConnectionSuggestionResponse dto = ConnectionSuggestionResponse.builder()
                     .userId(user.getId())
@@ -606,15 +706,23 @@ public class UserServiceImpl implements UserService {
                     .isFollowing(false)
                     .isAccountVerified(user.isAccountVerified())
                     .createdAt(user.getCreatedAt())
-                    .suggestionReason(reason)
+                    .suggestionReason(combinedReason)
+                    .reasonBadges(reasonBadges)
+                    .mutualFollowsCount(mutualFollowsMap.getOrDefault(user.getId(), 0L))
                     .matchScore(score)
                     .build();
 
             scoredList.add(dto);
         }
 
-        // Sắp xếp giảm dần theo matchScore
-        scoredList.sort((a, b) -> Integer.compare(b.getMatchScore(), a.getMatchScore()));
+        // Sắp xếp: Ưu tiên người có bạn chung lên đầu, sau đó đến điểm tổng thể
+        scoredList.sort((a, b) -> {
+            int mutualComp = Long.compare(b.getMutualFollowsCount(), a.getMutualFollowsCount());
+            if (mutualComp != 0) {
+                return mutualComp;
+            }
+            return Integer.compare(b.getMatchScore(), a.getMatchScore());
+        });
 
         return scoredList.stream().limit(limit).toList();
     }

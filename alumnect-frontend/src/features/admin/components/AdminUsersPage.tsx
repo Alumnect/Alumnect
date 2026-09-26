@@ -11,7 +11,6 @@ const TABS = [
   { name: 'Tất cả', value: 'ALL' },
   { name: 'Cựu sinh viên', value: 'ALUMNI' },
   { name: 'Sinh viên', value: 'STUDENT' },
-  { name: 'Chờ duyệt', value: 'PENDING' },
   { name: 'Đang khóa', value: 'LOCKED' },
 ]
 
@@ -22,7 +21,7 @@ export function AdminUsersPage() {
 
   // Mapping tab values to API parameters
   const roleParam = tab === 'ALUMNI' ? 'ALUMNI' : tab === 'STUDENT' ? 'STUDENT' : undefined
-  const statusParam = tab === 'PENDING' ? 'WAITING_APPROVAL' : tab === 'LOCKED' ? 'LOCKED' : undefined
+  const statusParam = tab === 'LOCKED' ? 'LOCKED' : undefined
 
   // Fetch users
   const { data, isLoading, error } = useAdminUsers({
@@ -76,7 +75,7 @@ export function AdminUsersPage() {
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Quản lý tài khoản"
-        subtitle="Tìm kiếm, phân trang tài khoản, xem hồ sơ chi tiết và khóa/mở khóa tài khoản người dùng."
+        subtitle="Tìm kiếm, xem hồ sơ chi tiết và khóa/mở khóa tài khoản người dùng."
       />
 
       {/* Tabs and search bar */}
@@ -186,20 +185,10 @@ export function AdminUsersPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <Badge
-                          tone={
-                            u.accountStatus === 'ACTIVE'
-                              ? 'success'
-                              : u.accountStatus === 'LOCKED'
-                                ? 'danger'
-                                : 'gold'
-                          }
+                          tone={u.accountStatus === 'LOCKED' ? 'danger' : 'success'}
                           className="px-2.5 py-0.5"
                         >
-                          {u.accountStatus === 'ACTIVE'
-                            ? 'Hoạt động'
-                            : u.accountStatus === 'LOCKED'
-                              ? 'Bị khóa'
-                              : 'Đợi duyệt'}
+                          {u.accountStatus === 'LOCKED' ? 'Bị khóa' : 'Hoạt động'}
                         </Badge>
                       </td>
                       <td className="px-5 py-3.5 text-plum-600">
@@ -295,6 +284,12 @@ export function AdminUsersPage() {
                           className="px-2.5 py-0.5 text-[10px] rounded-full shrink-0 font-bold uppercase border"
                         >
                           {userDetail.role === 'ADMIN' ? 'Quản trị viên' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                        </Badge>
+                        <Badge
+                          tone={userDetail.accountStatus === 'LOCKED' ? 'danger' : 'success'}
+                          className="px-2.5 py-0.5 text-[10px] rounded-full shrink-0 font-bold uppercase border"
+                        >
+                          {userDetail.accountStatus === 'LOCKED' ? 'Bị khóa' : 'Hoạt động'}
                         </Badge>
                       </div>
                       <p className="text-slate-500 text-xs mt-0.5 font-medium">{userDetail.email}</p>

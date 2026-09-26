@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Briefcase, GraduationCap, MessageCircle, UserPlus, UserCheck, Loader2 } from 'lucide-react'
+import { MapPin, Briefcase, GraduationCap, MessageCircle, UserPlus, UserCheck, Loader2, Users } from 'lucide-react'
 import { Avatar, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { TiltCard } from '@/components/motion'
@@ -125,6 +125,12 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                 {user.city}
               </span>
             )}
+            {user.mutualFollowsCount && user.mutualFollowsCount > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700 whitespace-nowrap border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
+                <Users size={11} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+                {user.mutualFollowsCount} bạn chung
+              </span>
+            ) : null}
           </div>
 
           {/* Primary Experience / Company */}
