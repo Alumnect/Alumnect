@@ -20,12 +20,15 @@ stateDiagram-v2
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-- **Bước 1 - Khởi đầu**: Người dùng (Guest/Student/Alumni) mở trang `/app`. Frontend gọi `useFeed('all')` → `GET /api/v1/posts?page=0&size=5&sort=recent`.
+- **Bước 1 - Khởi đầu**: Người dùng (Guest/Student/Alumni) mở trang `/app`. Frontend gọi `useFeed('all', '')` → `GET /api/v1/posts?page=0&size=5`.
 - **Bước 2 - Xác định quyền xem**: Backend kiểm tra `Authentication` trong Security Context (do `JwtFilter` gán nếu có Bearer token hợp lệ). Nếu không có/token không hợp lệ → coi là **Guest**; ngược lại → **thành viên** (Student/Alumni/Admin).
-- **Bước 3 - Truy vấn dữ liệu**: Backend truy vấn bảng `posts`, loại trừ bài đã ẩn (`is_hidden = true`). Guest chỉ nhận bài `visibility = PUBLIC`; thành viên nhận toàn bộ bài chưa ẩn. Nếu có tham số `type`, lọc thêm theo loại bài viết. Sắp xếp theo `created_at DESC`.
+- **Bước 3 - Truy vấn & Xếp hạng thông minh 2 tầng (Two-Tier Unified Smart Feed)**:
+  Hệ thống tính toán tổng số bài viết thực tế trong toàn bộ cơ sở dữ liệu (`totalElements`). 
+  - **Tầng 1 (Smart Ranking Feed - 150 bài đầu tiên)**: Áp dụng thuật toán chấm điểm cá nhân hóa thống nhất (chuẩn Facebook/Instagram/LinkedIn) dựa trên: người đang theo dõi (+100), cùng chuyên ngành FPT (+45), cùng khóa học (+35/+20/+10), cùng cơ sở/thành phố (+15/+10), sinh viên xem bài cựu sinh viên (+25), chất lượng nội dung & hình ảnh, điểm tương tác logarit (Likes/Comments/Reposts), độ suy giảm trọng lực (Gravity Time-decay) và ưu đãi bài mới đăng (Freshness Boost). Bài vừa đăng được Frontend chèn tức thì lên đầu (Optimistic Prepend) và xếp hạng tự nhiên khi tải lại trang.
+  - **Tầng 2 (Deep Chronological Feed - Khi cuộn sâu qua 150 bài)**: Tự động kết nối và tải trực tiếp các bài viết cũ hơn từ Database theo thứ tự thời gian (`createdAt DESC`), đảm bảo người dùng có thể lướt vô tận qua toàn bộ bài viết trong hệ thống mà không bao giờ bị dừng lại.
 - **Bước 4 - Trả kết quả**: Backend trả về trang kết quả (`content`, `pageNumber`, `totalElements`, `totalPages`, `last`) bọc trong `ApiResponse`.
-- **Bước 5 - Hiển thị**: Frontend xác thực từng phần tử bằng Zod (`postSchema.safeParse`), bỏ qua phần tử hỏng, hiển thị danh sách `PostCard`. Nếu `content` rỗng → hiển thị `FeedEmpty`. Nếu lỗi mạng/HTTP → hiển thị `FeedError` kèm nút "Thử lại".
-- **Bước 6 - Lọc & tải thêm**: Người dùng chọn tab lọc → tạo `queryKey` mới → gọi lại từ trang 0. Người dùng bấm "Tải thêm bài viết" → gọi trang kế tiếp, nối vào danh sách hiện có cho tới khi `last = true`.
+- **Bước 5 - Hiển thị**: Frontend xác thực từng phần tử bằng Zod (`postSchema.safeParse`), hiển thị danh sách `PostCard` tinh gọn, hiện đại. Nếu `content` rỗng → hiển thị `FeedEmpty`.
+- **Bước 6 - Lọc danh mục & tải thêm**: Người dùng có thể lọc theo chuyên mục (Tất cả, Thành tựu, Tuyển dụng, Sự kiện) hoặc tìm kiếm từ khóa → cập nhật cache TanStack Query → tải trang mới. Hỗ trợ Infinite Scroll tự động tải thêm khi cuộn tới cuối trang.
 
 ### 3.2 Module 3 - Social: Feed, Posts, Events, Packages & Messaging
 Module chứa các tính năng tương tác cộng đồng của AlumNect: bảng tin, bài viết, sự kiện, gói dịch vụ và nhắn tin. UC15 là chức năng nền tảng đầu tiên của module — hiển thị dòng thời gian hoạt động của cộng đồng cựu sinh viên.
@@ -34,39 +37,45 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect: bản
 
 **Function trigger**:
 - **Navigation path**: `/app` (trang mặc định sau khi vào khu vực đã đăng nhập; Guest cũng truy cập được).
-- **Timing Frequency**: On screen mount (tải trang đầu); on-demand khi đổi filter hoặc bấm "Tải thêm bài viết".
+- **Timing Frequency**: On screen mount (tải trang đầu); on-demand khi đổi filter chuyên mục, tìm kiếm từ khóa, hoặc cuộn trang để tải thêm.
 
 **Function description**:
 - **Actors/Roles**: Guest, Student, Alumni (Admin không phải actor chính của UC này nhưng kỹ thuật vẫn xem được bảng tin như một thành viên).
-- **Purpose**: Cho phép mọi đối tượng xem hoạt động mới nhất của cộng đồng cựu sinh viên; khuyến khích Guest đăng ký để tương tác đầy đủ.
+- **Purpose**: Cho phép mọi đối tượng xem hoạt động mới nhất của cộng đồng cựu sinh viên; xếp hạng thông minh nhằm cá nhân hóa nội dung phù hợp với từng sinh viên/cựu sinh viên FPT trên cùng một dòng thời gian thống nhất.
 - **Interface**:
-  - Ô soạn bài (`Composer`, chỉ Student/Alumni) hoặc banner mời đăng nhập (`GuestPrompt`, chỉ Guest).
-  - Tabs lọc: All / Achievements / Hiring / Events.
-  - Danh sách `PostCard`: avatar, tên, badge loại bài, thời gian, nội dung, ảnh (nếu có), số like/comment/repost, nút hành động.
-  - Trạng thái: Loading (`PostSkeleton` × 3), Rỗng (`FeedEmpty`), Lỗi (`FeedError` + nút Thử lại), nút "Tải thêm bài viết" / "Bạn đã xem hết bảng tin".
+  - Ô soạn bài (`Composer`, chỉ Student/Alumni).
+  - Thanh chip lọc chuyên mục tinh gọn: Tất cả, Thành tựu, Tuyển dụng, Sự kiện.
+  - Danh sách `PostCard`: avatar, tên tác giả, tick xanh xác thực, chuyên ngành/vai trò, loại bài viết, thời gian tương đối, nội dung, ảnh đính kèm, số like/comment/repost, các nút tương tác.
+  - Trạng thái: Loading (`PostSkeleton` × 3), Rỗng (`FeedEmpty`), Lỗi (`FeedError` + nút Thử lại), Infinite Scroll tải trang mượt mà.
 
-**Data processing**:
-1. Frontend gọi `GET /api/v1/posts?page&size&sort=recent[&type]`.
-2. Backend đọc `Authentication` từ Security Context → xác định `isAuthenticated`.
-3. Backend truy vấn `PostRepository.findFeed(guestMode, type, pageable)` — JOIN FETCH tác giả (User) để tránh N+1.
-4. Backend batch-fetch `UserProfile` của toàn bộ tác giả trong trang (1 query `findAllById`) để lấy tên/avatar/headline.
-5. `PostMapper` ghép Post + User + UserProfile → `PostResponse` (bao gồm tính chuỗi thời gian tương đối).
-6. Backend trả `ApiResponse<PageResponse<PostResponse>>`.
-7. Frontend validate bằng Zod, cập nhật cache TanStack Query theo `queryKey: ['feed', filter]`.
-
-**Screen layout**:
-- Bố cục 2 cột trên desktop: cột trái (bảng tin chính, `max-w-6xl` chia `1fr` + `320px`), cột phải (sidebar gợi ý follow/event/Q&A, ẩn trên mobile).
-- Responsive: cột phải ẩn trên màn hình nhỏ hơn `lg`, `PostCard` full-width.
-
-**Function details**:
-- **Data**: `id`, `type`, `author`, `role`, `avatar`, `verified`, `time`, `text`, `image`, `likes`, `comments`, `reposts`, `liked`.
-- **Validation**:
-  - `page` (số nguyên ≥ 0, mặc định 0), `size` (số nguyên dương, mặc định 5) — vi phạm trả về **MSG-FEED-06** (HTTP 400).
-  - `type` (nếu có): phải thuộc {`normal`, `achievement`, `recruitment`, `event`} — sai định dạng trả về **MSG-FEED-01**.
-- **Business rules**: xem mục 5.1 (BR-08, BR-11, BR-12).
-- **Error Handling**: lỗi validate `page`/`size` → HTTP 400 (MSG-FEED-06); lỗi validate `type` → HTTP 400 (MSG-FEED-01); lỗi hệ thống/mất kết nối → HTTP 500, Frontend hiển thị `FeedError` với nút "Thử lại" gọi `refetch()`.
-- **Normal case**: Trả về đúng số bài viết theo quyền xem, phân trang chính xác, hiển thị mượt trên UI.
-- **Abnormal case**: DB không có bài viết nào → `content = []`, Frontend hiển thị `FeedEmpty` (MSG-FEED-02); tham số `type` sai → 400 (MSG-FEED-01); tham số `page`/`size` sai → 400 (MSG-FEED-06).
+**Thuật toán xếp hạng thông minh cá nhân hóa (Smart Ranking Formula 2.0)**:
+Hệ thống sử dụng mô hình kết hợp (Hybrid Content-based + Social Graph + Logarithmic Engagement + Smooth Gravity Time-Decay) lấy cảm hứng từ Facebook, Instagram, LinkedIn và Reddit:
+1. **Bài viết ghim (Pinned Post)**: Luôn cố định ở đầu trang bảng tin.
+2. **Quan hệ xã hội (Social Graph & Affinity)**:
+   - Người xem đang theo dõi tác giả bài viết: $+100$ điểm.
+   - Trải nghiệm bài tự đăng (Self-post): Khi vừa đăng, Frontend lập tức chèn bài viết vào vị trí đầu tiên (Optimistic Prepend). Khi người dùng F5 / tải lại trang (reset), bài viết xếp hạng tự nhiên theo độ tươi mới (Freshness Boost) mà không can thiệp điểm cứng.
+3. **Mức độ tương thích học thuật FPT (Academic & Alumni Graph)**:
+   - Cùng chuyên ngành học: $+45$ điểm.
+   - Cùng khóa nhập học (Cohort): Cùng khóa $+35$ điểm, lệch 1 khóa $+20$ điểm, lệch 2 khóa $+10$ điểm.
+   - Cùng cơ sở đào tạo / thành phố sinh sống: $+15$ / $+10$ điểm.
+   - Động lực kết nối Sinh viên & Cựu sinh viên (Cross-Role Career Synergy): Người xem là Student xem bài tuyển dụng hoặc thành tựu từ Alumni: $+25$ điểm.
+4. **Chuyên mục bài viết & Định dạng nội dung (Category & Content Richness)**:
+   - Bài tuyển dụng (`RECRUITMENT`): $+25$ điểm.
+   - Bài thành tựu (`ACHIEVEMENT`) / Sự kiện (`EVENT`): $+20$ điểm.
+   - Nội dung chia sẻ chi tiết, tâm huyết ($\ge 150$ ký tự): $+10$ điểm.
+   - Bài viết có hình ảnh / media trực quan: $+15$ điểm.
+5. **Điểm tương tác bài viết (Logarithmic Engagement Score - Chuẩn Facebook MSI)**:
+   $$RawEng = (\text{Likes} \times 3) + (\text{Comments} \times 8) + (\text{Reposts} \times 10)$$
+   $$Score_{eng} = 45 \times \ln(1 + RawEng)$$
+   *(Bình luận và Chia sẻ mang giá trị tương tác sâu, trọng số cao vượt trội giúp bài viết viral duy trì vị thế top)*.
+6. **Hàm suy giảm trọng lực theo thời gian (Smooth Gravity Time-Decay)**:
+   $$Decay = \frac{1}{\left(1 + \frac{\text{Hours}}{48}\right)^{1.15}}$$
+   *(Thời gian bán rã kéo dài 48 giờ, giúp bài viết chất lượng cao từ ngày hôm qua/hôm kia vẫn giữ được trên 50% điểm số)*.
+7. **Ưu đãi khám phá bài mới (Freshness Exploration Boost - Khám phá hợp lý)**:
+   Trong 2 giờ đầu (120 phút), bài viết nhận điểm ưu tiên hiển thị giảm dần tuyến tính từ $+25$ về $0$ để thử nghiệm nội dung mà không đè bẹp các bài viết đang thảo luận sôi nổi:
+   $$Bonus_{freshness} = \max\left(0, \; 25 \times \left(1 - \frac{\text{Minutes}}{120}\right)\right)$$
+8. **Tổng điểm xếp hạng**:
+   $$Score_{final} = (Score_{base} + Score_{social} + Score_{academic} + Score_{category} + Score_{eng}) \times Decay + Bonus_{freshness}$$
 
 ---
 
@@ -79,8 +88,10 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect: bản
 | BR-08 | Bài viết đã bị Admin ẩn (`is_hidden = true`) không xuất hiện trong bảng tin của bất kỳ ai. |
 | BR-11 | Việc ẩn bài viết là xóa mềm (soft-hide) — dữ liệu vẫn được giữ nguyên trong DB, không xóa cứng. |
 | BR-12 | Guest (chưa đăng nhập) chỉ xem được bài viết có `visibility = PUBLIC`; bài viết `MEMBERS` chỉ hiển thị cho người dùng đã đăng nhập (Student/Alumni/Admin). |
-| BR-13 | Bảng tin luôn sắp xếp theo thời gian tạo mới nhất trước (`created_at DESC`). |
-| BR-14 | Trường `liked` luôn trả về `false` ở UC15 — trạng thái "đã thích" theo từng người xem thuộc phạm vi UC "Like Post" (chưa triển khai). |
+| BR-13 | Bảng tin hoạt động theo cơ chế dòng tin thống nhất (Unified Smart Feed tương tự Facebook/Instagram): tất cả bài viết được tổng hợp và xếp hạng thông minh tự động theo độ liên quan cá nhân hóa của người xem, không chia tách thành các tab sắp xếp rời rạc. |
+| BR-14 | Trường `liked` và `saved` phản ánh chính xác trạng thái của người xem hiện tại (viewer-specific). |
+| BR-15 | Hỗ trợ tìm kiếm từ khóa tiếng Việt không phân biệt dấu và chữ hoa chữ thường thông qua hàm `unaccent()` của cơ sở dữ liệu PostgreSQL trên cả nội dung bài viết và tên tác giả. |
+| BR-16 | Giao diện bảng tin được tinh gọn tối đa theo phong cách mạng xã hội hiện đại, loại bỏ các nhãn lý do rườm rà để người dùng tập trung vào nội dung bài viết và trải nghiệm kết nối. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 - Dữ liệu bảng tin được phân trang (`page`/`size`), không tải toàn bộ một lần.

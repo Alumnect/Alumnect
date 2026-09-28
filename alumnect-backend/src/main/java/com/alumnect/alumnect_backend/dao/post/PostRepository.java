@@ -22,15 +22,55 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
             "AND (:category IS NULL OR p.category = :category) " +
             "AND (:keyword = '' " +
             "   OR LOWER(p.content) LIKE :keyword " +
-            "   OR LOWER(up.fullName) LIKE :keyword) " +
+            "   OR LOWER(up.fullName) LIKE :keyword " +
+            "   OR cast(function('unaccent', LOWER(p.content)) as String) LIKE :unaccentedKeyword " +
+            "   OR cast(function('unaccent', LOWER(up.fullName)) as String) LIKE :unaccentedKeyword) " +
+            "ORDER BY p.isPinned DESC, p.createdAt DESC")
+    List<Post> findCandidatesForSmartFeed(
+            @Param("category") PostCategory category,
+            @Param("keyword") String keyword,
+            @Param("unaccentedKeyword") String unaccentedKeyword,
+            Pageable pageable
+    );
+
+    @Query("SELECT COUNT(DISTINCT p) FROM Post p JOIN p.author u LEFT JOIN u.profile up " +
+            "WHERE p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
+            "AND (:category IS NULL OR p.category = :category) " +
+            "AND (:keyword = '' " +
+            "   OR LOWER(p.content) LIKE :keyword " +
+            "   OR LOWER(up.fullName) LIKE :keyword " +
+            "   OR cast(function('unaccent', LOWER(p.content)) as String) LIKE :unaccentedKeyword " +
+            "   OR cast(function('unaccent', LOWER(up.fullName)) as String) LIKE :unaccentedKeyword)")
+    long countActiveFeed(
+            @Param("category") PostCategory category,
+            @Param("keyword") String keyword,
+            @Param("unaccentedKeyword") String unaccentedKeyword
+    );
+
+    @Query(value = "SELECT DISTINCT p FROM Post p JOIN FETCH p.author u LEFT JOIN u.profile up " +
+            "WHERE p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
+            "AND (:category IS NULL OR p.category = :category) " +
+            "AND (:keyword = '' " +
+            "   OR LOWER(p.content) LIKE :keyword " +
+            "   OR LOWER(up.fullName) LIKE :keyword " +
+            "   OR cast(function('unaccent', LOWER(p.content)) as String) LIKE :unaccentedKeyword " +
+            "   OR cast(function('unaccent', LOWER(up.fullName)) as String) LIKE :unaccentedKeyword) " +
             "ORDER BY p.isPinned DESC, p.createdAt DESC",
             countQuery = "SELECT COUNT(DISTINCT p) FROM Post p JOIN p.author u LEFT JOIN u.profile up " +
             "WHERE p.status = com.alumnect.alumnect_backend.common.enums.PostStatus.ACTIVE " +
             "AND (:category IS NULL OR p.category = :category) " +
             "AND (:keyword = '' " +
             "   OR LOWER(p.content) LIKE :keyword " +
-            "   OR LOWER(up.fullName) LIKE :keyword)")
-    Page<Post> findFeed(@Param("guestMode") boolean guestMode, @Param("category") PostCategory category, @Param("keyword") String keyword, Pageable pageable);
+            "   OR LOWER(up.fullName) LIKE :keyword " +
+            "   OR cast(function('unaccent', LOWER(p.content)) as String) LIKE :unaccentedKeyword " +
+            "   OR cast(function('unaccent', LOWER(up.fullName)) as String) LIKE :unaccentedKeyword)")
+    Page<Post> findChronologicalFeed(
+            @Param("category") PostCategory category,
+            @Param("keyword") String keyword,
+            @Param("unaccentedKeyword") String unaccentedKeyword,
+            Pageable pageable
+    );
+
 
     @Query("SELECT p FROM Post p JOIN FETCH p.author u LEFT JOIN FETCH p.mediaList WHERE p.id = :id")
     Optional<Post> findDetailById(@Param("id") Long id);

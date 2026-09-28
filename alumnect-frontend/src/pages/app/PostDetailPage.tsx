@@ -271,7 +271,7 @@ function PostDetailCard({
               </Link>
               <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
             </p>
-            <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>
+            <p className="truncate text-xs text-plum-400">{post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}</p>
           </div>
           <PostActionMenu
             post={post}

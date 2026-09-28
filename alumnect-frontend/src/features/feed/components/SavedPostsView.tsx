@@ -155,7 +155,7 @@ function SavedFeedCard({
                 </span>
               </div>
               <p className="text-xs text-plum-400 mt-0.5 truncate">
-                {post.role ? `${post.role} · ` : ''}{post.time}
+                {post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}
               </p>
             </div>
           </div>

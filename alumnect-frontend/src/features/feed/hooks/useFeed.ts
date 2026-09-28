@@ -9,7 +9,12 @@ import type { FeedFilter } from '../model/post'
  * @param filter Bộ lọc loại bài viết ('all' = tất cả)
  * @return Đối tượng query (pages, isLoading, isError, fetchNextPage, hasNextPage...)
  */
-export function useFeed(filter: FeedFilter = 'all', keyword: string = '', size?: number, eventFilter?: string) {
+export function useFeed(
+  filter: FeedFilter = 'all',
+  keyword: string = '',
+  size?: number,
+  eventFilter?: string,
+) {
   return useInfiniteQuery({
     queryKey: ['feed', { filter, keyword, size, eventFilter }],
     queryFn: ({ pageParam }) => feedApi.getFeed({ page: pageParam, filter, keyword, size, eventFilter }),

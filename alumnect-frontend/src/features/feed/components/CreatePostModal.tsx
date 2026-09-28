@@ -46,12 +46,14 @@ export function CreatePostModal({
   viewer,
   editPost,
   defaultType = 'normal',
+  onPostCreated,
 }: {
   open: boolean
   onClose: () => void
   viewer: AuthUser
   editPost?: Post
   defaultType?: PostType
+  onPostCreated?: (post: Post) => void
 }) {
   const createMutation = useCreatePost()
   const editMutation = useEditPost()
@@ -198,9 +200,11 @@ export function CreatePostModal({
         )
       } else {
         createMutation.mutate(payload, {
-          onSuccess: () => {
+          onSuccess: (newPost: any) => {
             toast.success('Đăng bài viết thành công!')
+            onPostCreated?.(newPost)
             close()
+            window.scrollTo({ top: 0, behavior: 'smooth' })
           },
           onError: (err: any) => {
             toast.error(err?.message || 'Không thể đăng bài viết, vui lòng thử lại.')

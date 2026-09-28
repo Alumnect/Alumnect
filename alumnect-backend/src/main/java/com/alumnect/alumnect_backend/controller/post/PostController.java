@@ -68,7 +68,6 @@ public class PostController {
     public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getFeed(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "recent") String sort,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String eventFilter,
