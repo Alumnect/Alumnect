@@ -12,6 +12,8 @@ import { PostDetailPage } from '@/pages/app/PostDetailPage'
 import { AlumniDirectoryPage } from '@/pages/app/AlumniDirectoryPage'
 import { JobsPage } from '@/pages/app/JobsPage'
 import { EventsPage } from '@/pages/app/EventsPage'
+import { GroupsPage } from '@/pages/app/GroupsPage'
+import { GroupDetailPage } from '@/pages/app/GroupDetailPage'
 import { ForumPage } from '@/pages/app/ForumPage'
 import { QuestionDetailPage } from '@/pages/app/QuestionDetailPage'
 import { SalaryPage } from '@/pages/app/SalaryPage'
@@ -51,6 +53,8 @@ function App() {
             <Route path="posts/:id" element={<PostDetailPage />} />
             <Route path="jobs" element={<JobsPage />} />
             <Route path="events" element={<EventsPage />} />
+            <Route path="groups" element={<GroupsPage />} />
+            <Route path="groups/:id" element={<GroupDetailPage />} />
             <Route path="forum" element={<ForumPage />} />
             <Route path="forum/:id" element={<QuestionDetailPage />} />
             <Route path="alumni" element={<AlumniDirectoryPage />} />

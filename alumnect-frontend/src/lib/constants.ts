@@ -19,6 +19,7 @@ import {
   UserCog,
   Lock,
   FileText,
+  Users2,
 } from 'lucide-react'
 
 export const BRAND = {
@@ -49,6 +50,7 @@ export const APP_PRIMARY_NAV: NavItem[] = [
 
 /** Secondary features — tucked into the "More" apps menu (used less often). */
 export const APP_MORE_NAV: NavItem[] = [
+  { label: 'Hội nhóm', to: '/app/groups', icon: Users2 },
   { label: 'Bảng lương', to: '/app/salary', icon: LineChart },
   { label: 'Bản đồ cựu SV', to: '/app/map', icon: MapIcon },
   { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: Route },

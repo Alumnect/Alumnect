@@ -144,6 +144,51 @@ export function AppShell() {
   // ADMIN đã được điều hướng về /admin ở trên, nên tại đây role chỉ còn STUDENT/ALUMNI.
   const roleLabel = user ? (user.role === 'STUDENT' ? 'Sinh viên' : 'Cựu sinh viên') : ''
 
+  // Menu "Khám phá" (desktop): người đã đăng nhập thấy đủ mục; Khách chỉ thấy các mục công khai (Hội nhóm).
+  const renderMoreApps = (items: typeof APP_MORE_NAV) => (
+    <div className="hidden lg:block">
+      <Popover
+        isOpen={activePopover === 'apps'}
+        onToggle={() => setActivePopover((prev) => (prev === 'apps' ? null : 'apps'))}
+        onClose={() => setActivePopover(null)}
+        panelClass="w-auto p-2"
+        button={
+          <span className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
+            <span className="transition-transform duration-200 group-hover:-translate-y-0.5"><LayoutGrid size={19} /></span>
+            <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+              Khám phá
+            </span>
+          </span>
+        }
+      >
+        <p className="whitespace-nowrap px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-plum-400">Khám phá thêm</p>
+        <div className="flex items-center gap-1.5">
+          {items.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                aria-label={item.label}
+                className="group relative grid h-12 w-12 place-items-center rounded-2xl text-brand-600 transition-all hover:bg-brand-50 active:scale-95"
+              >
+                {Icon && (
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100/80 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:bg-brand-100">
+                    <Icon size={20} />
+                  </span>
+                )}
+                {/* Tooltip khi hover giống hệt icon ở ngoài */}
+                <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </Popover>
+    </div>
+  )
+
   return (
     <div className="relative min-h-screen bg-slate-50 text-slate-600 dark:!bg-[#18191a] dark:text-[#e4e6eb]">
       {/* ambient FPT brand wash (hidden in dark mode for pure Facebook look) */}
@@ -268,48 +313,7 @@ export function AppShell() {
                   badge={unreadNotifCount && unreadNotifCount > 0 ? unreadNotifCount : undefined}
                 />
 
-                {/* More apps (desktop) */}
-                <div className="hidden lg:block">
-                  <Popover
-                    isOpen={activePopover === 'apps'}
-                    onToggle={() => setActivePopover((prev) => (prev === 'apps' ? null : 'apps'))}
-                    onClose={() => setActivePopover(null)}
-                    panelClass="w-auto p-2"
-                    button={
-                      <span className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
-                        <span className="transition-transform duration-200 group-hover:-translate-y-0.5"><LayoutGrid size={19} /></span>
-                        <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
-                          Khám phá
-                        </span>
-                      </span>
-                    }
-                  >
-                    <p className="px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-plum-400">Khám phá thêm</p>
-                    <div className="flex items-center gap-1.5">
-                      {APP_MORE_NAV.map((item) => {
-                        const Icon = item.icon
-                        return (
-                          <Link
-                            key={item.to}
-                            to={item.to}
-                            aria-label={item.label}
-                            className="group relative grid h-12 w-12 place-items-center rounded-2xl text-brand-600 transition-all hover:bg-brand-50 active:scale-95"
-                          >
-                            {Icon && (
-                              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100/80 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:bg-brand-100">
-                                <Icon size={20} />
-                              </span>
-                            )}
-                            {/* Tooltip khi hover giống hệt icon ở ngoài */}
-                            <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
-                              {item.label}
-                            </span>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  </Popover>
-                </div>
+                {renderMoreApps(APP_MORE_NAV)}
 
                 {/* account */}
                 <Popover
@@ -360,6 +364,7 @@ export function AppShell() {
               </>
             ) : (
               <div className="flex items-center gap-1">
+                {renderMoreApps(APP_MORE_NAV.filter((item) => item.to === '/app/groups'))}
                 <Link to="/login" className="ml-1">
                   <Button size="sm" variant="primary" className="rounded-xl font-bold bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm">
                     Đăng nhập
@@ -495,7 +500,7 @@ export function AppShell() {
               <div className="grid grid-cols-3 gap-3" onClick={() => setSheet(false)}>
                 {(isAuthenticated 
                   ? [...APP_MORE_NAV, { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare }, { label: 'Thông báo', to: '/app/notifications', icon: Bell }]
-                  : [...APP_MORE_NAV.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')]
+                  : [...APP_MORE_NAV.filter(item => item.to === '/app/groups' || item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')]
                 ).map((item) => {
                   const Icon = item.icon
                   return (

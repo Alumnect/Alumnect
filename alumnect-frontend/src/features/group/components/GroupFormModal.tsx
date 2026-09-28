@@ -1,0 +1,286 @@
+/**
+ * GroupFormModal — Modal TẠO hội nhóm mới HOẶC CHỈNH SỬA thông tin hội nhóm (truyền `editGroup`).
+ *
+ * Trách nhiệm:
+ *  - Form tên, danh mục, loại hội nhóm (công khai/riêng tư), chủ đề, mô tả, quy định tham gia, ảnh bìa (tùy chọn).
+ *  - Validate bằng Zod (khớp Backend); chủ đề nhập dạng "AI, Machine Learning" (tối đa 5, mỗi chủ đề ≤ 50 ký tự).
+ *  - Chế độ TẠO: thành công thì điều hướng sang trang chi tiết nhóm vừa tạo; chế độ SỬA: thành công thì đóng modal.
+ *  - Ảnh bìa: upload qua presigned URL, xem trước và gỡ được.
+ */
+import { useEffect, useRef, useState } from 'react'
+import type { ChangeEvent } from 'react'
+import { createPortal } from 'react-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { AlertTriangle, Globe, ImagePlus, Loader2, Lock, X } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { toast } from '@/components/ui'
+import { cn } from '@/lib/utils'
+import { groupApi } from '../api/groupApi'
+import { useCreateGroup, useUpdateGroup } from '../hooks/useGroupActions'
+import {
+  GROUP_CATEGORIES,
+  GROUP_DESCRIPTION_MAX,
+  GROUP_MAX_TOPICS,
+  GROUP_NAME_MAX,
+  GROUP_RULES_MAX,
+  groupFormSchema,
+  parseTopics,
+  validateTopics,
+} from '../model/group'
+import type { GroupDetail, GroupFormValues, GroupInput } from '../model/group'
+import { GroupCover } from './GroupCover'
+
+const FIELD_CLASS =
+  'w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+
+export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; editGroup?: GroupDetail }) {
+  const isEdit = !!editGroup
+  const navigate = useNavigate()
+  const createMut = useCreateGroup()
+  const updateMut = useUpdateGroup(editGroup?.id ?? 0)
+  const isPending = isEdit ? updateMut.isPending : createMut.isPending
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [topicsError, setTopicsError] = useState<string | null>(null)
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<GroupFormValues>({
+    resolver: zodResolver(groupFormSchema),
+    defaultValues: {
+      name: editGroup?.name ?? '',
+      description: editGroup?.description ?? '',
+      category: editGroup?.category ?? '',
+      topicsText: (editGroup?.topics ?? []).join(', '),
+      privacy: editGroup?.privacy ?? 'PUBLIC',
+      joinRules: editGroup?.joinRules ?? '',
+      coverImageUrl: editGroup?.coverImageUrl ?? null,
+    },
+  })
+
+  const privacy = watch('privacy')
+  const coverImageUrl = watch('coverImageUrl')
+  const nameValue = watch('name')
+
+  const onSubmit = (values: GroupFormValues) => {
+    const topicMessage = validateTopics(values.topicsText)
+    setTopicsError(topicMessage)
+    if (topicMessage) return
+
+    const input: GroupInput = {
+      name: values.name.trim(),
+      description: values.description.trim(),
+      category: values.category,
+      topics: parseTopics(values.topicsText),
+      privacy: values.privacy,
+      joinRules: values.joinRules.trim() ? values.joinRules.trim() : null,
+      coverImageUrl: values.coverImageUrl,
+    }
+
+    if (isEdit) {
+      updateMut.mutate(input, {
+        onSuccess: () => {
+          toast.success('Đã cập nhật hội nhóm thành công!')
+          onClose()
+        },
+        onError: (err) => toast.error((err as Error).message || 'Không thể cập nhật hội nhóm.'),
+      })
+    } else {
+      createMut.mutate(input, {
+        onSuccess: (created) => {
+          toast.success('Đã tạo hội nhóm thành công!')
+          onClose()
+          navigate(`/app/groups/${created.id}`)
+        },
+        onError: (err) => toast.error((err as Error).message || 'Không thể tạo hội nhóm, vui lòng thử lại.'),
+      })
+    }
+  }
+
+  /** Chọn & tải ảnh bìa lên storage, lưu URL vào form. */
+  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploadError(null)
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Chỉ được chọn tệp ảnh')
+      return
+    }
+    setUploading(true)
+    try {
+      const url = await groupApi.uploadCover(file)
+      setValue('coverImageUrl', url, { shouldDirty: true })
+    } catch {
+      setUploadError('Tải ảnh lên thất bại. Vui lòng thử lại.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  // Khóa cuộn nền + đóng bằng phím Esc khi modal đang mở.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+
+  return createPortal(
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl card-surface p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-extrabold text-plum-900">{isEdit ? 'Chỉnh sửa hội nhóm' : 'Tạo hội nhóm mới'}</h2>
+          <button onClick={onClose} aria-label="Đóng" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Ảnh bìa */}
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-plum-900">Ảnh bìa (tùy chọn)</label>
+            <div className="relative overflow-hidden rounded-xl ring-1 ring-inset ring-plum-900/10">
+              <GroupCover url={coverImageUrl} name={nameValue || 'Hội nhóm'} className="aspect-[21/9]" />
+              <div className="absolute bottom-2 right-2 flex gap-2">
+                {coverImageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setValue('coverImageUrl', null, { shouldDirty: true })}
+                    className="rounded-lg bg-plum-900/60 px-2.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-rose-500"
+                  >
+                    Gỡ ảnh
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-plum-900 shadow-sm transition-colors hover:bg-white disabled:opacity-60"
+                >
+                  {uploading ? <Loader2 size={13} className="animate-spin" /> : <ImagePlus size={13} />}
+                  {coverImageUrl ? 'Đổi ảnh' : 'Chọn ảnh'}
+                </button>
+              </div>
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+            {uploadError && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600">
+                <AlertTriangle size={13} className="shrink-0" /> {uploadError}
+              </p>
+            )}
+          </div>
+
+          {/* Tên */}
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-plum-900">
+              Tên hội nhóm <span className="text-rose-500">*</span>
+            </label>
+            <input {...register('name')} maxLength={GROUP_NAME_MAX} placeholder="VD: Cộng đồng AI FPTU" className={`h-11 ${FIELD_CLASS}`} />
+            {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
+          </div>
+
+          {/* Danh mục + loại hội nhóm */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-plum-900">
+                Danh mục hoạt động <span className="text-rose-500">*</span>
+              </label>
+              <select {...register('category')} className={`h-11 ${FIELD_CLASS}`}>
+                <option value="">— Chọn danh mục —</option>
+                {GROUP_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              {errors.category && <p className="mt-1 text-xs text-rose-500">{errors.category.message}</p>}
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-plum-900">Loại hội nhóm</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    { value: 'PUBLIC', label: 'Công khai', icon: Globe, hint: 'Ai cũng tham gia trực tiếp' },
+                    { value: 'PRIVATE', label: 'Riêng tư', icon: Lock, hint: 'Cần được duyệt' },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setValue('privacy', opt.value, { shouldDirty: true })}
+                    aria-pressed={privacy === opt.value}
+                    className={cn(
+                      'flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition-colors',
+                      privacy === opt.value ? 'border-brand-400/70 bg-brand-500/10 text-brand-700' : 'border-plum-900/10 bg-plum-900/[0.03] text-plum-600 hover:border-plum-900/20',
+                    )}
+                  >
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold">
+                      <opt.icon size={14} /> {opt.label}
+                    </span>
+                    <span className="text-[11px] opacity-80">{opt.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Chủ đề */}
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-plum-900">
+              Chủ đề / sở thích liên quan <span className="font-normal text-plum-400">· tối đa {GROUP_MAX_TOPICS}, cách nhau bằng dấu phẩy</span>
+            </label>
+            <input {...register('topicsText')} placeholder="VD: AI, Machine Learning, Data" className={`h-11 ${FIELD_CLASS}`} />
+            {topicsError && <p className="mt-1 text-xs text-rose-500">{topicsError}</p>}
+          </div>
+
+          {/* Mô tả */}
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-plum-900">
+              Mô tả <span className="text-rose-500">*</span>
+            </label>
+            <textarea {...register('description')} rows={5} maxLength={GROUP_DESCRIPTION_MAX} placeholder="Hội nhóm này dành cho ai, hoạt động gì?" className={`py-3 ${FIELD_CLASS}`} />
+            {errors.description && <p className="mt-1 text-xs text-rose-500">{errors.description.message}</p>}
+          </div>
+
+          {/* Quy định tham gia */}
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-plum-900">Quy định tham gia (tùy chọn)</label>
+            <textarea {...register('joinRules')} rows={3} maxLength={GROUP_RULES_MAX} placeholder="VD: Tôn trọng thành viên, không quảng cáo..." className={`py-3 ${FIELD_CLASS}`} />
+            {errors.joinRules && <p className="mt-1 text-xs text-rose-500">{errors.joinRules.message}</p>}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" size="md" onClick={onClose}>
+              Hủy
+            </Button>
+            <Button type="submit" variant="primary" size="md" disabled={isPending || uploading} leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}>
+              {isEdit ? (isPending ? 'Đang lưu…' : 'Lưu thay đổi') : isPending ? 'Đang tạo…' : 'Tạo hội nhóm'}
+            </Button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>,
+    document.body,
+  )
+}
