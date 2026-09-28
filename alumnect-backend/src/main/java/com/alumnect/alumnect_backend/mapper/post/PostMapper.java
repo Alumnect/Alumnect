@@ -55,7 +55,7 @@ public class PostMapper {
         // (Sau khi merge dev, UserProfile không còn currentPosition/currentCompany —
         //  chức danh/công ty nay thuộc bảng experiences; tránh truy cập LAZY gây N+1 ở feed.)
         String role = authorProfile != null && authorProfile.getHeadline() != null
-                ? authorProfile.getHeadline()
+                ? authorProfile.getHeadline().replaceAll("(?i)\\s*\\|\\s*FPTU Alumni", "").replaceAll("(?i)FPTU Alumni", "").trim()
                 : "";
 
         return PostResponse.builder()

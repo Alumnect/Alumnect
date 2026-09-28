@@ -17,7 +17,6 @@ import {
   Briefcase,
   Award,
   Trophy,
-  Sparkles,
   Heart,
   MessageCircle,
   Bookmark,
@@ -268,7 +267,7 @@ export function PostCard({
             <Avatar src={post.avatar} name={post.author} size={44} verified={post.verified} />
           </Link>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
                 className="truncate font-bold text-slate-900 hover:underline hover:text-[#F27024] transition-colors text-sm sm:text-base"
@@ -279,7 +278,7 @@ export function PostCard({
               <Link to={`/app/posts/${post.id}`}>
                 {post.type === 'achievement' ? (
                   <Badge tone={meta.tone} className="px-2.5 py-0.5 text-[10px] cursor-pointer hover:opacity-85 shadow-sm shadow-amber-200/50 border border-amber-300/50 flex items-center gap-1 font-extrabold uppercase tracking-wide">
-                    <Sparkles size={10} className="text-amber-600" /> {meta.label}
+                    <Award size={11} className="text-amber-600" /> {meta.label}
                   </Badge>
                 ) : post.type !== 'normal' ? (
                   <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
@@ -287,7 +286,7 @@ export function PostCard({
               </Link>
             </div>
             <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-slate-400 hover:text-slate-600 transition-colors mt-0.5">
-              {post.role ? `${post.role} · ` : ''}{post.time}
+              {post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}
             </Link>
           </div>
           <PostActionMenu
@@ -692,6 +691,15 @@ export function FeedPage() {
 
   const cancelEventMutation = useCancelEvent()
 
+  // Danh sách các bài viết người dùng vừa đăng trong phiên làm việc hiện tại
+  // (Kiểu Facebook: hiển thị ngay tức thì ở đầu bảng tin trên máy người đăng;
+  //  khi bấm F5 / refresh trang, state này tự động biến mất và bảng tin trở về đúng thứ tự thuật toán tự nhiên)
+  const [sessionCreatedPosts, setSessionCreatedPosts] = useState<Post[]>([])
+
+  const handlePostCreated = (newPost: Post) => {
+    setSessionCreatedPosts((prev) => [newPost, ...prev.filter((p) => p.id !== newPost.id)])
+  }
+
   const globalKeyword = useSearchStore((s) => s.keyword)
   const [debouncedKeyword, setDebouncedKeyword] = useState(globalKeyword)
 
@@ -727,7 +735,7 @@ export function FeedPage() {
     setEditingPost(null)
   }
 
-  // === Bước 3: Gọi dữ liệu bảng tin qua hook infinite-query ===
+  // === Bước 3: Gọi dữ liệu bảng tin qua hook infinite-query với thuật toán thông minh tích hợp ===
   const {
     data,
     isLoading,          // đang tải trang đầu tiên
@@ -740,7 +748,13 @@ export function FeedPage() {
   } = useFeed(filter, debouncedKeyword)
 
   // === Bước 4: Gộp tất cả trang đã tải thành một danh sách bài viết phẳng ===
-  const posts = data?.pages.flatMap((p) => p.items) ?? []
+  const serverPosts = data?.pages.flatMap((p) => p.items) ?? []
+  const sessionFilteredServerPosts = serverPosts.filter(
+    (sp) => !sessionCreatedPosts.some((cp) => String(cp.id) === String(sp.id))
+  )
+  const posts = filter === 'all'
+    ? [...sessionCreatedPosts, ...sessionFilteredServerPosts]
+    : [...sessionCreatedPosts.filter((p) => p.type === filter), ...sessionFilteredServerPosts]
 
   // Tự động tải thêm bài viết (Infinite Scroll kiểu Facebook) khi người dùng cuộn tới cuối trang
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -788,11 +802,12 @@ export function FeedPage() {
               viewer={viewer}
               editPost={editingPost ?? undefined}
               defaultType={composerDefaultType}
+              onPostCreated={handlePostCreated}
             />
           </>
         )}
 
-        {/* Khối B: Tabs lọc theo loại bài viết */}
+        {/* Khối B: Bộ lọc danh mục bài viết (phong cách Facebook / Instagram - 1 dòng duy nhất) */}
         <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/50 backdrop-blur-xs w-fit dark:bg-[#242526] dark:border dark:border-[#393a3b]">
           {FILTERS.map((f) => {
             const isActive = filter === f.key
@@ -802,7 +817,7 @@ export function FeedPage() {
                 type="button"
                 onClick={() => setFilter(f.key)}
                 className={cn(
-                  'rounded-xl px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200',
+                  'rounded-xl px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer',
                   isActive
                     ? 'bg-white text-[#F27024] shadow-xs font-bold dark:bg-[#3a3b3c] dark:text-[#f27024]'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/50 dark:text-[#b0b3b8] dark:hover:text-white dark:hover:bg-[#3a3b3c]'
@@ -883,6 +898,9 @@ export function FeedPage() {
                 onClose={() => setDeletingPost(null)}
                 post={deletingPost}
                 onDeleted={() => {
+                   if (deletingPost) {
+                     setSessionCreatedPosts((prev) => prev.filter((p) => String(p.id) !== String(deletingPost.id)))
+                   }
                    setDeletingPost(null)
                    refetch()
                 }}

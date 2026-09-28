@@ -116,9 +116,9 @@ async function getMockPage(page: number, filter: FeedFilter): Promise<FeedPageRe
 export const feedApi = {
   /**
    * Lấy một trang bảng tin cộng đồng.
-   * Gọi `GET /api/v1/posts?page={n}&size={m}&sort=recent[&type=...]`; token Bearer
+   * Gọi `GET /api/v1/posts?page={n}&size={m}&sort={sort}[&type=...]`; token Bearer
    * (nếu có) được interceptor `http` tự đính kèm để backend phân biệt Guest/thành viên
-   * khi lọc theo phạm vi hiển thị (BR-12). Trường `liked` luôn là false ở UC15 (BR-14).
+   * khi lọc theo phạm vi hiển thị (BR-12).
    * @param page Chỉ số trang cần lấy (0-based)
    * @param filter Bộ lọc loại bài viết ('all' = không lọc)
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
@@ -139,8 +139,8 @@ export const feedApi = {
     // B1: Chế độ demo — dùng mock để FE chạy độc lập khi chưa có backend.
     if (!AUTH_ENFORCED) return getMockPage(page, filter)
 
-    // B2: Dựng query string phân trang + sắp xếp mới nhất, kèm lọc theo loại nếu có.
-    const query = new URLSearchParams({ page: String(page), size: String(size), sort: 'recent' })
+    // B2: Dựng query string phân trang, kèm lọc theo loại nếu có.
+    const query = new URLSearchParams({ page: String(page), size: String(size) })
     if (filter !== 'all') query.set('type', filter)
     if (keyword.trim() !== '') query.set('keyword', keyword.trim())
     if (eventFilter) query.set('eventFilter', eventFilter)
@@ -150,8 +150,6 @@ export const feedApi = {
 
     // B4: Trích + xác thực dữ liệu bằng Zod, rồi suy ra cờ còn trang tiếp theo.
     const items = parsePosts(extractRawItems(body))
-    // Không giữ nút "Tải thêm" khi trang vừa nhận không có bài nào có thể hiển thị.
-    // Trường hợp này có thể xảy ra khi dữ liệu thay đổi giữa hai lần tải trang.
     return { items, page, hasMore: items.length > 0 && inferHasMore(body, items.length) }
   },
 

@@ -44,10 +44,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alumnect.alumnect_backend.common.util.VietnameseStringUtils;
+import com.alumnect.alumnect_backend.dao.user.FollowRepository;
+
+import java.time.Duration;
 import java.time.Instant;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +67,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private FollowRepository followRepository;
 
     @Autowired
     private EventRepository eventRepository;
@@ -202,6 +210,7 @@ public class PostServiceImpl implements PostService {
         return getFeed(page, size, type, keyword, null, isAuthenticated, viewerEmail);
     }
 
+
     @Override
     public PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, String eventFilter, boolean isAuthenticated, String viewerEmail) {
         if (page < 0) {
@@ -213,9 +222,11 @@ public class PostServiceImpl implements PostService {
 
         PostCategory category = parsePostCategory(type);
         boolean guestMode = !isAuthenticated;
-        
-        String searchKeyword = keyword == null || keyword.isBlank() ? "" : "%" + keyword.trim().toLowerCase() + "%";
 
+        String searchKeyword = (keyword == null || keyword.isBlank()) ? "" : "%" + keyword.trim().toLowerCase() + "%";
+        String unaccentedKeyword = (keyword == null || keyword.isBlank()) ? "" : "%" + VietnameseStringUtils.removeAccents(keyword.trim().toLowerCase()) + "%";
+
+        // Xử lý bộ lọc chuyên biệt cho Sự kiện (Upcoming / This Month)
         if (category == PostCategory.EVENT && ("upcoming".equalsIgnoreCase(eventFilter) || "this_month".equalsIgnoreCase(eventFilter))) {
             Page<Event> eventsPage;
             if ("this_month".equalsIgnoreCase(eventFilter)) {
@@ -279,34 +290,217 @@ public class PostServiceImpl implements PostService {
                     .build();
         }
 
-        Page<Post> postsPage = postRepository.findFeed(guestMode, category, searchKeyword, PageRequest.of(page, size));
-        log.info("Lấy bảng tin: page={}, size={}, category={}, eventFilter={}, tổng kết quả={}", page, size, type, eventFilter, postsPage.getTotalElements());
+        // Đếm tổng số bài viết thực tế trong toàn bộ Database để phân trang chính xác vô tận
+        long totalElementsLong = postRepository.countActiveFeed(category, searchKeyword, unaccentedKeyword);
+        int totalElements = (int) totalElementsLong;
+        if (totalElements == 0) {
+            return PageResponse.<PostResponse>builder()
+                    .content(Collections.emptyList())
+                    .pageNumber(page)
+                    .pageSize(size)
+                    .totalElements(0)
+                    .totalPages(0)
+                    .last(true)
+                    .build();
+        }
 
-        List<Long> authorIds = postsPage.getContent().stream()
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        boolean last = (page + 1) >= totalPages;
+        int fromIndex = page * size;
+
+        // Cửa sổ xếp hạng thông minh (Smart Feed Window): 150 bài viết mới & hoạt động nhất
+        final int SMART_FEED_WINDOW = 150;
+        List<PostResponse> responses;
+
+        if (fromIndex < SMART_FEED_WINDOW) {
+            // ================= TẦNG 1: ĐỀ XUẤT THÔNG MINH (SMART RANKING FEED) =================
+            int candidateLimit = Math.min(totalElements, SMART_FEED_WINDOW);
+            List<Post> candidates = postRepository.findCandidatesForSmartFeed(category, searchKeyword, unaccentedKeyword, PageRequest.of(0, candidateLimit));
+
+            User viewer = (isAuthenticated && viewerEmail != null) ? userRepository.findByEmail(viewerEmail).orElse(null) : null;
+            UserProfile viewerProfile = (viewer != null) ? userProfileRepository.findById(viewer.getId()).orElse(null) : null;
+            Set<Long> followingIds = (viewer != null) ? new HashSet<>(followRepository.findFollowingIdsByFollowerId(viewer.getId())) : Collections.emptySet();
+
+            boolean isViewerStudent = viewer != null && viewer.getRole() != null && "STUDENT".equalsIgnoreCase(viewer.getRole().getName());
+
+            List<Long> candidateAuthorIds = candidates.stream().map(p -> p.getAuthor().getId()).distinct().collect(Collectors.toList());
+            Map<Long, UserProfile> authorProfiles = userProfileRepository.findAllById(candidateAuthorIds).stream()
+                    .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
+            Map<Long, Double> scores = new HashMap<>();
+            Instant now = Instant.now();
+
+            for (Post p : candidates) {
+                double score = 15.0; // Điểm nền cơ sở
+
+                Long authorId = p.getAuthor().getId();
+                UserProfile authorProfile = authorProfiles.get(authorId);
+
+                // 1. Mối quan hệ xã hội (Social Graph & Affinity - tương tự Facebook/Instagram)
+                if (followingIds.contains(authorId)) {
+                    score += 100.0; // Ưu tiên cao người dùng chủ động theo dõi
+                }
+
+                // 2. Mức độ liên quan học thuật & mạng lưới FPT (Academic & Alumni Graph)
+                if (viewerProfile != null && authorProfile != null) {
+                    // Cùng chuyên ngành học (+45 điểm)
+                    if (viewerProfile.getMajor() != null && authorProfile.getMajor() != null
+                            && viewerProfile.getMajor().getId().equals(authorProfile.getMajor().getId())) {
+                        score += 45.0;
+                    }
+
+                    // Cùng khóa nhập học (Cohort): Cùng khóa +35đ, lệch 1 khóa +20đ, lệch 2 khóa +10đ
+                    if (viewerProfile.getCohort() != null && authorProfile.getCohort() != null) {
+                        int diff = Math.abs(viewerProfile.getCohort() - authorProfile.getCohort());
+                        if (diff == 0) {
+                            score += 35.0;
+                        } else if (diff == 1) {
+                            score += 20.0;
+                        } else if (diff == 2) {
+                            score += 10.0;
+                        }
+                    }
+
+                    // Cùng cơ sở đào tạo / thành phố sinh sống
+                    if (viewerProfile.getCampus() != null && authorProfile.getCampus() != null
+                            && !viewerProfile.getCampus().isBlank()
+                            && viewerProfile.getCampus().equalsIgnoreCase(authorProfile.getCampus())) {
+                        score += 15.0;
+                    } else if (viewerProfile.getCity() != null && authorProfile.getCity() != null
+                            && !viewerProfile.getCity().isBlank()
+                            && viewerProfile.getCity().equalsIgnoreCase(authorProfile.getCity())) {
+                        score += 10.0;
+                    }
+
+                    // Động lực kết nối Sinh viên & Cựu sinh viên (Cross-Role Career Synergy)
+                    // Sinh viên xem bài viết cơ hội việc làm hoặc thành tựu từ Cựu sinh viên
+                    boolean isAuthorAlumni = p.getAuthor().getRole() != null && "ALUMNI".equalsIgnoreCase(p.getAuthor().getRole().getName());
+                    if (isViewerStudent && isAuthorAlumni) {
+                        if (p.getCategory() == PostCategory.RECRUITMENT || p.getCategory() == PostCategory.ACHIEVEMENT) {
+                            score += 25.0;
+                        } else {
+                            score += 10.0;
+                        }
+                    }
+                }
+
+                // 3. Chuyên mục bài viết & Định dạng nội dung (Category & Content Richness)
+                if (p.getCategory() == PostCategory.RECRUITMENT) {
+                    score += 25.0;
+                } else if (p.getCategory() == PostCategory.ACHIEVEMENT) {
+                    score += 20.0;
+                } else if (p.getCategory() == PostCategory.EVENT) {
+                    score += 20.0;
+                } else {
+                    score += 10.0;
+                }
+
+                if (p.getContent() != null && p.getContent().trim().length() >= 150) {
+                    score += 10.0; // Nội dung chia sẻ chi tiết, tâm huyết
+                }
+
+                if (p.getMediaList() != null && !p.getMediaList().isEmpty()) {
+                    score += 15.0; // Bài viết có hình ảnh / media trực quan
+                }
+
+                // 4. Điểm tương tác theo thang Logarit (Instagram / Facebook MSI - tôn vinh bài viết nhiều thảo luận)
+                int likes = p.getLikeCount();
+                int comments = p.getCommentCount();
+                int reposts = p.getRepostCount();
+                // Bình luận và Chia sẻ là tương tác sâu, trọng số cao vượt trội
+                double rawEngagement = (likes * 3.0) + (comments * 8.0) + (reposts * 10.0);
+                score += 45.0 * Math.log1p(rawEngagement);
+
+                // 5. Suy giảm theo thời gian (Smooth Gravity Time-Decay với thời gian bán rã 48 giờ)
+                Instant createdAt = p.getCreatedAt() != null ? p.getCreatedAt() : now;
+                double hours = Math.max(0.0, Duration.between(createdAt, now).toSeconds() / 3600.0);
+                double minutes = Math.max(0.0, Duration.between(createdAt, now).toMinutes());
+
+                // Kéo dài thời gian bán rã lên 48 giờ giúp bài viết viral, thảo luận nhiều vẫn giữ được vị trí top
+                double decay = 1.0 / Math.pow(1.0 + (hours / 48.0), 1.15);
+
+                // Freshness Exploration Boost (Ưu đãi bài mới vừa đăng +25 điểm để khám phá, không đè bẹp bài viral)
+                double freshnessBoost = minutes < 120.0 ? (25.0 * (1.0 - (minutes / 120.0))) : 0.0;
+
+                double finalScore = (score * decay) + freshnessBoost;
+                scores.put(p.getId(), finalScore);
+            }
+
+            // Sắp xếp bài viết: Pinned lên đầu -> Điểm xếp hạng cao nhất -> Thời gian tạo mới nhất
+            List<Post> sortedCandidates = new ArrayList<>(candidates);
+            sortedCandidates.sort((p1, p2) -> {
+                if (p1.isPinned() != p2.isPinned()) {
+                    return p1.isPinned() ? -1 : 1;
+                }
+                double s1 = scores.getOrDefault(p1.getId(), 0.0);
+                double s2 = scores.getOrDefault(p2.getId(), 0.0);
+                int cmp = Double.compare(s2, s1);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                Instant t1 = p1.getCreatedAt() != null ? p1.getCreatedAt() : Instant.MIN;
+                Instant t2 = p2.getCreatedAt() != null ? p2.getCreatedAt() : Instant.MIN;
+                return t2.compareTo(t1);
+            });
+
+            int toIndex = Math.min(fromIndex + size, sortedCandidates.size());
+            List<Post> pageContent = (fromIndex >= sortedCandidates.size())
+                    ? Collections.emptyList()
+                    : sortedCandidates.subList(fromIndex, toIndex);
+
+            responses = buildPostResponses(pageContent, viewerEmail);
+        } else {
+            // ================= TẦNG 2: XEM BÀI VIẾT CŨ VÔ TẬN (DEEP CHRONOLOGICAL FEED) =================
+            // Khi người dùng cuộn sâu qua 150 bài đề xuất, tự động tải trực tiếp từ DB theo thứ tự thời gian
+            Page<Post> deepPage = postRepository.findChronologicalFeed(category, searchKeyword, unaccentedKeyword, PageRequest.of(page, size));
+            responses = buildPostResponses(deepPage.getContent(), viewerEmail);
+        }
+
+        log.info("Lấy bảng tin thống nhất (Unified Feed 2-Tier): page={}, size={}, category={}, tổng bài viết={}", page, size, type, totalElements);
+
+        return PageResponse.<PostResponse>builder()
+                .content(responses)
+                .pageNumber(page)
+                .pageSize(size)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .last(last)
+                .build();
+    }
+
+    /**
+     * Tiện ích chuẩn hóa chuyển đổi danh sách Post sang PostResponse kèm batch fetching
+     * để tránh hoàn toàn N+1 queries.
+     */
+    private List<PostResponse> buildPostResponses(List<Post> posts, String viewerEmail) {
+        if (posts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> authorIds = posts.stream()
                 .map(p -> p.getAuthor().getId())
                 .distinct()
                 .collect(Collectors.toList());
         Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
 
-        List<Long> postIds = postsPage.getContent().stream().map(Post::getId).collect(Collectors.toList());
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
         Set<Long> likedPostIds = computeLikedPostIds(viewerEmail, postIds);
         Set<Long> savedPostIds = computeSavedPostIds(viewerEmail, postIds);
 
-        // Batch-fetch Jobs and Events to avoid N+1 queries
-        List<Long> jobIds = postsPage.getContent().stream()
+        List<Long> jobIds = posts.stream()
                 .filter(p -> p.getJobId() != null).map(Post::getJobId).distinct().collect(Collectors.toList());
-        List<Long> eventIds = postsPage.getContent().stream()
+        List<Long> eventIds = posts.stream()
                 .filter(p -> p.getEventId() != null).map(Post::getEventId).distinct().collect(Collectors.toList());
-        Map<Long, JobPosting> jobById = jobIds.isEmpty() ? new java.util.HashMap<>() :
+        Map<Long, JobPosting> jobById = jobIds.isEmpty() ? Collections.emptyMap() :
                 jobPostingRepository.findAllById(jobIds).stream().collect(Collectors.toMap(
                         JobPosting::getId, Function.identity()));
-        Map<Long, Event> eventById = eventIds.isEmpty() ? new java.util.HashMap<>() :
+        Map<Long, Event> eventById = eventIds.isEmpty() ? Collections.emptyMap() :
                 eventRepository.findAllById(eventIds).stream().collect(Collectors.toMap(
                         Event::getId, Function.identity()));
         Set<Long> registeredEventIds = computeRegisteredEventIds(viewerEmail, eventIds);
 
-        List<PostResponse> content = postsPage.getContent().stream()
+        return posts.stream()
                 .map(post -> postMapper.toResponse(
                         post,
                         profileByUserId.get(post.getAuthor().getId()),
@@ -314,17 +508,9 @@ public class PostServiceImpl implements PostService {
                         savedPostIds.contains(post.getId()),
                         post.getJobId() != null ? jobById.get(post.getJobId()) : null,
                         post.getEventId() != null ? eventById.get(post.getEventId()) : null,
-                        post.getEventId() != null && registeredEventIds.contains(post.getEventId())))
+                        post.getEventId() != null && registeredEventIds.contains(post.getEventId())
+                ))
                 .collect(Collectors.toList());
-
-        return PageResponse.<PostResponse>builder()
-                .content(content)
-                .pageNumber(postsPage.getNumber())
-                .pageSize(postsPage.getSize())
-                .totalElements(postsPage.getTotalElements())
-                .totalPages(postsPage.getTotalPages())
-                .last(postsPage.isLast())
-                .build();
     }
 
     @Override
