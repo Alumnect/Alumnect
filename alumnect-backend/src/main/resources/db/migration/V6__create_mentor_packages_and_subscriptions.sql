@@ -63,3 +63,7 @@ VALUES
     ('1 Tháng', 'Gói Tiêu Chuẩn 1 Tháng', 'Gói trải nghiệm kết nối cố vấn trong vòng 1 tháng dành cho Alumni mới gia nhập.', 1, 100000.00, 'ACTIVE'),
     ('3 Tháng', 'Gói Phổ Biến 3 Tháng', 'Gói cố vấn 3 tháng tối ưu chi phí, được khuyên dùng nhất cho các Mentor chính thức.', 3, 250000.00, 'ACTIVE'),
     ('6 Tháng', 'Gói Cao Cấp 6 Tháng', 'Gói đồng hành cố vấn dài hạn 6 tháng với ưu đãi tiết kiệm cao nhất.', 6, 500000.00, 'ACTIVE');
+
+-- Index hỗ trợ Admin truy vấn nhanh CV của Mentor theo mentor_profile_id và cv_file_key (UC96)
+CREATE INDEX IF NOT EXISTS idx_mentor_profiles_cv_lookup ON mentor_profiles(id, cv_file_key) WHERE cv_file_key IS NOT NULL;
+

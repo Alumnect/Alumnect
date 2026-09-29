@@ -5367,6 +5367,98 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "96. Admin Xem CV Mentor (UC96)",
+            "description": "Các API phục vụ cho Quản trị viên xem chi tiết CV và thông tin Mentor (UC96)",
+            "item": [
+                {
+                    "name": "96.1 Lấy danh sách Mentor cho Admin",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/mentors?page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Admin lấy danh sách phân trang các hồ sơ Mentor"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "96.2 Admin Xem CV Mentor thành công",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/mentors/1/cv",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "mentors",
+                                "1",
+                                "cv"
+                            ]
+                        },
+                        "description": "Admin lấy đường dẫn CV và thông tin chuyên môn của Mentor ID 1 thành công"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "96.3 Admin Xem CV Mentor thất bại - Mentor không tồn tại",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/mentors/99999/cv",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "mentors",
+                                "99999",
+                                "cv"
+                            ]
+                        },
+                        "description": "Admin truy cập mentorId không tồn tại, mong đợi lỗi 404 Not Found"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

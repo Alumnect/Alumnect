@@ -18,7 +18,7 @@ public interface MentorProfileRepository extends JpaRepository<MentorProfile, Lo
     Optional<MentorProfile> findByUserId(Long userId);
 
     /**
-     * Kiểm tra người dùng đã tồn tại hồ sơ Mentor hay chưa.
+     * Lấy danh sách hồ sơ Mentor theo danh sách userId.
      */
-    boolean existsByUserId(Long userId);
+    java.util.List<MentorProfile> findByUserIdIn(java.util.List<Long> userIds);
 }

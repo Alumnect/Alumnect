@@ -34,6 +34,8 @@ export interface AdminUserDto {
   bio?: string
   biography?: string
   socialLinks?: string[]
+  hasMentorProfile?: boolean
+  mentorProfileId?: number
 }
 
 export interface AdminVerificationRequestDto {
@@ -336,5 +338,30 @@ export interface UpdateAdminMentorPackagePayload {
   name?: string
   description?: string
 }
+
+export interface AdminMentorCvDto {
+  mentorProfileId: number
+  userId: number
+  mentorName: string
+  mentorEmail: string
+  avatarUrl?: string
+  currentPosition?: string
+  currentCompany?: string
+  yearsOfExperience?: number
+  bio?: string
+  cvFileKey?: string
+  cvUrl?: string
+  mentorStatus: string
+  supportedFields?: string[]
+  updatedAt: string
+}
+
+// Thêm các phương thức API UC96 vào object adminApi ở cuối file
+adminApi.getAdminMentors = (params: { keyword?: string; page?: number; size?: number }) =>
+  http.get<any, ApiResponse<PageResponse<AdminMentorCvDto>>>('/admin/mentors', { params })
+
+adminApi.getMentorCv = (mentorId: number) =>
+  http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}/cv`)
+
 
 
