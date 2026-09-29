@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { ShieldCheck, SignOut } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { ADMIN_NAV } from '@/lib/constants'
@@ -49,7 +50,7 @@ export function AdminShell() {
                       <motion.span
                         layoutId="admin-active"
                         className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-r from-gold-300/40 to-gold-400/20 ring-1 ring-inset ring-gold-400/50"
-                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                        transition={TRANSITION.indicator}
                       />
                     )}
                     {Icon && (
@@ -94,9 +95,9 @@ export function AdminShell() {
         <main className="px-5 py-7 sm:px-8">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={TRANSITION.page}
           >
             <Outlet />
           </motion.div>

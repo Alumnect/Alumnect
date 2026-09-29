@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Crown,
   Heart,
@@ -16,6 +17,7 @@ import {
 import { toast } from '@/components/ui'
 import { Avatar, Badge, Card } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
+import { TRANSITION } from '@/lib/motion'
 import { useAuthStore } from '@/store/authStore'
 import { ConfirmDialog } from './ConfirmDialog'
 import type { GroupPost } from '../model/group'
@@ -177,10 +179,17 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
                 <MoreHorizontal size={18} />
               </button>
 
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-9 z-30 min-w-[170px] overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-xl dark:border-[#393a3b] dark:bg-[#242526]">
+              {menuOpen && <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />}
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    key="post-menu"
+                    initial={{ opacity: 0, scale: 0.96, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: -4, transition: TRANSITION.exit }}
+                    transition={TRANSITION.pop}
+                    className="absolute right-0 top-9 z-30 min-w-[170px] origin-top-right overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-xl dark:border-[#393a3b] dark:bg-[#242526]"
+                  >
                     {post.canPin && (
                       <button
                         type="button"
@@ -205,9 +214,9 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
                         <span>Xóa bài viết</span>
                       </button>
                     )}
-                  </div>
-                </>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
@@ -319,10 +328,18 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
                   : 'hover:text-rose-500',
               )}
             >
-              <Heart
-                size={16}
-                className={cn(post.likedByViewer && 'fill-rose-500 text-rose-500 animate-in zoom-in-75 duration-200')}
-              />
+              {/* Tim nảy nhẹ mỗi khi đổi trạng thái thích (không animate ở lần hiển thị đầu tiên) */}
+              <AnimatePresence initial={false}>
+                <motion.span
+                  key={post.likedByViewer ? 'liked' : 'unliked'}
+                  className="inline-flex"
+                  initial={{ scale: 0.55, opacity: 0.4 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={TRANSITION.bounce}
+                >
+                  <Heart size={16} className={cn(post.likedByViewer && 'fill-rose-500 text-rose-500')} />
+                </motion.span>
+              </AnimatePresence>
               <span>{post.likeCount} thích</span>
             </button>
 
@@ -346,111 +363,122 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
           </div>
         </div>
 
-        {/* Phần bình luận (Collapsible) */}
-        {showComments && (
-          <div className="mt-4 space-y-3.5 border-t border-plum-900/[0.06] pt-3.5 dark:border-[#393a3b]">
-            {/* Input gửi bình luận mới (chỉ thành viên) */}
-            {isActiveMember ? (
-              <form onSubmit={handleSendComment} className="flex items-center gap-2.5">
-                <Avatar
-                  src={currentUser?.avatarUrl ?? ''}
-                  name={currentUser?.name ?? 'Thành viên'}
-                  size={32}
-                  className="shrink-0"
-                />
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Viết phản hồi của bạn..."
-                    className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!commentText.trim() || createCommentMutation.isPending}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400"
-                  >
-                    {createCommentMutation.isPending ? (
-                      <Loader2 size={13} className="animate-spin" />
-                    ) : (
-                      <Send size={13} />
-                    )}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <p className="text-center text-xs text-plum-400 dark:text-[#8a8d91]">
-                Vui lòng tham gia hội nhóm để tham gia bình luận.
-              </p>
-            )}
-
-            {/* Danh sách bình luận */}
-            {commentsLoading ? (
-              <div className="flex justify-center py-3">
-                <Loader2 size={18} className="animate-spin text-brand-500" />
-              </div>
-            ) : commentsData?.content && commentsData.content.length > 0 ? (
-              <div className="space-y-2.5 pt-1">
-                {commentsData.content.map((c) => (
-                  <div key={c.id} className="group flex items-start gap-2.5">
-                    <Link to={`/app/profile?userId=${c.author.userId}`}>
-                      <Avatar
-                        src={c.author.avatarUrl}
-                        name={c.author.fullName}
-                        size={28}
-                        className="shrink-0"
+        {/* Phần bình luận (Collapsible): mở / đóng bằng chuyển động chiều cao mềm */}
+        <AnimatePresence initial={false}>
+          {showComments && (
+            <motion.div
+              key="comments"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={TRANSITION.height}
+              className="-mx-1 overflow-hidden px-1"
+            >
+              <div className="mt-4 space-y-3.5 border-t border-plum-900/[0.06] pt-3.5 dark:border-[#393a3b]">
+                {/* Input gửi bình luận mới (chỉ thành viên) */}
+                {isActiveMember ? (
+                  <form onSubmit={handleSendComment} className="flex items-center gap-2.5">
+                    <Avatar
+                      src={currentUser?.avatarUrl ?? ''}
+                      name={currentUser?.name ?? 'Thành viên'}
+                      size={32}
+                      className="shrink-0"
+                    />
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Viết phản hồi của bạn..."
+                        className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91]"
                       />
-                    </Link>
-
-                    <div className="flex-1 rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <Link
-                            to={`/app/profile?userId=${c.author.userId}`}
-                            className="text-xs font-bold text-plum-900 hover:underline dark:text-white"
-                          >
-                            {c.author.fullName}
-                          </Link>
-
-                          {c.author.groupRole === 'OWNER' && (
-                            <span className="text-[9px] font-black text-amber-500">👑 Sáng lập</span>
-                          )}
-                          {c.author.groupRole === 'ADMIN' && (
-                            <span className="text-[9px] font-black text-brand-500">🛡️ Quản trị</span>
-                          )}
-
-                          <span className="text-[10px] text-plum-400">
-                            • {formatTime(c.createdAt)}
-                          </span>
-                        </div>
-
-                        {c.canDelete && (
-                          <button
-                            type="button"
-                            onClick={() => deleteCommentMutation.mutate(c.id)}
-                            className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-rose-500 text-plum-400"
-                            title="Xóa bình luận"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                      <button
+                        type="submit"
+                        disabled={!commentText.trim() || createCommentMutation.isPending}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400"
+                      >
+                        {createCommentMutation.isPending ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <Send size={13} />
                         )}
-                      </div>
-
-                      <p className="mt-1 text-xs text-plum-800 dark:text-plum-200">
-                        {c.content}
-                      </p>
+                      </button>
                     </div>
+                  </form>
+                ) : (
+                  <p className="text-center text-xs text-plum-400 dark:text-[#8a8d91]">
+                    Vui lòng tham gia hội nhóm để tham gia bình luận.
+                  </p>
+                )}
+
+                {/* Danh sách bình luận */}
+                {commentsLoading ? (
+                  <div className="flex justify-center py-3">
+                    <Loader2 size={18} className="animate-spin text-brand-500" />
                   </div>
-                ))}
+                ) : commentsData?.content && commentsData.content.length > 0 ? (
+                  <div className="space-y-2.5 pt-1">
+                    {commentsData.content.map((c) => (
+                      <div key={c.id} className="group flex items-start gap-2.5">
+                        <Link to={`/app/profile?userId=${c.author.userId}`}>
+                          <Avatar
+                            src={c.author.avatarUrl}
+                            name={c.author.fullName}
+                            size={28}
+                            className="shrink-0"
+                          />
+                        </Link>
+
+                        <div className="flex-1 rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Link
+                                to={`/app/profile?userId=${c.author.userId}`}
+                                className="text-xs font-bold text-plum-900 hover:underline dark:text-white"
+                              >
+                                {c.author.fullName}
+                              </Link>
+
+                              {c.author.groupRole === 'OWNER' && (
+                                <span className="text-[9px] font-black text-amber-500">👑 Sáng lập</span>
+                              )}
+                              {c.author.groupRole === 'ADMIN' && (
+                                <span className="text-[9px] font-black text-brand-500">🛡️ Quản trị</span>
+                              )}
+
+                              <span className="text-[10px] text-plum-400">
+                                • {formatTime(c.createdAt)}
+                              </span>
+                            </div>
+
+                            {c.canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => deleteCommentMutation.mutate(c.id)}
+                                className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-rose-500 text-plum-400"
+                                title="Xóa bình luận"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+
+                          <p className="mt-1 text-xs text-plum-800 dark:text-plum-200">
+                            {c.content}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-2 text-center text-xs text-plum-400 dark:text-[#8a8d91]">
+                    Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nghĩ!
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="py-2 text-center text-xs text-plum-400 dark:text-[#8a8d91]">
-                Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nghĩ!
-              </p>
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
 
       {/* Modal xác nhận xóa bài viết */}
@@ -466,23 +494,35 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
       />
 
       {/* Modal phóng to ảnh */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl">
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/60 text-white hover:bg-black"
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            key="image-preview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: TRANSITION.exit }}
+            transition={TRANSITION.overlay}
+            className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
+            onClick={() => setPreviewImage(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={TRANSITION.pop}
+              className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl"
             >
-              <X size={18} />
-            </button>
-            <img src={previewImage} alt="Phóng to" className="max-h-[90vh] max-w-[90vw] object-contain" />
-          </div>
-        </div>
-      )}
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/60 text-white hover:bg-black"
+              >
+                <X size={18} />
+              </button>
+              <img src={previewImage} alt="Phóng to" className="max-h-[90vh] max-w-[90vw] object-contain" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

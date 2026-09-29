@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -51,7 +52,8 @@ export function Modal({
             className="absolute inset-0 bg-plum-950/40 dark:bg-black/70 backdrop-blur-xs"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: TRANSITION.exit }}
+            transition={TRANSITION.overlay}
             onClick={onClose}
           />
 
@@ -64,10 +66,10 @@ export function Modal({
               maxWidthClassName,
               className
             )}
-            initial={{ opacity: 0, scale: 0.93, y: 15 }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, scale: 0.98, y: 6, transition: TRANSITION.exit }}
+            transition={TRANSITION.pop}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4.5 bg-white border-b border-plum-900/5 shrink-0 dark:bg-[#242526] dark:border-[#393a3b]">

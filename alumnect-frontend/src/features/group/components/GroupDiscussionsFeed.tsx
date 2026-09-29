@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { MessageSquare, Pin, Sparkles, Loader2 } from 'lucide-react'
 import { Card, Skeleton } from '@/components/ui/primitives'
+import { Reveal } from '@/components/motion'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useGroupPostsInfinite } from '../hooks/useGroupPosts'
@@ -125,12 +126,9 @@ export function GroupDiscussionsFeed({
       ) : posts.length > 0 ? (
         <div className="space-y-4">
           {posts.map((post) => (
-            <GroupPostCard
-              key={post.id}
-              post={post}
-              groupId={groupId}
-              isActiveMember={isActiveMember}
-            />
+            <Reveal key={post.id}>
+              <GroupPostCard post={post} groupId={groupId} isActiveMember={isActiveMember} />
+            </Reveal>
           ))}
 
           {/* Phân trang / Xem thêm: nối thêm trang kế tiếp vào cuối danh sách */}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink, Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import {
   MagnifyingGlass,
   Bell,
@@ -55,10 +56,10 @@ function Popover({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.96 }}
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.97 }}
-            transition={{ duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
+            exit={{ opacity: 0, y: -4, scale: 0.98, transition: TRANSITION.exit }}
+            transition={TRANSITION.pop}
             style={{ willChange: 'opacity, transform' }}
             onClick={onClose}
             className={cn(
@@ -279,7 +280,7 @@ export function AppShell() {
                         <motion.span
                           layoutId="app-tab"
                           className="absolute inset-x-2 bottom-0 h-[3px] rounded-full bg-[#F27024]"
-                          transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                          transition={TRANSITION.indicator}
                         />
                       )}
                     </>
@@ -402,6 +403,7 @@ export function AppShell() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={TRANSITION.height}
               className="overflow-hidden border-t border-plum-900/[0.07] md:hidden"
             >
               <label className="relative flex items-center px-4 py-3">
@@ -440,9 +442,9 @@ export function AppShell() {
       )}>
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={TRANSITION.page}
           className={location.pathname === '/app/messages' ? "h-full" : undefined}
         >
           <Outlet />
@@ -472,7 +474,7 @@ export function AppShell() {
                       <motion.span
                         layoutId="app-tab-mobile"
                         className="absolute inset-x-5 top-0 h-[3px] rounded-full bg-gradient-to-r from-brand-500 to-violet-500"
-                        transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                        transition={TRANSITION.indicator}
                       />
                     )}
                     {Icon && (
@@ -506,7 +508,8 @@ export function AppShell() {
               className="fixed inset-0 z-40 bg-plum-900/30 backdrop-blur-sm lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, transition: TRANSITION.exit }}
+              transition={TRANSITION.overlay}
               onClick={() => setSheet(false)}
             />
             <motion.div
@@ -514,7 +517,7 @@ export function AppShell() {
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+              transition={TRANSITION.sheet}
             >
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-plum-900/15" />
               <div className="mb-4 flex items-center justify-between">
@@ -574,8 +577,8 @@ export function AppShell() {
             onClick={scrollToTop}
             initial={{ opacity: 0, scale: 0.6, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.6, y: 15 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, scale: 0.6, y: 15, transition: TRANSITION.exit }}
+            transition={TRANSITION.pop}
             aria-label="Cuộn lên đầu trang"
             title="Cuộn lên đầu trang"
             className="fixed bottom-20 right-6 z-30 lg:bottom-7 lg:right-7 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-[#F27024] shadow-lg shadow-orange-500/10 backdrop-blur-md transition-all hover:bg-orange-50 hover:border-orange-300 hover:scale-110 active:scale-95 cursor-pointer"

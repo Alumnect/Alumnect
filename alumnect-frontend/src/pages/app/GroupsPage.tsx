@@ -9,8 +9,8 @@
  */
 import { useState } from 'react'
 import { AlertTriangle, Compass, Inbox, Loader2, Plus, Search, Sparkles, Users2, X } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { Card } from '@/components/ui'
+import { Stagger, StaggerItem } from '@/components/motion'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -217,16 +217,13 @@ export function GroupsPage() {
         </Card>
       ) : (
         <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-          >
+          <Stagger key={tab} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {groups.map((g) => (
-              <GroupCard key={g.id} group={g} />
+              <StaggerItem key={g.id} className="h-full">
+                <GroupCard group={g} />
+              </StaggerItem>
             ))}
-          </motion.div>
+          </Stagger>
 
           {query.hasNextPage && (
             <div className="pt-6 text-center">

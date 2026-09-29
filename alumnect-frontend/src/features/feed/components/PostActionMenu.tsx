@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { MoreHorizontal, Pencil, Trash2, Ban } from 'lucide-react'
 import type { Post } from '../model/post'
 
@@ -80,8 +81,8 @@ export function PostActionMenu({
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
-            transition={{ duration: 0.15 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4, transition: TRANSITION.exit }}
+            transition={TRANSITION.pop}
             onClick={(e) => e.stopPropagation()}
             className="absolute right-0 z-30 mt-1 w-44 origin-top-right rounded-xl border border-plum-900/10 bg-white py-1.5 shadow-lg shadow-plum-950/10 ring-1 ring-black/5 focus:outline-none dark:border-[#393a3b] dark:bg-[#242526] dark:shadow-black/50"
           >

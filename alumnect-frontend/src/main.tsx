@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { MotionConfig } from 'framer-motion'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from '@/lib/queryClient'
 import './index.css'
@@ -13,7 +14,10 @@ createRoot(document.getElementById('root')!).render(
     {/* Cung cấp TanStack Query cho toàn app: cache dữ liệu feed, auth mutations, v.v. */}
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
-        <App />
+        {/* Tôn trọng prefers-reduced-motion của người dùng cho toàn bộ animation framer-motion */}
+        <MotionConfig reducedMotion="user">
+          <App />
+        </MotionConfig>
       </GoogleOAuthProvider>
     </QueryClientProvider>
   </StrictMode>,

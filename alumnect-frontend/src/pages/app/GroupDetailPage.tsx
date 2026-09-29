@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Avatar, Badge, Card, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { TRANSITION } from '@/lib/motion'
 import { useAuthStore } from '@/store/authStore'
 import {
   ConfirmDialog,
@@ -60,8 +61,14 @@ export function GroupDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-6xl space-y-5">
-        <Skeleton className="h-64 sm:h-72 w-full rounded-3xl" />
+      <div className="mx-auto max-w-6xl space-y-5 pb-12">
+        {/* Kích thước khớp với nút quay lại, header (ảnh bìa 21:8 + phần thông tin) và thanh tab thật để nội dung không bị nhảy khi tải xong */}
+        <Skeleton className="h-5 w-40" />
+        <div className="overflow-hidden rounded-3xl">
+          <Skeleton className="aspect-[21/8] min-h-[160px] w-full rounded-none sm:min-h-[220px]" />
+          <Skeleton className="h-36 w-full rounded-none opacity-60" />
+        </div>
+        <Skeleton className="h-10 w-full rounded-2xl" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="space-y-4 lg:col-span-8">
             <Skeleton className="h-14 w-full rounded-2xl" />
@@ -206,7 +213,7 @@ export function GroupDetailPage() {
                   <motion.div
                     layoutId="group-active-tab-indicator"
                     className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-500"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    transition={TRANSITION.indicator}
                   />
                 )}
               </button>
@@ -224,10 +231,10 @@ export function GroupDetailPage() {
             {activeTab === 'discussions' && (
               <motion.div
                 key="tab-discussions"
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: { duration: 0.08 } }}
-                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                exit={{ opacity: 0, transition: TRANSITION.exit }}
+                transition={TRANSITION.content}
                 className="space-y-4"
               >
                 {/* Trạng thái nhóm riêng tư mà người xem chưa là thành viên */}
@@ -260,10 +267,10 @@ export function GroupDetailPage() {
             {activeTab === 'about' && (
               <motion.div
                 key="tab-about"
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: { duration: 0.08 } }}
-                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                exit={{ opacity: 0, transition: TRANSITION.exit }}
+                transition={TRANSITION.content}
                 className="space-y-5"
               >
                 <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
@@ -343,10 +350,10 @@ export function GroupDetailPage() {
             {activeTab === 'members' && (
               <motion.div
                 key="tab-members"
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: { duration: 0.08 } }}
-                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                exit={{ opacity: 0, transition: TRANSITION.exit }}
+                transition={TRANSITION.content}
               >
                 <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
                   <div className="mb-4 flex items-center justify-between">
@@ -370,10 +377,10 @@ export function GroupDetailPage() {
             {activeTab === 'manage' && isManager && (
               <motion.div
                 key="tab-manage"
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: { duration: 0.08 } }}
-                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                exit={{ opacity: 0, transition: TRANSITION.exit }}
+                transition={TRANSITION.content}
               >
                 <GroupManagePanel group={group} />
               </motion.div>
