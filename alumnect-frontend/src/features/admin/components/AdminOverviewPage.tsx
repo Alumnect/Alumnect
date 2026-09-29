@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAdminOverview, useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
+import { RegistrationAnalyticsChart } from './RegistrationAnalyticsChart'
 
 export function AdminOverviewPage() {
   const { data: summary, isLoading: isLoadingKpis, error: kpisError } = useAdminOverview()
@@ -120,49 +121,9 @@ export function AdminOverviewPage() {
 
       {/* Charts & Activity */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        {/* Registrations Chart */}
+        {/* Registrations Combo Chart (Bar + Line Trend - Tuần, Tháng, Năm) */}
         <Reveal>
-          <Card hover={false} className="p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="font-bold text-plum-900">Số lượng đăng ký mới</h2>
-                <p className="text-xs text-plum-400">Thống kê 7 ngày gần nhất (tài khoản đăng ký mới)</p>
-              </div>
-              {dailyRegs.length > 0 && (
-                <Badge tone="success" icon={<Activity size={13} />}>
-                  Live
-                </Badge>
-              )}
-            </div>
-            {isLoadingKpis ? (
-              <div className="flex h-52 items-end justify-between gap-2">
-                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                  <Skeleton key={i} className="h-full w-full rounded-t-lg" />
-                ))}
-              </div>
-            ) : dailyRegs.length === 0 ? (
-              <EmptyState icon={<Activity size={22} />} title="Không có dữ liệu đăng ký" />
-            ) : (
-              <div className="flex h-52 items-end gap-2">
-                {dailyRegs.map((d, i) => (
-                  <div key={i} className="group flex flex-1 flex-col items-center gap-2">
-                    <div className="flex w-full flex-1 items-end">
-                      <div
-                        className="w-full rounded-t-lg bg-gradient-to-t from-brand-600/40 to-violet-500 transition-all duration-500 group-hover:from-brand-500 group-hover:to-violet-400"
-                        style={{ height: `${(d.count / (maxRegCount || 1)) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] font-semibold text-plum-400">
-                      {d.date.substring(5)}
-                    </span>
-                    <span className="absolute -top-6 hidden rounded bg-plum-900 px-1.5 py-0.5 text-[10px] text-white group-hover:block">
-                      {d.count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+          <RegistrationAnalyticsChart summary={summary} liveDailyRegs={dailyRegs} isLoading={isLoadingKpis} />
         </Reveal>
 
         {/* Dynamic Tips & System info */}

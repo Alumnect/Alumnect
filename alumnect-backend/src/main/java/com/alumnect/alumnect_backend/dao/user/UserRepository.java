@@ -77,6 +77,25 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     List<Object[]> countRegistrationsByDayInRange(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
     /**
+     * Thống kê số lượng đăng ký tài khoản mới theo tháng trong năm từ CSDL.
+     */
+    @Query("SELECT EXTRACT(MONTH FROM u.createdAt) as regMonth, COUNT(u.id) as regCount " +
+           "FROM User u " +
+           "WHERE u.createdAt >= :startDate AND u.createdAt <= :endDate " +
+           "GROUP BY EXTRACT(MONTH FROM u.createdAt) " +
+           "ORDER BY regMonth ASC")
+    List<Object[]> countRegistrationsByMonthInRange(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+
+    /**
+     * Thống kê số lượng đăng ký tài khoản mới theo các năm từ CSDL.
+     */
+    @Query("SELECT EXTRACT(YEAR FROM u.createdAt) as regYear, COUNT(u.id) as regCount " +
+           "FROM User u " +
+           "GROUP BY EXTRACT(YEAR FROM u.createdAt) " +
+           "ORDER BY regYear ASC")
+    List<Object[]> countRegistrationsByYear();
+
+    /**
      * Tìm kiếm danh sách ứng viên đề xuất kết nối cho người dùng đã đăng nhập (Có phân trang / Limit).
      * Loại bỏ tài khoản không hoạt động, chính mình và các tài khoản đã follow.
      */

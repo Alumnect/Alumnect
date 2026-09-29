@@ -23,6 +23,13 @@ public interface MentorPackageRepository extends JpaRepository<MentorPackage, Lo
     List<MentorPackage> findByStatusOrderByDurationMonthsAsc(MentorPackageStatus status);
 
     /**
+     * Tìm danh sách toàn bộ các gói dịch vụ Mentor (cả ACTIVE và INACTIVE), sắp xếp theo thời hạn tăng dần.
+     *
+     * @return Danh sách tất cả gói dịch vụ Mentor
+     */
+    List<MentorPackage> findAllByOrderByDurationMonthsAsc();
+
+    /**
      * Tìm gói dịch vụ Mentor theo mã định danh duy nhất (code).
      *
      * @param code Mã gói dịch vụ (ví dụ: MENTOR_1M)

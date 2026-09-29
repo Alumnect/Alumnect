@@ -74,6 +74,7 @@ export const APP_NAV: NavItem[] = [
 /** Admin dashboard navigation. */
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Tổng quan', to: '/admin', icon: LayoutDashboard },
+  { label: 'Gói Mentor', to: '/admin/mentor-packages', icon: Compass },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
@@ -81,6 +82,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Người dùng', to: '/admin/users', icon: UserCog },
   { label: 'Thông báo chung', to: '/admin/broadcast', icon: Megaphone },
 ]
+
 
 /** Mock feed posts. */
 export const FEED_POSTS = [
