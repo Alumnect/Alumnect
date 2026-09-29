@@ -278,4 +278,43 @@ export function useArchiveSystemNotification() {
   })
 }
 
+/**
+ * Hook lấy danh sách toàn bộ các gói dịch vụ Mentor từ CSDL PostgreSQL dành cho Admin (UC95)
+ */
+export function useAdminMentorPackages() {
+  return useQuery({
+    queryKey: ['admin', 'mentor-packages'],
+    queryFn: async () => {
+      const response = await adminApi.getMentorPackages()
+      return response.data
+    },
+  })
+}
+
+/**
+ * Hook cập nhật giá và trạng thái gói dịch vụ Mentor vào CSDL PostgreSQL (UC95)
+ */
+export function useUpdateMentorPackage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number
+      payload: import('../api/adminApi').UpdateAdminMentorPackagePayload
+    }) => {
+      const response = await adminApi.updateMentorPackage(id, payload)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentor-packages'] })
+      queryClient.invalidateQueries({ queryKey: ['mentorship', 'packages'] })
+    },
+  })
+}
+
+
+
+
 
