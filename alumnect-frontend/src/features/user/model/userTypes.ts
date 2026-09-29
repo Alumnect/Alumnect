@@ -159,6 +159,7 @@ export interface UserDirectoryResponse {
 
 export interface UserSearchParams {
   query?: string
+  name?: string
   role?: string
   majorId?: number
   cohort?: number
@@ -166,6 +167,7 @@ export interface UserSearchParams {
   skill?: string
   company?: string
   page?: number
+  size?: number
   sortBy?: string
   sortDirection?: string
 }
