@@ -54,23 +54,29 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
 
   const tabs: { key: Tab; label: string; icon: typeof Inbox; badge?: number }[] = [
     { key: 'requests', label: 'Yêu cầu tham gia', icon: Inbox, badge: pending },
-    { key: 'settings', label: 'Cài đặt', icon: Settings2 },
+    { key: 'settings', label: 'Cài đặt & Trạng thái', icon: Settings2 },
   ]
 
   return (
-    <Card hover={false} className="p-5">
-      <div className="mb-4 flex gap-1 rounded-xl bg-plum-900/[0.04] p-1">
+    <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+      <div className="mb-6 flex gap-1.5 rounded-2xl bg-plum-900/[0.04] p-1.5 dark:bg-[#3a3b3c]">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={cn(
-              'inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-              tab === t.key ? 'bg-white text-plum-900 shadow-sm' : 'text-plum-500 hover:text-plum-900',
+              'inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              tab === t.key
+                ? 'bg-white text-plum-900 shadow-sm dark:bg-[#242526] dark:text-white'
+                : 'text-plum-500 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
             )}
           >
-            <t.icon size={15} /> {t.label}
-            {!!t.badge && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand-500 px-1 text-[11px] font-bold text-white">{t.badge}</span>}
+            <t.icon size={16} /> {t.label}
+            {!!t.badge && (
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand-500 px-1 text-[11px] font-black text-white">
+                {t.badge}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -78,9 +84,19 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
       {tab === 'requests' ? (
         <JoinRequestsList groupId={group.id} />
       ) : (
-        <div className="space-y-3">
-          <SettingRow title="Thông tin hội nhóm" description="Chỉnh sửa tên, ảnh bìa, mô tả, danh mục, chủ đề, loại hội nhóm và quy định tham gia.">
-            <Button variant="secondary" size="sm" leftIcon={<PencilLine size={14} />} onClick={() => setEditOpen(true)} disabled={isInactive}>
+        <div className="space-y-3.5">
+          <SettingRow
+            title="Chỉnh sửa thông tin hội nhóm"
+            description="Cập nhật tên, ảnh bìa, mô tả chi tiết, danh mục ngành nghề, chủ đề hashtags và quy định tham gia nhóm."
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<PencilLine size={14} />}
+              onClick={() => setEditOpen(true)}
+              disabled={isInactive}
+              className="rounded-xl font-bold"
+            >
               Chỉnh sửa
             </Button>
           </SettingRow>
@@ -88,8 +104,12 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
           {isOwner && (
             <>
               <SettingRow
-                title={isInactive ? 'Mở lại hội nhóm' : 'Đóng hội nhóm'}
-                description={isInactive ? 'Cho phép thành viên mới tham gia và hoạt động trở lại.' : 'Tạm ngừng hoạt động: ẩn khỏi danh sách khám phá và không nhận thành viên mới. Có thể mở lại bất cứ lúc nào.'}
+                title={isInactive ? 'Mở lại hội nhóm' : 'Tạm ngừng hội nhóm'}
+                description={
+                  isInactive
+                    ? 'Cho phép thành viên mới tham gia và hoạt động bình thường trở lại.'
+                    : 'Tạm ngừng hoạt động: Ẩn nhóm khỏi danh sách khám phá công khai và không nhận thêm thành viên mới.'
+                }
               >
                 <Button
                   variant="secondary"
@@ -97,13 +117,24 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
                   leftIcon={isInactive ? <PlayCircle size={14} /> : <PauseCircle size={14} />}
                   disabled={statusMut.isPending}
                   onClick={() => (isInactive ? changeStatus('ACTIVE') : setCloseOpen(true))}
+                  className="rounded-xl font-bold"
                 >
-                  {isInactive ? 'Mở lại' : 'Đóng nhóm'}
+                  {isInactive ? 'Mở lại nhóm' : 'Tạm ngừng'}
                 </Button>
               </SettingRow>
 
-              <SettingRow title="Xóa hội nhóm" description="Xóa vĩnh viễn hội nhóm khỏi hệ thống. Thao tác này không thể khôi phục." danger>
-                <Button variant="primary" size="sm" leftIcon={<Trash2 size={14} />} className="from-rose-600 to-rose-500 shadow-none" onClick={() => setDeleteOpen(true)}>
+              <SettingRow
+                title="Xóa vĩnh viễn hội nhóm"
+                description="Xóa bỏ hội nhóm khỏi hệ thống AlumNect. Toàn bộ thành viên sẽ mất quyền truy cập và thao tác này không thể hoàn tác."
+                danger
+              >
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Trash2 size={14} />}
+                  className="rounded-xl from-rose-600 to-rose-500 font-bold shadow-none hover:from-rose-700 hover:to-rose-600"
+                  onClick={() => setDeleteOpen(true)}
+                >
                   Xóa nhóm
                 </Button>
               </SettingRow>
@@ -116,22 +147,22 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
 
       <ConfirmDialog
         open={closeOpen}
-        title="Đóng hội nhóm"
-        message="Hội nhóm sẽ tạm ngừng hoạt động: không hiển thị ở danh sách khám phá và không nhận thêm thành viên. Bạn có thể mở lại bất cứ lúc nào."
-        confirmLabel="Đóng hội nhóm"
+        title="Tạm ngừng hoạt động hội nhóm"
+        message="Hội nhóm sẽ tạm ngừng hoạt động: Không hiển thị ở danh sách khám phá và không tiếp nhận thêm thành viên. Bạn có thể mở lại bất cứ lúc nào."
+        confirmLabel="Xác nhận tạm ngừng"
         loading={statusMut.isPending}
         onConfirm={() => changeStatus('INACTIVE')}
         onClose={() => setCloseOpen(false)}
       />
       <ConfirmDialog
         open={deleteOpen}
-        title="Xóa hội nhóm"
+        title="Xóa vĩnh viễn hội nhóm"
         message={
           <>
-            Bạn có chắc muốn xóa hội nhóm <b>{group.name}</b>? Toàn bộ thành viên sẽ mất quyền truy cập và thao tác này không thể hoàn tác.
+            Bạn có chắc chắn muốn xóa hội nhóm <b>{group.name}</b>? Toàn bộ dữ liệu thành viên sẽ không thể phục hồi sau khi xóa.
           </>
         }
-        confirmLabel="Xóa hội nhóm"
+        confirmLabel="Xác nhận xóa"
         danger
         loading={deleteMut.isPending}
         onConfirm={confirmDelete}
@@ -141,14 +172,33 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
   )
 }
 
-function SettingRow({ title, description, danger, children }: { title: string; description: string; danger?: boolean; children: React.ReactNode }) {
+function SettingRow({
+  title,
+  description,
+  danger,
+  children,
+}: {
+  title: string
+  description: string
+  danger?: boolean
+  children: React.ReactNode
+}) {
   return (
-    <div className={cn('flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3', danger ? 'border-rose-500/30 bg-rose-500/5' : 'border-plum-900/10')}>
+    <div
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4.5 transition-all',
+        danger
+          ? 'border-rose-500/30 bg-rose-500/5 dark:border-rose-900/40 dark:bg-rose-950/20'
+          : 'border-plum-900/[0.07] bg-white dark:border-[#393a3b] dark:bg-[#242526]',
+      )}
+    >
       <div className="min-w-0 flex-1">
-        <p className={cn('text-sm font-bold', danger ? 'text-rose-600' : 'text-plum-900')}>{title}</p>
-        <p className="mt-0.5 text-xs text-plum-500">{description}</p>
+        <p className={cn('text-sm font-extrabold', danger ? 'text-rose-600 dark:text-rose-400' : 'text-plum-900 dark:text-white')}>
+          {title}
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">{description}</p>
       </div>
-      {children}
+      <div className="shrink-0">{children}</div>
     </div>
   )
 }

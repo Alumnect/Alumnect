@@ -11,3 +11,17 @@ export { GroupMembersList } from './components/GroupMembersList'
 export { GroupManagePanel } from './components/GroupManagePanel'
 export { TransferOwnershipModal } from './components/TransferOwnershipModal'
 export { ConfirmDialog } from './components/ConfirmDialog'
+export { GroupCreatePostCard } from './components/GroupCreatePostCard'
+export { GroupPostCard } from './components/GroupPostCard'
+export { GroupDiscussionsFeed } from './components/GroupDiscussionsFeed'
+export {
+  useGroupPostsInfinite,
+  useCreateGroupPostMutation,
+  useDeleteGroupPostMutation,
+  useToggleGroupPostLikeMutation,
+  useToggleGroupPostPinMutation,
+  useGroupCommentsQuery,
+  useCreateGroupCommentMutation,
+  useDeleteGroupCommentMutation,
+} from './hooks/useGroupPosts'
+export type { GroupPost, GroupComment, GroupPostAuthor, GroupPostLikeResult, CreateGroupPostPayload } from './model/group'

@@ -180,3 +180,54 @@ export function validateTopics(text: string): string | null {
 export function isManagerRole(role: GroupRole | null | undefined): boolean {
   return role === 'OWNER' || role === 'ADMIN'
 }
+
+/** Thông tin tác giả bài viết / bình luận trong hội nhóm */
+export interface GroupPostAuthor {
+  userId: number
+  fullName: string
+  avatarUrl: string
+  groupRole: GroupRole | null
+  roleLabel: string
+}
+
+/** Dữ liệu bài viết / thảo luận trong hội nhóm */
+export interface GroupPost {
+  id: number
+  groupId: number
+  author: GroupPostAuthor
+  content: string
+  imageUrls: string[]
+  isPinned: boolean
+  likeCount: number
+  commentCount: number
+  likedByViewer: boolean
+  canPin: boolean
+  canEdit: boolean
+  canDelete: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/** Dữ liệu bình luận bài viết trong hội nhóm */
+export interface GroupComment {
+  id: number
+  postId: number
+  author: GroupPostAuthor
+  content: string
+  canDelete: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/** Kết quả thích / bỏ thích bài viết */
+export interface GroupPostLikeResult {
+  postId: number
+  liked: boolean
+  likeCount: number
+}
+
+/** Payload tạo mới hoặc chỉnh sửa bài viết trong nhóm */
+export interface CreateGroupPostPayload {
+  content: string
+  imageUrls?: string[]
+}

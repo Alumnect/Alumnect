@@ -94,6 +94,7 @@ export function Avatar({
           width={size}
           height={size}
           loading="lazy"
+          decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
           className={cn(

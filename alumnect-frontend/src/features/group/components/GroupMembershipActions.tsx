@@ -25,9 +25,10 @@ type Props = {
   /** Có hiển thị nút "Rời nhóm" hay không (chỉ ở trang chi tiết); onLeave do trang quyết định luồng xác nhận/chuyển quyền. */
   onLeave?: () => void
   className?: string
+  hideManageButton?: boolean
 }
 
-export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, className }: Props) {
+export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, className, hideManageButton }: Props) {
   const user = useAuthStore((s) => s.user)
   const promptLogin = useLoginPrompt((s) => s.open)
   const joinMut = useJoinGroup()
@@ -71,20 +72,22 @@ export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, 
   if (viewerMembershipStatus === 'ACTIVE') {
     return (
       <div className={`flex flex-wrap items-center gap-2 ${className ?? ''}`}>
-        {isManagerRole(viewerRole) ? (
-          onManage ? (
-            <Button variant="primary" size={size} leftIcon={<Settings2 size={15} />} onClick={onManage}>
-              Quản lý hội nhóm
-            </Button>
+        {!hideManageButton && (
+          isManagerRole(viewerRole) ? (
+            onManage ? (
+              <Button variant="primary" size={size} leftIcon={<Settings2 size={15} />} onClick={onManage}>
+                Quản lý hội nhóm
+              </Button>
+            ) : (
+              <ButtonLink to={`/app/groups/${id}?manage=1`} variant="primary" size={size} leftIcon={<Settings2 size={15} />}>
+                Quản lý hội nhóm
+              </ButtonLink>
+            )
           ) : (
-            <ButtonLink to={`/app/groups/${id}?manage=1`} variant="primary" size={size} leftIcon={<Settings2 size={15} />}>
-              Quản lý hội nhóm
-            </ButtonLink>
+            <Button variant="outline" size={size} disabled leftIcon={<CheckCircle2 size={15} />}>
+              Đã tham gia
+            </Button>
           )
-        ) : (
-          <Button variant="outline" size={size} disabled leftIcon={<CheckCircle2 size={15} />}>
-            Đã tham gia
-          </Button>
         )}
         {leaveButton}
       </div>

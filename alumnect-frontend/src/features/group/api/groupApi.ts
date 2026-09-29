@@ -23,6 +23,10 @@ import type {
   JoinRequestPageResult,
   MemberPageResult,
   MembershipResult,
+  GroupPost,
+  GroupComment,
+  GroupPostLikeResult,
+  CreateGroupPostPayload,
 } from '../model/group'
 
 /**
@@ -161,6 +165,86 @@ export const groupApi = {
   uploadCover: async (file: File): Promise<string> => {
     const res = await http.get<unknown, { data: { uploadUrl: string; publicUrl: string } }>(
       `/files/presigned-url?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}&folder=groups`,
+    )
+    const { uploadUrl, publicUrl } = res.data
+    await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
+    return publicUrl
+  },
+
+  /** Danh sách bài viết / thảo luận trong hội nhóm. `GET /api/v1/groups/{groupId}/posts`. */
+  listPosts: async (groupId: number, page = 0, size = 10): Promise<{ content: GroupPost[]; last: boolean; totalElements: number; pageNumber: number }> => {
+    const body = await http.get(`/groups/${groupId}/posts`, { params: { page, size } })
+    const p = payloadOf(body) as RawPage
+    return {
+      content: (p?.content ?? []) as GroupPost[],
+      last: Boolean(p?.last),
+      totalElements: Number(p?.totalElements ?? 0),
+      pageNumber: Number(p?.pageNumber ?? 0),
+    }
+  },
+
+  /** Chi tiết một bài viết trong nhóm. `GET /api/v1/groups/{groupId}/posts/{postId}`. */
+  getPostDetail: async (groupId: number, postId: number): Promise<GroupPost> => {
+    const body = await http.get(`/groups/${groupId}/posts/${postId}`)
+    return payloadOf(body) as GroupPost
+  },
+
+  /** Đăng bài viết / thảo luận mới trong hội nhóm. `POST /api/v1/groups/{groupId}/posts`. */
+  createPost: async (groupId: number, payload: CreateGroupPostPayload): Promise<GroupPost> => {
+    const body = await http.post(`/groups/${groupId}/posts`, payload)
+    return payloadOf(body) as GroupPost
+  },
+
+  /** Cập nhật bài viết trong nhóm. `PUT /api/v1/groups/{groupId}/posts/{postId}`. */
+  updatePost: async (groupId: number, postId: number, payload: CreateGroupPostPayload): Promise<GroupPost> => {
+    const body = await http.put(`/groups/${groupId}/posts/${postId}`, payload)
+    return payloadOf(body) as GroupPost
+  },
+
+  /** Xóa bài viết trong hội nhóm. `DELETE /api/v1/groups/{groupId}/posts/{postId}`. */
+  deletePost: async (groupId: number, postId: number): Promise<void> => {
+    await http.delete(`/groups/${groupId}/posts/${postId}`)
+  },
+
+  /** Thích / Bỏ thích bài viết trong hội nhóm. `POST /api/v1/groups/{groupId}/posts/{postId}/like`. */
+  togglePostLike: async (groupId: number, postId: number): Promise<GroupPostLikeResult> => {
+    const body = await http.post(`/groups/${groupId}/posts/${postId}/like`)
+    return payloadOf(body) as GroupPostLikeResult
+  },
+
+  /** Ghim / Bỏ ghim bài viết trong hội nhóm. `PUT /api/v1/groups/{groupId}/posts/{postId}/pin`. */
+  togglePostPin: async (groupId: number, postId: number): Promise<GroupPost> => {
+    const body = await http.put(`/groups/${groupId}/posts/${postId}/pin`)
+    return payloadOf(body) as GroupPost
+  },
+
+  /** Lấy danh sách bình luận của bài viết. `GET /api/v1/groups/{groupId}/posts/{postId}/comments`. */
+  listComments: async (groupId: number, postId: number, page = 0, size = 20): Promise<{ content: GroupComment[]; last: boolean; totalElements: number; pageNumber: number }> => {
+    const body = await http.get(`/groups/${groupId}/posts/${postId}/comments`, { params: { page, size } })
+    const p = payloadOf(body) as RawPage
+    return {
+      content: (p?.content ?? []) as GroupComment[],
+      last: Boolean(p?.last),
+      totalElements: Number(p?.totalElements ?? 0),
+      pageNumber: Number(p?.pageNumber ?? 0),
+    }
+  },
+
+  /** Thêm bình luận vào bài viết. `POST /api/v1/groups/{groupId}/posts/{postId}/comments`. */
+  createComment: async (groupId: number, postId: number, content: string): Promise<GroupComment> => {
+    const body = await http.post(`/groups/${groupId}/posts/${postId}/comments`, { content })
+    return payloadOf(body) as GroupComment
+  },
+
+  /** Xóa bình luận. `DELETE /api/v1/groups/{groupId}/posts/{postId}/comments/{commentId}`. */
+  deleteComment: async (groupId: number, postId: number, commentId: number): Promise<void> => {
+    await http.delete(`/groups/${groupId}/posts/${postId}/comments/${commentId}`)
+  },
+
+  /** Tải ảnh đính kèm bài viết lên storage qua presigned URL. */
+  uploadPostImage: async (file: File): Promise<string> => {
+    const res = await http.get<unknown, { data: { uploadUrl: string; publicUrl: string } }>(
+      `/files/presigned-url?fileName=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}&folder=group-posts`,
     )
     const { uploadUrl, publicUrl } = res.data
     await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })

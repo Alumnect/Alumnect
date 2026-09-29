@@ -1,29 +1,47 @@
 /**
- * GroupDetailPage — Trang chi tiết một hội nhóm.
+ * GroupDetailPage — Trang chi tiết hội nhóm theo phong cách mạng xã hội hiện đại (Threads / Reddit / Instagram).
  *
- * Trách nhiệm:
- *  - Hiển thị ảnh bìa, thông tin, mô tả, chủ đề, quy định tham gia, người sáng lập và danh sách thành viên.
- *  - Nhóm riêng tư + người xem chưa là thành viên: chỉ thấy thông tin công khai, ẩn người sáng lập và danh sách thành viên.
- *  - Nút thao tác đổi theo quyền: Guest / chưa tham gia / chờ duyệt / thành viên / Owner-Admin.
- *  - Owner/Admin mở bảng "Quản lý hội nhóm" (duyệt yêu cầu, chỉnh sửa, đóng/xóa nhóm).
- *  - Rời nhóm có xác nhận; Owner còn thành viên khác phải chuyển quyền sở hữu trước khi rời.
+ * Cấu trúc thiết kế:
+ *  - Đầu trang: Cover banner tỉ lệ chuẩn, Emblem đại diện nổi, nút chia sẻ và các hành động tham gia.
+ *  - Thanh điều hướng phụ (Sub-nav Tabs): Thảo luận | Giới thiệu | Thành viên | Quản lý (cho Owner/Admin).
+ *  - Bố cục 2 cột (Desktop 2-column layout):
+ *     + Cột chính (68%): Luồng thảo luận cộng đồng, giới thiệu chi tiết, danh sách thành viên hoặc bảng quản lý.
+ *     + Cột bên (32% sticky): Tóm tắt thông tin cộng đồng, ban điều hành, nội quy nhanh và lời mời tham gia.
  */
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, Info, Lock, ScrollText, SearchX, Tag } from 'lucide-react'
-import { Badge, Card, Skeleton, toast } from '@/components/ui'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Crown,
+  Info,
+  Lock,
+  MessagesSquare,
+  ScrollText,
+  SearchX,
+  Settings2,
+  ShieldCheck,
+  Users,
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Avatar, Badge, Card, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import {
   ConfirmDialog,
   GroupDetailHeader,
+  GroupDiscussionsFeed,
   GroupManagePanel,
   GroupMembersList,
   TransferOwnershipModal,
+  categoryLabel,
   isManagerRole,
   useGroupDetail,
   useLeaveGroup,
 } from '@/features/group'
+
+type TabKey = 'discussions' | 'about' | 'members' | 'manage'
 
 export function GroupDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -34,15 +52,27 @@ export function GroupDetailPage() {
   const { data: group, isLoading, isError, error, refetch } = useGroupDetail(id, user?.id ?? 'guest')
   const leaveMut = useLeaveGroup()
 
-  const [manageOpen, setManageOpen] = useState(searchParams.get('manage') === '1')
+  const initialTab: TabKey = searchParams.get('manage') === '1' ? 'manage' : 'discussions'
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab)
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
 
+
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-4xl space-y-4">
-        <Skeleton className="h-72 w-full rounded-3xl" />
-        <Skeleton className="h-40 w-full rounded-3xl" />
+      <div className="mx-auto max-w-6xl space-y-5">
+        <Skeleton className="h-64 sm:h-72 w-full rounded-3xl" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="space-y-4 lg:col-span-8">
+            <Skeleton className="h-14 w-full rounded-2xl" />
+            <Skeleton className="h-44 w-full rounded-2xl" />
+            <Skeleton className="h-56 w-full rounded-2xl" />
+          </div>
+          <div className="hidden space-y-4 lg:col-span-4 lg:block">
+            <Skeleton className="h-48 w-full rounded-2xl" />
+            <Skeleton className="h-36 w-full rounded-2xl" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -50,14 +80,20 @@ export function GroupDetailPage() {
   if (isError || !group) {
     const notFound = (error as (Error & { status?: number }) | null)?.status === 404
     return (
-      <div className="mx-auto max-w-2xl">
-        <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">{notFound ? <SearchX size={24} /> : <AlertTriangle size={24} />}</span>
+      <div className="mx-auto max-w-2xl py-10">
+        <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-plum-900/[0.08] p-12 text-center shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400 dark:bg-white/5">
+            {notFound ? <SearchX size={28} /> : <AlertTriangle size={28} />}
+          </span>
           <div>
-            <p className="font-bold text-plum-900">{notFound ? 'Không tìm thấy hội nhóm' : 'Không tải được hội nhóm'}</p>
-            <p className="mt-1 text-sm text-plum-500">{notFound ? 'Hội nhóm này không tồn tại hoặc đã bị xóa.' : ((error as Error)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.')}</p>
+            <h2 className="text-xl font-extrabold text-plum-900 dark:text-white">
+              {notFound ? 'Không tìm thấy hội nhóm' : 'Không tải được hội nhóm'}
+            </h2>
+            <p className="mt-1.5 text-sm text-plum-500 dark:text-[#b0b3b8]">
+              {notFound ? 'Hội nhóm này không tồn tại hoặc đã bị xóa.' : ((error as Error)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.')}
+            </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2.5 pt-2">
             {!notFound && (
               <Button variant="secondary" size="sm" onClick={() => refetch()}>
                 Thử lại
@@ -78,9 +114,10 @@ export function GroupDetailPage() {
   const isOwner = group.viewerRole === 'OWNER'
   const isSoleOwner = isOwner && group.memberCount <= 1
   const isPrivateOutsider = group.privacy === 'PRIVATE' && group.viewerMembershipStatus !== 'ACTIVE'
+  const isMember = group.viewerMembershipStatus === 'ACTIVE'
+  const pendingRequests = group.pendingRequestCount ?? 0
 
   const handleLeave = () => {
-    // Owner còn thành viên khác → phải chọn người nhận quyền sở hữu; ngược lại chỉ cần xác nhận.
     if (isOwner && group.memberCount > 1) setTransferOpen(true)
     else setConfirmLeave(true)
   }
@@ -92,73 +129,350 @@ export function GroupDetailPage() {
         onSuccess: (res) => {
           toast.success(res.message || 'Đã rời khỏi hội nhóm.')
           setConfirmLeave(false)
-          setManageOpen(false)
+          setActiveTab('discussions')
         },
         onError: (err) => toast.error((err as Error).message || 'Không thể rời nhóm, vui lòng thử lại.'),
       },
     )
   }
 
+
+  // Danh sách các tab
+  const tabs: { key: TabKey; label: string; icon: typeof MessagesSquare; badge?: number }[] = [
+    { key: 'discussions', label: 'Thảo luận', icon: MessagesSquare },
+    { key: 'about', label: 'Giới thiệu', icon: Info },
+    { key: 'members', label: `Thành viên (${group.memberCount})`, icon: Users },
+  ]
+
+  if (isManager) {
+    tabs.push({
+      key: 'manage',
+      label: 'Quản trị nhóm',
+      icon: Settings2,
+      badge: pendingRequests > 0 ? pendingRequests : undefined,
+    })
+  }
+
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <Link to="/app/groups" className="inline-flex items-center gap-1.5 text-sm font-semibold text-plum-500 transition-colors hover:text-brand-600">
-        <ArrowLeft size={15} /> Tất cả hội nhóm
+    <div className="mx-auto max-w-6xl space-y-5 pb-12">
+      {/* Nút quay lại */}
+      <Link
+        to="/app/groups"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-plum-500 transition-colors hover:text-brand-600 dark:text-[#b0b3b8] dark:hover:text-brand-400"
+      >
+        <ArrowLeft size={16} /> Tất cả hội nhóm
       </Link>
 
-      <GroupDetailHeader group={group} onManage={() => setManageOpen((v) => !v)} onLeave={handleLeave} />
+      {/* Header Hội nhóm phong cách mạng xã hội cao cấp */}
+      <GroupDetailHeader
+        group={group}
+        onManage={() => setActiveTab('manage')}
+        onLeave={handleLeave}
+      />
 
-      {isManager && manageOpen && <GroupManagePanel group={group} />}
-
+      {/* Thông báo nhóm tạm ngừng */}
       {group.status === 'INACTIVE' && (
-        <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700">
-          <Info size={16} className="shrink-0" /> Hội nhóm đang tạm ngừng hoạt động và không nhận thành viên mới.
+        <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500/10 px-5 py-3 text-sm font-medium text-amber-800 dark:text-amber-300">
+          <Info size={17} className="shrink-0 text-amber-600" />
+          <span>Hội nhóm đang tạm ngừng hoạt động: Không hiển thị ở danh sách khám phá và tạm ngưng tiếp nhận thành viên mới.</span>
         </div>
       )}
 
-      <Card hover={false} className="p-5 sm:p-6">
-        <h2 className="mb-3 text-lg font-extrabold text-plum-900">Giới thiệu</h2>
-        <p className="whitespace-pre-line text-sm leading-relaxed text-plum-700">{group.description}</p>
+      {/* Thanh điều hướng phụ (Sub-navigation Tabs) chuẩn Threads */}
+      <div className="flex items-center justify-between border-b border-plum-900/[0.08] dark:border-[#393a3b]">
+        <div className="flex gap-2 sm:gap-6 overflow-x-auto scrollbar-none">
+          {tabs.map((t) => {
+            const isActive = activeTab === t.key
+            return (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={cn(
+                  'relative flex items-center gap-2 pb-3.5 pt-1 text-sm font-bold transition-colors whitespace-nowrap',
+                  isActive
+                    ? 'text-brand-600 dark:text-brand-400'
+                    : 'text-plum-500 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
+                )}
+              >
+                <t.icon size={17} className={isActive ? 'text-brand-600 dark:text-brand-400' : 'text-plum-400 dark:text-[#b0b3b8]'} />
+                <span>{t.label}</span>
+                {typeof t.badge === 'number' && (
+                  <span className="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-brand-500 px-1.5 text-[10px] font-black text-white">
+                    {t.badge}
+                  </span>
+                )}
+                {/* Đường gạch chân hoạt họa khi Active */}
+                {isActive && (
+                  <motion.div
+                    layoutId="group-active-tab-indicator"
+                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-500"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-        {group.topics.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-1.5">
-            <Tag size={14} className="text-plum-400" />
-            {group.topics.map((t) => (
-              <Badge key={t} tone="neutral" className="px-2.5 py-0.5 text-[11px] normal-case">
-                {t}
-              </Badge>
-            ))}
+      {/* Bố cục 2 cột (Desktop 2-column layout phong cách Reddit / Threads) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* ===================== CỘT CHÍNH (68% - 8 cột) ===================== */}
+        <div className="space-y-5 lg:col-span-8">
+          <AnimatePresence mode="wait" initial={false}>
+            {/* TAB 1: THẢO LUẬN (DISCUSSIONS) */}
+            {activeTab === 'discussions' && (
+              <motion.div
+                key="tab-discussions"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.08 } }}
+                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="space-y-4"
+              >
+                {/* Trạng thái nhóm riêng tư mà người xem chưa là thành viên */}
+                {isPrivateOutsider ? (
+                  <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-plum-900/[0.08] p-10 text-center shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+                    <div className="grid h-16 w-16 place-items-center rounded-3xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20">
+                      <Lock size={32} />
+                    </div>
+                    <div className="max-w-md">
+                      <h3 className="text-xl font-extrabold text-plum-900 dark:text-white">
+                        Hội nhóm riêng tư
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+                        Nội dung thảo luận, bài viết và hoạt động trong nhóm này được bảo mật. Bạn cần gửi yêu cầu tham gia và được Quản trị viên duyệt để cùng trao đổi.
+                      </p>
+                    </div>
+                  </Card>
+                ) : (
+                  <GroupDiscussionsFeed
+                    groupId={group.id}
+                    groupName={group.name}
+                    isActiveMember={isMember}
+                    topics={group.topics}
+                  />
+                )}
+              </motion.div>
+            )}
+
+            {/* TAB 2: GIỚI THIỆU (ABOUT & RULES) */}
+            {activeTab === 'about' && (
+              <motion.div
+                key="tab-about"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.08 } }}
+                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="space-y-5"
+              >
+                <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+                  <h3 className="text-lg font-black text-plum-900 dark:text-white">Mô tả hội nhóm</h3>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-plum-700 dark:text-plum-200">
+                    {group.description}
+                  </p>
+
+                  {group.topics.length > 0 && (
+                    <div className="mt-5 border-t border-plum-900/[0.06] pt-4 dark:border-[#393a3b]">
+                      <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-plum-400">
+                        Chủ đề hoạt động
+                      </h4>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {group.topics.map((t) => (
+                          <Badge key={t} tone="neutral" className="rounded-full px-3 py-1 text-xs font-semibold normal-case">
+                            #{t}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+
+                {/* Quy định tham gia (Community Rules) */}
+                <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+                  <div className="flex items-center gap-2 text-plum-900 dark:text-white">
+                    <ScrollText size={20} className="text-brand-500" />
+                    <h3 className="text-lg font-black">Nội quy & Chuẩn mực cộng đồng</h3>
+                  </div>
+
+                  {group.joinRules ? (
+                    <div className="mt-4 rounded-2xl bg-plum-900/[0.03] p-4 text-sm leading-relaxed text-plum-700 dark:bg-[#3a3b3c] dark:text-plum-200 whitespace-pre-line">
+                      {group.joinRules}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-plum-500 dark:text-[#b0b3b8]">
+                      Hội nhóm này áp dụng các quy tắc văn hóa và ứng xử chung của nền tảng AlumNect.
+                    </p>
+                  )}
+
+                  {/* 3 quy chuẩn ứng xử mẫu */}
+                  <div className="mt-5 space-y-3">
+                    <div className="flex items-start gap-3 rounded-2xl border border-plum-900/[0.06] p-3.5 dark:border-[#393a3b]">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/10 text-xs font-black text-brand-600">
+                        1
+                      </span>
+                      <div>
+                        <strong className="text-sm font-bold text-plum-900 dark:text-white">Tôn trọng & Lắng nghe</strong>
+                        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Luôn giữ tinh thần hòa nhã, lịch sự trong giao tiếp và tranh luận mang tính xây dựng.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 rounded-2xl border border-plum-900/[0.06] p-3.5 dark:border-[#393a3b]">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/10 text-xs font-black text-brand-600">
+                        2
+                      </span>
+                      <div>
+                        <strong className="text-sm font-bold text-plum-900 dark:text-white">Không quảng cáo rác & Spam</strong>
+                        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Mọi bài viết thương mại hoặc tuyển dụng cần được sự đồng ý của ban quản trị nhóm.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 rounded-2xl border border-plum-900/[0.06] p-3.5 dark:border-[#393a3b]">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/10 text-xs font-black text-brand-600">
+                        3
+                      </span>
+                      <div>
+                        <strong className="text-sm font-bold text-plum-900 dark:text-white">Bảo mật thông tin nội bộ</strong>
+                        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Không mang nội dung thảo luận riêng tư của các thành viên ra các kênh công cộng khi chưa được phép.</p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* TAB 3: THÀNH VIÊN (MEMBERS) */}
+            {activeTab === 'members' && (
+              <motion.div
+                key="tab-members"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.08 } }}
+                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-plum-900 dark:text-white">Thành viên hội nhóm</h3>
+                      <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Danh sách những người đang sinh hoạt và kết nối trong cộng đồng</p>
+                    </div>
+                  </div>
+
+                  <GroupMembersList
+                    groupId={group.id}
+                    canView={group.canViewMembers}
+                    viewerRole={group.viewerRole}
+                    viewerUserId={viewerUserId}
+                  />
+                </Card>
+              </motion.div>
+            )}
+
+            {/* TAB 4: QUẢN TRỊ NHÓM (MANAGEMENT - CHỈ CHO OWNER/ADMIN) */}
+            {activeTab === 'manage' && isManager && (
+              <motion.div
+                key="tab-manage"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.08 } }}
+                transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <GroupManagePanel group={group} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ===================== CỘT BÊN (32% - 4 cột Sticky) ===================== */}
+        <div className="space-y-5 lg:col-span-4">
+          <div className="sticky top-20 space-y-5">
+            {/* Widget 1: Tóm tắt thông tin hội nhóm */}
+            <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+              <h4 className="text-xs font-black uppercase tracking-wider text-plum-400">
+                Thông tin cộng đồng
+              </h4>
+
+              <p className="mt-2.5 line-clamp-3 text-xs leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
+                {group.description}
+              </p>
+
+              <div className="mt-4 space-y-2.5 border-t border-plum-900/[0.06] pt-3.5 text-xs dark:border-[#393a3b]">
+                <div className="flex items-center justify-between">
+                  <span className="text-plum-500 dark:text-[#b0b3b8]">Loại nhóm</span>
+                  <span className="font-bold text-plum-900 dark:text-white">
+                    {group.privacy === 'PRIVATE' ? 'Nhóm riêng tư' : 'Nhóm công khai'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-plum-500 dark:text-[#b0b3b8]">Danh mục</span>
+                  <span className="font-bold text-brand-600 dark:text-brand-400">
+                    {categoryLabel(group.category)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-plum-500 dark:text-[#b0b3b8]">Tổng thành viên</span>
+                  <span className="font-bold text-plum-900 dark:text-white">
+                    {group.memberCount} thành viên
+                  </span>
+                </div>
+                {group.createdAt && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-plum-500 dark:text-[#b0b3b8]">Thành lập</span>
+                    <span className="font-medium text-plum-700 dark:text-plum-300">
+                      {new Date(group.createdAt).toLocaleDateString('vi-VN')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Widget 2: Ban điều hành & Người sáng lập */}
+            {group.owner && (
+              <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+                <h4 className="text-xs font-black uppercase tracking-wider text-plum-400">
+                  Người sáng lập
+                </h4>
+
+                <Link
+                  to={`/app/profile?userId=${group.owner.userId}`}
+                  className="mt-3 flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-plum-900/[0.03] dark:hover:bg-[#3a3b3c]"
+                >
+                  <Avatar
+                    src={group.owner.avatarUrl ?? ''}
+                    name={group.owner.fullName}
+                    size={44}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-bold text-plum-900 dark:text-white">
+                        {group.owner.fullName}
+                      </span>
+                      <Crown size={13} className="shrink-0 text-amber-500" />
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+            )}
+
+            {/* Widget 3: Cam kết & Văn hóa FPTU */}
+            <div className="rounded-3xl bg-plum-900/[0.03] p-4.5 text-xs text-plum-500 dark:bg-white/5 dark:text-[#b0b3b8]">
+              <div className="flex items-center gap-1.5 font-bold text-plum-700 dark:text-plum-300">
+                <ShieldCheck size={14} className="text-brand-500" /> AlumNect Community Trust
+              </div>
+              <p className="mt-1 leading-relaxed">
+                Môi trường kết nối lành mạnh, tin cậy dành riêng cho sinh viên & cựu sinh viên Đại học FPT trên toàn cầu.
+              </p>
+            </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {group.joinRules && (
-          <div className="mt-5 rounded-xl bg-plum-900/[0.04] p-4">
-            <p className="mb-1.5 inline-flex items-center gap-1.5 text-sm font-bold text-plum-900">
-              <ScrollText size={15} /> Quy định tham gia
-            </p>
-            <p className="whitespace-pre-line text-sm text-plum-600">{group.joinRules}</p>
-          </div>
-        )}
-
-        {isPrivateOutsider && (
-          <div className="mt-5 flex items-start gap-2 rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
-            <Lock size={16} className="mt-0.5 shrink-0" />
-            <span>Đây là hội nhóm riêng tư. Bạn cần gửi yêu cầu tham gia và được Owner/Admin duyệt để xem thành viên và nội dung dành riêng cho thành viên.</span>
-          </div>
-        )}
-      </Card>
-
-      <Card hover={false} className="p-5 sm:p-6">
-        <h2 className="mb-3 text-lg font-extrabold text-plum-900">Thành viên</h2>
-        <GroupMembersList groupId={group.id} canView={group.canViewMembers} viewerRole={group.viewerRole} viewerUserId={viewerUserId} />
-      </Card>
-
+      {/* Modal xác nhận rời nhóm */}
       <ConfirmDialog
         open={confirmLeave}
         title="Rời khỏi hội nhóm"
         message={
           isSoleOwner ? (
             <>
-              Bạn là thành viên cuối cùng của <b>{group.name}</b>. Nếu rời nhóm, hội nhóm sẽ bị xóa. Bạn có chắc chắn muốn tiếp tục?
+              Bạn là thành viên cuối cùng của <b>{group.name}</b>. Nếu rời nhóm, hội nhóm sẽ bị xóa vĩnh viễn. Bạn có chắc chắn muốn tiếp tục?
             </>
           ) : (
             <>
@@ -173,6 +487,7 @@ export function GroupDetailPage() {
         onClose={() => setConfirmLeave(false)}
       />
 
+      {/* Modal chuyển quyền sở hữu khi Owner rời nhóm */}
       {transferOpen && viewerUserId !== null && (
         <TransferOwnershipModal
           groupId={group.id}
@@ -180,11 +495,10 @@ export function GroupDetailPage() {
           onClose={() => setTransferOpen(false)}
           onDone={() => {
             setTransferOpen(false)
-            setManageOpen(false)
+            setActiveTab('discussions')
           }}
         />
       )}
-
     </div>
   )
 }

@@ -34,7 +34,7 @@ import type { GroupDetail, GroupFormValues, GroupInput } from '../model/group'
 import { GroupCover } from './GroupCover'
 
 const FIELD_CLASS =
-  'w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+  'w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-500/50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-white dark:placeholder:text-[#8a8d91]'
 
 export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; editGroup?: GroupDetail }) {
   const isEdit = !!editGroup

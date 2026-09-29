@@ -1,26 +1,28 @@
-import type { LucideIcon } from 'lucide-react'
+import type { ComponentType } from 'react'
+import type { IconProps } from '@/components/icons'
 import {
-  Home,
+  House,
   Users,
   Briefcase,
-  CalendarDays,
-  MessagesSquare,
-  HelpCircle,
-  LineChart,
-  Map as MapIcon,
-  Route,
+  CalendarBlank,
+  ChatCircleDots,
+  UsersThree,
+  ChartLineUp,
+  Compass,
+  GitFork,
+  Chats,
   Bell,
   CreditCard,
+  User,
+  LockKey,
   ShieldCheck,
-  LayoutDashboard,
-  Flag,
-  BadgeCheck,
-  Megaphone,
-  UserCog,
-  Lock,
+  SquaresFour,
   FileText,
-  Users2,
-} from 'lucide-react'
+  Flag,
+  SealCheck,
+  UserGear,
+  Megaphone,
+} from '@/components/icons'
 
 export const BRAND = {
   name: 'AlumNect',
@@ -32,7 +34,7 @@ export const BRAND = {
 export type NavItem = {
   label: string
   to: string
-  icon?: LucideIcon
+  icon?: ComponentType<IconProps>
   badge?: string
 }
 
@@ -41,25 +43,25 @@ export type NavItem = {
  * and as the mobile bottom tab bar.
  */
 export const APP_PRIMARY_NAV: NavItem[] = [
-  { label: 'Bảng tin', to: '/app', icon: Home },
+  { label: 'Bảng tin', to: '/app', icon: House },
   { label: 'Thành viên', to: '/app/alumni', icon: Users },
   { label: 'Tuyển dụng', to: '/app/jobs', icon: Briefcase },
-  { label: 'Sự kiện', to: '/app/events', icon: CalendarDays },
-  { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: HelpCircle },
+  { label: 'Sự kiện', to: '/app/events', icon: CalendarBlank },
+  { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: ChatCircleDots },
 ]
 
 /** Secondary features — tucked into the "More" apps menu (used less often). */
 export const APP_MORE_NAV: NavItem[] = [
-  { label: 'Hội nhóm', to: '/app/groups', icon: Users2 },
-  { label: 'Bảng lương', to: '/app/salary', icon: LineChart },
-  { label: 'Bản đồ cựu SV', to: '/app/map', icon: MapIcon },
-  { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: Route },
+  { label: 'Hội nhóm', to: '/app/groups', icon: UsersThree },
+  { label: 'Bảng lương', to: '/app/salary', icon: ChartLineUp },
+  { label: 'Bản đồ cựu SV', to: '/app/map', icon: Compass },
+  { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: GitFork },
 ]
 
 /** Items inside the avatar / account dropdown. */
 export const APP_ACCOUNT_NAV: NavItem[] = [
-  { label: 'Trang cá nhân', to: '/app/profile', icon: Users },
-  { label: 'Đổi mật khẩu', to: '/app/change-password', icon: Lock },
+  { label: 'Trang cá nhân', to: '/app/profile', icon: User },
+  { label: 'Đổi mật khẩu', to: '/app/change-password', icon: LockKey },
   { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
   { label: 'Bảng quản trị', to: '/admin', icon: ShieldCheck },
 ]
@@ -68,19 +70,19 @@ export const APP_ACCOUNT_NAV: NavItem[] = [
 export const APP_NAV: NavItem[] = [
   ...APP_PRIMARY_NAV,
   ...APP_MORE_NAV,
-  { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare },
+  { label: 'Tin nhắn', to: '/app/messages', icon: Chats },
   { label: 'Thông báo', to: '/app/notifications', icon: Bell },
   { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
 ]
 
 /** Admin dashboard navigation. */
 export const ADMIN_NAV: NavItem[] = [
-  { label: 'Tổng quan', to: '/admin', icon: LayoutDashboard },
+  { label: 'Tổng quan', to: '/admin', icon: SquaresFour },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
-  { label: 'Xác minh', to: '/admin/verifications', icon: BadgeCheck },
-  { label: 'Người dùng', to: '/admin/users', icon: UserCog },
+  { label: 'Xác minh', to: '/admin/verifications', icon: SealCheck },
+  { label: 'Người dùng', to: '/admin/users', icon: UserGear },
   { label: 'Thông báo chung', to: '/admin/broadcast', icon: Megaphone },
 ]
 
