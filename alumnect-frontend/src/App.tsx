@@ -25,6 +25,7 @@ import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
 import { MentoringHomePage } from '@/pages/app/MentoringHomePage'
 import { MentoringTermsPage } from '@/pages/app/MentoringTermsPage'
 import { BecomeMentorPage } from '@/pages/app/BecomeMentorPage'
+import { MentorSubscriptionPage } from '@/pages/app/MentorSubscriptionPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -70,6 +71,8 @@ function App() {
             <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
             <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />
             <Route path="mentoring/become-mentor" element={<ProtectedRoute><BecomeMentorPage /></ProtectedRoute>} />
+            <Route path="mentoring/packages" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
+            <Route path="mentoring/subscription" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
           </Route>
 
           {/* Direct redirect for /mentoring */}

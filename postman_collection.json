@@ -5177,6 +5177,196 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "92. Mentor Subscription (UC92)",
+            "description": "Các API phục vụ nghiệp vụ Xem & Chọn gói Mentor (UC92)",
+            "item": [
+                {
+                    "name": "92.1 Lấy danh sách gói Mentor active - Thành công",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"ApiResponse error code is 0\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data).to.be.an('array');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/packages",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "packages"
+                            ]
+                        },
+                        "description": "Lấy danh sách các gói dịch vụ Mentor đang hoạt động (1m, 3m, 6m)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "92.2 Lựa chọn gói Mentor - Thành công",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"ApiResponse error code is 0\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data.status).to.eql('PENDING_PAYMENT');",
+                                    "    pm.expect(jsonData.data.nextStep).to.eql('UC93_PAYMENT');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/select-package",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "select-package"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"packageId\": 1\n}"
+                        },
+                        "description": "Lựa chọn gói dịch vụ Mentor (packageId = 1) và tạo thông tin chờ thanh toán cho UC93"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "92.3 Lấy thông tin gói dịch vụ đã chọn của tôi - Thành công",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"ApiResponse error code is 0\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data).to.have.property('packageId');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/my-subscription",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "my-subscription"
+                            ]
+                        },
+                        "description": "Lấy thông tin đăng ký gói Mentor mới nhất của người dùng hiện tại"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "92.4 Lựa chọn gói Mentor thất bại - Gói không tồn tại",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 400\", function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/select-package",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "select-package"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"packageId\": 9999\n}"
+                        },
+                        "description": "Gửi packageId không tồn tại trong hệ thống, mong đợi 400 Bad Request"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }
