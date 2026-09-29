@@ -60,7 +60,6 @@ export const APP_MORE_NAV: NavItem[] = [
 export const APP_ACCOUNT_NAV: NavItem[] = [
   { label: 'Trang cá nhân', to: '/app/profile', icon: Users },
   { label: 'Đổi mật khẩu', to: '/app/change-password', icon: Lock },
-  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
   { label: 'Bảng quản trị', to: '/admin', icon: ShieldCheck },
 ]
 
@@ -70,7 +69,6 @@ export const APP_NAV: NavItem[] = [
   ...APP_MORE_NAV,
   { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare },
   { label: 'Thông báo', to: '/app/notifications', icon: Bell },
-  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
 ]
 
 /** Admin dashboard navigation. */

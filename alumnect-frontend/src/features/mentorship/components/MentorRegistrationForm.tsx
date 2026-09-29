@@ -267,7 +267,7 @@ export const MentorRegistrationForm: React.FC = () => {
               onClick={() => navigate('/app/mentoring/packages')}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-black text-xs font-bold shadow-md transition-colors"
             >
-              <span>Chọn gói & Kích hoạt (UC92)</span>
+              <span>Chọn gói & Kích hoạt</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
