@@ -1,0 +1,27 @@
+package com.alumnect.alumnect_backend.dto.request.group;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+/**
+ * Yêu cầu chỉnh sửa bài viết / thảo luận trong hội nhóm.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateGroupPostRequest {
+
+    @NotBlank(message = "Nội dung thảo luận không được để trống")
+    @Size(max = 5000, message = "Nội dung thảo luận không được vượt quá 5000 ký tự")
+    private String content;
+
+    @Size(max = 10, message = "Mỗi bài viết chỉ được đính kèm tối đa 10 hình ảnh")
+    private List<String> imageUrls;
+}
