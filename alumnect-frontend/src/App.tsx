@@ -22,6 +22,9 @@ import { NotificationsPage } from '@/pages/app/NotificationsPage'
 import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
 import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
+import { MentoringHomePage } from '@/pages/app/MentoringHomePage'
+import { MentoringTermsPage } from '@/pages/app/MentoringTermsPage'
+import { BecomeMentorPage } from '@/pages/app/BecomeMentorPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -64,7 +67,13 @@ function App() {
             <Route path="map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
             <Route path="career" element={<ProtectedRoute><CareerPage /></ProtectedRoute>} />
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+            <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
+            <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />
+            <Route path="mentoring/become-mentor" element={<ProtectedRoute><BecomeMentorPage /></ProtectedRoute>} />
           </Route>
+
+          {/* Direct redirect for /mentoring */}
+          <Route path="/mentoring/*" element={<Navigate to="/app/mentoring" replace />} />
 
           {/* Admin console */}
           <Route
