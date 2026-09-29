@@ -2,10 +2,12 @@ package com.alumnect.alumnect_backend.service.admin;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.AccountStatus;
+import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.admin.AdminUpdateUserStatusDto;
 import com.alumnect.alumnect_backend.dto.response.admin.AdminUserDto;
+import com.alumnect.alumnect_backend.entity.mentorship.MentorProfile;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,6 +41,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final MentorProfileRepository mentorProfileRepository;
     private final AdminMapper adminMapper;
 
     /**
@@ -111,8 +115,22 @@ public class AdminUserServiceImpl implements AdminUserService {
                 userProfileRepository.findAllById(userIds).stream()
                         .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
 
+        Map<Long, MentorProfile> mentorProfilesMap = userIds.isEmpty() ? Map.of() :
+                mentorProfileRepository.findByUserIdIn(userIds).stream()
+                        .collect(Collectors.toMap(mp -> mp.getUser().getId(), Function.identity(), (a, b) -> a));
+
         List<AdminUserDto> content = userPage.getContent().stream()
-                .map(user -> adminMapper.toDto(user, profilesMap.get(user.getId())))
+                .map(user -> {
+                    AdminUserDto dto = adminMapper.toDto(user, profilesMap.get(user.getId()));
+                    MentorProfile mp = mentorProfilesMap.get(user.getId());
+                    if (mp != null) {
+                        dto.setHasMentorProfile(true);
+                        dto.setMentorProfileId(mp.getId());
+                    } else {
+                        dto.setHasMentorProfile(false);
+                    }
+                    return dto;
+                })
                 .toList();
 
         return PageResponse.<AdminUserDto>builder()
@@ -138,7 +156,15 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + id));
         UserProfile profile = userProfileRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ cho người dùng với ID: " + id));
-        return adminMapper.toDto(user, profile);
+        AdminUserDto dto = adminMapper.toDto(user, profile);
+        Optional<MentorProfile> mp = mentorProfileRepository.findByUserId(id);
+        if (mp.isPresent()) {
+            dto.setHasMentorProfile(true);
+            dto.setMentorProfileId(mp.get().getId());
+        } else {
+            dto.setHasMentorProfile(false);
+        }
+        return dto;
     }
 
     /**

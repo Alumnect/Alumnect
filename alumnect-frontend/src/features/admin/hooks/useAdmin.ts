@@ -314,6 +314,35 @@ export function useUpdateMentorPackage() {
   })
 }
 
+/**
+ * Hook lấy danh sách phân trang các Mentor cho Quản trị viên (UC96)
+ */
+export function useAdminMentors(params: { keyword?: string; page?: number; size?: number }) {
+  return useQuery({
+    queryKey: ['admin', 'mentors', params],
+    queryFn: async () => {
+      const response = await adminApi.getAdminMentors(params)
+      return response.data
+    },
+  })
+}
+
+/**
+ * Hook lấy chi tiết CV và thông tin chuyên môn của Mentor (UC96)
+ */
+export function useAdminMentorCv(mentorId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentor-cv', mentorId],
+    queryFn: async () => {
+      if (!mentorId) return null
+      const response = await adminApi.getMentorCv(mentorId)
+      return response.data
+    },
+    enabled: !!mentorId,
+  })
+}
+
+
 
 
 
