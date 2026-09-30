@@ -9,6 +9,7 @@ import {
   LineChart,
   Map as MapIcon,
   Route,
+  Compass,
   Bell,
   CreditCard,
   ShieldCheck,
@@ -49,6 +50,7 @@ export const APP_PRIMARY_NAV: NavItem[] = [
 
 /** Secondary features — tucked into the "More" apps menu (used less often). */
 export const APP_MORE_NAV: NavItem[] = [
+  { label: 'Hướng dẫn & Hỗ trợ', to: '/app/mentoring', icon: Compass },
   { label: 'Bảng lương', to: '/app/salary', icon: LineChart },
   { label: 'Bản đồ cựu SV', to: '/app/map', icon: MapIcon },
   { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: Route },
@@ -58,7 +60,6 @@ export const APP_MORE_NAV: NavItem[] = [
 export const APP_ACCOUNT_NAV: NavItem[] = [
   { label: 'Trang cá nhân', to: '/app/profile', icon: Users },
   { label: 'Đổi mật khẩu', to: '/app/change-password', icon: Lock },
-  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
   { label: 'Bảng quản trị', to: '/admin', icon: ShieldCheck },
 ]
 
@@ -68,12 +69,12 @@ export const APP_NAV: NavItem[] = [
   ...APP_MORE_NAV,
   { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare },
   { label: 'Thông báo', to: '/app/notifications', icon: Bell },
-  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
 ]
 
 /** Admin dashboard navigation. */
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Tổng quan', to: '/admin', icon: LayoutDashboard },
+  { label: 'Gói Mentor', to: '/admin/mentor-packages', icon: Compass },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
@@ -81,6 +82,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Người dùng', to: '/admin/users', icon: UserCog },
   { label: 'Thông báo chung', to: '/admin/broadcast', icon: Megaphone },
 ]
+
 
 /** Mock feed posts. */
 export const FEED_POSTS = [

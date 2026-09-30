@@ -53,7 +53,8 @@ public class Endpoints {
         "/api/v1/career-paths",       // Lấy danh sách Career Paths phân trang công khai
         "/api/v1/career-paths/users/*", // Lấy chi tiết Career Path của người dùng công khai
         "/api/v1/events/*/rsvp",      // Kiểm tra trạng thái đăng ký sự kiện công khai (UC25)
-        "/api/v1/events/*/attendees"  // Lấy danh sách người tham gia sự kiện công khai (UC25)
+        "/api/v1/events/*/attendees", // Lấy danh sách người tham gia sự kiện công khai (UC25)
+        "/api/v1/admin/mentor-packages" // Lấy danh sách toàn bộ gói Mentor dành cho Admin (UC95)
     };
 
 

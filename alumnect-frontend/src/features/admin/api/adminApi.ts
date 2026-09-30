@@ -10,7 +10,10 @@ export interface AdminDashboardSummaryDto {
   totalStudents: number
   totalAlumni: number
   pendingAlumniVerifications: number
-  dailyRegistrations: DayRegistrationStatDto[]
+  dailyRegistrations?: DayRegistrationStatDto[]
+  registrationsLast7Days?: DayRegistrationStatDto[]
+  registrationsByMonth?: DayRegistrationStatDto[]
+  registrationsByYear?: DayRegistrationStatDto[]
 }
 
 export interface AdminUserDto {
@@ -31,6 +34,8 @@ export interface AdminUserDto {
   bio?: string
   biography?: string
   socialLinks?: string[]
+  hasMentorProfile?: boolean
+  mentorProfileId?: number
 }
 
 export interface AdminVerificationRequestDto {
@@ -231,6 +236,18 @@ export const adminApi = {
     http.get<any, ApiResponse<PageResponse<SystemNotificationDto>>>('/admin/notifications', { params }),
 
   /**
+   * Lấy danh sách toàn bộ các gói dịch vụ Mentor 1/3/6 tháng dành cho Admin (UC95)
+   */
+  getMentorPackages: () =>
+    http.get<any, ApiResponse<AdminMentorPackageDto[]>>('/admin/mentor-packages'),
+
+  /**
+   * Cập nhật giá niêm yết và trạng thái hoạt động của gói dịch vụ Mentor (UC95)
+   */
+  updateMentorPackage: (id: number, payload: UpdateAdminMentorPackagePayload) =>
+    http.put<any, ApiResponse<AdminMentorPackageDto>>(`/admin/mentor-packages/${id}`, payload),
+
+  /**
    * Tạo mới hoặc hẹn giờ gửi thông báo hệ thống
    */
   createSystemNotification: (payload: CreateSystemNotificationPayload) =>
@@ -303,4 +320,48 @@ export interface CreateSystemNotificationPayload {
   scheduledAt?: string
   expiresAt?: string
 }
+
+export interface AdminMentorPackageDto {
+  id: number
+  code: string
+  name: string
+  description?: string
+  durationMonths: number
+  price: number
+  status: 'ACTIVE' | 'INACTIVE'
+  createdAt: string
+}
+
+export interface UpdateAdminMentorPackagePayload {
+  price: number
+  status: 'ACTIVE' | 'INACTIVE'
+  name?: string
+  description?: string
+}
+
+export interface AdminMentorCvDto {
+  mentorProfileId: number
+  userId: number
+  mentorName: string
+  mentorEmail: string
+  avatarUrl?: string
+  currentPosition?: string
+  currentCompany?: string
+  yearsOfExperience?: number
+  bio?: string
+  cvFileKey?: string
+  cvUrl?: string
+  mentorStatus: string
+  supportedFields?: string[]
+  updatedAt: string
+}
+
+// Thêm các phương thức API UC96 vào object adminApi ở cuối file
+adminApi.getAdminMentors = (params: { keyword?: string; page?: number; size?: number }) =>
+  http.get<any, ApiResponse<PageResponse<AdminMentorCvDto>>>('/admin/mentors', { params })
+
+adminApi.getMentorCv = (mentorId: number) =>
+  http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}/cv`)
+
+
 

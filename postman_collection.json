@@ -4629,6 +4629,836 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "88. UC90 - Mentoring Terms",
+            "description": "Các API kiểm tra trạng thái và chấp nhận Điều khoản Hướng dẫn & Hỗ trợ (Mentoring Terms)",
+            "item": [
+                {
+                    "name": "88.0 Đăng nhập User (Lấy accessToken)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var res = pm.response.json();",
+                                    "    if (res.data && res.data.accessToken) {",
+                                    "        pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                                    "    }",
+                                    "}",
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"student.an@fpt.edu.vn\",\n  \"password\": \"Password@123\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "88.1 Get Terms Status - Not Accepted (TC-BE-01)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Response contains accepted = false\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.eql(0);",
+                                    "    pm.expect(json.data.accepted).to.eql(false);",
+                                    "    pm.expect(json.data.currentVersion).to.eql(\"1.0\");",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/terms/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "terms",
+                                "status"
+                            ]
+                        },
+                        "description": "Kiểm tra trạng thái điều khoản khi tài khoản chưa chấp nhận phiên bản hiện tại (accepted = false)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "88.2 Accept Mentoring Terms - Thành công (TC-BE-02)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Response indicates acceptance success\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.eql(0);",
+                                    "    pm.expect(json.data.accepted).to.eql(true);",
+                                    "    pm.expect(json.data.acceptedVersion).to.eql(\"1.0\");",
+                                    "    pm.expect(json.data.acceptedAt).to.not.be.null;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/terms/accept",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "terms",
+                                "accept"
+                            ]
+                        },
+                        "description": "Ghi nhận chấp nhận điều khoản Mentoring phiên bản hiện tại vào cơ sở dữ liệu"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "88.3 Get Terms Status - Accepted (TC-BE-03)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Response confirms accepted = true\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.eql(0);",
+                                    "    pm.expect(json.data.accepted).to.eql(true);",
+                                    "    pm.expect(json.data.currentVersion).to.eql(\"1.0\");",
+                                    "    pm.expect(json.data.acceptedAt).to.not.be.null;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/terms/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "terms",
+                                "status"
+                            ]
+                        },
+                        "description": "Kiểm tra lại trạng thái sau khi đã chấp nhận (accepted = true)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "88.4 Accept Again - Idempotent (TC-BE-04)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Idempotent accept returns success without duplicate error\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.eql(0);",
+                                    "    pm.expect(json.data.accepted).to.eql(true);",
+                                    "    pm.expect(json.data.acceptedVersion).to.eql(\"1.0\");",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/terms/accept",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "terms",
+                                "accept"
+                            ]
+                        },
+                        "description": "Gọi accept lần 2 kiểm tra tính idempotent (không lỗi, không duplicate)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "88.5 Unauthorized Request - Không có JWT Token (TC-BE-06)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 401 Unauthorized or 403 Forbidden\", function () {",
+                                    "    pm.expect([401, 403]).to.include(pm.response.code);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/terms/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "terms",
+                                "status"
+                            ]
+                        },
+                        "description": "Gọi API khi chưa đăng nhập / không có Bearer token, mong đợi 401 Unauthorized"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "89. UC91 - Register as Mentor",
+            "description": "Các API phục vụ quá trình Đăng ký trở thành Mentor (UC91) bao gồm lấy dữ liệu tự động điền, lưu nháp và hoàn tất đăng ký",
+            "item": [
+                {
+                    "name": "89.0 Đăng nhập Alumni (Lấy accessToken)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var res = pm.response.json();",
+                                    "    if (res.data && res.data.accessToken) {",
+                                    "        pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                                    "    }",
+                                    "}",
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"alumni.an@fpt.edu.vn\",\n  \"password\": \"Password@123\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "89.1 Lấy thông tin đăng ký Mentor - Get Registration (TC-BE-01)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Response structure conforms to ApiResponse\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.eql(0);",
+                                    "    pm.expect(json.data).to.have.property('personalInfo');",
+                                    "    pm.expect(json.data).to.have.property('professionalInfo');",
+                                    "    pm.expect(json.data).to.have.property('mentoringInfo');",
+                                    "    pm.expect(json.data).to.have.property('cvInfo');",
+                                    "    pm.expect(json.data).to.have.property('payoutAccount');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/registration",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "registration"
+                            ]
+                        },
+                        "description": "Lấy thông tin đăng ký Mentor của Alumni đang đăng nhập kèm dữ liệu auto-fill từ UserProfile và Experience"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "89.2 Lưu nháp đăng ký Mentor - Save Draft (TC-BE-04)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Draft save returns INCOMPLETE status\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.eql(0);",
+                                    "    pm.expect(json.data.mentorStatus).to.eql('INCOMPLETE');",
+                                    "    pm.expect(json.data.isComplete).to.eql(false);",
+                                    "    pm.expect(json.data.nextStep).to.eql('STAY_IN_DRAFT');",
+                                    "    pm.expect(json.data.missingFields.length).to.be.above(0);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/registration",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "registration"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"yearsOfExperience\": 2,\n  \"bio\": \"Bản nháp định hướng cố vấn của tôi\"\n}"
+                        },
+                        "description": "Lưu nháp một phần dữ liệu khi chưa đủ thông tin bắt buộc, đảm bảo không bị lỗi validation"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "89.3 Hoàn tất đăng ký Mentor - Complete (TC-BE-05)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Complete registration transitions to PAYMENT_PENDING\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.eql(0);",
+                                    "    pm.expect(json.data.mentorStatus).to.eql('PAYMENT_PENDING');",
+                                    "    pm.expect(json.data.isComplete).to.eql(true);",
+                                    "    pm.expect(json.data.nextStep).to.eql('UC92_SELECT_PACKAGE');",
+                                    "    pm.expect(json.data.missingFields.length).to.eql(0);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/registration",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "registration"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"yearsOfExperience\": 3,\n  \"bio\": \"Cựu sinh viên K16 mong muốn hỗ trợ sinh viên định hướng phần mềm.\",\n  \"workingMode\": \"BOTH\",\n  \"mentoringType\": \"INDIVIDUAL\",\n  \"supportedIndustryIds\": [1],\n  \"mentoringTopics\": [\"Review CV\", \"Mock Interview\"],\n  \"cvFileKey\": \"mentorship/cvs/sample-cv.pdf\",\n  \"bankName\": \"Vietcombank\",\n  \"bankAccountNumber\": \"0123456789\",\n  \"bankAccountHolder\": \"NGUYEN VAN AN\"\n}"
+                        },
+                        "description": "Gửi đầy đủ 100% thông tin hợp lệ để hoàn tất đăng ký UC91 và chuyển sang PAYMENT_PENDING"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "89.4 Số năm kinh nghiệm âm - Bad Request (TC-BE-06)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 400 Bad Request\", function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});",
+                                    "pm.test(\"Validation error message indicates non-negative constraint\", function () {",
+                                    "    var json = pm.response.json();",
+                                    "    pm.expect(json.error).to.not.eql(0);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/registration",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "registration"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"yearsOfExperience\": -5\n}"
+                        },
+                        "description": "Gửi số năm kinh nghiệm âm vi phạm validation constraint, mong đợi 400 Bad Request"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "89.5 Unauthorized Request - Không có Bearer token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 401 or 403\", function () {",
+                                    "    pm.expect([401, 403]).to.include(pm.response.code);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/registration",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "registration"
+                            ]
+                        },
+                        "description": "Gọi API khi chưa đăng nhập / không có Bearer token, mong đợi 401 hoặc 403"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "92. Mentor Subscription (UC92)",
+            "description": "Các API phục vụ nghiệp vụ Xem & Chọn gói Mentor (UC92)",
+            "item": [
+                {
+                    "name": "92.1 Lấy danh sách gói Mentor active - Thành công",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"ApiResponse error code is 0\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data).to.be.an('array');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/packages",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "packages"
+                            ]
+                        },
+                        "description": "Lấy danh sách các gói dịch vụ Mentor đang hoạt động (1m, 3m, 6m)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "92.2 Lựa chọn gói Mentor - Thành công",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"ApiResponse error code is 0\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data.status).to.eql('PENDING_PAYMENT');",
+                                    "    pm.expect(jsonData.data.nextStep).to.eql('UC93_PAYMENT');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/select-package",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "select-package"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"packageId\": 1\n}"
+                        },
+                        "description": "Lựa chọn gói dịch vụ Mentor (packageId = 1) và tạo thông tin chờ thanh toán cho UC93"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "92.3 Lấy thông tin gói dịch vụ đã chọn của tôi - Thành công",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"ApiResponse error code is 0\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data).to.have.property('packageId');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/my-subscription",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "my-subscription"
+                            ]
+                        },
+                        "description": "Lấy thông tin đăng ký gói Mentor mới nhất của người dùng hiện tại"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "92.4 Lựa chọn gói Mentor thất bại - Gói không tồn tại",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 400\", function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/select-package",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "select-package"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"packageId\": 9999\n}"
+                        },
+                        "description": "Gửi packageId không tồn tại trong hệ thống, mong đợi 400 Bad Request"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "96. Admin Xem CV Mentor (UC96)",
+            "description": "Các API phục vụ cho Quản trị viên xem chi tiết CV và thông tin Mentor (UC96)",
+            "item": [
+                {
+                    "name": "96.1 Lấy danh sách Mentor cho Admin",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/mentors?page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Admin lấy danh sách phân trang các hồ sơ Mentor"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "96.2 Admin Xem CV Mentor thành công",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/mentors/1/cv",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "mentors",
+                                "1",
+                                "cv"
+                            ]
+                        },
+                        "description": "Admin lấy đường dẫn CV và thông tin chuyên môn của Mentor ID 1 thành công"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "96.3 Admin Xem CV Mentor thất bại - Mentor không tồn tại",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminAccessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/mentors/99999/cv",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "mentors",
+                                "99999",
+                                "cv"
+                            ]
+                        },
+                        "description": "Admin truy cập mentorId không tồn tại, mong đợi lỗi 404 Not Found"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }
