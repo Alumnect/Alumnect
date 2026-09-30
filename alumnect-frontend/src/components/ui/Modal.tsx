@@ -7,13 +7,14 @@ import { cn } from '@/lib/utils'
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
-  title: string
+  title: ReactNode
   icon?: ReactNode
   children: ReactNode
   footer?: ReactNode
   className?: string
   maxWidthClassName?: string // ví dụ: 'max-w-md', 'max-w-lg', ...
   zIndexClassName?: string // ví dụ: 'z-50', 'z-[10000]', ...
+  bodyClassName?: string
 }
 
 /**
@@ -31,6 +32,7 @@ export function Modal({
   className,
   maxWidthClassName = 'max-w-md',
   zIndexClassName = 'z-50',
+  bodyClassName,
 }: ModalProps) {
   // Ngăn cuộn trang (scroll) khi modal đang mở
   useEffect(() => {
@@ -90,7 +92,7 @@ export function Modal({
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto p-5 text-plum-700 dark:text-[#e4e6eb]">
+            <div className={cn("flex-1 overflow-y-auto p-5 text-plum-700 dark:text-[#e4e6eb]", bodyClassName)}>
               {children}
             </div>
 

@@ -84,8 +84,8 @@ export function useSendMessage() {
       const optimisticMessage: Message = {
         id: tempId,
         conversationId: payload.conversationId,
-        senderId: currentUser?.id || 0,
-        senderName: currentUser?.fullName || 'Tôi',
+        senderId: Number(currentUser?.id) || 0,
+        senderName: currentUser?.name || 'Tôi',
         senderAvatar: currentUser?.avatarUrl,
         content: payload.content || '',
         isDeleted: false,

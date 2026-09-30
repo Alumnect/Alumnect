@@ -62,7 +62,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
         const res = await chatApi.searchUsersForChat(search.trim())
         if (isMounted) {
           const list = (res.data || [])
-            .filter((u) => u.userId !== currentUserId)
+            .filter((u) => String(u.userId) !== String(currentUserId))
             .map((u) => ({
               id: u.userId,
               fullName: u.fullName,

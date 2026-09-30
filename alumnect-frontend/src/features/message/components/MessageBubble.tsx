@@ -4,6 +4,7 @@ import { FileText, Download, ZoomIn, Clock, Check, AlertCircle } from 'lucide-re
 import { cn } from '@/lib/utils'
 import { Avatar, ImageViewerModal } from '@/components/ui'
 import type { Message } from '../model/types'
+import { SharedPostBubbleCard } from './SharedPostBubbleCard'
 
 interface MessageBubbleProps {
   message: Message
@@ -166,44 +167,89 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
           </div>
         )}
 
-        {/* 2. Bong bóng văn bản */}
-        {hasText && (
-          <div
-            className={cn(
-              'w-fit rounded-2xl px-4 py-2.5 shadow-xs',
-              isMe
-                ? 'rounded-br-xs bg-brand-600 text-white'
-                : 'rounded-bl-xs border border-plum-900/10 bg-white text-plum-900 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]'
-            )}
-          >
-            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-              {message.content}
-            </p>
-            <div
-              className={cn(
-                'mt-1 flex items-center justify-end gap-1 text-[10px]',
-                isMe ? 'text-white/75' : 'text-plum-400 dark:text-[#b0b3b8]'
-              )}
-            >
-              <span>{formattedTime}</span>
-              {isMe && message.status === 'sending' && (
-                <span title="Đang gửi..." className="inline-flex items-center text-white/70">
-                  <Clock size={11} className="animate-spin" />
-                </span>
-              )}
-              {isMe && message.status === 'error' && (
-                <span title="Gửi thất bại" className="inline-flex items-center text-rose-300">
-                  <AlertCircle size={11} />
-                </span>
-              )}
-              {isMe && (!message.status || message.status === 'sent') && (
-                <span title="Đã gửi" className="inline-flex items-center text-white/70">
-                  <Check size={11} />
-                </span>
+        {/* 2. Bong bóng văn bản & bài viết chia sẻ */}
+        {hasText && (() => {
+          const POST_LINK_REGEX = /(?:https?:\/\/[^\s]+)?\/app\/posts\/(\d+)/
+          const match = message.content ? message.content.match(POST_LINK_REGEX) : null
+          const sharedPostId = match ? match[1] : null
+          const noteText = message.content && sharedPostId
+            ? message.content.replace(POST_LINK_REGEX, '').trim()
+            : message.content
+
+          return (
+            <div className={cn('flex flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
+              {noteText ? (
+                <div
+                  className={cn(
+                    'w-fit rounded-2xl px-4 py-2.5 shadow-xs',
+                    isMe
+                      ? 'rounded-br-xs bg-brand-600 text-white'
+                      : 'rounded-bl-xs border border-plum-900/10 bg-white text-plum-900 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]'
+                  )}
+                >
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                    {noteText}
+                  </p>
+                  <div
+                    className={cn(
+                      'mt-1 flex items-center justify-end gap-1 text-[10px]',
+                      isMe ? 'text-white/75' : 'text-plum-400 dark:text-[#b0b3b8]'
+                    )}
+                  >
+                    <span>{formattedTime}</span>
+                    {isMe && message.status === 'sending' && (
+                      <span title="Đang gửi..." className="inline-flex items-center text-white/70">
+                        <Clock size={11} className="animate-spin" />
+                      </span>
+                    )}
+                    {isMe && message.status === 'error' && (
+                      <span title="Gửi thất bại" className="inline-flex items-center text-rose-300">
+                        <AlertCircle size={11} />
+                      </span>
+                    )}
+                    {isMe && (!message.status || message.status === 'sent') && (
+                      <span title="Đã gửi" className="inline-flex items-center text-white/70">
+                        <Check size={11} />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Render thẻ bài viết nhúng interactive nếu có liên kết bài viết */}
+              {sharedPostId && (
+                <div className="relative">
+                  <SharedPostBubbleCard postId={sharedPostId} isMe={isMe} />
+                  {!noteText && (
+                    <div
+                      className={cn(
+                        'mt-1 flex items-center justify-end gap-1 px-1 text-[10px]',
+                        isMe ? 'text-plum-500 dark:text-[#b0b3b8]' : 'text-plum-400 dark:text-[#b0b3b8]'
+                      )}
+                    >
+                      <span>{formattedTime}</span>
+                      {isMe && message.status === 'sending' && (
+                        <span title="Đang gửi..." className="inline-flex items-center text-brand-600">
+                          <Clock size={11} className="animate-spin" />
+                        </span>
+                      )}
+                      {isMe && message.status === 'error' && (
+                        <span title="Gửi thất bại" className="inline-flex items-center text-rose-500">
+                          <AlertCircle size={11} />
+                        </span>
+                      )}
+                      {isMe && (!message.status || message.status === 'sent') && (
+                        <span title="Đã gửi" className="inline-flex items-center text-emerald-600">
+                          <Check size={11} />
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Lightbox xem ảnh */}
         {previewImage && (

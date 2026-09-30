@@ -149,13 +149,13 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
       setSelectedNewAdminId(otherMembers[0]?.userId ?? null)
       setConfirmAction({
         type: 'transfer_and_leave',
-        userId: currentUserId!,
+        userId: Number(currentUserId) || 0,
         userName: 'Bạn',
       })
     } else {
       setConfirmAction({
         type: 'leave',
-        userId: currentUserId!,
+        userId: Number(currentUserId) || 0,
         userName: 'Bạn',
       })
     }
@@ -317,7 +317,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                         <Avatar src={u.avatarUrl || undefined} name={u.fullName} size={28} />
                         <div>
                           <p className="font-semibold text-plum-900 dark:text-[#f0f2f5]">{u.fullName}</p>
-                          <p className="text-[10px] text-plum-400 dark:text-[#b0b3b8]">{u.email || u.headline}</p>
+                          <p className="text-[10px] text-plum-400 dark:text-[#b0b3b8]">{u.headline || u.major}</p>
                         </div>
                       </div>
                       <Button
