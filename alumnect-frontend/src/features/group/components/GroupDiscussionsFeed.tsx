@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { MessageSquare, Pin, Sparkles, Loader2 } from 'lucide-react'
 import { Card, Skeleton } from '@/components/ui/primitives'
 import { Reveal } from '@/components/motion'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
-import { useGroupPostsInfinite } from '../hooks/useGroupPosts'
+import { useGroupPostDetail, useGroupPostsInfinite } from '../hooks/useGroupPosts'
 import { GroupCreatePostCard } from './GroupCreatePostCard'
 import { GroupPostCard } from './GroupPostCard'
 
@@ -12,41 +12,61 @@ interface GroupDiscussionsFeedProps {
   groupId: number
   groupName: string
   isActiveMember: boolean
+  isGroupActive: boolean
   topics?: string[]
+  sharedPostId?: number
 }
 
 export function GroupDiscussionsFeed({
   groupId,
   groupName,
   isActiveMember,
+  isGroupActive,
   topics = [],
+  sharedPostId,
 }: GroupDiscussionsFeedProps) {
   const [activeTopic, setActiveTopic] = useState<string>('all')
+  const visibleTopic = topics.includes(activeTopic) ? activeTopic : 'all'
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useGroupPostsInfinite(groupId, 15)
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useGroupPostsInfinite(groupId, 15, visibleTopic === 'all' ? '' : visibleTopic)
+  const { data: sharedPost, isError: sharedPostError } = useGroupPostDetail(groupId, sharedPostId)
+  const displayedSharedPostId = sharedPostError ? undefined : sharedPost?.id
 
-  // Gộp các trang đã tải thành một danh sách phẳng (loại trùng theo id do phân trang offset có thể lặp khi có bài mới),
-  // rồi lọc theo chủ đề đang chọn (khớp trên nội dung bài viết) hoặc lấy tất cả.
+  useEffect(() => {
+    if (displayedSharedPostId) document.getElementById(`group-post-${displayedSharedPostId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [displayedSharedPostId])
+
+  // Gộp các trang đã tải, loại trùng theo id do phân trang offset có thể lặp khi có bài mới.
   const posts = useMemo(() => {
     const seen = new Set<number>()
-    const raw = (data?.pages ?? []).flatMap((pg) => pg.content).filter((p) => {
+    return (data?.pages ?? []).flatMap((pg) => pg.content).filter((p) => {
       if (seen.has(p.id)) return false
       seen.add(p.id)
       return true
     })
-    if (activeTopic === 'all') return raw
-    return raw.filter((p) => p.content.toLowerCase().includes(activeTopic.toLowerCase()))
-  }, [data?.pages, activeTopic])
+  }, [data?.pages])
 
   return (
     <div className="space-y-5">
+      {sharedPostId && sharedPostError && (
+        <Card hover={false} className="rounded-2xl border border-plum-900/10 p-4 text-sm text-plum-500 dark:border-[#393a3b] dark:bg-[#242526]">
+          Bài viết được chia sẻ không còn khả dụng.
+        </Card>
+      )}
+      {sharedPost && !sharedPostError && (
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-600">Bài viết được chia sẻ</p>
+          <GroupPostCard post={sharedPost} groupId={groupId} isActiveMember={isActiveMember} isGroupActive={isGroupActive} topics={topics} />
+        </div>
+      )}
       {/* 1. Khung tạo bài viết thảo luận (chỉ cho thành viên ACTIVE) */}
-      {isActiveMember ? (
+      {isActiveMember && isGroupActive ? (
         <GroupCreatePostCard
           groupId={groupId}
           groupName={groupName}
+          topics={topics}
         />
-      ) : (
+      ) : !isGroupActive ? null : (
         <Card hover={false} className="rounded-3xl border border-brand-500/20 bg-gradient-to-r from-brand-50/50 to-coral-50/30 p-5 shadow-card dark:border-brand-500/30 dark:from-brand-950/20 dark:to-[#242526]">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -69,7 +89,7 @@ export function GroupDiscussionsFeed({
             onClick={() => setActiveTopic('all')}
             className={cn(
               'rounded-full px-3.5 py-1 text-xs font-bold transition-colors',
-              activeTopic === 'all'
+              visibleTopic === 'all'
                 ? 'bg-plum-900 text-white dark:bg-white dark:text-plum-900'
                 : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#b0b3b8]',
             )}
@@ -83,7 +103,7 @@ export function GroupDiscussionsFeed({
               onClick={() => setActiveTopic(t)}
               className={cn(
                 'rounded-full px-3.5 py-1 text-xs font-bold transition-colors',
-                activeTopic === t
+                visibleTopic === t
                   ? 'bg-brand-500 text-white'
                   : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#b0b3b8]',
               )}
@@ -125,9 +145,9 @@ export function GroupDiscussionsFeed({
         </div>
       ) : posts.length > 0 ? (
         <div className="space-y-4">
-          {posts.map((post) => (
+          {posts.filter((post) => post.id !== displayedSharedPostId).map((post) => (
             <Reveal key={post.id}>
-              <GroupPostCard post={post} groupId={groupId} isActiveMember={isActiveMember} />
+              <GroupPostCard post={post} groupId={groupId} isActiveMember={isActiveMember} isGroupActive={isGroupActive} topics={topics} />
             </Reveal>
           ))}
 
@@ -173,7 +193,7 @@ export function GroupDiscussionsFeed({
             <MessageSquare size={22} />
           </div>
           <h4 className="mt-3 text-sm font-bold text-plum-900 dark:text-white">
-            Chưa có bài thảo luận nào
+            {visibleTopic === 'all' ? 'Chưa có bài thảo luận nào' : `Chưa có bài thảo luận về ${visibleTopic}`}
           </h4>
           <p className="mt-1 text-xs text-plum-500 dark:text-[#b0b3b8]">
             {isActiveMember

@@ -15,6 +15,7 @@ import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.group.CreateGroupCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.group.CreateGroupPostRequest;
 import com.alumnect.alumnect_backend.dto.request.group.UpdateGroupPostRequest;
+import com.alumnect.alumnect_backend.dto.request.group.UpdateGroupCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.group.GroupCommentResponse;
 import com.alumnect.alumnect_backend.dto.response.group.GroupPostAuthorResponse;
 import com.alumnect.alumnect_backend.dto.response.group.GroupPostLikeResponse;
@@ -64,7 +65,7 @@ public class GroupPostServiceImpl implements GroupPostService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<GroupPostResponse> listPosts(Long groupId, String viewerEmail, int page, int size) {
+    public PageResponse<GroupPostResponse> listPosts(Long groupId, String viewerEmail, int page, int size, String topic) {
         CommunityGroup group = getVisibleGroup(groupId);
         User viewer = viewerEmail != null ? getUserByEmailOrNull(viewerEmail) : null;
         GroupMember viewerMember = viewer != null
@@ -78,7 +79,17 @@ public class GroupPostServiceImpl implements GroupPostService {
         }
 
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        Page<GroupPost> postPage = groupPostRepository.findByGroupIdOrderByPinnedAndRecent(groupId, pageable);
+        Page<GroupPost> postPage;
+        if (topic == null || topic.isBlank()) {
+            postPage = groupPostRepository.findByGroupIdOrderByPinnedAndRecent(groupId, pageable);
+        } else {
+            String requestedTopic = topic.trim();
+            String groupTopic = Optional.ofNullable(group.getTopics()).orElseGet(Collections::emptyList).stream()
+                    .filter(candidate -> candidate.equalsIgnoreCase(requestedTopic))
+                    .findFirst()
+                    .orElseThrow(() -> new BadRequestException("Chủ đề đã chọn không thuộc hội nhóm này."));
+            postPage = groupPostRepository.findByGroupIdAndTopicOrderByPinnedAndRecent(groupId, groupTopic, pageable);
+        }
 
         if (postPage.isEmpty()) {
             return PageResponse.<GroupPostResponse>builder()
@@ -128,6 +139,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                     .groupId(groupId)
                     .author(toAuthorResponse(p.getAuthor(), authorProfile, authorMember))
                     .content(p.getContent())
+                    .topic(p.getTopic())
                     .imageUrls(p.getImageUrls() != null ? p.getImageUrls() : Collections.emptyList())
                     .isPinned(p.isPinned())
                     .likeCount(p.getLikeCount())
@@ -181,6 +193,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .groupId(groupId)
                 .author(toAuthorResponse(post.getAuthor(), authorProfile, authorMember))
                 .content(post.getContent())
+                .topic(post.getTopic())
                 .imageUrls(post.getImageUrls() != null ? post.getImageUrls() : Collections.emptyList())
                 .isPinned(post.isPinned())
                 .likeCount(post.getLikeCount())
@@ -203,11 +216,13 @@ public class GroupPostServiceImpl implements GroupPostService {
         GroupMember member = checkMemberActive(groupId, author.getId(), "Chỉ thành viên của hội nhóm mới có quyền đăng bài thảo luận.");
 
         List<String> cleanImages = sanitizeImages(request.getImageUrls());
+        String topic = resolveGroupTopic(group, request.getTopic());
 
         GroupPost post = GroupPost.builder()
                 .group(group)
                 .author(author)
                 .content(request.getContent().trim())
+                .topic(topic)
                 .imageUrls(cleanImages)
                 .isPinned(false)
                 .likeCount(0)
@@ -224,6 +239,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .groupId(groupId)
                 .author(toAuthorResponse(author, profile, member))
                 .content(saved.getContent())
+                .topic(saved.getTopic())
                 .imageUrls(saved.getImageUrls() != null ? saved.getImageUrls() : Collections.emptyList())
                 .isPinned(saved.isPinned())
                 .likeCount(0)
@@ -252,6 +268,7 @@ public class GroupPostServiceImpl implements GroupPostService {
         }
 
         post.setContent(request.getContent().trim());
+        post.setTopic(resolveGroupTopic(group, request.getTopic()));
         post.setImageUrls(sanitizeImages(request.getImageUrls()));
         GroupPost saved = groupPostRepository.save(post);
 
@@ -266,6 +283,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .groupId(groupId)
                 .author(toAuthorResponse(author, profile, member))
                 .content(saved.getContent())
+                .topic(saved.getTopic())
                 .imageUrls(saved.getImageUrls() != null ? saved.getImageUrls() : Collections.emptyList())
                 .isPinned(saved.isPinned())
                 .likeCount(saved.getLikeCount())
@@ -365,6 +383,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .groupId(groupId)
                 .author(toAuthorResponse(saved.getAuthor(), authorProfile, authorMember))
                 .content(saved.getContent())
+                .topic(saved.getTopic())
                 .imageUrls(saved.getImageUrls() != null ? saved.getImageUrls() : Collections.emptyList())
                 .isPinned(saved.isPinned())
                 .likeCount(saved.getLikeCount())
@@ -435,6 +454,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                     .postId(postId)
                     .author(toAuthorResponse(c.getAuthor(), authorProfile, authorMember))
                     .content(c.getContent())
+                    .canEdit(isCommentAuthor)
                     .canDelete(canDelete)
                     .createdAt(c.getCreatedAt())
                     .updatedAt(c.getUpdatedAt())
@@ -478,6 +498,41 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .postId(postId)
                 .author(toAuthorResponse(author, profile, member))
                 .content(saved.getContent())
+                .canEdit(true)
+                .canDelete(true)
+                .createdAt(saved.getCreatedAt())
+                .updatedAt(saved.getUpdatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public GroupCommentResponse updateComment(Long groupId, Long postId, Long commentId, String authorEmail,
+                                              UpdateGroupCommentRequest request) {
+        User author = getUserByEmail(authorEmail);
+        CommunityGroup group = getVisibleGroup(groupId);
+        checkGroupActive(group);
+
+        GroupPostComment comment = groupPostCommentRepository.findByIdAndPostId(commentId, postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bình luận không tồn tại trong bài viết này."));
+        if (!comment.getPost().getGroup().getId().equals(groupId)) {
+            throw new ResourceNotFoundException("Bình luận không tồn tại trong hội nhóm này.");
+        }
+        if (!comment.getAuthor().getId().equals(author.getId())) {
+            throw new ForbiddenException("Bạn chỉ có thể chỉnh sửa bình luận do chính mình đăng.");
+        }
+
+        comment.setContent(request.getContent().trim());
+        GroupPostComment saved = groupPostCommentRepository.save(comment);
+        UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
+        GroupMember member = groupMemberRepository.findByGroupIdAndUserId(groupId, author.getId()).orElse(null);
+
+        return GroupCommentResponse.builder()
+                .id(saved.getId())
+                .postId(postId)
+                .author(toAuthorResponse(author, profile, member))
+                .content(saved.getContent())
+                .canEdit(true)
                 .canDelete(true)
                 .createdAt(saved.getCreatedAt())
                 .updatedAt(saved.getUpdatedAt())
@@ -557,6 +612,15 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .filter(url -> url != null && !url.isBlank())
                 .limit(10)
                 .collect(Collectors.toList());
+    }
+
+    private String resolveGroupTopic(CommunityGroup group, String requested) {
+        if (requested == null || requested.isBlank()) return null;
+        String normalized = requested.trim();
+        return Optional.ofNullable(group.getTopics()).orElseGet(Collections::emptyList).stream()
+                .filter(topic -> topic.equalsIgnoreCase(normalized))
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException("Chủ đề đã chọn không thuộc hội nhóm này."));
     }
 
     private GroupPostAuthorResponse toAuthorResponse(User user, UserProfile profile, GroupMember member) {

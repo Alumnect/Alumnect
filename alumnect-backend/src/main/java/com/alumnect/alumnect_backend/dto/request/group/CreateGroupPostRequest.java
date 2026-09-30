@@ -22,6 +22,9 @@ public class CreateGroupPostRequest {
     @Size(max = 5000, message = "Nội dung thảo luận không được vượt quá 5000 ký tự")
     private String content;
 
+    @Size(max = 50, message = "Chủ đề không được vượt quá 50 ký tự")
+    private String topic;
+
     @Size(max = 10, message = "Mỗi bài viết chỉ được đính kèm tối đa 10 hình ảnh")
     private List<String> imageUrls;
 }

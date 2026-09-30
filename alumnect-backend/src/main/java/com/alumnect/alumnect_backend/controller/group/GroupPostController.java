@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.group.CreateGroupCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.group.CreateGroupPostRequest;
 import com.alumnect.alumnect_backend.dto.request.group.UpdateGroupPostRequest;
+import com.alumnect.alumnect_backend.dto.request.group.UpdateGroupCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.group.GroupCommentResponse;
 import com.alumnect.alumnect_backend.dto.response.group.GroupPostLikeResponse;
 import com.alumnect.alumnect_backend.dto.response.group.GroupPostResponse;
@@ -37,8 +38,9 @@ public class GroupPostController {
             @PathVariable Long groupId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String topic,
             Authentication authentication) {
-        PageResponse<GroupPostResponse> result = groupPostService.listPosts(groupId, emailOrNull(authentication), page, size);
+        PageResponse<GroupPostResponse> result = groupPostService.listPosts(groupId, emailOrNull(authentication), page, size, topic);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bài viết hội nhóm thành công", result));
     }
 
@@ -144,6 +146,19 @@ public class GroupPostController {
         GroupCommentResponse result = groupPostService.createComment(groupId, postId, authentication.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Gửi bình luận thành công", result));
+    }
+
+    /** Chỉ tác giả bình luận được chỉnh sửa bình luận của mình. */
+    @PutMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<ApiResponse<GroupCommentResponse>> updateComment(
+            @PathVariable Long groupId,
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @Valid @RequestBody UpdateGroupCommentRequest request,
+            Authentication authentication) {
+        GroupCommentResponse result = groupPostService.updateComment(
+                groupId, postId, commentId, authentication.getName(), request);
+        return ResponseEntity.ok(ApiResponse.success("Chỉnh sửa bình luận thành công", result));
     }
 
     /**

@@ -177,7 +177,7 @@ export function AppShell() {
         }
       >
         <p className="whitespace-nowrap px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-plum-400">Khám phá thêm</p>
-        <div className="flex items-center gap-1.5">
+        <div className="grid grid-cols-3 gap-1.5">
           {items.map((item) => {
             const Icon = item.icon
             return (
@@ -292,25 +292,6 @@ export function AppShell() {
 
           {/* right actions */}
           <div className="ml-auto flex items-center gap-1 sm:gap-1.5 lg:ml-0">
-            {/* Nút chuyển chế độ Sáng / Tối trực tiếp cho cả User đăng nhập & Khách (Guest) */}
-            <button
-              type="button"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-              title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-              className="group relative grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-2xl text-plum-500 hover:bg-plum-900/[0.05] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-colors cursor-pointer"
-            >
-              {theme === 'dark' ? (
-                <Sun size={20} weight="fill" className="text-amber-400 transition-transform duration-200 group-hover:rotate-45" />
-              ) : (
-                <Moon size={20} weight="fill" className="text-slate-600 transition-transform duration-200 group-hover:-rotate-12" />
-              )}
-              {/* Tooltip khi hover */}
-              <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100 dark:bg-white dark:text-slate-900">
-                {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
-              </span>
-            </button>
-
             {/* mobile search toggle */}
             <button
               onClick={() => setSearchOpen((v) => !v)}
@@ -393,6 +374,24 @@ export function AppShell() {
                 </Link>
               </div>
             )}
+            {/* Nút chuyển chế độ Sáng / Tối ở ngoài cùng bên phải */}
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+              title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+              className="group relative grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-2xl text-plum-500 hover:bg-plum-900/[0.05] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-colors cursor-pointer"
+            >
+              {theme === 'dark' ? (
+                <Sun size={20} weight="fill" className="text-amber-400 transition-transform duration-200 group-hover:rotate-45" />
+              ) : (
+                <Moon size={20} weight="fill" className="text-slate-600 transition-transform duration-200 group-hover:-rotate-12" />
+              )}
+              {/* Tooltip khi hover */}
+              <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100 dark:bg-white dark:text-slate-900">
+                {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
+              </span>
+            </button>
           </div>
         </div>
 

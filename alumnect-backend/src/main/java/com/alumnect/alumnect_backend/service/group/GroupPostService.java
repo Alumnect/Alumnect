@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.group.CreateGroupCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.group.CreateGroupPostRequest;
 import com.alumnect.alumnect_backend.dto.request.group.UpdateGroupPostRequest;
+import com.alumnect.alumnect_backend.dto.request.group.UpdateGroupCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.group.GroupCommentResponse;
 import com.alumnect.alumnect_backend.dto.response.group.GroupPostLikeResponse;
 import com.alumnect.alumnect_backend.dto.response.group.GroupPostResponse;
@@ -18,7 +19,7 @@ public interface GroupPostService {
      * Nhóm PUBLIC: xem được kể cả Guest.
      * Nhóm PRIVATE: chỉ thành viên ACTIVE mới được xem.
      */
-    PageResponse<GroupPostResponse> listPosts(Long groupId, String viewerEmail, int page, int size);
+    PageResponse<GroupPostResponse> listPosts(Long groupId, String viewerEmail, int page, int size, String topic);
 
     /**
      * Lấy thông tin chi tiết một bài viết trong hội nhóm.
@@ -59,6 +60,9 @@ public interface GroupPostService {
      * Thêm bình luận vào bài viết trong hội nhóm. Chỉ thành viên ACTIVE mới có quyền.
      */
     GroupCommentResponse createComment(Long groupId, Long postId, String authorEmail, CreateGroupCommentRequest request);
+
+    GroupCommentResponse updateComment(Long groupId, Long postId, Long commentId, String authorEmail,
+                                       UpdateGroupCommentRequest request);
 
     /**
      * Xóa bình luận. Tác giả bình luận, tác giả bài viết hoặc Owner / Admin nhóm có quyền xóa.

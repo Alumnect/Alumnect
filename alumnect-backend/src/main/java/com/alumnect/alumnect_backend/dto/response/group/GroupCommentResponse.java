@@ -21,6 +21,9 @@ public class GroupCommentResponse {
     private GroupPostAuthorResponse author;
     private String content;
 
+    /** Chỉ tác giả bình luận được chỉnh sửa. */
+    private boolean canEdit;
+
     /** Người xem có quyền xóa bình luận (tác giả bình luận, tác giả bài viết, hoặc Owner/Admin nhóm) */
     private boolean canDelete;
 

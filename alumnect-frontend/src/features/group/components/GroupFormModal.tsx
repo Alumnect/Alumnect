@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
-import { AlertTriangle, Globe, ImagePlus, Loader2, Lock, X } from 'lucide-react'
+import { AlertTriangle, ImagePlus, Loader2, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { toast } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -24,9 +24,9 @@ import { useCreateGroup, useUpdateGroup } from '../hooks/useGroupActions'
 import {
   GROUP_CATEGORIES,
   GROUP_DESCRIPTION_MAX,
-  GROUP_MAX_TOPICS,
   GROUP_NAME_MAX,
   GROUP_RULES_MAX,
+  GROUP_TOPIC_MAX_LENGTH,
   groupFormSchema,
   parseTopics,
   validateTopics,
@@ -48,6 +48,8 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [topicsError, setTopicsError] = useState<string | null>(null)
+  const [topics, setTopics] = useState<string[]>(editGroup?.topics ?? [])
+  const [topicInput, setTopicInput] = useState('')
 
   const {
     register,
@@ -72,8 +74,40 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
   const coverImageUrl = watch('coverImageUrl')
   const nameValue = watch('name')
 
+  const updateTopics = (nextTopics: string[]) => {
+    setTopics(nextTopics)
+    setValue('topicsText', nextTopics.join(', '), { shouldDirty: true, shouldValidate: true })
+  }
+
+  const addTopics = () => {
+    const candidates = parseTopics(topicInput)
+    if (candidates.length === 0) return
+
+    const nextTopics = [...topics]
+    for (const candidate of candidates) {
+      if (nextTopics.some((topic) => topic.toLowerCase() === candidate.toLowerCase())) continue
+      nextTopics.push(candidate)
+    }
+
+    const topicMessage = validateTopics(nextTopics.join(', '))
+    setTopicsError(topicMessage)
+    if (topicMessage) return
+
+    updateTopics(nextTopics)
+    setTopicInput('')
+  }
+
+  const removeTopic = (topicToRemove: string) => {
+    updateTopics(topics.filter((topic) => topic !== topicToRemove))
+    setTopicsError(null)
+  }
+
   const onSubmit = (values: GroupFormValues) => {
-    const topicMessage = validateTopics(values.topicsText)
+    const submittedTopics = [...topics]
+    for (const candidate of parseTopics(topicInput)) {
+      if (!submittedTopics.some((topic) => topic.toLowerCase() === candidate.toLowerCase())) submittedTopics.push(candidate)
+    }
+    const topicMessage = validateTopics(submittedTopics.join(', '))
     setTopicsError(topicMessage)
     if (topicMessage) return
 
@@ -81,7 +115,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
       name: values.name.trim(),
       description: values.description.trim(),
       category: values.category,
-      topics: parseTopics(values.topicsText),
+      topics: submittedTopics,
       privacy: values.privacy,
       joinRules: values.joinRules.trim() ? values.joinRules.trim() : null,
       coverImageUrl: values.coverImageUrl,
@@ -222,8 +256,8 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
               <div className="grid grid-cols-2 gap-2">
                 {(
                   [
-                    { value: 'PUBLIC', label: 'Công khai', icon: Globe, hint: 'Ai cũng tham gia trực tiếp' },
-                    { value: 'PRIVATE', label: 'Riêng tư', icon: Lock, hint: 'Cần được duyệt' },
+                    { value: 'PUBLIC', label: 'Công khai' },
+                    { value: 'PRIVATE', label: 'Riêng tư' },
                   ] as const
                 ).map((opt) => (
                   <button
@@ -232,14 +266,11 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                     onClick={() => setValue('privacy', opt.value, { shouldDirty: true })}
                     aria-pressed={privacy === opt.value}
                     className={cn(
-                      'flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition-colors',
+                      'flex h-11 items-center justify-center rounded-xl border px-3 text-center text-sm font-bold transition-colors',
                       privacy === opt.value ? 'border-brand-400/70 bg-brand-500/10 text-brand-700' : 'border-plum-900/10 bg-plum-900/[0.03] text-plum-600 hover:border-plum-900/20',
                     )}
                   >
-                    <span className="inline-flex items-center gap-1.5 text-sm font-bold">
-                      <opt.icon size={14} /> {opt.label}
-                    </span>
-                    <span className="text-[11px] opacity-80">{opt.hint}</span>
+                    {opt.label}
                   </button>
                 ))}
               </div>
@@ -248,10 +279,41 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
 
           {/* Chủ đề */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-plum-900">
-              Chủ đề / sở thích liên quan <span className="font-normal text-plum-400">· tối đa {GROUP_MAX_TOPICS}, cách nhau bằng dấu phẩy</span>
-            </label>
-            <input {...register('topicsText')} placeholder="VD: AI, Machine Learning, Data" className={`h-11 ${FIELD_CLASS}`} />
+            <label className="mb-1 block text-sm font-semibold text-plum-900">Chủ đề / sở thích liên quan</label>
+            <input type="hidden" {...register('topicsText')} />
+            <div className="flex gap-2">
+              <input
+                value={topicInput}
+                onChange={(event) => {
+                  setTopicInput(event.target.value)
+                  if (topicsError) setTopicsError(null)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    addTopics()
+                  }
+                }}
+                maxLength={GROUP_TOPIC_MAX_LENGTH}
+                placeholder="Nhập chủ đề"
+                className={`h-11 ${FIELD_CLASS}`}
+              />
+              <Button type="button" variant="primary" size="md" onClick={addTopics} disabled={!topicInput.trim()} leftIcon={<Plus size={16} />}>
+                Thêm
+              </Button>
+            </div>
+            {topics.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {topics.map((topic) => (
+                  <span key={topic.toLowerCase()} className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300">
+                    {topic}
+                    <button type="button" onClick={() => removeTopic(topic)} aria-label={`Xóa chủ đề ${topic}`} className="rounded-full p-0.5 transition-colors hover:bg-brand-100 dark:hover:bg-brand-500/20">
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
             {topicsError && <p className="mt-1 text-xs text-rose-500">{topicsError}</p>}
           </div>
 

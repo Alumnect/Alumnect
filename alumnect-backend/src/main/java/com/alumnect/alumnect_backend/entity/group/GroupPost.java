@@ -41,6 +41,9 @@ public class GroupPost {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "topic", length = 50)
+    private String topic;
+
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "image_urls", columnDefinition = "varchar(500)[]")
     @Builder.Default

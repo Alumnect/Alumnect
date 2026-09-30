@@ -196,6 +196,7 @@ export interface GroupPost {
   groupId: number
   author: GroupPostAuthor
   content: string
+  topic: string | null
   imageUrls: string[]
   isPinned: boolean
   likeCount: number
@@ -214,6 +215,7 @@ export interface GroupComment {
   postId: number
   author: GroupPostAuthor
   content: string
+  canEdit: boolean
   canDelete: boolean
   createdAt: string
   updatedAt: string
@@ -229,5 +231,6 @@ export interface GroupPostLikeResult {
 /** Payload tạo mới hoặc chỉnh sửa bài viết trong nhóm */
 export interface CreateGroupPostPayload {
   content: string
+  topic?: string | null
   imageUrls?: string[]
 }

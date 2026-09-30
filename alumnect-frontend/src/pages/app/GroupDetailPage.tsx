@@ -2,29 +2,27 @@
  * GroupDetailPage — Trang chi tiết hội nhóm theo phong cách mạng xã hội hiện đại (Threads / Reddit / Instagram).
  *
  * Cấu trúc thiết kế:
- *  - Đầu trang: Cover banner tỉ lệ chuẩn, Emblem đại diện nổi, nút chia sẻ và các hành động tham gia.
+ *  - Đầu trang: Ảnh bìa gọn, thông tin nhóm và các hành động tham gia bên dưới.
  *  - Thanh điều hướng phụ (Sub-nav Tabs): Thảo luận | Giới thiệu | Thành viên | Quản lý (cho Owner/Admin).
  *  - Bố cục 2 cột (Desktop 2-column layout):
  *     + Cột chính (68%): Luồng thảo luận cộng đồng, giới thiệu chi tiết, danh sách thành viên hoặc bảng quản lý.
- *     + Cột bên (32% sticky): Tóm tắt thông tin cộng đồng, ban điều hành, nội quy nhanh và lời mời tham gia.
+ *     + Cột bên (32% sticky): Tóm tắt thông tin cộng đồng và nội quy nhanh.
  */
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   ArrowLeft,
-  Crown,
   Info,
   Lock,
   MessagesSquare,
   ScrollText,
   SearchX,
   Settings2,
-  ShieldCheck,
   Users,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Avatar, Badge, Card, Skeleton, toast } from '@/components/ui'
+import { Badge, Card, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { TRANSITION } from '@/lib/motion'
@@ -62,10 +60,10 @@ export function GroupDetailPage() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-6xl space-y-5 pb-12">
-        {/* Kích thước khớp với nút quay lại, header (ảnh bìa 21:8 + phần thông tin) và thanh tab thật để nội dung không bị nhảy khi tải xong */}
+        {/* Kích thước khớp với ảnh bìa và phần thông tin nhóm khi tải xong */}
         <Skeleton className="h-5 w-40" />
         <div className="overflow-hidden rounded-3xl">
-          <Skeleton className="aspect-[21/8] min-h-[160px] w-full rounded-none sm:min-h-[220px]" />
+          <Skeleton className="h-32 w-full rounded-none sm:h-44 lg:h-48" />
           <Skeleton className="h-36 w-full rounded-none opacity-60" />
         </div>
         <Skeleton className="h-10 w-full rounded-2xl" />
@@ -170,7 +168,7 @@ export function GroupDetailPage() {
         <ArrowLeft size={16} /> Tất cả hội nhóm
       </Link>
 
-      {/* Header Hội nhóm phong cách mạng xã hội cao cấp */}
+      {/* Ảnh bìa và thông tin hội nhóm */}
       <GroupDetailHeader
         group={group}
         onManage={() => setActiveTab('manage')}
@@ -247,9 +245,6 @@ export function GroupDetailPage() {
                       <h3 className="text-xl font-extrabold text-plum-900 dark:text-white">
                         Hội nhóm riêng tư
                       </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
-                        Nội dung thảo luận, bài viết và hoạt động trong nhóm này được bảo mật. Bạn cần gửi yêu cầu tham gia và được Quản trị viên duyệt để cùng trao đổi.
-                      </p>
                     </div>
                   </Card>
                 ) : (
@@ -257,7 +252,9 @@ export function GroupDetailPage() {
                     groupId={group.id}
                     groupName={group.name}
                     isActiveMember={isMember}
+                    isGroupActive={group.status === 'ACTIVE'}
                     topics={group.topics}
+                    sharedPostId={Number(searchParams.get('postId')) || undefined}
                   />
                 )}
               </motion.div>
@@ -431,43 +428,6 @@ export function GroupDetailPage() {
               </div>
             </Card>
 
-            {/* Widget 2: Ban điều hành & Người sáng lập */}
-            {group.owner && (
-              <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-                <h4 className="text-xs font-black uppercase tracking-wider text-plum-400">
-                  Người sáng lập
-                </h4>
-
-                <Link
-                  to={`/app/profile?userId=${group.owner.userId}`}
-                  className="mt-3 flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-plum-900/[0.03] dark:hover:bg-[#3a3b3c]"
-                >
-                  <Avatar
-                    src={group.owner.avatarUrl ?? ''}
-                    name={group.owner.fullName}
-                    size={44}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-bold text-plum-900 dark:text-white">
-                        {group.owner.fullName}
-                      </span>
-                      <Crown size={13} className="shrink-0 text-amber-500" />
-                    </div>
-                  </div>
-                </Link>
-              </Card>
-            )}
-
-            {/* Widget 3: Cam kết & Văn hóa FPTU */}
-            <div className="rounded-3xl bg-plum-900/[0.03] p-4.5 text-xs text-plum-500 dark:bg-white/5 dark:text-[#b0b3b8]">
-              <div className="flex items-center gap-1.5 font-bold text-plum-700 dark:text-plum-300">
-                <ShieldCheck size={14} className="text-brand-500" /> AlumNect Community Trust
-              </div>
-              <p className="mt-1 leading-relaxed">
-                Môi trường kết nối lành mạnh, tin cậy dành riêng cho sinh viên & cựu sinh viên Đại học FPT trên toàn cầu.
-              </p>
-            </div>
           </div>
         </div>
       </div>

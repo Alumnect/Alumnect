@@ -172,8 +172,8 @@ export const groupApi = {
   },
 
   /** Danh sách bài viết / thảo luận trong hội nhóm. `GET /api/v1/groups/{groupId}/posts`. */
-  listPosts: async (groupId: number, page = 0, size = 10): Promise<{ content: GroupPost[]; last: boolean; totalElements: number; pageNumber: number }> => {
-    const body = await http.get(`/groups/${groupId}/posts`, { params: { page, size } })
+  listPosts: async (groupId: number, page = 0, size = 10, topic?: string): Promise<{ content: GroupPost[]; last: boolean; totalElements: number; pageNumber: number }> => {
+    const body = await http.get(`/groups/${groupId}/posts`, { params: { page, size, ...(topic ? { topic } : {}) } })
     const p = payloadOf(body) as RawPage
     return {
       content: (p?.content ?? []) as GroupPost[],
@@ -233,6 +233,12 @@ export const groupApi = {
   /** Thêm bình luận vào bài viết. `POST /api/v1/groups/{groupId}/posts/{postId}/comments`. */
   createComment: async (groupId: number, postId: number, content: string): Promise<GroupComment> => {
     const body = await http.post(`/groups/${groupId}/posts/${postId}/comments`, { content })
+    return payloadOf(body) as GroupComment
+  },
+
+  /** Chỉ tác giả được sửa bình luận của mình. */
+  updateComment: async (groupId: number, postId: number, commentId: number, content: string): Promise<GroupComment> => {
+    const body = await http.put(`/groups/${groupId}/posts/${postId}/comments/${commentId}`, { content })
     return payloadOf(body) as GroupComment
   },
 

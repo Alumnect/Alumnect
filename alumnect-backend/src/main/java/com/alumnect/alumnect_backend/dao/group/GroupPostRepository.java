@@ -24,6 +24,11 @@ public interface GroupPostRepository extends JpaRepository<GroupPost, Long> {
             countQuery = "SELECT COUNT(p) FROM GroupPost p WHERE p.group.id = :groupId")
     Page<GroupPost> findByGroupIdOrderByPinnedAndRecent(@Param("groupId") Long groupId, Pageable pageable);
 
+    @Query(value = "SELECT p FROM GroupPost p JOIN FETCH p.author WHERE p.group.id = :groupId AND p.topic = :topic ORDER BY p.isPinned DESC, p.createdAt DESC",
+            countQuery = "SELECT COUNT(p) FROM GroupPost p WHERE p.group.id = :groupId AND p.topic = :topic")
+    Page<GroupPost> findByGroupIdAndTopicOrderByPinnedAndRecent(@Param("groupId") Long groupId,
+                                                                 @Param("topic") String topic, Pageable pageable);
+
     /**
      * Tìm bài viết theo ID và Group ID kèm thông tin tác giả.
      */

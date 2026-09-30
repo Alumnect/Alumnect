@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
 import { groupApi } from '../api/groupApi'
-import type { GroupInput, GroupRole, GroupStatus } from '../model/group'
+import type { GroupDetail, GroupInput, GroupRole, GroupStatus } from '../model/group'
 
 /** Làm mới toàn bộ cache liên quan tới một hội nhóm (danh sách, nhóm của tôi, chi tiết, thành viên, yêu cầu). */
 function refreshGroup(queryClient: QueryClient, id?: number) {
@@ -28,7 +28,10 @@ export function useUpdateGroup(id: number) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: GroupInput) => groupApi.update(id, input),
-    onSuccess: () => refreshGroup(queryClient, id),
+    onSuccess: (updatedGroup) => {
+      queryClient.setQueriesData<GroupDetail>({ queryKey: ['group', String(id)] }, updatedGroup)
+      refreshGroup(queryClient, id)
+    },
   })
 }
 

@@ -10,17 +10,24 @@ import { useCreateGroupPostMutation } from '../hooks/useGroupPosts'
 interface GroupCreatePostCardProps {
   groupId: number
   groupName: string
+  topics: string[]
 }
 
-export function GroupCreatePostCard({ groupId, groupName }: GroupCreatePostCardProps) {
+export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreatePostCardProps) {
   const user = useAuthStore((s) => s.user)
   const [content, setContent] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const createPostMutation = useCreateGroupPostMutation(groupId)
+  const currentTopic = topics.find((topic) => topic === selectedTopic) ?? null
+  const lastWord = content.trim().split(/\s+/).at(-1)?.replace(/^#/, '').toLocaleLowerCase() ?? ''
+  const matchingTopics = topics.filter((topic) => topic.toLocaleLowerCase().includes(lastWord))
+  const suggestedTopics = matchingTopics.length > 0 ? matchingTopics : topics
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
@@ -37,8 +44,8 @@ export function GroupCreatePostCard({ groupId, groupName }: GroupCreatePostCardP
       const uploadedUrls = await Promise.all(uploadPromises)
       setImages((prev) => [...prev, ...uploadedUrls])
       toast.success(`Đã tải lên ${uploadedUrls.length} hình ảnh`)
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể tải ảnh lên. Vui lòng thử lại.')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Không thể tải ảnh lên. Vui lòng thử lại.')
     } finally {
       setUploading(false)
       if (fileInputRef.current) {
@@ -62,10 +69,13 @@ export function GroupCreatePostCard({ groupId, groupName }: GroupCreatePostCardP
     try {
       await createPostMutation.mutateAsync({
         content: trimmed,
+        topic: currentTopic,
         imageUrls: images.length > 0 ? images : undefined,
       })
       setContent('')
       setImages([])
+      setSelectedTopic(null)
+      setSuggestionsOpen(false)
       setIsFocused(false)
     } catch {
       // toast is already handled in mutation
@@ -84,14 +94,63 @@ export function GroupCreatePostCard({ groupId, groupName }: GroupCreatePostCardP
 
         <div className="flex-1">
           <form onSubmit={handleSubmit}>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              placeholder={`Bạn muốn chia sẻ điều gì với cộng đồng ${groupName} hôm nay?`}
-              rows={isFocused || images.length > 0 ? 3 : 2}
-              className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-3 text-sm text-plum-900 transition-all placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] dark:focus:border-brand-400 dark:focus:bg-[#242526]"
-            />
+            <div
+              className="relative"
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setSuggestionsOpen(false)
+              }}
+            >
+              <textarea
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value)
+                  setSuggestionsOpen(Boolean(e.target.value.trim()) && topics.length > 0)
+                }}
+                onFocus={() => {
+                  setIsFocused(true)
+                  setSuggestionsOpen(Boolean(content.trim()) && topics.length > 0)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') setSuggestionsOpen(false)
+                }}
+                aria-label="Nội dung bài thảo luận"
+                aria-expanded={suggestionsOpen && suggestedTopics.length > 0}
+                aria-controls="group-post-topic-suggestions"
+                placeholder={`Bạn muốn chia sẻ điều gì với cộng đồng ${groupName} hôm nay?`}
+                rows={isFocused || images.length > 0 ? 3 : 2}
+                className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-3 text-sm text-plum-900 transition-all placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] dark:focus:border-brand-400 dark:focus:bg-[#242526]"
+              />
+              {suggestionsOpen && suggestedTopics.length > 0 && (
+                <div id="group-post-topic-suggestions" className="absolute inset-x-0 top-full z-20 mt-1 max-h-48 overflow-y-auto rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-xl dark:border-[#393a3b] dark:bg-[#242526]">
+                  <p className="px-2 py-1 text-xs font-semibold text-plum-500 dark:text-[#b0b3b8]">Chọn chủ đề cho bài viết</p>
+                  {suggestedTopics.map((topic) => (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTopic(topic)
+                        setSuggestionsOpen(false)
+                      }}
+                      className="block w-full rounded-xl px-3 py-2 text-left text-sm text-plum-800 hover:bg-brand-500/10 dark:text-white dark:hover:bg-[#3a3b3c]"
+                    >
+                      #{topic}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {currentTopic && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-plum-500 dark:text-[#b0b3b8]">
+                Chủ đề:
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/10 px-2.5 py-1 font-semibold text-brand-700 dark:text-brand-300">
+                  #{currentTopic}
+                  <button type="button" onClick={() => setSelectedTopic(null)} aria-label={`Bỏ chủ đề ${currentTopic}`}>
+                    <X size={12} />
+                  </button>
+                </span>
+              </div>
+            )}
 
             {/* Danh sách ảnh đính kèm xem trước */}
             {images.length > 0 && (

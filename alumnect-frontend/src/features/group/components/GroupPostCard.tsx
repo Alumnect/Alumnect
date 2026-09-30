@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -7,6 +7,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   Pin,
+  Pencil,
   Repeat,
   Send,
   ShieldCheck,
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { TRANSITION } from '@/lib/motion'
 import { useAuthStore } from '@/store/authStore'
 import { ConfirmDialog } from './ConfirmDialog'
+import { GroupEditPostModal } from './GroupEditPostModal'
 import type { GroupPost } from '../model/group'
 import {
   useDeleteGroupPostMutation,
@@ -28,20 +30,55 @@ import {
   useGroupCommentsQuery,
   useCreateGroupCommentMutation,
   useDeleteGroupCommentMutation,
+  useUpdateGroupCommentMutation,
 } from '../hooks/useGroupPosts'
+
+let minuteSnapshot = Math.floor(Date.now() / 60000)
+const minuteListeners = new Set<() => void>()
+let minuteTimer: ReturnType<typeof setInterval> | null = null
+
+function subscribeToMinute(listener: () => void) {
+  minuteListeners.add(listener)
+  const refreshMinute = () => {
+    const next = Math.floor(Date.now() / 60000)
+    if (next === minuteSnapshot) return
+    minuteSnapshot = next
+    minuteListeners.forEach((notify) => notify())
+  }
+  if (!minuteTimer) {
+    queueMicrotask(refreshMinute)
+    minuteTimer = setInterval(refreshMinute, 15_000)
+  }
+  return () => {
+    minuteListeners.delete(listener)
+    if (minuteListeners.size === 0 && minuteTimer) {
+      clearInterval(minuteTimer)
+      minuteTimer = null
+    }
+  }
+}
+
+const getMinuteSnapshot = () => minuteSnapshot
 
 interface GroupPostCardProps {
   post: GroupPost
   groupId: number
   isActiveMember: boolean
+  isGroupActive: boolean
+  topics: string[]
 }
 
-export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardProps) {
+export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, topics }: GroupPostCardProps) {
+  const now = useSyncExternalStore(subscribeToMinute, getMinuteSnapshot, getMinuteSnapshot) * 60000
   const currentUser = useAuthStore((s) => s.user)
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editingPost, setEditingPost] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editingCommentText, setEditingCommentText] = useState('')
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   // Mutations
@@ -59,8 +96,10 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
   )
   const createCommentMutation = useCreateGroupCommentMutation(groupId, post.id)
   const deleteCommentMutation = useDeleteGroupCommentMutation(groupId, post.id)
+  const updateCommentMutation = useUpdateGroupCommentMutation(groupId, post.id)
 
   const handleToggleLike = () => {
+    if (!isGroupActive) return
     if (!isActiveMember) {
       toast.error('Vui lòng tham gia hội nhóm để thích bài viết!')
       return
@@ -96,15 +135,30 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
     }
   }
 
-  const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href)
-    toast.success('Đã sao chép liên kết bài viết!')
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/app/groups/${groupId}?postId=${post.id}`)
+      toast.success('Đã sao chép liên kết bài viết!')
+    } catch {
+      toast.error('Không thể sao chép liên kết bài viết.')
+    }
+  }
+
+  const saveCommentEdit = async (commentId: number) => {
+    const content = editingCommentText.trim()
+    if (!content) return
+    try {
+      await updateCommentMutation.mutateAsync({ commentId, content })
+      setEditingCommentId(null)
+    } catch {
+      // Lỗi đã được hiển thị trong mutation.
+    }
   }
 
   const formatTime = (iso: string) => {
     try {
       const d = new Date(iso)
-      const diffMin = Math.round((Date.now() - d.getTime()) / 60000)
+      const diffMin = Math.round((now - d.getTime()) / 60000)
       if (diffMin < 1) return 'Vừa xong'
       if (diffMin < 60) return `${diffMin} phút trước`
       const diffHour = Math.round(diffMin / 60)
@@ -119,7 +173,7 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
 
   return (
     <>
-      <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+      <Card hover={false} id={`group-post-${post.id}`} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
         {/* Header: Author + Role + Time + Pinned status + Menu */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -156,6 +210,9 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
 
               <div className="flex items-center gap-2 text-xs text-plum-400">
                 <span>{formatTime(post.createdAt)}</span>
+                {post.updatedAt && post.updatedAt !== post.createdAt && (
+                  <span>• Đã chỉnh sửa</span>
+                )}
                 {post.isPinned && (
                   <>
                     <span>•</span>
@@ -168,12 +225,14 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
             </div>
           </div>
 
-          {/* Action Menu (Pin, Delete) */}
-          {(post.canPin || post.canDelete) && (
+          {/* Action Menu (Edit, Pin, Delete) */}
+          {isGroupActive && (post.canEdit || post.canPin || post.canDelete) && (
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Tùy chọn bài viết"
+                aria-expanded={menuOpen}
                 className="grid h-8 w-8 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 dark:hover:bg-[#3a3b3c] dark:hover:text-white"
               >
                 <MoreHorizontal size={18} />
@@ -190,6 +249,18 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
                     transition={TRANSITION.pop}
                     className="absolute right-0 top-9 z-30 min-w-[170px] origin-top-right overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-xl dark:border-[#393a3b] dark:bg-[#242526]"
                   >
+                    {post.canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false)
+                          setEditingPost(true)
+                        }}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-plum-700 transition-colors hover:bg-plum-900/[0.05] dark:text-plum-200 dark:hover:bg-[#3a3b3c]"
+                      >
+                        <Pencil size={14} /> Chỉnh sửa bài viết
+                      </button>
+                    )}
                     {post.canPin && (
                       <button
                         type="button"
@@ -220,6 +291,12 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
             </div>
           )}
         </div>
+
+        {post.topic && (
+          <span className="mt-3 inline-flex rounded-full bg-brand-500/10 px-2.5 py-1 text-xs font-semibold text-brand-700 dark:text-brand-300">
+            #{post.topic}
+          </span>
+        )}
 
         {/* Nội dung bài viết */}
         <p className="mt-3.5 whitespace-pre-line text-sm leading-relaxed text-plum-800 dark:text-plum-200">
@@ -321,6 +398,8 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
             <button
               type="button"
               onClick={handleToggleLike}
+              disabled={!isGroupActive || likeMutation.isPending}
+              aria-pressed={post.likedByViewer}
               className={cn(
                 'inline-flex items-center gap-1.5 transition-colors',
                 post.likedByViewer
@@ -376,7 +455,7 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
             >
               <div className="mt-4 space-y-3.5 border-t border-plum-900/[0.06] pt-3.5 dark:border-[#393a3b]">
                 {/* Input gửi bình luận mới (chỉ thành viên) */}
-                {isActiveMember ? (
+                {isActiveMember && isGroupActive ? (
                   <form onSubmit={handleSendComment} className="flex items-center gap-2.5">
                     <Avatar
                       src={currentUser?.avatarUrl ?? ''}
@@ -389,6 +468,7 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
                         type="text"
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
+                        maxLength={1000}
                         placeholder="Viết phản hồi của bạn..."
                         className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91]"
                       />
@@ -407,7 +487,7 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
                   </form>
                 ) : (
                   <p className="text-center text-xs text-plum-400 dark:text-[#8a8d91]">
-                    Vui lòng tham gia hội nhóm để tham gia bình luận.
+                    {isGroupActive ? 'Vui lòng tham gia hội nhóm để tham gia bình luận.' : 'Hội nhóm đang tạm ngừng tương tác.'}
                   </p>
                 )}
 
@@ -449,23 +529,60 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
                               <span className="text-[10px] text-plum-400">
                                 • {formatTime(c.createdAt)}
                               </span>
+                              {c.updatedAt && c.updatedAt !== c.createdAt && (
+                                <span className="text-[10px] text-plum-400">• Đã chỉnh sửa</span>
+                              )}
                             </div>
 
-                            {c.canDelete && (
-                              <button
-                                type="button"
-                                onClick={() => deleteCommentMutation.mutate(c.id)}
-                                className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-rose-500 text-plum-400"
-                                title="Xóa bình luận"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {isGroupActive && c.canEdit && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCommentId(c.id)
+                                    setEditingCommentText(c.content)
+                                  }}
+                                  className="text-plum-400 hover:text-brand-600"
+                                  aria-label="Chỉnh sửa bình luận"
+                                ><Pencil size={13} /></button>
+                              )}
+                              {isGroupActive && c.canDelete && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDeletingCommentId(c.id)}
+                                  className="text-plum-400 hover:text-rose-500"
+                                  aria-label="Xóa bình luận"
+                                ><Trash2 size={13} /></button>
+                              )}
+                            </div>
                           </div>
 
-                          <p className="mt-1 text-xs text-plum-800 dark:text-plum-200">
-                            {c.content}
-                          </p>
+                          {editingCommentId === c.id ? (
+                            <form
+                              onSubmit={(event) => {
+                                event.preventDefault()
+                                saveCommentEdit(c.id)
+                              }}
+                              className="mt-2 space-y-2"
+                            >
+                              <textarea
+                                value={editingCommentText}
+                                onChange={(event) => setEditingCommentText(event.target.value)}
+                                maxLength={1000}
+                                rows={3}
+                                autoFocus
+                                className="w-full rounded-xl border border-plum-900/10 bg-white p-2 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-[#393a3b] dark:bg-[#242526] dark:text-white"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button type="button" onClick={() => setEditingCommentId(null)} disabled={updateCommentMutation.isPending} className="text-xs text-plum-500">Hủy</button>
+                                <button type="submit" disabled={!editingCommentText.trim() || updateCommentMutation.isPending} className="text-xs font-bold text-brand-600 disabled:opacity-50">
+                                  {updateCommentMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            <p className="mt-1 whitespace-pre-wrap text-xs text-plum-800 dark:text-plum-200">{c.content}</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -492,6 +609,22 @@ export function GroupPostCard({ post, groupId, isActiveMember }: GroupPostCardPr
         onConfirm={handleDeletePost}
         onClose={() => setConfirmDelete(false)}
       />
+
+      <ConfirmDialog
+        open={deletingCommentId !== null}
+        title="Xóa bình luận"
+        message="Bạn có chắc chắn muốn xóa bình luận này không?"
+        confirmLabel="Xóa bình luận"
+        danger
+        loading={deleteCommentMutation.isPending}
+        onConfirm={() => {
+          if (deletingCommentId === null) return
+          deleteCommentMutation.mutate(deletingCommentId, { onSuccess: () => setDeletingCommentId(null) })
+        }}
+        onClose={() => setDeletingCommentId(null)}
+      />
+
+      {editingPost && <GroupEditPostModal post={post} groupId={groupId} topics={topics} onClose={() => setEditingPost(false)} />}
 
       {/* Modal phóng to ảnh */}
       <AnimatePresence>
