@@ -49,6 +49,18 @@
   --color-brand-600: #f27024;
   --color-brand-700: #d45105;
 
+  /* ---- Primary alias mapped to Brand FPT Orange ---- */
+  --color-primary-50: #fff4ec;
+  --color-primary-100: #ffe6d5;
+  --color-primary-200: #fec7a8;
+  --color-primary-300: #fd9f6e;
+  --color-primary-400: #fb7c3d;
+  --color-primary-500: #f75512;
+  --color-primary-600: #f27024;
+  --color-primary-700: #d45105;
+  --color-primary-800: #b33e02;
+  --color-primary-900: #8c3002;
+
   /* ---- Secondary Brand: FPT Corporate Navy (#004F9E & #0B2545) ---- */
   --color-fpt-navy: #004f9e;
   --color-violet-300: #93c5fd;

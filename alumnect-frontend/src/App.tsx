@@ -24,7 +24,11 @@ import { NotificationsPage } from '@/pages/app/NotificationsPage'
 import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
 import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
-import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage } from '@/features/admin'
+import { MentoringHomePage } from '@/pages/app/MentoringHomePage'
+import { MentoringTermsPage } from '@/pages/app/MentoringTermsPage'
+import { BecomeMentorPage } from '@/pages/app/BecomeMentorPage'
+import { MentorSubscriptionPage } from '@/pages/app/MentorSubscriptionPage'
+import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
 function App() {
@@ -68,7 +72,15 @@ function App() {
             <Route path="map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
             <Route path="career" element={<ProtectedRoute><CareerPage /></ProtectedRoute>} />
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+            <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
+            <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />
+            <Route path="mentoring/become-mentor" element={<ProtectedRoute><BecomeMentorPage /></ProtectedRoute>} />
+            <Route path="mentoring/packages" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
+            <Route path="mentoring/subscription" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
           </Route>
+
+          {/* Direct redirect for /mentoring */}
+          <Route path="/mentoring/*" element={<Navigate to="/app/mentoring" replace />} />
 
           {/* Admin console */}
           <Route
@@ -81,6 +93,7 @@ function App() {
           >
             <Route index element={<AdminOverviewPage />} />
             <Route path="users" element={<AdminUsersPage />} />
+            <Route path="mentor-packages" element={<AdminMentorPackagesPage />} />
             <Route path="posts" element={<AdminPostsPage />} />
             <Route path="posts/:id" element={<AdminPostDetailPage />} />
             <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />

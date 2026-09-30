@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { Client } from '@stomp/stompjs'
 import { useAuthStore } from '@/store/authStore'
-import { useQueryClient } from '@tanstack/react-query'
-import type { Message } from '../model/types'
+import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import type { Message, Conversation } from '../model/types'
 
 /**
  * Hook kết nối WebSocket STOMP nhận tin nhắn thời gian thực và tự động làm mới cache React Query.
@@ -12,14 +12,17 @@ export function useWebSocketChat(onMessageReceived?: (message: Message) => void)
   const accessToken = useAuthStore((state) => state.accessToken)
   const clientRef = useRef<Client | null>(null)
   const onMessageReceivedRef = useRef(onMessageReceived)
-  onMessageReceivedRef.current = onMessageReceived
+
+  useEffect(() => {
+    onMessageReceivedRef.current = onMessageReceived
+  }, [onMessageReceived])
 
   useEffect(() => {
     if (!accessToken) return
 
     // Suy biến WebSocket URL từ baseURL cấu hình
     const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
-    let wsUrl = apiBase.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '') + '/ws'
+    const wsUrl = apiBase.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '') + '/ws'
 
     const client = new Client({
       brokerURL: wsUrl,
@@ -36,7 +39,7 @@ export function useWebSocketChat(onMessageReceived?: (message: Message) => void)
             const newMsg: Message = JSON.parse(stompMessage.body)
 
             // 1. Cập nhật trực tiếp cache tin nhắn vào useInfiniteQuery mà không cần gọi HTTP
-            queryClient.setQueryData<{ pages: any[]; pageParams: any[] }>(
+            queryClient.setQueryData<InfiniteData<{ content?: Message[]; totalElements?: number }>>(
               ['messages', newMsg.conversationId],
               (oldData) => {
                 if (!oldData || !oldData.pages || oldData.pages.length === 0) {
@@ -64,7 +67,7 @@ export function useWebSocketChat(onMessageReceived?: (message: Message) => void)
 
             // 2. Cập nhật trực tiếp danh sách cuộc hội thoại (snippet, lastMessageAt, unreadCount)
             let isExistingConv = false
-            queryClient.setQueryData<any[]>(['conversations'], (oldConvs) => {
+            queryClient.setQueriesData<Conversation[]>({ queryKey: ['conversations'] }, (oldConvs) => {
               if (!oldConvs || !Array.isArray(oldConvs)) return oldConvs
 
               const snippet = newMsg.content?.trim()
@@ -104,6 +107,16 @@ export function useWebSocketChat(onMessageReceived?: (message: Message) => void)
               queryClient.invalidateQueries({ queryKey: ['conversations'] })
             }
 
+            // Nếu là thông báo hệ thống nhóm (thêm thành viên, đổi tên, cập nhật ảnh, rời nhóm...)
+            // làm mới cache danh sách hội thoại (để cập nhật memberCount, avatar, title) và danh sách thành viên
+            if (
+              newMsg.type
+                ? newMsg.type === 'SYSTEM'
+                : newMsg.content && /^((\p{L}|\s)+) đã (thêm|tạo|đổi|cập nhật|rời|xóa|chuyển)/iu.test(newMsg.content)
+            ) {
+              queryClient.invalidateQueries({ queryKey: ['conversations'] })
+              queryClient.invalidateQueries({ queryKey: ['group-members', newMsg.conversationId] })
+            }
 
             if (onMessageReceivedRef.current) {
               onMessageReceivedRef.current(newMsg)
@@ -139,6 +152,4 @@ export function useWebSocketChat(onMessageReceived?: (message: Message) => void)
       clientRef.current = null
     }
   }, [accessToken, queryClient])
-
-  return clientRef.current
 }

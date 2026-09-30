@@ -166,6 +166,7 @@ public class UserSpecification {
                         cb.like(unaccentHeadline, unaccentedPattern),
                         cb.like(cb.lower(profileJoin.get("headline")), rawPattern)
                 );
+                Predicate emailPred = cb.like(cb.lower(root.get("email")), rawPattern);
                 Predicate studentCodePred = cb.like(cb.lower(profileJoin.get("studentCode")), rawPattern);
                 Predicate cityPred = cb.or(
                         cb.like(unaccentCity, unaccentedPattern),
@@ -209,6 +210,7 @@ public class UserSpecification {
 
                 predicates.add(cb.or(
                         namePred,
+                        emailPred,
                         headlinePred,
                         studentCodePred,
                         cityPred,

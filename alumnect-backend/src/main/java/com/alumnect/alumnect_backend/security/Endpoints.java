@@ -59,7 +59,8 @@ public class Endpoints {
         "/api/v1/groups/{groupId:\\d+}/members", // Danh sách thành viên — Service tự chặn nhóm riêng tư với người ngoài nhóm
         "/api/v1/groups/{groupId:\\d+}/posts",   // Danh sách thảo luận trong nhóm — Service tự chặn nhóm riêng tư với người ngoài nhóm
         "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}", // Chi tiết bài viết thảo luận trong nhóm
-        "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}/comments" // Danh sách bình luận trong bài viết
+        "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}/comments", // Danh sách bình luận trong bài viết
+        "/api/v1/admin/mentor-packages" // Lấy danh sách toàn bộ gói Mentor dành cho Admin (UC95)
     };
 
 

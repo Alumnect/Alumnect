@@ -8,12 +8,14 @@ import { cn } from '@/lib/utils'
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
-  title: string
+  title: ReactNode
   icon?: ReactNode
   children: ReactNode
   footer?: ReactNode
   className?: string
   maxWidthClassName?: string // ví dụ: 'max-w-md', 'max-w-lg', ...
+  zIndexClassName?: string // ví dụ: 'z-50', 'z-[10000]', ...
+  bodyClassName?: string
 }
 
 /**
@@ -30,6 +32,8 @@ export function Modal({
   footer,
   className,
   maxWidthClassName = 'max-w-md',
+  zIndexClassName = 'z-50',
+  bodyClassName,
 }: ModalProps) {
   // Ngăn cuộn trang (scroll) khi modal đang mở
   useEffect(() => {
@@ -46,7 +50,7 @@ export function Modal({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className={cn("fixed inset-0 flex items-center justify-center p-4", zIndexClassName)}>
           {/* Lớp nền mờ (Backdrop) phủ toàn màn hình */}
           <motion.div
             className="absolute inset-0 bg-plum-950/40 dark:bg-black/70 backdrop-blur-xs"
@@ -90,7 +94,7 @@ export function Modal({
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto p-5 text-plum-700 dark:text-[#e4e6eb]">
+            <div className={cn("flex-1 overflow-y-auto p-5 text-plum-700 dark:text-[#e4e6eb]", bodyClassName)}>
               {children}
             </div>
 

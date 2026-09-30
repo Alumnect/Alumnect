@@ -437,6 +437,8 @@ export function AppShell() {
           ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
           : location.pathname === '/app/messages'
           ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100vh-3.85rem)] overflow-y-auto no-scrollbar"
+          : location.pathname === '/app/mentoring/terms'
+          ? "max-w-[1560px] px-3 sm:px-6 lg:px-8 py-2 sm:py-3 h-[calc(100vh-3.85rem)] overflow-hidden"
           : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
         <motion.div
@@ -444,7 +446,7 @@ export function AppShell() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={TRANSITION.page}
-          className={location.pathname === '/app/messages' ? "h-full" : undefined}
+          className={location.pathname === '/app/messages' || location.pathname === '/app/mentoring/terms' ? "h-full" : undefined}
         >
           <Outlet />
         </motion.div>

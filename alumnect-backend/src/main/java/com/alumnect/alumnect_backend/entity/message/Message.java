@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.entity.message;
 
+import com.alumnect.alumnect_backend.common.enums.MessageType;
 import com.alumnect.alumnect_backend.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,6 +40,12 @@ public class Message {
     /** Nội dung văn bản của tin nhắn (có thể null nếu chỉ gửi tệp đính kèm) */
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    /** Phân loại tin nhắn: TEXT (mặc định), SYSTEM, IMAGE, FILE */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type", length = 20, nullable = false)
+    @Builder.Default
+    private MessageType type = MessageType.TEXT;
 
     /** Cờ đánh dấu tin nhắn đã bị xóa/thu hồi */
     @Column(name = "is_deleted", nullable = false)

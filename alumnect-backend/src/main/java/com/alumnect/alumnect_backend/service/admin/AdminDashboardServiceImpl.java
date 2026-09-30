@@ -47,23 +47,20 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         long lockedUsers = userRepository.countByAccountStatus(AccountStatus.LOCKED);
         long pendingVerifications = verificationRequestRepository.countByStatus(VerificationStatus.PENDING);
 
-        // Lấy xu hướng đăng ký 7 ngày gần nhất (bao gồm cả ngày hôm nay)
+        // 1. Lấy xu hướng đăng ký 7 ngày gần nhất (bao gồm cả ngày hôm nay)
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         LocalDate sevenDaysAgo = today.minusDays(6);
 
-        // Chuyển LocalDate sang Instant để query DB (bắt đầu ngày 7 ngày trước -> hết ngày hôm nay)
-        Instant startDate = sevenDaysAgo.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
-        Instant endDate = today.plusDays(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+        Instant startDate7 = sevenDaysAgo.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+        Instant endDate7 = today.plusDays(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
 
-        List<Object[]> rawStats = userRepository.countRegistrationsByDayInRange(startDate, endDate);
+        List<Object[]> rawStats = userRepository.countRegistrationsByDayInRange(startDate7, endDate7);
 
-        // Đổ dữ liệu DB vào map để dễ tra cứu [ngày (chuỗi yyyy-MM-dd) -> số lượng]
         Map<String, Long> statMap = new HashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         for (Object[] row : rawStats) {
             if (row[0] != null) {
-                // Ép kiểu ngày từ DB, có thể là java.sql.Date hoặc LocalDate tùy Driver JPA
                 String dateStr;
                 if (row[0] instanceof java.sql.Date) {
                     dateStr = ((java.sql.Date) row[0]).toLocalDate().format(formatter);
@@ -77,13 +74,48 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             }
         }
 
-        // Tạo danh sách kết quả chứa đủ 7 ngày liên tục
         List<DayRegistrationStatDto> registrationsTrend = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             LocalDate date = sevenDaysAgo.plusDays(i);
             String dateStr = date.format(formatter);
             long count = statMap.getOrDefault(dateStr, 0L);
             registrationsTrend.add(new DayRegistrationStatDto(dateStr, count));
+        }
+
+        // 2. Thống kê theo 12 tháng trong năm hiện tại từ CSDL
+        LocalDate startOfYear = LocalDate.of(today.getYear(), 1, 1);
+        LocalDate endOfYear = LocalDate.of(today.getYear(), 12, 31);
+        Instant startInstYear = startOfYear.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+        Instant endInstYear = endOfYear.plusDays(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+
+        List<Object[]> rawMonthStats = userRepository.countRegistrationsByMonthInRange(startInstYear, endInstYear);
+        Map<Integer, Long> monthMap = new HashMap<>();
+        for (Object[] row : rawMonthStats) {
+            if (row[0] != null) {
+                int m = ((Number) row[0]).intValue();
+                long c = ((Number) row[1]).longValue();
+                monthMap.put(m, c);
+            }
+        }
+
+        List<DayRegistrationStatDto> monthStats = new ArrayList<>();
+        for (int m = 1; m <= 12; m++) {
+            long count = monthMap.getOrDefault(m, 0L);
+            monthStats.add(new DayRegistrationStatDto("Tháng " + m, count));
+        }
+
+        // 3. Thống kê theo các năm từ CSDL
+        List<Object[]> rawYearStats = userRepository.countRegistrationsByYear();
+        List<DayRegistrationStatDto> yearStats = new ArrayList<>();
+        for (Object[] row : rawYearStats) {
+            if (row[0] != null) {
+                String yLabel = "Năm " + ((Number) row[0]).intValue();
+                long c = ((Number) row[1]).longValue();
+                yearStats.add(new DayRegistrationStatDto(yLabel, c));
+            }
+        }
+        if (yearStats.isEmpty()) {
+            yearStats.add(new DayRegistrationStatDto("Năm " + today.getYear(), totalUsers));
         }
 
         return AdminDashboardSummaryDto.builder()
@@ -95,6 +127,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .lockedUsers(lockedUsers)
                 .pendingVerifications(pendingVerifications)
                 .registrationsLast7Days(registrationsTrend)
+                .registrationsByMonth(monthStats)
+                .registrationsByYear(yearStats)
                 .build();
     }
 }

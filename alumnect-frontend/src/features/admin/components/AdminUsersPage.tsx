@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAdminUsers, useAdminUserDetail, useUpdateUserStatus } from '../hooks/useAdmin'
+import { AdminMentorCvModal } from './AdminMentorCvModal'
 
 const TABS = [
   { name: 'Tất cả', value: 'ALL' },
@@ -18,6 +19,10 @@ export function AdminUsersPage() {
   const [tab, setTab] = useState('ALL')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
+
+  // UC96 State
+  const [selectedCvMentorId, setSelectedCvMentorId] = useState<number | null>(null)
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false)
 
   // Mapping tab values to API parameters
   const roleParam = tab === 'ALUMNI' ? 'ALUMNI' : tab === 'STUDENT' ? 'STUDENT' : undefined
@@ -197,6 +202,18 @@ export function AdminUsersPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center justify-end gap-2">
+                          {u.role === 'ALUMNI' && (u.hasMentorProfile || u.mentorProfileId) && (
+                            <button
+                              onClick={() => {
+                                setSelectedCvMentorId(u.mentorProfileId || u.id)
+                                setIsCvModalOpen(true)
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-orange-50 px-2 py-1.5 text-xs font-bold text-[#F27024] hover:bg-orange-100 border border-orange-200/80 shadow-sm transition-all"
+                              title="Xem CV Mentor (UC96)"
+                            >
+                              <FileText size={13} /> CV Mentor
+                            </button>
+                          )}
                           <button
                             onClick={() => setSelectedUserId(u.id)}
                             className="inline-flex items-center justify-center rounded-lg bg-plum-900/[0.04] px-2.5 py-1.5 text-xs font-semibold text-plum-600 hover:bg-plum-900/[0.08]"
@@ -470,6 +487,12 @@ export function AdminUsersPage() {
           </p>
         </Modal>
       )}
+      {/* UC96 Modal Xem CV Mentor cho Quản trị viên */}
+      <AdminMentorCvModal
+        isOpen={isCvModalOpen}
+        onClose={() => setIsCvModalOpen(false)}
+        mentorProfileId={selectedCvMentorId}
+      />
     </div>
   )
 }

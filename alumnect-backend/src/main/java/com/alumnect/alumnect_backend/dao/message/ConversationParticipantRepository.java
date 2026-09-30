@@ -37,4 +37,20 @@ public interface ConversationParticipantRepository extends JpaRepository<Convers
      * Kiểm tra xem người dùng có phải là thành viên của cuộc hội thoại hay không.
      */
     boolean existsByConversationIdAndUserId(Long conversationId, Long userId);
+
+    /**
+     * Xóa một thành viên khỏi cuộc hội thoại.
+     */
+    void deleteByConversationIdAndUserId(Long conversationId, Long userId);
+
+    /**
+     * Đếm tổng số thành viên trong một cuộc hội thoại.
+     */
+    long countByConversationId(Long conversationId);
+
+    /**
+     * Lấy danh sách thành viên của một cuộc hội thoại kèm thông tin User.
+     */
+    @Query("SELECT cp FROM ConversationParticipant cp JOIN FETCH cp.user u WHERE cp.conversation.id = :conversationId")
+    List<ConversationParticipant> findByConversationIdWithUser(@Param("conversationId") Long conversationId);
 }
