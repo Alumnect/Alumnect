@@ -141,6 +141,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                     .content(p.getContent())
                     .topic(p.getTopic())
                     .imageUrls(p.getImageUrls() != null ? p.getImageUrls() : Collections.emptyList())
+                    .videoUrls(p.getVideoUrls() != null ? p.getVideoUrls() : Collections.emptyList())
                     .isPinned(p.isPinned())
                     .likeCount(p.getLikeCount())
                     .commentCount(p.getCommentCount())
@@ -195,6 +196,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .content(post.getContent())
                 .topic(post.getTopic())
                 .imageUrls(post.getImageUrls() != null ? post.getImageUrls() : Collections.emptyList())
+                .videoUrls(post.getVideoUrls() != null ? post.getVideoUrls() : Collections.emptyList())
                 .isPinned(post.isPinned())
                 .likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
@@ -216,6 +218,8 @@ public class GroupPostServiceImpl implements GroupPostService {
         GroupMember member = checkMemberActive(groupId, author.getId(), "Chỉ thành viên của hội nhóm mới có quyền đăng bài thảo luận.");
 
         List<String> cleanImages = sanitizeImages(request.getImageUrls());
+        List<String> cleanVideos = sanitizeVideos(request.getVideoUrls());
+        validateMediaCount(cleanImages, cleanVideos);
         String topic = resolveGroupTopic(group, request.getTopic());
 
         GroupPost post = GroupPost.builder()
@@ -224,6 +228,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .content(request.getContent().trim())
                 .topic(topic)
                 .imageUrls(cleanImages)
+                .videoUrls(cleanVideos)
                 .isPinned(false)
                 .likeCount(0)
                 .commentCount(0)
@@ -241,6 +246,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .content(saved.getContent())
                 .topic(saved.getTopic())
                 .imageUrls(saved.getImageUrls() != null ? saved.getImageUrls() : Collections.emptyList())
+                .videoUrls(saved.getVideoUrls() != null ? saved.getVideoUrls() : Collections.emptyList())
                 .isPinned(saved.isPinned())
                 .likeCount(0)
                 .commentCount(0)
@@ -269,7 +275,11 @@ public class GroupPostServiceImpl implements GroupPostService {
 
         post.setContent(request.getContent().trim());
         post.setTopic(resolveGroupTopic(group, request.getTopic()));
-        post.setImageUrls(sanitizeImages(request.getImageUrls()));
+        List<String> cleanImages = sanitizeImages(request.getImageUrls());
+        List<String> cleanVideos = sanitizeVideos(request.getVideoUrls());
+        validateMediaCount(cleanImages, cleanVideos);
+        post.setImageUrls(cleanImages);
+        post.setVideoUrls(cleanVideos);
         GroupPost saved = groupPostRepository.save(post);
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
@@ -285,6 +295,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .content(saved.getContent())
                 .topic(saved.getTopic())
                 .imageUrls(saved.getImageUrls() != null ? saved.getImageUrls() : Collections.emptyList())
+                .videoUrls(saved.getVideoUrls() != null ? saved.getVideoUrls() : Collections.emptyList())
                 .isPinned(saved.isPinned())
                 .likeCount(saved.getLikeCount())
                 .commentCount(saved.getCommentCount())
@@ -385,6 +396,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .content(saved.getContent())
                 .topic(saved.getTopic())
                 .imageUrls(saved.getImageUrls() != null ? saved.getImageUrls() : Collections.emptyList())
+                .videoUrls(saved.getVideoUrls() != null ? saved.getVideoUrls() : Collections.emptyList())
                 .isPinned(saved.isPinned())
                 .likeCount(saved.getLikeCount())
                 .commentCount(saved.getCommentCount())
@@ -454,6 +466,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                     .postId(postId)
                     .author(toAuthorResponse(c.getAuthor(), authorProfile, authorMember))
                     .content(c.getContent())
+                    .parentId(c.getParentComment() != null ? c.getParentComment().getId() : null)
                     .canEdit(isCommentAuthor)
                     .canDelete(canDelete)
                     .createdAt(c.getCreatedAt())
@@ -482,9 +495,17 @@ public class GroupPostServiceImpl implements GroupPostService {
         GroupPost post = groupPostRepository.findByIdAndGroupId(postId, groupId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bài viết không tồn tại trong hội nhóm này."));
 
+        GroupPostComment parent = null;
+        if (request.getParentId() != null) {
+            parent = groupPostCommentRepository.findByIdAndPostId(request.getParentId(), postId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Bình luận cần trả lời không còn khả dụng."));
+            if (parent.getParentComment() != null) parent = parent.getParentComment();
+        }
+
         GroupPostComment comment = GroupPostComment.builder()
                 .post(post)
                 .author(author)
+                .parentComment(parent)
                 .content(request.getContent().trim())
                 .build();
 
@@ -498,6 +519,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .postId(postId)
                 .author(toAuthorResponse(author, profile, member))
                 .content(saved.getContent())
+                .parentId(parent != null ? parent.getId() : null)
                 .canEdit(true)
                 .canDelete(true)
                 .createdAt(saved.getCreatedAt())
@@ -532,6 +554,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .postId(postId)
                 .author(toAuthorResponse(author, profile, member))
                 .content(saved.getContent())
+                .parentId(saved.getParentComment() != null ? saved.getParentComment().getId() : null)
                 .canEdit(true)
                 .canDelete(true)
                 .createdAt(saved.getCreatedAt())
@@ -562,8 +585,10 @@ public class GroupPostServiceImpl implements GroupPostService {
             throw new ForbiddenException("Bạn không có quyền xóa bình luận này.");
         }
 
+        int deletedCount = Math.toIntExact(1 + (comment.getParentComment() == null
+                ? groupPostCommentRepository.countByParentComment_Id(commentId) : 0));
         groupPostCommentRepository.delete(comment);
-        groupPostRepository.decrementCommentCount(postId);
+        groupPostRepository.decrementCommentCount(postId, deletedCount);
         log.info("Xóa bình luận hội nhóm thành công: commentId={}, postId={}, deletedBy={}", commentId, postId, user.getId());
     }
 
@@ -612,6 +637,18 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .filter(url -> url != null && !url.isBlank())
                 .limit(10)
                 .collect(Collectors.toList());
+    }
+
+    private List<String> sanitizeVideos(List<String> videos) {
+        if (videos == null || videos.isEmpty()) return new ArrayList<>();
+        return videos.stream().filter(url -> url != null && !url.isBlank()).limit(10)
+                .collect(Collectors.toList());
+    }
+
+    private void validateMediaCount(List<String> images, List<String> videos) {
+        if (images.size() + videos.size() > 10) {
+            throw new BadRequestException("Mỗi bài viết chỉ được đính kèm tối đa 10 ảnh hoặc video.");
+        }
     }
 
     private String resolveGroupTopic(CommunityGroup group, String requested) {

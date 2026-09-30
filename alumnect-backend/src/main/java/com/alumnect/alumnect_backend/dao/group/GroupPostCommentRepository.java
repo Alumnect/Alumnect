@@ -25,4 +25,6 @@ public interface GroupPostCommentRepository extends JpaRepository<GroupPostComme
 
     @Query("SELECT c FROM GroupPostComment c JOIN FETCH c.author WHERE c.id = :id AND c.post.id = :postId")
     Optional<GroupPostComment> findByIdAndPostId(@Param("id") Long id, @Param("postId") Long postId);
+
+    long countByParentComment_Id(Long parentId);
 }

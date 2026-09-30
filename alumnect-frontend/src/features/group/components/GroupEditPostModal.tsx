@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { groupApi } from '../api/groupApi'
 import { useUpdateGroupPostMutation } from '../hooks/useGroupPosts'
 import type { GroupPost } from '../model/group'
+import { validateGroupMedia } from '../lib/groupMedia'
 
 const MAX_IMAGES = 10
 const MAX_CONTENT = 5000
@@ -19,6 +20,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
   const [content, setContent] = useState(post.content)
   const [topic, setTopic] = useState(topics.includes(post.topic ?? '') ? post.topic ?? '' : '')
   const [images, setImages] = useState<string[]>(post.imageUrls ?? [])
+  const [videos, setVideos] = useState<string[]>(post.videoUrls ?? [])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateMutation = useUpdateGroupPostMutation(groupId)
@@ -28,14 +30,12 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
     const files = Array.from(event.target.files ?? [])
     event.target.value = ''
     if (!files.length) return
-    if (images.length + files.length > MAX_IMAGES) {
-      toast.error(`Chỉ được đính kèm tối đa ${MAX_IMAGES} hình ảnh.`)
-      return
-    }
     setUploading(true)
     try {
+      await validateGroupMedia(files, images.length + videos.length)
       const urls = await Promise.all(files.map((file) => groupApi.uploadPostImage(file)))
-      setImages((current) => [...current, ...urls])
+      setImages((current) => [...current, ...urls.filter((_, index) => files[index].type.startsWith('image/'))])
+      setVideos((current) => [...current, ...urls.filter((_, index) => files[index].type.startsWith('video/'))])
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Không thể tải ảnh lên. Vui lòng thử lại.')
     } finally {
@@ -51,7 +51,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
       return
     }
     updateMutation.mutate(
-      { postId: post.id, payload: { content: trimmed, topic: topic || null, imageUrls: images } },
+      { postId: post.id, payload: { content: trimmed, topic: topic || null, imageUrls: images, videoUrls: videos } },
       { onSuccess: onClose },
     )
   }
@@ -100,7 +100,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
         </div>
 
         <div>
-          <p className="mb-2 text-sm font-semibold">Ảnh đính kèm ({images.length}/{MAX_IMAGES})</p>
+          <p className="mb-2 text-sm font-semibold">Ảnh/video đính kèm ({images.length + videos.length}/{MAX_IMAGES})</p>
           {images.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2">
               {images.map((url, index) => (
@@ -116,9 +116,22 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
               ))}
             </div>
           )}
-          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} />
-          <Button type="button" variant="secondary" size="sm" disabled={busy || images.length >= MAX_IMAGES} onClick={() => fileInputRef.current?.click()} leftIcon={<ImagePlus size={15} />}>
-            Thêm ảnh
+          {videos.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {videos.map((url, index) => (
+                <div key={`${url}-${index}`} className="relative h-20 w-28 overflow-hidden rounded-xl bg-black">
+                  <video src={url} muted preload="metadata" className="h-full w-full object-cover" />
+                  <button type="button" onClick={() => setVideos((current) => current.filter((_, videoIndex) => videoIndex !== index))}
+                    aria-label={`Gỡ video ${index + 1}`} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white">
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} />
+          <Button type="button" variant="secondary" size="sm" disabled={busy || images.length + videos.length >= MAX_IMAGES} onClick={() => fileInputRef.current?.click()} leftIcon={<ImagePlus size={15} />}>
+            Thêm ảnh/video
           </Button>
         </div>
       </form>

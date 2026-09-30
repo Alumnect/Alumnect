@@ -27,6 +27,7 @@ public class GroupPostResponse {
     private String content;
     private String topic;
     private List<String> imageUrls;
+    private List<String> videoUrls;
     /** Bài viết đang được ghim lên đầu hội nhóm (serialize đúng tên "isPinned") */
     @JsonProperty("isPinned")
     private boolean isPinned;

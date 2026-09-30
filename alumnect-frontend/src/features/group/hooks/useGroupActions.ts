@@ -8,7 +8,9 @@ function refreshGroup(queryClient: QueryClient, id?: number) {
   queryClient.invalidateQueries({ queryKey: ['groups'] })
   queryClient.invalidateQueries({ queryKey: ['my-groups'] })
   if (id !== undefined) {
-    queryClient.invalidateQueries({ queryKey: ['group', String(id)] })
+    queryClient.invalidateQueries({
+      predicate: (query) => query.queryKey[0] === 'group' && Number(query.queryKey[1]) === id,
+    })
     queryClient.invalidateQueries({ queryKey: ['group-members', id] })
     queryClient.invalidateQueries({ queryKey: ['group-requests', id] })
   }
@@ -29,7 +31,10 @@ export function useUpdateGroup(id: number) {
   return useMutation({
     mutationFn: (input: GroupInput) => groupApi.update(id, input),
     onSuccess: (updatedGroup) => {
-      queryClient.setQueriesData<GroupDetail>({ queryKey: ['group', String(id)] }, updatedGroup)
+      queryClient.setQueriesData<GroupDetail>(
+        { predicate: (query) => query.queryKey[0] === 'group' && Number(query.queryKey[1]) === id },
+        updatedGroup,
+      )
       refreshGroup(queryClient, id)
     },
   })
@@ -72,7 +77,9 @@ export function useLeaveGroup() {
   return useMutation({
     mutationFn: ({ id, transferToUserId }: { id: number; transferToUserId?: number }) => groupApi.leave(id, transferToUserId),
     onSuccess: async (_data, vars) => {
-      await queryClient.invalidateQueries({ queryKey: ['group', String(vars.id)] })
+      await queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'group' && Number(query.queryKey[1]) === vars.id,
+      })
       refreshGroup(queryClient, vars.id)
     },
   })

@@ -5,7 +5,7 @@ import {
   Users,
   Briefcase,
   CalendarBlank,
-  ChatCircleDots,
+  Question,
   UsersThree,
   ChartLineUp,
   Compass,
@@ -47,7 +47,7 @@ export const APP_PRIMARY_NAV: NavItem[] = [
   { label: 'Thành viên', to: '/app/alumni', icon: Users },
   { label: 'Tuyển dụng', to: '/app/jobs', icon: Briefcase },
   { label: 'Sự kiện', to: '/app/events', icon: CalendarBlank },
-  { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: ChatCircleDots },
+  { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: Question },
 ]
 
 /** Secondary features — tucked into the "More" apps menu (used less often). */

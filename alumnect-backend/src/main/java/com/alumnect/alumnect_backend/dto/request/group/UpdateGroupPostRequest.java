@@ -27,4 +27,7 @@ public class UpdateGroupPostRequest {
 
     @Size(max = 10, message = "Mỗi bài viết chỉ được đính kèm tối đa 10 hình ảnh")
     private List<String> imageUrls;
+
+    @Size(max = 10, message = "Mỗi bài viết chỉ được đính kèm tối đa 10 video")
+    private List<String> videoUrls;
 }

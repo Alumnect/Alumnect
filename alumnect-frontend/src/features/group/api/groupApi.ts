@@ -231,8 +231,8 @@ export const groupApi = {
   },
 
   /** Thêm bình luận vào bài viết. `POST /api/v1/groups/{groupId}/posts/{postId}/comments`. */
-  createComment: async (groupId: number, postId: number, content: string): Promise<GroupComment> => {
-    const body = await http.post(`/groups/${groupId}/posts/${postId}/comments`, { content })
+  createComment: async (groupId: number, postId: number, content: string, parentId?: number): Promise<GroupComment> => {
+    const body = await http.post(`/groups/${groupId}/posts/${postId}/comments`, { content, ...(parentId ? { parentId } : {}) })
     return payloadOf(body) as GroupComment
   },
 

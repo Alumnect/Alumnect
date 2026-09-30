@@ -49,6 +49,11 @@ public class GroupPost {
     @Builder.Default
     private List<String> imageUrls = new ArrayList<>();
 
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "video_urls", columnDefinition = "varchar(500)[]")
+    @Builder.Default
+    private List<String> videoUrls = new ArrayList<>();
+
     @Column(name = "is_pinned", nullable = false)
     @Builder.Default
     private boolean isPinned = false;

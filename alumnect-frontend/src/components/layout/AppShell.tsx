@@ -164,7 +164,7 @@ export function AppShell() {
         isOpen={activePopover === 'apps'}
         onToggle={() => setActivePopover((prev) => (prev === 'apps' ? null : 'apps'))}
         onClose={() => setActivePopover(null)}
-        panelClass="w-auto p-2"
+        panelClass="w-[184px] p-3"
         button={
           <span className="group relative grid h-11 w-11 place-items-center rounded-2xl text-plum-500 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
             <span className="transition-transform duration-200 group-hover:-translate-y-0.5">
@@ -177,7 +177,7 @@ export function AppShell() {
         }
       >
         <p className="whitespace-nowrap px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-plum-400">Khám phá thêm</p>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-3 justify-items-center gap-2">
           {items.map((item) => {
             const Icon = item.icon
             return (

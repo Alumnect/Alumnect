@@ -23,6 +23,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
   const [search, setSearch] = useState('')
   const keyword = useDebouncedValue(search, 400)
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } = useGroupMembers(groupId, keyword, canView)
+  const { data: managerData } = useGroupMembers(groupId, '', canView && viewerRole === 'OWNER')
   const removeMut = useRemoveMember(groupId)
   const roleMut = useChangeMemberRole(groupId)
   const [toRemove, setToRemove] = useState<GroupMember | null>(null)
@@ -41,10 +42,12 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
 
   const members = data?.pages.flatMap((p) => p.items) ?? []
   const total = data?.pages[0]?.total ?? 0
+  const hasAdmin = managerData?.pages.some((page) => page.items.some((member) => member.role === 'ADMIN')) ?? true
 
   /** Quyền thao tác của người xem đối với một thành viên cụ thể. */
   const canRemove = (m: GroupMember) => m.userId !== viewerUserId && ((viewerRole === 'OWNER' && m.role !== 'OWNER') || (viewerRole === 'ADMIN' && m.role === 'MEMBER'))
-  const canChangeRole = (m: GroupMember) => viewerRole === 'OWNER' && m.userId !== viewerUserId && m.role !== 'OWNER'
+  const canChangeRole = (m: GroupMember) => viewerRole === 'OWNER' && m.userId !== viewerUserId
+    && m.role !== 'OWNER' && (m.role === 'ADMIN' || !hasAdmin)
 
   const changeRole = (m: GroupMember) => {
     const role = m.role === 'ADMIN' ? 'MEMBER' : 'ADMIN'

@@ -18,6 +18,7 @@ public class GroupCommentResponse {
 
     private Long id;
     private Long postId;
+    private Long parentId;
     private GroupPostAuthorResponse author;
     private String content;
 

@@ -22,7 +22,7 @@ import { TRANSITION } from '@/lib/motion'
 import { useAuthStore } from '@/store/authStore'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GroupEditPostModal } from './GroupEditPostModal'
-import type { GroupPost } from '../model/group'
+import type { GroupComment, GroupPost } from '../model/group'
 import {
   useDeleteGroupPostMutation,
   useToggleGroupPostLikeMutation,
@@ -73,6 +73,8 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
   const currentUser = useAuthStore((s) => s.user)
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
+  const [replyingTo, setReplyingTo] = useState<number | null>(null)
+  const [replyText, setReplyText] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editingPost, setEditingPost] = useState(false)
@@ -87,16 +89,21 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
   const deleteMutation = useDeleteGroupPostMutation(groupId)
 
   // Comments
-  const { data: commentsData, isLoading: commentsLoading } = useGroupCommentsQuery(
+  const { data: commentsData, isLoading: commentsLoading, hasNextPage: hasMoreComments, fetchNextPage: fetchMoreComments, isFetchingNextPage } = useGroupCommentsQuery(
     groupId,
     post.id,
-    0,
     50,
     showComments, // chỉ tải bình luận khi người dùng mở khung bình luận
   )
   const createCommentMutation = useCreateGroupCommentMutation(groupId, post.id)
   const deleteCommentMutation = useDeleteGroupCommentMutation(groupId, post.id)
   const updateCommentMutation = useUpdateGroupCommentMutation(groupId, post.id)
+  const loadedComments = commentsData?.pages.flatMap((page) => page.content) ?? []
+  const roots = loadedComments.filter((comment) => !comment.parentId || !loadedComments.some((item) => item.id === comment.parentId))
+  const orderedComments: GroupComment[] = roots.flatMap((root) => [
+    root,
+    ...loadedComments.filter((comment) => comment.parentId === root.id),
+  ])
 
   const handleToggleLike = () => {
     if (!isGroupActive) return
@@ -128,10 +135,25 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
     }
 
     try {
-      await createCommentMutation.mutateAsync(trimmed)
+      await createCommentMutation.mutateAsync({ content: trimmed })
       setCommentText('')
     } catch {
       // toast handled in mutation
+    }
+  }
+
+  const handleSendReply = async (event: React.FormEvent, parentId: number) => {
+    event.preventDefault()
+    const content = replyText.trim()
+    if (!content) return
+    const selectedComment = loadedComments.find((comment) => comment.id === parentId)
+    const rootParentId = selectedComment?.parentId ?? parentId
+    try {
+      await createCommentMutation.mutateAsync({ content, parentId: rootParentId })
+      setReplyText('')
+      setReplyingTo(null)
+    } catch {
+      // Lỗi đã được hiển thị trong mutation.
     }
   }
 
@@ -392,6 +414,16 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
           </div>
         )}
 
+        {(post.videoUrls ?? []).length > 0 && (
+          <div className="mt-3.5 grid gap-2 sm:grid-cols-2">
+            {post.videoUrls.map((url, index) => (
+              <video key={`${url}-${index}`} src={url} controls preload="metadata"
+                aria-label={`Video đính kèm ${index + 1}`}
+                className="max-h-[460px] w-full rounded-2xl bg-black" />
+            ))}
+          </div>
+        )}
+
         {/* Thanh tương tác: Like, Bình luận, Chia sẻ */}
         <div className="mt-4 flex items-center justify-between border-t border-plum-900/[0.06] pt-3 text-xs font-bold text-plum-500 dark:border-[#393a3b] dark:text-[#b0b3b8]">
           <div className="flex items-center gap-4">
@@ -496,10 +528,12 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                   <div className="flex justify-center py-3">
                     <Loader2 size={18} className="animate-spin text-brand-500" />
                   </div>
-                ) : commentsData?.content && commentsData.content.length > 0 ? (
+                ) : loadedComments.length > 0 ? (
                   <div className="space-y-2.5 pt-1">
-                    {commentsData.content.map((c) => (
-                      <div key={c.id} className="group flex items-start gap-2.5">
+                    {orderedComments.map((c) => {
+                      const parentComment = c.parentId ? loadedComments.find((comment) => comment.id === c.parentId) : undefined
+                      return (
+                      <div key={c.id} className={cn('group flex items-start gap-2.5', c.parentId && 'relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20')}>
                         <Link to={`/app/profile?userId=${c.author.userId}`}>
                           <Avatar
                             src={c.author.avatarUrl}
@@ -581,11 +615,46 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                               </div>
                             </form>
                           ) : (
-                            <p className="mt-1 whitespace-pre-wrap text-xs text-plum-800 dark:text-plum-200">{c.content}</p>
+                            <div className="mt-1">
+                              {parentComment && (
+                                <span className="mr-1 text-[11px] font-semibold text-brand-600 dark:text-brand-400">
+                                  @{parentComment.author.fullName}
+                                </span>
+                              )}
+                              <span className="whitespace-pre-wrap text-xs text-plum-800 dark:text-plum-200">{c.content}</span>
+                            </div>
+                          )}
+                          {isActiveMember && isGroupActive && editingCommentId !== c.id && (
+                            <button type="button" onClick={() => {
+                              setReplyingTo(c.id)
+                              setReplyText('')
+                            }} className="mt-1.5 text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400">
+                              Trả lời
+                            </button>
+                          )}
+                          {replyingTo === c.id && (
+                            <form onSubmit={(event) => handleSendReply(event, c.id)} className="mt-2 space-y-2">
+                              <label className="block text-[11px] text-plum-500">Trả lời {c.author.fullName}</label>
+                              <textarea value={replyText} onChange={(event) => setReplyText(event.target.value)}
+                                maxLength={1000} rows={2} autoFocus
+                                className="w-full rounded-xl border border-plum-900/10 bg-white p-2 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-[#393a3b] dark:bg-[#242526] dark:text-white" />
+                              <div className="flex justify-end gap-2">
+                                <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-plum-500">Hủy</button>
+                                <button type="submit" disabled={!replyText.trim() || createCommentMutation.isPending}
+                                  className="text-xs font-bold text-brand-600 disabled:opacity-50">Gửi trả lời</button>
+                              </div>
+                            </form>
                           )}
                         </div>
                       </div>
-                    ))}
+                      )
+                    })}
+                    {hasMoreComments && (
+                      <button type="button" onClick={() => fetchMoreComments()} disabled={isFetchingNextPage}
+                        className="block w-full py-2 text-center text-xs font-semibold text-brand-600 hover:underline">
+                        {isFetchingNextPage ? 'Đang tải...' : 'Xem thêm bình luận'}
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <p className="py-2 text-center text-xs text-plum-400 dark:text-[#8a8d91]">

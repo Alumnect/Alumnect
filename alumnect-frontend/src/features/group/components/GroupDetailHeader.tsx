@@ -36,7 +36,12 @@ export function GroupDetailHeader({
 
   return (
     <Card hover={false} className="overflow-hidden rounded-3xl border border-plum-900/[0.08] p-0 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-      <GroupCover url={group.coverImageUrl} name={group.name} aspect="h-32 sm:h-44 lg:h-48" />
+      <GroupCover
+        url={group.coverImageUrl}
+        name={group.name}
+        aspect="h-40 sm:h-52 lg:h-64 xl:h-72"
+        fit="contain"
+      />
 
       <div className="px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

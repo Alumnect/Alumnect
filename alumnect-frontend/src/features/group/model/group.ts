@@ -198,6 +198,7 @@ export interface GroupPost {
   content: string
   topic: string | null
   imageUrls: string[]
+  videoUrls: string[]
   isPinned: boolean
   likeCount: number
   commentCount: number
@@ -213,6 +214,7 @@ export interface GroupPost {
 export interface GroupComment {
   id: number
   postId: number
+  parentId: number | null
   author: GroupPostAuthor
   content: string
   canEdit: boolean
@@ -233,4 +235,5 @@ export interface CreateGroupPostPayload {
   content: string
   topic?: string | null
   imageUrls?: string[]
+  videoUrls?: string[]
 }

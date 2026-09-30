@@ -21,7 +21,7 @@ import {
   Settings2,
   Users,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Badge, Card, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -63,7 +63,7 @@ export function GroupDetailPage() {
         {/* Kích thước khớp với ảnh bìa và phần thông tin nhóm khi tải xong */}
         <Skeleton className="h-5 w-40" />
         <div className="overflow-hidden rounded-3xl">
-          <Skeleton className="h-32 w-full rounded-none sm:h-44 lg:h-48" />
+          <Skeleton className="h-40 w-full rounded-none sm:h-52 lg:h-64 xl:h-72" />
           <Skeleton className="h-36 w-full rounded-none opacity-60" />
         </div>
         <Skeleton className="h-10 w-full rounded-2xl" />
@@ -223,16 +223,14 @@ export function GroupDetailPage() {
       {/* Bố cục 2 cột (Desktop 2-column layout phong cách Reddit / Threads) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* ===================== CỘT CHÍNH (68% - 8 cột) ===================== */}
-        <div className="space-y-5 lg:col-span-8">
-          <AnimatePresence mode="wait" initial={false}>
+        <div className="min-h-[32rem] space-y-5 [overflow-anchor:none] lg:col-span-8">
             {/* TAB 1: THẢO LUẬN (DISCUSSIONS) */}
             {activeTab === 'discussions' && (
               <motion.div
                 key="tab-discussions"
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: TRANSITION.exit }}
-                transition={TRANSITION.content}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="space-y-4"
               >
                 {/* Trạng thái nhóm riêng tư mà người xem chưa là thành viên */}
@@ -264,10 +262,9 @@ export function GroupDetailPage() {
             {activeTab === 'about' && (
               <motion.div
                 key="tab-about"
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: TRANSITION.exit }}
-                transition={TRANSITION.content}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="space-y-5"
               >
                 <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
@@ -347,10 +344,9 @@ export function GroupDetailPage() {
             {activeTab === 'members' && (
               <motion.div
                 key="tab-members"
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: TRANSITION.exit }}
-                transition={TRANSITION.content}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
                   <div className="mb-4 flex items-center justify-between">
@@ -374,15 +370,13 @@ export function GroupDetailPage() {
             {activeTab === 'manage' && isManager && (
               <motion.div
                 key="tab-manage"
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: TRANSITION.exit }}
-                transition={TRANSITION.content}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <GroupManagePanel group={group} />
               </motion.div>
             )}
-          </AnimatePresence>
         </div>
 
         {/* ===================== CỘT BÊN (32% - 4 cột Sticky) ===================== */}

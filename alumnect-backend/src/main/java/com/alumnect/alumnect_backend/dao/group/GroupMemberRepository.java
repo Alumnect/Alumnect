@@ -38,6 +38,10 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 
     long countByGroupIdAndMembershipStatus(Long groupId, com.alumnect.alumnect_backend.common.enums.MembershipStatus status);
 
+    long countByGroupIdAndRoleAndMembershipStatus(Long groupId,
+            com.alumnect.alumnect_backend.common.enums.MembershipRole role,
+            com.alumnect.alumnect_backend.common.enums.MembershipStatus status);
+
     /** Danh sách thành viên ACTIVE: Owner trước, rồi Admin, rồi Member (theo ngày tham gia); tìm theo tên có/không dấu. */
     @Query(value = "SELECT m FROM GroupMember m JOIN FETCH m.user u LEFT JOIN UserProfile up ON up.userId = u.id " +
             "WHERE m.group.id = :groupId AND m.membershipStatus = com.alumnect.alumnect_backend.common.enums.MembershipStatus.ACTIVE " +

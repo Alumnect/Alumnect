@@ -310,6 +310,9 @@ public class GroupServiceImpl implements GroupService {
                 GroupMember successor = memberRepository.findByGroupIdAndUserIdForUpdate(groupId, transferToUserId)
                         .filter(m -> m.getMembershipStatus() == MembershipStatus.ACTIVE)
                         .orElseThrow(() -> new BadRequestException("Người nhận quyền sở hữu phải là thành viên đang hoạt động của nhóm."));
+                // Giải phóng slot OWNER trước khi bổ nhiệm người kế nhiệm (unique index không deferrable).
+                membership.setRole(MembershipRole.MEMBER);
+                memberRepository.saveAndFlush(membership);
                 successor.setRole(MembershipRole.OWNER);
                 memberRepository.save(successor);
                 group.setOwner(successor.getUser());
@@ -462,6 +465,12 @@ public class GroupServiceImpl implements GroupService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thành viên trong hội nhóm."));
         if (target.getRole() == MembershipRole.OWNER) {
             throw new BadRequestException("Không thể thay đổi vai trò của chủ sở hữu.");
+        }
+
+        if (newRole == MembershipRole.ADMIN && target.getRole() != MembershipRole.ADMIN
+                && memberRepository.countByGroupIdAndRoleAndMembershipStatus(
+                        groupId, MembershipRole.ADMIN, MembershipStatus.ACTIVE) > 0) {
+            throw new BadRequestException("Mỗi hội nhóm chỉ được có một quản trị viên. Hãy gỡ Admin hiện tại trước.");
         }
 
         target.setRole(newRole);

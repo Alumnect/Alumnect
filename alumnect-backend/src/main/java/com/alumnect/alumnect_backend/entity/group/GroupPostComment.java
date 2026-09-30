@@ -34,6 +34,10 @@ public class GroupPostComment {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_comment_id")
+    private GroupPostComment parentComment;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 

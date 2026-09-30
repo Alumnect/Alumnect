@@ -27,12 +27,14 @@ export function GroupCover({
   className,
   aspect = 'aspect-[16/9]',
   showInitial = false,
+  fit = 'cover',
 }: {
   url?: string | null
   name: string
   className?: string
   aspect?: string
   showInitial?: boolean
+  fit?: 'cover' | 'contain'
 }) {
   const [failed, setFailed] = useState(false)
   const palette = getGradient(name || 'Group')
@@ -41,15 +43,28 @@ export function GroupCover({
   return (
     <div className={cn('relative w-full overflow-hidden bg-gradient-to-br', aspect, palette, className)}>
       {url && !failed ? (
-        <img
-          src={url}
-          alt={name}
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-          onError={() => setFailed(true)}
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-        />
+        <>
+          {fit === 'contain' && (
+            <img
+              src={url}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-xl"
+            />
+          )}
+          <img
+            src={url}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={() => setFailed(true)}
+            className={cn(
+              'relative h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.02]',
+              fit === 'contain' ? 'object-contain' : 'object-cover',
+            )}
+          />
+        </>
       ) : (
         <div className="absolute inset-0 grid place-items-center bg-gradient-to-tr from-plum-900/10 via-transparent to-white/20 p-4 text-center">
           {showInitial ? (

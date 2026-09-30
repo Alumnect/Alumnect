@@ -60,8 +60,8 @@ public interface GroupPostRepository extends JpaRepository<GroupPost, Long> {
      * Giảm số lượng bình luận của bài viết một cách nguyên tử (kẹp sàn 0).
      */
     @Modifying
-    @Query("UPDATE GroupPost p SET p.commentCount = CASE WHEN p.commentCount > 0 THEN p.commentCount - 1 ELSE 0 END WHERE p.id = :postId")
-    void decrementCommentCount(@Param("postId") Long postId);
+    @Query("UPDATE GroupPost p SET p.commentCount = CASE WHEN p.commentCount > :count THEN p.commentCount - :count ELSE 0 END WHERE p.id = :postId")
+    void decrementCommentCount(@Param("postId") Long postId, @Param("count") int count);
 
     /**
      * Đếm tổng số bài viết trong hội nhóm.

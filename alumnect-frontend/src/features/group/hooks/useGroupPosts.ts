@@ -2,15 +2,17 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tansta
 import type { InfiniteData } from '@tanstack/react-query'
 import { toast } from '@/components/ui'
 import { groupApi } from '../api/groupApi'
-import type { CreateGroupPostPayload, GroupPost } from '../model/group'
+import type { CreateGroupPostPayload, GroupComment, GroupPost } from '../model/group'
 
 type GroupPostPage = Awaited<ReturnType<typeof groupApi.listPosts>>
+type GroupCommentPage = Awaited<ReturnType<typeof groupApi.listComments>>
 
 export const groupPostKeys = {
   all: ['group-posts'] as const,
   list: (groupId: number, size = 10, topic = '') => [...groupPostKeys.all, 'list', groupId, size, topic] as const,
   detail: (groupId: number, postId: number) => [...groupPostKeys.all, 'detail', groupId, postId] as const,
-  comments: (groupId: number, postId: number, page = 0) => [...groupPostKeys.all, 'comments', groupId, postId, page] as const,
+  comments: (groupId: number, postId: number, page?: number, size?: number) =>
+    [...groupPostKeys.all, 'comments', groupId, postId, ...(page === undefined ? [] : [page, size ?? 20])] as const,
 }
 
 /**
@@ -158,10 +160,12 @@ export function useToggleGroupPostPinMutation(groupId: number) {
  * Hook lấy danh sách bình luận của bài viết.
  * @param enabled false = chưa gọi API (khung bình luận đang đóng) để tránh N+1 request khi tải danh sách bài viết
  */
-export function useGroupCommentsQuery(groupId: number, postId: number, page = 0, size = 20, enabled = true) {
-  return useQuery({
-    queryKey: groupPostKeys.comments(groupId, postId, page),
-    queryFn: () => groupApi.listComments(groupId, postId, page, size),
+export function useGroupCommentsQuery(groupId: number, postId: number, size = 50, enabled = true) {
+  return useInfiniteQuery({
+    queryKey: groupPostKeys.comments(groupId, postId, 0, size),
+    queryFn: ({ pageParam }) => groupApi.listComments(groupId, postId, pageParam, size),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.last ? undefined : lastPage.pageNumber + 1,
     enabled: enabled && Number.isFinite(groupId) && Number.isFinite(postId) && postId > 0,
     staleTime: 1000 * 20,
   })
@@ -171,10 +175,32 @@ export function useGroupCommentsQuery(groupId: number, postId: number, page = 0,
 export function useCreateGroupCommentMutation(groupId: number, postId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (content: string) => groupApi.createComment(groupId, postId, content),
-    onSuccess: () => {
+    mutationFn: ({ content, parentId }: { content: string; parentId?: number }) =>
+      groupApi.createComment(groupId, postId, content, parentId),
+    onSuccess: (created, variables) => {
       toast.success('Đã gửi bình luận!')
-      qc.invalidateQueries({ queryKey: groupPostKeys.comments(groupId, postId) })
+      const confirmed: GroupComment = {
+        ...created,
+        parentId: variables.parentId ?? created.parentId ?? null,
+      }
+      let patched = false
+      qc.setQueriesData<InfiniteData<GroupCommentPage>>(
+        { queryKey: groupPostKeys.comments(groupId, postId) },
+        (old) => {
+          if (!old || old.pages.some((page) => page.content.some((comment) => comment.id === confirmed.id))) return old
+          patched = true
+          const lastIndex = old.pages.length - 1
+          return {
+            ...old,
+            pages: old.pages.map((page, index) => index === lastIndex ? {
+              ...page,
+              content: [...page.content, confirmed],
+              totalElements: page.totalElements + 1,
+            } : page),
+          }
+        },
+      )
+      if (!patched) qc.invalidateQueries({ queryKey: groupPostKeys.comments(groupId, postId) })
       qc.invalidateQueries({ queryKey: [...groupPostKeys.all, 'list', groupId] })
       qc.invalidateQueries({ queryKey: groupPostKeys.detail(groupId, postId) })
     },
