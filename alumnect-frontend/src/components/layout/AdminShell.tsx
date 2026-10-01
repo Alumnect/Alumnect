@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ShieldCheck, LogOut } from 'lucide-react'
+import { TRANSITION } from '@/lib/motion'
+import { ShieldCheck, SignOut } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { ADMIN_NAV } from '@/lib/constants'
 import { Avatar, Badge } from '@/components/ui/primitives'
@@ -15,12 +16,12 @@ export function AdminShell() {
   return (
     <div className="relative min-h-screen bg-cream-100 text-plum-600">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-grid mask-fade-b opacity-50" />
-      <div className="pointer-events-none fixed right-0 top-0 -z-10 h-96 w-96 rounded-full bg-gold-300/25 blur-[150px]" />
+      <div className="pointer-events-none fixed right-0 top-0 -z-10 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(253,230,138,0.25),transparent)]" />
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-plum-900/[0.07] bg-white/70 backdrop-blur-xl lg:flex">
         <div className="flex items-center gap-2.5 px-5 py-5">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-gold-300 to-gold-400 text-plum-900 shadow-[0_8px_22px_-10px_rgba(239,175,62,0.8)]">
-            <ShieldCheck size={18} />
+            <ShieldCheck size={20} weight="fill" />
           </span>
           <div>
             <p className="text-sm font-extrabold text-plum-900">Bảng Quản Trị</p>
@@ -49,10 +50,16 @@ export function AdminShell() {
                       <motion.span
                         layoutId="admin-active"
                         className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-r from-gold-300/40 to-gold-400/20 ring-1 ring-inset ring-gold-400/50"
-                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                        transition={TRANSITION.indicator}
                       />
                     )}
-                    {Icon && <Icon size={18} className={cn(isActive ? 'text-gold-600' : 'text-plum-400')} />}
+                    {Icon && (
+                      <Icon
+                        size={20}
+                        weight={isActive ? 'fill' : 'regular'}
+                        className={cn(isActive ? 'text-gold-600' : 'text-plum-400')}
+                      />
+                    )}
                     {item.label}
                   </>
                 )}
@@ -64,14 +71,14 @@ export function AdminShell() {
         <button
           type="button"
           onClick={() => logoutM.mutate()}
-          className="m-3 flex items-center justify-center gap-2 rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-500/20"
+          className="m-3 flex items-center justify-center gap-2 rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-500/20 cursor-pointer"
         >
-          <LogOut size={16} /> Đăng xuất
+          <SignOut size={18} weight="bold" /> Đăng xuất
         </button>
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-plum-900/[0.07] bg-cream-50/80 px-5 backdrop-blur-xl sm:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-plum-900/[0.07] bg-cream-50/95 px-5 sm:px-8">
           <div className="flex items-center gap-3">
             <Badge tone="gold">Quản trị</Badge>
             <span className="hidden text-sm text-plum-500 sm:block">FPTU AlumNect · Bảng điều khiển quản trị</span>
@@ -88,9 +95,9 @@ export function AdminShell() {
         <main className="px-5 py-7 sm:px-8">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 12, filter: 'blur(5px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={TRANSITION.page}
           >
             <Outlet />
           </motion.div>

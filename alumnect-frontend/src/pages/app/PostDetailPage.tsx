@@ -11,11 +11,6 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  Heart,
-  MessageCircle,
-  Share2,
-  Bookmark,
-  Flag,
   ArrowLeft,
   ArrowRight,
   Pencil,
@@ -34,6 +29,13 @@ import {
   CalendarPlus,
   Ban,
 } from 'lucide-react'
+import {
+  Heart,
+  ChatCircle,
+  ShareFat,
+  BookmarkSimple,
+  Flag,
+} from '@/components/icons'
 import { motion } from 'framer-motion'
 import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel, toast } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
@@ -516,7 +518,18 @@ function PostDetailCard({
               : 'text-slate-600 dark:text-[#b0b3b8] enabled:hover:bg-slate-100 dark:enabled:hover:bg-[#3a3b3c] enabled:hover:text-slate-900 dark:enabled:hover:text-[#f0f2f5]',
           )}
         >
-          <Heart size={18} className={liked ? 'fill-rose-500 text-rose-500 dark:fill-rose-400 dark:text-rose-400' : ''} /> {compact(likeCount)}
+          {liked ? (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: [1.35, 1], opacity: 1 }}
+              transition={{ duration: 0.35, type: 'spring', bounce: 0.6 }}
+            >
+              <Heart size={20} weight="fill" className="text-rose-500 dark:text-rose-400" />
+            </motion.div>
+          ) : (
+            <Heart size={20} weight="regular" />
+          )}
+          <span>{compact(likeCount)}</span>
         </button>
         <button
           disabled={!canInteract}
@@ -527,7 +540,7 @@ function PostDetailCard({
           }}
           className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:bg-[#F27024]/10 dark:enabled:hover:bg-[#F27024]/15 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <MessageCircle size={18} /> {compact(post.comments)}
+          <ChatCircle size={20} weight="regular" /> {compact(post.comments)}
         </button>
         <button
           disabled={!canInteract}
@@ -535,7 +548,7 @@ function PostDetailCard({
           onClick={onShare}
           className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:bg-slate-100 dark:enabled:hover:bg-[#3a3b3c] enabled:hover:text-slate-900 dark:enabled:hover:text-[#f0f2f5] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <Share2 size={18} />
+          <ShareFat size={20} weight="regular" />
         </button>
         {!isAuthor && (canReport ? (
           <button
@@ -545,7 +558,7 @@ function PostDetailCard({
             title="Báo cáo bài viết"
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
           >
-            <Flag size={18} />
+            <Flag size={19} weight="regular" />
           </button>
         ) : !canInteract ? (
           <button
@@ -554,7 +567,7 @@ function PostDetailCard({
             aria-label="Đăng nhập để báo cáo bài viết"
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Flag size={18} />
+            <Flag size={19} weight="regular" />
           </button>
         ) : null)}
         <button
@@ -575,10 +588,10 @@ function PostDetailCard({
               animate={{ scale: [1.25, 1] }}
               transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
             >
-              <Bookmark size={18} className="fill-[#F27024] text-[#F27024] dark:fill-[#FF8C38] dark:text-[#FF8C38]" />
+              <BookmarkSimple size={20} weight="fill" className="text-[#F27024] dark:text-[#FF8C38]" />
             </motion.div>
           ) : (
-            <Bookmark size={18} />
+            <BookmarkSimple size={20} weight="regular" />
           )}
         </button>
       </div>
@@ -780,7 +793,7 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
 
       {replyingTo && (
         <div className="mb-3 flex items-center gap-2 rounded-lg bg-[#F27024]/10 px-3 py-1.5 text-xs font-semibold text-[#F27024] animate-fade-in w-fit">
-          <MessageCircle size={14} />
+          <ChatCircle size={14} weight="regular" />
           Đang trả lời {replyingTo.name}
           <button type="button" onClick={() => setReplyingTo(null)} className="ml-2 hover:text-[#d96010]">
             <X size={14} />
@@ -1067,7 +1080,7 @@ function CommentsSection({
   return (
     <section id="comments" className="space-y-4">
       <div className="mb-4 flex items-center gap-2.5">
-        <MessageCircle size={18} className="text-brand-600" />
+        <ChatCircle size={18} weight="fill" className="text-brand-600" />
         <h2 className="text-lg font-extrabold text-plum-900">Bình luận</h2>
         <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">
           {compact(commentCount)}

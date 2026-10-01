@@ -46,6 +46,10 @@ public class S3StorageServiceImpl implements StorageService {
      */
     @PostConstruct
     public void init() {
+        // Bỏ qua khởi tạo nếu endpoint chưa được cấu hình thực tế (chứa placeholder)
+        if (endpoint == null || endpoint.contains("<") || endpoint.contains("your_")) {
+            return;
+        }
         s3Presigner = S3Presigner.builder()
                 .endpointOverride(URI.create(endpoint))
                 .credentialsProvider(StaticCredentialsProvider.create(

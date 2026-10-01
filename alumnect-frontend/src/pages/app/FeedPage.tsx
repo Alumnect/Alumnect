@@ -17,10 +17,6 @@ import {
   Briefcase,
   Award,
   Trophy,
-  Heart,
-  MessageCircle,
-  Bookmark,
-  Flag,
   Loader2,
   AlertTriangle,
   Inbox,
@@ -28,10 +24,16 @@ import {
   ExternalLink,
   Clock,
   Users,
-  Share2,
   Ban,
   DollarSign,
 } from 'lucide-react'
+import {
+  Heart,
+  ChatCircle,
+  ShareFat,
+  BookmarkSimple,
+  Flag,
+} from '@/components/icons'
 import { Avatar, Badge, Card, ImageCarousel, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -461,13 +463,13 @@ export function PostCard({
           {liked ? (
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: [1.3, 1], opacity: 1 }}
-              transition={{ duration: 0.4, type: 'spring', bounce: 0.6 }}
+              animate={{ scale: [1.35, 1], opacity: 1 }}
+              transition={{ duration: 0.35, type: 'spring', bounce: 0.6 }}
             >
-              <Heart size={18} className="fill-rose-500 text-rose-500 dark:fill-rose-400 dark:text-rose-400" />
+              <Heart size={20} weight="fill" className="text-rose-500 dark:text-rose-400" />
             </motion.div>
           ) : (
-            <Heart size={18} />
+            <Heart size={20} weight="regular" />
           )}
           <span>{compact(likeCount)}</span>
         </button>
@@ -491,7 +493,7 @@ export function PostCard({
           )}
           title={showComments ? 'Thu gọn bình luận' : 'Xem và viết bình luận'}
         >
-          <MessageCircle size={18} className={showComments ? 'text-[#F27024] dark:text-[#FF8C38]' : ''} />
+          <ChatCircle size={20} weight={showComments ? 'fill' : 'regular'} className={showComments ? 'text-[#F27024] dark:text-[#FF8C38]' : ''} />
           <span>{compact(commentCount)}</span>
         </button>
 
@@ -510,7 +512,7 @@ export function PostCard({
           title="Chia sẻ bài viết"
           className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-slate-900 dark:hover:text-[#f0f2f5] cursor-pointer"
         >
-          <Share2 size={18} />
+          <ShareFat size={20} weight="regular" />
         </button>
         {!isAuthor && (canReport ? (
           <button
@@ -523,7 +525,7 @@ export function PostCard({
             title="Báo cáo bài viết"
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
           >
-            <Flag size={18} />
+            <Flag size={19} weight="regular" />
           </button>
         ) : !canInteract ? (
           <button
@@ -536,7 +538,7 @@ export function PostCard({
             title="Báo cáo bài viết"
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
           >
-            <Flag size={18} />
+            <Flag size={19} weight="regular" />
           </button>
         ) : null)}
         <button
@@ -561,10 +563,10 @@ export function PostCard({
               animate={{ scale: [1.25, 1] }}
               transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
             >
-              <Bookmark size={18} className="fill-[#F27024] text-[#F27024] dark:fill-[#FF8C38] dark:text-[#FF8C38]" />
+              <BookmarkSimple size={20} weight="fill" className="text-[#F27024] dark:text-[#FF8C38]" />
             </motion.div>
           ) : (
-            <Bookmark size={18} />
+            <BookmarkSimple size={20} weight="regular" />
           )}
         </button>
       </div>

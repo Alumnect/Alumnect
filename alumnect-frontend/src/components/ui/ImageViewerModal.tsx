@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { 
   X, 
   Download, 
@@ -183,8 +184,8 @@ export function ImageViewerModal({
         aria-modal="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.18 }}
+        exit={{ opacity: 0, transition: TRANSITION.exit }}
+        transition={TRANSITION.overlay}
         onClick={onClose}
         onWheel={handleWheel}
         onMouseMove={handleMouseMove}

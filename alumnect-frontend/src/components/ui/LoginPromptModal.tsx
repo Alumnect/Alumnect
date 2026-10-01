@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { X, LogIn, ArrowRight } from 'lucide-react'
 import { useLoginPrompt } from '@/store/loginPrompt'
 
@@ -22,7 +23,8 @@ export function LoginPromptModal() {
             className="absolute inset-0 bg-plum-900/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: TRANSITION.exit }}
+            transition={TRANSITION.overlay}
             onClick={close}
           />
           {/* Hộp thoại */}
@@ -30,10 +32,10 @@ export function LoginPromptModal() {
             role="dialog"
             aria-modal="true"
             className="relative w-full max-w-sm rounded-3xl card-surface p-6 text-center"
-            initial={{ opacity: 0, scale: 0.92, y: 10 }}
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 6 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, scale: 0.98, y: 6, transition: TRANSITION.exit }}
+            transition={TRANSITION.pop}
           >
             <button
               onClick={close}
