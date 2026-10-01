@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { ImagePlus, Loader2, Pencil, X } from 'lucide-react'
+import { Check, ChevronDown, ImagePlus, Loader2, Pencil, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import { groupApi } from '../api/groupApi'
 import { useUpdateGroupPostMutation } from '../hooks/useGroupPosts'
 import type { GroupPost } from '../model/group'
@@ -19,12 +21,25 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
 }) {
   const [content, setContent] = useState(post.content)
   const [topic, setTopic] = useState(topics.includes(post.topic ?? '') ? post.topic ?? '' : '')
+  const [topicOpen, setTopicOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [images, setImages] = useState<string[]>(post.imageUrls ?? [])
   const [videos, setVideos] = useState<string[]>(post.videoUrls ?? [])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateMutation = useUpdateGroupPostMutation(groupId)
   const busy = uploading || updateMutation.isPending
+
+  useEffect(() => {
+    if (!topicOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setTopicOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [topicOpen])
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
@@ -86,18 +101,106 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
           <p className="text-right text-xs text-plum-400">{content.length}/{MAX_CONTENT}</p>
         </div>
 
-        <div>
-          <label htmlFor={`group-edit-topic-${post.id}`} className="mb-1.5 block text-sm font-semibold">Chủ đề / sở thích</label>
-          <select
-            id={`group-edit-topic-${post.id}`}
-            value={topic}
-            onChange={(event) => setTopic(event.target.value)}
-            className="w-full rounded-2xl border border-plum-900/10 bg-white p-3 text-sm text-plum-900 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-white"
-          >
-            <option value="">Không chọn chủ đề</option>
-            {topics.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </div>
+        {topics.length > 0 && (
+          <div className="relative">
+            <label className="mb-1.5 block text-sm font-semibold text-plum-900 dark:text-white">
+              Chủ đề / sở thích
+            </label>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setTopicOpen((prev) => !prev)}
+                className="flex h-10 w-full items-center justify-between rounded-xl border border-plum-900/10 bg-white px-3.5 text-xs text-plum-900 transition-all hover:border-brand-500/50 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-white cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  {topic ? (
+                    <span className="inline-flex items-center rounded-full bg-brand-500/10 px-2 py-0.5 text-[11px] font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+                      #{topic}
+                    </span>
+                  ) : (
+                    <span className="text-plum-500 dark:text-[#b0b3b8]">Không chọn chủ đề</span>
+                  )}
+                </div>
+                <ChevronDown
+                  size={15}
+                  className={cn(
+                    'text-plum-400 transition-transform duration-200',
+                    topicOpen && 'rotate-180 text-brand-500',
+                  )}
+                />
+              </button>
+
+              <AnimatePresence>
+                {topicOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute left-0 right-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-brand-500/15 bg-white p-1.5 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#242526]"
+                  >
+                    <div className="mb-1 flex items-center justify-between px-2 py-1">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-plum-400">
+                        Chọn chủ đề
+                      </span>
+                      <span className="text-[9px] font-medium text-plum-400">
+                        {topics.length} lựa chọn
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTopic('')
+                        setTopicOpen(false)
+                      }}
+                      className={cn(
+                        'flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-all cursor-pointer',
+                        !topic
+                          ? 'bg-brand-500/10 font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                          : 'font-medium text-plum-700 hover:bg-plum-900/[0.04] dark:text-plum-200 dark:hover:bg-[#3a3b3c]',
+                      )}
+                    >
+                      <span>Không chọn chủ đề</span>
+                      {!topic && (
+                        <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-brand-500 text-white">
+                          <Check size={11} strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+
+                    {topics.map((item) => {
+                      const selected = topic === item
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => {
+                            setTopic(item)
+                            setTopicOpen(false)
+                          }}
+                          className={cn(
+                            'flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-all cursor-pointer',
+                            selected
+                              ? 'bg-brand-500/10 font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                              : 'font-medium text-plum-700 hover:bg-plum-900/[0.04] dark:text-plum-200 dark:hover:bg-[#3a3b3c]',
+                          )}
+                        >
+                          <span>#{item}</span>
+                          {selected && (
+                            <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-brand-500 text-white">
+                              <Check size={11} strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
 
         <div>
           <p className="mb-2 text-sm font-semibold">Ảnh/video đính kèm ({images.length + videos.length}/{MAX_IMAGES})</p>

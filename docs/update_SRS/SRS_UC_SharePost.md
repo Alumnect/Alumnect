@@ -7,7 +7,7 @@
 ```mermaid
 stateDiagram-v2
     [*] --> XemBaiViet: Người dùng xem bài viết trên Bảng tin / Chi tiết / Trang cá nhân
-    XemBaiViet --> MoModalChiaSe: Bấm biểu tượng "Chia sẻ" (Share Icon)
+    XemBaiViet --> MoModalChiaSe: Bấm nút "Chia sẻ"
     
     state MoModalChiaSe {
         [*] --> HienThiTuyChon: Hiển thị Modal "Chia sẻ bài viết" (kèm tóm tắt bài viết)
@@ -16,7 +16,7 @@ stateDiagram-v2
         
         state SaoChepLienKet {
             [*] --> CopyToClipboard: Ghi URL bài viết (/app/posts/{id}) vào Clipboard
-            CopyToClipboard --> DoiTrangThaiNut: Icon chuyển xanh ngọc + Nhãn "Đã chép"
+            CopyToClipboard --> DoiTrangThaiNut: Cập nhật nhãn nút "Đã sao chép liên kết"
             DoiTrangThaiNut --> ToastThanhCong: Hiển thị Toast thông báo
             ToastThanhCong --> [*]
         }
@@ -33,42 +33,41 @@ stateDiagram-v2
             
             ManHinhChonNguoiNhan --> BamNutGui: Bấm nút "Gửi" bên cạnh người nhận / nhóm
             BamNutGui --> GoiApiGuiTinNhan: Gửi POST /api/v1/messages
-            GoiApiGuiTinNhan --> GuiThanhCong: Server phản hồi 200 OK + WebSocket Broadcast
-            GuiThanhCong --> CapNhatDaGui: Nút chuyển sang "Đã gửi" (Tích xanh) + Toast thông báo
+            GuiThanhCong --> CapNhatDaGui: Nút chuyển sang trạng thái "Đã gửi" + Toast thông báo
             CapNhatDaGui --> [*]: Tiếp tục gửi người khác hoặc bấm "Xong" để đóng
         }
     }
     
-    MoModalChiaSe --> [*]: Bấm nút "Đóng" hoặc click ngoài nền mờ
+    MoModalChiaSe --> [*]: Bấm nút "Đóng" hoặc click ngoài nền modal
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-* **Bước 1 - Kích hoạt hành động**: Người dùng duyệt bài viết trên Bảng tin cộng đồng (`FeedPage`), Trang tin tuyển dụng (`JobsPage`), Trang sự kiện (`EventsPage`), Chi tiết bài viết (`PostDetailPage`) hoặc Trang cá nhân (`ProfilePage`), sau đó bấm vào nút biểu tượng **Chia sẻ** tại chân bài viết.
+* **Bước 1 - Kích hoạt hành động**: Người dùng duyệt bài viết trên Bảng tin cộng đồng (`FeedPage`), Trang tin tuyển dụng (`JobsPage`), Trang sự kiện (`EventsPage`), Chi tiết bài viết (`PostDetailPage`) hoặc Trang cá nhân (`ProfilePage`), sau đó bấm nút **Chia sẻ** tại chân bài viết.
 * **Bước 2 - Mở Modal Chia sẻ (`ShareModal`)**:
-  * Hệ thống mở cửa sổ pop-up hiển thị bản xem trước thu nhỏ của bài viết (Ảnh đại diện tác giả, họ tên, trích dẫn nội dung, thumbnail).
-  * Cung cấp 2 phương thức chia sẻ trực quan:
+  * Hệ thống mở hộp thoại hiển thị bản xem trước của bài viết (Ảnh đại diện tác giả, họ tên, trích dẫn nội dung).
+  * Cung cấp 2 phương thức chia sẻ:
     * **1. Gửi qua tin nhắn**: Chia sẻ trực tiếp vào hộp thư cá nhân hoặc nhóm chat trong hệ thống AlumNect.
     * **2. Sao chép liên kết**: Lấy đường dẫn trực tiếp của bài viết để chia sẻ ra ngoài nền tảng.
 * **Bước 3 - Xử lý theo từng phương thức**:
   * **Trường hợp A - Sao chép liên kết**:
     * Hệ thống tự động tổng hợp đường dẫn tuyệt đối: `${window.location.origin}/app/posts/{post.id}`.
     * Thực hiện ghi vào bộ nhớ tạm thông qua Clipboard API (`navigator.clipboard.writeText`).
-    * Giao diện nút bấm tức thì chuyển sang biểu tượng tích xanh ngọc bích `<Check />`, đổi nhãn thành *"Đã sao chép liên kết!"* kèm badge *"Đã chép"* trong 2 giây và hiển thị thông báo Toast thành công.
+    * Giao diện nút bấm cập nhật nhãn *"Đã sao chép liên kết!"* và hiển thị thông báo Toast thành công.
   * **Trường hợp B - Gửi qua tin nhắn nội bộ**:
     * Hệ thống kiểm tra quyền người dùng: Nếu là Guest chưa đăng nhập, hiển thị thông báo yêu cầu đăng nhập.
-    * Nếu đã đăng nhập: Modal chuyển mượt sang giao diện chọn người nhận với bố cục tối ưu (Header, Post Preview, Ô nhập lời nhắn, Ô tìm kiếm và Footer được cố định; chỉ riêng danh sách người nhận là cuộn mượt).
+    * Nếu đã đăng nhập: Modal chuyển sang giao diện chọn người nhận.
     * Người dùng có thể:
-      * Nhập lời nhắn riêng gửi kèm (ví dụ: *"Bài viết này bổ ích lắm, bạn xem thử nhé!"*).
-      * Tìm kiếm nhanh bạn bè hoặc nhóm trò chuyện theo tên/chuyên ngành qua ô tìm kiếm (tự động debounce 300ms và tải qua API).
-      * Xem danh sách các cuộc trò chuyện gần đây (cả 1-1 và nhóm chat).
-    * Bấm nút **"Gửi"** bên cạnh người nhận mong muốn: Nút hiển thị hiệu ứng xoay tròn `Đang gửi...` -> gọi API `POST /api/v1/messages` -> Server lưu DB và phát sự kiện realtime qua STOMP WebSocket -> Nút chuyển thành `Đã gửi` với dấu tích xanh và phát thông báo Toast.
-    * Người dùng có thể tiếp tục bấm gửi cho nhiều bạn bè/nhóm khác nhau mà không bị đóng modal.
-* **Bước 4 - Trải nghiệm phía người nhận tin nhắn**:
-  * Khi người nhận mở đoạn chat trong hệ thống Messenger AlumNect, tin nhắn sẽ hiển thị lời nhắn của người gửi kèm theo **Thẻ bài viết tương tác (Shared Post Embed Card)**:
-    * Avatar, tên tác giả bài viết, thời gian/vai trò.
-    * Ảnh đại diện bài viết (Thumbnail) và badge phân loại (Sự kiện, Tuyển dụng, Thành tích).
+      * Nhập lời nhắn riêng gửi kèm bài viết.
+      * Tìm kiếm bạn bè hoặc nhóm trò chuyện theo tên/chuyên ngành qua ô tìm kiếm.
+      * Xem danh sách các cuộc trò chuyện gần đây (1-1 và nhóm chat).
+    * Bấm nút **"Gửi"** bên cạnh người nhận mong muốn: Nút hiển thị trạng thái đang xử lý -> gọi API `POST /api/v1/messages` -> Server lưu DB và phát sự kiện realtime qua STOMP WebSocket -> Nút chuyển thành trạng thái `Đã gửi` và phát thông báo Toast.
+    * Người dùng có thể tiếp tục gửi cho nhiều người nhận khác nhau mà không bị đóng modal.
+* **Bước 4 - Phía người nhận tin nhắn**:
+  * Khi người nhận mở đoạn chat trong hệ thống AlumNect, tin nhắn sẽ hiển thị lời nhắn của người gửi kèm theo **Thẻ bài viết tương tác (Shared Post Card)**:
+    * Ảnh đại diện, tên tác giả bài viết, thời gian/vai trò.
+    * Ảnh đính kèm (nếu có) và phân loại bài viết.
     * Đoạn trích dẫn nội dung bài viết.
-    * Nút **"Xem bài viết"** bấm vào sẽ chuyển thẳng đến trang chi tiết bài viết gốc (`/app/posts/{id}`).
+    * Nút **"Xem bài viết"** điều hướng trực tiếp đến trang chi tiết bài viết gốc (`/app/posts/{id}`).
 
 ---
 
@@ -78,7 +77,7 @@ Module tương tác xã hội của AlumNect, kết nối chặt chẽ giữa B�
 #### 3.2.1 Chia sẻ bài viết (Share Post)
 
 **Function trigger**:
-*   **Navigation path**: Nút bấm biểu tượng Chia sẻ (Share) tại chân mỗi bài viết trên:
+*   **Navigation path**: Nút Chia sẻ tại chân mỗi bài viết trên:
     * `/app` (Bảng tin chính).
     * `/app/posts/:id` (Trang chi tiết bài viết).
     * `/app/jobs` (Trang bảng tin tuyển dụng).
@@ -87,23 +86,24 @@ Module tương tác xã hội của AlumNect, kết nối chặt chẽ giữa B�
 *   **Timing Frequency**: On demand (bất cứ khi nào người dùng bấm nút Chia sẻ bài viết).
 
 **Function description**:
-*   **Actors/Roles**: Guest (chỉ sao chép link), Student, Alumni, Admin.
-*   **Purpose**: Lan tỏa bài viết chất lượng trong cộng đồng; hỗ trợ chia sẻ liên kết ra ngoài hoặc gửi trực tiếp cho bạn bè, nhóm thảo luận nội bộ AlumNect mà không làm gián đoạn trải nghiệm lướt bảng tin.
+*   **Actors/Roles**: Guest (chỉ sao chép liên kết), Student, Alumni, Admin.
+*   **Purpose**: Lan tỏa bài viết chất lượng trong cộng đồng; hỗ trợ chia sẻ liên kết ra ngoài hoặc gửi trực tiếp cho bạn bè, nhóm thảo luận nội bộ AlumNect.
 *   **Interface**:
-    *   `ShareModal`: Modal hộp thoại nổi bo góc mềm mại (`rounded-3xl`), hiệu ứng mờ nền (`backdrop-blur-xs`), chuẩn responsive trên cả Desktop lẫn Mobile.
+    *   `ShareModal`: Hộp thoại chia sẻ hiển thị trên màn hình.
     *   **Màn hình 1 - Tùy chọn chia sẻ**:
-        *   Mini Context Card: Thumbnail bài viết, tên tác giả, đoạn trích dẫn.
-        *   Tùy chọn *"Gửi qua tin nhắn"*: Icon gradient xanh dương, mũi tên điều hướng `>`.
-        *   Tùy chọn *"Sao chép liên kết"*: Icon slate chuyển emerald khi chép thành công.
+        *   Khung tóm tắt bài viết: Tên tác giả, trích dẫn nội dung.
+        *   Tùy chọn *"Gửi qua tin nhắn"*: Điều hướng sang bước chọn người nhận nội bộ.
+        *   Tùy chọn *"Sao chép liên kết"*: Thực hiện ghi URL vào clipboard.
     *   **Màn hình 2 - Gửi qua tin nhắn**:
-        *   Header có nút mũi tên quay lại `←` và tiêu đề "Gửi qua tin nhắn".
+        *   Nút quay lại danh mục tùy chọn.
         *   Ô nhập lời nhắn tùy chọn (`textarea`).
-        *   Ô tìm kiếm bạn bè / nhóm chat có icon kính lúp và vòng xoay loading.
-        *   Danh sách liên hệ: Avatar, tên, chuyên ngành/thành viên, nút trạng thái (Gửi / Đang gửi / Đã gửi).
-        *   Footer cố định có nút "Quay lại" và "Xong/Đóng".
-    *   **Thẻ hiển thị trong đoạn chat (`SharedPostBubbleCard`)**:
-        *   Khung thẻ bài viết tương tác tích hợp bên dưới bong bóng chat.
-        *   Ảnh thumbnail, badge loại bài viết, avatar + tên tác giả, nút điều hướng chi tiết.
+        *   Ô tìm kiếm bạn bè / nhóm chat có trạng thái chờ tìm kiếm.
+        *   Danh sách liên hệ: Ảnh đại diện, tên, chuyên ngành/thành viên, nút trạng thái thao tác (Gửi / Đang gửi / Đã gửi).
+        *   Nút đóng hộp thoại.
+    *   **Thẻ hiển thị trong đoạn chat**:
+        *   **Thẻ bài viết bảng tin (`SharedPostBubbleCard`)**: Khung thẻ tương tác tích hợp bên dưới bong bóng chat; gồm thông tin tác giả, nội dung trích dẫn và nút xem chi tiết.
+        *   **Thẻ hội nhóm (`SharedGroupBubbleCard`)**: Khung thẻ thông tin nhóm (tên nhóm, số thành viên, mô tả tóm tắt, nút "Xem nhóm").
+        *   **Thẻ bài viết trong hội nhóm (`SharedGroupPostBubbleCard`)**: Khung thẻ hiển thị trích dẫn bài đăng trong nhóm cộng đồng.
 
 **Data processing**:
 *   **Sao chép liên kết**: Đọc `window.location.origin` và `post.id` để tạo URL dạng `${origin}/app/posts/${post.id}` và gọi `navigator.clipboard.writeText(url)`.
@@ -112,7 +112,10 @@ Module tương tác xã hội của AlumNect, kết nối chặt chẽ giữa B�
     *   Nếu gửi vào cuộc trò chuyện có sẵn: `{ conversationId: number, content: string }`.
     *   Nếu gửi trực tiếp cho người dùng mới: `{ recipientId: number, content: string }`.
     *   Nội dung `content` ghép giữa lời nhắn của người dùng và link bài viết: `"{customNote}\n\n{postUrl}"` (hoặc chỉ `{postUrl}` nếu không có lời nhắn).
-*   **Kết xuất thẻ tương tác phía chat**: `MessageBubble` kiểm tra regex `/(?:https?:\/\/[^\s]+)?\/app\/posts\/(\d+)/`, nếu tìm thấy ID bài viết sẽ kích hoạt component `SharedPostBubbleCard` gọi `GET /api/v1/posts/{id}` (có cơ chế in-memory caching) để hiển thị thẻ tóm tắt tương tác.
+*   **Kết xuất thẻ tương tác phía chat**: `MessageBubble` kiểm tra regex URL bài viết hoặc hội nhóm trong tin nhắn:
+    *   Link bài viết feed: `/app/posts/(\d+)` -> kích hoạt `SharedPostBubbleCard`.
+    *   Link hội nhóm: `/app/groups/(\d+)` -> kích hoạt `SharedGroupBubbleCard`.
+    *   Link bài viết trong nhóm: `/app/groups/(\d+)/posts/(\d+)` -> kích hoạt `SharedGroupPostBubbleCard`.
 
 **Function details**:
 *   **Data**: `postId`, `postUrl`, `customNote`, `conversationId`, `recipientId`, `content`.

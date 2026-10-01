@@ -80,7 +80,7 @@ Module này cung cấp các tính năng quản lý, theo dõi KPIs, phê duyệt
 #### 5.2 Common Requirements (Yêu cầu Chung)
 *   Tất cả múi giờ hiển thị trên giao diện kiểm duyệt của Admin mặc định là Asia/Ho_Chi_Minh.
 *   Mọi thông báo thành công hoặc thất bại đều được hiển thị qua Toast hoặc hộp thoại Modal xác nhận rõ ràng.
-*   Giao diện tuân thủ bảng màu Pastel Premium (nền kem ấm `#faf4ec`, surface trắng `#ffffff`, chữ mận chín mượt mà `#322c3f`).
+*   Giao diện bảng quản trị được tối ưu hóa hiển thị dữ liệu dạng bảng biểu rõ ràng và dễ thao tác.
 
 #### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
 

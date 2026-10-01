@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink, Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -14,6 +14,7 @@ import {
   ArrowUp,
   Sun,
   Moon,
+  GlobeSimple,
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
@@ -141,6 +142,20 @@ export function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Trạng thái ngôn ngữ (thiết kế sẵn sàng kết nối i18n)
+  const [currentLang, setCurrentLang] = useState<'vi' | 'en'>(() => {
+    return (localStorage.getItem('alumnect_lang') as 'vi' | 'en') || 'vi'
+  })
+  const [langMenuOpen, setLangMenuOpen] = useState(false)
+  const langMenuRef = useRef<HTMLDivElement>(null)
+  useClickOutside(langMenuRef, () => setLangMenuOpen(false), langMenuOpen)
+
+  const handleSelectLang = (lang: 'vi' | 'en') => {
+    setCurrentLang(lang)
+    localStorage.setItem('alumnect_lang', lang)
+    setLangMenuOpen(false)
+  }
+
   const handleClearSearch = () => {
     setKeyword('')
   }
@@ -157,7 +172,13 @@ export function AppShell() {
   // ADMIN đã được điều hướng về /admin ở trên, nên tại đây role chỉ còn STUDENT/ALUMNI.
   const roleLabel = user ? (user.role === 'STUDENT' ? 'Sinh viên' : 'Cựu sinh viên') : ''
 
-  // Menu "Khám phá" (desktop): người đã đăng nhập thấy đủ mục; Khách chỉ thấy các mục công khai (Hội nhóm).
+  // Hội nhóm chỉ hiển thị cho Cựu sinh viên (ALUMNI), ẩn với Khách và Sinh viên (STUDENT).
+  const visibleMoreNav = useMemo(
+    () => APP_MORE_NAV.filter((item) => item.to !== '/app/groups' || user?.role === 'ALUMNI'),
+    [user?.role]
+  )
+
+  // Menu "Khám phá" (desktop)
   const renderMoreApps = (items: typeof APP_MORE_NAV) => (
     <div className="hidden lg:block">
       <Popover
@@ -315,7 +336,7 @@ export function AppShell() {
                   badge={unreadNotifCount && unreadNotifCount > 0 ? unreadNotifCount : undefined}
                 />
 
-                {renderMoreApps(APP_MORE_NAV)}
+                {renderMoreApps(visibleMoreNav)}
 
                 {/* account */}
                 <Popover
@@ -366,7 +387,6 @@ export function AppShell() {
               </>
             ) : (
               <div className="flex items-center gap-1">
-                {renderMoreApps(APP_MORE_NAV.filter((item) => item.to === '/app/groups'))}
                 <Link to="/login" className="ml-1">
                   <Button size="sm" variant="primary" className="rounded-xl font-bold bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm">
                     Đăng nhập
@@ -374,24 +394,6 @@ export function AppShell() {
                 </Link>
               </div>
             )}
-            {/* Nút chuyển chế độ Sáng / Tối ở ngoài cùng bên phải */}
-            <button
-              type="button"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-              title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-              className="group relative grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-2xl text-plum-500 hover:bg-plum-900/[0.05] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-colors cursor-pointer"
-            >
-              {theme === 'dark' ? (
-                <Sun size={20} weight="fill" className="text-amber-400 transition-transform duration-200 group-hover:rotate-45" />
-              ) : (
-                <Moon size={20} weight="fill" className="text-slate-600 transition-transform duration-200 group-hover:-rotate-12" />
-              )}
-              {/* Tooltip khi hover */}
-              <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100 dark:bg-white dark:text-slate-900">
-                {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
-              </span>
-            </button>
           </div>
         </div>
 
@@ -529,8 +531,8 @@ export function AppShell() {
               </div>
               <div className="grid grid-cols-3 gap-3" onClick={() => setSheet(false)}>
                 {(isAuthenticated 
-                  ? [...APP_MORE_NAV, { label: 'Tin nhắn', to: '/app/messages', icon: Chats }, { label: 'Thông báo', to: '/app/notifications', icon: Bell }]
-                  : [...APP_MORE_NAV.filter(item => item.to === '/app/groups' || item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')]
+                  ? [...visibleMoreNav, { label: 'Tin nhắn', to: '/app/messages', icon: Chats }, { label: 'Thông báo', to: '/app/notifications', icon: Bell }]
+                  : [...visibleMoreNav.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')]
                 ).map((item) => {
                   const Icon = item.icon
                   return (
@@ -566,6 +568,88 @@ export function AppShell() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Floating Preferences Dock (Theme & Language Switcher) - Góc dưới bên trái (Mini Compact) */}
+      <div className="fixed bottom-20 left-4 z-30 lg:bottom-6 lg:left-6 flex items-center rounded-full border border-slate-200/80 bg-white/85 p-0.5 shadow-md shadow-slate-900/5 backdrop-blur-md transition-all hover:bg-white hover:shadow-lg dark:border-[#393a3b] dark:bg-[#242526]/85 dark:hover:bg-[#242526] dark:shadow-black/20">
+        {/* Nút chuyển chế độ Sáng / Tối */}
+        <button
+          type="button"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+          title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+          className="group relative grid h-7 w-7 place-items-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-all cursor-pointer"
+        >
+          {theme === 'dark' ? (
+            <Sun size={15} weight="fill" className="text-amber-400 transition-transform duration-300 group-hover:rotate-45" />
+          ) : (
+            <Moon size={15} weight="fill" className="text-slate-600 transition-transform duration-300 group-hover:-rotate-12" />
+          )}
+          {/* Tooltip khi hover */}
+          <span className="pointer-events-none absolute bottom-[calc(100%+6px)] left-0 z-50 whitespace-nowrap rounded-md bg-slate-900 px-2 py-0.5 text-[10px] font-medium text-white opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100 dark:bg-white dark:text-slate-900">
+            {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
+          </span>
+        </button>
+
+        {/* Divider chia tách Theme và Language */}
+        <div className="mx-0.5 h-3.5 w-px bg-slate-200 dark:bg-[#3a3b3c]" />
+
+        {/* Nút Ngôn ngữ (Language Switcher) */}
+        <div className="relative" ref={langMenuRef}>
+          <button
+            type="button"
+            onClick={() => setLangMenuOpen((prev) => !prev)}
+            aria-label="Chọn ngôn ngữ"
+            title="Đổi ngôn ngữ (Language)"
+            className="group relative flex h-7 items-center gap-1 rounded-full px-2 text-[11px] font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-all cursor-pointer"
+          >
+            <GlobeSimple size={14} weight="bold" className="text-slate-400 group-hover:text-brand-500 dark:text-[#b0b3b8] dark:group-hover:text-brand-400 transition-colors" />
+            <span className="tracking-wider">{currentLang.toUpperCase()}</span>
+          </button>
+
+          {/* Menu chọn ngôn ngữ khi click */}
+          <AnimatePresence>
+            {langMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                transition={TRANSITION.pop}
+                className="absolute bottom-full left-0 mb-1.5 w-32 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-lg backdrop-blur-md dark:border-[#393a3b] dark:bg-[#242526]"
+              >
+                <div className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Ngôn ngữ
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSelectLang('vi')}
+                  className={cn(
+                    'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer',
+                    currentLang === 'vi'
+                      ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-[#3a3b3c]'
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">🇻🇳 Tiếng Việt</span>
+                  {currentLang === 'vi' && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectLang('en')}
+                  className={cn(
+                    'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer',
+                    currentLang === 'en'
+                      ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-[#3a3b3c]'
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">🇬🇧 English</span>
+                  {currentLang === 'en' && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
 
       {/* Popup mời đăng nhập (kiểu Facebook) — hiện khi Guest cố tương tác */}
       <LoginPromptModal />

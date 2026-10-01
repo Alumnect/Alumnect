@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
-  X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2, MapPin, Users, DollarSign, Link, Mail, Clock
+  X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2, MapPin, Users, Coins, Link, Mail, Clock
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Avatar, ImageCarousel, toast } from '@/components/ui'
@@ -430,7 +430,7 @@ export function CreatePostModal({
                     {/* Mức lương */}
                     <div>
                       <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-plum-900 dark:text-[#e4e6eb]">
-                        <DollarSign size={13} /> Mức lương (VNĐ) <span className="font-normal text-plum-400 dark:text-[#9ca3af]">— Để trống nếu thỏa thuận</span>
+                        <Coins size={13} className="text-emerald-500" /> Mức lương (VNĐ) <span className="font-normal text-plum-400 dark:text-[#9ca3af]">— Để trống nếu thỏa thuận</span>
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="relative">

@@ -12,6 +12,7 @@ import {
   Sparkles,
   Share2,
   ChevronRight,
+  FileText,
 } from 'lucide-react'
 import { Modal, toast, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -20,10 +21,20 @@ import type { Conversation, ChatCandidateUser } from '@/features/message/model/t
 import { useAuthStore } from '@/store/authStore'
 import type { Post } from '../model/post'
 
+export interface ShareItem {
+  title: string
+  subtitle?: string
+  thumbnail?: string | null
+  avatarUrl?: string | null
+  url?: string
+  typeLabel?: string
+}
+
 interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
-  post: Post
+  post?: Post
+  shareItem?: ShareItem
 }
 
 interface RecipientItem {
@@ -37,7 +48,7 @@ interface RecipientItem {
   isGroup?: boolean
 }
 
-export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
+export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps) {
   const currentUserId = useAuthStore((s) => s.user?.id)
   const [viewMode, setViewMode] = useState<'options' | 'messenger'>('options')
   const [copied, setCopied] = useState(false)
@@ -167,12 +178,18 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
     return items
   }, [recentConversations, searchUsers, searchKeyword])
 
+  const resolvedUrl = shareItem?.url || (post ? `${window.location.origin}/app/posts/${post.id}` : (typeof window !== 'undefined' ? window.location.href : ''))
+  const resolvedTitle = shareItem?.title || post?.author || 'Alumnect'
+  const resolvedSubtitle = shareItem?.subtitle || post?.text || 'Nội dung trên Alumnect'
+  const resolvedTypeLabel = shareItem?.typeLabel || 'bài viết'
+  const thumbnail = shareItem !== undefined ? shareItem.thumbnail : (post?.image || (post?.images && post.images.length > 0 ? post.images[0] : null))
+  const resolvedAvatar = shareItem?.avatarUrl !== undefined ? shareItem.avatarUrl : (post?.avatar || null)
+
   const handleCopyLink = async () => {
     try {
-      const link = `${window.location.origin}/app/posts/${post.id}`
-      await navigator.clipboard.writeText(link)
+      await navigator.clipboard.writeText(resolvedUrl)
       setCopied(true)
-      toast.success('Đã sao chép liên kết bài viết!')
+      toast.success(`Đã sao chép liên kết ${resolvedTypeLabel}!`)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy link: ', err)
@@ -182,10 +199,9 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
 
   // Thực hiện gửi bài viết tới một người nhận / nhóm trò chuyện
   const handleSendToRecipient = async (item: RecipientItem) => {
-    const postUrl = `${window.location.origin}/app/posts/${post.id}`
     const finalContent = customNote.trim()
-      ? `${customNote.trim()}\n\n${postUrl}`
-      : postUrl
+      ? `${customNote.trim()}\n\n${resolvedUrl}`
+      : resolvedUrl
 
     setSendingKey(item.id)
     try {
@@ -202,16 +218,14 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
       }
 
       setSentKeys((prev) => new Set(prev).add(item.id))
-      toast.success(`Đã gửi bài viết tới ${item.name}!`)
+      toast.success(`Đã gửi ${resolvedTypeLabel} tới ${item.name}!`)
     } catch (err) {
-      console.error('Lỗi khi gửi bài viết qua tin nhắn:', err)
+      console.error(`Lỗi khi gửi ${resolvedTypeLabel} qua tin nhắn:`, err)
       toast.error(`Không thể gửi tới ${item.name}. Vui lòng thử lại.`)
     } finally {
       setSendingKey(null)
     }
   }
-
-  const thumbnail = post.image || (post.images && post.images.length > 0 ? post.images[0] : null)
 
   return (
     <Modal
@@ -238,7 +252,7 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
               <Share2 size={16} />
             </div>
-            <span className="font-bold text-plum-900 dark:text-[#f0f2f5] text-base">Chia sẻ bài viết</span>
+            <span className="font-bold text-plum-900 dark:text-[#f0f2f5] text-base">Chia sẻ {resolvedTypeLabel}</span>
           </div>
         )
       }
@@ -287,17 +301,28 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
                 alt="Post thumbnail"
                 className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-2xs"
               />
+            ) : resolvedAvatar ? (
+              <Avatar
+                src={resolvedAvatar}
+                name={resolvedTitle}
+                size={40}
+                className="rounded-xl shrink-0 shadow-2xs"
+              />
             ) : (
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-500/10 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
-                <Sparkles size={18} />
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-plum-900/[0.04] text-plum-600 dark:bg-white/10 dark:text-[#f0f2f5]">
+                {resolvedTypeLabel.includes('nhóm') && !resolvedTypeLabel.includes('bài viết') ? (
+                  <Users size={18} />
+                ) : (
+                  <FileText size={18} />
+                )}
               </div>
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">
-                {post.author}
+                {resolvedTitle}
               </p>
               <p className="truncate text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                {post.text || 'Bài viết trên Alumnect'}
+                {resolvedSubtitle}
               </p>
             </div>
           </div>
@@ -351,7 +376,7 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
                 )}
               </div>
               <p className="text-xs text-plum-500 dark:text-[#b0b3b8] mt-0.5">
-                Sao chép đường dẫn bài viết vào bộ nhớ tạm
+                Sao chép đường dẫn {resolvedTypeLabel} vào bộ nhớ tạm
               </p>
             </div>
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 group-hover:bg-slate-200/50 transition-all dark:group-hover:bg-white/10 dark:group-hover:text-[#f0f2f5]">
@@ -367,24 +392,35 @@ export function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
             {thumbnail ? (
               <img
                 src={thumbnail}
-                alt="Post thumbnail"
+                alt="Thumbnail"
                 className="h-11 w-11 shrink-0 rounded-lg object-cover"
               />
+            ) : resolvedAvatar ? (
+              <Avatar
+                src={resolvedAvatar}
+                name={resolvedTitle}
+                size={44}
+                className="rounded-lg shrink-0 shadow-2xs"
+              />
             ) : (
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-plum-100 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400">
-                <Sparkles size={18} />
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-plum-900/[0.04] text-plum-600 dark:bg-white/10 dark:text-[#f0f2f5]">
+                {resolvedTypeLabel.includes('nhóm') && !resolvedTypeLabel.includes('bài viết') ? (
+                  <Users size={18} />
+                ) : (
+                  <FileText size={18} />
+                )}
               </div>
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 text-xs text-plum-500 dark:text-[#b0b3b8]">
-                <Avatar src={post.avatar || undefined} name={post.author} size={15} />
+                {post?.avatar && <Avatar src={post.avatar || undefined} name={resolvedTitle} size={15} />}
                 <span className="font-semibold text-plum-900 dark:text-[#f0f2f5] truncate">
-                  {post.author}
+                  {resolvedTitle}
                 </span>
-                {post.time && <span>• {post.time}</span>}
+                {post?.time && <span>• {post.time}</span>}
               </div>
               <p className="mt-0.5 line-clamp-1 text-xs text-plum-700 dark:text-[#e4e6eb] leading-tight">
-                {post.text || 'Bài viết đính kèm hình ảnh / nội dung trên Alumnect'}
+                {resolvedSubtitle}
               </p>
             </div>
           </div>

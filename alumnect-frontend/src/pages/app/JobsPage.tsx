@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { Briefcase, MapPin, Search, Bookmark, Building2, Loader2, X } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Briefcase, MapPin, Search, Bookmark, Building2, Loader2, X, Coins } from 'lucide-react'
 import { PageHeader, Card, EmptyState, Avatar } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
@@ -50,6 +50,7 @@ function extractCity(address?: string | null): string {
 }
 
 export function JobsPage() {
+  const navigate = useNavigate()
   const [keyword, setKeyword] = useState('')
   const [location, setLocation] = useState('')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
@@ -201,10 +202,15 @@ export function JobsPage() {
             const job = post.job!
             return (
               <StaggerItem key={post.id}>
-                <div className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md dark:bg-[#242526] dark:border-[#393a3b] dark:hover:border-[#4e4f50]">
-                  <Link to={`/app/posts/${post.id}`} className="absolute inset-0 z-0" aria-label={`Xem chi tiết tin tuyển dụng ${job.title}`} />
-                  
-                  <div className="relative z-10 flex flex-col gap-3.5">
+                <div
+                  onClick={(e) => {
+                    // Nếu click vào button hoặc link con (Bookmark, Ứng tuyển, Link profile) thì không chuyển trang
+                    if ((e.target as HTMLElement).closest('button, a')) return
+                    navigate(`/app/posts/${post.id}`)
+                  }}
+                  className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md cursor-pointer dark:bg-[#242526] dark:border-[#393a3b] dark:hover:border-[#4e4f50]"
+                >
+                  <div className="flex flex-col gap-3.5">
                     {/* Header Row: Company Icon, Job Title, Company Name & Action Buttons on Right */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       {/* Left: Job Title & Company */}
@@ -277,7 +283,7 @@ export function JobsPage() {
                     {/* Metadata Badges: Salary (Green Pill), Location & Author */}
                     <div className="flex flex-wrap items-center gap-2 pt-0.5">
                       <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:border-emerald-800/50 dark:text-emerald-400">
-                        <span>💰</span>
+                        <Coins size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span>{formatSalary(job.salaryMin, job.salaryMax)}</span>
                       </span>
 

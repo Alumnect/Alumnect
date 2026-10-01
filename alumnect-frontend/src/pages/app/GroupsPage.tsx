@@ -9,7 +9,7 @@
  */
 import { useState } from 'react'
 import { AlertTriangle, Compass, Inbox, Loader2, Plus, Search, Sparkles, Users2, X } from 'lucide-react'
-import { Card } from '@/components/ui'
+import { Card, PageHeader } from '@/components/ui'
 import { Stagger, StaggerItem } from '@/components/motion'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -50,7 +50,7 @@ function GroupCardSkeleton() {
 export function GroupsPage() {
   const user = useAuthStore((s) => s.user)
   const promptLogin = useLoginPrompt((s) => s.open)
-  const canCreate = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
+  const canCreate = !!user && user.role === 'ALUMNI'
 
   const [tab, setTab] = useState<Tab>('discover')
   const [searchInput, setSearchInput] = useState('')
@@ -78,37 +78,25 @@ export function GroupsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
-      {/* Banner đầu trang (Community Hero Header) phong cách FPT Warm Pastel */}
-      <div className="relative overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-gradient-to-br from-brand-500/10 via-white to-violet-500/10 p-6 sm:p-8 shadow-card dark:border-[#393a3b] dark:from-brand-950/20 dark:via-[#242526] dark:to-violet-950/20">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-3.5 py-1 text-xs font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
-              <Sparkles size={13} className="text-brand-600" />
-              <span>Cộng đồng Cựu sinh viên & Sinh viên FPTU</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-plum-900 dark:text-white">
-              Hội nhóm & Không gian gắn kết
-            </h1>
-            <p className="text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
-              Tìm kiếm đồng đội cùng chung chuyên môn công nghệ, sở thích khởi nghiệp hoặc khóa học để chia sẻ cơ hội và đồng hành cùng phát triển.
-            </p>
-          </div>
-
-          {(canCreate || !user) && (
-            <div className="shrink-0">
-              <Button
-                variant="primary"
-                size="md"
-                leftIcon={<Plus size={16} />}
-                onClick={handleCreateClick}
-                className="rounded-2xl px-5 py-2.5 font-bold shadow-soft transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Tạo hội nhóm mới
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Tiêu đề trang gọn gàng, tinh tế theo chuẩn PageHeader */}
+      <PageHeader
+        icon={<Users2 size={20} />}
+        title="Hội nhóm"
+        subtitle="Không gian kết nối và trao đổi chuyên môn dành cho Cựu sinh viên."
+        actions={
+          canCreate ? (
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus size={16} />}
+              onClick={handleCreateClick}
+              className="rounded-xl px-4 py-2 font-bold shadow-soft transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Tạo hội nhóm
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Tabs chuyển đổi: Khám phá vs Nhóm của tôi */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] pb-3 dark:border-[#393a3b]">

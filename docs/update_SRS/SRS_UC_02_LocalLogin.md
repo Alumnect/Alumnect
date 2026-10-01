@@ -95,7 +95,7 @@ Module phụ trách toàn bộ các chức năng bảo mật, đăng ký tài kh
 5. Client lưu thông tin token vào Zustand store để bắt đầu phiên truy cập.
 
 **Screen layout**:
-- Figure 01: Login Form layout (trên nền canvas pastel kem ấm `#faf4ec` và card-surface trắng mềm `#ffffff`).
+- Figure 01: Login Form layout (Giao diện màn hình đăng nhập người dùng).
 
 **Function details**:
 - **Data**:

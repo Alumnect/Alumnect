@@ -14,6 +14,7 @@ export { ConfirmDialog } from './components/ConfirmDialog'
 export { GroupCreatePostCard } from './components/GroupCreatePostCard'
 export { GroupPostCard } from './components/GroupPostCard'
 export { GroupDiscussionsFeed } from './components/GroupDiscussionsFeed'
+export { GroupSidebarInfo } from './components/GroupSidebarInfo'
 export {
   useGroupPostsInfinite,
   useCreateGroupPostMutation,

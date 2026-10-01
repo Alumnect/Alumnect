@@ -18,6 +18,23 @@ interface ConversationListProps {
   onGroupCreated?: (group: Conversation) => void
 }
 
+function formatLastMessage(msg?: string): string {
+  if (!msg) return 'Bắt đầu cuộc trò chuyện'
+  if (/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+\?(?:[^\s]*&)?postId=\d+/.test(msg)) {
+    const note = msg.replace(/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+\?(?:[^\s]*&)?postId=\d+/, '').trim()
+    return note ? `${note} • [Đã chia sẻ bài viết nhóm]` : '[Đã chia sẻ một bài viết]'
+  }
+  if (/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+/.test(msg)) {
+    const note = msg.replace(/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+(?:\?[^\s]*)?/, '').trim()
+    return note ? `${note} • [Đã chia sẻ hội nhóm]` : '[Đã chia sẻ một hội nhóm]'
+  }
+  if (/(?:https?:\/\/[^\s]+)?\/app\/posts\/\d+/.test(msg)) {
+    const note = msg.replace(/(?:https?:\/\/[^\s]+)?\/app\/posts\/\d+/, '').trim()
+    return note ? `${note} • [Đã chia sẻ bài viết]` : '[Đã chia sẻ một bài viết]'
+  }
+  return msg
+}
+
 export function ConversationList({
   conversations,
   activeId,
@@ -210,7 +227,7 @@ export function ConversationList({
                         : 'text-plum-500 dark:text-[#b0b3b8]'
                     )}
                   >
-                    {conv.lastMessage || 'Bắt đầu cuộc trò chuyện'}
+                    {formatLastMessage(conv.lastMessage)}
                   </p>
                 </div>
               </button>

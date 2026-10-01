@@ -41,7 +41,7 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
         <EmptyState
           icon={<LineChart size={22} />}
           title="Bạn chưa đóng góp dữ liệu lương nào"
-          description="Đóng góp mẫu lương đầu tiên để giúp cộng đồng cựu sinh viên có thêm dữ liệu tham khảo."
+          description="Đóng góp để hỗ trợ cộng đồng tham khảo."
         />
       ) : (
         <div className="space-y-2.5">

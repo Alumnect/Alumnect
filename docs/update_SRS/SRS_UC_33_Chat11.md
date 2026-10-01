@@ -54,13 +54,13 @@ stateDiagram-v2
     * Dữ liệu tin nhắn được sắp xếp giảm dần theo thời gian tạo (`createdAt DESC`). Khi người dùng cuộn lên trên đỉnh khung chat, hệ thống tự động tải thêm trang tiếp theo và neo giữ vị trí cuộn mượt mà (scroll anchoring) không gây giật màn hình.
   * **Soạn thảo và Gửi tin nhắn với Optimistic UI**:
     * Người dùng nhập nội dung văn bản (tối đa 5000 ký tự) và/hoặc tải tệp tin đa phương tiện (ảnh, video, tài liệu) lên Cloudflare R2 qua Presigned URL rồi bấm "Gửi".
-    * **Kỹ thuật Optimistic UI**: Hook `useSendMessage` lập tức tạo một tin nhắn tạm thời (`id = -Date.now()`, `status = 'sending'`) hiển thị ngay trên khung chat kèm biểu tượng đồng hồ `<Clock />` xoay nhẹ và cập nhật đoạn trích tin nhắn đưa hội thoại lên đầu danh sách trước khi máy chủ phản hồi.
+    * **Kỹ thuật Optimistic UI**: Hook `useSendMessage` lập tức tạo một tin nhắn tạm thời (`id = -Date.now()`, `status = 'sending'`) hiển thị ngay trên khung chat ở trạng thái đang gửi và cập nhật đoạn trích tin nhắn đưa hội thoại lên đầu danh sách trước khi máy chủ phản hồi.
     * Hệ thống kiểm tra: Nếu cả văn bản và danh sách đính kèm đều rỗng, từ chối yêu cầu và trả về lỗi HTTP 400 Bad Request (`MSG-CHAT-04`).
 * **Bước 3 - Kết thúc**:
   * Hệ thống lưu bản ghi `Message` (tự động phân loại `message_type`: `TEXT`, `IMAGE`, `FILE`) và các bản ghi `MessageAttachment` vào PostgreSQL trong cùng Transaction an toàn.
   * Cập nhật thời điểm `last_message_at` của cuộc hội thoại để tự động đưa hội thoại lên đầu danh sách.
   * Bản ghi `ConversationParticipant` của người gửi tự động cập nhật `last_read_message_id = savedMessage.id`.
-  * Trả về HTTP 200 OK kèm `MessageResponse` cho người gửi. Hook `useSendMessage` hoán đổi mượt mà tin nhắn tạm với dữ liệu chính thức từ server, đổi biểu tượng sang đã gửi `<Check />`. Nếu xảy ra lỗi mạng hoặc máy chủ, tin nhắn được đánh dấu trạng thái lỗi (`status = 'error'`) kèm thông báo toast.
+  * Trả về HTTP 200 OK kèm `MessageResponse` cho người gửi. Hook `useSendMessage` hoán đổi mượt mà tin nhắn tạm với dữ liệu chính thức từ server, chuyển trạng thái sang đã gửi thành công. Nếu xảy ra lỗi mạng hoặc máy chủ, tin nhắn được đánh dấu trạng thái lỗi (`status = 'error'`) kèm thông báo toast.
   * Đồng thời, backend gọi `SimpMessagingTemplate.convertAndSendToUser` đẩy tin nhắn theo thời gian thực tới kênh cá nhân `/user/queue/messages` của người nhận.
   * Client của người nhận nhận được frame STOMP, hook `useWebSocketChat` tự động cập nhật trực tiếp cache React Query `['messages', conversationId]` và tăng `unreadCount` trong danh sách `['conversations']` **mà không cần gọi lại HTTP REST API**, đảm bảo độ trễ gần như bằng 0 và không tốn băng thông máy chủ.
   * Nếu người nhận đang mở cửa sổ chat của cuộc trò chuyện đó, hook `useMarkAsRead` tự động gọi `POST /api/v1/conversations/{id}/read` để cập nhật trạng thái đã đọc.
@@ -73,7 +73,7 @@ Module Tin nhắn cung cấp khả năng kết nối, giao lưu và trao đổi 
 #### 3.2.1 Nhắn tin trực tiếp 1-1 (Direct Messaging)
 
 **Function trigger**:
-* **Navigation path**: Thanh điều hướng chính -> icon "Tin nhắn" (`/app/messages`), hoặc từ Hồ sơ cá nhân / Danh bạ cựu sinh viên click nút "Nhắn tin" (`/app/messages?userId={targetUserId}`).
+* **Navigation path**: Thanh điều hướng chính -> mục "Tin nhắn" (`/app/messages`), hoặc từ Hồ sơ cá nhân / Danh bạ cựu sinh viên click nút "Nhắn tin" (`/app/messages?userId={targetUserId}`).
 * **Timing Frequency**: On demand (bất cứ khi nào người dùng muốn trò chuyện hoặc có tin nhắn mới đẩy về qua socket).
 
 **Function description**:
@@ -81,7 +81,15 @@ Module Tin nhắn cung cấp khả năng kết nối, giao lưu và trao đổi 
 * **Purpose**: Cho phép thành viên trao đổi tin nhắn văn bản, gửi ảnh, video, tài liệu công việc/học tập theo thời gian thực (realtime) với độ trễ dưới 50ms.
 * **Interface**:
   * **Cột trái (ConversationList)**: Ô tìm kiếm cuộc trò chuyện, danh sách đối phương kèm Avatar, tên, chuyên ngành, tin nhắn mới nhất, thời gian và huy hiệu số tin chưa đọc (Unread badge).
-  * **Cột phải (ChatWindow)**: Header đối phương kèm chấm trạng thái hoạt động, khung cuộn lịch sử tin nhắn hỗ trợ Infinite Scroll (tin nhắn người gửi màu tím lavender `#7f86ee` bên phải, tin nhắn đối phương màu trắng bên trái), thanh soạn thảo kèm nút đính kèm tệp tin và nút Gửi.
+  * **Cột phải (ChatWindow)**: Header đối phương kèm trạng thái hoạt động, khung cuộn lịch sử tin nhắn hỗ trợ Infinite Scroll.
+  * **Bong bóng tin nhắn (`MessageBubble`)**:
+    - **Căn lề bố cục**: Tin nhắn của người gửi (`isMe`) căn phải, tin nhắn của đối phương (`!isMe`) căn trái.
+    - **Thời gian tin nhắn**: Dòng thời gian gửi tin nhắn được căn chỉnh theo mép tương ứng của bong bóng chat (`isMe` căn phải, `!isMe` căn trái), nằm ngay dưới chân mỗi bong bóng chat.
+    - **Thẻ liên kết tương tác nhúng trong tin nhắn**:
+      + `SharedPostBubbleCard`: Thẻ bài viết bảng tin được chia sẻ (tác giả, avatar, nội dung trích dẫn, ảnh thu nhỏ, nút xem chi tiết).
+      + `SharedGroupBubbleCard`: Thẻ hội nhóm được chia sẻ (ảnh bìa, tên nhóm, số thành viên, mô tả tóm tắt, nút xem nhóm).
+      + `SharedGroupPostBubbleCard`: Thẻ bài viết trong hội nhóm được chia sẻ.
+  * **Thanh soạn thảo**: Kèm nút đính kèm tệp tin đa phương tiện và nút Gửi.
 
 **Data processing**:
 * Trích xuất email người dùng từ JWT SecurityContext.
@@ -92,7 +100,7 @@ Module Tin nhắn cung cấp khả năng kết nối, giao lưu và trao đổi 
 * Client nhận STOMP frame và cập nhật trực tiếp cache React Query in-memory.
 
 **Screen layout**:
-* `Figure 33.1`: Giao diện hộp thư tin nhắn AlumNect trên nền canvas kem ấm (`#faf4ec`), khung thẻ kính mờ Pastel Premium (`bg-white/70 backdrop-blur-xl`).
+* `Figure 33.1`: Giao diện hộp thư tin nhắn và cửa sổ trò chuyện trực tiếp 1-1.
 
 **Function details**:
 * **Data**: `conversationId`, `recipientId`, `content`, `attachments` (`mediaType`, `url`, `fileName`, `fileSize`).

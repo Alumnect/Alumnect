@@ -28,7 +28,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
   const [topicMenuPosition, setTopicMenuPosition] = useState({ top: 0, left: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const topicButtonRef = useRef<HTMLButtonElement>(null)
-  const topicCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const topicMenuRef = useRef<HTMLDivElement>(null)
 
   const createPostMutation = useCreateGroupPostMutation(groupId)
   const currentTopic = topics.find((topic) => topic === selectedTopic) ?? null
@@ -36,33 +36,44 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
   const updateTopicMenuPosition = useCallback(() => {
     const rect = topicButtonRef.current?.getBoundingClientRect()
     if (!rect) return
-    const menuWidth = Math.min(288, window.innerWidth - 24)
+    const menuWidth = Math.min(230, window.innerWidth - 24)
     setTopicMenuPosition({
-      top: rect.bottom + 8,
+      top: rect.bottom + 6,
       left: Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12)),
     })
   }, [])
 
-  const openTopicMenu = () => {
-    if (topicCloseTimerRef.current) clearTimeout(topicCloseTimerRef.current)
-    updateTopicMenuPosition()
-    setTopicMenuOpen(true)
-  }
-
-  const scheduleTopicMenuClose = () => {
-    if (topicCloseTimerRef.current) clearTimeout(topicCloseTimerRef.current)
-    topicCloseTimerRef.current = setTimeout(() => setTopicMenuOpen(false), 140)
+  const toggleTopicMenu = () => {
+    if (topicMenuOpen) {
+      setTopicMenuOpen(false)
+    } else {
+      updateTopicMenuPosition()
+      setTopicMenuOpen(true)
+    }
   }
 
   useEffect(() => {
     if (!topicMenuOpen) return
+
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (
+        topicButtonRef.current?.contains(target) ||
+        topicMenuRef.current?.contains(target)
+      ) {
+        return
+      }
+      setTopicMenuOpen(false)
+    }
+
     const reposition = () => updateTopicMenuPosition()
     window.addEventListener('resize', reposition)
     window.addEventListener('scroll', reposition, true)
+    document.addEventListener('mousedown', handlePointerDown)
     return () => {
       window.removeEventListener('resize', reposition)
       window.removeEventListener('scroll', reposition, true)
-      if (topicCloseTimerRef.current) clearTimeout(topicCloseTimerRef.current)
+      document.removeEventListener('mousedown', handlePointerDown)
     }
   }, [topicMenuOpen, updateTopicMenuPosition])
 
@@ -132,6 +143,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
           <form onSubmit={handleSubmit}>
             <div className="relative">
               <textarea
+                id="group-create-post-textarea"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onFocus={() => setIsFocused(true)}
@@ -150,17 +162,12 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                   id={`group-post-topic-${groupId}`}
                   aria-haspopup="listbox"
                   aria-expanded={topicMenuOpen}
-                  onMouseEnter={openTopicMenu}
-                  onMouseLeave={scheduleTopicMenuClose}
-                  onClick={() => {
-                    if (topicMenuOpen) setTopicMenuOpen(false)
-                    else openTopicMenu()
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-1 py-1 text-xs font-semibold text-plum-600 transition-colors hover:text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:text-[#b0b3b8] dark:hover:text-brand-400"
+                  onClick={toggleTopicMenu}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-plum-600 transition-colors hover:text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:text-[#b0b3b8] dark:hover:text-brand-400 cursor-pointer"
                 >
                   <span>Chủ đề bài viết</span>
                   {currentTopic && (
-                    <span className="rounded-full bg-brand-500/10 px-2 py-0.5 text-[11px] text-brand-700 dark:text-brand-300">
+                    <span className="rounded-full bg-brand-500/10 px-2 py-0.5 text-[11px] font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
                       #{currentTopic}
                     </span>
                   )}
@@ -171,22 +178,19 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                   <AnimatePresence>
                     {topicMenuOpen && (
                       <motion.div
+                        ref={topicMenuRef}
                         role="listbox"
                         aria-labelledby={`group-post-topic-${groupId}`}
-                      onMouseEnter={() => {
-                        if (topicCloseTimerRef.current) clearTimeout(topicCloseTimerRef.current)
-                      }}
-                      onMouseLeave={scheduleTopicMenuClose}
-                        initial={{ opacity: 0, y: -10, scaleY: 0.78, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, y: 0, scaleY: 1, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, y: -7, scaleY: 0.86, filter: 'blur(3px)' }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.7 }}
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
                         style={{ top: topicMenuPosition.top, left: topicMenuPosition.left, transformOrigin: 'top' }}
-                        className="fixed z-[100] w-72 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-brand-500/15 bg-white/95 p-2 shadow-[0_18px_50px_rgba(31,24,48,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-[#242526]/95"
+                        className="fixed z-[100] w-56 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-brand-500/15 bg-white/95 p-1.5 shadow-[0_12px_36px_rgba(31,24,48,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-[#242526]/95"
                       >
-                      <div className="mb-1 flex items-center justify-between px-2 py-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-[0.14em] text-plum-400">Chọn chủ đề</span>
-                        <span className="text-[10px] font-medium text-plum-400">{topics.length} lựa chọn</span>
+                      <div className="mb-1 flex items-center justify-between px-2 py-1">
+                        <span className="text-[9px] font-black uppercase tracking-[0.14em] text-plum-400">Chọn chủ đề</span>
+                        <span className="text-[9px] font-medium text-plum-400">{topics.length} lựa chọn</span>
                       </div>
                       {[null, ...topics].map((topic, index) => {
                         const selected = currentTopic === topic
@@ -196,22 +200,22 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                             type="button"
                             role="option"
                             aria-selected={selected}
-                            initial={{ opacity: 0, x: -8 }}
+                            initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.035 * index, duration: 0.2, ease: 'easeOut' }}
+                            transition={{ delay: 0.025 * index, duration: 0.15, ease: 'easeOut' }}
                             onClick={() => {
                               setSelectedTopic(topic)
                               setTopicMenuOpen(false)
                             }}
-                            className={`group/topic flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition-all duration-150 ${
+                            className={`group/topic flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-all duration-150 cursor-pointer ${
                               selected
                                 ? 'bg-brand-500/10 font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
-                                : 'font-medium text-plum-700 hover:translate-x-0.5 hover:bg-plum-900/[0.045] hover:text-brand-600 dark:text-plum-200 dark:hover:bg-[#3a3b3c] dark:hover:text-brand-300'
+                                : 'font-medium text-plum-700 hover:bg-plum-900/[0.045] hover:text-brand-600 dark:text-plum-200 dark:hover:bg-[#3a3b3c] dark:hover:text-brand-300'
                             }`}
                           >
                             <span>{topic ? `#${topic}` : 'Không chọn chủ đề'}</span>
-                            <span className={`grid h-6 w-6 place-items-center rounded-full transition-all ${selected ? 'scale-100 bg-brand-500 text-white' : 'scale-75 bg-transparent text-transparent group-hover/topic:scale-100 group-hover/topic:bg-brand-500/10'}`}>
-                              <Check size={13} strokeWidth={3} />
+                            <span className={`grid h-4.5 w-4.5 place-items-center rounded-full transition-all ${selected ? 'scale-100 bg-brand-500 text-white' : 'scale-75 bg-transparent text-transparent group-hover/topic:scale-100 group-hover/topic:bg-brand-500/10'}`}>
+                              <Check size={11} strokeWidth={3} />
                             </span>
                           </motion.button>
                         )

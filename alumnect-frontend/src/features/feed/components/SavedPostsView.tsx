@@ -21,10 +21,10 @@ import {
   AlertTriangle,
   LayoutGrid,
   List,
+  Heart,
+  MessageCircle,
 } from 'lucide-react'
 import {
-  Heart,
-  ChatCircle,
   BookmarkSimple,
   Trash,
 } from '@/components/icons'
@@ -266,10 +266,10 @@ function SavedFeedCard({
             'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 cursor-pointer',
             liked
               ? 'text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15 hover:bg-rose-500/20'
-              : 'text-slate-600 dark:text-[#b0b3b8] hover:bg-slate-200/60 dark:hover:bg-[#3a3b3c] hover:text-slate-900 dark:hover:text-[#f0f2f5]',
+              : 'text-slate-600 dark:text-[#b0b3b8] hover:bg-slate-200/60 dark:hover:bg-[#3a3b3c] hover:text-rose-500 dark:hover:text-rose-400',
           )}
         >
-          <Heart size={16} weight={liked ? 'fill' : 'regular'} className={liked ? 'text-rose-500 dark:text-rose-400' : ''} />
+          <Heart size={15} className={cn(liked && 'fill-rose-500 text-rose-500 dark:text-rose-400 dark:fill-rose-400')} />
           <span>{compact(likeCount)}</span>
         </button>
 
@@ -277,7 +277,7 @@ function SavedFeedCard({
           to={`/app/posts/${post.id}#comments`}
           className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 hover:bg-[#F27024]/10 dark:hover:bg-[#F27024]/15 hover:text-[#F27024] dark:hover:text-[#FF8C38]"
         >
-          <ChatCircle size={16} weight="regular" />
+          <MessageCircle size={15} />
           <span>{compact(post.comments)} bình luận</span>
         </Link>
       </div>

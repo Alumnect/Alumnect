@@ -87,7 +87,7 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
         <div className="space-y-3.5">
           <SettingRow
             title="Chỉnh sửa thông tin hội nhóm"
-            description="Cập nhật tên, ảnh bìa, mô tả chi tiết, danh mục ngành nghề, chủ đề hashtags và quy định tham gia nhóm."
+            description="Cập nhật thông tin và quy định nhóm."
           >
             <Button
               variant="secondary"
@@ -95,7 +95,7 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
               leftIcon={<PencilLine size={14} />}
               onClick={() => setEditOpen(true)}
               disabled={isInactive}
-              className="rounded-xl font-bold"
+              className="w-[136px] rounded-xl font-bold"
             >
               Chỉnh sửa
             </Button>
@@ -107,8 +107,8 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
                 title={isInactive ? 'Mở lại hội nhóm' : 'Tạm ngừng hội nhóm'}
                 description={
                   isInactive
-                    ? 'Cho phép thành viên mới tham gia và hoạt động bình thường trở lại.'
-                    : 'Tạm ngừng hoạt động: Ẩn nhóm khỏi danh sách khám phá công khai và không nhận thêm thành viên mới.'
+                    ? 'Kích hoạt lại để nhóm hoạt động bình thường.'
+                    : 'Tạm ẩn nhóm và ngừng nhận thành viên mới.'
                 }
               >
                 <Button
@@ -117,7 +117,7 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
                   leftIcon={isInactive ? <PlayCircle size={14} /> : <PauseCircle size={14} />}
                   disabled={statusMut.isPending}
                   onClick={() => (isInactive ? changeStatus('ACTIVE') : setCloseOpen(true))}
-                  className="rounded-xl font-bold"
+                  className="w-[136px] rounded-xl font-bold"
                 >
                   {isInactive ? 'Mở lại nhóm' : 'Tạm ngừng'}
                 </Button>
@@ -125,14 +125,14 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
 
               <SettingRow
                 title="Xóa vĩnh viễn hội nhóm"
-                description="Xóa bỏ hội nhóm khỏi hệ thống AlumNect. Toàn bộ thành viên sẽ mất quyền truy cập và thao tác này không thể hoàn tác."
+                description="Xóa hoàn toàn hội nhóm. Không thể khôi phục."
                 danger
               >
                 <Button
                   variant="primary"
                   size="sm"
                   leftIcon={<Trash2 size={14} />}
-                  className="rounded-xl from-rose-600 to-rose-500 font-bold shadow-none hover:from-rose-700 hover:to-rose-600"
+                  className="w-[136px] rounded-xl from-rose-600 to-rose-500 font-bold shadow-none hover:from-rose-700 hover:to-rose-600"
                   onClick={() => setDeleteOpen(true)}
                 >
                   Xóa nhóm
@@ -147,9 +147,9 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
 
       <ConfirmDialog
         open={closeOpen}
-        title="Tạm ngừng hoạt động hội nhóm"
-        message="Hội nhóm sẽ tạm ngừng hoạt động: Không hiển thị ở danh sách khám phá và không tiếp nhận thêm thành viên. Bạn có thể mở lại bất cứ lúc nào."
-        confirmLabel="Xác nhận tạm ngừng"
+        title="Tạm ngừng hội nhóm"
+        message="Tạm ẩn nhóm và ngừng nhận thành viên mới. Bạn có thể mở lại bất kỳ lúc nào."
+        confirmLabel="Tạm ngừng"
         loading={statusMut.isPending}
         onConfirm={() => changeStatus('INACTIVE')}
         onClose={() => setCloseOpen(false)}
@@ -159,10 +159,10 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
         title="Xóa vĩnh viễn hội nhóm"
         message={
           <>
-            Bạn có chắc chắn muốn xóa hội nhóm <b>{group.name}</b>? Toàn bộ dữ liệu thành viên sẽ không thể phục hồi sau khi xóa.
+            Bạn có chắc chắn muốn xóa nhóm <b>{group.name}</b>? Thao tác này không thể hoàn tác.
           </>
         }
-        confirmLabel="Xác nhận xóa"
+        confirmLabel="Xóa nhóm"
         danger
         loading={deleteMut.isPending}
         onConfirm={confirmDelete}

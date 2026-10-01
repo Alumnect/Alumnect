@@ -31,10 +31,10 @@ import {
   ConfirmDialog,
   GroupDetailHeader,
   GroupDiscussionsFeed,
+  GroupSidebarInfo,
   GroupManagePanel,
   GroupMembersList,
   TransferOwnershipModal,
-  categoryLabel,
   isManagerRole,
   useGroupDetail,
   useLeaveGroup,
@@ -146,7 +146,7 @@ export function GroupDetailPage() {
   const tabs: { key: TabKey; label: string; icon: typeof MessagesSquare; badge?: number }[] = [
     { key: 'discussions', label: 'Thảo luận', icon: MessagesSquare },
     { key: 'about', label: 'Giới thiệu', icon: Info },
-    { key: 'members', label: `Thành viên (${group.memberCount})`, icon: Users },
+    { key: 'members', label: 'Thành viên', icon: Users },
   ]
 
   if (isManager) {
@@ -179,7 +179,7 @@ export function GroupDetailPage() {
       {group.status === 'INACTIVE' && (
         <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500/10 px-5 py-3 text-sm font-medium text-amber-800 dark:text-amber-300">
           <Info size={17} className="shrink-0 text-amber-600" />
-          <span>Hội nhóm đang tạm ngừng hoạt động: Không hiển thị ở danh sách khám phá và tạm ngưng tiếp nhận thành viên mới.</span>
+          <span>Hội nhóm đang tạm ngừng hoạt động và không nhận thêm thành viên mới.</span>
         </div>
       )}
 
@@ -220,10 +220,8 @@ export function GroupDetailPage() {
         </div>
       </div>
 
-      {/* Bố cục 2 cột (Desktop 2-column layout phong cách Reddit / Threads) */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* ===================== CỘT CHÍNH (68% - 8 cột) ===================== */}
-        <div className="min-h-[32rem] space-y-5 [overflow-anchor:none] lg:col-span-8">
+      {/* Nội dung các Tab */}
+      <div className="min-h-[32rem] space-y-5 [overflow-anchor:none]">
             {/* TAB 1: THẢO LUẬN (DISCUSSIONS) */}
             {activeTab === 'discussions' && (
               <motion.div
@@ -246,14 +244,21 @@ export function GroupDetailPage() {
                     </div>
                   </Card>
                 ) : (
-                  <GroupDiscussionsFeed
-                    groupId={group.id}
-                    groupName={group.name}
-                    isActiveMember={isMember}
-                    isGroupActive={group.status === 'ACTIVE'}
-                    topics={group.topics}
-                    sharedPostId={Number(searchParams.get('postId')) || undefined}
-                  />
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                    <div className="min-w-0">
+                      <GroupDiscussionsFeed
+                        groupId={group.id}
+                        groupName={group.name}
+                        isActiveMember={isMember}
+                        isGroupActive={group.status === 'ACTIVE'}
+                        topics={group.topics}
+                        sharedPostId={Number(searchParams.get('postId')) || undefined}
+                      />
+                    </div>
+                    <div className="hidden lg:block">
+                      <GroupSidebarInfo group={group} isActiveMember={isMember} />
+                    </div>
+                  </div>
                 )}
               </motion.div>
             )}
@@ -377,53 +382,6 @@ export function GroupDetailPage() {
                 <GroupManagePanel group={group} />
               </motion.div>
             )}
-        </div>
-
-        {/* ===================== CỘT BÊN (32% - 4 cột Sticky) ===================== */}
-        <div className="space-y-5 lg:col-span-4">
-          <div className="sticky top-20 space-y-5">
-            {/* Widget 1: Tóm tắt thông tin hội nhóm */}
-            <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-              <h4 className="text-xs font-black uppercase tracking-wider text-plum-400">
-                Thông tin cộng đồng
-              </h4>
-
-              <p className="mt-2.5 line-clamp-3 text-xs leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
-                {group.description}
-              </p>
-
-              <div className="mt-4 space-y-2.5 border-t border-plum-900/[0.06] pt-3.5 text-xs dark:border-[#393a3b]">
-                <div className="flex items-center justify-between">
-                  <span className="text-plum-500 dark:text-[#b0b3b8]">Loại nhóm</span>
-                  <span className="font-bold text-plum-900 dark:text-white">
-                    {group.privacy === 'PRIVATE' ? 'Nhóm riêng tư' : 'Nhóm công khai'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-plum-500 dark:text-[#b0b3b8]">Danh mục</span>
-                  <span className="font-bold text-brand-600 dark:text-brand-400">
-                    {categoryLabel(group.category)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-plum-500 dark:text-[#b0b3b8]">Tổng thành viên</span>
-                  <span className="font-bold text-plum-900 dark:text-white">
-                    {group.memberCount} thành viên
-                  </span>
-                </div>
-                {group.createdAt && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-plum-500 dark:text-[#b0b3b8]">Thành lập</span>
-                    <span className="font-medium text-plum-700 dark:text-plum-300">
-                      {new Date(group.createdAt).toLocaleDateString('vi-VN')}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-          </div>
-        </div>
       </div>
 
       {/* Modal xác nhận rời nhóm */}

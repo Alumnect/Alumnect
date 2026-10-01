@@ -236,7 +236,8 @@ export function EventsPage() {
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {Boolean(currentUser?.id && post.authorId && String(currentUser.id) === String(post.authorId)) &&
-                            event.status !== 'CANCELLED' && (
+                            event.status !== 'CANCELLED' &&
+                            !((event.endTime && new Date(event.endTime).getTime() < Date.now()) || (!event.endTime && event.startTime && new Date(event.startTime).getTime() < Date.now())) && (
                               <Button
                                 size="sm"
                                 variant="secondary"
