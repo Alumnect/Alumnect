@@ -14,7 +14,6 @@ createRoot(document.getElementById('root')!).render(
     {/* Cung cấp TanStack Query cho toàn app: cache dữ liệu feed, auth mutations, v.v. */}
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
-        {/* Tôn trọng prefers-reduced-motion của người dùng cho toàn bộ animation framer-motion */}
         <MotionConfig reducedMotion="user">
           <App />
         </MotionConfig>
