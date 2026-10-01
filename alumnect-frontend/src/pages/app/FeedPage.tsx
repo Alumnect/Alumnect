@@ -25,15 +25,14 @@ import {
   Clock,
   Users,
   Ban,
-  DollarSign,
-} from 'lucide-react'
-import {
+  Coins,
   Heart,
-  ChatCircle,
-  ShareFat,
-  BookmarkSimple,
+  MessageCircle,
+  Repeat,
+  Bookmark,
   Flag,
-} from '@/components/icons'
+} from 'lucide-react'
+import { TRANSITION } from '@/lib/motion'
 import { Avatar, Badge, Card, ImageCarousel, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -304,11 +303,9 @@ export function PostCard({
 
         {/* --- Phần 2: Nội dung văn bản bài viết --- */}
         {post.text && (
-          <Link to={`/app/posts/${post.id}`} className="mt-3.5 block">
-            <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-700 transition-colors hover:text-slate-900">
-              {post.text}
-            </p>
-          </Link>
+          <p className="mt-3.5 whitespace-pre-line text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+            {post.text}
+          </p>
         )}
       </div>
 
@@ -348,7 +345,7 @@ export function PostCard({
             )}
             {(post.job.salaryMin || post.job.salaryMax) ? (
               <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                <DollarSign size={13} />
+                <Coins size={13} />
                 {post.job.salaryMin && post.job.salaryMax
                   ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
                   : post.job.salaryMin
@@ -426,149 +423,240 @@ export function PostCard({
         </div>
       )}
 
-      {/* --- Phần 4: Ảnh đính kèm (áp dụng cho tất cả loại bài viết nếu có ảnh) --- */}
+      {/* --- Phần 4: Ảnh đính kèm (Lưới ảnh thông minh kiểu Facebook/Cộng đồng hiện đại) --- */}
       {(() => {
         const imgs = post.images && post.images.length > 0
           ? post.images
           : post.image ? [post.image] : []
         if (imgs.length === 0) return null
         return (
-          <ImageCarousel
-            images={imgs}
-            height={460}
-            altPrefix="Ảnh bài viết"
-            onImageClick={(url) => setPreviewImage(url)}
-          />
+          <div className="px-5 pb-2">
+            <div className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#393a3b]">
+              {imgs.length === 1 && (
+                <img
+                  src={imgs[0]}
+                  alt="Ảnh bài viết"
+                  loading="lazy"
+                  decoding="async"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPreviewImage(imgs[0])
+                  }}
+                  className="max-h-[460px] w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                />
+              )}
+
+              {imgs.length === 2 && (
+                <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
+                  {imgs.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt="Ảnh bài viết"
+                      loading="lazy"
+                      decoding="async"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewImage(url)
+                      }}
+                      className="h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {imgs.length === 3 && (
+                <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
+                  <img
+                    src={imgs[0]}
+                    alt="Ảnh bài viết"
+                    loading="lazy"
+                    decoding="async"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPreviewImage(imgs[0])
+                    }}
+                    className="col-span-2 h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                  />
+                  {imgs.slice(1).map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt="Ảnh bài viết"
+                      loading="lazy"
+                      decoding="async"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewImage(url)
+                      }}
+                      className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {imgs.length >= 4 && (
+                <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
+                  {imgs.slice(0, 3).map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt="Ảnh bài viết"
+                      loading="lazy"
+                      decoding="async"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewImage(url)
+                      }}
+                      className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    />
+                  ))}
+                  <div
+                    className="relative h-44 cursor-pointer overflow-hidden"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPreviewImage(imgs[3])
+                    }}
+                  >
+                    <img
+                      src={imgs[3]}
+                      alt="Ảnh bài viết"
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-opacity hover:opacity-95"
+                    />
+                    {imgs.length > 4 && (
+                      <div className="absolute inset-0 grid place-items-center bg-black/50 text-xl font-black text-white">
+                        +{imgs.length - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )
       })()}
 
-      {/* --- Phần 5: Thanh hành động — Thích (hoặc Chúc mừng) / Bình luận / Đăng lại / Báo cáo / Lưu.
-          Guest bấm bất kỳ nút nào sẽ mở popup mời đăng nhập (kiểu Facebook) theo BR-12 --- */}
-      <div className="flex items-center gap-1.5 p-2.5 sm:px-4 sm:py-3 border-t border-slate-100 dark:border-[#393a3b]">
-        {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleLike()
-          }}
-          aria-pressed={liked}
-          className={cn(
-            'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 cursor-pointer',
-            liked
-              ? 'text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15 hover:bg-rose-500/20 dark:hover:bg-rose-500/25'
-              : 'text-slate-600 dark:text-[#b0b3b8] hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-slate-900 dark:hover:text-[#f0f2f5]',
-          )}
-        >
-          {liked ? (
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: [1.35, 1], opacity: 1 }}
-              transition={{ duration: 0.35, type: 'spring', bounce: 0.6 }}
-            >
-              <Heart size={20} weight="fill" className="text-rose-500 dark:text-rose-400" />
-            </motion.div>
-          ) : (
-            <Heart size={20} weight="regular" />
-          )}
-          <span>{compact(likeCount)}</span>
-        </button>
-
-        {/* Nút Bình luận: Bấm để mở/đóng inline quick comment trực tiếp trên thẻ bài viết */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            if (!canInteract) {
-              promptLogin('Đăng nhập để bình luận về bài viết.')
-              return
-            }
-            setShowComments((prev) => !prev)
-          }}
-          className={cn(
-            'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 cursor-pointer',
-            showComments
-              ? 'text-[#F27024] dark:text-[#FF8C38] bg-[#F27024]/10 dark:bg-[#F27024]/15 hover:bg-[#F27024]/20 dark:hover:bg-[#F27024]/25'
-              : 'text-slate-600 dark:text-[#b0b3b8] hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-[#F27024] dark:hover:text-[#FF8C38]',
-          )}
-          title={showComments ? 'Thu gọn bình luận' : 'Xem và viết bình luận'}
-        >
-          <ChatCircle size={20} weight={showComments ? 'fill' : 'regular'} className={showComments ? 'text-[#F27024] dark:text-[#FF8C38]' : ''} />
-          <span>{compact(commentCount)}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (!canInteract) {
-              promptLogin('Đăng nhập để chia sẻ bài viết.')
-            } else if (onShare) {
-              onShare(post)
-            }
-          }}
-          aria-label="Chia sẻ bài viết"
-          title="Chia sẻ bài viết"
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-slate-900 dark:hover:text-[#f0f2f5] cursor-pointer"
-        >
-          <ShareFat size={20} weight="regular" />
-        </button>
-        {!isAuthor && (canReport ? (
+      {/* --- Phần 5: Thanh hành động — Thích / Bình luận / Chia sẻ / Lưu / Báo cáo --- */}
+      <div className="flex items-center justify-between border-t border-slate-100 dark:border-[#393a3b] px-5 py-3 text-xs font-bold text-slate-500 dark:text-[#b0b3b8]">
+        <div className="flex items-center gap-4">
+          {/* Nút Thích */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation()
-              onReport?.(post)
+              handleLike()
             }}
-            aria-label="Báo cáo bài viết"
-            title="Báo cáo bài viết"
-            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
+            aria-pressed={liked}
+            className={cn(
+              'inline-flex items-center gap-1.5 transition-colors cursor-pointer',
+              liked
+                ? 'text-rose-500 font-extrabold'
+                : 'hover:text-rose-500',
+            )}
           >
-            <Flag size={19} weight="regular" />
+            <AnimatePresence initial={false}>
+              <motion.span
+                key={liked ? 'liked' : 'unliked'}
+                className="inline-flex"
+                initial={{ scale: 0.55, opacity: 0.4 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={TRANSITION.bounce}
+              >
+                <Heart size={16} className={cn(liked && 'fill-rose-500 text-rose-500')} />
+              </motion.span>
+            </AnimatePresence>
+            <span>{compact(likeCount)} thích</span>
           </button>
-        ) : !canInteract ? (
+
+          {/* Nút Bình luận */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation()
-              promptLogin('Đăng nhập để báo cáo bài viết.')
+              if (!canInteract) {
+                promptLogin('Đăng nhập để bình luận về bài viết.')
+                return
+              }
+              setShowComments((prev) => !prev)
             }}
-            aria-label="Báo cáo bài viết"
-            title="Báo cáo bài viết"
-            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
+            className={cn(
+              'inline-flex items-center gap-1.5 transition-colors cursor-pointer',
+              showComments
+                ? 'text-[#F27024] dark:text-[#FF8C38]'
+                : 'hover:text-brand-500 dark:hover:text-brand-400',
+            )}
           >
-            <Flag size={19} weight="regular" />
+            <MessageCircle size={16} />
+            <span>{compact(commentCount)} bình luận</span>
           </button>
-        ) : null)}
-        <button
-          type="button"
-          aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
-          title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
-          onClick={(e) => {
-            e.stopPropagation()
-            handleSave()
-          }}
-          className={cn(
-            'inline-flex items-center justify-center rounded-xl p-2 transition-all duration-200 cursor-pointer',
-            isAuthor ? 'ml-auto' : '',
-            saved
-              ? 'text-[#F27024] dark:text-[#FF8C38] bg-[#F27024]/10 dark:bg-[#F27024]/15 hover:bg-[#F27024]/20'
-              : 'text-slate-400 dark:text-[#8a8d91] hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-[#F27024] dark:hover:text-[#FF8C38]',
-          )}
-        >
-          {saved ? (
-            <motion.div
-              initial={{ scale: 0.6 }}
-              animate={{ scale: [1.25, 1] }}
-              transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
+
+          {/* Nút Chia sẻ */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (!canInteract) {
+                promptLogin('Đăng nhập để chia sẻ bài viết.')
+              } else if (onShare) {
+                onShare(post)
+              }
+            }}
+            aria-label="Chia sẻ bài viết"
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-violet-500 dark:hover:text-violet-400 cursor-pointer"
+          >
+            <Repeat size={16} />
+            <span>Chia sẻ</span>
+          </button>
+        </div>
+
+        {/* Các nút phụ bên phải: Lưu & Báo cáo */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleSave()
+            }}
+            className={cn(
+              'inline-flex items-center justify-center rounded-lg p-1.5 transition-colors cursor-pointer',
+              saved
+                ? 'text-[#F27024] dark:text-[#FF8C38] hover:bg-[#F27024]/10'
+                : 'text-slate-400 hover:text-[#F27024] dark:text-[#8a8d91] dark:hover:text-[#FF8C38] hover:bg-slate-100 dark:hover:bg-[#3a3b3c]',
+            )}
+          >
+            <Bookmark size={16} className={cn(saved && 'fill-[#F27024] text-[#F27024] dark:fill-[#FF8C38] dark:text-[#FF8C38]')} />
+          </button>
+
+          {!isAuthor && (canReport ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onReport?.(post)
+              }}
+              aria-label="Báo cáo bài viết"
+              className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 dark:text-[#8a8d91] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
             >
-              <BookmarkSimple size={20} weight="fill" className="text-[#F27024] dark:text-[#FF8C38]" />
-            </motion.div>
-          ) : (
-            <BookmarkSimple size={20} weight="regular" />
-          )}
-        </button>
+              <Flag size={16} />
+            </button>
+          ) : !canInteract ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                promptLogin('Đăng nhập để báo cáo bài viết.')
+              }}
+              aria-label="Báo cáo bài viết"
+              className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 dark:text-[#8a8d91] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+            >
+              <Flag size={16} />
+            </button>
+          ) : null)}
+        </div>
       </div>
 
       {/* --- Phần 6: Khung bình luận trực tiếp trên bài viết (Inline Quick Comments) --- */}

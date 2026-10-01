@@ -17,9 +17,9 @@ stateDiagram-v2
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-* **Bước 1 - Khởi đầu**: Admin điều hướng vào hàng đợi duyệt hồ sơ cựu sinh viên (đường dẫn `/admin/verifications`).
+* **Bước 1 - Khởi đầu**: Admin điều hướng vào hàng đợi duyệt hồ sơ cựu sinh viên (đường dẫn `/admin/verifications` hoặc tab Duyệt cựu sinh viên).
 * **Bước 2 - Các bước chuyển tiếp**:
-  * Admin xem thông tin học vấn (ngành học, niên khóa), ghi chú và mở xem ảnh minh chứng tốt nghiệp (`proofUrl`).
+  * Admin xem thông tin cựu sinh viên (Họ tên, Email, Mã số sinh viên), Chuyên ngành đào tạo và mở xem ảnh minh chứng tốt nghiệp (`proofUrl` qua modal phóng to ảnh).
   * Admin bấm chọn "Duyệt" (nếu minh chứng hợp lệ) hoặc "Từ chối" (nếu minh chứng không đúng/mờ).
   * Giao diện hiển thị Modal kiểm duyệt yêu cầu nhập ghi chú kiểm duyệt. Nếu chọn Từ chối, lý do từ chối kiểm duyệt là bắt buộc.
   * Admin bấm xác nhận để gửi API kiểm duyệt lên backend.
@@ -39,8 +39,12 @@ stateDiagram-v2
   * **Purpose**: Kiểm soát hồ sơ, xác thực thông tin bằng cấp của cựu sinh viên Đại học FPT trước khi cho phép hoạt động trên hệ thống.
   * **Interface**:
     * Bộ lọc danh sách theo trạng thái: Đang chờ duyệt, Đã chấp thuận, Đã từ chối.
-    * Bảng danh sách hiển thị tên, ngành học, khóa học, ghi chú kèm link ảnh minh chứng tốt nghiệp.
-    * Modal phản hồi kiểm duyệt.
+    * Bảng danh sách chuẩn hóa 4 cột:
+      1. **Cựu sinh viên**: Avatar, họ tên, email, mã số sinh viên.
+      2. **Chuyên ngành**: Tên và mã chuyên ngành (VD: SE - Kỹ thuật phần mềm).
+      3. **Minh chứng**: Nút/Thumbnail nhấp xem trước ảnh minh chứng tốt nghiệp toàn màn hình.
+      4. **Thao tác**: Nút hành động Duyệt và Từ chối.
+    * Modal xem chi tiết và xác nhận kiểm duyệt: Hiển thị Chuyên ngành, Thời điểm gửi yêu cầu, Người duyệt, Ghi chú kiểm duyệt của Admin và ảnh bằng tốt nghiệp.
 
 * **Data processing**:
   1. Frontend gửi yêu cầu `PUT /api/v1/admin/verifications/{id}/review` kèm body chứa status (APPROVED / REJECTED) và reviewNote.

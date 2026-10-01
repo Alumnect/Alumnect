@@ -15,11 +15,12 @@ import {
   X,
   Loader2,
 } from 'lucide-react'
-import { toast } from '@/components/ui'
+import { toast, ImageViewerModal } from '@/components/ui'
 import { Avatar, Badge, Card } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
 import { TRANSITION } from '@/lib/motion'
 import { useAuthStore } from '@/store/authStore'
+import { ShareModal } from '@/features/feed'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GroupEditPostModal } from './GroupEditPostModal'
 import type { GroupComment, GroupPost } from '../model/group'
@@ -82,6 +83,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
   const [editingCommentText, setEditingCommentText] = useState('')
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
 
   // Mutations
   const likeMutation = useToggleGroupPostLikeMutation(groupId)
@@ -157,13 +159,8 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
     }
   }
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/app/groups/${groupId}?postId=${post.id}`)
-      toast.success('Đã sao chép liên kết bài viết!')
-    } catch {
-      toast.error('Không thể sao chép liên kết bài viết.')
-    }
+  const handleShare = () => {
+    setShareModalOpen(true)
   }
 
   const saveCommentEdit = async (commentId: number) => {
@@ -232,7 +229,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
               <div className="flex items-center gap-2 text-xs text-plum-400">
                 <span>{formatTime(post.createdAt)}</span>
-                {post.updatedAt && post.updatedAt !== post.createdAt && (
+                {post.updatedAt && new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime() > 10000 && (
                   <span>• Đã chỉnh sửa</span>
                 )}
                 {post.isPinned && (
@@ -460,7 +457,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               className="inline-flex items-center gap-1.5 hover:text-brand-500"
             >
               <MessageCircle size={16} />
-              <span>{post.commentCount} phản hồi</span>
+              <span>{post.commentCount} bình luận</span>
             </button>
 
             <button
@@ -563,7 +560,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                               <span className="text-[10px] text-plum-400">
                                 • {formatTime(c.createdAt)}
                               </span>
-                              {c.updatedAt && c.updatedAt !== c.createdAt && (
+                              {c.updatedAt && new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime() > 10000 && (
                                 <span className="text-[10px] text-plum-400">• Đã chỉnh sửa</span>
                               )}
                             </div>
@@ -695,36 +692,31 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
       {editingPost && <GroupEditPostModal post={post} groupId={groupId} topics={topics} onClose={() => setEditingPost(false)} />}
 
-      {/* Modal phóng to ảnh */}
-      <AnimatePresence>
-        {previewImage && (
-          <motion.div
-            key="image-preview"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: TRANSITION.exit }}
-            transition={TRANSITION.overlay}
-            className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
-            onClick={() => setPreviewImage(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={TRANSITION.pop}
-              className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl"
-            >
-              <button
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/60 text-white hover:bg-black"
-              >
-                <X size={18} />
-              </button>
-              <img src={previewImage} alt="Phóng to" className="max-h-[90vh] max-w-[90vw] object-contain" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Lightbox xem ảnh toàn màn hình chuẩn Messenger với Zoom, Pan, Rotate, Download */}
+      <ImageViewerModal
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage || ''}
+        alt="Ảnh bài viết hội nhóm"
+        senderName={post.author.fullName}
+        senderAvatar={post.author.avatarUrl}
+        time={formatTime(post.createdAt)}
+      />
+
+      {shareModalOpen && (
+        <ShareModal
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          shareItem={{
+            title: post.author.fullName,
+            subtitle: post.content || 'Bài viết trong nhóm',
+            thumbnail: post.imageUrls?.[0] ?? null,
+            avatarUrl: post.author.avatarUrl,
+            url: `${window.location.origin}/app/groups/${groupId}?postId=${post.id}`,
+            typeLabel: 'bài viết nhóm',
+          }}
+        />
+      )}
     </>
   )
 }

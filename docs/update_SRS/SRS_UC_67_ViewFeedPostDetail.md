@@ -44,8 +44,9 @@ stateDiagram-v2
 *   **Purpose**: Giúp Quản trị viên xem đầy đủ nội dung bài viết cộng đồng cùng hình ảnh đính kèm và các chỉ số tương tác để phục vụ việc kiểm duyệt và ẩn bài viết vi phạm.
 *   **Interface**:
     *   Nút "Quay lại danh sách bài viết".
-    *   Khung hiển thị thông tin tác giả: Ảnh đại diện (Avatar), Họ tên, Email.
+    *   Khung hiển thị thông tin tác giả: Ảnh đại diện (Avatar), Họ tên, Email, chuyên ngành, vai trò.
     *   Khung hiển thị nội dung: Badge loại bài viết (Bình thường, Thành tựu, Tuyển dụng, Sự kiện), nội dung văn bản đầy đủ, hình ảnh đính kèm (nếu có).
+    *   **Thẻ thông tin tuyển dụng (đối với bài RECRUITMENT)**: Chức danh công việc, Tên công ty, Nhãn loại hình công việc (Full-time/Part-time/Intern/Remote), Khối ứng tuyển & Hồ sơ (nút liên kết nộp hồ sơ `applyUrl` và email liên hệ `contactEmail`), Khung mức lương (Min - Max VNĐ hoặc Thỏa thuận), Địa điểm làm việc, và mô tả công việc.
     *   Thanh chỉ số tương tác: lượt thích, bình luận, lượt đăng lại.
     *   Khung kiểm duyệt ở cột phải: Trạng thái hiện tại (Đang hiển thị / Đã ẩn), ID bài viết, thời gian đăng bài, và nút bấm "Ẩn bài viết" (hoặc "Mở ẩn bài viết" nếu bài viết đang ẩn).
 

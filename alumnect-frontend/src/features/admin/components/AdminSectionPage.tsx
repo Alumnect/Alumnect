@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { 
   Inbox, Loader2, CheckCircle2, 
-  Eye, X, MessageSquare, AlertTriangle, FileImage
+  Eye, X, AlertTriangle, FileImage
 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, ImageViewerModal, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -183,8 +183,7 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                 <thead>
                   <tr className="border-b border-plum-900/8 text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
                     <th className="px-5 py-3.5 font-bold">Cựu sinh viên</th>
-                    <th className="px-5 py-3.5 font-bold">Thông tin xác minh</th>
-                    <th className="px-5 py-3.5 font-bold">Ghi chú</th>
+                    <th className="px-5 py-3.5 font-bold">Chuyên ngành</th>
                     <th className="px-5 py-3.5 font-bold text-center">Minh chứng</th>
                     <th className="px-5 py-3.5 font-bold text-right">Thao tác</th>
                   </tr>
@@ -208,36 +207,14 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                         </div>
                       </td>
 
-                      {/* Cột 2: Thông tin xác minh (Ngành + Năm tốt nghiệp) */}
+                      {/* Cột 2: Chuyên ngành */}
                       <td className="px-5 py-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs font-semibold text-plum-900">
-                            {r.majorName ? `${r.majorCode} - ${r.majorName}` : r.majorCode}
-                          </span>
-                          <span className="text-xs text-plum-500">
-                            Tốt nghiệp năm <strong className="text-plum-800 font-semibold">{r.graduationYear}</strong>
-                          </span>
-                        </div>
+                        <span className="text-xs font-semibold text-plum-900">
+                          {r.majorName ? `${r.majorCode} - ${r.majorName}` : r.majorCode}
+                        </span>
                       </td>
 
-                      {/* Cột 3: Ghi chú */}
-                      <td className="px-5 py-4 max-w-xs">
-                        {r.note ? (
-                          <div className="flex items-start gap-1 text-xs text-plum-700 italic bg-plum-900/[0.03] p-2 rounded-lg border border-plum-900/5 line-clamp-2">
-                            <MessageSquare size={12} className="mt-0.5 shrink-0 text-gold-600" />
-                            <span>"{r.note}"</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-plum-400 font-normal">Không có ghi chú</span>
-                        )}
-                        {r.status !== 'PENDING' && r.reviewNote && (
-                          <div className="mt-1 text-[11px] font-medium text-plum-500">
-                            Ghi chú Admin: {r.reviewNote}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Cột 4: Ảnh minh chứng (Thumbnail nút nhấp xem) */}
+                      {/* Cột 3: Ảnh minh chứng (Thumbnail nút nhấp xem) */}
                       <td className="px-5 py-4 text-center">
                         <button
                           onClick={() => setPreviewProofUrl(r.proofUrl)}
@@ -361,14 +338,10 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
               <div className="p-6 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="space-y-3 p-4 rounded-xl bg-brand-50/40 border border-brand-100">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Thông tin học tập</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Thông tin đăng ký</h4>
                     <div>
                       <span className="text-xs text-plum-500 block">Chuyên ngành</span>
                       <span className="font-bold text-plum-900">{detailReq.majorName ? `${detailReq.majorCode} - ${detailReq.majorName}` : detailReq.majorCode}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-plum-500 block">Năm tốt nghiệp</span>
-                      <span className="font-bold text-plum-900">{detailReq.graduationYear}</span>
                     </div>
                     <div>
                       <span className="text-xs text-plum-500 block">Thời điểm gửi yêu cầu</span>
@@ -377,23 +350,15 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                   </div>
 
                   <div className="space-y-3 p-4 rounded-xl bg-brand-50/40 border border-brand-100">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Ghi chú & Kiểm duyệt</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Kiểm duyệt của Admin</h4>
                     <div>
-                      <span className="text-xs text-plum-500 block">Ghi chú từ cựu sinh viên</span>
-                      <span className="italic font-medium text-plum-800">{detailReq.note ? `"${detailReq.note}"` : 'Không có'}</span>
+                      <span className="text-xs text-plum-500 block">Người duyệt</span>
+                      <span className="font-bold text-plum-900">{detailReq.reviewedBy || 'Chưa xét duyệt'}</span>
                     </div>
-                    {detailReq.reviewedBy && (
-                      <div>
-                        <span className="text-xs text-plum-500 block">Người duyệt</span>
-                        <span className="font-bold text-plum-900">{detailReq.reviewedBy}</span>
-                      </div>
-                    )}
-                    {detailReq.reviewNote && (
-                      <div>
-                        <span className="text-xs text-plum-500 block">Ghi chú duyệt của Admin</span>
-                        <span className="font-bold text-plum-900">{detailReq.reviewNote}</span>
-                      </div>
-                    )}
+                    <div>
+                      <span className="text-xs text-plum-500 block">Ghi chú duyệt của Admin</span>
+                      <span className="italic font-medium text-plum-800">{detailReq.reviewNote || 'Chưa có nhận xét'}</span>
+                    </div>
                   </div>
                 </div>
 

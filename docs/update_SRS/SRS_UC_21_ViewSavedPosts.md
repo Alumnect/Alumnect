@@ -54,13 +54,13 @@ Module quản lý toàn bộ bài viết trên bảng tin cộng đồng AlumNec
 *   **Purpose**: Cung cấp không gian lưu trữ cá nhân riêng tư giúp thành viên dễ dàng tìm lại các bài chia sẻ kiến thức hữu ích, tin tuyển dụng tiềm năng hoặc sự kiện họp mặt đã đánh dấu trước đó.
 *   **Interface**:
     *   **Header Tool Bar**: Các tab lọc danh mục kèm số đếm bài viết (`Tất cả`, `Thành tựu`, `Tuyển dụng`, `Sự kiện`) và nút chuyển đổi chế độ xem Lưới (Grid) / Dòng thời gian (Feed).
-    *   **Saved Grid View (Mặc định)**: Lưới thẻ 3 cột gọn gàng theo phong cách Instagram, hiển thị ảnh bìa, badge thể loại tương phản cao (`bg-white/95 text-sky-700 font-extrabold`), tiêu đề tóm tắt, avatar tác giả và nút xóa/bỏ lưu nhanh.
-    *   **Saved Feed View**: Dòng thời gian chi tiết hiển thị thẻ bài viết đầy đủ thông tin: Avatar tác giả, Tên tác giả, Badge phân loại, Thời gian đăng, Nội dung text, Khối việc làm/sự kiện đính kèm, Carousel ảnh, Nút Thả tim, Nút Bình luận và Nút "Đã lưu" / "Bỏ lưu".
-    *   **States**:
-        *   *Loading*: Khung xương bài viết (`SavedPostsSkeleton`).
-        *   *Empty*: Hiển thị minh họa Bookmark với nút bấm chuyển hướng "Khám phá Bảng tin".
-        *   *Error*: Thông báo lỗi mạng kèm nút "Thử lại".
-        *   *Load More*: Nút bấm "Tải thêm bài viết" kèm hiệu ứng spinner quay khi đang tải trang kế tiếp.
+    *   **Saved Grid View (Mặc định)**: Bố cục dạng lưới thẻ 3 cột, hiển thị ảnh bìa, nhãn thể loại bài viết, tiêu đề tóm tắt, ảnh đại diện tác giả và nút bỏ lưu nhanh.
+    *   **Saved Feed View**: Dòng thời gian chi tiết hiển thị thẻ bài viết đầy đủ thông tin: Thông tin tác giả, Phân loại bài viết, Thời gian đăng, Nội dung văn bản, Khối việc làm/sự kiện đính kèm, **Lưới ảnh thông minh (Smart Photo Grid)** với 1, 2, 3, 4+ ảnh, Nút Thích (`{n} thích`), Nút Bình luận (`{n} bình luận`), Nút Chia sẻ, Nút Lưu bài viết và Nút Báo cáo vi phạm.
+    *   **Trạng thái giao diện**:
+        *   *Đang tải (Loading)*: Khung xương bài viết (`SavedPostsSkeleton`).
+        *   *Dữ liệu trống (Empty)*: Hiển thị thông báo chưa có bài viết đã lưu kèm nút chuyển hướng "Khám phá Bảng tin".
+        *   *Báo lỗi (Error)*: Thông báo lỗi mạng kèm nút "Thử lại".
+        *   *Tải thêm (Load More)*: Nút "Tải thêm bài viết" khi cuộn tới cuối danh sách.
 
 **Data processing**:
 1. Client gửi yêu cầu HTTP `GET /api/v1/posts/saved?page={page}&size={size}` kèm Bearer Access Token.
@@ -115,7 +115,6 @@ Module quản lý toàn bộ bài viết trên bảng tin cộng đồng AlumNec
 | BR-04 | Khi bài viết gốc bị xóa hoàn toàn khỏi hệ thống, bản ghi trong bảng `post_saves` sẽ tự động bị xóa theo nhờ cơ chế `ON DELETE CASCADE`. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-*   Giao diện tuân thủ tiêu chuẩn thiết kế Pastel Premium của AlumNect (màu canvas kem `#faf4ec`, chữ mận chín `#322c3f`, điểm nhấn cam FPT `#F27024`).
 *   Dữ liệu được tải theo cơ chế phân trang vô hạn (Infinite Scroll) thông qua TanStack Query.
 *   Tất cả các định dạng bài viết đa hình (bài thường, thành tựu, việc làm tuyển dụng, sự kiện) được kết xuất đồng bộ và trực quan.
 

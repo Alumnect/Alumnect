@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { CalendarDays, Check, Crown, Globe, Lock, Share2, Users } from 'lucide-react'
 import { Avatar, Badge, Card, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
+import { ShareModal } from '@/features/feed'
 import { categoryLabel } from '../model/group'
 import type { GroupDetail } from '../model/group'
 import { GroupCover } from './GroupCover'
@@ -17,22 +18,9 @@ export function GroupDetailHeader({
   onManage?: () => void
   onLeave: () => void
 }) {
-  const [copied, setCopied] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
   const isPrivate = group.privacy === 'PRIVATE'
   const createdDate = group.createdAt ? new Date(group.createdAt).toLocaleDateString('vi-VN') : ''
-
-  const handleShare = async () => {
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(window.location.href)
-        setCopied(true)
-        toast.success('Đã sao chép liên kết hội nhóm vào bộ nhớ tạm!')
-        setTimeout(() => setCopied(false), 2500)
-      }
-    } catch {
-      toast.info('Vui lòng sao chép đường dẫn trên thanh địa chỉ trình duyệt.')
-    }
-  }
 
   return (
     <Card hover={false} className="overflow-hidden rounded-3xl border border-plum-900/[0.08] p-0 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
@@ -98,17 +86,32 @@ export function GroupDetailHeader({
             <Button
               variant="secondary"
               size="sm"
-              leftIcon={copied ? <Check size={16} className="text-emerald-500" /> : <Share2 size={16} />}
-              onClick={handleShare}
+              leftIcon={<Share2 size={16} />}
+              onClick={() => setShareModalOpen(true)}
               className="rounded-xl border border-plum-900/10 bg-plum-900/[0.03] dark:border-[#393a3b] dark:bg-[#3a3b3c]"
             >
-              {copied ? 'Đã chép link' : 'Chia sẻ'}
+              Chia sẻ
             </Button>
 
             <GroupMembershipActions group={group} size="sm" onLeave={onLeave} hideManageButton={true} />
           </div>
         </div>
       </div>
+
+      {/* Modal chia sẻ hội nhóm cao cấp chuẩn Bảng tin */}
+      {shareModalOpen && (
+        <ShareModal
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          shareItem={{
+            title: group.name,
+            subtitle: `${group.memberCount} thành viên • ${group.shortDescription || group.description || 'Hội nhóm trên AlumNect'}`,
+            thumbnail: group.coverImageUrl,
+            url: `${window.location.origin}/app/groups/${group.id}`,
+            typeLabel: 'hội nhóm',
+          }}
+        />
+      )}
     </Card>
   )
 }

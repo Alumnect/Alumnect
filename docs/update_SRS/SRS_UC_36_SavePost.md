@@ -21,20 +21,20 @@ stateDiagram-v2
     
     GoiApiLuu --> CapNhatDatabaseLuu: Gửi POST /api/v1/posts/{id}/save
     CapNhatDatabaseLuu --> LuuThanhCong: Tạo bản ghi PostSave mới
-    LuuThanhCong --> CapNhatGiaoDienDaLuu: Đổi màu icon sang cam (#F27024), saved = true
+    LuuThanhCong --> CapNhatGiaoDienDaLuu: Cập nhật trạng thái đã lưu: saved = true
     CapNhatGiaoDienDaLuu --> [*]
     
     GoiApiBoLuu --> CapNhatDatabaseBoLuu: Gửi DELETE /api/v1/posts/{id}/save
     CapNhatDatabaseBoLuu --> BoLuuThanhCong: Xóa bản ghi PostSave
-    BoLuuThanhCong --> CapNhatGiaoDienBoLuu: Đổi màu icon sang xám, saved = false
+    BoLuuThanhCong --> CapNhatGiaoDienBoLuu: Cập nhật trạng thái chưa lưu: saved = false
     CapNhatGiaoDienBoLuu --> [*]
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-* **Bước 1 - Kích hoạt hành động**: Người dùng lướt xem các bài viết trên Bảng tin (`FeedPage`), Trang việc làm (`JobsPage`) hoặc Trang chi tiết bài viết (`PostDetailPage`) và bấm vào nút biểu tượng Bookmark trên thẻ bài viết.
+* **Bước 1 - Kích hoạt hành động**: Người dùng lướt xem các bài viết trên Bảng tin (`FeedPage`), Trang việc làm (`JobsPage`) hoặc Trang chi tiết bài viết (`PostDetailPage`) và bấm vào nút Lưu bài viết trên thẻ bài viết.
 * **Bước 2 - Kiểm tra quyền & xác thực**:
-  * Nếu người dùng là **Khách vãng lai (Guest - chưa đăng nhập)**: Hệ thống mở popup modal mời đăng nhập (`LoginPromptModal`) theo quy tắc BR-12, không gửi request lưu bài lên server.
-  * Nếu người dùng là **Thành viên hợp lệ (STUDENT / ALUMNI)**: Hệ thống thực hiện cập nhật giao diện lạc quan (Optimistic UI Update) đổi trạng thái icon ngay lập tức, sau đó gửi request tương ứng (`POST` để lưu hoặc `DELETE` để bỏ lưu) tới Backend.
+  * Nếu người dùng là **Khách vãng lai (Guest - chưa đăng nhập)**: Hệ thống mở popup modal mời đăng nhập (`LoginPromptModal`), không gửi request lưu bài lên server.
+  * Nếu người dùng là **Thành viên hợp lệ (STUDENT / ALUMNI)**: Hệ thống thực hiện cập nhật giao diện lạc quan (Optimistic UI Update) đổi trạng thái ngay lập tức, sau đó gửi request tương ứng (`POST` để lưu hoặc `DELETE` để bỏ lưu) tới Backend.
 * **Bước 3 - Xử lý nghiệp vụ tại Backend**:
   * Spring Security xác thực JWT Token và trích xuất email người dùng.
   * Backend kiểm tra tài khoản người dùng có tồn tại và thuộc vai trò hợp lệ (`STUDENT` hoặc `ALUMNI`). Nếu là vai trò khác (như `ADMIN`), ném lỗi `403 Forbidden`.
@@ -42,7 +42,7 @@ stateDiagram-v2
   * Thực hiện thao tác lũy đẳng trong cơ sở dữ liệu: thêm mới bản ghi vào bảng `post_saves` (khi lưu) hoặc xóa bản ghi (khi bỏ lưu).
 * **Bước 4 - Phản hồi & Đồng bộ dữ liệu**:
   * Server phản hồi mã `200 OK` kèm kết quả `{ saved: boolean }`.
-  * Frontend nhận phản hồi thành công và giữ nguyên trạng thái; nếu xảy ra lỗi mạng hoặc lỗi từ server, Frontend tự động hoàn tác (rollback) trạng thái icon về ban đầu.
+  * Frontend nhận phản hồi thành công và giữ nguyên trạng thái; nếu xảy ra lỗi mạng hoặc lỗi từ server, Frontend tự động hoàn tác (rollback) trạng thái giao diện về ban đầu.
 
 ---
 
@@ -52,16 +52,16 @@ Module chịu trách nhiệm quản lý bảng tin cộng đồng, bài viết �
 #### 3.2.1 Lưu & Bỏ lưu bài viết (Save & Unsave Post)
 
 **Function trigger**:
-*   **Navigation path**: Nút biểu tượng Bookmark trên từng thẻ bài viết tại:
+*   **Navigation path**: Nút Lưu bài viết trên từng thẻ bài viết tại:
     * `/app` (Bảng tin cộng đồng).
     * `/app/jobs` (Trang tuyển dụng việc làm).
     * `/app/posts/:id` (Trang chi tiết bài viết).
-*   **Timing Frequency**: On demand (khi người dùng bấm biểu tượng Bookmark trên bài viết).
+*   **Timing Frequency**: On demand (khi người dùng bấm nút Lưu bài viết).
 
 **Function description**:
 *   **Actors/Roles**: Student (Sinh viên), Alumni (Cựu sinh viên), Guest (Khách vãng lai - được hiển thị modal mời đăng nhập).
 *   **Purpose**: Cho phép người dùng đánh dấu và lưu trữ các bài viết, tin tuyển dụng, sự kiện quan trọng để theo dõi.
-*   **Interface**: Nút biểu tượng Bookmark trên thẻ bài viết: viền xám khi chưa lưu (`saved = false`), chuyển sang màu cam thương hiệu (`#F27024`) kèm hiệu ứng nảy (spring scale animation) khi đã lưu (`saved = true`).
+*   **Interface**: Nút Lưu bài viết trên thẻ bài viết: Cho phép người dùng lưu/bỏ lưu bài viết. Trạng thái gồm Chưa lưu (`saved = false`) và Đã lưu (`saved = true`). Áp dụng cơ chế cập nhật lạc quan (Optimistic UI). Khách vãng lai chưa đăng nhập bấm vào sẽ hiển thị modal yêu cầu đăng nhập.
 
 **Data processing**:
 1. Client gửi request `POST /api/v1/posts/{id}/save` (để lưu) hoặc `DELETE /api/v1/posts/{id}/save` (để bỏ lưu) kèm JWT Bearer Token trong header.
@@ -103,17 +103,15 @@ Module chịu trách nhiệm quản lý bảng tin cộng đồng, bài viết �
 | BR-03 | Thao tác bỏ lưu bài viết mang tính chất lũy đẳng: Bỏ lưu một bài viết chưa lưu vẫn trả về thành công với `saved: false`. |
 | BR-04 | Chỉ người dùng có vai trò `STUDENT` hoặc `ALUMNI` mới có quyền thực hiện lưu và bỏ lưu bài viết. |
 | BR-05 | Quản trị viên (`ADMIN`) không có quyền lưu bài viết cá nhân; khi gọi API sẽ nhận mã lỗi `403 Forbidden`. |
-| BR-06 | Khách vãng lai (`GUEST`) khi nhấn nút Bookmark trên bất kỳ bài viết nào sẽ được hiển thị modal mời đăng nhập theo quy định. |
+| BR-06 | Khách vãng lai (`GUEST`) khi nhấn nút Lưu bài viết sẽ được hiển thị modal yêu cầu đăng nhập theo quy định. |
 | BR-07 | Khi người dùng xóa tài khoản, toàn bộ các bản ghi bài viết đã lưu của người dùng đó sẽ tự động bị xóa theo cơ chế Cascade Delete. |
 | BR-08 | Khi bài viết gốc bị xóa vĩnh viễn, toàn bộ các bản ghi lưu bài viết đó trong bảng `post_saves` sẽ tự động bị xóa theo cơ chế Cascade Delete. |
 | BR-09 | Cờ `saved` (đã lưu hay chưa) phải được tính toán động dựa trên người xem hiện tại cho từng bài viết khi tải Bảng tin và Chi tiết bài viết. |
 | BR-10 | Việc tính toán cờ `saved` cho danh sách bài viết trên Bảng tin phải sử dụng cơ chế Batch-Fetch (`findSavedPostIds`) để triệt tiêu lỗi N+1 Query. |
-| BR-11 | Giao diện phía Client phải hỗ trợ cập nhật lạc quan (Optimistic UI Update) và tự động hoàn tác khi gặp lỗi mạng. |
-| BR-12 | Nút Bookmark phải hỗ trợ hoạt ảnh chuyển đổi trạng thái mượt mà (Spring Bounce Animation) giữa trạng thái đã lưu và chưa lưu. |
+| BR-11 | Giao diện phía Client hỗ trợ cập nhật lạc quan (Optimistic UI) và tự động hoàn tác khi gặp lỗi kết nối máy chủ. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-* Giao diện áp dụng bảng màu Pastel Premium của AlumNect: Điểm nhấn màu cam thương hiệu FPTU `#F27024`.
-* Nút Bookmark được tích hợp đồng bộ trên cả 3 trang: Bảng tin, Chi tiết bài viết và Danh sách việc làm.
+* Nút Lưu bài viết được tích hợp đồng bộ trên cả 3 trang: Bảng tin, Chi tiết bài viết và Danh sách việc làm.
 * Toàn bộ API đều tuân thủ chuẩn phong bì phản hồi `ResponseEntity<ApiResponse<T>>`.
 
 #### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng & Lỗi Nghiệp vụ)

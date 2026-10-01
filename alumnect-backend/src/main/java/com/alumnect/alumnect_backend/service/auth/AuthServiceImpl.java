@@ -173,16 +173,8 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Chuyên ngành không tồn tại với ID: " + request.getMajorId()));
 
-        // 3b. Kiểm tra các trường bắt buộc đặc thù của vai trò ALUMNI trước khi ghi vào
-        // CSDL
+        // 3b. Kiểm tra các trường đặc thù của vai trò ALUMNI trước khi ghi vào CSDL
         if (roleName.equals("ALUMNI")) {
-            if (request.getGraduationYear() == null) {
-                throw new BadRequestException("Năm tốt nghiệp là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
-            }
-            int currentYear = LocalDate.now().getYear();
-            if (request.getGraduationYear() > currentYear) {
-                throw new BadRequestException("Năm tốt nghiệp không được lớn hơn năm hiện tại");
-            }
             if (request.getProofUrl() == null || request.getProofUrl().trim().isEmpty()) {
                 throw new BadRequestException("Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
             }
@@ -211,7 +203,6 @@ public class AuthServiceImpl implements AuthService {
             profile = userProfileRepository.findById(user.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ người dùng"));
             profile.setFullName(request.getFullName());
-            profile.setCohort(request.getCohort());
             profile.setStudentCode(request.getStudentCode());
         }
         profile.setMajor(major);
@@ -241,9 +232,7 @@ public class AuthServiceImpl implements AuthService {
             Optional<VerificationRequest> existingVerRequestOpt = verificationRequestRepository.findByUser(user);
             if (existingVerRequestOpt.isPresent()) {
                 verRequest = existingVerRequestOpt.get();
-                verRequest.setGraduationYear(request.getGraduationYear());
                 verRequest.setProofUrl(request.getProofUrl());
-                verRequest.setNote(request.getNote());
                 verRequest.setStatus(VerificationStatus.PENDING);
             } else {
                 verRequest = authMapper.toVerificationRequest(request);
@@ -893,13 +882,6 @@ public class AuthServiceImpl implements AuthService {
 
         // 5b. Ràng buộc với ALUMNI
         if (roleName.equals("ALUMNI")) {
-            if (request.getGraduationYear() == null) {
-                throw new BadRequestException("Năm tốt nghiệp là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
-            }
-            int currentYear = LocalDate.now().getYear();
-            if (request.getGraduationYear() > currentYear) {
-                throw new BadRequestException("Năm tốt nghiệp không được lớn hơn năm hiện tại");
-            }
             if (request.getProofUrl() == null || request.getProofUrl().trim().isEmpty()) {
                 throw new BadRequestException("Ảnh minh chứng là bắt buộc khi đăng ký với vai trò Cựu sinh viên");
             }
@@ -952,14 +934,12 @@ public class AuthServiceImpl implements AuthService {
                     .fullName(request.getFullName().trim())
                     .avatarUrl(picture) // lấy avatar mặc định của người dùng từ Google
                     .major(major)
-                    .cohort(request.getCohort())
                     .studentCode(studentCode)
                     .build();
         } else {
             profile = userProfileRepository.findById(user.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ người dùng"));
             profile.setFullName(request.getFullName().trim());
-            profile.setCohort(request.getCohort());
             profile.setStudentCode(studentCode);
             profile.setMajor(major);
             String picture = (String) googleClaims.get("picture");
@@ -991,16 +971,12 @@ public class AuthServiceImpl implements AuthService {
             Optional<VerificationRequest> existingVerRequestOpt = verificationRequestRepository.findByUser(user);
             if (existingVerRequestOpt.isPresent()) {
                 verRequest = existingVerRequestOpt.get();
-                verRequest.setGraduationYear(request.getGraduationYear());
                 verRequest.setProofUrl(request.getProofUrl());
-                verRequest.setNote(request.getNote());
                 verRequest.setStatus(VerificationStatus.PENDING);
             } else {
                 verRequest = VerificationRequest.builder()
                         .user(user)
-                        .graduationYear(request.getGraduationYear())
                         .proofUrl(request.getProofUrl())
-                        .note(request.getNote())
                         .status(VerificationStatus.PENDING)
                         .build();
             }

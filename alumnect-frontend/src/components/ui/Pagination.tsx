@@ -63,7 +63,7 @@ export function Pagination({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-2 border-t border-slate-200/60 pt-4 mt-6',
+        'flex items-center justify-center gap-2 border-t border-slate-200/60 pt-4 mt-6 dark:border-[#393a3b]',
         className
       )}
     >
@@ -82,7 +82,7 @@ export function Pagination({
         {items.map((item, idx) => {
           if (typeof item === 'string') {
             return (
-              <span key={item + idx} className="px-1 text-xs text-slate-400 select-none">
+              <span key={item + idx} className="px-1 text-xs text-slate-400 select-none dark:text-[#b0b3b8]">
                 ...
               </span>
             )
@@ -97,10 +97,10 @@ export function Pagination({
               aria-label={`Trang ${item + 1}`}
               aria-current={isCurrent ? 'page' : undefined}
               className={cn(
-                'grid h-8 min-w-[32px] place-items-center rounded-lg px-2 text-xs font-semibold transition-all',
+                'grid h-8 min-w-[32px] place-items-center rounded-lg px-2 text-xs font-semibold transition-all cursor-pointer',
                 isCurrent
                   ? 'bg-brand-500 text-white shadow-xs'
-                  : 'border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                  : 'border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#e4e6eb] dark:hover:bg-[#3a3b3c]'
               )}
             >
               {item + 1}

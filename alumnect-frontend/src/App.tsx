@@ -57,14 +57,14 @@ function App() {
             <Route path="posts/:id" element={<PostDetailPage />} />
             <Route path="jobs" element={<JobsPage />} />
             <Route path="events" element={<EventsPage />} />
-            <Route path="groups" element={<GroupsPage />} />
-            <Route path="groups/:id" element={<GroupDetailPage />} />
             <Route path="forum" element={<ForumPage />} />
             <Route path="forum/:id" element={<QuestionDetailPage />} />
             <Route path="alumni" element={<AlumniDirectoryPage />} />
 
             {/* --- PROTECTED ROUTES (Login required) --- */}
             <Route path="saved" element={<Navigate to="/app/profile?tab=saved" replace />} />
+            <Route path="groups" element={<RoleRoute role="ALUMNI"><GroupsPage /></RoleRoute>} />
+            <Route path="groups/:id" element={<RoleRoute role="ALUMNI"><GroupDetailPage /></RoleRoute>} />
             <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
             <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />

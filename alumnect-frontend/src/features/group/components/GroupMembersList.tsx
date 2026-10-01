@@ -7,7 +7,7 @@
  */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Crown, Loader2, Lock, Search, ShieldCheck, ShieldOff, UserMinus, X } from 'lucide-react'
+import { Crown, Loader2, Lock, Search, ShieldCheck, ShieldOff, UserX, X } from 'lucide-react'
 import { Avatar, Badge, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
@@ -120,14 +120,28 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
                   </Badge>
                 )}
                 {(canChangeRole(m) || canRemove(m)) && (
-                  <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-2">
                     {canChangeRole(m) && (
-                      <Button variant="outline" size="sm" onClick={() => changeRole(m)} disabled={roleMut.isPending} leftIcon={m.role === 'ADMIN' ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => changeRole(m)}
+                        disabled={roleMut.isPending}
+                        leftIcon={m.role === 'ADMIN' ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
+                        className="w-[115px] justify-center rounded-full border-plum-900/15 text-xs font-semibold text-plum-700 hover:bg-plum-900/[0.04] dark:border-[#393a3b] dark:text-[#f0f2f5] dark:hover:bg-[#3a3b3c]"
+                      >
                         {m.role === 'ADMIN' ? 'Gỡ Admin' : 'Đặt làm Admin'}
                       </Button>
                     )}
                     {canRemove(m) && (
-                      <Button variant="ghost" size="sm" onClick={() => setToRemove(m)} aria-label={`Xóa ${m.fullName} khỏi nhóm`} leftIcon={<UserMinus size={14} />} className="text-rose-600 hover:text-rose-700">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setToRemove(m)}
+                        aria-label={`Xóa ${m.fullName} khỏi nhóm`}
+                        leftIcon={<UserX size={14} />}
+                        className="w-[115px] justify-center rounded-full border-rose-200 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:border-rose-300 dark:border-rose-900/40 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                      >
                         Xóa
                       </Button>
                     )}

@@ -412,7 +412,7 @@ export function ForgotPasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+                    className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-700 dark:text-[#b0b3b8] dark:hover:text-white transition-colors cursor-pointer"
                     aria-label="Ẩn/hiện mật khẩu"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -431,7 +431,7 @@ export function ForgotPasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+                    className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-700 dark:text-[#b0b3b8] dark:hover:text-white transition-colors cursor-pointer"
                     aria-label="Ẩn/hiện mật khẩu"
                   >
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}

@@ -28,15 +28,17 @@ import {
   Trash2,
   CalendarPlus,
   Ban,
-} from 'lucide-react'
-import {
+  Building2,
+  Coins,
+  Mail,
   Heart,
-  ChatCircle,
-  ShareFat,
-  BookmarkSimple,
+  MessageCircle,
+  Repeat,
+  Bookmark,
   Flag,
-} from '@/components/icons'
-import { motion } from 'framer-motion'
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel, toast } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -184,6 +186,11 @@ function PostDetailCard({
     ? !!currentUserId && post.authorId === currentUserId
     : !!currentUserName && post.author === currentUserName
 
+  const isEventEnded = post.type === 'event' && post.event != null && Boolean(
+    (post.event.endTime && new Date(post.event.endTime).getTime() < Date.now()) ||
+    (!post.event.endTime && post.event.startTime && new Date(post.event.startTime).getTime() < Date.now())
+  )
+
   // Trạng thái thích cục bộ (UC17) — khởi tạo từ dữ liệu bài viết đã tải.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState(post.likes)
@@ -294,70 +301,123 @@ function PostDetailCard({
 
       {/* --- Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
-          {/* Header Tuyển dụng */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
-            <h3 className="flex items-center gap-2 font-bold text-brand-900 text-lg dark:text-[#f0f2f5]">
-              <Briefcase size={20} className="text-brand-600 dark:text-brand-400" />
-              <span>Tuyển dụng: <span className="text-plum-900 dark:text-[#f0f2f5]">{post.job.title}</span></span>
-            </h3>
-            {post.job.applyUrl && (
-              <a
-                href={post.job.applyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-4 py-2 text-sm font-bold text-white hover:bg-[#d96010] transition-colors"
-              >
-                Ứng tuyển <ExternalLink size={14} />
-              </a>
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-orange-200 bg-white shadow-sm ring-1 ring-orange-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
+          {/* Header Tuyển dụng - Thiết kế trang trọng, nổi bật */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-amber-50/40 to-white px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-orange-100 text-[#F27024] shadow-2xs dark:bg-orange-500/20 dark:text-orange-400">
+                <Briefcase size={22} />
+              </span>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#F27024] dark:text-orange-400">
+                  Cơ hội việc làm
+                </span>
+                <h3 className="text-lg font-bold text-plum-900 dark:text-[#f0f2f5] leading-snug">
+                  {post.job.title}
+                </h3>
+              </div>
+            </div>
+
+            {post.job.company && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-white/90 px-3.5 py-1.5 border border-orange-200/80 text-sm font-bold text-slate-800 shadow-2xs dark:border-[#4e4f50] dark:bg-[#242526] dark:text-[#f0f2f5]">
+                <Building2 size={16} className="text-[#F27024]" />
+                <span>{post.job.company}</span>
+              </div>
             )}
           </div>
 
           <div className="p-6">
-            <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 p-5 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
-              <p className="text-base font-bold text-plum-900 dark:text-[#f0f2f5] mb-3">Công ty: {post.job.company}</p>
+            {/* Box Kêu gọi Ứng tuyển (tương tự RSVP của Sự kiện) */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/30 p-4 shadow-xs dark:border-[#393a3b] dark:bg-none dark:bg-[#3a3b3c]">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">Ứng tuyển vị trí này</p>
+                <p className="text-xs text-slate-500 dark:text-[#b0b3b8] mt-0.5">
+                  {post.job.applyUrl
+                    ? 'Gửi hồ sơ trực tiếp qua liên kết tuyển dụng của doanh nghiệp'
+                    : post.job.contactEmail
+                    ? `Liên hệ ứng tuyển qua email: ${post.job.contactEmail}`
+                    : 'Liên hệ người đăng bài để biết thêm thông tin ứng tuyển'}
+                </p>
+              </div>
 
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Địa điểm</p>
-                  <div className="flex flex-wrap gap-2 text-sm text-plum-800 dark:text-[#f0f2f5] font-medium">
-                    {post.job.location && (
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin size={15} className="text-brand-500" /> {post.job.location}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Mức lương & Liên hệ</p>
-                  <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800 dark:text-[#f0f2f5]">
-                    {(post.job.salaryMin || post.job.salaryMax) ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          {post.job.salaryMin && post.job.salaryMax
-                            ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
-                            : post.job.salaryMin
-                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
-                              : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">Thỏa thuận</span>
-                    )}
-                    {post.job.contactEmail && (
-                      <span className="inline-flex items-center gap-1.5 text-sm dark:text-[#b0b3b8]">
-                        <Inbox size={15} className="text-plum-400 dark:text-[#b0b3b8]" /> {post.job.contactEmail}
-                      </span>
-                    )}
-                  </div>
+              <div className="flex items-center gap-2">
+                {post.job.contactEmail && (
+                  <a
+                    href={`mailto:${post.job.contactEmail}?subject=${encodeURIComponent(`Ứng tuyển vị trí ${post.job.title} - ${post.job.company}`)}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-2xs dark:border-[#4e4f50] dark:bg-[#242526] dark:text-slate-200 dark:hover:bg-[#323334]"
+                    title="Gửi email cho nhà tuyển dụng"
+                  >
+                    <Mail size={14} className="text-slate-500 dark:text-slate-400" />
+                    <span>Gửi CV</span>
+                  </a>
+                )}
+                {post.job.applyUrl && (
+                  <a
+                    href={post.job.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#F27024] to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:from-[#d96010] hover:to-amber-700 transition-all cursor-pointer"
+                  >
+                    <span>Ứng tuyển ngay</span>
+                    <ExternalLink size={13} />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Thông tin chi tiết: Mức lương, Email, Địa điểm (Grid trực quan tương tự Sự kiện) */}
+            <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
+              <div>
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Mức lương</p>
+                <div className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Coins size={16} className="text-emerald-500 shrink-0" />
+                  {(post.job.salaryMin || post.job.salaryMax) ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                      {post.job.salaryMin && post.job.salaryMax
+                        ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VNĐ`
+                        : post.job.salaryMin
+                        ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VNĐ`
+                        : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VNĐ`}
+                    </span>
+                  ) : (
+                    <span className="text-slate-500 dark:text-[#b0b3b8] font-medium">Thỏa thuận</span>
+                  )}
                 </div>
               </div>
+
+              <div>
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Liên hệ tuyển dụng</p>
+                <div className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Mail size={16} className="text-sky-500 shrink-0" />
+                  {post.job.contactEmail ? (
+                    <a
+                      href={`mailto:${post.job.contactEmail}`}
+                      className="text-sky-600 hover:underline dark:text-sky-400 truncate"
+                      title={post.job.contactEmail}
+                    >
+                      {post.job.contactEmail}
+                    </a>
+                  ) : (
+                    <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">—</span>
+                  )}
+                </div>
+              </div>
+
+              {post.job.location && (
+                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-slate-200/60 dark:border-[#4e4f50] pt-4">
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Địa điểm làm việc</p>
+                  <p className="flex items-start gap-1.5 text-sm font-medium text-plum-800 dark:text-[#f0f2f5]">
+                    <MapPin size={16} className="text-[#F27024] shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{post.job.location}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Mô tả tuyển dụng */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Mô tả công việc:</p>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#F27024] dark:text-orange-400">Mô tả công việc:</p>
                 <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 dark:text-[#e4e6eb]">
                   {post.text}
                 </p>
@@ -391,7 +451,7 @@ function PostDetailCard({
               <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 dark:bg-rose-500/20 dark:text-rose-400">
                 <Ban size={13} /> Đã hủy
               </span>
-            ) : isAuthor && onCancelEvent ? (
+            ) : isAuthor && !isEventEnded && onCancelEvent ? (
               <Button
                 type="button"
                 variant="secondary"
@@ -510,69 +570,64 @@ function PostDetailCard({
           disabled={!canInteract}
           onClick={handleLike}
           aria-pressed={liked}
-          title={guardTitle}
           className={cn(
-            'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
+            'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
             liked
-              ? 'text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15 enabled:hover:bg-rose-500/20'
-              : 'text-slate-600 dark:text-[#b0b3b8] enabled:hover:bg-slate-100 dark:enabled:hover:bg-[#3a3b3c] enabled:hover:text-slate-900 dark:enabled:hover:text-[#f0f2f5]',
+              ? 'text-rose-500 font-extrabold'
+              : 'text-slate-600 dark:text-[#b0b3b8] enabled:hover:text-rose-500 dark:enabled:hover:text-rose-400',
           )}
         >
-          {liked ? (
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: [1.35, 1], opacity: 1 }}
-              transition={{ duration: 0.35, type: 'spring', bounce: 0.6 }}
+          <AnimatePresence initial={false}>
+            <motion.span
+              key={liked ? 'liked' : 'unliked'}
+              className="inline-flex"
+              initial={{ scale: 0.55, opacity: 0.4 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={TRANSITION.bounce}
             >
-              <Heart size={20} weight="fill" className="text-rose-500 dark:text-rose-400" />
-            </motion.div>
-          ) : (
-            <Heart size={20} weight="regular" />
-          )}
-          <span>{compact(likeCount)}</span>
+              <Heart size={16} className={cn(liked && 'fill-rose-500 text-rose-500 dark:text-rose-400 dark:fill-rose-400')} />
+            </motion.span>
+          </AnimatePresence>
+          <span>{compact(likeCount)} thích</span>
         </button>
         <button
           disabled={!canInteract}
-          title={guardTitle}
           onClick={() => {
             window.location.hash = 'comments'
             document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
           }}
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:bg-[#F27024]/10 dark:enabled:hover:bg-[#F27024]/15 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <ChatCircle size={20} weight="regular" /> {compact(post.comments)}
+          <MessageCircle size={16} /> <span>{compact(post.comments)} bình luận</span>
         </button>
         <button
           disabled={!canInteract}
-          title={guardTitle}
           onClick={onShare}
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:bg-slate-100 dark:enabled:hover:bg-[#3a3b3c] enabled:hover:text-slate-900 dark:enabled:hover:text-[#f0f2f5] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:text-violet-500 dark:enabled:hover:text-violet-400 disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <ShareFat size={20} weight="regular" />
+          <Repeat size={16} />
+          <span>Chia sẻ</span>
         </button>
         {!isAuthor && (canReport ? (
           <button
             type="button"
             onClick={onReport}
             aria-label="Báo cáo bài viết"
-            title="Báo cáo bài viết"
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
           >
-            <Flag size={19} weight="regular" />
+            <Flag size={16} />
           </button>
         ) : !canInteract ? (
           <button
             disabled
-            title={guardTitle}
             aria-label="Đăng nhập để báo cáo bài viết"
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Flag size={19} weight="regular" />
+            <Flag size={16} />
           </button>
         ) : null)}
         <button
           aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
-          title={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           onClick={handleSave}
           className={cn(
             'inline-flex items-center justify-center rounded-xl p-2 transition-all duration-200 cursor-pointer',
@@ -582,17 +637,7 @@ function PostDetailCard({
               : 'text-slate-400 dark:text-[#8a8d91] hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-[#F27024] dark:hover:text-[#FF8C38]',
           )}
         >
-          {saved ? (
-            <motion.div
-              initial={{ scale: 0.6 }}
-              animate={{ scale: [1.25, 1] }}
-              transition={{ duration: 0.3, type: 'spring', bounce: 0.5 }}
-            >
-              <BookmarkSimple size={20} weight="fill" className="text-[#F27024] dark:text-[#FF8C38]" />
-            </motion.div>
-          ) : (
-            <BookmarkSimple size={20} weight="regular" />
-          )}
+          <Bookmark size={16} className={cn(saved && 'fill-[#F27024] text-[#F27024] dark:fill-[#FF8C38] dark:text-[#FF8C38]')} />
         </button>
       </div>
 
@@ -793,7 +838,7 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
 
       {replyingTo && (
         <div className="mb-3 flex items-center gap-2 rounded-lg bg-[#F27024]/10 px-3 py-1.5 text-xs font-semibold text-[#F27024] animate-fade-in w-fit">
-          <ChatCircle size={14} weight="regular" />
+          <MessageCircle size={14} />
           Đang trả lời {replyingTo.name}
           <button type="button" onClick={() => setReplyingTo(null)} className="ml-2 hover:text-[#d96010]">
             <X size={14} />
@@ -1080,7 +1125,7 @@ function CommentsSection({
   return (
     <section id="comments" className="space-y-4">
       <div className="mb-4 flex items-center gap-2.5">
-        <ChatCircle size={18} weight="fill" className="text-brand-600" />
+        <MessageCircle size={18} className="text-brand-600" />
         <h2 className="text-lg font-extrabold text-plum-900">Bình luận</h2>
         <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">
           {compact(commentCount)}

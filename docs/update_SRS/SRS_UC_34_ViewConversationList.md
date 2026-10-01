@@ -163,7 +163,7 @@ Module cung cấp giải pháp liên lạc thời gian thực giữa các thành
 | **BR-34-07** | Tin nhắn chờ từ người lạ chỉ hiển thị ở tab "Tin nhắn chờ" (Requests) cho đến khi người dùng nhấn nút Chấp nhận (Accept) thì mới chuyển sang tab Hộp thư chính (Primary). |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-* Giao diện tuân thủ phong cách Pastel Premium: mặt kính mờ `backdrop-blur-xl`, bảng màu kem ấm `#faf4ec` và mực mận `#322c3f`.
+* Giao diện danh sách cuộc trò chuyện tương thích mượt mà trên cả trình duyệt máy tính và thiết bị di động.
 * Tốc độ phản hồi API danh sách cuộc trò chuyện phải đạt dưới 100ms với quy mô hàng ngàn bản ghi nhờ kỹ thuật Batching Queries.
 * Hệ thống bảo mật toàn bộ dữ liệu truyền tải thông qua HTTPS và WSS (WebSocket Secure).
 

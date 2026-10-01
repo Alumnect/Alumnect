@@ -152,13 +152,6 @@ export function AlumniDirectoryPage() {
         icon={<Users size={22} className="text-brand-500" />}
         title="Mạng lưới & Danh bạ AlumNect"
         subtitle="Khám phá và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University."
-        actions={
-          totalElements > 0 && activeTab === 'directory' ? (
-            <Badge tone="brand" className="px-3.5 py-1 text-xs">
-              <UserCheck size={13} /> {totalElements} Thành viên
-            </Badge>
-          ) : undefined
-        }
       />
 
       {/* Main Tabs Navigation - Chỉ hiển thị khi người dùng đã đăng nhập */}

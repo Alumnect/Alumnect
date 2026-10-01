@@ -69,16 +69,20 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
 ) {
   return (
     <div className="relative">
-      {icon && <span className="absolute top-3.5 left-3 text-gray-400 dark:text-[#b0b3b8] z-10 pointer-events-none">{icon}</span>}
+      {icon && (
+        <div className="pointer-events-none absolute inset-y-0 left-3 flex w-6 items-center justify-center text-gray-400 dark:text-[#b0b3b8] z-10">
+          {icon}
+        </div>
+      )}
       <input
         ref={ref}
         {...rest}
         placeholder=" "
         className={cn(
           'peer block w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 pb-2.5 pt-4 text-sm text-gray-900 focus:border-[#F27024] focus:outline-none focus:ring-0 dark:border-[#4e4f50] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:focus:border-[#F27024] [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white] dark:[&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_#3a3b3c]',
-          icon && 'pl-10',
+          icon && 'pl-11',
           error && 'border-red-500 focus:border-red-500 dark:border-rose-500',
-          trailing && 'pr-10',
+          trailing && 'pr-11',
           className,
         )}
       />
@@ -88,13 +92,17 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           'bg-white dark:bg-[#242526] dark:text-[#b0b3b8]',
           'peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:!bg-transparent dark:peer-placeholder-shown:!bg-transparent',
           'peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:bg-white peer-focus:text-[#F27024] dark:peer-focus:bg-[#242526] dark:peer-focus:text-[#F27024]',
-          icon && 'left-9',
+          icon && 'left-10',
           error && 'peer-focus:text-red-500 dark:peer-focus:text-rose-400'
         )}
       >
         {label}
       </label>
-      {trailing && <span className="absolute top-3.5 right-3 text-gray-500 dark:text-[#b0b3b8]">{trailing}</span>}
+      {trailing && (
+        <div className="absolute inset-y-0 right-3 flex w-6 items-center justify-center text-gray-500 dark:text-[#b0b3b8]">
+          {trailing}
+        </div>
+      )}
       {error && <span className="mt-1 block text-xs text-red-500 dark:text-rose-400">{error}</span>}
     </div>
   )

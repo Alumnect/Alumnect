@@ -10,7 +10,6 @@ import { GroupMembershipActions } from './GroupMembershipActions'
 export function GroupCard({ group }: { group: GroupCardData }) {
   const isPrivate = group.privacy === 'PRIVATE'
   const detailPath = `/app/groups/${group.id}`
-  const initial = (group.name || 'G').trim().charAt(0).toUpperCase()
 
   return (
     <Card hover className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] p-0 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
@@ -39,20 +38,14 @@ export function GroupCard({ group }: { group: GroupCardData }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-5 pt-3">
-        {/* Emblem/Avatar đại diện của nhóm đè nhẹ cạnh ảnh bìa */}
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-brand-500 to-coral-400 text-sm font-extrabold text-white shadow-sm ring-2 ring-white dark:ring-[#242526]">
-              {initial}
-            </div>
-            {group.status === 'INACTIVE' && (
-              <Badge tone="neutral" className="px-2 py-0.5 text-[10px]">
-                Tạm ngừng
-              </Badge>
-            )}
+      <div className="flex flex-1 flex-col p-5 pt-4">
+        {group.status === 'INACTIVE' && (
+          <div className="mb-2">
+            <Badge tone="neutral" className="px-2 py-0.5 text-[10px]">
+              Tạm ngừng
+            </Badge>
           </div>
-        </div>
+        )}
 
         {/* Tiêu đề & Mô tả */}
         <Link to={detailPath} className="group/title block">
@@ -67,15 +60,9 @@ export function GroupCard({ group }: { group: GroupCardData }) {
         {/* Phần minh chứng xã hội (Social Proof) & Nút tham gia */}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-plum-900/[0.06] pt-4 dark:border-[#393a3b]">
           <div className="flex items-center gap-2">
-            {/* Cụm avatar mini chồng lớp (Stack) */}
-            <div className="flex -space-x-1.5 overflow-hidden">
-              <span className="inline-grid h-6 w-6 place-items-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-700 ring-2 ring-white dark:bg-brand-900 dark:text-brand-300 dark:ring-[#242526]">
-                {initial}
-              </span>
-              <span className="inline-grid h-6 w-6 place-items-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700 ring-2 ring-white dark:bg-violet-900 dark:text-violet-300 dark:ring-[#242526]">
-                <Users size={11} />
-              </span>
-            </div>
+            <span className="inline-grid h-6 w-6 place-items-center rounded-full bg-brand-50 text-brand-600 ring-1 ring-brand-200/60 dark:bg-brand-950/40 dark:text-brand-300 dark:ring-brand-800/40">
+              <Users size={12} />
+            </span>
             <span className="text-xs font-semibold text-plum-600 dark:text-[#b0b3b8]">
               {group.memberCount} thành viên
             </span>

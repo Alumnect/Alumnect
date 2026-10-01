@@ -14,7 +14,20 @@
 
 ### Mục đích và giao diện
 
-Thành viên báo cáo một bài viết đang hiển thị trên Feed hoặc Post Detail. Nút Flag mở modal gồm lý do bắt buộc và mô tả tùy chọn; khi chọn `OTHER`, mô tả là bắt buộc. Guest được mời đăng nhập. Admin không thấy thao tác báo cáo vì không thuộc actor UC24.
+Thành viên báo cáo một bài viết đang hiển thị trên Bảng tin (Feed), Trang chi tiết bài viết (Post Detail) hoặc Trang bài viết đã lưu. 
+* **Nút kích hoạt**: Nút "Báo cáo" tại thanh công cụ chân bài viết.
+* **Giao diện Modal (`ReportPostModal`)**:
+  * Thiết kế theo danh sách dọc trực quan.
+  * Danh sách 5 lý do vi phạm:
+    1. **SPAM**: "Spam hoặc quảng cáo phiền toái" (Nội dung lặp đi lặp lại, quảng cáo bán hàng không liên quan).
+    2. **INAPPROPRIATE**: "Nội dung nhạy cảm, bạo lực hoặc phản cảm" (Hình ảnh hoặc từ ngữ thô tục, khiêu dâm, bạo lực).
+    3. **MISINFORMATION**: "Thông tin sai lệch hoặc gây hiểu lầm" (Tin giả mạo, thông tin học tập hoặc việc làm chưa kiểm chứng).
+    4. **SCAM_OR_FRAUD**: "Lừa đảo, gian lận hoặc độc hại" (Đa cấp, giả mạo cán bộ trường, đường link độc hại đánh cắp tài khoản).
+    5. **OTHER**: "Lý do khác" (Các vấn đề khác không thuộc danh sách trên).
+  * Khi chọn lý do `OTHER`, khung nhập mô tả chi tiết (`textarea`) sẽ mở rộng và trở thành trường bắt buộc (1 - 500 ký tự).
+  * Chân modal gồm 2 nút hành động: **Hủy bỏ** và **Gửi báo cáo** (có trạng thái Loading vô hiệu hóa khi đang gửi request).
+* **Khách vãng lai (Guest)**: Nhấp vào nút báo cáo sẽ hiển thị modal yêu cầu đăng nhập (`LoginPromptModal`).
+* **Quản trị viên (Admin)**: Không hiển thị nút báo cáo bài viết vi phạm.
 
 ### Luồng xử lý
 

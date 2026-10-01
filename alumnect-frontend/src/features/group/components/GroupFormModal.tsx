@@ -13,9 +13,9 @@ import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
-import { AlertTriangle, ImagePlus, Loader2, Plus, X } from 'lucide-react'
+import { AlertTriangle, Check, ChevronDown, Globe, ImagePlus, Loader2, Lock, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { toast } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -27,6 +27,7 @@ import {
   GROUP_NAME_MAX,
   GROUP_RULES_MAX,
   GROUP_TOPIC_MAX_LENGTH,
+  categoryLabel,
   groupFormSchema,
   parseTopics,
   validateTopics,
@@ -73,6 +74,20 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
   const privacy = watch('privacy')
   const coverImageUrl = watch('coverImageUrl')
   const nameValue = watch('name')
+  const categoryValue = watch('category')
+  const [categoryOpen, setCategoryOpen] = useState(false)
+  const categoryRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!categoryOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
+        setCategoryOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [categoryOpen])
 
   const updateTopics = (nextTopics: string[]) => {
     setTopics(nextTopics)
@@ -191,9 +206,9 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Ảnh bìa */}
+          {/* Ảnh nhóm */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-plum-900">Ảnh bìa (tùy chọn)</label>
+            <label className="mb-1 block text-sm font-semibold text-plum-900">Ảnh nhóm</label>
             <div className="relative overflow-hidden rounded-xl ring-1 ring-inset ring-plum-900/10">
               <GroupCover url={coverImageUrl} name={nameValue || 'Hội nhóm'} className="aspect-[21/9]" />
               <div className="absolute bottom-2 right-2 flex gap-2">
@@ -236,18 +251,73 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
 
           {/* Danh mục + loại hội nhóm */}
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div ref={categoryRef} className="relative">
               <label className="mb-1 block text-sm font-semibold text-plum-900">
                 Danh mục hoạt động <span className="text-rose-500">*</span>
               </label>
-              <select {...register('category')} className={`h-11 ${FIELD_CLASS}`}>
-                <option value="">— Chọn danh mục —</option>
-                {GROUP_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+
+              <button
+                type="button"
+                onClick={() => setCategoryOpen((prev) => !prev)}
+                className={cn(
+                  'flex h-11 w-full items-center justify-between rounded-2xl border px-4 text-left text-sm transition-all cursor-pointer',
+                  errors.category
+                    ? 'border-rose-400 bg-rose-50/50 text-rose-900 dark:border-rose-500/50 dark:bg-rose-950/20 dark:text-rose-200'
+                    : 'border-plum-900/10 bg-plum-900/[0.03] text-plum-900 hover:border-brand-500/40 hover:bg-white focus:outline-none dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-white dark:hover:border-brand-500/50',
+                  categoryOpen && 'border-brand-500 ring-2 ring-brand-500/20 dark:border-brand-500'
+                )}
+              >
+                <span className={cn(!categoryValue && 'text-plum-400 dark:text-[#8a8d91]')}>
+                  {categoryValue ? categoryLabel(categoryValue) : '— Chọn danh mục —'}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={cn(
+                    'text-plum-400 transition-transform duration-200',
+                    categoryOpen && 'rotate-180 text-brand-500'
+                  )}
+                />
+              </button>
+
+              <AnimatePresence>
+                {categoryOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-2xl border border-brand-500/15 bg-white p-1.5 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#242526]"
+                  >
+                    {GROUP_CATEGORIES.map((c) => {
+                      const isSelected = categoryValue === c.value
+                      return (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => {
+                            setValue('category', c.value, { shouldDirty: true, shouldValidate: true })
+                            setCategoryOpen(false)
+                          }}
+                          className={cn(
+                            'flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-all cursor-pointer',
+                            isSelected
+                              ? 'bg-brand-500/10 font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                              : 'font-medium text-plum-700 hover:bg-plum-900/[0.04] dark:text-plum-200 dark:hover:bg-[#3a3b3c]'
+                          )}
+                        >
+                          <span>{c.label}</span>
+                          {isSelected && (
+                            <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-brand-500 text-white">
+                              <Check size={11} strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {errors.category && <p className="mt-1 text-xs text-rose-500">{errors.category.message}</p>}
             </div>
 
@@ -256,23 +326,30 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
               <div className="grid grid-cols-2 gap-2">
                 {(
                   [
-                    { value: 'PUBLIC', label: 'Công khai' },
-                    { value: 'PRIVATE', label: 'Riêng tư' },
+                    { value: 'PUBLIC', label: 'Công khai', icon: Globe },
+                    { value: 'PRIVATE', label: 'Riêng tư', icon: Lock },
                   ] as const
-                ).map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setValue('privacy', opt.value, { shouldDirty: true })}
-                    aria-pressed={privacy === opt.value}
-                    className={cn(
-                      'flex h-11 items-center justify-center rounded-xl border px-3 text-center text-sm font-bold transition-colors',
-                      privacy === opt.value ? 'border-brand-400/70 bg-brand-500/10 text-brand-700' : 'border-plum-900/10 bg-plum-900/[0.03] text-plum-600 hover:border-plum-900/20',
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                ).map((opt) => {
+                  const Icon = opt.icon
+                  const isSelected = privacy === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setValue('privacy', opt.value, { shouldDirty: true })}
+                      aria-pressed={isSelected}
+                      className={cn(
+                        'flex h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-bold transition-all cursor-pointer',
+                        isSelected
+                          ? 'border-brand-400/70 bg-brand-500/10 text-brand-700 shadow-2xs'
+                          : 'border-plum-900/10 bg-plum-900/[0.03] text-plum-600 hover:border-plum-900/20 hover:bg-plum-900/[0.05]',
+                      )}
+                    >
+                      <Icon size={16} className={isSelected ? 'text-brand-600' : 'text-plum-400'} />
+                      <span>{opt.label}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -328,7 +405,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
 
           {/* Quy định tham gia */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-plum-900">Quy định tham gia (tùy chọn)</label>
+            <label className="mb-1 block text-sm font-semibold text-plum-900">Quy định tham gia</label>
             <textarea {...register('joinRules')} rows={3} maxLength={GROUP_RULES_MAX} placeholder="VD: Tôn trọng thành viên, không quảng cáo..." className={`py-3 ${FIELD_CLASS}`} />
             {errors.joinRules && <p className="mt-1 text-xs text-rose-500">{errors.joinRules.message}</p>}
           </div>
