@@ -59,6 +59,11 @@ public class Conversation {
     @Column(name = "direct_key", length = 100, unique = true)
     private String directKey;
 
+    /** Hội nhóm cộng đồng liên kết (nếu cuộc hội thoại này thuộc về một hội nhóm) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "community_group_id")
+    private com.alumnect.alumnect_backend.entity.group.CommunityGroup communityGroup;
+
     /** Danh sách thành viên tham gia cuộc hội thoại */
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

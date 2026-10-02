@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.dto.response.group;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,6 +35,11 @@ public class GroupDetailResponse {
     private boolean canViewMembers;
     /** Số yêu cầu tham gia đang chờ duyệt — chỉ có giá trị với Owner/Admin */
     private Long pendingRequestCount;
+    /** Mã cuộc trò chuyện nhóm (nếu hội nhóm đã khởi tạo nhóm chat) */
+    private Long conversationId;
+    /** Người xem hiện tại đã tham gia nhóm chat này chưa */
+    @JsonProperty("isConversationMember")
+    private boolean isConversationMember;
 
     /** Thông tin người sáng lập/sở hữu hội nhóm */
     @Data

@@ -1,49 +1,100 @@
-### 3.6.6 Search / Filter Career Path
-(Covers UC58 - Career Path Directory Filters)
+# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC58.1 - TÌM KIẾM VÀ LỌC LỘ TRÌNH SỰ NGHIỆP (SEARCH & FILTER CAREER PATHS)
 
-**Function trigger**
-*   **Navigation path:** Sidebar / AppShell Header -> Menu "Career Path" -> `/career-path` -> Interact with the search bar or the filter dropdowns located at the top or side of the directory.
-*   **Timing / Frequency:** On demand, whenever the user wants to narrow down the extensive alumni directory to find specific individuals, roles, companies, or academic peers.
+## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
 
-**Function description**
-*   **Actors/Roles:** Guest (unauthenticated visitor), Student, Alumni, Admin (Public access / Open to all roles).
-*   **Purpose:** To empower users to efficiently navigate and drill down into the large alumni database. It facilitates targeted networking, allowing students to find potential mentors at specific companies, or alumni to reconnect with peers from their exact cohort or major.
-*   **Interface:** 
-    *   **Global Search Bar:** A prominent, debounced text input field supporting full-text search.
-    *   **Filter Controls:** Dropdowns, select menus, or a collapsible filter drawer containing options for Academic Major, Cohort (Intake/Graduation Year), Location (City), and Current Industry/Company.
-    *   **Active Filter Chips:** A row of small visual tags (chips) displaying the currently applied filters, each with a close ("x") icon for quick removal, alongside a "Clear All" (Xóa tất cả) button.
-*   **UI States:** 
-    *   Skeleton loading grids or a subtle progress bar while data is being fetched over the network.
-    *   An empty-state placeholder illustration when the combination of filters yields zero matching alumni.
+### 2.2.3 Business Workflow (Luồng nghiệp vụ)
 
-**Data processing**
-1.  The user types a keyword into the search bar or selects an option from a filter dropdown.
-2.  The frontend applies a debounce strategy (typically 300ms - 500ms) on text inputs to prevent excessive API requests while typing.
-3.  The frontend serializes the active filters into the browser's URL query string (e.g., `/career-path?search=Data&majorId=3&cohort=15`). This ensures the filtered view is bookmarkable and shareable.
-4.  The client sends a `GET` request to the backend endpoint (e.g., `/api/v1/career-paths`) appending these query parameters.
-5.  The backend controller validates the parameters and delegates to the service layer.
-6.  The backend executes a dynamic database query (e.g., using JPA Specifications or Criteria Builder), applying a logical `AND` between different filter categories (e.g., matches search keyword AND matches exact major ID).
-7.  The backend returns an HTTP 200 OK with the paginated and filtered array of alumni summaries.
-8.  The frontend updates its state, replacing the current grid/list with the newly fetched data, and updates the active filter chips UI.
+```mermaid
+stateDiagram-v2
+    [*] --> CareerPage : Người dùng vào trang Lộ trình sự nghiệp (/app/career)
+    CareerPage --> EnterKeyword : Nhập từ khóa (Tên/Công ty/Chức danh) hoặc Chọn bộ lọc
+    EnterKeyword --> DebounceWait : Debounce 400ms
+    DebounceWait --> CallFilterAPI : Gửi GET /api/v1/career-paths với query params
+    CallFilterAPI --> DisplayFilteredList : Trả về danh sách cựu sinh viên phù hợp
+    DisplayFilteredList --> [*] : Xem kết quả hoặc tiếp tục tương tác
+```
 
-**Screen layout:** 
-[Figure — Search / Filter Career Path screen layout (Web)]
+#### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
+* **Bước 1 - Khởi đầu**: Người dùng truy cập trang Lộ trình sự nghiệp (`/app/career`).
+* **Bước 2 - Chọn tiêu chí lọc**: Người dùng nhập từ khóa tìm kiếm (họ tên, công ty, vị trí) hoặc chọn bộ lọc theo khóa học (cohort), thành phố (city), chức danh (jobTitle).
+* **Bước 3 - Xử lý truy vấn**: Frontend gửi request `GET /api/v1/career-paths` kèm các tham số lọc tới backend.
+* **Bước 4 - Hiển thị kết quả**: Backend tìm kiếm trong các bảng `user_profiles` và `experiences`, trả về danh sách cựu sinh viên thỏa mãn điều kiện.
 
-**Function details**
-*   **Data:** Filter parameters sent to the API include: `search` (String), `majorId` (Integer), `cohort` (Integer), `location` (String), `company` (String).
-*   **Validation:** 
-    *   Search text inputs are sanitized and trimmed to prevent injection or erroneous blank searches.
-    *   ID-based filters (like `majorId`, `cohort`) must be valid positive integers. If invalid, the backend ignores them or throws a 400 Bad Request.
+---
 
-*   **Business rules:** 
-    *   **Combinatorial Filtering (Logical AND):** Selecting multiple different filters narrows the results. For instance, filtering by Major = "Software Engineering" AND Cohort = "15" guarantees that all returned alumni satisfy both conditions simultaneously.
-    *   **Debounce Strategy:** Immediate API calls on every keystroke are prohibited to maintain system performance and respect database limits.
-    *   **URL State Synchronization (Deep Linking):** The application must sync the active filter state with the URL parameters. If a user refreshes the page or sends the link to a friend, the application must read the URL on load and immediately apply those specific filters.
+### 3.2 Module Lộ trình Sự nghiệp (Career Path)
 
-*   **Error Handling:**
-    *   **No Results Found:** If the filter combination is too restrictive and returns no records, the UI replaces the grid with an empty state illustration stating: "Không tìm thấy cựu sinh viên nào khớp với bộ lọc." (No alumni found matching the filters) and prominently displays a "Clear filters" button to help the user recover.
+#### 3.2.1 Tìm kiếm & Lọc lộ trình sự nghiệp (UC58.1)
+*(Tài liệu chuyên sâu chi tiết về tính năng tìm kiếm thuộc Module Lộ trình Sự nghiệp - Tham chiếu tổng thể tại [SRS_UC_58_ViewCareerpath.md](file:///d:/Alumnect/docs/update_SRS/SRS_UC_58_ViewCareerpath.md))*
 
-*   **Normal case:** A student wants to work at VNG. They navigate to `/career-path`, type "VNG" into the search bar, and select the "Software Engineering" major from the dropdown. After a brief loading skeleton, the grid updates to display only Software Engineering alumni who currently (or previously) have "VNG" listed in their employment history. The URL updates automatically to reflect these filters.
+---
 
-*   **Abnormal case:** 
-    *   **Network Failure During Filter:** If the user applies a filter but their internet connection drops, the API request fails. The frontend catches the exception, displays a toast notification: "Không thể áp dụng bộ lọc lúc này. Vui lòng kiểm tra kết nối." (Cannot apply filters at this time. Please check your connection), and retains the last successfully loaded grid of alumni to prevent a blank screen.
+### 5. Requirement Appendix (Phụ lục Yêu cầu)
+
+#### 5.1 Business Rules (Quy tắc Nghiệp vụ)
+
+| ID | Định nghĩa Quy tắc (Rule Definition) |
+| :--- | :--- |
+| BR-CP-01 | Chỉ cựu sinh viên có tài khoản `ACTIVE` và có dữ liệu kinh nghiệm làm việc mới xuất hiện trong kết quả tìm kiếm. |
+| BR-CP-02 | Các tiêu chí lọc được kết hợp theo phép toán logic AND. |
+
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-CP-01 | Toast / In line | Lọc lộ trình thành công | Lấy danh sách lộ trình sự nghiệp thành công. |
+| 2 | MSG-CP-02 | EmptyState | Không có kết quả phù hợp | Không tìm thấy cựu sinh viên nào phù hợp với bộ lọc đã chọn. |
+
+---
+
+## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
+
+### 3. Detail Design (Thiết kế chi tiết)
+
+#### 3.1.1 Class Diagram (Sơ đồ Lớp)
+
+```mermaid
+classDiagram
+    class CareerPathController {
+        +getCareerPaths(keyword, jobTitle, company, city, cohort, page, size) ResponseEntity
+    }
+    class CareerPathService {
+        <<interface>>
+        +getCareerPaths(filter, pageable) PageResponse
+    }
+    class CareerPathServiceImpl {
+        -CareerPathQueryRepository queryRepository
+        +getCareerPaths(filter, pageable) PageResponse
+    }
+    class CareerPathQueryRepository {
+        +searchCareerPaths(filter, pageable) Page
+    }
+
+    CareerPathController --> CareerPathService : calls
+    CareerPathServiceImpl ..|> CareerPathService : implements
+    CareerPathServiceImpl --> CareerPathQueryRepository : queries
+```
+
+##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng
+    participant UI as CareerPage (FE)
+    participant Controller as CareerPathController
+    participant Service as CareerPathServiceImpl
+    participant Repo as CareerPathQueryRepository
+    participant DB as PostgreSQL
+
+    User->>UI: Nhập từ khóa & chọn bộ lọc
+    UI->>Controller: GET /api/v1/career-paths?keyword=...&page=0&size=10
+    Controller->>Service: getCareerPaths(filter, pageable)
+    Service->>Repo: searchCareerPaths(filter, pageable)
+    Repo->>DB: Thực thi truy vấn động trên user_profiles & experiences
+    DB-->>Repo: Page<CareerPathSummary>
+    Repo-->>Service: Page<CareerPathSummary>
+    Service-->>Controller: PageResponse<CareerPathSummaryResponse>
+    Controller-->>UI: HTTP 200 OK (Kết quả tìm kiếm)
+    UI-->>User: Hiển thị danh sách cựu sinh viên phù hợp
+```

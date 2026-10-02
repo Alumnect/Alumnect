@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> GuiYeuCauXemChiTiet : Client gửi GET /api/v1/admin/posts/:id (hoặc /api/v1/events/:id/rsvp)
+    [*] --> GuiYeuCauXemChiTiet : Client gửi GET /api/v1/admin/posts/{id} (hoặc /api/v1/events/{id}/rsvp)
     GuiYeuCauXemChiTiet --> KiemTraQuyen : Spring Security kiểm tra JWT Token
     KiemTraQuyen --> TuChoiTruyCap : 401 / 403 (Chưa đăng nhập hoặc không đủ quyền)
     KiemTraQuyen --> TruyVanPostVaEvent : Token hợp lệ
@@ -37,7 +37,7 @@ stateDiagram-v2
 #### 3.2.1 Xem thông tin chi tiết sự kiện (UC73)
 
 **Function trigger**:
-*   **Navigation path**: /admin/posts/:id (đối với bài viết loại EVENT) hoặc trang chi tiết sự kiện trên Bảng tin.
+*   **Navigation path**: /admin/posts/{id} (đối với bài viết loại EVENT) hoặc trang chi tiết sự kiện trên Bảng tin.
 *   **Timing Frequency**: On demand / On screen mount khi người dùng click vào chi tiết sự kiện.
 
 **Function description**:
@@ -89,6 +89,16 @@ stateDiagram-v2
 #### 5.2 Common Requirements (Yêu cầu Chung)
 *   Sử dụng Fetch Join hoặc truy vấn theo ID để tránh lỗi N+1 Query.
 *   Mã hóa toàn bộ dữ liệu truyền tải qua HTTPS/TLS.
+
+---
+
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-UC73-01 | Toast message | Lấy chi tiết sự kiện thành công | Lấy chi tiết sự kiện thành công. |
+| 2 | MSG-UC73-02 | Toast Error | Sự kiện không tồn tại | Không tìm thấy sự kiện. |
+| 3 | MSG-UC73-03 | Toast Error | Không có quyền Quản trị viên | Bạn không có quyền truy cập chức năng này. |
 
 ---
 

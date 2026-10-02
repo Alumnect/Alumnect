@@ -99,7 +99,179 @@ stateDiagram-v2
 
 ---
 
-## PHẦN 2: THIẾT KẾ KỸ THUẬT (REPORT 4)
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-EV-HIST-01 | Toast message | Lấy lịch sử sự kiện thành công | Lấy lịch sử tham gia sự kiện thành công. |
+| 2 | MSG-EV-HIST-02 | EmptyState | Chưa có dữ liệu sự kiện đã tham gia | Bạn chưa tham gia sự kiện nào. Hãy khám phá và đăng ký các sự kiện mới! |
+| 3 | MSG-EV-HIST-03 | EmptyState | Bộ lọc không có sự kiện tương ứng | Không có sự kiện nào trong danh mục này. |
+| 4 | MSG-EV-HIST-04 | Alert Banner | Khách chưa đăng nhập vào tab lịch sử | Vui lòng đăng nhập để xem lịch sử sự kiện đã tham gia. |
+| 5 | MSG-EV-HIST-05 | Toast Error | Quản trị viên truy cập trang lịch sử | Tài khoản Quản trị viên không áp dụng cho tính năng này. |
+
+---
+
+## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
+
+### 3. Detail Design (Thiết kế chi tiết)
+
+#### 3.1 UC28 Xem lịch sử tham gia sự kiện (View Attended-Event History)
+
+##### 3.1.1 Class Diagram (Sơ đồ Lớp)
+
+```mermaid
+classDiagram
+    %% Controller Layer
+    class EventController {
+        +getEventHistory(page: int, size: int, filter: String, authentication: Authentication) ResponseEntity~ApiResponse~PageResponse~EventHistoryResponse~~~
+    }
+
+    %% DTO Layer
+    class EventHistoryResponse {
+        -Long registrationId
+        -String registrationStatus
+        -Instant registeredAt
+        -Long eventId
+        -String title
+        -String location
+        -Instant startTime
+        -Instant endTime
+        -Integer capacity
+        -int attendeeCount
+        -String eventStatus
+        -Long postId
+        -String coverUrl
+        -Long organizerId
+        -String organizerName
+        -String organizerAvatar
+        -String attendanceState
+    }
+
+    %% Service Layer
+    class EventService {
+        <<interface>>
+        +getEventHistory(userEmail: String, page: int, size: int, filter: String) PageResponse~EventHistoryResponse~
+    }
+
+    class EventServiceImpl {
+        -EventRegistrationRepository registrationRepository
+        -UserRepository userRepository
+        -EventMapper eventMapper
+        +getEventHistory(userEmail: String, page: int, size: int, filter: String) PageResponse~EventHistoryResponse~
+    }
+
+    %% Repository Layer
+    class EventRegistrationRepository {
+        <<interface>>
+        +findByAttendeeIdWithFilters(attendeeId: Long, filter: String, pageable: Pageable) Page~EventRegistration~
+    }
+
+    class UserRepository {
+        <<interface>>
+        +findByEmail(email: String) Optional~User~
+    }
+
+    %% Entities
+    class EventRegistration {
+        -Long id
+        -Event event
+        -User attendee
+        -RegistrationStatus status
+        -Instant registeredAt
+    }
+
+    class Event {
+        -Long id
+        -User organizer
+        -String title
+        -Instant startTime
+        -Instant endTime
+        -EventStatus status
+    }
+
+    %% Frontend Components & Hooks
+    class EventHistoryTab {
+        +filter: string
+        +render() JSX.Element
+    }
+
+    class useEventHistory {
+        +data: PageResponse
+        +isLoading: boolean
+        +refetch() void
+    }
+
+    EventController ..> EventService : calls
+    EventServiceImpl ..|> EventService : implements
+    EventServiceImpl --> EventRegistrationRepository : queries
+    EventServiceImpl --> UserRepository : queries
+    EventServiceImpl --> EventRegistration : reads
+    EventServiceImpl ..> EventHistoryResponse : maps
+    EventHistoryTab ..> useEventHistory : uses
+    useEventHistory ..> EventController : HTTP GET
+```
+
+###### Mô tả chi tiết cấu trúc các lớp (Class Design Description):
+* **Lớp Controller (`EventController.java`)**: Cung cấp API `GET /api/v1/events/my-history` (kèm alias `/history`), tiếp nhận các tham số phân trang (`page`, `size`) và bộ lọc (`filter`), trích xuất thông tin người dùng từ JWT.
+* **Lớp DTO (`EventHistoryResponse.java`)**: Đóng gói toàn diện thông tin sự kiện, thông tin người tổ chức và trạng thái tính toán động `attendanceState` (`UPCOMING`, `ONGOING`, `PAST`, `CANCELLED`).
+* **Lớp Service (`EventService.java`, `EventServiceImpl.java`)**: Xác định định danh người dùng qua email, truy vấn các lượt đăng ký có phân trang từ `EventRegistrationRepository` và chuyển đổi sang danh sách `EventHistoryResponse`.
+* **Lớp Repository & Entity (`EventRegistrationRepository.java`, `EventRegistration.java`, `Event.java`)**: Quản lý quan hệ Many-to-One giữa người tham gia và sự kiện, hỗ trợ truy vấn tối ưu kèm thông tin liên kết bài viết (`posts`).
+* **Lớp Frontend (`EventHistoryTab.tsx`, `useEventHistory.ts`)**: Component hiển thị danh sách thẻ lịch sử sự kiện với các chip lọc trạng thái và hỗ trợ tải thêm phân trang vô tận hoặc nút "Tải thêm".
+
+##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng (Student/Alumni)
+    participant UI as EventHistoryTab (FE)
+    participant Controller as EventController
+    participant Service as EventServiceImpl
+    participant UserRepo as UserRepository
+    participant RegRepo as EventRegistrationRepository
+    participant DB as PostgreSQL
+
+    User->>UI: Mở tab "Lịch sử tham gia" (chọn filter: all/upcoming/past/cancelled)
+    UI->>Controller: GET /api/v1/events/my-history?page=0&size=9&filter={filter} (Bearer JWT)
+    
+    alt Trường hợp 1: Người dùng chưa đăng nhập (Guest)
+        Controller-->>UI: HTTP 401 Unauthorized
+        UI-->>User: Hiển thị EmptyState nhắc đăng nhập & nút "Đăng nhập ngay"
+        
+    else Trường hợp 2: Tài khoản Quản trị viên (ADMIN)
+        Controller-->>UI: HTTP 403 Forbidden
+        UI-->>User: Hiển thị thông báo tài khoản Admin không áp dụng
+        
+    else Trường hợp 3: Người dùng hợp lệ (Student / Alumni)
+        Controller->>Service: getEventHistory(userEmail, page, size, filter)
+        Service->>UserRepo: findByEmail(userEmail)
+        UserRepo->>DB: SELECT * FROM users WHERE email = ?
+        DB-->>UserRepo: User entity
+        UserRepo-->>Service: User attendee
+        
+        Service->>RegRepo: findByAttendeeIdWithFilters(attendee.id, filter, pageable)
+        RegRepo->>DB: SELECT reg.*, e.* FROM event_registrations reg JOIN events e ON reg.event_id = e.id WHERE reg.user_id = ? ... ORDER BY reg.registered_at DESC
+        DB-->>RegRepo: Page<EventRegistration>
+        RegRepo-->>Service: Page<EventRegistration>
+        
+        Note over Service: Tính toán attendanceState cho từng sự kiện:<br/>- e.status == 'CANCELLED' -> EVENT_CANCELLED<br/>- reg.status == 'CANCELLED' -> REGISTRATION_CANCELLED<br/>- now < startTime -> UPCOMING<br/>- now between start và end -> ONGOING<br/>- now > endTime -> PAST
+        
+        Service-->>Controller: PageResponse<EventHistoryResponse>
+        Controller-->>UI: HTTP 200 OK (ApiResponse: "Lấy lịch sử tham gia sự kiện thành công", PageResponse)
+        
+        alt Danh sách trống
+            UI-->>User: Hiển thị EmptyState thân thiện "Chưa có sự kiện nào"
+        else Có dữ liệu
+            UI-->>User: Render danh sách card lịch sử sự kiện với badge trạng thái tương ứng
+        end
+    end
+```
+
+###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
+1. **Luồng 1 - Thành công (Normal Case)**: Người dùng hợp lệ truy cập tab lịch sử sự kiện. Backend xác thực tài khoản qua JWT, truy vấn bảng `event_registrations` lọc theo `userId` và trạng thái `filter`, tính toán cờ trạng thái trực quan `attendanceState` theo mốc thời gian thực của máy chủ, đóng gói trả về `PageResponse<EventHistoryResponse>` với mã `200 OK`.
+2. **Luồng 2 - Ngoại lệ Chưa đăng nhập (Unauthorized Case)**: Khách vãng lai cố truy cập API lịch sử sự kiện. Spring Security chặn trước Controller và trả về `HTTP 401 Unauthorized`. Frontend bắt lỗi và hiển thị giao diện thông báo yêu cầu đăng nhập.
+3. **Luồng 3 - Ngoại lệ Phân quyền (Forbidden Case)**: Tài khoản Admin gọi API. Hệ thống từ chối với `HTTP 403 Forbidden` vì Quản trị viên không tham gia vào luồng sự kiện của sinh viên/cựu sinh viên.
+
 
 ### 1. Database Schema
 

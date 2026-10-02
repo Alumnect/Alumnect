@@ -14,7 +14,7 @@ stateDiagram-v2
     HienThiLoi --> DangTaiChiTiet : Nguoi dung bam "Thu lai"
     ChanGuest --> [*] : Dieu huong dang nhap
     BaiKhongKhaDung --> [*] : Ve bang tin
-    HienThiChiTiet --> DangTaiBinhLuan : Tai luong binh luan (GET /comments)
+    HienThiChiTiet --> DangTaiBinhLuan : Tai luong binh luan (GET /api/v1/posts/{postId}/comments)
     DangTaiBinhLuan --> HienThiBinhLuan : Noi them trang binh luan
     HienThiBinhLuan --> BinhLuanRong : totalElements = 0
     HienThiBinhLuan --> DangTaiBinhLuan : Bam "Xem them binh luan"

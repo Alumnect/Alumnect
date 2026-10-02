@@ -59,7 +59,7 @@ flowchart TD
 | BR-24-05 | Mỗi tài khoản gửi tối đa 5 báo cáo trong 10 phút. |
 | BR-24-06 | Mỗi báo cáo mới được lưu với `status = PENDING` để UC69–UC71 xử lý sau. |
 
-### Thông điệp và lỗi
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
 
 | Mã | HTTP | Nội dung |
 | --- | --- | --- |

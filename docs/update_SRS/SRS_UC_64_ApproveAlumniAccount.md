@@ -183,7 +183,7 @@ Các bảng liên quan:
 * Bảng `users`
 
 ##### 3.1.4 API Contract
-* **Đường dẫn**: `PUT /api/v1/admin/verifications/1/review`
+* **Đường dẫn**: `PUT /api/v1/admin/verifications/{id}/review`
 * **HTTP Status**: 200 OK
 * **Request Payload**:
   ```json

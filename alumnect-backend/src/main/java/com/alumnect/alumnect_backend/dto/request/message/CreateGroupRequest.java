@@ -20,7 +20,7 @@ public class CreateGroupRequest {
 
     /** Tên nhóm trò chuyện */
     @NotBlank(message = "Tên nhóm không được để trống")
-    @Size(min = 2, max = 100, message = "Tên nhóm phải từ 2 đến 100 ký tự")
+    @Size(min = 1, max = 100, message = "Tên nhóm phải từ 1 đến 100 ký tự")
     private String title;
 
     /** Đường dẫn ảnh đại diện nhóm (tùy chọn) */

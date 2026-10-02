@@ -67,4 +67,10 @@ public class ConversationResponse {
 
     /** Số lượng tin nhắn chưa đọc */
     private long unreadCount;
+
+    /** Mã Hội nhóm cộng đồng liên kết (nếu có) */
+    private Long communityGroupId;
+
+    /** Tên Hội nhóm cộng đồng liên kết (nếu có) */
+    private String communityGroupName;
 }

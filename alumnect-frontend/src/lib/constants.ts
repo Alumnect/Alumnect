@@ -22,6 +22,7 @@ import {
   SealCheck,
   UserGear,
   Megaphone,
+  GraduationCap,
 } from '@/components/icons'
 
 export const BRAND = {
@@ -53,7 +54,7 @@ export const APP_PRIMARY_NAV: NavItem[] = [
 /** Secondary features — tucked into the "More" apps menu (used less often). */
 export const APP_MORE_NAV: NavItem[] = [
   { label: 'Hội nhóm', to: '/app/groups', icon: UsersThree },
-  { label: 'Hướng dẫn & Hỗ trợ', to: '/app/mentoring', icon: Compass },
+  { label: 'Hướng dẫn & Hỗ trợ', to: '/app/mentoring', icon: GraduationCap },
   { label: 'Bảng lương', to: '/app/salary', icon: ChartLineUp },
   { label: 'Bản đồ cựu SV', to: '/app/map', icon: Compass },
   { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: GitFork },

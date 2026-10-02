@@ -111,3 +111,27 @@ export function useChangeMemberRole(id: number) {
     onSuccess: () => refreshGroup(queryClient, id),
   })
 }
+
+/** Hook khởi tạo nhóm trò chuyện cho hội nhóm (Owner/Admin). */
+export function useCreateGroupChat() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (groupId: number) => groupApi.createChat(groupId),
+    onSuccess: (_data, groupId) => {
+      refreshGroup(queryClient, groupId)
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    },
+  })
+}
+
+/** Hook thành viên tham gia nhóm trò chuyện của hội nhóm. */
+export function useJoinGroupChat() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (groupId: number) => groupApi.joinChat(groupId),
+    onSuccess: (_data, groupId) => {
+      refreshGroup(queryClient, groupId)
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    },
+  })
+}

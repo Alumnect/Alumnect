@@ -81,7 +81,13 @@ export const groupDetailSchema = z.object({
   viewerRole: z.string().nullable().default(null).transform((v) => v as GroupRole | null),
   canViewMembers: z.boolean().default(false),
   pendingRequestCount: z.number().nullable().default(null),
-})
+  conversationId: z.number().nullable().default(null),
+  conversationMember: z.boolean().optional(),
+  isConversationMember: z.boolean().default(false),
+}).transform((data) => ({
+  ...data,
+  isConversationMember: data.isConversationMember || Boolean(data.conversationMember),
+}))
 export type GroupDetail = z.infer<typeof groupDetailSchema>
 
 /** Schema Zod cho một thành viên ACTIVE của hội nhóm. */

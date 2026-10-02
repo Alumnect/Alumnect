@@ -191,6 +191,24 @@ public class GroupController {
         return ResponseEntity.ok(ApiResponse.success(result.getMessage(), result));
     }
 
+    /** Khởi tạo nhóm chat cho hội nhóm — chỉ Owner/Admin. */
+    @PostMapping("/{groupId}/chat")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> createGroupChat(
+            @PathVariable Long groupId,
+            Authentication authentication) {
+        Long conversationId = groupService.createGroupChat(groupId, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Khởi tạo nhóm trò chuyện thành công!", java.util.Map.of("conversationId", conversationId)));
+    }
+
+    /** Thành viên hội nhóm tham gia nhóm chat. */
+    @PostMapping("/{groupId}/chat/join")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> joinGroupChat(
+            @PathVariable Long groupId,
+            Authentication authentication) {
+        Long conversationId = groupService.joinGroupChat(groupId, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.success("Tham gia nhóm trò chuyện thành công!", java.util.Map.of("conversationId", conversationId)));
+    }
+
     private String emailOrNull(Authentication authentication) {
         boolean authenticated = authentication != null
                 && authentication.isAuthenticated()

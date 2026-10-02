@@ -98,7 +98,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
         )}
         <div className="absolute top-2 right-2">
           <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
-            {group.visibility === 'PUBLIC' ? (
+            {(group.privacy ?? (group as any).visibility) === 'PUBLIC' ? (
               <>
                 <Globe size={10} />
                 Công khai

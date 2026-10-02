@@ -44,7 +44,8 @@ public class GroupMapper {
      * @param showOwner    true nếu được phép hiển thị thông tin người sáng lập
      */
     public GroupDetailResponse toDetail(CommunityGroup group, GroupMember viewer, UserProfile ownerProfile,
-                                        boolean showOwner, boolean canViewMembers, Long pendingRequestCount) {
+                                        boolean showOwner, boolean canViewMembers, Long pendingRequestCount,
+                                        Long conversationId, boolean isConversationMember) {
         GroupDetailResponse.GroupOwnerInfo ownerInfo = null;
         if (showOwner) {
             User owner = group.getOwner();
@@ -71,6 +72,8 @@ public class GroupMapper {
                 .viewerRole(viewerRole(viewer))
                 .canViewMembers(canViewMembers)
                 .pendingRequestCount(pendingRequestCount)
+                .conversationId(conversationId)
+                .isConversationMember(isConversationMember)
                 .build();
     }
 

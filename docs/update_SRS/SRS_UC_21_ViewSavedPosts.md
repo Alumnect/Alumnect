@@ -120,7 +120,19 @@ Module quản lý toàn bộ bài viết trên bảng tin cộng đồng AlumNec
 
 ---
 
-## PHẦN 2: THIẾT KẾ KỸ THUẬT CHI TIẾT (REPORT 4)
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-SAVED-01 | Toast message | Lấy danh sách bài viết đã lưu thành công | Lấy danh sách bài viết đã lưu thành công. |
+| 2 | MSG-SAVED-02 | EmptyState | Chưa có bài viết nào được lưu | Bạn chưa lưu bài viết nào. Hãy lưu lại các bài viết hữu ích từ Bảng tin! |
+| 3 | MSG-SAVED-03 | Toast message | Bỏ lưu bài viết thành công | Đã bỏ lưu bài viết. |
+| 4 | MSG-SAVED-04 | Alert Banner | Khách chưa đăng nhập vào tab bài viết đã lưu | Vui lòng đăng nhập để xem danh sách bài viết đã lưu của bạn. |
+| 5 | MSG-SAVED-05 | Toast Error | Không có quyền truy cập danh sách lưu người khác | Bạn không có quyền xem bài viết đã lưu của người dùng khác. |
+
+---
+
+## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
 
 ### 1.1 Class Diagram (Sơ đồ Lớp Chi tiết)
 

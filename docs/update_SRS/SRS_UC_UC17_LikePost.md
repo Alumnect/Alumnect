@@ -13,11 +13,11 @@ stateDiagram-v2
     ChanGuest --> [*] : Popup / moi dang nhap (KHONG goi API)
 
     ChuaThich --> DangGoiLike : Thanh vien bam Thich (optimistic +1)
-    DangGoiLike --> DaThich : POST /like 200 { liked:true, likeCount }
+    DangGoiLike --> DaThich : POST /api/v1/posts/{postId}/like 200 { liked:true, likeCount }
     DangGoiLike --> ChuaThich : Loi -> hoan tac (rollback)
 
     DaThich --> DangGoiUnlike : Thanh vien bam Thich lai (optimistic -1)
-    DangGoiUnlike --> ChuaThich : DELETE /like 200 { liked:false, likeCount }
+    DangGoiUnlike --> ChuaThich : DELETE /api/v1/posts/{postId}/like 200 { liked:false, likeCount }
     DangGoiUnlike --> DaThich : Loi -> hoan tac (rollback)
 
     DangGoiLike --> TuChoi403 : Vai tro khong phai STUDENT/ALUMNI

@@ -309,6 +309,7 @@ export function useDeleteConversation() {
     mutationFn: (conversationId: number) => chatApi.deleteConversation(conversationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
+      queryClient.invalidateQueries({ queryKey: ['group'] })
     },
   })
 }

@@ -106,7 +106,7 @@ Module 4 (Q&A Forum & Salary Board). UC54 mở rộng UC53 (View salary statisti
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | MSG-FS-01 | Toast lỗi | industryId không tồn tại | Ngành nghề không tồn tại | 400 |
 | 2 | MSG-FS-02 | Toast lỗi | level không hợp lệ | Cấp bậc không hợp lệ (chỉ chấp nhận Junior/Mid/Senior) | 400 |
-| 3 | MSG-FS-03 | Chặn bởi Spring Security / ProtectedRoute | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 3 | MSG-FS-03 | Chặn bởi Spring Security / ProtectedRoute | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 4 | MSG-FS-04 | EmptyState | Không có nhóm nào khớp bộ lọc | Không có dữ liệu lương khớp bộ lọc này | 200 (rỗng) |
 
 ---
@@ -203,8 +203,3 @@ sequenceDiagram
 2.  **Luồng lỗi `industryId` không tồn tại (400)**: Kiểm tra qua `industryRepository.existsById` trước khi chạm tới Repository thống kê.
 3.  **Luồng lỗi `level` không hợp lệ (400)**: So khớp với `VALID_LEVELS = {"Junior", "Mid", "Senior"}`, giá trị khác (VD "Expert") bị từ chối ngay tại Service, không chạm DB.
 4.  **Luồng không có bộ lọc**: Mọi query param bỏ trống → hành vi giống hệt UC53 gốc (xem toàn bộ).
-
-### 4. Kết quả kiểm thử thực tế
-* ✅ `mvn -q -o compile` (Backend) — BUILD SUCCESS.
-* ✅ `npm run build` (`tsc -b && vite build`, Frontend) — PASS.
-* ⏳ Chưa test tay qua UI/Postman trong phiên này — cần user restart Backend rồi test: lọc theo từng tiêu chí riêng lẻ, kết hợp nhiều tiêu chí (kiểm tra đúng AND), `industryId`/`level` sai (kỳ vọng 400), không có dữ liệu khớp (kỳ vọng EmptyState không phải lỗi).

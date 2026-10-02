@@ -39,4 +39,9 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
            "AND EXISTS (SELECT 1 FROM Message m WHERE m.conversation = c) " +
            "ORDER BY c.lastMessageAt DESC NULLS LAST, c.createdAt DESC")
     List<Conversation> findConversationsByUserId(@Param("userId") Long userId);
+
+    /**
+     * Tìm cuộc hội thoại gắn với Hội nhóm cộng đồng.
+     */
+    Optional<Conversation> findByCommunityGroupId(Long communityGroupId);
 }

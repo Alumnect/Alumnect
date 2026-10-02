@@ -150,4 +150,57 @@ classDiagram
 
 ---
 
-*This SRS document follows the structure defined in `TemplateSRS.md` and reflects the implementation of UC66 – Filter By Type.*
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-UC66-01 | Toast message | Lấy danh sách bài viết theo bộ lọc thành công | Lấy danh sách bài viết thành công. |
+| 2 | MSG-UC66-02 | EmptyState | Không tìm thấy bài viết nào khớp bộ lọc | Không tìm thấy bài viết nào phù hợp với bộ lọc hiện tại. |
+| 3 | MSG-UC66-03 | Toast Error | Không có quyền Quản trị viên | Bạn không có quyền truy cập chức năng quản trị bài viết. |
+
+---
+
+## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
+
+### 3. Detail Design (Thiết kế chi tiết)
+
+#### 3.1.1 Class Diagram (Sơ đồ Lớp)
+*(Đã định nghĩa tại mục 3.4)*
+
+#### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Quản trị viên (Admin)
+    participant UI as AdminPostsPage (FE)
+    participant Controller as AdminPostController
+    participant Service as AdminPostServiceImpl
+    participant Spec as PostSpecification
+    participant Repo as PostRepository
+    participant DB as PostgreSQL
+
+    Admin->>UI: Chọn loại bài viết (NORMAL/EVENT/RECRUITMENT/ACHIEVEMENT) & bấm Lọc
+    UI->>Controller: GET /api/v1/admin/posts?type={type}&page=0&size=10 (Bearer JWT)
+    
+    alt Không có quyền ADMIN
+        Controller-->>UI: HTTP 403 Forbidden
+        UI-->>Admin: Hiển thị lỗi từ chối truy cập
+    else Có quyền ADMIN hợp lệ
+        Controller->>Service: getPosts(query, author, status, type, page, size)
+        Service->>Spec: filterPosts(query, author, status, type)
+        Spec-->>Service: Specification<Post>
+        Service->>Repo: findAll(spec, pageable)
+        Repo->>DB: SELECT p.* FROM posts p WHERE p.type = ? ORDER BY p.created_at DESC LIMIT 10 OFFSET 0
+        DB-->>Repo: Page<Post>
+        Repo-->>Service: Page<Post>
+        Service-->>Controller: PageResponse<AdminPostResponse>
+        Controller-->>UI: HTTP 200 OK (ApiResponse: "Lấy danh sách bài viết thành công", PageResponse)
+        UI-->>Admin: Hiển thị danh sách bài viết theo đúng thể loại đã lọc
+    end
+```
+
+###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
+1. **Luồng thành công**: Quản trị viên chọn loại bài viết trên thanh lọc giao diện Admin. Frontend gọi API `GET /api/v1/admin/posts?type=...`. Backend kiểm tra quyền Admin, xây dựng vị từ JPA `Specification<Post>` tương ứng, thực thi truy vấn phân trang trên PostgreSQL và trả về `PageResponse<AdminPostResponse>` với mã `200 OK`.
+2. **Luồng từ chối quyền**: Người dùng không có vai trò `ADMIN` gọi API. Spring Security chặn và phản hồi `403 Forbidden`.
+
