@@ -14,7 +14,7 @@ stateDiagram-v2
     HienThiLoi --> DangTaiChiTiet : Nguoi dung bam "Thu lai"
     ChanGuest --> [*] : Dieu huong dang nhap
     BaiKhongKhaDung --> [*] : Ve bang tin
-    HienThiChiTiet --> DangTaiBinhLuan : Tai luong binh luan (GET /comments)
+    HienThiChiTiet --> DangTaiBinhLuan : Tai luong binh luan (GET /api/v1/posts/{postId}/comments)
     DangTaiBinhLuan --> HienThiBinhLuan : Noi them trang binh luan
     HienThiBinhLuan --> BinhLuanRong : totalElements = 0
     HienThiBinhLuan --> DangTaiBinhLuan : Bam "Xem them binh luan"
@@ -44,7 +44,14 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect. UC16 
 - **Purpose**: Hiển thị toàn bộ nội dung một bài viết kèm luồng bình luận của nó, cho phép người xem đọc chi tiết trước khi tương tác.
 - **Interface**:
   - Nút "Quay lại bảng tin".
-  - Thẻ chi tiết bài viết (`PostDetailCard`): avatar, tên, badge loại bài, chức danh · thời gian, nội dung đầy đủ, ảnh (nếu có), thanh số liệu like/comment/repost.
+  - Thẻ chi tiết bài viết (`PostDetailCard`): avatar, tên tác giả, tick xác minh, badge loại bài viết, chức danh · thời gian, nội dung đầy đủ.
+  - **Lưới ảnh thông minh (Smart Photo Grid)**: Hiển thị ảnh bài viết theo cấu trúc tối ưu (1 ảnh tràn rộng, 2 ảnh 4:3, 3 ảnh 1 lớn + 2 nhỏ, 4+ ảnh 2x2 với overlay `+{n}`); nhấp vào mở `ImageViewerModal` xem ảnh toàn màn hình.
+  - **Thanh công cụ tương tác**:
+    - Nút Thích: Bày tỏ cảm xúc yêu thích bài viết, hiển thị số lượt thích `{số} thích`.
+    - Nút Bình luận: Cuộn tới khu vực bình luận, hiển thị số lượng `{số} bình luận`.
+    - Nút Chia sẻ: Kích hoạt chức năng chia sẻ bài viết.
+    - Nút Lưu bài viết: Lưu hoặc bỏ lưu bài viết vào danh mục cá nhân, hiển thị trạng thái đã lưu.
+    - Nút Báo cáo: Mở biểu mẫu báo cáo bài viết vi phạm tới ban quản trị.
   - Khu bình luận: tiêu đề "Bình luận · N", ô soạn bình luận (trạng thái chờ — đăng bình luận thuộc UC18), danh sách `CommentItem` (avatar, tên, chức danh, thời gian, nội dung; bình luận trả lời được thụt lề), nút "Xem thêm bình luận".
   - Trạng thái: Loading (skeleton), Không khả dụng (404), Dành cho thành viên (403 — mời đăng nhập), Lỗi (retry), Rỗng bình luận.
 

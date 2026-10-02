@@ -19,7 +19,7 @@ import {
   GraduationCap,
   BookOpen,
 } from 'lucide-react'
-import { PageHeader, Card, Avatar, Skeleton, EmptyState } from '@/components/ui'
+import { PageHeader, Card, Avatar, Skeleton, EmptyState, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useNavigate } from 'react-router-dom'
@@ -377,13 +377,12 @@ export function CareerPage() {
             })}
           </Stagger>
 
-          {pageData.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1.5 mt-8">
-              <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="rounded-xl font-bold">Trước</Button>
-              <span className="text-xs text-plum-500 font-bold px-3 py-1 bg-plum-100/50 rounded-xl">{page + 1} / {pageData.totalPages}</span>
-              <Button variant="secondary" size="sm" disabled={pageData.last} onClick={() => setPage((p) => p + 1)} className="rounded-xl font-bold">Sau</Button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            totalPages={pageData.totalPages}
+            onPageChange={setPage}
+            className="mt-8"
+          />
         </div>
       )}
 

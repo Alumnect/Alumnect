@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Xem_Chi_Tiet_Cau_Hoi : Tác giả mở trang chi tiết câu hỏi của mình
+    [*] --> Xem_Chi_Tiet_Cau_Hoi : Tác giả mở trang chi tiết câu hỏi của bản thân
     Xem_Chi_Tiet_Cau_Hoi --> Hien_Nut_Xoa : FE so khớp authorId == người đăng nhập (STUDENT/ALUMNI)
     Hien_Nut_Xoa --> Mo_Modal_Xac_Nhan : Bấm "Xóa" → mở modal cảnh báo
 
@@ -56,7 +56,7 @@ Module 4 (Q&A Forum) gồm: xem danh sách (UC38), xem chi tiết (UC39), đặt
 
 **Function description**:
 *   **Actors/Roles**: Sinh viên (STUDENT), Cựu sinh viên (ALUMNI) — nhưng **chỉ tác giả** của câu hỏi. Người khác (kể cả STUDENT/ALUMNI khác) không thấy nút Xóa và bị API từ chối 403; Guest bị chặn 401.
-*   **Purpose**: Cho phép tác giả tự gỡ bỏ câu hỏi của mình khỏi diễn đàn công khai (VD đăng nhầm, không còn cần thiết, thông tin nhạy cảm).
+*   **Purpose**: Cho phép tác giả tự gỡ bỏ câu hỏi của bản thân khỏi diễn đàn công khai (VD đăng nhầm, không còn cần thiết, thông tin nhạy cảm).
 *   **Interface**:
     *   **Nút "Xóa"** (icon thùng rác, màu đỏ khi hover) nằm cạnh nút "Chỉnh sửa" ở hàng đầu card chi tiết — chỉ hiện với tác giả.
     *   **Modal xác nhận**: tiêu đề "Xóa câu hỏi", icon cảnh báo màu đỏ, nội dung "Bạn có chắc chắn muốn xóa câu hỏi này không? Hành động này không thể hoàn tác.", 2 nút "Hủy" / "Xóa câu hỏi" (màu đỏ, có spinner khi đang xử lý).
@@ -112,7 +112,7 @@ Module 4 (Q&A Forum) gồm: xem danh sách (UC38), xem chi tiết (UC39), đặt
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | MSG-DQ-01 | Banner (Alert error, trong modal) | Câu hỏi không tồn tại/không ACTIVE | Không tìm thấy câu hỏi với id: {id} | 404 |
 | 2 | MSG-DQ-02 | Banner (Alert error, trong modal) | Không phải tác giả | Chỉ tác giả mới được xóa câu hỏi này | 403 |
-| 3 | MSG-DQ-03 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 3 | MSG-DQ-03 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 4 | MSG-DQ-04 | API response (200) | Xóa thành công (FE đóng modal + điều hướng) | Xóa câu hỏi thành công | 200 |
 
 ---

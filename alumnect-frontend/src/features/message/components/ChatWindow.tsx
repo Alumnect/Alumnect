@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { MessagesSquare, Users, Loader2, Info, Check, Trash2 } from 'lucide-react'
+import { MessagesSquare, Users, Loader2, Info, Check, Trash2, ExternalLink } from 'lucide-react'
 import { Avatar, Button, ConfirmModal, toast } from '@/components/ui'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
@@ -163,13 +163,13 @@ export function ChatWindow({
       {/* Header cuộc trò chuyện */}
       <div className="flex shrink-0 items-center justify-between border-b border-plum-900/10 bg-white/80 px-5 py-3.5 backdrop-blur-md dark:border-[#393a3b] dark:bg-[#242526]/80">
         {isGroup ? (
-          <button
-            type="button"
-            onClick={() => setIsGroupInfoOpen(true)}
-            className="flex items-center gap-3 text-left transition-opacity hover:opacity-85"
-            title="Xem thông tin và quản lý nhóm"
-          >
-            <div className="relative shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setIsGroupInfoOpen(true)}
+              className="relative shrink-0 transition-opacity hover:opacity-85"
+              title="Xem thông tin và quản lý nhóm"
+            >
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-50 text-brand-600 shadow-xs ring-1 ring-brand-500/20 dark:bg-brand-500/20 dark:text-brand-400">
                 {conversation.avatarUrl ? (
                   <img src={conversation.avatarUrl} alt="Group" className="h-full w-full rounded-2xl object-cover" />
@@ -180,14 +180,25 @@ export function ChatWindow({
               <div className="absolute -bottom-1 -right-1 grid h-3.5 w-3.5 place-items-center rounded-full bg-brand-600 text-white shadow-xs">
                 <Users size={8} />
               </div>
+            </button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsGroupInfoOpen(true)}
+                  className="truncate text-left text-sm font-bold text-plum-900 transition-colors hover:text-brand-600 dark:text-[#f0f2f5] dark:hover:text-brand-400"
+                  title="Xem thông tin và quản lý nhóm"
+                >
+                  {displayName}
+                </button>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-medium text-plum-400 dark:text-[#b0b3b8]">
+                  {conversation.memberCount || 2} thành viên
+                </span>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">{displayName}</h3>
-              <p className="text-xs font-medium text-plum-400 dark:text-[#b0b3b8]">
-                {conversation.memberCount || 2} thành viên
-              </p>
-            </div>
-          </button>
+          </div>
         ) : (
           <Link
             to={conversation.recipientId ? `/app/profile?userId=${conversation.recipientId}` : '#'}
@@ -216,6 +227,19 @@ export function ChatWindow({
 
         {/* Nút tác vụ header */}
         <div className="flex items-center gap-2">
+          {isGroup && conversation.communityGroupId && (
+            <Link
+              to={`/app/groups/${conversation.communityGroupId}`}
+              title={`Đến trang hội nhóm: ${conversation.communityGroupName || displayName}`}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-brand-500/20 bg-brand-50/70 px-2.5 py-1.5 text-xs font-semibold text-brand-700 transition-all hover:bg-brand-100 hover:border-brand-500/30 active:scale-95 dark:border-brand-500/30 dark:bg-brand-950/50 dark:text-brand-300 dark:hover:bg-brand-900/50"
+            >
+              <Users size={13} className="shrink-0 text-brand-600 dark:text-brand-400" />
+              <span className="hidden sm:inline max-w-[120px] md:max-w-[180px] truncate">
+                {conversation.communityGroupName || 'Hội nhóm'}
+              </span>
+              <ExternalLink size={12} className="shrink-0 opacity-70" />
+            </Link>
+          )}
           {isGroup && (
             <button
               type="button"
@@ -300,7 +324,7 @@ export function ChatWindow({
       </div>
 
       {/* Modal thông tin nhóm */}
-      {isGroup && (
+      {isGroup && isGroupInfoOpen && (
         <GroupInfoModal
           isOpen={isGroupInfoOpen}
           onClose={() => setIsGroupInfoOpen(false)}

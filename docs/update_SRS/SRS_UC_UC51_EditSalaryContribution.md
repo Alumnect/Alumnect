@@ -20,7 +20,7 @@ stateDiagram-v2
     Validate_FE --> Mo_Modal_Sua : Zod báo lỗi field (chưa gọi API)
     Validate_FE --> Goi_API_Sua : Hợp lệ
 
-    Goi_API_Sua --> Kiem_Tra_Server : PUT /salary-contributions/{id} (Bearer JWT)
+    Goi_API_Sua --> Kiem_Tra_Server : PUT /salary-contributions/{contributionId} (Bearer JWT)
 
     state Kiem_Tra_Server {
         [*] --> Kiem_Tra_Ton_Tai
@@ -49,14 +49,14 @@ stateDiagram-v2
 * **Bước 1 - Hiển thị nút "Đóng góp của tôi"**: Trên trang Bảng lương ẩn danh (`SalaryPage`), nút chỉ hiển thị khi người dùng đã đăng nhập với vai trò **ALUMNI** — cùng điều kiện với nút "Đóng góp dữ liệu" (UC50).
 * **Bước 2 - Xem danh sách**: Bấm nút mở `MyContributionsModal`, gọi `GET /salary-contributions/mine` (Bearer JWT), hiển thị các lượt đóng góp của chính người dùng (mới nhất trước) — chỉ chính họ thấy được danh sách này, người khác không truy cập được (kiểm tra ở tầng Backend qua `user_id`).
 * **Bước 3 - Chọn bản ghi cần sửa**: Bấm "Sửa" trên 1 dòng → đóng modal danh sách, mở lại `ContributeSalaryModal` ở **chế độ SỬA** (điền sẵn toàn bộ dữ liệu của bản ghi đó, bao gồm `industryId` để dropdown ngành nghề chọn đúng).
-* **Bước 4 - Validate & Gửi**: Cùng schema Zod với lúc tạo (UC50). Client gọi `PUT /salary-contributions/{id}` (Bearer JWT). Server (`SalaryServiceImpl.updateContribution`, `@Transactional`):
+* **Bước 4 - Validate & Gửi**: Cùng schema Zod với lúc tạo (UC50). Client gọi `PUT /salary-contributions/{contributionId}` (Bearer JWT). Server (`SalaryServiceImpl.updateContribution`, `@Transactional`):
   * Nạp User theo email (JWT); không tồn tại → 404.
   * Tìm lượt đóng góp theo `id`; không tồn tại → 404.
   * **Kiểm tra quyền sở hữu**: `contribution.user.id` khác người đăng nhập → 403.
   * Nếu có `industryId`: kiểm tra tồn tại — không tồn tại → 400.
   * **Chuẩn hóa `currency`**: cùng logic UC50 (bỏ trống → "VND", sai định dạng → 400).
   * Cập nhật toàn bộ các trường, lưu — `@PreUpdate` tự động cập nhật `updated_at`.
-* **Bước 5 - Kết thúc**: Server trả HTTP 200 với `SalaryContributionResponse` đã cập nhật. Frontend đóng modal, hiện toast "Đã cập nhật dữ liệu lương thành công!", làm mới cache thống kê (`['salary-statistics']`, UC53) và danh sách đóng góp của chính mình (`['my-salary-contributions']`).
+* **Bước 5 - Kết thúc**: Server trả HTTP 200 với `SalaryContributionResponse` đã cập nhật. Frontend đóng modal, hiện toast "Đã cập nhật dữ liệu lương thành công!", làm mới cache thống kê (`['salary-statistics']`, UC53) và danh sách đóng góp của bản thân (`['my-salary-contributions']`).
 
 ---
 
@@ -67,19 +67,19 @@ Module 4 (Q&A Forum & Salary Board). UC51 hoàn thiện quyền tự quản lý 
 #### 3.11.1 Xem danh sách đóng góp của tôi
 
 **Function trigger**: `/app/salary` → nút "Đóng góp của tôi" (chỉ Alumni) → modal danh sách.
-**Actors/Roles**: Cựu sinh viên (ALUMNI) — chỉ xem được đóng góp của **chính mình**, không xem được của người khác (không có API nào cho phép việc này).
+**Actors/Roles**: Cựu sinh viên (ALUMNI) — chỉ xem được đóng góp của **bản thân**, không xem được của người khác (không có API nào cho phép việc này).
 **Interface**: Modal liệt kê từng lượt đóng góp (chức danh, ngành/công ty/khu vực, mức lương), nút "Sửa" trên mỗi dòng. Trạng thái: skeleton khi tải, banner lỗi + nút "Thử lại", `EmptyState` khi chưa từng đóng góp.
 
 #### 3.11.2 Chỉnh sửa đóng góp lương (Edit salary contribution)
 
 **Function trigger**: Từ danh sách "Đóng góp của tôi" → bấm "Sửa" trên 1 dòng → modal chỉnh sửa (điền sẵn dữ liệu) → "Lưu thay đổi".
 **Function description**:
-*   **Actors/Roles**: Cựu sinh viên (ALUMNI) — nhưng **chỉ chính chủ** của lượt đóng góp đó. Người khác (kể cả Alumni khác) bị API từ chối 403 (không có UI nào dẫn tới việc này vì danh sách "của tôi" chỉ hiện dữ liệu của chính mình).
+*   **Actors/Roles**: Cựu sinh viên (ALUMNI) — nhưng **chỉ chính chủ** của lượt đóng góp đó. Người khác (kể cả Alumni khác) bị API từ chối 403 (không có UI nào dẫn tới việc này vì danh sách "của tôi" chỉ hiện dữ liệu của bản thân).
 *   **Purpose**: Cho phép chính chủ tự sửa lại dữ liệu lương đã đóng góp (VD nhập sai chức danh, cập nhật mức lương mới sau khi tăng lương).
 *   **Interface**: Tái sử dụng nguyên `ContributeSalaryModal` (UC50) ở chế độ SỬA — tiêu đề đổi thành "Chỉnh sửa dữ liệu lương", nút "Lưu thay đổi" thay vì "Gửi đóng góp".
 
 **Data processing**:
-1.  Client gọi `PUT /salary-contributions/{id}` (Bearer JWT) với body giống hệt lúc tạo (UC50).
+1.  Client gọi `PUT /salary-contributions/{contributionId}` (Bearer JWT) với body giống hệt lúc tạo (UC50).
 2.  Server (`SalaryServiceImpl.updateContribution`, `@Transactional`): nạp User (404), tìm lượt đóng góp theo id (404), kiểm tra sở hữu (403), kiểm tra `industryId` tồn tại nếu có (400), chuẩn hóa `currency` (400 nếu sai định dạng), cập nhật các trường, lưu (`@PreUpdate` tự cập nhật `updatedAt`).
 3.  Server trả HTTP 200 `ApiResponse<SalaryContributionResponse>`.
 4.  Client đóng modal, toast thành công, làm mới cache thống kê (UC53) + danh sách "của tôi".
@@ -108,7 +108,7 @@ Module 4 (Q&A Forum & Salary Board). UC51 hoàn thiện quyền tự quản lý 
 | ID | Định nghĩa Quy tắc (Rule Definition) |
 | :--- | :--- |
 | BR-ES-01 | Chỉ **chính chủ** (người đã tạo lượt đóng góp đó) mới được sửa; người khác (kể cả ALUMNI khác) bị từ chối 403. Kiểm tra qua `contribution.user.id == người đăng nhập`, không dựa vào role. |
-| BR-ES-02 | Danh sách "Đóng góp của tôi" (`GET /mine`) chỉ trả về dữ liệu của **chính người gọi API** — không có endpoint nào cho phép xem đóng góp của người khác, giữ đúng cam kết ẩn danh với người ngoài. |
+| BR-ES-02 | Danh sách "Đóng góp của tôi" (`GET /api/v1/salary-contributions/mine`) chỉ trả về dữ liệu của **chính người gọi API** — không có endpoint nào cho phép xem đóng góp của người khác, giữ đúng cam kết ẩn danh với người ngoài. |
 | BR-ES-03 | Form sửa dùng **cùng bộ trường và cùng validate** với lúc tạo (UC50): `jobTitle`/`grossAmount` bắt buộc; `industryId`/`company`/`region`/`yearsExperience`/`currency` tùy chọn. |
 | BR-ES-04 | Sửa thành công cập nhật `updated_at` (qua `@PreUpdate`), **không đổi** `created_at` (giữ nguyên thời điểm tạo gốc). |
 | BR-ES-05 | `SalaryContributionResponse` (dùng chung cho tạo/xem danh sách của tôi/sửa) nay có thêm `industryId` — **không phải thông tin định danh cá nhân** nên không vi phạm cam kết ẩn danh, chỉ để Frontend điền sẵn dropdown khi mở form sửa. |
@@ -128,7 +128,7 @@ Module 4 (Q&A Forum & Salary Board). UC51 hoàn thiện quyền tự quản lý 
 | 2 | MSG-ES-02 | Toast lỗi | Không phải chính chủ | Chỉ chính chủ mới được chỉnh sửa lượt đóng góp này | 403 |
 | 3 | MSG-ES-03 | Toast lỗi | Ngành nghề không tồn tại | Ngành nghề không tồn tại | 400 |
 | 4 | MSG-ES-04 | Toast lỗi | Sai định dạng currency | Đơn vị tiền tệ phải là mã 3 chữ cái (VD: VND, USD) | 400 |
-| 5 | MSG-ES-05 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 5 | MSG-ES-05 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 6 | MSG-ES-06 | Toast thành công | Sửa thành công | Đã cập nhật dữ liệu lương thành công! | 200 |
 
 ---
@@ -213,7 +213,7 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     Note over Client, Ctrl: Guest chưa đăng nhập bị Spring Security chặn 401 trước Controller
-    Client->>Ctrl: HTTP PUT /salary-contributions/{id} (Bearer JWT, body)
+    Client->>Ctrl: HTTP PUT /salary-contributions/{contributionId} (Bearer JWT, body)
     Ctrl->>Service: updateContribution(email, id, request)
     Service->>UserRepo: findByEmail(email)
     UserRepo-->>Service: User
@@ -249,12 +249,7 @@ sequenceDiagram
 ```
 
 ###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
-1.  **Luồng thành công**: Client gửi `PUT /salary-contributions/{id}`. Service nạp User, tìm bản ghi, xác nhận sở hữu, kiểm tra ngành nghề nếu có chọn, chuẩn hóa currency, cập nhật field, lưu (`updated_at` tự làm mới). Trả HTTP 200.
+1.  **Luồng thành công**: Client gửi `PUT /salary-contributions/{contributionId}`. Service nạp User, tìm bản ghi, xác nhận sở hữu, kiểm tra ngành nghề nếu có chọn, chuẩn hóa currency, cập nhật field, lưu (`updated_at` tự làm mới). Trả HTTP 200.
 2.  **Luồng lỗi Không tìm thấy (404)**: `id` không tồn tại trong bảng `salary_contributions`.
 3.  **Luồng lỗi Quyền sở hữu (403)**: `contribution.user.id` khác người đăng nhập. Guest bị Spring Security chặn 401 trước Controller.
 4.  **Luồng lỗi Validate nghiệp vụ (400)**: `industryId` gửi lên không tồn tại, hoặc `currency` có giá trị nhưng sai định dạng 3 chữ cái.
-
-### 4. Kết quả kiểm thử thực tế
-* ✅ `mvn -q -o compile` (Backend) — BUILD SUCCESS.
-* ✅ `npm run build` (`tsc -b && vite build`, Frontend) — PASS.
-* ⏳ Chưa test tay qua UI/Postman trong phiên này — cần user restart Backend rồi test: xem danh sách "Đóng góp của tôi", sửa 1 bản ghi (kiểm tra dropdown ngành nghề điền đúng sẵn), thử sửa bản ghi của người khác qua Postman (kỳ vọng 403).

@@ -101,7 +101,7 @@ stateDiagram-v2
 | BR-07 | Hệ thống hỗ trợ tìm kiếm linh hoạt bằng tiếng Việt có dấu hoặc không dấu trên các thông tin cá nhân, chức danh, kỹ năng và học vấn của thành viên. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-* Giao diện tuân thủ tiêu chuẩn Pastel Premium: Canvas `#faf4ec`, Card bề mặt trắng bo góc lớn `rounded-3xl`, viền `border-plum-900/10`, hiệu ứng kính mờ `glassmorphism`, bóng đổ mềm và chuyển động mượt mà bằng Framer Motion.
+* Giao diện bố cục dạng lưới thẻ tương thích tốt trên cả máy tính để bàn và thiết bị di động.
 * Hỗ trợ tìm kiếm từ khóa tức thì với cơ chế debounce 350ms để tối ưu tải máy chủ.
 * Dữ liệu phân trang đầy đủ, có nút điều hướng Trang trước / Trang sau và hiển thị tổng số kết quả.
 
@@ -332,7 +332,7 @@ sequenceDiagram
      2. Đếm số followers qua `countFollowersByUserIds(userIds)`.
      3. Đếm số following qua `countFollowingByUserIds(userIds)`.
      4. Kiểm tra trạng thái đã follow của người xem qua `findByFollowerIdAndFollowingIdIn(viewerId, userIds)`.
-   * Toàn bộ dữ liệu được nạp vào các Map tra cứu trong bộ nhớ RAM (`expMap`, `followersCountMap`, `followingCountMap`, `followedUserIds`). Vòng lặp map DTO chỉ thực hiện ghép nối dữ liệu trong bộ nhớ mà **không bắn thêm bất kỳ câu truy vấn SQL nào xuống Database** (triệt tiêu hoàn toàn lỗi N+1 Query).
+   * Toàn bộ dữ liệu được nạp vào các Map tra cứu trong bộ nhớ RAM (`expMap`, `followersCountMap`, `followingCountMap`, `followedUserIds`). Vòng lặp map DTO chỉ thực hiện ghép nối dữ liệu trong bộ nhớ mà **không thực thi thêm bất kỳ câu truy vấn SQL nào xuống Database** (triệt tiêu hoàn toàn lỗi N+1 Query).
    * Kết quả được đóng gói thành `PageResponse<UserDirectoryResponse>` và phản hồi cho Client với mã HTTP 200 OK.
 2. **Luồng 2 - Ngoại lệ Validation tham số (Validation Error Case)**:
    * Client gửi tham số phân trang âm hoặc không hợp lệ (ví dụ `page = -1`). `UserController` phát hiện và ném `BadRequestException`. `GlobalExceptionHandler` bắt và trả về HTTP 400 Bad Request kèm thông báo lỗi tiếng Việt.

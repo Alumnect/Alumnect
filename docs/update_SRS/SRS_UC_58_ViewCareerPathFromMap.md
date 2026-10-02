@@ -1,51 +1,102 @@
-### 3.6.4 View Career Path on Map
-(Covers UC58 - View Career Path / Map Spatial Integration)
+# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC58.2 - XEM LỘ TRÌNH SỰ NGHIỆP TỪ BẢN ĐỒ (VIEW CAREER PATH FROM MAP)
 
-**Function trigger**
-*   **Navigation path:** Sidebar / AppShell Header -> Menu "Alumni Map" -> /app/map -> Click on an Alumni Avatar Pin -> Click the "Career Path" (Lộ trình sự nghiệp) action button inside the summary popover.
-*   **Timing / Frequency:** On demand, whenever a user wants to visually trace the geographical and chronological employment journey of a specific alumni directly on the map.
+## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
 
-**Function description**
-*   **Actors/Roles:** Guest (unauthenticated visitor), Student, Alumni, Admin (Public access / Open to all roles).
-*   **Purpose:** Elevates the standard list-based resume by visualizing an alumni's career progression spatially. It helps users see physical relocations and career mobility over time (e.g., studying in Da Nang -> working in Ho Chi Minh -> relocating to Singapore) through connected paths on the map.
-*   **Interface:** 
-    *   **Path Visualization (Polyline):** A curved, dashed, or gradient vector line (GeoJSON LineString) connecting past and current job locations on the map canvas.
-    *   **Stepped Location Markers:** Numbered or chronologically scaled mini-markers indicating the sequence of companies/roles.
-    *   **Timeline Overlay:** A minimalist timeline widget floating at the bottom or side of the screen, mapping the chronological sequence of roles to the points on the map.
-    *   **Exit/Reset Button:** A button (e.g., "Thoát lộ trình" or "X") to exit the career path view and return to the global alumni distribution view.
-*   **UI States:** 
-    *   A loading spinner inside the popover while fetching the full employment history.
-    *   A smooth line-drawing animation (dasharray transition) from the earliest experience to the current one.
-    *   Fading out (opacity reduction) of other unrelated alumni pins to focus the user's attention solely on the selected journey.
+### 2.2.3 Business Workflow (Luồng nghiệp vụ)
 
-**Data processing**
-1.  The user clicks the "Career Path" button on an active marker's popover.
-2.  The frontend triggers a `GET` request to `/api/v1/users/{alumniId}/experiences` to fetch the complete employment history (including non-primary and past roles).
-3.  The backend verifies the request and returns an HTTP 200 OK with the array of `ExperienceResponse` DTOs, strictly sorted by `startDate` ascending (oldest to newest).
-4.  The frontend processes the returned data:
-    *   Filters out any experiences that lack `latitude` and `longitude` coordinates.
-    *   Constructs a GeoJSON LineString feature connecting the valid coordinates chronologically.
-5.  The MapLibre engine adds the new GeoJSON layer, rendering the directional path and the step-markers.
-6.  The frontend calculates the bounding box (bounds) of all points in the path and triggers a `fitBounds` camera animation to ensure the entire career trajectory is visible on screen.
+```mermaid
+stateDiagram-v2
+    [*] --> MapViewing : Người dùng xem bản đồ (/app/map)
+    MapViewing --> ClickMarker : Nhấp vào marker cựu sinh viên
+    ClickMarker --> DetailCard : Mở thẻ tóm tắt cựu sinh viên (AlumniDetailCard)
+    DetailCard --> ClickCareerBtn : Nhấn nút "Lộ trình sự nghiệp"
+    ClickCareerBtn --> OpenCareerDrawer : Mở Drawer Panel dòng thời gian sự nghiệp
+    OpenCareerDrawer --> FetchTimeline : Gửi GET /api/v1/career-paths/users/{userId}
+    FetchTimeline --> RenderTimeline : Hiển thị toàn bộ lịch sử nghề nghiệp theo công ty
+    RenderTimeline --> [*] : Đóng Drawer hoặc chuyển sang xem hồ sơ cá nhân
+```
 
-**Screen layout:** 
-[Figure — View Career Path on Map (Web)]
+#### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
+* **Bước 1 - Khởi đầu**: Người dùng xem bản đồ cựu sinh viên tại `/app/map`.
+* **Bước 2 - Chọn cựu sinh viên**: Nhấp vào một marker cựu sinh viên bất kỳ, thẻ tóm tắt `AlumniDetailCard` mở ra.
+* **Bước 3 - Mở lộ trình**: Người dùng nhấp vào nút "Lộ trình sự nghiệp". Hệ thống mở Side Drawer (trên Desktop) hoặc Bottom Sheet (trên Mobile) và gọi API `GET /api/v1/career-paths/users/{userId}`.
+* **Bước 4 - Xem dòng thời gian**: Hệ thống kết xuất toàn bộ quá trình thăng tiến sự nghiệp của cựu sinh viên đó được sắp xếp từ quá khứ đến hiện tại và nhóm theo từng công ty/tổ chức.
 
-**Function details**
-*   **Data:** The API payload includes an array of experiences containing: `title`, `company`, `startDate`, `endDate`, `latitude`, `longitude`, `isCurrent`.
-*   **Validation:** 
-    *   Experiences missing valid `latitude` and `longitude` values are silently excluded from the spatial map path, though they may still appear in the floating timeline overlay.
+---
 
-*   **Business rules:** 
-    *   **Chronological Integrity:** The spatial path must strictly connect points from the oldest `startDate` to the newest/current role. Overlapping locations (e.g., working at two companies in the same city sequentially) should be handled by slightly offsetting the markers or clustering them into a multi-role step.
-    *   **Visual Direction:** The connecting line must visually indicate directionality (e.g., using chevron arrows along the path or a color gradient from light to dark) to make the journey's timeline intuitive without forcing the user to read the dates.
-    *   **Exclusive Focus View:** Activating the Career Path view automatically suppresses (hides or dims) all other alumni markers on the map to prevent visual noise.
+### 3.2 Module Lộ trình Sự nghiệp (Career Path)
 
-*   **Error Handling:**
-    *   **Insufficient Spatial Data:** If the alumni only has one mapped location or no past mapped locations (e.g., their previous jobs didn't have coordinates), the system displays an inline toast message: "Không đủ dữ liệu vị trí để vẽ lộ trình sự nghiệp." (Insufficient location data to draw spatial career path) and prevents the map transformation.
-    *   **Network Failure:** If the API fails to fetch experiences, the frontend displays an error toast: "Không thể tải lộ trình sự nghiệp lúc này." (Cannot load career path at this time) and maintains the current map state.
+#### 3.2.2 Xem Lộ trình Sự nghiệp từ Bản đồ (UC58.2)
+*(Tham chiếu chi tiết toàn diện tại [SRS_UC_58_ViewCareerpath.md](file:///d:/Alumnect/docs/update_SRS/SRS_UC_58_ViewCareerpath.md))*
 
-*   **Normal case:** The user clicks "Career Path" for an alumni. The API fetches 3 locations. Unrelated map pins fade out. The map camera zooms out to cover both Da Nang and HCM. A dynamic line draws from the FPT University Da Nang campus (Step 1), to an agency in Da Nang (Step 2), and finally to VNG Corporation in HCM (Step 3). The floating timeline shows the specific dates and job titles for these 3 steps.
+---
 
-*   **Abnormal case:** 
-    *   **Server Timeout:** The API returns HTTP 504. The frontend catches the error, stops the loading spinner on the button, and alerts the user to try again later.
+### 5. Requirement Appendix (Phụ lục Yêu cầu)
+
+#### 5.1 Business Rules (Quy tắc Nghiệp vụ)
+
+| ID | Định nghĩa Quy tắc (Rule Definition) |
+| :--- | :--- |
+| BR-CP-MAP-01 | Nút "Lộ trình sự nghiệp" trên thẻ bản đồ chỉ kích hoạt khi cựu sinh viên có ít nhất một bản ghi kinh nghiệm làm việc. |
+| BR-CP-MAP-02 | Drawer lộ trình sự nghiệp hiển thị đè lên bản đồ với hiệu ứng làm mờ nền (backdrop blur) mà không cần chuyển trang. |
+
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-CPMAP-01 | Toast message | Lấy chi tiết lộ trình thành công | Lấy thông tin lộ trình sự nghiệp thành công. |
+| 2 | MSG-CPMAP-02 | In Drawer | Cựu sinh viên chưa cập nhật kinh nghiệm | Cựu sinh viên chưa cập nhật lộ trình làm việc. |
+
+---
+
+## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
+
+### 3. Detail Design (Thiết kế chi tiết)
+
+#### 3.1.1 Class Diagram (Sơ đồ Lớp)
+
+```mermaid
+classDiagram
+    class AlumniDetailCard {
+        +onNavigateCareer(userId) void
+    }
+    class CareerDrawer {
+        +userId: Long
+        +isOpen: boolean
+        +onClose() void
+    }
+    class CareerPathController {
+        +getUserCareerPath(userId: Long) ResponseEntity
+    }
+    class CareerPathService {
+        <<interface>>
+        +getUserCareerPath(userId: Long) CareerPathDetailResponse
+    }
+
+    AlumniDetailCard --> CareerDrawer : triggers
+    CareerDrawer ..> CareerPathController : HTTP GET
+    CareerPathController --> CareerPathService : calls
+```
+
+##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng
+    participant Map as AlumniDetailCard (FE)
+    participant Drawer as CareerDrawer (FE)
+    participant Controller as CareerPathController
+    participant Service as CareerPathService
+    participant DB as PostgreSQL
+
+    User->>Map: Bấm "Lộ trình sự nghiệp"
+    Map->>Drawer: Mở Drawer với userId
+    Drawer->>Controller: GET /api/v1/career-paths/users/{userId}
+    Controller->>Service: getUserCareerPath(userId)
+    Service->>DB: SELECT * FROM experiences WHERE user_id = ? ORDER BY start_date ASC
+    DB-->>Service: List<Experience>
+    Service-->>Controller: CareerPathDetailResponse
+    Controller-->>Drawer: HTTP 200 OK (Chi tiết dòng thời gian nghề nghiệp)
+    Drawer-->>User: Hiển thị dòng thời gian sự nghiệp nhóm theo công ty
+```

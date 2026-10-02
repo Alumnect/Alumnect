@@ -10,9 +10,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Bookmark,
-  Heart,
-  MessageCircle,
   Trophy,
   Sparkles,
   Briefcase,
@@ -24,8 +21,13 @@ import {
   AlertTriangle,
   LayoutGrid,
   List,
-  Trash2,
+  Heart,
+  MessageCircle,
 } from 'lucide-react'
+import {
+  BookmarkSimple,
+  Trash,
+} from '@/components/icons'
 import { Avatar, Card, EmptyState, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
@@ -168,8 +170,8 @@ function SavedFeedCard({
             title="Bỏ lưu bài viết này"
             className="group flex items-center gap-1.5 rounded-xl border border-plum-900/10 bg-plum-50/60 px-3 py-1.5 text-xs font-semibold text-plum-600 transition-all hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 active:scale-95 cursor-pointer shrink-0"
           >
-            <Bookmark size={14} className="fill-[#F27024] text-[#F27024] group-hover:hidden" />
-            <Trash2 size={14} className="hidden text-rose-600 group-hover:block" />
+            <BookmarkSimple size={14} weight="fill" className="text-[#F27024] group-hover:hidden" />
+            <Trash size={14} weight="bold" className="hidden text-rose-600 group-hover:block" />
             <span className="group-hover:text-rose-600">Đã lưu</span>
           </button>
         </div>
@@ -264,10 +266,10 @@ function SavedFeedCard({
             'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 cursor-pointer',
             liked
               ? 'text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15 hover:bg-rose-500/20'
-              : 'text-slate-600 dark:text-[#b0b3b8] hover:bg-slate-200/60 dark:hover:bg-[#3a3b3c] hover:text-slate-900 dark:hover:text-[#f0f2f5]',
+              : 'text-slate-600 dark:text-[#b0b3b8] hover:bg-slate-200/60 dark:hover:bg-[#3a3b3c] hover:text-rose-500 dark:hover:text-rose-400',
           )}
         >
-          <Heart size={15} className={liked ? 'fill-rose-500 text-rose-500 dark:fill-rose-400 dark:text-rose-400' : ''} />
+          <Heart size={15} className={cn(liked && 'fill-rose-500 text-rose-500 dark:text-rose-400 dark:fill-rose-400')} />
           <span>{compact(likeCount)}</span>
         </button>
 
@@ -326,7 +328,7 @@ function SavedGridCard({
           title="Bỏ lưu bài viết"
           className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-lg bg-white/90 text-rose-500 shadow-sm backdrop-blur-xs hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
         >
-          <Trash2 size={13} />
+          <Trash size={13} weight="bold" />
         </button>
       </Link>
 
@@ -492,7 +494,7 @@ export function SavedPostsView() {
       ) : filteredPosts.length === 0 ? (
         <Card hover={false} className="rounded-2xl p-10 text-center bg-white border border-plum-900/10">
           <EmptyState
-            icon={<Bookmark size={32} className="text-orange-500" />}
+            icon={<BookmarkSimple size={32} weight="fill" className="text-orange-500" />}
             title={filter === 'all' ? 'Chưa có bài viết nào được lưu' : `Không có bài viết loại "${FILTERS.find(f => f.key === filter)?.label}"`}
             description={filter === 'all' ? 'Lưu lại những bài viết, tuyển dụng hoặc sự kiện hay trên Bảng tin để xem lại bất cứ khi nào.' : 'Thử chuyển sang tab bộ lọc khác để xem bài viết.'}
             action={

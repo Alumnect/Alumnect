@@ -165,6 +165,9 @@ public class ChatServiceImpl implements ChatService {
             long unreadCount = unreadMap.getOrDefault(conversation.getId(), 0L);
 
             if (conversation.getType() == ConversationType.GROUP) {
+                Long commId = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getId() : null;
+                String commName = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getName() : null;
+
                 resultList.add(ConversationResponse.builder()
                         .id(conversation.getId())
                         .type(ConversationType.GROUP)
@@ -180,6 +183,8 @@ public class ChatServiceImpl implements ChatService {
                         .adminId(conversation.getCreatedBy() != null ? conversation.getCreatedBy().getId() : null)
                         .lastMessage(lastSnippet)
                         .unreadCount(unreadCount)
+                        .communityGroupId(commId)
+                        .communityGroupName(commName)
                         .build());
             } else {
                 User recipient = recipientByConv.get(conversation.getId());
@@ -492,14 +497,25 @@ public class ChatServiceImpl implements ChatService {
             conversationRepository.delete(conversation);
             log.info("User {} đã xóa cuộc trò chuyện trực tiếp {}", currentUser.getId(), conversationId);
         } else {
-            // Đối với nhóm, nếu là người tạo nhóm thì xóa toàn bộ nhóm, nếu không thì rời khỏi nhóm
-            if (conversation.getCreatedBy() != null && conversation.getCreatedBy().getId().equals(currentUser.getId())) {
-                conversationRepository.delete(conversation);
-                log.info("Admin {} đã giải tán nhóm {}", currentUser.getId(), conversationId);
+            // Đối với nhóm trò chuyện (cả nhóm cộng đồng lẫn nhóm tự tạo):
+            boolean isAuthorizedToDelete = false;
+            if (conversation.getCommunityGroup() != null) {
+                var group = conversation.getCommunityGroup();
+                isAuthorizedToDelete = (group.getOwner() != null && group.getOwner().getId().equals(currentUser.getId()))
+                        || (conversation.getCreatedBy() != null && conversation.getCreatedBy().getId().equals(currentUser.getId()));
             } else {
-                conversationParticipantRepository.deleteByConversationIdAndUserId(conversationId, currentUser.getId());
-                log.info("User {} đã rời khỏi nhóm {}", currentUser.getId(), conversationId);
+                isAuthorizedToDelete = (conversation.getCreatedBy() != null && conversation.getCreatedBy().getId().equals(currentUser.getId()))
+                        || conversationParticipantRepository.findByConversationIdAndUserId(conversationId, currentUser.getId())
+                                .map(p -> p.getRole() == ParticipantRole.ADMIN)
+                                .orElse(false);
             }
+
+            if (!isAuthorizedToDelete) {
+                throw new ForbiddenException("Chỉ Trưởng nhóm / Chủ sở hữu mới có quyền giải tán nhóm trò chuyện.");
+            }
+
+            conversationRepository.delete(conversation);
+            log.info("Admin/Owner {} đã giải tán nhóm trò chuyện {}", currentUser.getId(), conversationId);
         }
     }
 
@@ -677,6 +693,9 @@ public class ChatServiceImpl implements ChatService {
 
         long memberCount = conversationParticipantRepository.countByConversationId(conversationId);
 
+        Long commId = saved.getCommunityGroup() != null ? saved.getCommunityGroup().getId() : null;
+        String commName = saved.getCommunityGroup() != null ? saved.getCommunityGroup().getName() : null;
+
         return ConversationResponse.builder()
                 .id(saved.getId())
                 .type(ConversationType.GROUP)
@@ -690,6 +709,8 @@ public class ChatServiceImpl implements ChatService {
                 .memberCount((int) memberCount)
                 .isAccepted(true)
                 .adminId(saved.getCreatedBy() != null ? saved.getCreatedBy().getId() : null)
+                .communityGroupId(commId)
+                .communityGroupName(commName)
                 .build();
     }
 
@@ -776,6 +797,9 @@ public class ChatServiceImpl implements ChatService {
 
         long memberCount = conversationParticipantRepository.countByConversationId(conversationId);
 
+        Long commId = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getId() : null;
+        String commName = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getName() : null;
+
         return ConversationResponse.builder()
                 .id(conversation.getId())
                 .type(ConversationType.GROUP)
@@ -789,6 +813,8 @@ public class ChatServiceImpl implements ChatService {
                 .memberCount((int) memberCount)
                 .isAccepted(true)
                 .adminId(conversation.getCreatedBy() != null ? conversation.getCreatedBy().getId() : null)
+                .communityGroupId(commId)
+                .communityGroupName(commName)
                 .build();
     }
 
@@ -810,6 +836,22 @@ public class ChatServiceImpl implements ChatService {
 
         boolean isSelf = currentUser.getId().equals(targetUserId);
 
+        // Với nhóm chat thuộc hội nhóm cộng đồng: Chủ sở hữu tuyệt đối không thể rời (out) hoặc bị kick khỏi nhóm chat
+        if (conversation.getCommunityGroup() != null) {
+            var group = conversation.getCommunityGroup();
+            boolean isTargetOwner = (group.getOwner() != null && group.getOwner().getId().equals(targetUserId))
+                    || (conversation.getCreatedBy() != null && conversation.getCreatedBy().getId().equals(targetUserId))
+                    || (isSelf && myPart.getRole() == ParticipantRole.ADMIN);
+
+            if (isTargetOwner) {
+                if (isSelf) {
+                    throw new BadRequestException("Bạn là Chủ sở hữu của hội nhóm này nên không thể rời khỏi nhóm trò chuyện. Nếu muốn chuyển quyền, vui lòng chuyển quyền sở hữu hội nhóm tại trang Quản lý hội nhóm.");
+                } else {
+                    throw new BadRequestException("Không thể xóa Chủ sở hữu của hội nhóm khỏi nhóm trò chuyện.");
+                }
+            }
+        }
+
         if (!isSelf && myPart.getRole() != ParticipantRole.ADMIN) {
             throw new ForbiddenException("Chỉ quản trị viên mới có quyền xóa thành viên khỏi nhóm.");
         }
@@ -821,9 +863,11 @@ public class ChatServiceImpl implements ChatService {
             conversationRepository.delete(conversation);
             log.info("Nhóm {} không còn thành viên, đã tự động giải tán.", conversationId);
         } else {
-            // Nếu người rời là admin, chuyển quyền admin cho thành viên được chỉ định (newAdminId) hoặc thành viên còn lại
+            // Nếu người rời là admin:
+            // Với nhóm chat hội nhóm: KHÔNG chuyển quyền admin cho ai khác (chỉ Chủ sở hữu hội nhóm mới là admin)
+            // Với nhóm chat thông thường: chuyển quyền admin cho thành viên được chỉ định hoặc thành viên còn lại
             String nextAdminName = null;
-            if (isSelf && myPart.getRole() == ParticipantRole.ADMIN) {
+            if (isSelf && myPart.getRole() == ParticipantRole.ADMIN && conversation.getCommunityGroup() == null) {
                 List<ConversationParticipant> remainingList = conversationParticipantRepository.findByConversationId(conversationId);
                 if (!remainingList.isEmpty()) {
                     ConversationParticipant nextAdmin = null;

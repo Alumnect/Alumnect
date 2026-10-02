@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> TiepNhanYeuCauAnJob : PUT /api/v1/admin/posts/:id/status (hidden=true)
+    [*] --> TiepNhanYeuCauAnJob : PUT /api/v1/admin/posts/{id}/status (hidden=true)
     TiepNhanYeuCauAnJob --> KiemTraQuyenAdmin : Xác thực JWT Role ADMIN
     KiemTraQuyenAdmin --> TuChoi : 403 Forbidden
     KiemTraQuyenAdmin --> TimKiemBaiDangJob : Tìm Post có job_id trong Database
@@ -87,6 +87,18 @@ stateDiagram-v2
 #### 5.2 Common Requirements (Yêu cầu Chung)
 *   Thao tác cập nhật cơ sở dữ liệu được thực hiện an toàn trong Transaction.
 *   Trả về mã phản hồi chuẩn RESTful.
+
+---
+
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-UC77-01 | Toast message | Ẩn tin tuyển dụng vi phạm thành công | Ẩn tin tuyển dụng thành công. |
+| 2 | MSG-UC77-02 | Toast message | Mở lại hiển thị tin tuyển dụng thành công | Mở ẩn tin tuyển dụng thành công. |
+| 3 | MSG-UC77-03 | Modal confirm | Xác nhận ẩn tin tuyển dụng vi phạm | Bạn có chắc chắn muốn ẩn tin tuyển dụng này khỏi bảng tin cộng đồng? |
+| 4 | MSG-UC77-04 | Toast Error | Tin tuyển dụng không tồn tại | Không tìm thấy tin tuyển dụng. |
+| 5 | MSG-UC77-05 | Toast Error | Không có quyền Quản trị viên | Bạn không có quyền thực hiện thao tác này. |
 
 ---
 

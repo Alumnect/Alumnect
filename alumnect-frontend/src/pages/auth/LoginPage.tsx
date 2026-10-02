@@ -55,7 +55,7 @@ export function LoginPage() {
             <button
               type="button"
               onClick={() => setShow((v) => !v)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900"
+              className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-700 dark:text-[#b0b3b8] dark:hover:text-white transition-colors cursor-pointer"
               aria-label="Ẩn hiện mật khẩu"
             >
               {show ? <EyeOff size={16} /> : <Eye size={16} />}

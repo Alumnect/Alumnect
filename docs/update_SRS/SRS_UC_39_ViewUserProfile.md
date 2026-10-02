@@ -77,7 +77,7 @@ Chịu trách nhiệm hiển thị thông tin hồ sơ cá nhân phục vụ gia
         *   Endpoint: `GET /api/v1/users/profile/{userId}`
         *   Auth: Công khai (Không bắt buộc token).
     *   **Business rules**:
-        *   Người dùng xem hồ sơ của chính mình được phép xem bất kỳ lúc nào, kể cả khi trạng thái tài khoản là `PENDING` hoặc `LOCKED`.
+        *   Người dùng xem hồ sơ của bản thân được phép xem bất kỳ lúc nào, kể cả khi trạng thái tài khoản là `PENDING` hoặc `LOCKED`.
         *   Khi xem hồ sơ của người khác (Other Profile), tài khoản cần xem bắt buộc phải ở trạng thái `ACTIVE` đối với mọi đối tượng gọi API (kể cả ADMIN hay chính chủ khi gọi API công khai này). Nếu không, hệ thống chặn và báo lỗi 400.
     *   **Error Handling**:
         *   Xem tài khoản bị khóa/chưa kích hoạt (đối với người dùng khác): Trả về lỗi 400 Bad Request kèm thông báo: *"Tài khoản người dùng này chưa được kích hoạt hoặc đã bị khóa."*

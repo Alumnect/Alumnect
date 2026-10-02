@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class UpdateGroupRequest {
 
     /** Tên nhóm mới */
-    @Size(min = 2, max = 100, message = "Tên nhóm phải từ 2 đến 100 ký tự")
+    @Size(min = 1, max = 100, message = "Tên nhóm phải từ 1 đến 100 ký tự")
     private String title;
 
     /** Ảnh đại diện nhóm mới */

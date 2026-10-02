@@ -50,9 +50,10 @@ cho phép thành viên tham gia thảo luận bằng cách đăng bình luận (
 - **Actors/Roles**: Student, Alumni (đã đăng nhập). Admin/Guest không được bình luận (Admin → 403; Guest bị chặn ở Frontend/401).
 - **Purpose**: Cho phép thành viên đăng bình luận trên bài viết để tham gia thảo luận cộng đồng.
 - **Interface**:
-  - Ô soạn (`CommentComposer`): avatar người dùng, textarea "Viết bình luận…", bộ đếm ký tự `N/2000`, nút "Gửi".
-  - Trạng thái: nút Gửi vô hiệu khi rỗng/đang gửi; spinner "Đang gửi…"; thông điệp lỗi nghiệp vụ; Guest → lời mời đăng nhập.
-  - Bình luận mới xuất hiện cuối luồng với thời gian "vừa xong".
+  - **Nút Bình luận trên thanh tương tác bài viết**: Hiển thị số lượng bình luận `{số} bình luận`, khi người dùng bấm sẽ điều hướng tới khu vực bình luận.
+  - Ô soạn bình luận (`CommentComposer`): Ảnh đại diện người dùng, khung nhập nội dung (textarea), bộ đếm ký tự tối đa 2000 ký tự, nút "Gửi".
+  - Trạng thái giao diện: Nút Gửi bị vô hiệu hóa khi nội dung trống hoặc đang gửi; hiển thị trạng thái đang xử lý (Loading); hiển thị thông báo lỗi khi vi phạm nghiệp vụ; hiển thị modal mời đăng nhập khi người dùng là Guest.
+  - Bình luận mới: Tự động hiển thị ở cuối danh sách bình luận sau khi gửi thành công.
 
 **Data processing**:
 1. Frontend gọi `POST /api/v1/posts/{id}/comments` với body `{ content, parentId? }`.

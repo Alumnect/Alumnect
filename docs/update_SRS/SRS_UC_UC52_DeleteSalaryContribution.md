@@ -13,7 +13,7 @@ stateDiagram-v2
     Mo_Modal_Xac_Nhan --> Huy : Bấm "Hủy" -> đóng modal, không đổi gì
     Mo_Modal_Xac_Nhan --> Goi_API : Bấm "Xóa" (xác nhận)
 
-    Goi_API --> Kiem_Tra_Server : DELETE /salary-contributions/{id} (Bearer JWT)
+    Goi_API --> Kiem_Tra_Server : DELETE /salary-contributions/{contributionId} (Bearer JWT)
 
     state Kiem_Tra_Server {
         [*] --> Kiem_Tra_Ton_Tai
@@ -34,9 +34,9 @@ stateDiagram-v2
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-* **Bước 1 - Vào danh sách "Đóng góp của tôi"**: Giống UC51, Alumni mở modal danh sách đóng góp của chính mình. Mỗi dòng nay có thêm icon "Xóa" (thùng rác, đổi màu đỏ khi hover) cạnh nút "Sửa".
+* **Bước 1 - Vào danh sách "Đóng góp của tôi"**: Giống UC51, Alumni mở modal danh sách đóng góp của bản thân. Mỗi dòng nay có thêm icon "Xóa" (thùng rác, đổi màu đỏ khi hover) cạnh nút "Sửa".
 * **Bước 2 - Xác nhận**: Bấm icon "Xóa" mở `DeleteSalaryContributionModal` (chồng lên danh sách) — cảnh báo "Bạn có chắc muốn xóa lượt đóng góp '{jobTitle}' này không? Hành động này không thể hoàn tác." Người dùng "Hủy" (đóng modal, không đổi gì) hoặc "Xóa" để xác nhận.
-* **Bước 3 - Gửi & Kiểm tra phía Server**: Client gọi `DELETE /salary-contributions/{id}` kèm Bearer JWT. Server (`SalaryServiceImpl.deleteContribution`, `@Transactional`):
+* **Bước 3 - Gửi & Kiểm tra phía Server**: Client gọi `DELETE /salary-contributions/{contributionId}` kèm Bearer JWT. Server (`SalaryServiceImpl.deleteContribution`, `@Transactional`):
   * Nạp User theo email (JWT); không tồn tại → 404.
   * Tìm lượt đóng góp theo `id`; không tồn tại → 404.
   * **Kiểm tra quyền sở hữu**: `contribution.user.id` khác người đăng nhập → 403.
@@ -61,7 +61,7 @@ Module 4 (Q&A Forum & Salary Board). UC52 hoàn thiện vòng đời CRUD của 
 *   **Timing Frequency**: On demand (khi chính chủ muốn rút lại dữ liệu đã đóng góp).
 
 **Function description**:
-*   **Actors/Roles**: Cựu sinh viên (ALUMNI) — nhưng **chỉ chính chủ** của lượt đóng góp đó. Người khác bị API từ chối 403 (không có UI nào dẫn tới việc này vì danh sách "của tôi" chỉ hiện dữ liệu của chính mình); Guest bị chặn 401.
+*   **Actors/Roles**: Cựu sinh viên (ALUMNI) — nhưng **chỉ chính chủ** của lượt đóng góp đó. Người khác bị API từ chối 403 (không có UI nào dẫn tới việc này vì danh sách "của tôi" chỉ hiện dữ liệu của bản thân); Guest bị chặn 401.
 *   **Purpose**: Cho phép chính chủ tự gỡ bỏ vĩnh viễn 1 lượt đóng góp lương đã gửi (VD nhập nhầm, muốn rút lại dữ liệu).
 *   **Interface**:
     *   **Icon "Xóa"** (thùng rác) trong danh sách "Đóng góp của tôi", cạnh nút "Sửa".
@@ -69,7 +69,7 @@ Module 4 (Q&A Forum & Salary Board). UC52 hoàn thiện vòng đời CRUD của 
     *   **Thông báo**: toast thành công "Đã xóa dữ liệu lương thành công" hoặc banner lỗi trong modal nếu API thất bại.
 
 **Data processing**:
-1.  Client gọi `DELETE /salary-contributions/{id}` (Bearer JWT), không có request body.
+1.  Client gọi `DELETE /salary-contributions/{contributionId}` (Bearer JWT), không có request body.
 2.  Server (`SalaryServiceImpl.deleteContribution`, `@Transactional`): nạp User (404), tìm lượt đóng góp (404), kiểm tra sở hữu (403), **xóa cứng** bản ghi.
 3.  Server trả HTTP 200 `ApiResponse<Void>`.
 4.  Client hiện toast, `invalidateQueries(['salary-statistics'])` + `invalidateQueries(['my-salary-contributions'])` → dòng biến mất khỏi danh sách, thống kê tự cập nhật lần tải sau.
@@ -117,7 +117,7 @@ Module 4 (Q&A Forum & Salary Board). UC52 hoàn thiện vòng đời CRUD của 
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | MSG-DS-01 | Toast lỗi | Lượt đóng góp không tồn tại | Không tìm thấy lượt đóng góp với id: {id} | 404 |
 | 2 | MSG-DS-02 | Toast lỗi | Không phải chính chủ | Chỉ chính chủ mới được xóa lượt đóng góp này | 403 |
-| 3 | MSG-DS-03 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 3 | MSG-DS-03 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 4 | MSG-DS-04 | Toast thành công | Xóa thành công | Đã xóa dữ liệu lương thành công | 200 |
 
 ---
@@ -186,7 +186,7 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     Note over Client, Ctrl: Guest chưa đăng nhập bị Spring Security chặn 401 trước Controller
-    Client->>Ctrl: HTTP DELETE /salary-contributions/{id} (Bearer JWT)
+    Client->>Ctrl: HTTP DELETE /salary-contributions/{contributionId} (Bearer JWT)
     Ctrl->>Service: deleteContribution(email, id)
     Service->>UserRepo: findByEmail(email)
     UserRepo-->>Service: User
@@ -211,11 +211,6 @@ sequenceDiagram
 ```
 
 ###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
-1.  **Luồng thành công**: Client gửi `DELETE /salary-contributions/{id}`. Service nạp User, tìm bản ghi, xác nhận sở hữu, xóa cứng. Trả HTTP 200.
+1.  **Luồng thành công**: Client gửi `DELETE /salary-contributions/{contributionId}`. Service nạp User, tìm bản ghi, xác nhận sở hữu, xóa cứng. Trả HTTP 200.
 2.  **Luồng lỗi Không tìm thấy (404)**: `id` không tồn tại trong bảng `salary_contributions` (kể cả gọi xóa 2 lần liên tiếp cùng id — lần 2 không tìm thấy vì đã xóa cứng thật).
 3.  **Luồng lỗi Quyền sở hữu (403)**: `contribution.user.id` khác người đăng nhập → `ForbiddenException`. Guest bị Spring Security chặn 401 trước Controller, không tới được Service.
-
-### 4. Kết quả kiểm thử thực tế
-* ✅ `mvn -q -o compile` (Backend) — BUILD SUCCESS.
-* ✅ `npm run build` (`tsc -b && vite build`, Frontend) — PASS.
-* ⏳ Chưa test tay qua UI/Postman trong phiên này — cần user restart Backend rồi test: xóa 1 lượt đóng góp của chính mình (kiểm tra biến mất khỏi danh sách + thống kê cập nhật đúng ở lần tải sau), thử xóa lượt của người khác qua Postman (kỳ vọng 403), xóa 2 lần liên tiếp (lần 2 kỳ vọng 404).

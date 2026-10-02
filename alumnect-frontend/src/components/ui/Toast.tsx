@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X, Bell } from 'lucide-react'
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning' | 'notification'
@@ -99,8 +100,8 @@ export function ToastContainer() {
               layout
               initial={{ opacity: 0, y: -16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.95 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -12, scale: 0.95, transition: TRANSITION.exit }}
+              transition={TRANSITION.pop}
               className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-3.5 shadow-lg shadow-black/10 backdrop-blur-md dark:shadow-black/50 ${config.border}`}
             >
               <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${config.iconClass}`}>

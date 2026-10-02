@@ -1,10 +1,19 @@
 import { useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { motion } from 'framer-motion'
-import { Flag, Loader2, ShieldAlert, CheckCircle2 } from 'lucide-react'
+import {
+  Flag,
+  Loader2,
+  Ban,
+  EyeOff,
+  AlertTriangle,
+  ShieldAlert,
+  HelpCircle,
+  Check,
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal, toast } from '@/components/ui'
+import { cn } from '@/lib/utils'
 import { useCreatePostReport } from '../hooks/useCreatePostReport'
 import {
   createPostReportSchema,
@@ -14,12 +23,44 @@ import {
   type ReportReason,
 } from '../model/report'
 
-const REASON_DETAILS: Record<ReportReason, string> = {
-  SPAM: 'Nội dung lặp lại hoặc quảng cáo không liên quan.',
-  INAPPROPRIATE: 'Nội dung gây phản cảm hoặc vi phạm tiêu chuẩn cộng đồng.',
-  MISINFORMATION: 'Thông tin có dấu hiệu không chính xác hoặc gây hiểu nhầm.',
-  SCAM_OR_FRAUD: 'Có dấu hiệu lừa đảo, giả mạo hoặc gian lận.',
-  OTHER: 'Một lý do khác cần được bạn mô tả rõ hơn.',
+interface ReasonConfig {
+  icon: typeof Ban
+  iconColor: string
+  iconBg: string
+  description: string
+}
+
+const REASON_CONFIG: Record<ReportReason, ReasonConfig> = {
+  SPAM: {
+    icon: Ban,
+    iconColor: 'text-amber-600 dark:text-amber-400',
+    iconBg: 'bg-amber-500/10',
+    description: 'Nội dung lặp lại, quảng cáo rác hoặc không liên quan.',
+  },
+  INAPPROPRIATE: {
+    icon: EyeOff,
+    iconColor: 'text-rose-600 dark:text-rose-400',
+    iconBg: 'bg-rose-500/10',
+    description: 'Nội dung bạo lực, phản cảm hoặc vi phạm chuẩn mực.',
+  },
+  MISINFORMATION: {
+    icon: AlertTriangle,
+    iconColor: 'text-orange-600 dark:text-orange-400',
+    iconBg: 'bg-orange-500/10',
+    description: 'Thông tin sai sự thật, gây hoang mang hoặc hiểu nhầm.',
+  },
+  SCAM_OR_FRAUD: {
+    icon: ShieldAlert,
+    iconColor: 'text-red-600 dark:text-red-400',
+    iconBg: 'bg-red-500/10',
+    description: 'Dấu hiệu lừa đảo tài chính, giả mạo danh tính.',
+  },
+  OTHER: {
+    icon: HelpCircle,
+    iconColor: 'text-violet-600 dark:text-violet-400',
+    iconBg: 'bg-violet-500/10',
+    description: 'Vấn đề khác cần được quản trị viên xem xét riêng.',
+  },
 }
 
 export function ReportPostModal({
@@ -67,8 +108,8 @@ export function ReportPostModal({
         },
         onError: (err: any) => {
           toast.error(err?.message || 'Không thể gửi báo cáo')
-        }
-      }
+        },
+      },
     )
   }
 
@@ -77,85 +118,121 @@ export function ReportPostModal({
       isOpen={open}
       onClose={close}
       title="Báo cáo bài viết"
-      icon={<Flag size={18} className="text-coral-500" />}
-      maxWidthClassName="max-w-lg"
+      icon={<Flag size={18} className="text-rose-500" />}
+      maxWidthClassName="max-w-[480px]"
       footer={(
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={close} disabled={createReport.isPending}>Hủy</Button>
+        <div className="flex items-center justify-end gap-2.5">
+          <Button
+            variant="secondary"
+            onClick={close}
+            disabled={createReport.isPending}
+            className="rounded-xl px-4 py-2 font-semibold text-xs text-slate-700 dark:text-slate-200"
+          >
+            Hủy
+          </Button>
           <Button
             form="report-post-form"
             type="submit"
-            disabled={createReport.isPending}
-            leftIcon={createReport.isPending ? <Loader2 size={16} className="animate-spin" /> : <Flag size={16} />}
+            disabled={createReport.isPending || !reason}
+            className="rounded-xl px-5 py-2 font-bold text-xs bg-[#F27024] hover:bg-[#d96010] text-white shadow-xs disabled:opacity-50"
+            leftIcon={createReport.isPending ? <Loader2 size={15} className="animate-spin" /> : <Flag size={15} />}
           >
             {createReport.isPending ? 'Đang gửi...' : 'Gửi báo cáo'}
           </Button>
         </div>
       )}
     >
-      <form id="report-post-form" onSubmit={handleSubmit(submit)} noValidate className="space-y-5">
-        <div className="flex gap-3 rounded-2xl border border-brand-200/60 bg-brand-50/55 p-4">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-brand-600 shadow-sm">
-            <ShieldAlert size={20} />
-          </span>
-          <div>
-            <p className="font-bold text-plum-900">Giúp giữ cộng đồng an toàn</p>
-            <p className="mt-0.5 text-sm leading-5 text-plum-600">Chọn lý do phù hợp nhất. Thông tin của bạn chỉ được dùng để đội ngũ quản trị xem xét.</p>
-          </div>
-        </div>
-
+      <form id="report-post-form" onSubmit={handleSubmit(submit)} noValidate className="space-y-4">
+        {/* Danh sách lý do báo cáo */}
         <fieldset>
-          <legend className="text-sm font-bold text-plum-800">Lý do báo cáo <span className="text-coral-500">*</span></legend>
+          <legend className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+            Lý do báo cáo <span className="text-rose-500">*</span>
+          </legend>
           <input type="hidden" {...register('reason')} />
-          <div role="radiogroup" aria-label="Lý do báo cáo" className="mt-2.5 grid gap-2 sm:grid-cols-2">
+          <div role="radiogroup" aria-label="Lý do báo cáo" className="space-y-1.5">
             {REPORT_REASONS.map((value) => {
               const selected = reason === value
+              const cfg = REASON_CONFIG[value]
+              const Icon = cfg.icon
+
               return (
-                <motion.button
+                <button
                   key={value}
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  whileTap={{ scale: 0.985 }}
                   onClick={() => setValue('reason', value, { shouldValidate: true, shouldDirty: true })}
-                  className={`group rounded-2xl border p-3 text-left transition-all ${selected
-                    ? 'border-brand-400 bg-brand-50 shadow-[0_8px_18px_-14px_rgba(242,112,36,0.85)]'
-                    : 'border-plum-900/10 bg-white hover:border-brand-200 hover:bg-cream-50'}`}
+                  className={cn(
+                    'group relative flex w-full items-center justify-between rounded-xl border p-2 text-left transition-all duration-150 cursor-pointer',
+                    selected
+                      ? 'border-[#F27024] bg-[#F27024]/[0.05] dark:bg-[#F27024]/10 shadow-2xs ring-1 ring-[#F27024]/30'
+                      : 'border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/70 dark:border-[#393a3b] dark:bg-[#242526] dark:hover:border-[#4e4f50] dark:hover:bg-[#3a3b3c]/50',
+                  )}
                 >
-                  <span className="flex items-start gap-2.5">
-                    <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition ${selected ? 'border-brand-500 bg-brand-500' : 'border-plum-300 bg-white group-hover:border-brand-300'}`}>
-                      {selected && <CheckCircle2 size={13} className="text-white" />}
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                    <span className={cn('grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-colors', cfg.iconBg, cfg.iconColor)}>
+                      <Icon size={15} />
                     </span>
-                    <span>
-                      <span className="block text-sm font-bold text-plum-800">{REPORT_REASON_LABELS[value]}</span>
-                      <span className="mt-0.5 block text-xs leading-4 text-plum-500">{REASON_DETAILS[value]}</span>
-                    </span>
+                    <div className="min-w-0">
+                      <span className={cn('text-xs font-bold block truncate', selected ? 'text-[#F27024] dark:text-[#FF8C38]' : 'text-slate-800 dark:text-[#f0f2f5]')}>
+                        {REPORT_REASON_LABELS[value]}
+                      </span>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {cfg.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Radio Indicator */}
+                  <span
+                    className={cn(
+                      'grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full border transition-all duration-150',
+                      selected
+                        ? 'border-[#F27024] bg-[#F27024] text-white shadow-2xs'
+                        : 'border-slate-300 bg-white group-hover:border-slate-400 dark:border-[#4e4f50] dark:bg-[#3a3b3c]',
+                    )}
+                  >
+                    {selected && <Check size={11} strokeWidth={3} />}
                   </span>
-                </motion.button>
+                </button>
               )
             })}
           </div>
-          {errors.reason && <span className="mt-2 block text-xs font-semibold text-coral-600">{errors.reason.message}</span>}
+          {errors.reason && <span className="mt-1.5 block text-xs font-semibold text-rose-500">{errors.reason.message}</span>}
         </fieldset>
 
-        <label className="block text-sm font-bold text-plum-800">
-          Mô tả {reason === 'OTHER' && <span className="text-coral-500">*</span>}
+        {/* Ô mô tả chi tiết */}
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+            Mô tả chi tiết {reason === 'OTHER' ? <span className="text-rose-500">*</span> : <span className="text-slate-400 font-normal normal-case">(không bắt buộc)</span>}
+          </label>
           <textarea
             {...register('description')}
-            rows={4}
+            rows={2}
             maxLength={500}
             aria-invalid={!!errors.description}
-            placeholder="Bổ sung thông tin giúp chúng tôi xem xét báo cáo (không bắt buộc)."
-            className="mt-1.5 w-full resize-y rounded-2xl border border-plum-900/10 bg-white px-3.5 py-3 text-sm text-plum-900 placeholder:text-plum-400 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+            placeholder={
+              reason === 'OTHER'
+                ? 'Vui lòng mô tả cụ thể vi phạm của bài viết...'
+                : 'Bổ sung thông tin giúp chúng tôi xem xét nhanh hơn...'
+            }
+            className={cn(
+              'w-full resize-none rounded-xl border bg-white px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 outline-none transition-all dark:bg-[#18191a] dark:text-[#f0f2f5] dark:placeholder:text-[#8a8d91]',
+              errors.description
+                ? 'border-rose-400 ring-2 ring-rose-400/20'
+                : 'border-slate-200/90 focus:border-[#F27024] focus:ring-2 focus:ring-[#F27024]/20 dark:border-[#393a3b]',
+            )}
           />
-          <span className="mt-1 flex justify-between text-xs text-plum-400">
-            <span className="text-coral-600">{errors.description?.message}</span>
-            <span>{description.length}/500</span>
-          </span>
-        </label>
+          <div className="mt-0.5 flex items-center justify-between text-[11px]">
+            {errors.description?.message ? (
+              <span className="font-semibold text-rose-500">{errors.description.message}</span>
+            ) : <span />}
+            <span className="text-slate-400">{description.length}/500</span>
+          </div>
+        </div>
 
         {createReport.isError && (
-          <p role="alert" className="rounded-2xl border border-coral-200 bg-coral-500/10 px-3.5 py-3 text-sm font-medium text-coral-700">
+          <p role="alert" className="rounded-xl border border-rose-200 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-700 dark:text-rose-400 dark:border-rose-900/40">
             {createReport.error instanceof Error ? createReport.error.message : 'Không thể gửi báo cáo. Vui lòng thử lại.'}
           </p>
         )}

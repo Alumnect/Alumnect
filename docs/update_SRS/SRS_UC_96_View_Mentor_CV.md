@@ -107,7 +107,7 @@ Module Quản trị hệ thống quản lý các tài khoản người dùng, b�
 | 1 | MSG_UC96_01 | Toast / Modal | Tải thông tin CV Mentor thành công | Tải CV Mentor thành công |
 | 2 | MSG_UC96_02 | Inline Error | Không tìm thấy hồ sơ Mentor | Không tìm thấy hồ sơ Mentor với ID: {mentorId} |
 | 3 | MSG_UC96_03 | Inline Error | Mentor chưa cập nhật tệp CV | Mentor này chưa cập nhật tệp CV lên hệ thống |
-| 4 | MSG_UC96_04 | Alert Banner | Từ chối truy cập do thiếu quyền Admin | Access Denied: Bạn không có quyền truy cập chức năng này |
+| 4 | MSG_UC96_04 | Alert Banner | Từ chối truy cập do thiếu quyền Admin | Access Denied: Người dùng không có quyền truy cập chức năng này |
 
 ---
 

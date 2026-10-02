@@ -1,13 +1,14 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import { EASE_OUT } from '@/lib/motion'
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none'
 
 const offset: Record<Direction, { x: number; y: number }> = {
-  up: { x: 0, y: 34 },
-  down: { x: 0, y: -34 },
-  left: { x: 44, y: 0 },
-  right: { x: -44, y: 0 },
+  up: { x: 0, y: 20 },
+  down: { x: 0, y: -20 },
+  left: { x: 28, y: 0 },
+  right: { x: -28, y: 0 },
   none: { x: 0, y: 0 },
 }
 
@@ -39,10 +40,10 @@ export function Reveal({
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, x, y, filter: blur ? 'blur(6px)' : 'blur(0px)' }}
-      whileInView={{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
+      initial={blur ? { opacity: 0, x, y, filter: 'blur(6px)' } : { opacity: 0, x, y }}
+      whileInView={blur ? { opacity: 1, x: 0, y: 0, filter: 'blur(0px)' } : { opacity: 1, x: 0, y: 0 }}
       viewport={{ once, margin: '0px' }}
-      transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration, delay, ease: EASE_OUT }}
     >
       {children}
     </motion.div>
@@ -81,8 +82,8 @@ export function StaggerItem({ children, className }: { children: ReactNode; clas
     <motion.div
       className={className}
       variants={{
-        hidden: { opacity: 0, y: 16 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+        hidden: { opacity: 0, y: 14 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE_OUT } },
       }}
     >
       {children}

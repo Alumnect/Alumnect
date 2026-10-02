@@ -77,7 +77,162 @@ stateDiagram-v2
 
 ---
 
-## PHẦN 2: THIẾT KẾ KỸ THUẬT (REPORT 4)
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-EV-ATT-01 | Toast message | Lấy danh sách người tham gia thành công | Lấy danh sách người tham gia sự kiện thành công! |
+| 2 | MSG-EV-ATT-02 | EmptyState | Sự kiện chưa có người đăng ký tham gia | Chưa có ai đăng ký tham gia sự kiện này. Hãy là người đầu tiên! |
+| 3 | MSG-EV-ATT-03 | EmptyState | Tìm kiếm tên không có kết quả | Không tìm thấy người tham gia nào phù hợp với từ khóa. |
+| 4 | MSG-EV-ATT-04 | Alert Modal | Khách chưa đăng nhập bấm xem danh sách | Vui lòng đăng nhập để xem danh sách thành viên tham gia sự kiện. |
+| 5 | MSG-EV-ATT-05 | Toast Error | Sự kiện không tồn tại | Không tìm thấy sự kiện. |
+
+---
+
+## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
+
+### 3. Detail Design (Thiết kế chi tiết)
+
+#### 3.1 UC29 Xem danh sách người tham gia sự kiện (View Event Attendee List)
+
+##### 3.1.1 Class Diagram (Sơ đồ Lớp)
+
+```mermaid
+classDiagram
+    %% Controller Layer
+    class EventController {
+        +getEventAttendees(eventId: Long, authentication: Authentication) ResponseEntity~ApiResponse~List~EventAttendeeResponse~~~
+    }
+
+    %% DTO Layer
+    class EventAttendeeResponse {
+        -Long userId
+        -String fullName
+        -String avatarUrl
+        -String headline
+        -String role
+        -Instant registeredAt
+    }
+
+    %% Service Layer
+    class EventService {
+        <<interface>>
+        +getEventAttendees(eventId: Long, viewerEmail: String) List~EventAttendeeResponse~
+    }
+
+    class EventServiceImpl {
+        -EventRepository eventRepository
+        -EventRegistrationRepository registrationRepository
+        -UserRepository userRepository
+        -EventMapper eventMapper
+        +getEventAttendees(eventId: Long, viewerEmail: String) List~EventAttendeeResponse~
+    }
+
+    %% Repository Layer
+    class EventRepository {
+        <<interface>>
+        +existsById(id: Long) boolean
+    }
+
+    class EventRegistrationRepository {
+        <<interface>>
+        +findByEventIdAndStatusOrderByRegisteredAtAsc(eventId: Long, status: RegistrationStatus) List~EventRegistration~
+    }
+
+    class EventRegistration {
+        -Long id
+        -Event event
+        -User attendee
+        -RegistrationStatus status
+        -Instant registeredAt
+    }
+
+    %% Frontend Components & Hooks
+    class EventAttendeesModal {
+        +eventId: number
+        +isOpen: boolean
+        +onClose() void
+    }
+
+    class useEventAttendees {
+        +data: EventAttendeeResponse[]
+        +isLoading: boolean
+    }
+
+    EventController ..> EventService : calls
+    EventServiceImpl ..|> EventService : implements
+    EventServiceImpl --> EventRepository : checks
+    EventServiceImpl --> EventRegistrationRepository : queries
+    EventServiceImpl --> EventRegistration : reads
+    EventServiceImpl ..> EventAttendeeResponse : maps
+    EventAttendeesModal ..> useEventAttendees : uses
+    useEventAttendees ..> EventController : HTTP GET
+```
+
+###### Mô tả chi tiết cấu trúc các lớp (Class Design Description):
+* **Lớp Controller (`EventController.java`)**: Cung cấp API công khai/bảo mật `GET /api/v1/events/{eventId}/attendees` tiếp nhận yêu cầu, trích xuất danh tính người xem và chuyển tiếp xử lý cho `EventService`.
+* **Lớp DTO (`EventAttendeeResponse.java`)**: Chứa thông tin hồ sơ rút gọn của thành viên tham gia sự kiện (mã người dùng, họ tên, avatar, chức danh nghề nghiệp, vai trò, thời gian đăng ký).
+* **Lớp Service (`EventService.java`, `EventServiceImpl.java`)**: Xác minh sự tồn tại của sự kiện, truy vấn các lượt đăng ký có trạng thái `REGISTERED` và chuyển đổi sang danh sách `EventAttendeeResponse`.
+* **Lớp Repository & Entity (`EventRepository.java`, `EventRegistrationRepository.java`, `EventRegistration.java`)**: Thực hiện các câu truy vấn cơ sở dữ liệu đã tạo index tối ưu theo `event_id` và `status`.
+* **Lớp Frontend (`EventAttendeesModal.tsx`, `useEventAttendees.ts`)**: Component modal dạng popup hiển thị danh sách người tham gia, tích hợp ô tìm kiếm real-time và các tab phân loại Sinh viên/Cựu sinh viên.
+
+##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng (Student/Alumni)
+    participant UI as EventAttendeesModal (FE)
+    participant Controller as EventController
+    participant Service as EventServiceImpl
+    participant EventRepo as EventRepository
+    participant RegRepo as EventRegistrationRepository
+    participant DB as PostgreSQL
+
+    User->>UI: Bấm vào số lượng người tham gia trên thẻ sự kiện
+    UI->>Controller: GET /api/v1/events/{eventId}/attendees (Bearer JWT)
+    
+    alt Trường hợp 1: Người dùng chưa đăng nhập (Guest)
+        Controller-->>UI: HTTP 401 Unauthorized
+        UI-->>User: Mở LoginPromptModal nhắc đăng nhập
+        
+    else Trường hợp 2: Đã đăng nhập (Student / Alumni)
+        Controller->>Service: getEventAttendees(eventId, viewerEmail)
+        Service->>EventRepo: existsById(eventId)
+        EventRepo->>DB: SELECT COUNT(*) > 0 FROM events WHERE id = ?
+        DB-->>EventRepo: true / false
+        
+        alt Trường hợp 2.1: Sự kiện không tồn tại
+            EventRepo-->>Service: false
+            Service-->>Controller: throw ResourceNotFoundException("Không tìm thấy sự kiện")
+            Controller-->>UI: HTTP 404 Not Found
+            UI-->>User: Hiển thị Toast lỗi "Không tìm thấy sự kiện"
+            
+        else Trường hợp 2.2: Sự kiện tồn tại hợp lệ
+            EventRepo-->>Service: true
+            Service->>RegRepo: findByEventIdAndStatusOrderByRegisteredAtAsc(eventId, REGISTERED)
+            RegRepo->>DB: SELECT r.*, u.*, p.* FROM event_registrations r JOIN users u ON r.user_id = u.id LEFT JOIN user_profiles p ON u.id = p.user_id WHERE r.event_id = ? AND r.status = 'REGISTERED' ORDER BY r.registered_at ASC
+            DB-->>RegRepo: List<EventRegistration>
+            RegRepo-->>Service: List<EventRegistration>
+            
+            Note over Service: Map sang List<EventAttendeeResponse>
+            Service-->>Controller: List<EventAttendeeResponse>
+            Controller-->>UI: HTTP 200 OK (ApiResponse danh sách người tham gia)
+            
+            alt Danh sách không có ai
+                UI-->>User: Hiển thị thông báo "Chưa có ai đăng ký tham gia"
+            else Có danh sách
+                UI-->>User: Hiển thị Modal danh sách người tham gia, tab lọc & ô tìm kiếm
+            end
+        end
+    end
+```
+
+###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
+1. **Luồng 1 - Thành công (Normal Case)**: Thành viên đã đăng nhập bấm xem danh sách người tham gia. Backend kiểm tra `eventId` tồn tại, truy vấn danh sách `REGISTERED` từ CSDL PostgreSQL, ghép nối thông tin hồ sơ `UserProfile` và trả về `200 OK` kèm mảng `List<EventAttendeeResponse>`. Frontend kết xuất Modal trực quan, hỗ trợ lọc theo vai trò và tìm kiếm trực tiếp.
+2. **Luồng 2 - Ngoại lệ Chưa đăng nhập (Unauthorized Case)**: Khách vãng lai bấm xem danh sách. Backend trả về `401 Unauthorized`. Frontend bắt lỗi và hiển thị popup mời đăng nhập.
+3. **Luồng 3 - Ngoại lệ Sự kiện không tồn tại (Not Found Case)**: `eventId` không có trong hệ thống. Service ném `ResourceNotFoundException` và trả về mã lỗi `HTTP 404 Not Found`.
+
 
 ### 1. Database Schema
 

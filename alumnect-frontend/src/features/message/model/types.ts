@@ -44,6 +44,8 @@ export interface Conversation {
   adminId?: number | null
   lastMessage?: string
   unreadCount: number
+  communityGroupId?: number | null
+  communityGroupName?: string | null
 }
 
 /** Kiểm tra cuộc hội thoại có phải là nhóm hay không */

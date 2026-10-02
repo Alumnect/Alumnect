@@ -6,19 +6,19 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DanhSachBaiViet : Admin truy cập /admin/posts hoặc /admin/posts/:id
+    [*] --> DanhSachBaiViet : Admin truy cập /admin/posts hoặc /admin/posts/{id}
     DanhSachBaiViet --> MoModalXacNhan : Nhấp nút "Ẩn" / "Mở ẩn"
     MoModalXacNhan --> HuyBo : Click "Hủy" hoặc đóng Modal
     HuyBo --> DanhSachBaiViet : Giữ nguyên trạng thái bài viết
     MoModalXacNhan --> GuiYeuCauToggle : Click "Xác nhận"
-    GuiYeuCauToggle --> CapNhatDatabase : PUT /api/v1/admin/posts/:id/status (hidden=true/false)
+    GuiYeuCauToggle --> CapNhatDatabase : PUT /api/v1/admin/posts/{id}/status (hidden=true/false)
     CapNhatDatabase --> GuiThongBaoTacGia : Nếu hidden=true, tự động gửi thông báo vi phạm đến tác giả
     GuiThongBaoTacGia --> CapNhatUIThanhCong : 200 OK (Toast thông báo thành công & refetch UI)
     CapNhatUIThanhCong --> [*] : Hoàn thành
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-* **Bước 1 - Khởi đầu**: Quản trị viên (Admin) phát hiện một bài viết vi phạm tiêu chuẩn cộng đồng (từ trang Quản lý bài viết `/admin/posts` hoặc trang Chi tiết bài viết `/admin/posts/:id` hoặc hàng đợi báo cáo `/admin/reports`).
+* **Bước 1 - Khởi đầu**: Quản trị viên (Admin) phát hiện một bài viết vi phạm tiêu chuẩn cộng đồng (từ trang Quản lý bài viết `/admin/posts` hoặc trang Chi tiết bài viết `/admin/posts/{id}` hoặc hàng đợi báo cáo `/admin/reports`).
 * **Bước 2 - Yêu cầu Thao tác**: Admin nhấp vào nút "Ẩn" (icon `EyeOff`) trên hàng của bài viết tương ứng. Hệ thống hiển thị hộp thoại Modal cảnh báo xác nhận hành động.
 * **Bước 3 - Xác nhận & Xử lý**:
   * Admin nhấn nút "Ẩn bài viết" trên Modal.
@@ -36,7 +36,7 @@ stateDiagram-v2
 #### 3.2.1 Ẩn hoặc hiển thị lại bài viết vi phạm (UC68)
 
 **Function trigger**:
-*   **Navigation path**: /admin/posts (hoặc /admin/posts/:id) -> Click nút Ẩn/Mở tại cột Thao tác -> Xác nhận trên Modal.
+*   **Navigation path**: /admin/posts (hoặc /admin/posts/{id}) -> Click nút Ẩn/Mở tại cột Thao tác -> Xác nhận trên Modal.
 *   **Timing Frequency**: On demand (bất cứ khi nào Admin muốn xử lý bài viết vi phạm).
 
 **Function description**:

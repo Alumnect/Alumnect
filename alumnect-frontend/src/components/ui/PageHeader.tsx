@@ -1,8 +1,17 @@
-import type { ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, type ReactNode } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Info, X } from 'lucide-react'
+import { TRANSITION } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
-/** Consistent page title block for app & admin screens. */
+/**
+ * Consistent page title block for app & admin screens.
+ * Thiết kế siêu tối giản (Zero-Clutter):
+ * - Bỏ hoàn toàn tiêu đề chữ to và icon trang cồng kềnh ngoài giao diện chính.
+ * - Chỉ để lại 1 nút icon tròn chữ (i) nhỏ nhắn, tinh tế.
+ * - Khi click vào nút (i), popover kính mờ sẽ mở ra hiển thị Tên trang, Icon và Hướng dẫn chi tiết.
+ */
 export function PageHeader({
   title,
   subtitle,
@@ -16,25 +25,73 @@ export function PageHeader({
   icon?: ReactNode
   className?: string
 }) {
+  const [showInfo, setShowInfo] = useState(false)
+  const infoRef = useRef<HTMLDivElement>(null)
+  useClickOutside(infoRef, () => setShowInfo(false), showInfo)
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className={cn('mb-7 flex flex-wrap items-end justify-between gap-4', className)}
-    >
-      <div className="flex items-center gap-3">
-        {icon && (
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-600/30 to-violet-600/20 text-brand-600 ring-1 ring-inset ring-plum-900/10">
-            {icon}
-          </span>
-        )}
-        <div>
-          <h1 className="text-2xl font-extrabold text-plum-900 sm:text-3xl">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-plum-500">{subtitle}</p>}
-        </div>
+    <div className={cn('mb-4 flex items-center justify-between gap-3', className)}>
+      {/* Nút icon tròn chữ (i) duy nhất - Tinh tế, không choán diện tích */}
+      <div className="relative inline-flex" ref={infoRef}>
+        <button
+          type="button"
+          onClick={() => setShowInfo((prev) => !prev)}
+          aria-label="Thông tin & hướng dẫn trang"
+          title="Thông tin & hướng dẫn trang này"
+          className={cn(
+            'group grid h-7 w-7 place-items-center rounded-full border transition-all duration-200 cursor-pointer shadow-2xs',
+            showInfo
+              ? 'border-[#F27024] bg-[#F27024] text-white scale-105 shadow-xs'
+              : 'border-slate-200/90 bg-white/90 text-slate-400 hover:border-[#F27024]/50 hover:bg-orange-50 hover:text-[#F27024] dark:border-[#393a3b] dark:bg-[#242526]/90 dark:text-[#b0b3b8] dark:hover:text-[#F27024]'
+          )}
+        >
+          <Info size={14} strokeWidth={2.4} />
+        </button>
+
+        {/* Popover hiển thị Tên trang + Icon + Hướng dẫn khi người dùng bấm vào (i) */}
+        <AnimatePresence>
+          {showInfo && (
+            <motion.div
+              initial={{ opacity: 0, y: 6, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.95 }}
+              transition={TRANSITION.pop}
+              className="absolute left-0 top-full z-50 mt-2 w-72 sm:w-80 rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-xl backdrop-blur-md dark:border-[#393a3b] dark:bg-[#242526]/95 dark:shadow-black/40"
+            >
+              {/* Header của popover: Icon + Tên trang + Nút đóng X */}
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 dark:border-[#393a3b]">
+                <div className="flex items-center gap-2 min-w-0">
+                  {icon && (
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-orange-50 text-[#F27024] dark:bg-orange-500/20 dark:text-orange-400">
+                      {icon}
+                    </span>
+                  )}
+                  <h3 className="text-sm font-bold text-slate-900 truncate dark:text-white">
+                    {title}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowInfo(false)}
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#3a3b3c] dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+
+              {/* Nội dung thông tin & hướng dẫn */}
+              {subtitle && (
+                <div className="mt-2.5 text-xs leading-relaxed text-slate-600 dark:text-[#e4e6eb]">
+                  {subtitle}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
-    </motion.div>
+
+      {/* Các nút hành động bên phải nếu trang có (ví dụ nút Tạo bài, Đặt câu hỏi...) */}
+      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+    </div>
   )
 }

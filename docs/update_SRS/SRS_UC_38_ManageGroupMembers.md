@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> XemDanhSachThanhVien: Mở GroupInfoModal -> Gọi GET /conversations/{id}/members
+    [*] --> XemDanhSachThanhVien: Mở GroupInfoModal -> Gọi GET /conversations/{conversationId}/members
     XemDanhSachThanhVien --> HienThiDanhSach: Hiển thị danh sách kèm huy hiệu Trưởng nhóm (ADMIN)
     
     state HienThiDanhSach {
@@ -16,16 +16,16 @@ stateDiagram-v2
     }
     
     ThemThanhVien --> ChonThanhVienMoi: Tìm kiếm và tick chọn các người dùng chưa tham gia
-    ChonThanhVienMoi --> GoiApiThemThanhVien: POST /api/v1/conversations/{id}/members (AddMembersRequest)
+    ChonThanhVienMoi --> GoiApiThemThanhVien: POST /api/v1/conversations/{conversationId}/members (AddMembersRequest)
     GoiApiThemThanhVien --> LuuThanhVienMoi: Thêm bản ghi vào conversation_participants (role = MEMBER)
-    LuuThanhVienMoi --> PhatSongThem: Bắn tin nhắn hệ thống SYSTEM ("{A} đã thêm {B} vào nhóm") qua WebSocket
+    LuuThanhVienMoi --> PhatSongThem: Phát sóng tin nhắn hệ thống SYSTEM ("{A} đã thêm {B} vào nhóm") qua WebSocket
     PhatSongThem --> HienThiDanhSach
     
     XoaThanhVien --> XacNhanXoaThanhVien: Modal xác nhận xóa thành viên khỏi nhóm
-    XacNhanXoaThanhVien --> GoiApiXoa: DELETE /api/v1/conversations/{id}/members/{userId}
+    XacNhanXoaThanhVien --> GoiApiXoa: DELETE /api/v1/conversations/{conversationId}/members/{userId}
     GoiApiXoa --> KiemTraQuyenAdmin: Xác minh người thao tác có role = ADMIN
     KiemTraQuyenAdmin --> XoaKhoiNhom: Xóa bản ghi trong conversation_participants
-    XoaKhoiNhom --> PhatSongXoa: Bắn tin nhắn hệ thống SYSTEM ("{Admin} đã xóa {Thành viên} khỏi nhóm")
+    XoaKhoiNhom --> PhatSongXoa: Phát sóng tin nhắn hệ thống SYSTEM ("{Admin} đã xóa {Thành viên} khỏi nhóm")
     PhatSongXoa --> HienThiDanhSach
     
     RoiKhoiNhom --> KiemTraAdminRoi: Kiểm tra người rời có phải là ADMIN duy nhất hay không
@@ -35,12 +35,12 @@ stateDiagram-v2
     KiemTraAdminRoi --> XacNhanRoiThang: Là MEMBER thường hoặc nhóm chỉ còn 1 mình
     
     ChonAdminMoi --> ChonNguoiKeNhiem: Modal bắt buộc chọn thành viên làm Trưởng nhóm mới (newAdminId)
-    ChonNguoiKeNhiem --> GoiApiRoiKemAdmin: DELETE /api/v1/conversations/{id}/members/{myId}?newAdminId={newAdminId}
+    ChonNguoiKeNhiem --> GoiApiRoiKemAdmin: DELETE /api/v1/conversations/{conversationId}/members/{myId}?newAdminId={newAdminId}
     
-    XacNhanRoiThang --> GoiApiRoiThuong: DELETE /api/v1/conversations/{id}/members/{myId}
+    XacNhanRoiThang --> GoiApiRoiThuong: DELETE /api/v1/conversations/{conversationId}/members/{myId}
     
     GoiApiRoiKemAdmin --> CapNhatAdminMoi: Gán role = ADMIN cho người được chọn, xóa người cũ khỏi nhóm
-    CapNhatAdminMoi --> PhatSongChuyenAdmin: Bắn tin nhắn SYSTEM ("{A} đã chuyển quyền cho {B} và rời nhóm")
+    CapNhatAdminMoi --> PhatSongChuyenAdmin: Phát sóng tin nhắn SYSTEM ("{A} đã chuyển quyền cho {B} và rời nhóm")
     PhatSongChuyenAdmin --> DongKhungChat: Loại nhóm khỏi danh sách của người rời, trở về màn hình chờ
     
     GoiApiRoiThuong --> KiemTraGiaiTan: Nếu không còn ai, tự động giải tán nhóm (Xóa conversation)
@@ -149,6 +149,8 @@ stateDiagram-v2
 | **BR-38-03** | Khi một thành viên bị xóa hoặc tự rời khỏi nhóm, họ lập tức mất toàn bộ quyền xem và gửi tin nhắn trong nhóm đó. |
 | **BR-38-04** | Trưởng nhóm khi rời nhóm bắt buộc phải bàn giao quyền cho một thành viên khác nếu nhóm còn người. Hệ thống cập nhật đồng thời trường `role = ADMIN` và `conversations.created_by`. |
 | **BR-38-05** | Mọi biến động về nhân sự trong nhóm (thêm người, xóa người, rời nhóm, chuyển quyền trưởng nhóm) đều được hệ thống ghi nhận bằng một tin nhắn hệ thống (`SYSTEM`) và gửi realtime qua WebSocket. |
+| **BR-38-06** | **Ràng buộc với Nhóm chat Hội nhóm (`community_group_id != null`)**: Chủ sở hữu Hội nhóm nắm giữ quyền `ADMIN` cố định và **tuyệt đối không được phép tự rời nhóm chat** (`400 Bad Request`). Muốn rời, Chủ sở hữu phải chuyển quyền sở hữu Hội nhóm tại trang Quản lý hội nhóm. |
+| **BR-38-07** | **Đồng bộ tự động với Hội nhóm**: Khi một thành viên rời Hội nhóm hoặc bị Ban quản trị xóa khỏi Hội nhóm, hệ thống tự động xóa người đó khỏi nhóm chat. Khi Chủ sở hữu Hội nhóm chuyển quyền sở hữu, quyền `ADMIN` nhóm chat tự động được bàn giao cho Chủ sở hữu mới. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 * Danh sách thành viên hiển thị rõ ràng, có phân trang hoặc thanh cuộn mượt mà nếu nhóm đông người.
@@ -169,6 +171,7 @@ stateDiagram-v2
 | 8 | `MSG-MBR-08` | System message | Thông báo xóa thành viên | {Tên Admin} đã xóa {Tên thành viên} khỏi nhóm. |
 | 9 | `MSG-MBR-09` | System message | Thông báo rời nhóm thường | {Tên người dùng} đã rời nhóm. |
 | 10 | `MSG-MBR-10` | System message | Thông báo chuyển quyền & rời nhóm | {Tên Admin cũ} đã chuyển quyền cho {Tên Admin mới} và rời nhóm. |
+| 11 | `MSG-MBR-11` | Toast message (Error) | Owner Hội nhóm cố tình bấm rời nhóm chat | Bạn là Chủ sở hữu của hội nhóm này nên không thể rời khỏi nhóm trò chuyện. Nếu muốn chuyển quyền, vui lòng chuyển quyền sở hữu hội nhóm tại trang Quản lý hội nhóm. |
 
 ---
 
@@ -253,17 +256,35 @@ classDiagram
         +handleLeaveGroup(newAdminId?: number): void
     }
 
+    class useGroupMembers {
+        +data: ParticipantResponse[]
+        +isLoading: boolean
+    }
+
+    class useAddMembers {
+        +mutate(params: { conversationId: number, payload: AddMembersRequest }): void
+    }
+
+    class useRemoveMember {
+        +mutate(params: { conversationId: number, userId: number, newAdminId?: number }): void
+    }
+
     class chatApi {
-        +getGroupMembers(id: number): Promise~ApiResponse~ParticipantResponse[]~~
-        +addMembers(id: number, req: AddMembersRequest): Promise~ApiResponse~Conversation~~~~
-        +removeMember(id: number, userId: number, newAdminId?: number): Promise~ApiResponse~void~~
+        +getGroupMembers(conversationId: number): Promise~ApiResponse~ParticipantResponse[]~~
+        +addMembers(conversationId: number, payload: AddMembersRequest): Promise~ApiResponse~Conversation~~~~
+        +removeMember(conversationId: number, userId: number, newAdminId?: number): Promise~ApiResponse~void~~
     }
 
     ChatController --> ChatService : ủy quyền xử lý
     ChatServiceImpl ..|> ChatService : hiện thực hóa
     ChatServiceImpl --> ConversationParticipantRepository : thao tác bản ghi thành viên
     ChatServiceImpl --> MessageRepository : lưu tin nhắn SYSTEM
-    GroupInfoModal --> chatApi : gọi các API quản lý thành viên
+    GroupInfoModal --> useGroupMembers : nạp danh sách thành viên
+    GroupInfoModal --> useAddMembers : kích hoạt thêm thành viên
+    GroupInfoModal --> useRemoveMember : kích hoạt xóa/rời nhóm
+    useGroupMembers --> chatApi : gọi GET /conversations/{conversationId}/members
+    useAddMembers --> chatApi : gọi POST /conversations/{conversationId}/members
+    useRemoveMember --> chatApi : gọi DELETE /conversations/{conversationId}/members/{userId}
     chatApi ..> ChatController : HTTP REST
 ```
 
@@ -289,7 +310,7 @@ sequenceDiagram
         activate Modal
         Modal ->> Api: chatApi.addMembers(conversationId, { memberIds })
         activate Api
-        Api ->> Controller: POST /api/v1/conversations/{id}/members
+        Api ->> Controller: POST /api/v1/conversations/{conversationId}/members
         activate Controller
         Controller ->> Service: addMembers(email, conversationId, request)
         activate Service
@@ -326,7 +347,7 @@ sequenceDiagram
         Admin ->> Modal: Xác nhận đồng ý
         Modal ->> Api: chatApi.removeMember(conversationId, targetUserId)
         activate Api
-        Api ->> Controller: DELETE /api/v1/conversations/{id}/members/{targetUserId}
+        Api ->> Controller: DELETE /api/v1/conversations/{conversationId}/members/{targetUserId}
         activate Controller
         Controller ->> Service: removeMember(email, conversationId, targetUserId, null)
         activate Service
@@ -361,7 +382,7 @@ sequenceDiagram
         Admin ->> Modal: Chọn thành viên B làm Trưởng nhóm mới -> Bấm "Xác nhận rời"
         Modal ->> Api: chatApi.removeMember(conversationId, adminId, newAdminId)
         activate Api
-        Api ->> Controller: DELETE /api/v1/conversations/{id}/members/{adminId}?newAdminId={newAdminId}
+        Api ->> Controller: DELETE /api/v1/conversations/{conversationId}/members/{adminId}?newAdminId={newAdminId}
         activate Controller
         Controller ->> Service: removeMember(email, conversationId, adminId, newAdminId)
         activate Service

@@ -4,6 +4,9 @@ import { FileText, Download, ZoomIn, Clock, Check, AlertCircle } from 'lucide-re
 import { cn } from '@/lib/utils'
 import { Avatar, ImageViewerModal } from '@/components/ui'
 import type { Message } from '../model/types'
+import { SharedPostBubbleCard } from './SharedPostBubbleCard'
+import { SharedGroupBubbleCard } from './SharedGroupBubbleCard'
+import { SharedGroupPostBubbleCard } from './SharedGroupPostBubbleCard'
 
 interface MessageBubbleProps {
   message: Message
@@ -100,7 +103,10 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                       </div>
                     </button>
                     {!hasText && (
-                      <span className="pointer-events-none absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
+                      <span className={cn(
+                        'pointer-events-none absolute bottom-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs',
+                        isMe ? 'right-2' : 'left-2'
+                      )}>
                         <span>{formattedTime}</span>
                         {isMe && message.status === 'sending' && <Clock size={10} className="animate-spin text-white/80" />}
                         {isMe && message.status === 'error' && <AlertCircle size={10} className="text-rose-400" />}
@@ -123,7 +129,10 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                       className="max-h-80 w-full rounded-2xl"
                     />
                     {!hasText && (
-                      <span className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
+                      <span className={cn(
+                        'pointer-events-none absolute bottom-3 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs',
+                        isMe ? 'right-3' : 'left-3'
+                      )}>
                         <span>{formattedTime}</span>
                         {isMe && message.status === 'sending' && <Clock size={10} className="animate-spin text-white/80" />}
                         {isMe && message.status === 'error' && <AlertCircle size={10} className="text-rose-400" />}
@@ -166,44 +175,174 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
           </div>
         )}
 
-        {/* 2. Bong bóng văn bản */}
-        {hasText && (
-          <div
-            className={cn(
-              'w-fit rounded-2xl px-4 py-2.5 shadow-xs',
-              isMe
-                ? 'rounded-br-xs bg-brand-600 text-white'
-                : 'rounded-bl-xs border border-plum-900/10 bg-white text-plum-900 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]'
-            )}
-          >
-            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-              {message.content}
-            </p>
-            <div
-              className={cn(
-                'mt-1 flex items-center justify-end gap-1 text-[10px]',
-                isMe ? 'text-white/75' : 'text-plum-400 dark:text-[#b0b3b8]'
+        {/* 2. Bong bóng văn bản & bài viết chia sẻ */}
+        {hasText && (() => {
+          const POST_LINK_REGEX = /(?:https?:\/\/[^\s]+)?\/app\/posts\/(\d+)/
+          const GROUP_POST_LINK_REGEX = /(?:https?:\/\/[^\s]+)?\/app\/groups\/(\d+)\?(?:[^\s]*&)?postId=(\d+)/
+          const GROUP_LINK_REGEX = /(?:https?:\/\/[^\s]+)?\/app\/groups\/(\d+)(?:\?[^\s]*)?/
+
+          const postMatch = message.content ? message.content.match(POST_LINK_REGEX) : null
+          const groupPostMatch = !postMatch && message.content ? message.content.match(GROUP_POST_LINK_REGEX) : null
+          const groupMatch = !postMatch && !groupPostMatch && message.content ? message.content.match(GROUP_LINK_REGEX) : null
+
+          const sharedPostId = postMatch ? postMatch[1] : null
+          const sharedGroupPost = groupPostMatch ? { groupId: groupPostMatch[1], postId: groupPostMatch[2] } : null
+          const sharedGroupId = groupMatch ? groupMatch[1] : null
+
+          const linkRegex = postMatch
+            ? POST_LINK_REGEX
+            : groupPostMatch
+              ? GROUP_POST_LINK_REGEX
+              : groupMatch
+                ? GROUP_LINK_REGEX
+                : null
+
+          const noteText = message.content && linkRegex
+            ? message.content.replace(linkRegex, '').trim()
+            : message.content
+
+          return (
+            <div className={cn('flex flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
+              {noteText ? (
+                <div
+                  className={cn(
+                    'w-fit rounded-2xl px-4 py-2.5 shadow-xs',
+                    isMe
+                      ? 'rounded-br-xs bg-brand-600 text-white'
+                      : 'rounded-bl-xs border border-plum-900/10 bg-white text-plum-900 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]'
+                  )}
+                >
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                    {noteText}
+                  </p>
+                  <div
+                    className={cn(
+                      'mt-1 flex items-center gap-1 text-[10px]',
+                      isMe ? 'justify-end text-white/75' : 'justify-start text-plum-400 dark:text-[#b0b3b8]'
+                    )}
+                  >
+                    <span>{formattedTime}</span>
+                    {isMe && message.status === 'sending' && (
+                      <span title="Đang gửi..." className="inline-flex items-center text-white/70">
+                        <Clock size={11} className="animate-spin" />
+                      </span>
+                    )}
+                    {isMe && message.status === 'error' && (
+                      <span title="Gửi thất bại" className="inline-flex items-center text-rose-300">
+                        <AlertCircle size={11} />
+                      </span>
+                    )}
+                    {isMe && (!message.status || message.status === 'sent') && (
+                      <span title="Đã gửi" className="inline-flex items-center text-white/70">
+                        <Check size={11} />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Render thẻ bài viết nhúng interactive nếu có liên kết bài viết bảng tin */}
+              {sharedPostId && (
+                <div className="relative">
+                  <SharedPostBubbleCard postId={sharedPostId} isMe={isMe} />
+                  {!noteText && (
+                    <div
+                      className={cn(
+                        'mt-1 flex items-center gap-1 px-1.5 text-[11px] font-medium',
+                        isMe ? 'justify-end text-plum-500 dark:text-[#b0b3b8]' : 'justify-start text-slate-400 dark:text-[#8a8d91]'
+                      )}
+                    >
+                      <span>{formattedTime}</span>
+                      {isMe && message.status === 'sending' && (
+                        <span title="Đang gửi..." className="inline-flex items-center text-brand-600">
+                          <Clock size={11} className="animate-spin" />
+                        </span>
+                      )}
+                      {isMe && message.status === 'error' && (
+                        <span title="Gửi thất bại" className="inline-flex items-center text-rose-500">
+                          <AlertCircle size={11} />
+                        </span>
+                      )}
+                      {isMe && (!message.status || message.status === 'sent') && (
+                        <span title="Đã gửi" className="inline-flex items-center text-emerald-600">
+                          <Check size={11} />
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-            >
-              <span>{formattedTime}</span>
-              {isMe && message.status === 'sending' && (
-                <span title="Đang gửi..." className="inline-flex items-center text-white/70">
-                  <Clock size={11} className="animate-spin" />
-                </span>
+
+              {/* Render thẻ bài viết hội nhóm nhúng interactive nếu có liên kết bài viết nhóm */}
+              {sharedGroupPost && (
+                <div className="relative">
+                  <SharedGroupPostBubbleCard
+                    groupId={sharedGroupPost.groupId}
+                    postId={sharedGroupPost.postId}
+                    isMe={isMe}
+                  />
+                  {!noteText && (
+                    <div
+                      className={cn(
+                        'mt-1 flex items-center gap-1 px-1.5 text-[11px] font-medium',
+                        isMe ? 'justify-end text-plum-500 dark:text-[#b0b3b8]' : 'justify-start text-slate-400 dark:text-[#8a8d91]'
+                      )}
+                    >
+                      <span>{formattedTime}</span>
+                      {isMe && message.status === 'sending' && (
+                        <span title="Đang gửi..." className="inline-flex items-center text-brand-600">
+                          <Clock size={11} className="animate-spin" />
+                        </span>
+                      )}
+                      {isMe && message.status === 'error' && (
+                        <span title="Gửi thất bại" className="inline-flex items-center text-rose-500">
+                          <AlertCircle size={11} />
+                        </span>
+                      )}
+                      {isMe && (!message.status || message.status === 'sent') && (
+                        <span title="Đã gửi" className="inline-flex items-center text-emerald-600">
+                          <Check size={11} />
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-              {isMe && message.status === 'error' && (
-                <span title="Gửi thất bại" className="inline-flex items-center text-rose-300">
-                  <AlertCircle size={11} />
-                </span>
-              )}
-              {isMe && (!message.status || message.status === 'sent') && (
-                <span title="Đã gửi" className="inline-flex items-center text-white/70">
-                  <Check size={11} />
-                </span>
+
+              {/* Render thẻ hội nhóm nhúng interactive nếu có liên kết hội nhóm */}
+              {sharedGroupId && (
+                <div className="relative">
+                  <SharedGroupBubbleCard groupId={sharedGroupId} isMe={isMe} />
+                  {!noteText && (
+                    <div
+                      className={cn(
+                        'mt-1 flex items-center gap-1 px-1.5 text-[11px] font-medium',
+                        isMe ? 'justify-end text-plum-500 dark:text-[#b0b3b8]' : 'justify-start text-slate-400 dark:text-[#8a8d91]'
+                      )}
+                    >
+                      <span>{formattedTime}</span>
+                      {isMe && message.status === 'sending' && (
+                        <span title="Đang gửi..." className="inline-flex items-center text-brand-600">
+                          <Clock size={11} className="animate-spin" />
+                        </span>
+                      )}
+                      {isMe && message.status === 'error' && (
+                        <span title="Gửi thất bại" className="inline-flex items-center text-rose-500">
+                          <AlertCircle size={11} />
+                        </span>
+                      )}
+                      {isMe && (!message.status || message.status === 'sent') && (
+                        <span title="Đã gửi" className="inline-flex items-center text-emerald-600">
+                          <Check size={11} />
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Lightbox xem ảnh */}
         {previewImage && (

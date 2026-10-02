@@ -13,7 +13,7 @@
  */
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Map as MapIcon, SlidersHorizontal, Search, MapPin, Loader2, GraduationCap, ChevronDown, Check } from 'lucide-react'
-import { Badge, Card, EmptyState, Skeleton, Avatar } from '@/components/ui'
+import { PageHeader, Badge, Card, EmptyState, Skeleton, Avatar } from '@/components/ui'
 import { Reveal } from '@/components/motion'
 import { AlumniMapLibre } from '@/features/alumnimap/components/AlumniMapLibre'
 import { useAlumniMap } from '@/features/alumnimap/hooks/useAlumniMap'
@@ -267,20 +267,13 @@ export function MapPage() {
 
   return (
     <div className="mx-auto flex min-h-0 w-full flex-col px-1 sm:px-2 xl:h-[calc(100dvh-88px)] xl:overflow-hidden">
-      {/* Header */}
-      <div className="mb-3 flex w-full flex-wrap items-center justify-center gap-4">
-        <div className="flex items-center justify-center gap-3 text-center">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-100 text-brand-600 shadow-sm">
-            <MapIcon size={20} />
-          </div>
-          <div>
-            <h1 className="text-lg font-extrabold leading-none text-plum-900 sm:text-xl">Bản đồ mạng lưới Alumni</h1>
-            <p className="text-xs text-plum-400 mt-1.5 leading-none">
-              Khám phá cộng đồng cựu sinh viên FPTU trên toàn cầu.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Header siêu tối giản đồng bộ toàn hệ thống */}
+      <PageHeader
+        title="Bản đồ mạng lưới Alumni"
+        subtitle="Khám phá cộng đồng cựu sinh viên FPTU trên toàn cầu."
+        icon={<MapIcon size={18} />}
+        className="mb-2"
+      />
 
       {/* 5-Column Grid */}
       <div className="grid min-h-0 grid-cols-1 gap-4 xl:flex-1 xl:grid-cols-5 xl:overflow-hidden">

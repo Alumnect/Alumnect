@@ -53,7 +53,13 @@ public class Endpoints {
         "/api/v1/career-paths",       // Lấy danh sách Career Paths phân trang công khai
         "/api/v1/career-paths/users/*", // Lấy chi tiết Career Path của người dùng công khai
         "/api/v1/events/*/rsvp",      // Kiểm tra trạng thái đăng ký sự kiện công khai (UC25)
-        "/api/v1/events/*/attendees", // Lấy danh sách người tham gia sự kiện công khai (UC25)
+        "/api/v1/events/*/attendees",  // Lấy danh sách người tham gia sự kiện công khai (UC25)
+        "/api/v1/groups",             // Khám phá danh sách hội nhóm — Guest xem được
+        "/api/v1/groups/{groupId:\\d+}",         // Chi tiết hội nhóm (nhóm riêng tư chỉ lộ thông tin công khai) — chỉ khớp id số, không khớp /groups/my-groups
+        "/api/v1/groups/{groupId:\\d+}/members", // Danh sách thành viên — Service tự chặn nhóm riêng tư với người ngoài nhóm
+        "/api/v1/groups/{groupId:\\d+}/posts",   // Danh sách thảo luận trong nhóm — Service tự chặn nhóm riêng tư với người ngoài nhóm
+        "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}", // Chi tiết bài viết thảo luận trong nhóm
+        "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}/comments", // Danh sách bình luận trong bài viết
         "/api/v1/admin/mentor-packages" // Lấy danh sách toàn bộ gói Mentor dành cho Admin (UC95)
     };
 

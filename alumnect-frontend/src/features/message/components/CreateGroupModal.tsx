@@ -62,7 +62,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
         const res = await chatApi.searchUsersForChat(search.trim())
         if (isMounted) {
           const list = (res.data || [])
-            .filter((u) => u.userId !== currentUserId)
+            .filter((u) => String(u.userId) !== String(currentUserId))
             .map((u) => ({
               id: u.userId,
               fullName: u.fullName,
@@ -94,7 +94,14 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!groupName.trim() || selectedUserIds.length === 0) return
+    if (!groupName.trim()) {
+      toast.error('Vui lòng nhập tên nhóm trò chuyện.')
+      return
+    }
+    if (selectedUserIds.length === 0) {
+      toast.error('Vui lòng chọn ít nhất 1 thành viên khác vào nhóm.')
+      return
+    }
 
     try {
       const res = await createGroupMutation.mutateAsync({
@@ -102,6 +109,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
         avatarUrl: avatarUrl || undefined,
         memberIds: selectedUserIds,
       })
+      toast.success('Tạo nhóm trò chuyện thành công!')
       onCreated(res.data)
       onClose()
       setGroupName('')
@@ -110,6 +118,18 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
       setSearch('')
     } catch (err: any) {
       console.error('Lỗi tạo nhóm:', err)
+      let errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Không thể tạo nhóm trò chuyện. Vui lòng thử lại.'
+      const fieldErrors = err?.data?.data || err?.response?.data?.data
+      if (fieldErrors && typeof fieldErrors === 'object' && !Array.isArray(fieldErrors)) {
+        const firstVal = Object.values(fieldErrors)[0]
+        if (typeof firstVal === 'string') {
+          errorMsg = firstVal
+        }
+      }
+      toast.error(errorMsg)
     }
   }
 

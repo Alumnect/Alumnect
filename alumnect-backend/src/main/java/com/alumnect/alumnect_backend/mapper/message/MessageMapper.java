@@ -109,6 +109,9 @@ public class MessageMapper {
             avatarUrl = recipientAvatar;
         }
 
+        Long communityGroupId = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getId() : null;
+        String communityGroupName = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getName() : null;
+
         return ConversationResponse.builder()
                 .id(conversation.getId())
                 .type(conversation.getType())
@@ -126,6 +129,8 @@ public class MessageMapper {
                 .adminId(conversation.getCreatedBy() != null ? conversation.getCreatedBy().getId() : null)
                 .lastMessage(lastMessageSnippet)
                 .unreadCount(unreadCount)
+                .communityGroupId(communityGroupId)
+                .communityGroupName(communityGroupName)
                 .build();
     }
 
