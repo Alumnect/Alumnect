@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Award, AlertCircle, Clock, CheckCircle2, Lock, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react'
+import { Award, AlertCircle, Clock, CheckCircle2, Lock, ArrowRight } from 'lucide-react'
 import { Card, Skeleton, Badge, Button } from '@/components/ui'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { vnd } from '@/lib/utils'

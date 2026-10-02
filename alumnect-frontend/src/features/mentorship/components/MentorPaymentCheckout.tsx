@@ -98,6 +98,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
           orderCode: 0,
           amount: mySubscription.priceAtPurchase,
           paymentStatus: 'PAID',
+          paymentExpiresAt: mySubscription.endDate || '',
           subscriptionStatus: 'ACTIVE',
           mentorStatus: 'ACTIVE',
           subscriptionStartDate: mySubscription.startDate,
