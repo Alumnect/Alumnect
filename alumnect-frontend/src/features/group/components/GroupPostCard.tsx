@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Crown,
@@ -15,7 +15,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react'
-import { toast, ImageViewerModal } from '@/components/ui'
+import { toast, ImageViewerModal, ImageCarousel } from '@/components/ui'
 import { Avatar, Badge, Card } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
 import { TRANSITION } from '@/lib/motion'
@@ -67,12 +67,16 @@ interface GroupPostCardProps {
   isActiveMember: boolean
   isGroupActive: boolean
   topics: string[]
+  /** Chế độ trang chi tiết bài viết: mở sẵn khung bình luận, thời gian không còn là liên kết. */
+  detailMode?: boolean
+  /** Gọi sau khi xóa bài viết thành công (trang chi tiết dùng để quay về hội nhóm). */
+  onDeleted?: () => void
 }
 
-export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, topics }: GroupPostCardProps) {
+export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, topics, detailMode = false, onDeleted }: GroupPostCardProps) {
   const now = useSyncExternalStore(subscribeToMinute, getMinuteSnapshot, getMinuteSnapshot) * 60000
   const currentUser = useAuthStore((s) => s.user)
-  const [showComments, setShowComments] = useState(false)
+  const [showComments, setShowComments] = useState(detailMode)
   const [commentText, setCommentText] = useState('')
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [replyText, setReplyText] = useState('')
@@ -82,8 +86,10 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
   const [editingCommentText, setEditingCommentText] = useState('')
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
+  const imageCount = post.imageUrls?.length ?? 0
   const [shareModalOpen, setShareModalOpen] = useState(false)
+  const navigate = useNavigate()
 
   // Mutations
   const likeMutation = useToggleGroupPostLikeMutation(groupId)
@@ -123,7 +129,10 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
   const handleDeletePost = () => {
     deleteMutation.mutate(post.id, {
-      onSuccess: () => setConfirmDelete(false),
+      onSuccess: () => {
+        setConfirmDelete(false)
+        onDeleted?.()
+      },
     })
   }
 
@@ -159,6 +168,14 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
     }
   }
 
+  // Bấm vào thẻ bài viết (ngoài các phần tương tác) thì mở trang chi tiết — giống bài viết ở bảng tin.
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (detailMode) return
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, select, video, [role="button"], [data-interactive]')) return
+    navigate(`/app/groups/${groupId}/posts/${post.id}`)
+  }
+
   const handleShare = () => {
     setShareModalOpen(true)
   }
@@ -192,7 +209,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
   return (
     <>
-      <Card hover={false} id={`group-post-${post.id}`} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+      <Card hover={false} id={`group-post-${post.id}`} onClick={handleCardClick} className={cn('rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]', !detailMode && 'cursor-pointer')}>
         {/* Header: Author + Role + Time + Pinned status + Menu */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -228,7 +245,13 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               </div>
 
               <div className="flex items-center gap-2 text-xs text-plum-400">
-                <span>{formatTime(post.createdAt)}</span>
+                {detailMode ? (
+                  <span>{formatTime(post.createdAt)}</span>
+                ) : (
+                  <Link to={`/app/groups/${groupId}/posts/${post.id}`} className="hover:underline" title="Xem chi tiết bài viết">
+                    {formatTime(post.createdAt)}
+                  </Link>
+                )}
                 {post.updatedAt && new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime() > 10000 && (
                   <span>• Đã chỉnh sửa</span>
                 )}
@@ -257,7 +280,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                 <MoreHorizontal size={18} />
               </button>
 
-              {menuOpen && <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />}
+              {menuOpen && <div data-interactive className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />}
               <AnimatePresence>
                 {menuOpen && (
                   <motion.div
@@ -322,97 +345,20 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
           {post.content}
         </p>
 
-        {/* Thư viện hình ảnh đính kèm */}
+        {/* Ảnh đính kèm: băng chuyền có nút Trước/Sau, kéo/vuốt để chuyển ảnh, bấm ảnh để xem phóng to (giống bài viết thường) */}
         {post.imageUrls && post.imageUrls.length > 0 && (
-          <div className="mt-3.5 overflow-hidden rounded-2xl border border-plum-900/10 dark:border-[#393a3b]">
-            {post.imageUrls.length === 1 && (
-              <img
-                src={post.imageUrls[0]}
-                alt="Đính kèm"
-                loading="lazy"
-                decoding="async"
-                onClick={() => setPreviewImage(post.imageUrls[0])}
-                className="max-h-[460px] w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
-              />
-            )}
-
-            {post.imageUrls.length === 2 && (
-              <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
-                {post.imageUrls.map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt="Đính kèm"
-                    loading="lazy"
-                    decoding="async"
-                    onClick={() => setPreviewImage(url)}
-                    className="h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
-                  />
-                ))}
-              </div>
-            )}
-
-            {post.imageUrls.length === 3 && (
-              <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
-                <img
-                  src={post.imageUrls[0]}
-                  alt="Đính kèm"
-                  loading="lazy"
-                  decoding="async"
-                  onClick={() => setPreviewImage(post.imageUrls[0])}
-                  className="col-span-2 h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
-                />
-                {post.imageUrls.slice(1).map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt="Đính kèm"
-                    loading="lazy"
-                    decoding="async"
-                    onClick={() => setPreviewImage(url)}
-                    className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
-                  />
-                ))}
-              </div>
-            )}
-
-            {post.imageUrls.length >= 4 && (
-              <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
-                {post.imageUrls.slice(0, 3).map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt="Đính kèm"
-                    loading="lazy"
-                    decoding="async"
-                    onClick={() => setPreviewImage(url)}
-                    className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
-                  />
-                ))}
-                <div
-                  className="relative h-44 cursor-pointer overflow-hidden"
-                  onClick={() => setPreviewImage(post.imageUrls[3])}
-                >
-                  <img
-                    src={post.imageUrls[3]}
-                    alt="Đính kèm"
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition-opacity hover:opacity-95"
-                  />
-                  {post.imageUrls.length > 4 && (
-                    <div className="absolute inset-0 grid place-items-center bg-black/50 text-xl font-black text-white">
-                      +{post.imageUrls.length - 3}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+          <div data-interactive className="mt-3.5 overflow-hidden rounded-2xl border border-plum-900/10 dark:border-[#393a3b]">
+            <ImageCarousel
+              images={post.imageUrls}
+              height={detailMode ? 520 : 420}
+              altPrefix="Ảnh bài viết"
+              onImageClick={(_url, index) => setPreviewIndex(index)}
+            />
           </div>
         )}
 
         {(post.videoUrls ?? []).length > 0 && (
-          <div className="mt-3.5 grid gap-2 sm:grid-cols-2">
+          <div data-interactive className="mt-3.5 grid gap-2 sm:grid-cols-2">
             {post.videoUrls.map((url, index) => (
               <video key={`${url}-${index}`} src={url} controls preload="metadata"
                 aria-label={`Video đính kèm ${index + 1}`}
@@ -480,6 +426,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={TRANSITION.height}
+              data-interactive
               className="-mx-1 overflow-hidden px-1"
             >
               <div className="mt-4 space-y-3.5 border-t border-plum-900/[0.06] pt-3.5 dark:border-[#393a3b]">
@@ -694,9 +641,12 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
       {/* Lightbox xem ảnh toàn màn hình chuẩn Messenger với Zoom, Pan, Rotate, Download */}
       <ImageViewerModal
-        isOpen={!!previewImage}
-        onClose={() => setPreviewImage(null)}
-        src={previewImage || ''}
+        isOpen={previewIndex !== null}
+        onClose={() => setPreviewIndex(null)}
+        src={previewIndex !== null ? (post.imageUrls[previewIndex] ?? '') : ''}
+        onPrev={imageCount > 1 ? () => setPreviewIndex((i) => ((i ?? 0) - 1 + imageCount) % imageCount) : undefined}
+        onNext={imageCount > 1 ? () => setPreviewIndex((i) => ((i ?? 0) + 1) % imageCount) : undefined}
+        counter={imageCount > 1 && previewIndex !== null ? `${previewIndex + 1} / ${imageCount}` : undefined}
         alt="Ảnh bài viết hội nhóm"
         senderName={post.author.fullName}
         senderAvatar={post.author.avatarUrl}

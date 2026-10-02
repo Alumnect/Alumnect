@@ -14,6 +14,7 @@ import { JobsPage } from '@/pages/app/JobsPage'
 import { EventsPage } from '@/pages/app/EventsPage'
 import { GroupsPage } from '@/pages/app/GroupsPage'
 import { GroupDetailPage } from '@/pages/app/GroupDetailPage'
+import { GroupPostDetailPage } from '@/pages/app/GroupPostDetailPage'
 import { ForumPage } from '@/pages/app/ForumPage'
 import { QuestionDetailPage } from '@/pages/app/QuestionDetailPage'
 import { SalaryPage } from '@/pages/app/SalaryPage'
@@ -65,6 +66,7 @@ function App() {
             <Route path="saved" element={<Navigate to="/app/profile?tab=saved" replace />} />
             <Route path="groups" element={<RoleRoute role="ALUMNI"><GroupsPage /></RoleRoute>} />
             <Route path="groups/:id" element={<RoleRoute role="ALUMNI"><GroupDetailPage /></RoleRoute>} />
+            <Route path="groups/:groupId/posts/:postId" element={<RoleRoute role="ALUMNI"><GroupPostDetailPage /></RoleRoute>} />
             <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
             <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
