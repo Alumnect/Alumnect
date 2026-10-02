@@ -9,7 +9,7 @@
  *     + Cột bên (32% sticky): Tóm tắt thông tin cộng đồng và nội quy nhanh.
  */
 import { useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -55,6 +55,10 @@ export function GroupDetailPage() {
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab)
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
+
+  // Liên kết chia sẻ cũ dạng /app/groups/{id}?postId={n} chuyển thẳng sang trang chi tiết bài viết.
+  const sharedPostId = Number(searchParams.get('postId'))
+  if (id && sharedPostId > 0) return <Navigate to={`/app/groups/${id}/posts/${sharedPostId}`} replace />
 
 
   if (isLoading) {
@@ -252,7 +256,6 @@ export function GroupDetailPage() {
                         isActiveMember={isMember}
                         isGroupActive={group.status === 'ACTIVE'}
                         topics={group.topics}
-                        sharedPostId={Number(searchParams.get('postId')) || undefined}
                       />
                     </div>
                     <div className="hidden lg:block">

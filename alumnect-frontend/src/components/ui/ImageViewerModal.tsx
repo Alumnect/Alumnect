@@ -8,7 +8,9 @@ import {
   ExternalLink, 
   ZoomIn, 
   ZoomOut, 
-  RotateCw 
+  RotateCw,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 interface ImageViewerModalProps {
@@ -20,6 +22,11 @@ interface ImageViewerModalProps {
   senderName?: string
   senderAvatar?: string
   time?: string
+  /** Chuyển sang ảnh trước / sau (chỉ truyền khi bài viết có nhiều ảnh); thiếu thì ẩn nút điều hướng. */
+  onPrev?: () => void
+  onNext?: () => void
+  /** Bộ đếm hiển thị ở header, ví dụ "2 / 4". */
+  counter?: string
 }
 
 export function ImageViewerModal({
@@ -31,6 +38,9 @@ export function ImageViewerModal({
   senderName,
   senderAvatar,
   time,
+  onPrev,
+  onNext,
+  counter,
 }: ImageViewerModalProps) {
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
@@ -124,6 +134,10 @@ export function ImageViewerModal({
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose()
+      } else if (e.key === 'ArrowLeft' && onPrev) {
+        onPrev()
+      } else if (e.key === 'ArrowRight' && onNext) {
+        onNext()
       } else if (e.key === '+' || e.key === '=') {
         setZoom((prev) => Math.min(prev + 0.25, 3.5))
       } else if (e.key === '-' || e.key === '_') {
@@ -140,7 +154,7 @@ export function ImageViewerModal({
         setPan({ x: 0, y: 0 })
       }
     },
-    [onClose]
+    [onClose, onPrev, onNext]
   )
 
   useEffect(() => {
@@ -222,6 +236,10 @@ export function ImageViewerModal({
             </div>
           </div>
 
+          {counter ? (
+            <span className="ml-auto mr-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white/90">{counter}</span>
+          ) : null}
+
           {/* Nút Đóng (X) tròn đặc trưng của Messenger ở góc trên bên phải */}
           <button
             type="button"
@@ -261,6 +279,30 @@ export function ImageViewerModal({
             />
           </motion.div>
         </div>
+
+        {/* --- NÚT CHUYỂN ẢNH TRƯỚC / SAU (bài viết nhiều ảnh) --- */}
+        {onPrev && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onPrev() }}
+            title="Ảnh trước (←)"
+            aria-label="Ảnh trước"
+            className="absolute left-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition-all hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
+          >
+            <ChevronLeft size={26} />
+          </button>
+        )}
+        {onNext && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onNext() }}
+            title="Ảnh sau (→)"
+            aria-label="Ảnh sau"
+            className="absolute right-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition-all hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
+          >
+            <ChevronRight size={26} />
+          </button>
+        )}
 
         {/* --- THANH ĐIỀU KHIỂN DOCK NỔI PHÍA DƯỚI (FLOATING TOOLBAR GIỐNG MESSENGER) --- */}
         <div

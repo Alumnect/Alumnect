@@ -17,6 +17,7 @@ export { GroupDiscussionsFeed } from './components/GroupDiscussionsFeed'
 export { GroupSidebarInfo } from './components/GroupSidebarInfo'
 export {
   useGroupPostsInfinite,
+  useGroupPostDetail,
   useCreateGroupPostMutation,
   useDeleteGroupPostMutation,
   useToggleGroupPostLikeMutation,

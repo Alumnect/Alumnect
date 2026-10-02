@@ -154,7 +154,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
     return (
       <div className="mt-1">
         <Link
-          to={`/app/groups/${groupId}?postId=${postId}`}
+          to={`/app/groups/${groupId}/posts/${postId}`}
           className="inline-flex items-center gap-1.5 text-xs underline font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
         >
           <span>Xem bài viết nhóm #{postId}</span>
@@ -168,7 +168,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
 
   return (
     <Link
-      to={`/app/groups/${groupId}?postId=${postId}`}
+      to={`/app/groups/${groupId}/posts/${postId}`}
       className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition-all hover:shadow-md ${
         isMe
           ? 'border-brand-400/40 bg-white/95 text-plum-900 shadow-2xs hover:bg-white dark:border-brand-500/30 dark:bg-[#242526] dark:text-[#f0f2f5]'
