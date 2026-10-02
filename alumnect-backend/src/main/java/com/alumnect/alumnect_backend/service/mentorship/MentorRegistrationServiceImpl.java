@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -239,8 +240,13 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         // 4. Đồng bộ danh mục ngành nghề hỗ trợ (mentor_supported_fields FK -> industries.id)
         if (request.getSupportedIndustryIds() != null) {
             mentorSupportedFieldRepository.deleteByMentorProfileId(savedProfile.getId());
-            if (!request.getSupportedIndustryIds().isEmpty()) {
-                List<Industry> industries = industryRepository.findAllById(request.getSupportedIndustryIds());
+            mentorSupportedFieldRepository.flush(); // Bắt buộc flush DELETE SQL xuống PostgreSQL trước khi chèn danh sách mới
+            List<Long> distinctIndustryIds = request.getSupportedIndustryIds().stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!distinctIndustryIds.isEmpty()) {
+                List<Industry> industries = industryRepository.findAllById(distinctIndustryIds);
                 List<MentorSupportedField> supportedFields = industries.stream()
                         .map(ind -> MentorSupportedField.builder()
                                 .mentorProfile(savedProfile)
@@ -248,13 +254,16 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                                 .build())
                         .collect(Collectors.toList());
                 mentorSupportedFieldRepository.saveAll(supportedFields);
+                mentorSupportedFieldRepository.flush();
             }
         }
 
         // 5. Đồng bộ danh sách chủ đề cố vấn chuyên sâu tự do (mentor_topics)
         if (request.getMentoringTopics() != null) {
             mentorTopicRepository.deleteByMentorProfileId(savedProfile.getId());
+            mentorTopicRepository.flush(); // Bắt buộc flush DELETE SQL xuống PostgreSQL trước khi chèn danh sách mới
             List<MentorTopic> topics = request.getMentoringTopics().stream()
+                    .filter(Objects::nonNull)
                     .map(String::trim)
                     .filter(t -> !t.isEmpty())
                     .distinct()
@@ -265,6 +274,7 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                     .collect(Collectors.toList());
             if (!topics.isEmpty()) {
                 mentorTopicRepository.saveAll(topics);
+                mentorTopicRepository.flush();
             }
         }
 
@@ -438,4 +448,19 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
 
         return missing;
     }
+
+    /**
+     * Kiểm tra tính hoàn thiện 100% của hồ sơ Mentor (tái sử dụng từ UC91).
+     * Dùng chung cho UC92, UC93, UC94 nhằm tránh duplicate logic thẩm định hồ sơ.
+     *
+     * @param userEmail Email của người dùng đã xác thực
+     * @return true nếu hồ sơ đã điền đầy đủ và thỏa mãn mọi ràng buộc UC91
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isMentorProfileComplete(String userEmail) {
+        MentorRegistrationResponse response = getRegistration(userEmail);
+        return response != null && response.isComplete();
+    }
 }
+

@@ -106,8 +106,13 @@ export function ProfilePage() {
       setActiveTab('saved')
     } else if (tab === 'posts') {
       setActiveTab('posts')
-    } else if (edit === 'true') {
+    } else if (edit === 'true' || searchParams.get('action') === 'add-experience' || searchParams.get('addExperience') === 'true') {
       setActiveTab('about')
+      if (searchParams.get('action') === 'add-experience' || searchParams.get('addExperience') === 'true') {
+        setFormMode('create')
+        setExpToEdit(null)
+        setIsExpModalOpen(true)
+      }
     } else if (tab === 'profile') {
       setActiveTab('profile')
     }
