@@ -51,6 +51,13 @@ services:
       - R2_PUBLIC_URL=${R2_PUBLIC_URL:-}
       # Biến cấu hình Google OAuth2 Client ID
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      # Biến cấu hình Cổng thanh toán PayOS (UC93)
+      - PAYOS_CLIENT_ID=${PAYOS_CLIENT_ID:-}
+      - PAYOS_API_KEY=${PAYOS_API_KEY:-}
+      - PAYOS_CHECKSUM_KEY=${PAYOS_CHECKSUM_KEY:-}
+      - PAYOS_PAYMENT_EXPIRATION_MINUTES=${PAYOS_PAYMENT_EXPIRATION_MINUTES:-15}
+      - PAYOS_RETURN_URL=${PAYOS_RETURN_URL:-}
+      - PAYOS_CANCEL_URL=${PAYOS_CANCEL_URL:-}
     depends_on:
       postgres-db:
         condition: service_healthy

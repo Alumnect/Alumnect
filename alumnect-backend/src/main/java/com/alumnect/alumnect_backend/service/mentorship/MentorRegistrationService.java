@@ -28,4 +28,14 @@ public interface MentorRegistrationService {
      * @return DTO chứa kết quả lưu, trạng thái hồ sơ và cờ hoàn tất
      */
     MentorRegistrationSaveResponse saveRegistration(String userEmail, MentorRegistrationRequest request);
+
+    /**
+     * Kiểm tra tính hoàn thiện 100% của hồ sơ Mentor (tái sử dụng từ UC91).
+     * Dùng chung cho UC92, UC93, UC94 nhằm tránh duplicate logic thẩm định hồ sơ.
+     *
+     * @param userEmail Email của người dùng đã xác thực
+     * @return true nếu hồ sơ đã điền đầy đủ và thỏa mãn mọi ràng buộc UC91
+     */
+    boolean isMentorProfileComplete(String userEmail);
 }
+
