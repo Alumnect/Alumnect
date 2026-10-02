@@ -66,6 +66,7 @@ public class Endpoints {
 
     // Endpoint công khai — POST, không cần đăng nhập
     public static final String[] PUBLIC_POST = {
+        "/api/v1/mentoring/subscriptions/payment/webhook", // Tiếp nhận Webhook IPN từ PayOS (UC93)
         "/api/v1/auth/register", // Đăng ký tài khoản mới
         "/api/v1/auth/login",    // Đăng nhập lấy JWT token
         "/api/v1/auth/google",   // Đăng nhập bằng Google OAuth2
@@ -74,8 +75,7 @@ public class Endpoints {
         "/api/v1/auth/refresh",   // Làm mới access token bằng refresh token
         "/api/v1/auth/forgot-password", // Yêu cầu gửi mã OTP quên mật khẩu
         "/api/v1/auth/reset-password",   // Đặt lại mật khẩu mới bằng OTP
-        "/api/v1/auth/verify-reset-otp",  // Xác minh OTP khôi phục mật khẩu
-        "/api/v1/mentoring/subscriptions/payment/webhook" // Tiếp nhận Webhook IPN từ PayOS (UC93)
+        "/api/v1/auth/verify-reset-otp"  // Xác minh OTP khôi phục mật khẩu
     };
 
     // Endpoint dành riêng cho Admin
