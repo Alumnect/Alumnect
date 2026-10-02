@@ -197,12 +197,12 @@ export function ConversationList({
                 )}
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-1.5">
                     <p className="truncate text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">
                       {displayName}
                     </p>
                     {conv.unreadCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-[11px] font-bold text-white shadow-sm">
+                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-500 px-1.5 text-[11px] font-bold text-white shadow-sm">
                         {conv.unreadCount}
                       </span>
                     )}
@@ -213,9 +213,9 @@ export function ConversationList({
                       {conv.recipientMajor}
                     </p>
                   )}
-                  {isGroup && conv.memberCount && (
-                    <p className="truncate text-[11px] font-medium text-plum-500 dark:text-[#b0b3b8]">
-                      {conv.memberCount} thành viên
+                  {isGroup && (
+                    <p className="text-[11px] font-medium text-plum-500 dark:text-[#b0b3b8]">
+                      {conv.memberCount ? `${conv.memberCount} thành viên` : 'Nhóm trò chuyện'}
                     </p>
                   )}
 

@@ -1,54 +1,115 @@
-# TÀI LIỆU ĐẶC TẢ YÊU CẦU (SRS) - UC35
+# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC35 - TÌM KIẾM BÀI VIẾT TRÊN BẢNG TIN (SEARCH FEED POSTS)
 
-**Dự án:** Alumnect
-**Mã Use Case:** UC35
-**Tên Use Case:** Tìm kiếm bài viết trên Feed (Search Post)
-**Ngày cập nhật:** 01/09/2026
-**Trạng thái:** Chấp thuận (Approved)
+## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
+
+### 2.2.3 Business Workflow (Luồng nghiệp vụ)
+
+```mermaid
+stateDiagram-v2
+    [*] --> FeedViewing : Người dùng vào Bảng tin cộng đồng (/app)
+    FeedViewing --> InputSearchQuery : Nhập từ khóa vào thanh tìm kiếm bài viết
+    InputSearchQuery --> DebounceWait : Chờ người dùng dừng nhập 400ms
+    DebounceWait --> SendSearchRequest : Gửi GET /api/v1/posts?query={keyword}&page=0&size=10
+    SendSearchRequest --> DisplaySearchResults : Nhận kết quả & hiển thị danh sách bài viết
+    DisplaySearchResults --> ClearSearch : Bấm nút "Xóa tìm kiếm"
+    ClearSearch --> FeedViewing : Hoàn nguyên hiển thị toàn bộ bài viết mới nhất
+```
+
+#### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
+* **Bước 1 - Khởi đầu**: Người dùng (Khách vãng lai, Sinh viên hoặc Cựu sinh viên) truy cập Bảng tin cộng đồng AlumNect (`/app`).
+* **Bước 2 - Nhập từ khóa**: Người dùng nhập từ khóa cần tìm (tiêu đề, nội dung, chủ đề, tên công ty tuyển dụng hoặc sự kiện) vào ô Search Bar.
+* **Bước 3 - Truy vấn dữ liệu**: Sau khoảng thời gian debounce 400ms, hệ thống gửi yêu cầu HTTP `GET /api/v1/posts?query=...` kèm các tham số phân trang.
+* **Bước 4 - Phản hồi kết quả**: Backend tìm kiếm trong bảng `posts` (khớp nội dung hoặc thông tin tác giả), trả về danh sách phân trang các bài viết phù hợp có trạng thái `ACTIVE`.
+
+---
+
+### 3.2 Quản Lý Bài Viết & Bảng Tin (Community Feed)
+
+#### 3.2.1 Tìm kiếm bài viết (UC35)
+
+**Function trigger**:
+* **Navigation path**: Trang chủ / Bảng tin `/app` -> Thanh tìm kiếm bài viết.
+* **Timing Frequency**: On demand khi người dùng nhập từ khóa tìm kiếm.
+
+**Function description**:
+* **Actors/Roles**: Tất cả người dùng (GUEST chỉ xem bài PUBLIC; STUDENT/ALUMNI xem thêm bài MEMBERS).
+* **Purpose**: Giúp thành viên nhanh chóng tra cứu bài viết theo chủ đề quan tâm, cơ hội việc làm, thông tin sự kiện hoặc nội dung học tập.
 
 ---
 
-## 1. MÔ TẢ TỔNG QUAN (DESCRIPTION)
-Use case UC35 cho phép người dùng (bao gồm Guest, Sinh viên, Cựu sinh viên và Admin) tìm kiếm các bài viết đang ở trạng thái hiển thị (ACTIVE) trên bảng tin (Feed) thông qua từ khóa. Người dùng có thể tìm kiếm dựa trên nội dung bài viết (`content`) hoặc tên tác giả (`UserProfile.fullName`). Hỗ trợ kết hợp bộ lọc (Category) và phân trang.
+### 5. Requirement Appendix (Phụ lục Yêu cầu)
 
-## 2. ACTOR (NGƯỜI TƯƠNG TÁC)
-- **Guest (Khách chưa đăng nhập):** Có thể tìm kiếm bài viết công khai.
-- **Thành viên (Sinh viên / Cựu sinh viên):** Có thể tìm kiếm toàn bộ bài viết chưa bị ẩn hoặc xóa.
-- **Quản trị viên (Admin):** Có thể tìm kiếm tương tự thành viên.
+#### 5.1 Business Rules (Quy tắc Nghiệp vụ)
 
-## 3. ĐIỀU KIỆN TIỀN QUYẾT (PRE-CONDITIONS)
-- Hệ thống đã hiển thị màn hình trang chủ (Feed Page).
-- Kết nối tới Backend bình thường.
+| ID | Định nghĩa Quy tắc (Rule Definition) |
+| :--- | :--- |
+| BR-35-01 | Chỉ trả về các bài viết có `status = 'ACTIVE'`. Bài viết bị ẩn hoặc đã xóa không được xuất hiện trong kết quả tìm kiếm. |
+| BR-35-02 | Khách vãng lai (Guest) chỉ tìm thấy các bài viết có phạm vi `visibility = 'PUBLIC'`. |
 
-## 4. LUỒNG SỰ KIỆN CHÍNH (MAIN FLOW)
-1. Người dùng nhập từ khóa tìm kiếm vào thanh Search Bar trên giao diện Feed.
-2. Quá trình nhập kết thúc sau 400ms (cơ chế Debounce) để chống spam API.
-3. Frontend gửi request `GET /posts?keyword={từ khóa}&page=0&size=5` (và kèm tham số `type` nếu có lọc theo loại).
-4. Backend nhận request:
-   a. Chuẩn hóa (trim) chuỗi từ khóa, nếu chỉ có khoảng trắng thì coi như không có từ khóa.
-   b. Dựa trên tham số phân trang và lọc, thực hiện truy vấn các bài viết ở trạng thái `ACTIVE` mà nội dung (content) hoặc tên tác giả (fullName) chứa từ khóa (không phân biệt hoa thường).
-5. Backend trả dữ liệu bài viết (nếu có) dưới định dạng phân trang (Pagination).
-6. Frontend nhận dữ liệu và hiển thị danh sách bài viết.
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
 
-## 5. LUỒNG NGOẠI LỆ / LUỒNG PHỤ (ALTERNATIVE FLOWS)
-**AF1: Không có kết quả nào khớp với từ khóa**
-1. Ở bước 4 của Main Flow, Backend thực thi xong truy vấn nhưng không có bài viết nào phù hợp.
-2. Backend trả về `PageResponse` với thuộc tính `content` rỗng và `totalElements = 0`.
-3. Frontend hiển thị trạng thái Empty State "Không tìm thấy kết quả nào khớp với từ khóa".
-
-**AF2: Từ khóa tìm kiếm hoàn toàn là khoảng trắng**
-1. Ở bước 4a, Backend loại bỏ khoảng trắng dư thừa, từ khóa biến thành `null`.
-2. Backend bỏ qua điều kiện `LIKE` và tải bảng tin Feed mặc định.
-
-## 6. QUY TẮC NGHIỆP VỤ (BUSINESS RULES)
-- **BR-35.1:** Tính năng tìm kiếm không phân biệt chữ hoa, chữ thường (Case Insensitive).
-- **BR-35.2:** Tính năng tìm kiếm chỉ truy xuất những bài viết mang trạng thái `ACTIVE` (không truy xuất các bài HIDDEN hoặc DELETED).
-- **BR-35.3:** Truy vấn kết hợp với tiêu chí lọc thể loại bài viết (`ACHIEVEMENT`, `EVENT`, `RECRUITMENT`, `GENERAL`) tạo thành giao của 2 tập hợp (AND).
-- **BR-35.4:** Việc đánh dấu Highlight từ khóa trên giao diện không được thực hiện trong phiên bản này.
-
-## 7. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
-- **Performance:** Frontend bắt buộc sử dụng Debounce (tối thiểu 300ms, hiện tại là 400ms) để không dội request quá nhiều xuống Server.
-- **UI/UX:** Giao diện thanh tìm kiếm tuân thủ ngôn ngữ thiết kế chung của hệ thống (bo góc tròn, icon kính lúp mờ, viền đổi màu khi focus).
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-SEARCH-01 | Toast / In line | Tìm kiếm thành công | Lấy danh sách kết quả tìm kiếm thành công. |
+| 2 | MSG-SEARCH-02 | EmptyState | Không tìm thấy bài viết nào | Không tìm thấy bài viết nào phù hợp với từ khóa của bạn. |
 
 ---
-*(Tài liệu được tạo và biên soạn bởi AI)*
+
+## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
+
+### 3. Detail Design (Thiết kế chi tiết)
+
+#### 3.1 UC35 Tìm kiếm bài viết (Search Feed Posts)
+
+##### 3.1.1 Class Diagram (Sơ đồ Lớp)
+
+```mermaid
+classDiagram
+    class PostController {
+        +getPosts(query: String, type: String, page: int, size: int, authentication: Authentication) ResponseEntity~ApiResponse~PageResponse~PostResponse~~~
+    }
+
+    class PostService {
+        <<interface>>
+        +getPosts(userEmail: String, query: String, type: String, page: int, size: int) PageResponse~PostResponse~
+    }
+
+    class PostServiceImpl {
+        -PostRepository postRepository
+        -PostMapper postMapper
+        +getPosts(userEmail: String, query: String, type: String, page: int, size: int) PageResponse~PostResponse~
+    }
+
+    class PostRepository {
+        <<interface>>
+        +searchActivePosts(query: String, pageable: Pageable) Page~Post~
+    }
+
+    PostController --> PostService : calls
+    PostServiceImpl ..|> PostService : implements
+    PostServiceImpl --> PostRepository : queries
+```
+
+##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Người dùng
+    participant UI as FeedPage (FE)
+    participant Controller as PostController
+    participant Service as PostServiceImpl
+    participant Repo as PostRepository
+    participant DB as PostgreSQL
+
+    User->>UI: Nhập từ khóa tìm kiếm (debounce 400ms)
+    UI->>Controller: GET /api/v1/posts?query={keyword}&page=0&size=10
+    Controller->>Service: getPosts(viewerEmail, query, null, 0, 10)
+    Service->>Repo: searchActivePosts(query, pageable)
+    Repo->>DB: SELECT p.* FROM posts p WHERE p.status = 'ACTIVE' AND (p.content ILIKE %query%) ORDER BY p.created_at DESC
+    DB-->>Repo: Page<Post>
+    Repo-->>Service: Page<Post>
+    Service-->>Controller: PageResponse<PostResponse>
+    Controller-->>UI: HTTP 200 OK (Danh sách bài viết kết quả)
+    UI-->>User: Hiển thị kết quả tìm kiếm bài viết trên Feed
+```

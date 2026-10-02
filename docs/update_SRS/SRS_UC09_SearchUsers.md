@@ -332,7 +332,7 @@ sequenceDiagram
      2. Đếm số followers qua `countFollowersByUserIds(userIds)`.
      3. Đếm số following qua `countFollowingByUserIds(userIds)`.
      4. Kiểm tra trạng thái đã follow của người xem qua `findByFollowerIdAndFollowingIdIn(viewerId, userIds)`.
-   * Toàn bộ dữ liệu được nạp vào các Map tra cứu trong bộ nhớ RAM (`expMap`, `followersCountMap`, `followingCountMap`, `followedUserIds`). Vòng lặp map DTO chỉ thực hiện ghép nối dữ liệu trong bộ nhớ mà **không bắn thêm bất kỳ câu truy vấn SQL nào xuống Database** (triệt tiêu hoàn toàn lỗi N+1 Query).
+   * Toàn bộ dữ liệu được nạp vào các Map tra cứu trong bộ nhớ RAM (`expMap`, `followersCountMap`, `followingCountMap`, `followedUserIds`). Vòng lặp map DTO chỉ thực hiện ghép nối dữ liệu trong bộ nhớ mà **không thực thi thêm bất kỳ câu truy vấn SQL nào xuống Database** (triệt tiêu hoàn toàn lỗi N+1 Query).
    * Kết quả được đóng gói thành `PageResponse<UserDirectoryResponse>` và phản hồi cho Client với mã HTTP 200 OK.
 2. **Luồng 2 - Ngoại lệ Validation tham số (Validation Error Case)**:
    * Client gửi tham số phân trang âm hoặc không hợp lệ (ví dụ `page = -1`). `UserController` phát hiện và ném `BadRequestException`. `GlobalExceptionHandler` bắt và trả về HTTP 400 Bad Request kèm thông báo lỗi tiếng Việt.

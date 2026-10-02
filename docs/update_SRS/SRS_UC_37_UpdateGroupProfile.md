@@ -22,13 +22,13 @@ stateDiagram-v2
     KiemTraHopLe --> BaoLoiDauVao: Tên nhóm để trống hoặc < 2 ký tự
     BaoLoiDauVao --> HienThiModalNhom: Hiển thị cảnh báo lỗi màu đỏ
     
-    KiemTraHopLe --> GoiApiCapNhat: Hợp lệ, gọi PUT /api/v1/conversations/{id}/group
+    KiemTraHopLe --> GoiApiCapNhat: Hợp lệ, gọi PUT /api/v1/conversations/{conversationId}/group
     
     state GoiApiCapNhat {
         [*] --> KiemTraQuyenThanhVien: Xác minh người dùng là thành viên của nhóm
         KiemTraQuyenThanhVien --> CapNhatDatabase: Cập nhật title và/hoặc avatar_url trong bảng conversations
         CapNhatDatabase --> TaoTinNhanHeThong: Lưu Message (type = SYSTEM: "{Tên} đã đổi tên nhóm...")
-        TaoTinNhanHeThong --> PhatSongWebSocket: Bắn STOMP frame tới tất cả các thành viên qua /user/queue/messages
+        TaoTinNhanHeThong --> PhatSongWebSocket: Phát sóng thông điệp STOMP tới tất cả các thành viên qua /user/queue/messages
     }
     
     GoiApiCapNhat --> KetQuaCapNhat: Nhận phản hồi từ máy chủ
@@ -226,8 +226,13 @@ classDiagram
         +handleUpdateProfile(title: string, avatarUrl: string): void
     }
 
+    class useUpdateGroup {
+        +mutate(params: { conversationId: number, payload: UpdateGroupRequest }): void
+        +isLoading: boolean
+    }
+
     class chatApi {
-        +updateGroup(id: number, req: UpdateGroupRequest): Promise~ApiResponse~Conversation~~~~
+        +updateGroup(conversationId: number, req: UpdateGroupRequest): Promise~ApiResponse~Conversation~~~~
     }
 
     ChatController ..> UpdateGroupRequest : tiếp nhận & validate
@@ -236,7 +241,8 @@ classDiagram
     ChatServiceImpl --> ConversationRepository : cập nhật bảng conversations
     ChatServiceImpl --> MessageRepository : lưu tin nhắn SYSTEM
     ChatServiceImpl --> SimpMessagingTemplate : phát sóng WebSocket
-    GroupInfoModal --> chatApi : gọi PUT /conversations/{id}/group
+    GroupInfoModal --> useUpdateGroup : kích hoạt mutation
+    useUpdateGroup --> chatApi : gọi PUT /conversations/{conversationId}/group
 ```
 
 ##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự Gộp)
@@ -260,7 +266,7 @@ sequenceDiagram
     activate Modal
     Modal ->> Api: chatApi.updateGroup(conversationId, { title, avatarUrl })
     activate Api
-    Api ->> Controller: PUT /api/v1/conversations/{id}/group (UpdateGroupRequest)
+    Api ->> Controller: PUT /api/v1/conversations/{conversationId}/group (UpdateGroupRequest)
     activate Controller
     
     Controller ->> Service: updateGroup(email, conversationId, request)

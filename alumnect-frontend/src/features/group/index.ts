@@ -1,5 +1,5 @@
 export { useGroups, useMyGroups, useGroupDetail, useGroupMembers, useJoinRequests } from './hooks/useGroups'
-export { useCreateGroup, useUpdateGroup, useSetGroupStatus, useDeleteGroup, useJoinGroup, useLeaveGroup, useHandleJoinRequest, useRemoveMember, useChangeMemberRole } from './hooks/useGroupActions'
+export { useCreateGroup, useUpdateGroup, useSetGroupStatus, useDeleteGroup, useJoinGroup, useLeaveGroup, useHandleJoinRequest, useRemoveMember, useChangeMemberRole, useCreateGroupChat, useJoinGroupChat } from './hooks/useGroupActions'
 export { useDebouncedValue } from './hooks/useDebouncedValue'
 export { groupApi } from './api/groupApi'
 export { GROUP_CATEGORIES, GROUP_SEARCH_MAX, categoryLabel, groupCardSchema, groupDetailSchema, isManagerRole } from './model/group'

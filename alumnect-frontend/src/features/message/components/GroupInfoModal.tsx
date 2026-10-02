@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Users, UserPlus, LogOut, ShieldCheck, UserX, Edit2, Check, Loader2, Camera, Crown } from 'lucide-react'
+import { X, Users, UserPlus, LogOut, ShieldCheck, UserX, Edit2, Check, Loader2, Camera, Crown, Trash2 } from 'lucide-react'
 import { Avatar, Button, toast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -10,6 +10,7 @@ import {
   useAddMembers,
   useRemoveMember,
   useUpdateGroup,
+  useDeleteConversation,
 } from '../hooks/useChat'
 import type { Conversation, ChatCandidateUser } from '../model/types'
 
@@ -22,7 +23,7 @@ interface GroupInfoModalProps {
 }
 
 interface ConfirmAction {
-  type: 'leave' | 'remove' | 'transfer_and_leave'
+  type: 'leave' | 'remove' | 'transfer_and_leave' | 'disband'
   userId: number
   userName: string
   userAvatar?: string | null
@@ -36,6 +37,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
   const addMembersMutation = useAddMembers()
   const removeMemberMutation = useRemoveMember()
   const updateGroupMutation = useUpdateGroup()
+  const deleteConversationMutation = useDeleteConversation()
 
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [newTitle, setNewTitle] = useState(conversation.title || '')
@@ -56,12 +58,39 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
   const [addCandidates, setAddCandidates] = useState<ChatCandidateUser[]>([])
   const [isSearchingAdd, setIsSearchingAdd] = useState(false)
 
-  if (!isOpen || !conversationId) return null
+  // Tự động tải danh sách thành viên gợi ý ngay khi mở "Thêm thành viên" hoặc khi tìm kiếm
+  useEffect(() => {
+    if (!isOpen || !isAddingMember) return
+
+    let isMounted = true
+    const timer = setTimeout(async () => {
+      setIsSearchingAdd(true)
+      try {
+        const res = await chatApi.searchUsersForChat(searchAdd.trim())
+        if (isMounted) {
+          const existingIds = members.map((m) => m.userId)
+          const filtered = (res.data || []).filter((u) => !existingIds.includes(u.userId))
+          setAddCandidates(filtered)
+        }
+      } catch (e) {
+        console.error('Lỗi tìm kiếm:', e)
+      } finally {
+        if (isMounted) setIsSearchingAdd(false)
+      }
+    }, searchAdd.trim() ? 250 : 0)
+
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
+  }, [isOpen, isAddingMember, searchAdd, members])
 
   const currentMember = members.find((m) => String(m.userId) === String(currentUserId))
   const isAdmin =
     currentMember?.role === 'ADMIN' ||
-    (conversation.adminId != null && String(conversation.adminId) === String(currentUserId))
+    (conversation?.adminId != null && String(conversation.adminId) === String(currentUserId))
+  const isCommunityGroup = Boolean(conversation?.communityGroupId)
+  const isCommunityOwner = isCommunityGroup && isAdmin
   const otherMembers = members.filter((m) => String(m.userId) !== String(currentUserId))
 
   // Xử lý đổi ảnh đại diện nhóm
@@ -106,24 +135,9 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
     toast.success('Đã cập nhật tên nhóm')
   }
 
-  // Tìm kiếm để thêm thành viên
-  const handleSearchAdd = async (kw: string) => {
+  // Cập nhật từ khóa tìm kiếm thành viên
+  const handleSearchAdd = (kw: string) => {
     setSearchAdd(kw)
-    if (!kw.trim()) {
-      setAddCandidates([])
-      return
-    }
-    setIsSearchingAdd(true)
-    try {
-      const res = await chatApi.searchUsersForChat(kw.trim())
-      const existingIds = members.map((m) => m.userId)
-      const filtered = (res.data || []).filter((u) => !existingIds.includes(u.userId))
-      setAddCandidates(filtered)
-    } catch (e) {
-      console.error('Lỗi tìm kiếm:', e)
-    } finally {
-      setIsSearchingAdd(false)
-    }
   }
 
   // Thêm thành viên
@@ -143,8 +157,20 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
     }
   }
 
-  // Bấm nút rời nhóm: Nếu là admin và còn thành viên khác thì mở giao diện chọn admin mới
+  // Bấm nút rời nhóm: Nếu là admin và còn thành viên khác thì mở giao diện chọn admin mới (trừ nhóm chat hội nhóm)
   const handleLeaveClick = () => {
+    if (isCommunityOwner) {
+      toast.error('Bạn là Chủ sở hữu hội nhóm nên không thể rời nhóm trò chuyện này.')
+      return
+    }
+    if (isCommunityGroup) {
+      setConfirmAction({
+        type: 'leave',
+        userId: Number(currentUserId) || 0,
+        userName: 'Bạn',
+      })
+      return
+    }
     if (isAdmin && otherMembers.length > 0) {
       setSelectedNewAdminId(otherMembers[0]?.userId ?? null)
       setConfirmAction({
@@ -161,10 +187,32 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
     }
   }
 
-  // Thực hiện xóa hoặc rời nhóm qua Modal xác nhận
+  // Bấm nút giải tán nhóm (chỉ dành cho Chủ sở hữu / Trưởng nhóm)
+  const handleDisbandClick = () => {
+    setConfirmAction({
+      type: 'disband',
+      userId: Number(currentUserId) || 0,
+      userName: conversation.title || 'Nhóm trò chuyện',
+    })
+  }
+
+  // Thực hiện xóa, rời nhóm hoặc giải tán nhóm qua Modal xác nhận
   const handleConfirmAction = async () => {
     if (!confirmAction) return
     const { type, userId } = confirmAction
+
+    if (type === 'disband') {
+      try {
+        await deleteConversationMutation.mutateAsync(conversationId)
+        toast.success('Đã giải tán nhóm trò chuyện thành công')
+        setConfirmAction(null)
+        onLeftGroup()
+        onClose()
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message || err?.message || 'Có lỗi xảy ra khi giải tán nhóm')
+      }
+      return
+    }
 
     try {
       const newAdminId = type === 'transfer_and_leave' ? (selectedNewAdminId ?? undefined) : undefined
@@ -189,16 +237,18 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
     }
   }
 
+  if (!isOpen || !conversationId) return null
+
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#242526] dark:text-[#f0f2f5]">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-plum-900/10 px-6 py-4 dark:border-[#393a3b]">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative flex max-h-[85vh] sm:max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#242526] dark:text-[#f0f2f5]">
+        {/* Header - Cố định ở đỉnh modal */}
+        <div className="flex shrink-0 items-center justify-between border-b border-plum-900/10 px-5 py-3.5 dark:border-[#393a3b]">
           <div className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
-              <Users size={18} />
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
+              <Users size={16} />
             </div>
-            <h3 className="text-base font-bold text-plum-900 dark:text-[#f0f2f5]">Thông tin nhóm</h3>
+            <h3 className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">Thông tin nhóm</h3>
           </div>
           <button
             onClick={onClose}
@@ -208,83 +258,93 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
           </button>
         </div>
 
-        {/* Group Name & Stats */}
-        <div className="p-6 text-center">
-          <div className="relative mx-auto mb-3 h-20 w-20 group">
-            <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-3xl bg-brand-50 text-2xl font-bold text-brand-600 shadow-inner ring-2 ring-brand-500/20 dark:bg-brand-500/20 dark:text-brand-400">
-              {currentAvatarUrl ? (
-                <img src={currentAvatarUrl} alt="Group" className="h-full w-full object-cover" />
-              ) : (
-                <Users size={36} />
-              )}
+        {/* Nội dung cuộn mượt mà bên trong, không bao giờ tràn màn hình */}
+        <div className="flex-1 overflow-y-auto px-5 py-3.5 min-h-0">
+          {/* Group Name & Stats */}
+          <div className="mb-3 text-center">
+            <div className="relative mx-auto mb-2 h-16 w-16 group">
+              <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-2xl bg-brand-50 text-xl font-bold text-brand-600 shadow-inner ring-2 ring-brand-500/20 dark:bg-brand-500/20 dark:text-brand-400">
+                {currentAvatarUrl ? (
+                  <img src={currentAvatarUrl} alt="Group" className="h-full w-full object-cover" />
+                ) : (
+                  <Users size={28} />
+                )}
+              </div>
+
+              {/* Nút đổi ảnh đại diện nhóm */}
+              <button
+                type="button"
+                disabled={isUploadingAvatar}
+                onClick={() => fileInputRef.current?.click()}
+                title="Đổi ảnh đại diện nhóm"
+                className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-black/55 text-white opacity-0 transition-opacity hover:opacity-100 group-hover:opacity-100 cursor-pointer disabled:pointer-events-none"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 size={18} className="animate-spin text-white" />
+                ) : (
+                  <>
+                    <Camera size={16} className="mb-0.5" />
+                    <span className="text-[9px] font-bold">Đổi ảnh</span>
+                  </>
+                )}
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
 
-            {/* Nút đổi ảnh đại diện nhóm */}
-            <button
-              type="button"
-              disabled={isUploadingAvatar}
-              onClick={() => fileInputRef.current?.click()}
-              title="Đổi ảnh đại diện nhóm"
-              className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl bg-black/55 text-white opacity-0 transition-opacity hover:opacity-100 group-hover:opacity-100 cursor-pointer disabled:pointer-events-none"
-            >
-              {isUploadingAvatar ? (
-                <Loader2 size={20} className="animate-spin text-white" />
-              ) : (
-                <>
-                  <Camera size={18} className="mb-0.5" />
-                  <span className="text-[10px] font-bold">Đổi ảnh</span>
-                </>
-              )}
-            </button>
+            {isEditingTitle ? (
+              <div className="mx-auto flex max-w-xs items-center gap-1.5">
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="h-8 w-full rounded-xl border border-brand-500 px-3 text-xs font-bold text-plum-900 focus:outline-none dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                />
+                <Button size="sm" onClick={handleSaveTitle} className="h-8 rounded-xl bg-brand-600 px-3">
+                  <Check size={14} />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-1.5">
+                <h4 className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">{conversation.title}</h4>
+                <button
+                  onClick={() => {
+                    setNewTitle(conversation.title || '')
+                    setIsEditingTitle(true)
+                  }}
+                  className="text-plum-400 hover:text-brand-600 dark:text-[#b0b3b8]"
+                  title="Đổi tên nhóm"
+                >
+                  <Edit2 size={13} />
+                </button>
+              </div>
+            )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
+            <p className="mt-0.5 text-[11px] text-plum-400 dark:text-[#b0b3b8]">{members.length} thành viên</p>
           </div>
 
-          {isEditingTitle ? (
-            <div className="mx-auto flex max-w-xs items-center gap-1.5">
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="h-9 w-full rounded-xl border border-brand-500 px-3 text-sm font-bold text-plum-900 focus:outline-none dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
-              />
-              <Button size="sm" onClick={handleSaveTitle} className="h-9 rounded-xl bg-brand-600 px-3">
-                <Check size={14} />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              <h4 className="text-base font-bold text-plum-900 dark:text-[#f0f2f5]">{conversation.title}</h4>
-              <button
-                onClick={() => {
-                  setNewTitle(conversation.title || '')
-                  setIsEditingTitle(true)
-                }}
-                className="text-plum-400 hover:text-brand-600 dark:text-[#b0b3b8]"
-                title="Đổi tên nhóm"
-              >
-                <Edit2 size={14} />
-              </button>
-            </div>
-          )}
-
-          <p className="mt-1 text-xs text-plum-400 dark:text-[#b0b3b8]">{members.length} thành viên</p>
-        </div>
-
-        {/* Members section */}
-        <div className="px-6 pb-6">
-          <div className="mb-2.5 flex items-center justify-between">
-            <h5 className="text-xs font-bold uppercase tracking-wider text-plum-600 dark:text-[#b0b3b8]">
-              Thành viên ({members.length})
-            </h5>
+          {/* Members section */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <h5 className="text-[11px] font-bold uppercase tracking-wider text-plum-600 dark:text-[#b0b3b8]">
+                Thành viên ({members.length})
+              </h5>
             <button
-              onClick={() => setIsAddingMember(!isAddingMember)}
+              onClick={() => {
+                if (isAddingMember) {
+                  setIsAddingMember(false)
+                  setSearchAdd('')
+                } else {
+                  setIsAddingMember(true)
+                  setSearchAdd('')
+                }
+              }}
               className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:underline dark:text-brand-400"
             >
               <UserPlus size={13} />
@@ -303,27 +363,27 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 className="h-8 w-full rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:outline-none dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#f0f2f5]"
               />
               {isSearchingAdd ? (
-                <div className="flex justify-center py-2">
+                <div className="flex justify-center py-2.5">
                   <Loader2 size={16} className="animate-spin text-brand-500" />
                 </div>
               ) : addCandidates.length > 0 ? (
-                <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
+                <div className="mt-2 max-h-32 space-y-1 overflow-y-auto pr-0.5">
                   {addCandidates.map((u) => (
                     <div
                       key={u.userId}
-                      className="flex items-center justify-between rounded-lg bg-white p-1.5 text-xs dark:bg-[#242526]"
+                      className="flex items-center justify-between rounded-lg bg-white p-1.5 text-xs shadow-2xs dark:bg-[#242526]"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <Avatar src={u.avatarUrl || undefined} name={u.fullName} size={28} />
-                        <div>
-                          <p className="font-semibold text-plum-900 dark:text-[#f0f2f5]">{u.fullName}</p>
-                          <p className="text-[10px] text-plum-400 dark:text-[#b0b3b8]">{u.headline || u.major}</p>
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-plum-900 dark:text-[#f0f2f5]">{u.fullName}</p>
+                          <p className="truncate text-[10px] text-plum-400 dark:text-[#b0b3b8]">{u.headline || u.major || 'Thành viên'}</p>
                         </div>
                       </div>
                       <Button
                         size="sm"
                         onClick={() => handleAddUser(u.userId)}
-                        className="h-6 rounded-lg bg-brand-600 px-2 text-[10px] text-white hover:bg-brand-700"
+                        className="h-6 shrink-0 rounded-lg bg-brand-600 px-2 text-[10px] text-white hover:bg-brand-700"
                       >
                         Thêm
                       </Button>
@@ -332,12 +392,14 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 </div>
               ) : searchAdd.trim() ? (
                 <p className="mt-2 text-center text-[11px] text-plum-400">Không tìm thấy thành viên phù hợp</p>
-              ) : null}
+              ) : (
+                <p className="mt-2 text-center text-[11px] text-plum-400">Không có thành viên mới để thêm</p>
+              )}
             </div>
           )}
 
           {/* Member List */}
-          <div className="no-scrollbar max-h-48 space-y-2 overflow-y-auto rounded-2xl border border-plum-900/10 p-2 dark:border-[#393a3b]">
+          <div className="no-scrollbar max-h-36 space-y-1.5 overflow-y-auto rounded-2xl border border-plum-900/10 p-1.5 dark:border-[#393a3b]">
             {isLoadingMembers ? (
               <div className="flex h-20 items-center justify-center">
                 <Loader2 size={18} className="animate-spin text-brand-500" />
@@ -354,7 +416,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                     className="flex items-center justify-between rounded-xl px-2.5 py-1.5 hover:bg-plum-900/[0.02] dark:hover:bg-[#3a3b3c]"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Avatar src={m.avatar || undefined} name={m.fullName} size={32} />
+                      <Avatar src={m.avatar || undefined} name={m.fullName} size={30} />
                       <div>
                         <div className="flex items-center gap-1.5">
                           <p className="text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">
@@ -371,7 +433,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                       </div>
                     </div>
 
-                    {isAdmin && !isMe && (
+                    {isAdmin && !isMe && (!isCommunityGroup || !isUserAdmin) && (
                       <button
                         type="button"
                         onClick={() =>
@@ -394,18 +456,49 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
               })
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Leave group button */}
-          <div className="mt-4 pt-3 border-t border-plum-900/10 dark:border-[#393a3b]">
+      {/* Action buttons (Leave / Disband) - Cố định ở chân modal */}
+        <div className="shrink-0 border-t border-plum-900/10 bg-slate-50/70 px-5 py-3 dark:border-[#393a3b] dark:bg-[#1f2021]/70">
+          {isCommunityOwner ? (
+            <button
+              type="button"
+              onClick={handleDisbandClick}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200/80 bg-red-50/80 py-2.5 text-xs font-bold text-red-600 shadow-sm transition-all hover:bg-red-100 hover:text-red-700 active:scale-98 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50"
+            >
+              <Trash2 size={14} />
+              Giải tán nhóm
+            </button>
+          ) : isAdmin && !isCommunityGroup ? (
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={handleLeaveClick}
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] py-2.5 px-3 text-xs font-bold text-plum-700 transition-all hover:bg-plum-900/[0.06] hover:text-plum-900 active:scale-98 dark:border-white/10 dark:bg-white/5 dark:text-[#e4e6eb] dark:hover:bg-white/10"
+              >
+                <LogOut size={14} className="text-plum-500 dark:text-[#b0b3b8]" />
+                Rời khỏi nhóm
+              </button>
+              <button
+                type="button"
+                onClick={handleDisbandClick}
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-red-200/80 bg-red-50/80 py-2.5 px-3 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:text-red-700 active:scale-98 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50"
+              >
+                <Trash2 size={14} className="text-red-500 dark:text-red-400" />
+                Giải tán nhóm
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
               onClick={handleLeaveClick}
-              className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200/80 bg-red-50/80 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:text-red-700 active:scale-98 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50"
             >
               <LogOut size={14} />
               Rời khỏi nhóm
             </button>
-          </div>
+          )}
         </div>
 
         {/* In-card Confirmation Overlay: Thiết kế tinh tế, không mở thêm cửa sổ modal thứ 2 */}
@@ -508,6 +601,10 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                         <UserX size={12} />
                       </div>
                     </>
+                  ) : confirmAction.type === 'disband' ? (
+                    <div className="grid h-16 w-16 place-items-center rounded-2xl bg-rose-50 text-rose-500 shadow-sm ring-8 ring-rose-500/10 dark:bg-rose-500/20 dark:text-rose-400 dark:ring-rose-500/10">
+                      <Trash2 size={26} />
+                    </div>
                   ) : (
                     <div className="grid h-16 w-16 place-items-center rounded-2xl bg-rose-50 text-rose-500 shadow-sm ring-8 ring-rose-500/10 dark:bg-rose-500/20 dark:text-rose-400 dark:ring-rose-500/10">
                       <LogOut size={26} />
@@ -517,7 +614,11 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
                 {/* Title */}
                 <h4 className="text-base font-bold text-plum-900 dark:text-[#f0f2f5]">
-                  {confirmAction.type === 'remove' ? 'Xóa thành viên?' : 'Rời nhóm?'}
+                  {confirmAction.type === 'remove'
+                    ? 'Xóa thành viên?'
+                    : confirmAction.type === 'disband'
+                    ? 'Giải tán nhóm trò chuyện?'
+                    : 'Rời nhóm?'}
                 </h4>
 
                 {/* Message */}
@@ -525,6 +626,10 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                   {confirmAction.type === 'remove' ? (
                     <>
                       Xóa <strong className="font-semibold text-plum-900 dark:text-white">{confirmAction.userName}</strong> khỏi nhóm này?
+                    </>
+                  ) : confirmAction.type === 'disband' ? (
+                    <>
+                      Bạn có chắc muốn giải tán nhóm <strong className="font-semibold text-plum-900 dark:text-white">{confirmAction.userName}</strong>? Toàn bộ tin nhắn và lịch sử trò chuyện sẽ bị xóa vĩnh viễn.
                     </>
                   ) : (
                     'Bạn có chắc muốn rời nhóm này?'
@@ -536,7 +641,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                   <button
                     type="button"
                     onClick={() => setConfirmAction(null)}
-                    disabled={removeMemberMutation.isPending}
+                    disabled={removeMemberMutation.isPending || deleteConversationMutation.isPending}
                     className="flex-1 rounded-xl bg-plum-900/5 py-2.5 text-xs font-semibold text-plum-700 transition-colors hover:bg-plum-900/10 disabled:opacity-50 dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50]"
                   >
                     Hủy
@@ -544,17 +649,23 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                   <button
                     type="button"
                     onClick={handleConfirmAction}
-                    disabled={removeMemberMutation.isPending}
+                    disabled={removeMemberMutation.isPending || deleteConversationMutation.isPending}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 py-2.5 text-xs font-semibold text-white shadow-md shadow-rose-600/25 transition-all hover:bg-rose-700 active:scale-95 disabled:opacity-50"
                   >
-                    {removeMemberMutation.isPending ? (
+                    {(removeMemberMutation.isPending || deleteConversationMutation.isPending) ? (
                       <Loader2 size={13} className="animate-spin" />
                     ) : confirmAction.type === 'remove' ? (
                       <UserX size={14} />
+                    ) : confirmAction.type === 'disband' ? (
+                      <Trash2 size={14} />
                     ) : (
                       <LogOut size={14} />
                     )}
-                    {confirmAction.type === 'remove' ? 'Xóa' : 'Rời nhóm'}
+                    {confirmAction.type === 'remove'
+                      ? 'Xóa'
+                      : confirmAction.type === 'disband'
+                      ? 'Giải tán nhóm'
+                      : 'Rời nhóm'}
                   </button>
                 </div>
               </>

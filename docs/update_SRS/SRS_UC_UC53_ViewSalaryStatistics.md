@@ -114,7 +114,7 @@ Module 4 (Q&A Forum & Salary Board). UC53 là chức năng **đọc/tổng hợp
 
 | # | Mã thông điệp | Loại thông điệp | Ngữ cảnh | Nội dung hiển thị | HTTP |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | MSG-VS-01 | Chuyển hướng / Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 1 | MSG-VS-01 | Chuyển hướng / Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 2 | MSG-VS-02 | Banner lỗi + nút Thử lại | Lỗi mạng/hệ thống khi tải thống kê | Không tải được thống kê lương / Đã có lỗi hệ thống xảy ra. Vui lòng thử lại. | — |
 | 3 | MSG-VS-03 | EmptyState | Chưa có nhóm nào đạt đủ mẫu tối thiểu | Chưa có dữ liệu lương cho khu vực này | 200 (rỗng) |
 
@@ -226,8 +226,3 @@ sequenceDiagram
 2.  **Luồng Guest chưa đăng nhập**: FE `ProtectedRoute` chuyển hướng `/login` trước khi vào trang; nếu gọi thẳng API vẫn bị Spring Security chặn 401 trước khi tới Controller.
 3.  **Luồng chưa đủ dữ liệu**: Nếu chưa có nhóm nào đạt 5 mẫu, `rows` rỗng (`trackedPositions = 0`), `overallMedian` có thể `null` nếu chưa có bản ghi VND nào — FE hiển thị `EmptyState`, không phải lỗi.
 4.  **Luồng lỗi hệ thống**: Lỗi kết nối DB hoặc exception khác → FE bắt lỗi qua `isError`/`error` của `useQuery`, hiển thị banner + nút "Thử lại" (`refetch`).
-
-### 4. Kết quả kiểm thử thực tế
-* ✅ `mvn -q -o compile` (Backend) — BUILD SUCCESS.
-* ✅ `npm run build` (`tsc -b && vite build`, Frontend) — PASS.
-* ⏳ **Chưa verify trực tiếp trên DB thật** trong phiên này (không kết nối được PostgreSQL local — sai mật khẩu `postgres` mặc định) — cú pháp `PERCENTILE_CONT ... WITHIN GROUP` là hàm chuẩn PostgreSQL, đã dùng đúng cấu trúc, nhưng cần chạy thử tay qua Postman (mục 5.12–5.13) sau khi restart Backend để xác nhận số liệu tính đúng.

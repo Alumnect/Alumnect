@@ -28,6 +28,15 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.common.enums.ConversationType;
+import com.alumnect.alumnect_backend.common.enums.MessageType;
+import com.alumnect.alumnect_backend.common.enums.ParticipantRole;
+import com.alumnect.alumnect_backend.dao.message.ConversationParticipantRepository;
+import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
+import com.alumnect.alumnect_backend.dao.message.MessageRepository;
+import com.alumnect.alumnect_backend.entity.message.Conversation;
+import com.alumnect.alumnect_backend.entity.message.ConversationParticipant;
+import com.alumnect.alumnect_backend.entity.message.Message;
 import com.alumnect.alumnect_backend.mapper.group.GroupMapper;
 import com.alumnect.alumnect_backend.specification.group.GroupSpecification;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +79,9 @@ public class GroupServiceImpl implements GroupService {
     private final GroupMemberRepository memberRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final ConversationRepository conversationRepository;
+    private final ConversationParticipantRepository conversationParticipantRepository;
+    private final MessageRepository messageRepository;
     private final GroupMapper groupMapper;
 
     // ==================== Xem danh sách / chi tiết ====================
@@ -318,6 +330,18 @@ public class GroupServiceImpl implements GroupService {
                 group.setOwner(successor.getUser());
                 groupRepository.save(group);
                 message = "Đã chuyển quyền sở hữu và rời khỏi hội nhóm.";
+
+                // Tự động chuyển quyền Trưởng nhóm chat sang cho Chủ sở hữu mới nếu hội nhóm đã có nhóm chat
+                conversationRepository.findByCommunityGroupId(groupId).ifPresent(conv -> {
+                    conv.setCreatedBy(successor.getUser());
+                    conversationRepository.save(conv);
+                    conversationParticipantRepository.findByConversationIdAndUserId(conv.getId(), successor.getUser().getId())
+                            .ifPresent(p -> {
+                                p.setRole(ParticipantRole.ADMIN);
+                                conversationParticipantRepository.save(p);
+                            });
+                    log.info("Đã chuyển quyền Trưởng nhóm chat id={} sang cho Chủ sở hữu mới userId={}", conv.getId(), successor.getUser().getId());
+                });
             }
         }
 
@@ -326,6 +350,14 @@ public class GroupServiceImpl implements GroupService {
         memberRepository.save(membership);
         groupRepository.decrementMemberCount(groupId);
         log.info("Người dùng {} đã rời hội nhóm id={}", email, groupId);
+
+        // Xóa thành viên khỏi nhóm chat của hội nhóm nếu có
+        conversationRepository.findByCommunityGroupId(groupId).ifPresent(conv -> {
+            if (conversationParticipantRepository.existsByConversationIdAndUserId(conv.getId(), user.getId())) {
+                conversationParticipantRepository.deleteByConversationIdAndUserId(conv.getId(), user.getId());
+                log.info("Đã xóa người dùng {} khỏi nhóm chat id={} khi rời hội nhóm id={}", email, conv.getId(), groupId);
+            }
+        });
 
         return GroupMembershipResponse.builder()
                 .groupId(groupId)
@@ -438,6 +470,14 @@ public class GroupServiceImpl implements GroupService {
         groupRepository.decrementMemberCount(groupId);
         log.info("{} đã xóa thành viên userId={} khỏi hội nhóm id={}", email, targetUserId, groupId);
 
+        // Xóa thành viên khỏi nhóm chat của hội nhóm nếu có
+        conversationRepository.findByCommunityGroupId(groupId).ifPresent(conv -> {
+            if (conversationParticipantRepository.existsByConversationIdAndUserId(conv.getId(), targetUserId)) {
+                conversationParticipantRepository.deleteByConversationIdAndUserId(conv.getId(), targetUserId);
+                log.info("Đã xóa userId={} khỏi nhóm chat id={} khi bị xóa khỏi hội nhóm id={}", targetUserId, conv.getId(), groupId);
+            }
+        });
+
         return GroupActionResponse.builder()
                 .groupId(groupId)
                 .targetUserId(targetUserId)
@@ -486,6 +526,116 @@ public class GroupServiceImpl implements GroupService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public Long createGroupChat(Long groupId, String email) {
+        User user = requireUser(email);
+        CommunityGroup group = getVisibleGroup(groupId);
+        assertGroupActive(group);
+        requireOwner(group, user);
+
+        var existingOpt = conversationRepository.findByCommunityGroupId(groupId);
+        if (existingOpt.isPresent()) {
+            return existingOpt.get().getId();
+        }
+
+        Conversation conversation = Conversation.builder()
+                .type(ConversationType.GROUP)
+                .title(group.getName())
+                .avatarUrl(group.getCoverImageUrl())
+                .createdBy(user)
+                .communityGroup(group)
+                .createdAt(Instant.now())
+                .lastMessageAt(Instant.now())
+                .build();
+
+        Conversation savedConversation = conversationRepository.save(conversation);
+
+        // Chủ sở hữu hội nhóm là ADMIN (trưởng nhóm) của cuộc trò chuyện
+        ConversationParticipant participant = ConversationParticipant.builder()
+                .conversation(savedConversation)
+                .user(user)
+                .role(ParticipantRole.ADMIN)
+                .isAccepted(true)
+                .joinedAt(Instant.now())
+                .build();
+        conversationParticipantRepository.save(participant);
+
+        // Tạo tin nhắn hệ thống chào mừng nhóm
+        UserProfile userProfile = userProfileRepository.findById(user.getId()).orElse(null);
+        String userName = userProfile != null && userProfile.getFullName() != null
+                ? userProfile.getFullName()
+                : user.getEmail();
+
+        Message initMessage = messageRepository.save(Message.builder()
+                .conversation(savedConversation)
+                .sender(user)
+                .type(MessageType.SYSTEM)
+                .content(userName + " đã khởi tạo nhóm trò chuyện cho hội nhóm \"" + group.getName() + "\"")
+                .createdAt(Instant.now())
+                .build());
+
+        savedConversation.setLastMessageAt(initMessage.getCreatedAt());
+        conversationRepository.save(savedConversation);
+
+        log.info("Owner {} đã khởi tạo nhóm chat id={} cho hội nhóm id={}", email, savedConversation.getId(), groupId);
+        return savedConversation.getId();
+    }
+
+    @Override
+    @Transactional
+    public Long joinGroupChat(Long groupId, String email) {
+        User user = requireUser(email);
+        CommunityGroup group = getVisibleGroup(groupId);
+        assertGroupActive(group);
+
+        GroupMember membership = memberRepository.findByGroupIdAndUserId(groupId, user.getId())
+                .filter(m -> m.getMembershipStatus() == MembershipStatus.ACTIVE)
+                .orElseThrow(() -> new ForbiddenException("Bạn phải là thành viên chính thức của hội nhóm để tham gia nhóm trò chuyện."));
+
+        Conversation conversation = conversationRepository.findByCommunityGroupId(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hội nhóm chưa khởi tạo nhóm trò chuyện."));
+
+        boolean alreadyParticipant = conversationParticipantRepository
+                .existsByConversationIdAndUserId(conversation.getId(), user.getId());
+
+        if (!alreadyParticipant) {
+            // Chỉ Chủ sở hữu hội nhóm mới là ADMIN của nhóm chat, Quản trị viên hay thành viên đều là MEMBER
+            ParticipantRole chatRole = (membership.getRole() == MembershipRole.OWNER)
+                    ? ParticipantRole.ADMIN
+                    : ParticipantRole.MEMBER;
+
+            ConversationParticipant participant = ConversationParticipant.builder()
+                    .conversation(conversation)
+                    .user(user)
+                    .role(chatRole)
+                    .isAccepted(true)
+                    .joinedAt(Instant.now())
+                    .build();
+            conversationParticipantRepository.save(participant);
+
+            // Tin nhắn hệ thống khi thành viên mới tham gia
+            UserProfile userProfile = userProfileRepository.findById(user.getId()).orElse(null);
+            String userName = userProfile != null && userProfile.getFullName() != null
+                    ? userProfile.getFullName()
+                    : user.getEmail();
+
+            Message joinMessage = messageRepository.save(Message.builder()
+                    .conversation(conversation)
+                    .sender(user)
+                    .type(MessageType.SYSTEM)
+                    .content(userName + " đã tham gia nhóm trò chuyện.")
+                    .createdAt(Instant.now())
+                    .build());
+
+            conversation.setLastMessageAt(joinMessage.getCreatedAt());
+            conversationRepository.save(conversation);
+            log.info("Người dùng {} đã tham gia nhóm chat id={} của hội nhóm id={}", email, conversation.getId(), groupId);
+        }
+
+        return conversation.getId();
+    }
+
     // ==================== Hàm hỗ trợ ====================
 
     private GroupDetailResponse buildDetail(CommunityGroup group, GroupMember viewerMembership) {
@@ -496,7 +646,19 @@ public class GroupServiceImpl implements GroupService {
         Long pendingCount = isManager(viewerMembership)
                 ? memberRepository.countByGroupIdAndMembershipStatus(group.getId(), MembershipStatus.PENDING)
                 : null;
-        return groupMapper.toDetail(group, viewerMembership, ownerProfile, canSeeInside, canSeeInside, pendingCount);
+
+        Long conversationId = null;
+        boolean isConversationMember = false;
+        var convOpt = conversationRepository.findByCommunityGroupId(group.getId());
+        if (convOpt.isPresent()) {
+            conversationId = convOpt.get().getId();
+            if (activeMember && viewerMembership.getUser() != null) {
+                isConversationMember = conversationParticipantRepository
+                        .existsByConversationIdAndUserId(conversationId, viewerMembership.getUser().getId());
+            }
+        }
+
+        return groupMapper.toDetail(group, viewerMembership, ownerProfile, canSeeInside, canSeeInside, pendingCount, conversationId, isConversationMember);
     }
 
     private CommunityGroup getVisibleGroup(Long groupId) {

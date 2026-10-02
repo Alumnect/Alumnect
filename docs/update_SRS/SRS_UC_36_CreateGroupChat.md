@@ -2,6 +2,9 @@
 
 ## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
 
+> [!NOTE]
+> **Phân biệt phạm vi:** Use Case này (UC36) đặc tả việc người dùng tự do khởi tạo nhóm trò chuyện bạn bè/học tập thông thường từ mục Tin nhắn (`/app/messages`). Đối với nhóm trò chuyện trực thuộc **Hội nhóm sinh viên (Community Group Chat)** gắn liền với vòng đời hội nhóm, quy trình khởi tạo được đặc tả chi tiết tại tài liệu riêng [SRS_UC_CommunityGroupChat.md](file:///d:/Alumnect/docs/update_SRS/SRS_UC_CommunityGroupChat.md).
+
 ### 2.2.3 Business Workflow (Luồng nghiệp vụ)
 
 ```mermaid
@@ -10,7 +13,7 @@ stateDiagram-v2
     BamNutTaoNhom --> MoModalTaoNhom: Hiển thị CreateGroupModal
     
     state MoModalTaoNhom {
-        [*] --> NhapThongTinNhom: Nhập tên nhóm (Bắt buộc, 2 - 100 ký tự)
+        [*] --> NhapThongTinNhom: Nhập tên nhóm (Bắt buộc, 1 - 100 ký tự)
         NhapThongTinNhom --> TaiAnhDaiDien: Tùy chọn tải ảnh nhóm (Upload Cloudflare R2)
         TaiAnhDaiDien --> TimKiemThanhVien: Tìm kiếm người dùng qua API Search / danh sách Following
         TimKiemThanhVien --> ChonThanhVien: Chọn checkbox thêm thành viên (Tối thiểu 1 người khác)
@@ -20,7 +23,7 @@ stateDiagram-v2
     MoModalTaoNhom --> KiemTraDuLieuDauVao: Người dùng nhấn nút "Tạo nhóm"
     
     state KiemTraDuLieuDauVao <<choice>>
-    KiemTraDuLieuDauVao --> BaoLoiGiaoDien: Tên nhóm trống hoặc chưa chọn thành viên
+    KiemTraDuLieuDauVao --> BaoLoiGiaoDien: Tên nhóm trống hoặc chưa chọn thành viên (Hiển thị thông báo lỗi)
     BaoLoiGiaoDien --> MoModalTaoNhom: Hiển thị lỗi form
     
     KiemTraDuLieuDauVao --> GoiApiTaoNhom: Dữ liệu hợp lệ, gọi POST /api/v1/conversations/group
@@ -36,7 +39,7 @@ stateDiagram-v2
     
     state KetQuaTaoNhom <<choice>>
     KetQuaTaoNhom --> BaoLoiHeThong: HTTP 400 / 500
-    BaoLoiHeThong --> MoModalTaoNhom: Hiển thị Toast lỗi
+    BaoLoiHeThong --> MoModalTaoNhom: Hiển thị thông báo lỗi hệ thống
     
     KetQuaTaoNhom --> TaoNhomThanhCong: HTTP 200 OK (Trả về ConversationResponse)
     TaoNhomThanhCong --> CapNhatGiaoDienClient: Đóng Modal, nạp nhóm vào danh sách hội thoại, kích hoạt Active
@@ -49,7 +52,7 @@ stateDiagram-v2
   * Người dùng nhấp vào biểu tượng dấu cộng `+` bên cạnh tiêu đề hộp thư "Tin nhắn" để mở cửa sổ tạo nhóm (`CreateGroupModal`).
 * **Bước 2 - Các bước chuyển tiếp**:
   * **Nhập liệu thông tin nhóm**:
-    * Người dùng nhập "Tên nhóm trò chuyện" (bắt buộc, độ dài từ 2 đến 100 ký tự).
+    * Người dùng nhập "Tên nhóm trò chuyện" (bắt buộc, độ dài từ 1 đến 100 ký tự).
     * Tùy chọn tải lên ảnh đại diện nhóm thông qua nút chọn ảnh; ảnh được tải lên đám mây Cloudflare R2 và lấy URL trả về gán vào `avatarUrl`.
   * **Chọn thành viên tham gia**:
     * Hệ thống hiển thị thanh tìm kiếm thành viên kèm danh sách gợi ý bạn bè / người đang theo dõi (Following).
@@ -57,10 +60,14 @@ stateDiagram-v2
     * Khi nhấp chọn thành viên, thành viên đó xuất hiện dưới dạng Chip/Badge phía trên danh sách có kèm ảnh đại diện nhỏ và nút `x` để gỡ bỏ nhanh.
     * Quy tắc: Bắt buộc chọn ít nhất 1 thành viên khác ngoài người tạo nhóm.
   * **Gửi yêu cầu tạo nhóm**:
-    * Người dùng nhấn nút "Tạo nhóm" (`bg-brand-500`). Nút chuyển sang trạng thái đang tải (Loading Spinner).
-    * Frontend đóng gói payload JSON theo mẫu `CreateGroupRequest` (`{ title, avatarUrl, memberIds }`) và gọi API `POST /api/v1/conversations/group`.
+    * Người dùng nhấn nút "Tạo nhóm" (`bg-brand-500`).
+    * Hệ thống kiểm tra dữ liệu đầu vào phía Client:
+      * Nếu tên nhóm bị bỏ trống, hệ thống hiển thị thông báo lỗi: *"Vui lòng nhập tên nhóm trò chuyện."*.
+      * Nếu chưa chọn thành viên nào, hệ thống hiển thị thông báo lỗi: *"Vui lòng chọn ít nhất 1 thành viên khác vào nhóm."*.
+    * Khi dữ liệu hợp lệ, nút chuyển sang trạng thái đang tải (Loading Spinner).
+    * Hệ thống đóng gói dữ liệu yêu cầu theo mẫu `CreateGroupRequest` (`{ title, avatarUrl, memberIds }`) và gửi yêu cầu tạo nhóm qua API `POST /api/v1/conversations/group`.
   * **Xử lý nghiệp vụ tại Backend**:
-    * Spring Boot thẩm định dữ liệu `@Valid CreateGroupRequest`.
+    * Spring Boot thẩm định dữ liệu `@Valid CreateGroupRequest` (`@NotBlank`, `@Size(min = 1, max = 100)`).
     * Lọc danh sách `memberIds`: loại bỏ ID của người tạo (nếu vô tình gửi kèm) và loại bỏ các ID trùng lặp.
     * Tạo bản ghi mới trong bảng `conversations`: `type = 'GROUP'`, `title = request.getTitle()`, `avatar_url = request.getAvatarUrl()`, `created_by = currentUser`, `direct_key = NULL`.
     * Thêm các bản ghi thành viên vào bảng `conversation_participants`:
@@ -74,7 +81,7 @@ stateDiagram-v2
     * Sử dụng `SimpMessagingTemplate` phát sóng thời gian thực thông điệp khởi tạo tới kênh riêng `/user/queue/messages` của từng thành viên được mời.
 * **Bước 3 - Kết thúc**:
   * API trả về HTTP 200 OK kèm đối tượng `ConversationResponse` đầy đủ thông tin nhóm.
-  * Frontend đóng modal tạo nhóm, tự động cập nhật cache React Query `['conversations', 'primary']`, đưa nhóm mới lên đầu danh sách hội thoại và chuyển ngay khung chat bên phải sang cuộc trò chuyện nhóm vừa tạo.
+  * Frontend hiển thị thông báo Toast thành công: *"Tạo nhóm trò chuyện thành công!"*, đóng modal tạo nhóm, tự động cập nhật cache React Query `['conversations', 'primary']`, đưa nhóm mới lên đầu danh sách hội thoại và chuyển ngay khung chat bên phải sang cuộc trò chuyện nhóm vừa tạo.
 
 ---
 
@@ -92,16 +99,16 @@ stateDiagram-v2
 * **Interface**:
   * **Cửa sổ Modal "Tạo nhóm trò chuyện" (CreateGroupModal)**:
     * Khung tải ảnh đại diện nhóm: Vùng tròn cho phép nhấp để upload ảnh đại diện (kích thước tối đa 5MB).
-    * Trường nhập tên nhóm: Ô văn bản kèm placeholder *"Nhập tên nhóm trò chuyện..."*, có bộ đếm ký tự (2 - 100 ký tự).
+    * Trường nhập tên nhóm: Ô văn bản kèm placeholder *"Nhập tên nhóm trò chuyện..."*, có bộ đếm ký tự (1 - 100 ký tự).
     * Vùng hiển thị thành viên đã chọn: Các chip tag hiển thị tên + nút xóa nhỏ.
     * Ô tìm kiếm thành viên: Nhập tên/email để lọc danh sách người dùng.
     * Danh sách kết quả tìm kiếm/gợi ý bạn bè: Thẻ người dùng có checkbox hoặc nút "Chọn".
     * Nút "Hủy": Đóng modal mà không lưu.
-    * Nút "Tạo nhóm": Nút chính màu tím nổi bật, bị vô hiệu hóa (disabled) nếu tên nhóm chưa đủ 2 ký tự hoặc chưa chọn thành viên nào.
+    * Nút "Tạo nhóm": Nút chính màu tím nổi bật, bị vô hiệu hóa (disabled) nếu đang trong quá trình gửi yêu cầu.
 
 **Data processing**:
 * Tiếp nhận `CreateGroupRequest` gồm `title`, `avatarUrl`, `memberIds`.
-* Thẩm định: `title` không rỗng (2 - 100 ký tự), `memberIds` không rỗng sau khi loại bỏ người tạo.
+* Thẩm định: `title` không rỗng (1 - 100 ký tự), `memberIds` không rỗng sau khi loại bỏ người tạo.
 * Gán người tạo quyền `ADMIN` trong nhóm.
 * Tự động sinh tin nhắn hệ thống chào mừng dạng `SYSTEM` để hiển thị trong khung chat và danh sách hộp thư.
 * Phát sóng WebSocket thông báo cho các thành viên.
@@ -150,10 +157,10 @@ stateDiagram-v2
 
 | # | Mã thông điệp | Loại thông điệp | Ngữ cảnh | Nội dung hiển thị |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | `MSG-GRP-01` | Toast message | Tạo nhóm thành công | Tạo nhóm trò chuyện thành công. |
-| 2 | `MSG-GRP-02` | In red, dưới ô nhập | Tên nhóm rỗng | Tên nhóm không được để trống. |
-| 3 | `MSG-GRP-03` | In red, dưới ô nhập | Tên nhóm < 2 ký tự hoặc > 100 ký tự | Tên nhóm phải từ 2 đến 100 ký tự. |
-| 4 | `MSG-GRP-04` | In line | Chưa chọn thành viên nào | Vui lòng chọn ít nhất 1 thành viên tham gia nhóm. |
+| 1 | `MSG-GRP-01` | Toast message | Tạo nhóm thành công | Tạo nhóm trò chuyện thành công! |
+| 2 | `MSG-GRP-02` | Toast error | Tên nhóm rỗng khi bấm Tạo nhóm | Vui lòng nhập tên nhóm trò chuyện. |
+| 3 | `MSG-GRP-03` | Backend error | Tên nhóm < 1 ký tự hoặc > 100 ký tự | Tên nhóm phải từ 1 đến 100 ký tự |
+| 4 | `MSG-GRP-04` | Toast error | Chưa chọn thành viên nào | Vui lòng chọn ít nhất 1 thành viên khác vào nhóm. |
 | 5 | `MSG-GRP-05` | System Message | Tin nhắn khởi tạo nhóm | {Tên người tạo} đã tạo nhóm "{Tên nhóm}". |
 
 ---
@@ -248,6 +255,11 @@ classDiagram
         +handleSubmit(): void
     }
 
+    class useCreateGroup {
+        +mutate(params: { payload: CreateGroupRequest }): void
+        +isLoading: boolean
+    }
+
     class chatApi {
         +createGroup(req: CreateGroupRequest): Promise~ApiResponse~Conversation~~~~
     }
@@ -259,7 +271,8 @@ classDiagram
     ChatServiceImpl --> ConversationParticipantRepository : lưu thành viên
     ChatServiceImpl --> MessageRepository : lưu tin nhắn hệ thống
     Conversation "1" *-- "many" ConversationParticipant : chứa
-    CreateGroupModal --> chatApi : gọi POST /conversations/group
+    CreateGroupModal --> useCreateGroup : kích hoạt mutation
+    useCreateGroup --> chatApi : gọi POST /conversations/group
 ```
 
 ##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự Gộp)

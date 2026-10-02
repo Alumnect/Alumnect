@@ -12,8 +12,8 @@ stateDiagram-v2
 
     state ChoSuKien {
         [*] --> LangNghe
-        LangNghe --> NhanThongBaoRealtime : Máy chủ bắn sự kiện (Like, Comment, Follow, Q&A, Gỡ bài, Chào mừng)
-        NhanThongBaoRealtime --> HienThiToast : Hiện Toast nổi góc màn hình
+        LangNghe --> NhanThongBaoRealtime : Máy chủ phát sự kiện thời gian thực (Like, Comment, Follow, Q&A, Gỡ bài, Chào mừng)
+        NhanThongBaoRealtime --> HienThiToast : Hiện thông báo nổi góc màn hình
         HienThiToast --> NhayBadgeChuong : Tăng số đếm chưa đọc trên icon Chuông
     }
 
@@ -61,7 +61,7 @@ Module Thông báo chịu trách nhiệm thu thập, lưu trữ, gom nhóm, phá
   - Thanh phân trang hiện đại: Nút bấm trực tiếp các số trang (`[1]`, `[2]`...) cùng hai nút điều hướng `Trang trước` và `Trang sau`.
 
 **Data processing**:
-* **Gom nhóm lượt thích (Like Aggregation)**: Khi bài viết nhận nhiều lượt like mà chủ bài viết chưa đọc thông báo like trước đó, hệ thống không tạo bản ghi rác mới mà cập nhật lại bản ghi cũ: tăng `sender_count`, cập nhật nội dung thành `"[Người mới nhất] và X người khác đã thích bài viết của bạn."`, đưa thời gian cập nhật lên đầu trang. Khi người dùng bỏ thích (Unlike), hệ thống tự động giảm số đếm hoặc xóa bỏ thông báo.
+* **Gom nhóm lượt thích (Like Aggregation)**: Khi bài viết nhận nhiều lượt like mà chủ bài viết chưa đọc thông báo like trước đó, hệ thống không tạo bản ghi rác mới mà cập nhật lại bản ghi cũ: tăng `sender_count`, cập nhật nội dung thành `"[Người mới nhất] và X người khác đã thích bài viết của người dùng."`, đưa thời gian cập nhật lên đầu trang. Khi người dùng bỏ thích (Unlike), hệ thống tự động giảm số đếm hoặc xóa bỏ thông báo.
 * **Bình luận kèm trích đoạn & Hash điều hướng**: Cắt ngắn nội dung bình luận tối đa 60 ký tự, lưu trữ targetId dạng `{postId}#comment-{commentId}` để frontend tự động cuộn mượt (smooth scroll) và highlight đúng bình luận trong 4 giây.
 * **Theo dõi người dùng**: Lưu trữ `targetType="USER"` và `targetId="{followerId}"` để điều hướng chuẩn về `/app/profile?userId={id}`.
 * **Tự tương tác**: Kiểm tra `recipientId != senderId`; nếu người dùng tự like/comment bài của mình hoặc tự trả lời câu hỏi của mình thì không sinh thông báo.
@@ -79,7 +79,7 @@ Module Thông báo chịu trách nhiệm thu thập, lưu trữ, gom nhóm, phá
   - Yêu cầu xác thực JWT hợp lệ (401 Unauthorized nếu thiếu token).
   - Không cho phép thao tác đánh dấu đã đọc trên thông báo thuộc về người khác (404 Not Found).
 * **Business rules**:
-  - BR-NOTIF-01: Không gửi thông báo khi người dùng tự thao tác trên nội dung của chính mình.
+  - BR-NOTIF-01: Không gửi thông báo khi người dùng tự thao tác trên nội dung của bản thân.
   - BR-NOTIF-02: Thông báo lượt thích trên cùng 1 bài viết sẽ được gom nhóm nếu thông báo trước đó chưa đọc.
   - BR-NOTIF-03: Thông báo chào đón thành viên chỉ được gửi một lần duy nhất khi tài khoản chuyển sang `ACTIVE`.
   - BR-NOTIF-04: Đánh dấu tất cả đã đọc chỉ áp dụng cho các thông báo chưa đọc thuộc quyền sở hữu của người dùng đăng nhập.
@@ -97,7 +97,7 @@ Module Thông báo chịu trách nhiệm thu thập, lưu trữ, gom nhóm, phá
 
 | ID | Định nghĩa Quy tắc (Rule Definition) |
 | :--- | :--- |
-| BR-NOTIF-01 | Người dùng không nhận thông báo do chính mình gây ra (Self-action exemption). |
+| BR-NOTIF-01 | Người dùng không nhận thông báo do chính người dùng thực hiện (Self-action exemption). |
 | BR-NOTIF-02 | Các lượt thích (Like) trên cùng một bài viết chưa được đọc phải được gom nhóm thành 1 thông báo duy nhất và cập nhật số lượng `senderCount`. |
 | BR-NOTIF-03 | Nếu người dùng hủy thích (Unlike), số lượng gom nhóm giảm tương ứng; nếu về 0 thì thông báo tự động được thu hồi/xóa bỏ. |
 | BR-NOTIF-04 | Thông báo chào đón thành viên (WELCOME) kích hoạt tự động ngay khi tài khoản chuyển trạng thái sang `ACTIVE` và chỉ gửi tối đa 1 lần. |
@@ -114,9 +114,9 @@ Module Thông báo chịu trách nhiệm thu thập, lưu trữ, gom nhóm, phá
 
 | # | Mã thông điệp | Loại thông điệp | Ngữ cảnh | Nội dung hiển thị |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | MSG-NOTIF-01 | Toast / WebSocket | Có người thích bài viết | `[Người A] đã thích bài viết của bạn.` |
-| 2 | MSG-NOTIF-02 | Toast / WebSocket | Nhiều người thích bài viết | `[Người mới nhất] và X người khác đã thích bài viết của bạn.` |
-| 3 | MSG-NOTIF-03 | Toast / WebSocket | Có người bình luận bài viết | `[Người A] đã bình luận về bài viết của bạn: "[Trích đoạn...]"` |
+| 1 | MSG-NOTIF-01 | Toast / WebSocket | Có người thích bài viết | `[Người A] đã thích bài viết của người dùng.` |
+| 2 | MSG-NOTIF-02 | Toast / WebSocket | Nhiều người thích bài viết | `[Người mới nhất] và X người khác đã thích bài viết của người dùng.` |
+| 3 | MSG-NOTIF-03 | Toast / WebSocket | Có người bình luận bài viết | `[Người A] đã bình luận về bài viết của người dùng: "[Trích đoạn...]"` |
 | 4 | MSG-NOTIF-04 | Toast / WebSocket | Có người theo dõi mới | `[Người A] đã bắt đầu theo dõi bạn.` |
 | 5 | MSG-NOTIF-05 | Toast / WebSocket | Có câu trả lời Q&A mới | `[Người A] đã trả lời câu hỏi "[Tiêu đề...]" của bạn.` |
 | 6 | MSG-NOTIF-06 | Toast / WebSocket | Bài viết bị gỡ do vi phạm | `Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng.` |
@@ -349,4 +349,4 @@ sequenceDiagram
 ###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
 1. **Luồng 1 - Truy vấn danh sách thông báo phân trang**: Client gửi HTTP GET kèm JWT token lên `NotificationController`. Sau khi kiểm tra xác thực, Controller gọi `NotificationService` để tìm thông báo theo `recipient_id` từ CSDL PostgreSQL (có phân trang và sắp xếp theo `created_at DESC`). `NotificationMapper` chuyển đổi các thực thể sang DTO `NotificationResponse` (kèm họ tên và avatar của người gửi) và Controller trả về HTTP 200 OK.
 2. **Luồng 2 - Đánh dấu thông báo đã đọc**: Khi người dùng nhấn vào thông báo, Client gửi HTTP PATCH tới `/notifications/{id}/read`. Service thực thi câu lệnh update atomic trong PostgreSQL ràng buộc cả `id` và `recipient_id`. Nếu không có bản ghi nào được cập nhật, hệ thống ném `ResourceNotFoundException` trả về HTTP 404. Nếu thành công, trả về HTTP 200 OK.
-3. **Luồng 3 - Bắn thông báo thời gian thực qua WebSocket**: Khi một tương tác xảy ra trong hệ thống (thích bài, bình luận, follow, v.v.), service tương ứng gọi `NotificationService`. Nếu phát hiện người thao tác chính là tác giả, hệ thống lập tức bỏ qua. Ngược lại, hệ thống kiểm tra gom nhóm (với lượt thích) hoặc tạo mới bản ghi thông báo trong PostgreSQL, sau đó thông qua `SimpMessagingTemplate` phát sóng gói tin trực tiếp tới kênh riêng `/user/queue/notifications` của người nhận. `AppShell` tại Frontend nhận được frame, hiển thị Toast thông báo và tăng số đếm badge tức thời.
+3. **Luồng 3 - Phát thông báo thời gian thực qua WebSocket**: Khi một tương tác xảy ra trong hệ thống (thích bài, bình luận, follow, v.v.), service tương ứng gọi `NotificationService`. Nếu phát hiện người thao tác chính là tác giả, hệ thống lập tức bỏ qua. Ngược lại, hệ thống kiểm tra gom nhóm (với lượt thích) hoặc tạo mới bản ghi thông báo trong PostgreSQL, sau đó thông qua `SimpMessagingTemplate` phát sóng gói tin trực tiếp tới kênh riêng `/user/queue/notifications` của người nhận. `AppShell` tại Frontend nhận được frame, hiển thị Toast thông báo và tăng số đếm badge tức thời.

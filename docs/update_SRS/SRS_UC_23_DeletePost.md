@@ -1,6 +1,31 @@
 # ĐẶC TẢ YÊU CẦU PHẦN MỀM (SRS) - UC23 XÓA BÀI VIẾT
 
-## PHẦN 1: TÀI LIỆU YÊU CẦU (REPORT 1)
+## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
+
+### 2.2.3 Business Workflow (Luồng nghiệp vụ)
+
+```mermaid
+stateDiagram-v2
+    [*] --> FeedViewing : Tác giả xem bài viết trên Bảng tin / Trang cá nhân
+    FeedViewing --> OpenConfirmModal : Bấm icon "Thùng rác" (Xóa bài viết)
+    OpenConfirmModal --> CancelDelete : Bấm "Hủy" / Đóng modal
+    CancelDelete --> FeedViewing : Giữ nguyên bài viết
+    OpenConfirmModal --> SubmitDelete : Bấm "Xóa bài viết"
+    SubmitDelete --> CheckAuth : Gửi DELETE /api/v1/posts/{id}
+    CheckAuth --> Forbidden403 : Không phải tác giả bài viết
+    CheckAuth --> NotFound404 : Bài viết không tồn tại / đã bị ẩn
+    CheckAuth --> SoftDeleteDB : Xác nhận chính chủ -> Cập nhật status = DELETED
+    SoftDeleteDB --> SuccessToast : Trả về 200 OK
+    SuccessToast --> [*] : Invalidate cache & biến mất khỏi Feed
+```
+
+#### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
+* **Bước 1 - Khởi đầu**: Tác giả sở hữu bài viết (thành viên Student hoặc Alumni) xem bài viết của mình trên Bảng tin hoặc Trang chi tiết bài viết, bấm vào nút "Xóa bài viết" (biểu tượng Thùng rác).
+* **Bước 2 - Xác nhận hành động**: Hệ thống hiển thị hộp thoại Modal xác nhận xóa: *"Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác"*.
+* **Bước 3 - Xử lý tại máy chủ**: Nếu người dùng bấm xác nhận, Frontend gửi `DELETE /api/v1/posts/{id}`. Backend kiểm tra quyền sở hữu tác giả (`post.user.id == currentUser.id`), cập nhật trạng thái bài viết thành `PostStatus.DELETED` (xóa mềm) trong cơ sở dữ liệu PostgreSQL.
+* **Bước 4 - Phản hồi & Đồng bộ**: Backend phản hồi HTTP 200 OK. Frontend hiển thị Toast thông báo *"Đã xóa bài viết thành công"*, tự động làm mới cache TanStack Query và loại bỏ thẻ bài viết khỏi giao diện.
+
+---
 
 ### 1. THÔNG TIN CHUNG (GENERAL INFO)
 *   Tên tính năng: Delete a post
@@ -10,7 +35,16 @@
 Authenticated Student and Alumni users can delete posts that they created. The system must only allow the post owner to access the delete action, require confirmation before deletion, and remove the post from the Feed after a successful request. Appropriate loading, success/error toasts must be shown.
 
 ### 5. Yêu cầu Giao diện & Hiển thị (UI & Display Requirements)
-#### 5.3 Error & Informational Messages (Thông điệp Lỗi & Thông báo)
+#### 5.1 Business Rules (Quy tắc Nghiệp vụ)
+
+| ID | Định nghĩa Quy tắc (Rule Definition) |
+| :--- | :--- |
+| BR-DEL-01 | Chỉ tác giả sở hữu bài viết (`STUDENT` hoặc `ALUMNI`) mới được phép xóa bài viết của mình. Người khác hoặc Admin không có quyền xóa qua API này (trả về 403 Forbidden). |
+| BR-DEL-02 | Bài viết đã bị xóa hoặc không tồn tại sẽ trả về lỗi 404 Not Found. |
+| BR-DEL-03 | Bài viết sau khi xóa sẽ được cập nhật trạng thái sang `DELETED` (Soft Delete), không còn hiển thị trên Bảng tin, Trang chi tiết hay Danh sách đã lưu. |
+| BR-DEL-04 | Khách vãng lai chưa đăng nhập không thể thực hiện thao tác xóa bài viết (trả về 401 Unauthorized). |
+
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
 
 | # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
 | :--- | :--- | :--- | :--- | :--- |

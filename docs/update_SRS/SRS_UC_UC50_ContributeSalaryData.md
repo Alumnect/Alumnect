@@ -46,7 +46,7 @@ stateDiagram-v2
   * Nếu có `industryId`: kiểm tra tồn tại trong bảng `industries` — không tồn tại → 400.
   * **Chuẩn hóa `currency`**: bỏ trống → mặc định `"VND"`; có giá trị thì phải đúng định dạng 3 chữ cái viết hoa (VD `USD`) — sai định dạng → 400.
   * Lưu bản ghi `salary_contributions` (kèm `user_id` để truy vết nội bộ/chống spam, nhưng **không bao giờ trả `user_id` hay bất kỳ trường định danh nào về Client**).
-* **Bước 5 - Kết thúc**: Server trả HTTP 201 với `SalaryContributionResponse` (không chứa thông tin định danh). Frontend đóng modal, hiện toast "Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!". UC50 chỉ lo phần **ghi** dữ liệu — không hiển thị lại danh sách/thống kê (thuộc UC53 - View salary statistics, ngoài phạm vi UC50), nên không cần invalidate cache nào.
+* **Bước 5 - Kết thúc**: Server trả HTTP 201 với `SalaryContributionResponse` (không chứa thông tin định danh). Frontend đóng modal, hiện toast "Đã ghi nhận đóng góp dữ liệu lương của người dùng. Cảm ơn bạn!". UC50 chỉ lo phần **ghi** dữ liệu — không hiển thị lại danh sách/thống kê (thuộc UC53 - View salary statistics, ngoài phạm vi UC50), nên không cần invalidate cache nào.
 
 ---
 
@@ -58,7 +58,7 @@ Module 5 (Career Paths & Salary). UC50 là chức năng **ghi** đầu tiên c�
 
 **Function trigger**:
 *   **Navigation path**: `/app/salary` (Bảng lương ẩn danh) → nút "Đóng góp dữ liệu" (chỉ Alumni đã đăng nhập) → modal → "Gửi đóng góp".
-*   **Timing Frequency**: On demand (khi Alumni muốn chia sẻ mức lương thực tế của mình).
+*   **Timing Frequency**: On demand (khi Alumni muốn chia sẻ mức lương thực tế của bản thân).
 
 **Function description**:
 *   **Actors/Roles**: **Cựu sinh viên (ALUMNI)** — KHÁC các UC Q&A Forum khác (thường cho phép cả STUDENT + ALUMNI), vì dữ liệu lương thực tế chỉ có ý nghĩa từ người đã đi làm. Student/Admin bị API từ chối 403 (và không thấy nút ở FE); Guest bị chặn 401.
@@ -66,7 +66,7 @@ Module 5 (Career Paths & Salary). UC50 là chức năng **ghi** đầu tiên c�
 *   **Interface**:
     *   **Nút "Đóng góp dữ liệu"** (gold, icon `Plus`) trên `PageHeader` của `SalaryPage` — chỉ hiển thị khi `user.role === 'ALUMNI'`.
     *   **Modal `ContributeSalaryModal`**: tiêu đề "Đóng góp dữ liệu lương", badge "Ẩn danh 100%" + dòng giải thích "Hệ thống không lưu tên/thông tin định danh cùng dữ liệu lương bạn đóng góp", form gồm 6 trường (2 bắt buộc, 4 tùy chọn), nút "Hủy"/"Gửi đóng góp" (có spinner khi xử lý).
-    *   **Thông báo**: toast thành công "Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!" hoặc banner lỗi trong modal nếu API thất bại.
+    *   **Thông báo**: toast thành công "Đã ghi nhận đóng góp dữ liệu lương của người dùng. Cảm ơn bạn!" hoặc banner lỗi trong modal nếu API thất bại.
 
 **Data processing**:
 1.  Client gọi `POST /salary-contributions` (Bearer JWT) với body `{ industryId?, jobTitle, company?, region?, yearsExperience?, grossAmount, currency? }`.
@@ -125,8 +125,8 @@ Module 5 (Career Paths & Salary). UC50 là chức năng **ghi** đầu tiên c�
 | 3 | MSG-CS-03 | Lỗi field (FE) / Toast lỗi (BE) | Mức lương không hợp lệ | Mức lương không được để trống / phải lớn hơn 0 | 400 |
 | 4 | MSG-CS-04 | Toast lỗi | Ngành nghề không tồn tại | Ngành nghề không tồn tại | 400 |
 | 5 | MSG-CS-05 | Toast lỗi | Sai định dạng currency | Đơn vị tiền tệ phải là mã 3 chữ cái (VD: VND, USD) | 400 |
-| 6 | MSG-CS-06 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
-| 7 | MSG-CS-07 | Toast thành công | Đóng góp thành công | Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn! | 201 |
+| 6 | MSG-CS-06 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 7 | MSG-CS-07 | Toast thành công | Đóng góp thành công | Đã ghi nhận đóng góp dữ liệu lương của người dùng. Cảm ơn bạn! | 201 |
 
 ---
 

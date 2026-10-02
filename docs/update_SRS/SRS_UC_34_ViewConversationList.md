@@ -85,7 +85,7 @@ stateDiagram-v2
   * **Đồng bộ hóa thời gian thực (WebSocket Real-time Sync)**:
     * Khi có bất kỳ tin nhắn mới nào được gửi tới người dùng qua kênh `/user/queue/messages`, hook `useWebSocketChat` tự động phân giải dữ liệu STOMP, cập nhật đoạn trích tin nhắn cuối, thời gian mới nhất và tăng huy hiệu chưa đọc thêm 1 đơn vị trực tiếp trên bộ nhớ đệm React Query mà không cần tải lại toàn bộ trang. Cuộc trò chuyện đó ngay lập tức được tự động đẩy lên vị trí đầu danh sách.
 * **Bước 3 - Kết thúc**:
-  * Khi người dùng nhấp chọn một cuộc hội thoại cụ thể, cuộc trò chuyện đó chuyển sang trạng thái kích hoạt (Active), khung chat bên phải nạp lịch sử tin nhắn chi tiết (UC33) và hệ thống tự động gửi yêu cầu đánh dấu đã đọc (`POST /conversations/{id}/read`), đặt huy hiệu chưa đọc của cuộc trò chuyện đó về 0.
+  * Khi người dùng nhấp chọn một cuộc hội thoại cụ thể, cuộc trò chuyện đó chuyển sang trạng thái kích hoạt (Active), khung chat bên phải nạp lịch sử tin nhắn chi tiết (UC33) và hệ thống tự động gửi yêu cầu đánh dấu đã đọc (`POST /conversations/{conversationId}/read`), đặt huy hiệu chưa đọc của cuộc trò chuyện đó về 0.
 
 ---
 

@@ -23,7 +23,7 @@ stateDiagram-v2
         [*] --> KiemTraIdempotentHoiThoai: Kiểm tra/Khởi tạo hội thoại theo directKey
         KiemTraIdempotentHoiThoai --> LuuDatabase: Lưu Message, Attachments & cập nhật last_message_at
         LuuDatabase --> CapNhatNguoiDoc: Đánh dấu đã đọc tin nhắn cho người gửi
-        CapNhatNguoiDoc --> PhatSongWebSocket: Bắn STOMP frame tới người nhận (/user/queue/messages)
+        CapNhatNguoiDoc --> PhatSongWebSocket: Phát sóng thông điệp STOMP tới người nhận (/user/queue/messages)
     }
     
     XuLyLuuVaPhatSong --> CapNhatGiaoDienRealtime: Trả lời HTTP 200 OK
@@ -63,7 +63,7 @@ stateDiagram-v2
   * Trả về HTTP 200 OK kèm `MessageResponse` cho người gửi. Hook `useSendMessage` hoán đổi mượt mà tin nhắn tạm với dữ liệu chính thức từ server, chuyển trạng thái sang đã gửi thành công. Nếu xảy ra lỗi mạng hoặc máy chủ, tin nhắn được đánh dấu trạng thái lỗi (`status = 'error'`) kèm thông báo toast.
   * Đồng thời, backend gọi `SimpMessagingTemplate.convertAndSendToUser` đẩy tin nhắn theo thời gian thực tới kênh cá nhân `/user/queue/messages` của người nhận.
   * Client của người nhận nhận được frame STOMP, hook `useWebSocketChat` tự động cập nhật trực tiếp cache React Query `['messages', conversationId]` và tăng `unreadCount` trong danh sách `['conversations']` **mà không cần gọi lại HTTP REST API**, đảm bảo độ trễ gần như bằng 0 và không tốn băng thông máy chủ.
-  * Nếu người nhận đang mở cửa sổ chat của cuộc trò chuyện đó, hook `useMarkAsRead` tự động gọi `POST /api/v1/conversations/{id}/read` để cập nhật trạng thái đã đọc.
+  * Nếu người nhận đang mở cửa sổ chat của cuộc trò chuyện đó, hook `useMarkAsRead` tự động gọi `POST /api/v1/conversations/{conversationId}/read` để cập nhật trạng thái đã đọc.
 
 ---
 

@@ -35,7 +35,7 @@ stateDiagram-v2
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
 * **Bước 1 - Khởi đầu**: Thành viên đã đăng nhập với vai trò Sinh viên (STUDENT) hoặc Cựu sinh viên (ALUMNI) đang ở trang diễn đàn Q&A (`/app/forum`). Chỉ họ mới thấy nút "Đặt câu hỏi". Bấm nút sẽ mở Modal đặt câu hỏi.
-* **Bước 2 - Nhập liệu & Kiểm tra hợp lệ Client**: Người dùng nhập tiêu đề, nội dung và có thể chọn một chủ đề (picker phân cấp 2 cấp: chọn ngành lớn hoặc bung ra chọn chủ đề con). Client kiểm tra bằng Zod (`createQuestionSchema`): tiêu đề bắt buộc ≤ 250 ký tự, nội dung bắt buộc ≤ 10000 ký tự. Chủ đề là tùy chọn.
+* **Bước 2 - Nhập liệu & Kiểm tra hợp lệ Client**: Người dùng nhập tiêu đề, nội dung và có thể chọn một chủ đề (picker phân cấp 2 cấp: chọn ngành lớn hoặc mở rộng để chọn chủ đề con). Client kiểm tra bằng Zod (`createQuestionSchema`): tiêu đề bắt buộc ≤ 250 ký tự, nội dung bắt buộc ≤ 10000 ký tự. Chủ đề là tùy chọn.
 * **Bước 3 - Gửi & Kiểm tra phía Server**: Client gọi `POST /api/v1/questions` kèm Bearer JWT. Server (`QuestionServiceImpl.createQuestion`):
   * Nạp User theo email (từ JWT); không tồn tại → 404.
   * Kiểm tra quyền: nếu vai trò không phải STUDENT/ALUMNI → ném lỗi 403 (RBAC).
@@ -59,7 +59,7 @@ Module 4 (Q&A Forum) phụ trách diễn đàn hỏi đáp: xem danh sách câu 
 *   **Purpose**: Cho phép thành viên tạo và đăng một câu hỏi (tiêu đề + nội dung, tùy chọn gắn chủ đề) lên diễn đàn Q&A để nhận tư vấn/giải đáp từ cộng đồng cựu sinh viên.
 *   **Interface**:
     *   **Nút "Đặt câu hỏi"** ở đầu trang diễn đàn — chỉ hiển thị cho STUDENT/ALUMNI.
-    *   **Modal đặt câu hỏi** (render qua React Portal ra `<body>` để hiển thị chính giữa màn hình, khóa cuộn nền, đóng bằng Esc): ô nhập **Tiêu đề** (input); **picker Chủ đề (tùy chọn)** dạng phân cấp — bấm ngành lớn để chọn cả ngành, hoặc bung ra tick chọn một chủ đề con; ô nhập **Nội dung** (textarea); nút "Hủy" và nút "Đăng câu hỏi" (trạng thái "Đang đăng…").
+    *   **Modal đặt câu hỏi** (render qua React Portal ra `<body>` để hiển thị chính giữa màn hình, khóa cuộn nền, đóng bằng Esc): ô nhập **Tiêu đề** (input); **picker Chủ đề (tùy chọn)** dạng phân cấp — bấm ngành lớn để chọn cả ngành, hoặc mở rộng để tick chọn một chủ đề con; ô nhập **Nội dung** (textarea); nút "Hủy" và nút "Đăng câu hỏi" (trạng thái "Đang đăng…").
     *   **Trạng thái**: Loading (nút "Đăng câu hỏi" khóa + spinner khi đang gửi); Error (banner đỏ hiển thị nguyên văn thông điệp lỗi nghiệp vụ từ Backend, ví dụ 403); Success (đóng modal, điều hướng sang trang chi tiết câu hỏi vừa tạo).
 
 **Data processing**:
@@ -125,7 +125,7 @@ Module 4 (Q&A Forum) phụ trách diễn đàn hỏi đáp: xem danh sách câu 
 | 4 | MSG-AQ-04 | Inline (dưới ô) | Nội dung vượt quá độ dài | Nội dung câu hỏi không được vượt quá 10000 ký tự | 400 |
 | 5 | MSG-AQ-05 | Banner (Alert error) | Chủ đề gắn không tồn tại | Chủ đề không tồn tại | 400 |
 | 6 | MSG-AQ-06 | Banner (Alert error) | Vai trò không được phép đặt câu hỏi | Chỉ sinh viên và cựu sinh viên mới được đặt câu hỏi | 403 |
-| 7 | MSG-AQ-07 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 7 | MSG-AQ-07 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 8 | MSG-AQ-08 | Banner (Alert error) | Token hợp lệ nhưng tài khoản không tồn tại | Không tìm thấy tài khoản người dùng | 404 |
 | 9 | MSG-AQ-09 | API response (201) | Đặt câu hỏi thành công (FE điều hướng sang trang chi tiết) | Đặt câu hỏi thành công | 201 |
 

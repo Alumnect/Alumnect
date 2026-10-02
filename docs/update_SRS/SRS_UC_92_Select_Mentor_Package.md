@@ -99,7 +99,7 @@ stateDiagram-v2
 | :--- | :--- | :--- | :--- |
 | **MSG-92-01** | `packageId` | Mã gói dịch vụ không được để trống | 400 Bad Request |
 | **MSG-92-02** | N/A | Gói dịch vụ không tồn tại hoặc đã ngưng hoạt động. | 400 Bad Request |
-| **MSG-92-03** | N/A | Bạn cần hoàn thiện thông tin đăng ký Mentor (UC91) trước khi chọn gói dịch vụ. | 400 Bad Request |
+| **MSG-92-03** | N/A | Vui lòng hoàn thiện thông tin đăng ký Mentor (UC91) trước khi chọn gói dịch vụ. | 400 Bad Request |
 | **MSG-92-04** | N/A | Bạn phải chấp nhận Điều khoản Hướng dẫn & Hỗ trợ trước khi chọn gói Mentor. | 403 Forbidden |
 | **MSG-92-05** | N/A | Chức năng chọn gói Mentor chỉ dành riêng cho Cựu sinh viên. | 403 Forbidden |
 | **MSG-92-06** | N/A | Lựa chọn gói Mentor thành công. Thông tin thanh toán đã sẵn sàng. | 200 OK |
@@ -225,7 +225,7 @@ sequenceDiagram
         Svc->>ProfRepo: findByUserId(userId)
         ProfRepo-->>Svc: MentorProfile (status)
         alt Profile status == INCOMPLETE
-            Svc-->>Ctrl: Throw BadRequestException("Bạn cần hoàn thiện thông tin UC91...")
+            Svc-->>Ctrl: Throw BadRequestException("Vui lòng hoàn thiện thông tin UC91...")
             Ctrl-->>FE: 400 Bad Request
             FE-->>Alumni: Hiển thị thông báo lỗi hoàn thiện UC91
         else Profile hợp lệ (PAYMENT_PENDING / ACTIVE)

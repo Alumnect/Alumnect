@@ -38,13 +38,13 @@ stateDiagram-v2
     QuyetDinhHanhDong --> ChapNhanTinNhan: Người dùng bấm "Chấp nhận" (Accept)
     QuyetDinhHanhDong --> TuChoiTinNhan: Người dùng bấm "Xóa / Từ chối" (Delete/Reject)
     
-    ChapNhanTinNhan --> GoiApiAccept: POST /api/v1/conversations/{id}/accept
+    ChapNhanTinNhan --> GoiApiAccept: POST /api/v1/conversations/{conversationId}/accept
     GoiApiAccept --> CapNhatAcceptedDB: Cập nhật is_accepted = true trong CSDL
     CapNhatAcceptedDB --> ChuyenSangHopThuChinh: Cuộc hội thoại chuyển sang tab "Hộp thư chính", mở khóa gửi tin nhắn
     ChuyenSangHopThuChinh --> [*]
     
     TuChoiTinNhan --> XacNhanXoa: Hiển thị Modal xác nhận xóa tin nhắn chờ
-    XacNhanXoa --> GoiApiDelete: DELETE /api/v1/conversations/{id}
+    XacNhanXoa --> GoiApiDelete: DELETE /api/v1/conversations/{conversationId}
     GoiApiDelete --> XoaKhoiDB: Xóa bản ghi hội thoại và tin nhắn liên quan
     XoaKhoiDB --> LoaiBoKhoiGiaoDien: Cập nhật cache React Query, đóng khung chat
     LoaiBoKhoiGiaoDien --> [*]
@@ -140,7 +140,7 @@ stateDiagram-v2
 | :--- | :--- |
 | **BR-35-01** | Khi người gửi A nhắn tin cho người nhận B lần đầu tiên, nếu B chưa nhấn Follow A trên hệ thống, cuộc hội thoại được xếp vào danh mục Tin nhắn chờ của B (`participant.is_accepted = false`). |
 | **BR-35-02** | Phía người gửi A luôn có `is_accepted = true`, cuộc trò chuyện xuất hiện bình thường trong danh sách của A. |
-| **BR-35-03** | Chỉ người nhận (người có `is_accepted = false`) mới có quyền thực hiện hành động Chấp nhận (`POST /accept`). |
+| **BR-35-03** | Chỉ người nhận (người có `is_accepted = false`) mới có quyền thực hiện hành động Chấp nhận (`POST /api/v1/conversations/{conversationId}/accept`). |
 | **BR-35-04** | Khi chấp nhận thành công, cờ `is_accepted` chuyển thành `true` vĩnh viễn cho cuộc hội thoại này; những tin nhắn trao đổi sau này sẽ đi thẳng vào Hộp thư chính. |
 | **BR-35-05** | Thao tác Xóa cuộc trò chuyện trực tiếp từ người lạ sẽ xóa sạch bản ghi hội thoại và toàn bộ tin nhắn liên quan khỏi CSDL. |
 
@@ -295,7 +295,7 @@ sequenceDiagram
         activate UI
         UI ->> Api: chatApi.acceptConversation(conversationId)
         activate Api
-        Api ->> Controller: POST /api/v1/conversations/{id}/accept
+        Api ->> Controller: POST /api/v1/conversations/{conversationId}/accept
         activate Controller
         Controller ->> Controller: Trích xuất email từ SecurityContext
         Controller ->> Service: acceptConversation(email, conversationId)
@@ -332,7 +332,7 @@ sequenceDiagram
         User ->> UI: Xác nhận đồng ý xóa
         UI ->> Api: chatApi.deleteConversation(conversationId)
         activate Api
-        Api ->> Controller: DELETE /api/v1/conversations/{id}
+        Api ->> Controller: DELETE /api/v1/conversations/{conversationId}
         activate Controller
         Controller ->> Controller: Trích xuất email từ SecurityContext
         Controller ->> Service: deleteConversation(email, conversationId)

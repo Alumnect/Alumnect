@@ -106,7 +106,7 @@ Mô tả: Module Quản lý gói Mentor chịu trách nhiệm cấu hình danh m
 | 3 | MSG_MP_03 | Red text under input | Giá gói rỗng hoặc nhỏ hơn 0 | Giá gói dịch vụ phải lớn hơn hoặc bằng 0 |
 | 4 | MSG_MP_04 | Red text under input | Trạng thái rỗng | Trạng thái gói dịch vụ không được để trống |
 | 5 | MSG_MP_05 | Modal Alert / Toast | Không tìm thấy ID gói Mentor trong cơ sở dữ liệu | Không tìm thấy gói Mentor với ID: {id} |
-| 6 | MSG_MP_06 | Toast message | Người dùng không có quyền Admin truy cập API | Bạn không có quyền thực hiện thao tác này |
+| 6 | MSG_MP_06 | Toast message | Người dùng không có quyền Admin truy cập API | Người dùng không có quyền thực hiện thao tác này |
 
 ---
 

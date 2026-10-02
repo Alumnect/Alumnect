@@ -52,4 +52,16 @@ public interface GroupService {
     GroupActionResponse removeMember(Long groupId, Long targetUserId, String email);
 
     GroupActionResponse changeMemberRole(Long groupId, Long targetUserId, String email, MembershipRole newRole);
+
+    /**
+     * Khởi tạo nhóm trò chuyện cho Hội nhóm cộng đồng (Chỉ Owner/Admin).
+     * Trả về ID của cuộc trò chuyện được tạo.
+     */
+    Long createGroupChat(Long groupId, String email);
+
+    /**
+     * Thành viên hội nhóm tham gia nhóm trò chuyện.
+     * Trả về ID của cuộc trò chuyện.
+     */
+    Long joinGroupChat(Long groupId, String email);
 }

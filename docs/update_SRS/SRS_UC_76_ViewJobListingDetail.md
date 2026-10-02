@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> GuiYeuCauChiTietJob : GET /api/v1/admin/posts/:id (với post có type=RECRUITMENT)
+    [*] --> GuiYeuCauChiTietJob : GET /api/v1/admin/posts/{id} (với post có type=RECRUITMENT)
     GuiYeuCauChiTietJob --> KiemTraToken : Spring Security kiểm tra tính hợp lệ của JWT
     KiemTraToken --> TuChoi : 403 Forbidden (Không đủ quyền)
     KiemTraToken --> TruyVanPostVaJob : PostRepository.findDetailById(id)
@@ -36,7 +36,7 @@ stateDiagram-v2
 #### 3.2.1 Xem chi tiết tin tuyển dụng (UC76)
 
 **Function trigger**:
-*   **Navigation path**: /admin/posts/:id (đối với tin bài loại RECRUITMENT).
+*   **Navigation path**: /admin/posts/{id} (đối với tin bài loại RECRUITMENT).
 *   **Timing Frequency**: On demand khi Admin nhấp xem chi tiết tin tuyển dụng.
 
 **Function description**:
@@ -88,6 +88,16 @@ stateDiagram-v2
 #### 5.2 Common Requirements (Yêu cầu Chung)
 *   Phản hồi dữ liệu theo định dạng JSON chuẩn `ApiResponse<AdminPostResponse>`.
 *   Thời gian xử lý API dưới 200ms.
+
+---
+
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-UC76-01 | Toast message | Lấy chi tiết tin tuyển dụng thành công | Lấy chi tiết tin tuyển dụng thành công. |
+| 2 | MSG-UC76-02 | Toast Error | Tin tuyển dụng không tồn tại | Không tìm thấy tin tuyển dụng. |
+| 3 | MSG-UC76-03 | Toast Error | Không có quyền Quản trị viên | Bạn không có quyền truy cập chức năng này. |
 
 ---
 

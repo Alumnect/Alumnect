@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Xem_Cau_Tra_Loi : Tác giả xem câu trả lời/reply của chính mình
+    [*] --> Xem_Cau_Tra_Loi : Tác giả xem câu trả lời/reply của bản thân
     Xem_Cau_Tra_Loi --> Hien_Nut_Xoa : FE so khớp authorId == người đăng nhập
     Hien_Nut_Xoa --> Mo_Modal_Xac_Nhan : Bấm "Xóa" → mở modal cảnh báo
 
@@ -57,12 +57,12 @@ Module 4 (Q&A Forum). UC49 hoàn thiện vòng đời CRUD của câu trả lờ
 #### 3.8.1 Xóa câu trả lời (Delete an answer)
 
 **Function trigger**:
-*   **Navigation path**: `/app/forum/{id}` (chi tiết câu hỏi) → khu vực "Câu trả lời" → nút "Xóa" (chỉ tác giả) trên câu trả lời/reply của chính mình → modal xác nhận → "Xóa".
+*   **Navigation path**: `/app/forum/{id}` (chi tiết câu hỏi) → khu vực "Câu trả lời" → nút "Xóa" (chỉ tác giả) trên câu trả lời/reply của bản thân → modal xác nhận → "Xóa".
 *   **Timing Frequency**: On demand (khi tác giả muốn gỡ bỏ câu trả lời/reply đã đăng).
 
 **Function description**:
 *   **Actors/Roles**: Sinh viên (STUDENT), Cựu sinh viên (ALUMNI) — nhưng **chỉ tác giả** của câu trả lời/reply đó. Người khác (kể cả Student/Alumni khác) không thấy nút Xóa và bị API từ chối 403; Guest bị chặn 401.
-*   **Purpose**: Cho phép tác giả tự gỡ bỏ vĩnh viễn câu trả lời hoặc reply của mình (VD trả lời nhầm, không còn chính xác, muốn rút lại).
+*   **Purpose**: Cho phép tác giả tự gỡ bỏ vĩnh viễn câu trả lời hoặc reply của bản thân (VD trả lời nhầm, không còn chính xác, muốn rút lại).
 *   **Interface**:
     *   **Nút "Xóa"** (text link, đổi màu đỏ khi hover) nằm trong hàng hành động của mỗi câu trả lời/reply, cạnh "Trả lời"/"Chỉnh sửa" — chỉ hiện với chính tác giả bong bóng đó.
     *   **Modal xác nhận**: tiêu đề "Xóa câu trả lời", icon cảnh báo đỏ, nội dung "Bạn có chắc muốn xóa câu trả lời này không?", 2 nút "Hủy"/"Xóa" (đỏ, có spinner khi xử lý). Nhấn mạnh tính **không thể hoàn tác** vì là xóa cứng.
@@ -88,7 +88,7 @@ Module 4 (Q&A Forum). UC49 hoàn thiện vòng đời CRUD của câu trả lờ
     *   Câu trả lời không tồn tại/không ACTIVE/khác câu hỏi (kể cả xóa 2 lần) → 404 (MSG-DA-01).
     *   Không phải tác giả → 403 (MSG-DA-02).
     *   Guest chưa đăng nhập → 401, chặn bởi Spring Security trước Controller (MSG-DA-03).
-*   **Normal case**: Tác giả xác nhận xóa câu trả lời/reply của mình; hệ thống xóa cứng bản ghi (+ reply trực tiếp nếu là gốc), dọn vote liên quan, đối xứng giảm `answer_count` nếu là câu trả lời gốc, trả 200; toast thành công, câu trả lời biến mất khỏi luồng.
+*   **Normal case**: Tác giả xác nhận xóa câu trả lời/reply của bản thân; hệ thống xóa cứng bản ghi (+ reply trực tiếp nếu là gốc), dọn vote liên quan, đối xứng giảm `answer_count` nếu là câu trả lời gốc, trả 200; toast thành công, câu trả lời biến mất khỏi luồng.
 *   **Abnormal case**: Không phải tác giả → 403; câu trả lời đã xóa/không tồn tại/khác câu hỏi → 404; Guest → 401.
 
 ---
@@ -119,7 +119,7 @@ Module 4 (Q&A Forum). UC49 hoàn thiện vòng đời CRUD của câu trả lờ
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | MSG-DA-01 | Toast lỗi | Câu trả lời không tồn tại/không ACTIVE/khác câu hỏi | Không tìm thấy câu trả lời với id: {id} | 404 |
 | 2 | MSG-DA-02 | Toast lỗi | Không phải tác giả | Chỉ tác giả mới được xóa câu trả lời này | 403 |
-| 3 | MSG-DA-03 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 3 | MSG-DA-03 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 4 | MSG-DA-04 | Toast thành công | Xóa thành công | Đã xóa câu trả lời thành công | 200 |
 
 ---

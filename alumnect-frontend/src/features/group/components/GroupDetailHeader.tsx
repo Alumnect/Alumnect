@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CalendarDays, Check, Crown, Globe, Lock, Share2, Users } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { CalendarDays, Crown, Globe, Lock, MessagesSquare, Share2, Users } from 'lucide-react'
 import { Avatar, Badge, Card, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { ShareModal } from '@/features/feed'
 import { categoryLabel } from '../model/group'
 import type { GroupDetail } from '../model/group'
+import { useCreateGroupChat, useJoinGroupChat } from '../hooks/useGroupActions'
 import { GroupCover } from './GroupCover'
 import { GroupMembershipActions } from './GroupMembershipActions'
 
@@ -19,8 +20,44 @@ export function GroupDetailHeader({
   onLeave: () => void
 }) {
   const [shareModalOpen, setShareModalOpen] = useState(false)
+  const navigate = useNavigate()
+  const createChatMut = useCreateGroupChat()
+  const joinChatMut = useJoinGroupChat()
+
   const isPrivate = group.privacy === 'PRIVATE'
   const createdDate = group.createdAt ? new Date(group.createdAt).toLocaleDateString('vi-VN') : ''
+  const isActiveMember = group.viewerMembershipStatus === 'ACTIVE'
+  const isOwner = group.viewerRole === 'OWNER'
+
+  const handleOpenChat = () => {
+    if (group.conversationId) {
+      navigate(`/app/messages?conversationId=${group.conversationId}`)
+    }
+  }
+
+  const handleJoinChat = () => {
+    joinChatMut.mutate(group.id, {
+      onSuccess: (res) => {
+        toast.success('Đã tham gia nhóm trò chuyện!')
+        navigate(`/app/messages?conversationId=${res.conversationId}`)
+      },
+      onError: (err) => {
+        toast.error((err as Error)?.message || 'Không thể tham gia nhóm trò chuyện, vui lòng thử lại.')
+      },
+    })
+  }
+
+  const handleCreateChat = () => {
+    createChatMut.mutate(group.id, {
+      onSuccess: (res) => {
+        toast.success('Khởi tạo nhóm trò chuyện thành công!')
+        navigate(`/app/messages?conversationId=${res.conversationId}`)
+      },
+      onError: (err) => {
+        toast.error((err as Error)?.message || 'Không thể tạo nhóm trò chuyện, vui lòng thử lại.')
+      },
+    })
+  }
 
   return (
     <Card hover={false} className="overflow-hidden rounded-3xl border border-plum-900/[0.08] p-0 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
@@ -83,6 +120,47 @@ export function GroupDetailHeader({
             </div>
 
           <div className="flex flex-wrap items-center gap-2 lg:shrink-0 lg:justify-end">
+            {/* Nút Nhắn tin nhóm / Tham gia nhóm chat / Tạo nhóm chat */}
+            {isActiveMember && (
+              group.conversationId ? (
+                group.isConversationMember ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<MessagesSquare size={16} />}
+                    onClick={handleOpenChat}
+                    className="rounded-xl shadow-xs"
+                  >
+                    Nhắn tin nhóm
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<MessagesSquare size={16} />}
+                    onClick={handleJoinChat}
+                    disabled={joinChatMut.isPending}
+                    className="rounded-xl shadow-xs"
+                  >
+                    {joinChatMut.isPending ? 'Đang tham gia...' : 'Tham gia nhóm chat'}
+                  </Button>
+                )
+              ) : (
+                isOwner && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<MessagesSquare size={16} />}
+                    onClick={handleCreateChat}
+                    disabled={createChatMut.isPending}
+                    className="rounded-xl border border-brand-500/20 bg-brand-50/70 text-brand-600 hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400"
+                  >
+                    {createChatMut.isPending ? 'Đang khởi tạo...' : 'Tạo nhóm chat'}
+                  </Button>
+                )
+              )
+            )}
+
             <Button
               variant="secondary"
               size="sm"

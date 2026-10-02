@@ -530,7 +530,7 @@ sequenceDiagram
     *   **Kiểm tra trùng Mã sinh viên:** `AuthServiceImpl` gọi `UserProfileRepository` để kiểm tra sự tồn tại của `studentCode`. Nếu bị trùng ở tài khoản khác -> ném lỗi `ConflictException` (trả về 409 Conflict).
     *   **Kiểm tra đặc thù ALUMNI (trước khi lưu):** Nếu vai trò là `ALUMNI`, kiểm tra `proofUrl` không được để trống *trước khi ghi bất kỳ dữ liệu nào vào CSDL*. Nếu thiếu -> ném lỗi `BadRequestException` (trả về 400 Bad Request).
     *   **Ghi đè hoặc Lưu mới:** Sau khi tất cả kiểm tra hợp lệ, mã hóa password bằng BCrypt, lưu/cập nhật bản ghi `User`, `UserProfile` vào CSDL. Nếu user mới, tạo thêm bản ghi `UserSettings` mặc định (theme: SYSTEM, language: vi). Nếu vai trò là `ALUMNI`, tạo/cập nhật bản ghi yêu cầu xác minh `VerificationRequest` ở trạng thái `PENDING`. Nếu user PENDING cũ đổi từ ALUMNI sang STUDENT, xóa `VerificationRequest` cũ nếu có.
-    *   **Sinh & Gửi OTP:** Vô hiệu hóa các OTP cũ của user đó bằng cách set `used = true`. Sinh OTP 6 chữ số mới có hạn 5 phút lưu vào bảng `verification_tokens`, sau đó gọi dịch vụ gửi email để bắn email OTP đến hòm thư người dùng (tên người gửi hiển thị là **AlumNect** theo cấu hình `MAIL_FROM_NAME`). Trả về HTTP 200 OK.
+    *   **Sinh & Gửi OTP:** Vô hiệu hóa các OTP cũ của user đó bằng cách set `used = true`. Sinh OTP 6 chữ số mới có hạn 5 phút lưu vào bảng `verification_tokens`, sau đó gọi dịch vụ gửi email để gửi mã xác thực OTP đến hòm thư người dùng (tên người gửi hiển thị là **AlumNect** theo cấu hình `MAIL_FROM_NAME`). Trả về HTTP 200 OK.
 
 2.  **TIẾN TRÌNH 2: XÁC THỰC EMAIL BẰNG OTP**
     *   **Gửi Request:** Người dùng nhập mã OTP 6 số trên màn hình. Client gửi HTTP GET tới `/api/v1/auth/verify-email` kèm tham số email và token.

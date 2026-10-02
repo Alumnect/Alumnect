@@ -256,4 +256,16 @@ export const groupApi = {
     await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
     return publicUrl
   },
+
+  /** Khởi tạo nhóm chat cho hội nhóm. `POST /api/v1/groups/{id}/chat`. */
+  createChat: async (id: number): Promise<{ conversationId: number }> => {
+    const body = await http.post(`/groups/${id}/chat`)
+    return payloadOf(body) as { conversationId: number }
+  },
+
+  /** Thành viên tham gia nhóm chat của hội nhóm. `POST /api/v1/groups/{id}/chat/join`. */
+  joinChat: async (id: number): Promise<{ conversationId: number }> => {
+    const body = await http.post(`/groups/${id}/chat/join`)
+    return payloadOf(body) as { conversationId: number }
+  },
 }
