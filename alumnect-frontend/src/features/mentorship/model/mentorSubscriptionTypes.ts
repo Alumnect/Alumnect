@@ -1,5 +1,5 @@
 export type MentorPackageStatus = 'ACTIVE' | 'INACTIVE'
-export type MentorSubscriptionStatus = 'PENDING_PAYMENT' | 'PAID' | 'CANCELLED' | 'EXPIRED'
+export type MentorSubscriptionStatus = 'PENDING_PAYMENT' | 'ACTIVE' | 'PAID' | 'CANCELLED' | 'EXPIRED'
 
 /**
  * Interface cho gói dịch vụ Mentor do Admin cấu hình.

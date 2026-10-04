@@ -2,26 +2,40 @@ import { MentoringTermsGate } from '@/features/mentorship'
 import { Container, Card, Badge } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
+import { useMentorRegistration } from '@/features/mentorship/hooks/useMentorRegistration'
 import {
   Compass,
   FileText,
   ShieldCheck,
   Sparkles,
   ArrowRight,
+  CheckCircle,
+  CreditCard,
+  UserCheck,
 } from 'lucide-react'
 
 function MentoringHomeContent() {
   const user = useAuthStore((s) => s.user)
   const isAlumni = user?.role === 'ALUMNI'
+  const { data: registration } = useMentorRegistration(isAlumni)
+  const isMentorActive = registration?.mentorStatus === 'ACTIVE'
+  const isPaymentPending = registration?.mentorStatus === 'PAYMENT_PENDING'
 
   return (
     <div className="space-y-8 py-6">
       {/* Hero Banner giới thiệu module */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-transparent p-6 sm:p-10 border border-brand-500/15">
         <div className="relative z-10 max-w-2xl space-y-4">
-          <Badge tone="brand" icon={<Sparkles className="h-3.5 w-3.5" />}>
-            Mạng lưới Hướng dẫn & Hỗ trợ FPTU
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="brand" icon={<Sparkles className="h-3.5 w-3.5" />}>
+              Mạng lưới Hướng dẫn & Hỗ trợ FPTU
+            </Badge>
+            {isMentorActive && (
+              <Badge tone="success" icon={<CheckCircle className="h-3.5 w-3.5" />}>
+                Bạn đang là Mentor chính thức (Active)
+              </Badge>
+            )}
+          </div>
           <h1 className="font-heading text-2xl sm:text-4xl font-extrabold tracking-tight text-plum-900 dark:text-[#e4e6eb]">
             Kết nối Cố vấn & Hướng nghiệp 1:1
           </h1>
@@ -31,14 +45,53 @@ function MentoringHomeContent() {
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             {isAlumni && (
-              <ButtonLink
-                to="/app/mentoring/become-mentor"
-                variant="primary"
-                size="md"
-                rightIcon={<ArrowRight className="h-4 w-4" />}
-              >
-                Đăng ký trở thành Mentor
-              </ButtonLink>
+              isMentorActive ? (
+                <>
+                  <ButtonLink
+                    to="/app/mentoring/subscription"
+                    variant="primary"
+                    size="md"
+                    leftIcon={<CreditCard className="h-4 w-4" />}
+                  >
+                    Quản lý gói Mentor
+                  </ButtonLink>
+                  <ButtonLink
+                    to="/app/mentoring/become-mentor"
+                    variant="outline"
+                    size="md"
+                    leftIcon={<UserCheck className="h-4 w-4" />}
+                  >
+                    Hồ sơ Mentor của tôi
+                  </ButtonLink>
+                </>
+              ) : isPaymentPending ? (
+                <>
+                  <ButtonLink
+                    to="/app/mentoring/subscription"
+                    variant="primary"
+                    size="md"
+                    rightIcon={<ArrowRight className="h-4 w-4" />}
+                  >
+                    Kích hoạt gói Mentor
+                  </ButtonLink>
+                  <ButtonLink
+                    to="/app/mentoring/become-mentor"
+                    variant="outline"
+                    size="md"
+                  >
+                    Chỉnh sửa hồ sơ
+                  </ButtonLink>
+                </>
+              ) : (
+                <ButtonLink
+                  to="/app/mentoring/become-mentor"
+                  variant="primary"
+                  size="md"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  Đăng ký trở thành Mentor
+                </ButtonLink>
+              )
             )}
             <ButtonLink
               to="/app/mentoring/terms"

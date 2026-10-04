@@ -66,6 +66,7 @@ public class Endpoints {
 
     // Endpoint công khai — POST, không cần đăng nhập
     public static final String[] PUBLIC_POST = {
+        "/api/v1/mentoring/subscriptions/payment/webhook", // Tiếp nhận Webhook IPN từ PayOS (UC93)
         "/api/v1/auth/register", // Đăng ký tài khoản mới
         "/api/v1/auth/login",    // Đăng nhập lấy JWT token
         "/api/v1/auth/google",   // Đăng nhập bằng Google OAuth2

@@ -25,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,6 +97,23 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
             throw new BadRequestException("Bạn cần hoàn thiện thông tin đăng ký Mentor (UC91) trước khi chọn gói dịch vụ.");
         }
 
+        // 3.1. Kiểm tra nếu Mentor đã có gói đang ACTIVE và chưa hết hạn thì KHÔNG cho phép mua gói mới
+        List<MentorSubscription> activeSubs = mentorSubscriptionRepository
+                .findByMentorProfileIdOrderByCreatedAtDesc(profile.getId());
+        Instant now = Instant.now();
+        Optional<MentorSubscription> currentActiveSubOpt = activeSubs.stream()
+                .filter(s -> (s.getStatus() == MentorSubscriptionStatus.ACTIVE || s.getStatus() == MentorSubscriptionStatus.PAID)
+                        && s.getEndDate() != null && s.getEndDate().isAfter(now))
+                .findFirst();
+
+        if (currentActiveSubOpt.isPresent()) {
+            MentorSubscription currentSub = currentActiveSubOpt.get();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+            String expDateStr = formatter.format(currentSub.getEndDate());
+            throw new BadRequestException("Bạn đang có gói Mentor (" + currentSub.getMentorPackage().getName() 
+                    + ") đang hoạt động đến ngày " + expDateStr + ". Vui lòng chờ hết hạn gói hiện tại trước khi đăng ký hoặc gia hạn gói mới.");
+        }
+
         // 4. Kiểm tra gói dịch vụ được chọn (phải tồn tại và đang ở trạng thái ACTIVE)
         MentorPackage mentorPackage = mentorPackageRepository.findById(request.getPackageId())
                 .orElseThrow(() -> new BadRequestException("Gói dịch vụ không tồn tại hoặc đã ngưng hoạt động."));
@@ -136,6 +156,7 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
 
     /**
      * Lấy thông tin đăng ký gói Mentor hiện tại của người dùng.
+     * Ưu tiên gói đang ACTIVE còn hiệu lực, sau đó đến PENDING_PAYMENT.
      *
      * @param userEmail Email người dùng đăng nhập
      * @return DTO thông tin đăng ký gói Mentor
@@ -151,9 +172,24 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
         MentorProfile profile = mentorProfileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Hồ sơ Mentor không tồn tại."));
 
-        MentorSubscription subscription = mentorSubscriptionRepository
-                .findFirstByMentorProfileIdOrderByCreatedAtDesc(profile.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Bạn chưa chọn gói dịch vụ Mentor nào."));
+        List<MentorSubscription> subscriptions = mentorSubscriptionRepository
+                .findByMentorProfileIdOrderByCreatedAtDesc(profile.getId());
+        if (subscriptions.isEmpty()) {
+            throw new ResourceNotFoundException("Bạn chưa chọn gói dịch vụ Mentor nào.");
+        }
+
+        Instant now = Instant.now();
+        // 1. Ưu tiên cao nhất: Gói đang ACTIVE hoặc PAID và chưa hết hạn
+        MentorSubscription subscription = subscriptions.stream()
+                .filter(s -> (s.getStatus() == MentorSubscriptionStatus.ACTIVE || s.getStatus() == MentorSubscriptionStatus.PAID)
+                        && s.getEndDate() != null && s.getEndDate().isAfter(now))
+                .findFirst()
+                // 2. Kế tiếp: Gói đang chờ thanh toán PENDING_PAYMENT
+                .orElseGet(() -> subscriptions.stream()
+                        .filter(s -> s.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT)
+                        .findFirst()
+                        // 3. Fallback: Bản ghi gần nhất
+                        .orElse(subscriptions.get(0)));
 
         return mentorSubscriptionMapper.toResponse(subscription);
     }
