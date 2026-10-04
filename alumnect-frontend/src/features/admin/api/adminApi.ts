@@ -262,6 +262,18 @@ export const adminApi = {
    */
   archiveNotification: (id: number) =>
     http.put<any, ApiResponse<void>>(`/admin/notifications/${id}/archive`),
+
+  /**
+   * Xem danh sách toàn bộ Mentor dành cho Admin (UC96)
+   */
+  getAdminMentors: (params: { keyword?: string; page?: number; size?: number }) =>
+    http.get<any, ApiResponse<PageResponse<AdminMentorCvDto>>>('/admin/mentors', { params }),
+
+  /**
+   * Xem thông tin chi tiết và CV của Mentor (UC96)
+   */
+  getMentorCv: (mentorId: number) =>
+    http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}/cv`),
 }
 
 export type SystemNotificationStatus =
@@ -351,15 +363,14 @@ export interface AdminMentorCvDto {
   cvUrl?: string
   mentorStatus: string
   supportedFields?: string[]
+  workingMode?: string
+  mentoringType?: string
+  topics?: string[]
+  bankName?: string
+  bankAccountNumber?: string
+  bankAccountHolder?: string
   updatedAt: string
 }
-
-// Thêm các phương thức API UC96 vào object adminApi ở cuối file
-adminApi.getAdminMentors = (params: { keyword?: string; page?: number; size?: number }) =>
-  http.get<any, ApiResponse<PageResponse<AdminMentorCvDto>>>('/admin/mentors', { params })
-
-adminApi.getMentorCv = (mentorId: number) =>
-  http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}/cv`)
 
 
 

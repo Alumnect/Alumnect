@@ -15,16 +15,22 @@ import { useClickOutside } from '@/hooks/useClickOutside'
 export function PageHeader({
   title,
   subtitle,
+  description,
   actions,
+  action,
   icon,
   className,
 }: {
   title: ReactNode
   subtitle?: ReactNode
+  description?: ReactNode
   actions?: ReactNode
+  action?: ReactNode
   icon?: ReactNode
   className?: string
 }) {
+  const effectiveSubtitle = subtitle ?? description
+  const effectiveActions = actions ?? action
   const [showInfo, setShowInfo] = useState(false)
   const infoRef = useRef<HTMLDivElement>(null)
   useClickOutside(infoRef, () => setShowInfo(false), showInfo)
@@ -80,9 +86,9 @@ export function PageHeader({
               </div>
 
               {/* Nội dung thông tin & hướng dẫn */}
-              {subtitle && (
+              {effectiveSubtitle && (
                 <div className="mt-2.5 text-xs leading-relaxed text-slate-600 dark:text-[#e4e6eb]">
-                  {subtitle}
+                  {effectiveSubtitle}
                 </div>
               )}
             </motion.div>
@@ -91,7 +97,7 @@ export function PageHeader({
       </div>
 
       {/* Các nút hành động bên phải nếu trang có (ví dụ nút Tạo bài, Đặt câu hỏi...) */}
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {effectiveActions && <div className="flex items-center gap-2 shrink-0">{effectiveActions}</div>}
     </div>
   )
 }

@@ -129,9 +129,9 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
           )}
         </div>
 
-        {(group.shortDescription || group.description) && (
+        {group.description && (
           <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-plum-700 dark:text-[#e4e6eb]">
-            {group.shortDescription || group.description}
+            {group.description}
           </p>
         )}
 

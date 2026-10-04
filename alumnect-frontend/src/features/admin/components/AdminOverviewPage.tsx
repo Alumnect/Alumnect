@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowUpRight, BadgeCheck, UserPlus, Activity, Inbox, Loader2 } from 'lucide-react'
+import { ArrowUpRight, BadgeCheck, UserPlus, Inbox, Loader2 } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
@@ -72,7 +72,6 @@ export function AdminOverviewPage() {
     : []
 
   const dailyRegs = summary?.dailyRegistrations || []
-  const maxRegCount = dailyRegs.length ? Math.max(...dailyRegs.map((d) => d.count)) : 1
 
   return (
     <div className="mx-auto max-w-6xl">

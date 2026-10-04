@@ -9,7 +9,6 @@ import {
   Send,
   Users,
   User,
-  Sparkles,
   Share2,
   ChevronRight,
   FileText,

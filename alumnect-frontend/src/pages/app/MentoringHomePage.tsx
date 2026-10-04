@@ -12,6 +12,7 @@ import {
   CheckCircle,
   CreditCard,
   UserCheck,
+  Activity,
 } from 'lucide-react'
 
 function MentoringHomeContent() {
@@ -92,6 +93,16 @@ function MentoringHomeContent() {
                   Đăng ký trở thành Mentor
                 </ButtonLink>
               )
+            )}
+            {isAlumni && (
+              <ButtonLink
+                to="/app/mentoring/status"
+                variant="outline"
+                size="md"
+                leftIcon={<Activity className="h-4 w-4 text-brand-600" />}
+              >
+                Trạng thái Mentor
+              </ButtonLink>
             )}
             <ButtonLink
               to="/app/mentoring/terms"

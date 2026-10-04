@@ -181,7 +181,6 @@ function PostDetailCard({
 }) {
 
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
-  const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
   const isAuthor = post.authorId != null
     ? !!currentUserId && post.authorId === currentUserId
     : !!currentUserName && post.author === currentUserName

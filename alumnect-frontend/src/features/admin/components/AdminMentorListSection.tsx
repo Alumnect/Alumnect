@@ -13,9 +13,8 @@ import {
   CreditCard,
   Target,
   Sparkles,
-  ShieldAlert,
 } from 'lucide-react'
-import { Avatar, Badge, Card, EmptyState, Pagination, Skeleton, Modal } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAdminMentors } from '../hooks/useAdmin'
