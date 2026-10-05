@@ -133,16 +133,16 @@ export function AdminMentorListSection() {
         <Reveal>
           <div className="space-y-4">
             <Card hover={false} className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+              <table className="w-full min-w-[1100px] text-sm">
                 <thead>
-                  <tr className="border-b border-plum-900/8 text-left text-xs uppercase tracking-wide text-plum-400">
-                    <th className="px-5 py-3 font-semibold">Cố vấn (Mentor)</th>
-                    <th className="px-5 py-3 font-semibold">Vị trí & Công ty</th>
-                    <th className="px-5 py-3 font-semibold">Trạng thái</th>
-                    <th className="px-5 py-3 font-semibold">Gói Mentor</th>
-                    <th className="px-5 py-3 font-semibold">Thời hạn hiệu lực</th>
-                    <th className="px-5 py-3 font-semibold">Kinh nghiệm</th>
-                    <th className="px-5 py-3 font-semibold text-right">Thao tác</th>
+                  <tr className="border-b border-plum-900/8 text-left text-xs uppercase tracking-wider text-plum-400">
+                    <th className="px-5 py-3.5 font-semibold whitespace-nowrap min-w-[220px]">Cố vấn (Mentor)</th>
+                    <th className="px-5 py-3.5 font-semibold whitespace-nowrap min-w-[180px]">Vị trí & Công ty</th>
+                    <th className="px-4 py-3.5 font-semibold whitespace-nowrap text-center min-w-[110px]">Trạng thái</th>
+                    <th className="px-5 py-3.5 font-semibold whitespace-nowrap min-w-[190px]">Gói Mentor</th>
+                    <th className="px-5 py-3.5 font-semibold whitespace-nowrap min-w-[170px]">Thời hạn hiệu lực</th>
+                    <th className="px-4 py-3.5 font-semibold whitespace-nowrap text-center min-w-[110px]">Kinh nghiệm</th>
+                    <th className="px-5 py-3.5 font-semibold whitespace-nowrap text-right min-w-[170px]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -152,7 +152,7 @@ export function AdminMentorListSection() {
                       className="border-b border-plum-900/5 transition-colors last:border-0 hover:bg-white/[0.03]"
                     >
                       {/* Avatar & Name */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3.5 whitespace-nowrap">
                         <div
                           className="flex items-center gap-3 cursor-pointer group/user"
                           onClick={() => setSelectedMentorDetail(m)}
@@ -161,10 +161,10 @@ export function AdminMentorListSection() {
                             <img
                               src={m.avatarUrl}
                               alt={m.mentorName}
-                              className="h-10 w-10 rounded-full object-cover ring-2 ring-brand-500/20"
+                              className="h-10 w-10 rounded-full object-cover ring-2 ring-brand-500/20 shrink-0"
                             />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold">
+                            <div className="h-10 w-10 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold shrink-0">
                               <User size={18} />
                             </div>
                           )}
@@ -178,19 +178,19 @@ export function AdminMentorListSection() {
                       </td>
 
                       {/* Position & Company */}
-                      <td className="px-5 py-3.5 text-xs">
-                        <p className="font-bold text-plum-800 flex items-center gap-1">
-                          <Briefcase size={13} className="text-brand-500 flex-shrink-0" />
-                          {m.currentPosition || 'Chưa cập nhật'}
+                      <td className="px-5 py-3.5 text-xs whitespace-nowrap">
+                        <p className="font-bold text-plum-800 flex items-center gap-1.5">
+                          <Briefcase size={13} className="text-brand-500 shrink-0" />
+                          <span>{m.currentPosition || 'Chưa cập nhật'}</span>
                         </p>
-                        <p className="text-plum-500 flex items-center gap-1 mt-0.5">
-                          <Building2 size={13} className="text-plum-400 flex-shrink-0" />
-                          {m.currentCompany || 'Chưa cập nhật'}
+                        <p className="text-plum-500 flex items-center gap-1.5 mt-0.5">
+                          <Building2 size={13} className="text-plum-400 shrink-0" />
+                          <span>{m.currentCompany || 'Chưa cập nhật'}</span>
                         </p>
                       </td>
 
                       {/* Status */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-nowrap text-center">
                         <Badge
                           tone={
                             m.mentorStatus === 'ACTIVE'
@@ -206,15 +206,15 @@ export function AdminMentorListSection() {
                       </td>
 
                       {/* Package Name */}
-                      <td className="px-5 py-3.5 text-xs">
+                      <td className="px-5 py-3.5 text-xs whitespace-nowrap">
                         {m.packageName ? (
-                          <div className="space-y-0.5">
-                            <span className="font-bold text-plum-900 flex items-center gap-1.5">
-                              <Crown size={13} className="text-amber-500 flex-shrink-0" />
-                              {m.packageName}
-                            </span>
+                          <div className="space-y-1">
+                            <div className="font-bold text-plum-900 flex items-center gap-1.5">
+                              <Crown size={14} className="text-amber-500 shrink-0" />
+                              <span className="whitespace-nowrap">{m.packageName}</span>
+                            </div>
                             {m.subscriptionStatus && (
-                              <span className="inline-block text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              <span className="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                 {m.subscriptionStatus}
                               </span>
                             )}
@@ -225,17 +225,17 @@ export function AdminMentorListSection() {
                       </td>
 
                       {/* Subscription Dates (Start - End) */}
-                      <td className="px-5 py-3.5 text-xs">
+                      <td className="px-5 py-3.5 text-xs whitespace-nowrap">
                         {m.subscriptionStartDate || m.subscriptionEndDate ? (
-                          <div className="space-y-0.5 font-medium">
-                            <p className="text-plum-600 flex items-center gap-1">
-                              <span className="text-[10px] text-plum-400 uppercase font-bold">Từ:</span>
-                              {formatDate(m.subscriptionStartDate)}
-                            </p>
-                            <p className="text-plum-900 font-bold flex items-center gap-1">
-                              <span className="text-[10px] text-brand-600 uppercase font-bold">Đến:</span>
-                              {formatDate(m.subscriptionEndDate)}
-                            </p>
+                          <div className="space-y-1 font-medium">
+                            <div className="flex items-center gap-1.5 text-plum-600">
+                              <span className="text-[10px] text-plum-400 font-bold uppercase tracking-wider w-8">Từ:</span>
+                              <span className="font-semibold text-plum-700">{formatDate(m.subscriptionStartDate)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-brand-600 font-bold uppercase tracking-wider w-8">Đến:</span>
+                              <span className="font-bold text-plum-900">{formatDate(m.subscriptionEndDate)}</span>
+                            </div>
                           </div>
                         ) : (
                           <span className="text-plum-400 italic">Chưa kích hoạt</span>
@@ -243,12 +243,12 @@ export function AdminMentorListSection() {
                       </td>
 
                       {/* Experience */}
-                      <td className="px-5 py-3.5 text-xs text-plum-700 font-semibold whitespace-nowrap">
+                      <td className="px-4 py-3.5 text-xs text-plum-700 font-semibold whitespace-nowrap text-center">
                         {m.yearsOfExperience != null ? `${m.yearsOfExperience} Năm` : 'N/A'}
                       </td>
 
                       {/* Action buttons */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
                           {/* Nút Xem CV Cam - Trắng FPT */}
                           <button
