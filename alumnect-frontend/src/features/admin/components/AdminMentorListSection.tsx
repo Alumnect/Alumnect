@@ -14,8 +14,9 @@ import {
   Target,
   Sparkles,
   ShieldAlert,
+  Crown,
 } from 'lucide-react'
-import { Avatar, Badge, Card, EmptyState, Pagination, Skeleton, Modal } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAdminMentors } from '../hooks/useAdmin'
@@ -44,6 +45,15 @@ export function AdminMentorListSection() {
 
   const mentors = data?.content || []
   const totalPages = data?.totalPages || 0
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'N/A'
+    return new Date(dateStr).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -129,12 +139,14 @@ export function AdminMentorListSection() {
                     <th className="px-5 py-3 font-semibold">Cố vấn (Mentor)</th>
                     <th className="px-5 py-3 font-semibold">Vị trí & Công ty</th>
                     <th className="px-5 py-3 font-semibold">Trạng thái</th>
+                    <th className="px-5 py-3 font-semibold">Gói Mentor</th>
+                    <th className="px-5 py-3 font-semibold">Thời hạn hiệu lực</th>
                     <th className="px-5 py-3 font-semibold">Kinh nghiệm</th>
                     <th className="px-5 py-3 font-semibold text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {mentors.map((m) => (
+                  {mentors.map((m: AdminMentorCvDto) => (
                     <tr
                       key={m.mentorProfileId}
                       className="border-b border-plum-900/5 transition-colors last:border-0 hover:bg-white/[0.03]"
@@ -182,7 +194,7 @@ export function AdminMentorListSection() {
                         <Badge
                           tone={
                             m.mentorStatus === 'ACTIVE'
-                              ? 'mint'
+                              ? 'success'
                               : m.mentorStatus === 'PAYMENT_PENDING'
                                 ? 'gold'
                                 : 'neutral'
@@ -193,8 +205,45 @@ export function AdminMentorListSection() {
                         </Badge>
                       </td>
 
+                      {/* Package Name */}
+                      <td className="px-5 py-3.5 text-xs">
+                        {m.packageName ? (
+                          <div className="space-y-0.5">
+                            <span className="font-bold text-plum-900 flex items-center gap-1.5">
+                              <Crown size={13} className="text-amber-500 flex-shrink-0" />
+                              {m.packageName}
+                            </span>
+                            {m.subscriptionStatus && (
+                              <span className="inline-block text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                {m.subscriptionStatus}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-plum-400 italic">Chưa đăng ký</span>
+                        )}
+                      </td>
+
+                      {/* Subscription Dates (Start - End) */}
+                      <td className="px-5 py-3.5 text-xs">
+                        {m.subscriptionStartDate || m.subscriptionEndDate ? (
+                          <div className="space-y-0.5 font-medium">
+                            <p className="text-plum-600 flex items-center gap-1">
+                              <span className="text-[10px] text-plum-400 uppercase font-bold">Từ:</span>
+                              {formatDate(m.subscriptionStartDate)}
+                            </p>
+                            <p className="text-plum-900 font-bold flex items-center gap-1">
+                              <span className="text-[10px] text-brand-600 uppercase font-bold">Đến:</span>
+                              {formatDate(m.subscriptionEndDate)}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-plum-400 italic">Chưa kích hoạt</span>
+                        )}
+                      </td>
+
                       {/* Experience */}
-                      <td className="px-5 py-3.5 text-xs text-plum-700 font-semibold">
+                      <td className="px-5 py-3.5 text-xs text-plum-700 font-semibold whitespace-nowrap">
                         {m.yearsOfExperience != null ? `${m.yearsOfExperience} Năm` : 'N/A'}
                       </td>
 
@@ -280,9 +329,8 @@ export function AdminMentorListSection() {
                     <p className="text-xs text-plum-500 font-mono">{selectedMentorDetail.mentorEmail}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge
-                        tone={selectedMentorDetail.mentorStatus === 'ACTIVE' ? 'mint' : 'gold'}
-                        size="sm"
-                        className="font-bold"
+                        tone={selectedMentorDetail.mentorStatus === 'ACTIVE' ? 'success' : 'gold'}
+                        className="font-bold text-[10px]"
                       >
                         {selectedMentorDetail.mentorStatus}
                       </Badge>
@@ -369,6 +417,45 @@ export function AdminMentorListSection() {
                     </div>
                   </div>
                 )}
+
+                {/* Subscription Package & Validity Details */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-brand-50/80 via-white to-amber-50/50 border border-brand-500/20 shadow-sm space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-plum-900">
+                      <Crown className="h-4 w-4 text-amber-500" /> Gói Mentor & Thời hạn bản quyền
+                    </div>
+                    {selectedMentorDetail.subscriptionStatus && (
+                      <Badge
+                        tone={selectedMentorDetail.subscriptionStatus === 'ACTIVE' ? 'success' : 'gold'}
+                        className="text-[10px] font-bold"
+                      >
+                        {selectedMentorDetail.subscriptionStatus}
+                      </Badge>
+                    )}
+
+                  </div>
+
+                  <div className="space-y-1.5 pt-1 text-plum-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-plum-500">Gói đăng ký:</span>
+                      <span className="font-extrabold text-plum-900">
+                        {selectedMentorDetail.packageName || 'Chưa đăng ký gói'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-plum-500">Ngày bắt đầu:</span>
+                      <span className="font-semibold text-plum-800">
+                        {selectedMentorDetail.subscriptionStartDate ? formatDate(selectedMentorDetail.subscriptionStartDate) : 'Chưa kích hoạt'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-plum-500">Ngày kết thúc:</span>
+                      <span className="font-semibold text-brand-600">
+                        {selectedMentorDetail.subscriptionEndDate ? formatDate(selectedMentorDetail.subscriptionEndDate) : 'Chưa kích hoạt'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Bank Payout Details */}
                 {(selectedMentorDetail.bankName || selectedMentorDetail.bankAccountNumber) && (

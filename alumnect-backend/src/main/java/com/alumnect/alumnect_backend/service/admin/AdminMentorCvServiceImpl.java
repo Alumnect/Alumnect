@@ -1,6 +1,9 @@
 package com.alumnect.alumnect_backend.service.admin;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.enums.MentorSubscriptionStatus;
+import com.alumnect.alumnect_backend.dao.mentorship.MentorSubscriptionRepository;
+import com.alumnect.alumnect_backend.entity.mentorship.MentorSubscription;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorPayoutAccountRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorSupportedFieldRepository;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +47,7 @@ public class AdminMentorCvServiceImpl implements AdminMentorCvService {
     private final MentorSupportedFieldRepository mentorSupportedFieldRepository;
     private final MentorTopicRepository mentorTopicRepository;
     private final MentorPayoutAccountRepository mentorPayoutAccountRepository;
+    private final MentorSubscriptionRepository mentorSubscriptionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -128,6 +133,27 @@ public class AdminMentorCvServiceImpl implements AdminMentorCvService {
         // Lấy thông tin tài khoản ngân hàng chi trả
         MentorPayoutAccount payoutAccount = mentorPayoutAccountRepository.findByMentorProfileId(profile.getId()).orElse(null);
 
+        // Lấy thông tin gói Mentor đã đăng ký (ưu tiên gói ACTIVE/PAID còn hạn, nếu không lấy gói mới nhất)
+        List<MentorSubscription> subscriptions = mentorSubscriptionRepository.findByMentorProfileIdOrderByCreatedAtDesc(profile.getId());
+        Instant now = Instant.now();
+        MentorSubscription activeSub = subscriptions.stream()
+                .filter(s -> (s.getStatus() == MentorSubscriptionStatus.ACTIVE || s.getStatus() == MentorSubscriptionStatus.PAID)
+                        && s.getEndDate() != null && s.getEndDate().isAfter(now))
+                .findFirst()
+                .orElse(subscriptions.isEmpty() ? null : subscriptions.get(0));
+
+        String packageName = null;
+        String subscriptionStatus = null;
+        Instant startDate = null;
+        Instant endDate = null;
+
+        if (activeSub != null) {
+            packageName = activeSub.getMentorPackage() != null ? activeSub.getMentorPackage().getName() : null;
+            subscriptionStatus = activeSub.getStatus() != null ? activeSub.getStatus().name() : null;
+            startDate = activeSub.getStartDate();
+            endDate = activeSub.getEndDate();
+        }
+
         String cvKey = profile.getCvFileKey();
 
         return AdminMentorCvResponse.builder()
@@ -150,6 +176,10 @@ public class AdminMentorCvServiceImpl implements AdminMentorCvService {
                 .bankName(payoutAccount != null ? payoutAccount.getBankName() : null)
                 .bankAccountNumber(payoutAccount != null ? payoutAccount.getBankAccountNumber() : null)
                 .bankAccountHolder(payoutAccount != null ? payoutAccount.getBankAccountHolder() : null)
+                .packageName(packageName)
+                .subscriptionStatus(subscriptionStatus)
+                .subscriptionStartDate(startDate)
+                .subscriptionEndDate(endDate)
                 .updatedAt(profile.getUpdatedAt())
                 .build();
     }

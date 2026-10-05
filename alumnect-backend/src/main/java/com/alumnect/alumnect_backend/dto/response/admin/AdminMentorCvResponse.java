@@ -76,6 +76,18 @@ public class AdminMentorCvResponse {
     /** Tên chủ tài khoản ngân hàng chi trả */
     private String bankAccountHolder;
 
+    /** Tên gói Mentor hiện tại hoặc gói đăng ký gần nhất */
+    private String packageName;
+
+    /** Trạng thái gói dịch vụ: ACTIVE, PAID, PENDING_PAYMENT, EXPIRED, CANCELLED */
+    private String subscriptionStatus;
+
+    /** Thời điểm bắt đầu hiệu lực gói */
+    private Instant subscriptionStartDate;
+
+    /** Thời điểm kết thúc hiệu lực gói */
+    private Instant subscriptionEndDate;
+
     /** Thời điểm cập nhật hồ sơ gần nhất */
     private Instant updatedAt;
 }
