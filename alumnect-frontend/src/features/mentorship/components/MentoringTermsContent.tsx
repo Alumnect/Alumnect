@@ -11,7 +11,7 @@ interface MentoringTermsContentProps {
  */
 export function MentoringTermsContent({ version = '1.0' }: MentoringTermsContentProps) {
   return (
-    <div className="flex-1 min-h-0 flex flex-col relative rounded-2xl border border-plum-900/[0.08] bg-cream-50/70 p-4 sm:p-6 shadow-inner dark:bg-[#1e1f20] dark:border-[#393a3b]">
+    <div className="flex-1 min-h-0 flex flex-col relative rounded-2xl border border-plum-900/[0.08] bg-cream-50/70 p-3.5 sm:p-5 shadow-inner dark:bg-[#1e1f20] dark:border-[#393a3b]">
       {/* Thanh tiêu đề phiên bản tài liệu */}
       <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.06] pb-3 dark:border-[#393a3b]">
         <div className="flex items-center gap-2.5 text-plum-900 dark:text-[#e4e6eb]">

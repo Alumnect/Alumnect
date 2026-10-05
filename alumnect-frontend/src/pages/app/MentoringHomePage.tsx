@@ -224,7 +224,7 @@ function MentoringHomeContent() {
  */
 export function MentoringHomePage() {
   return (
-    <Container className="py-6">
+    <Container className="py-2 sm:py-4">
       <MentoringTermsGate source="MENTORING_HOME">
         <MentoringHomeContent />
       </MentoringTermsGate>
