@@ -14,8 +14,9 @@ import {
   Target,
   Sparkles,
   ShieldAlert,
+  Crown,
 } from 'lucide-react'
-import { Avatar, Badge, Card, EmptyState, Pagination, Skeleton, Modal } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAdminMentors } from '../hooks/useAdmin'
@@ -44,6 +45,15 @@ export function AdminMentorListSection() {
 
   const mentors = data?.content || []
   const totalPages = data?.totalPages || 0
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'N/A'
+    return new Date(dateStr).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -122,104 +132,143 @@ export function AdminMentorListSection() {
       {!isLoading && !isError && mentors.length > 0 && (
         <Reveal>
           <div className="space-y-4">
-            <Card hover={false} className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+            <Card hover={false} className="overflow-hidden p-0 border border-plum-900/10 shadow-sm">
+              <table className="w-full text-sm table-auto">
                 <thead>
-                  <tr className="border-b border-plum-900/8 text-left text-xs uppercase tracking-wide text-plum-400">
-                    <th className="px-5 py-3 font-semibold">Cố vấn (Mentor)</th>
-                    <th className="px-5 py-3 font-semibold">Vị trí & Công ty</th>
-                    <th className="px-5 py-3 font-semibold">Trạng thái</th>
-                    <th className="px-5 py-3 font-semibold">Kinh nghiệm</th>
-                    <th className="px-5 py-3 font-semibold text-right">Thao tác</th>
+                  <tr className="border-b border-plum-900/8 text-left text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
+                    <th className="px-3.5 py-3 font-semibold whitespace-nowrap w-[20%]">Cố vấn (Mentor)</th>
+                    <th className="px-3 py-3 font-semibold whitespace-nowrap w-[16%]">Vị trí & Công ty</th>
+                    <th className="px-2 py-3 font-semibold whitespace-nowrap text-center w-[9%]">Trạng thái</th>
+                    <th className="px-3 py-3 font-semibold whitespace-nowrap w-[18%]">Gói Mentor</th>
+                    <th className="px-3 py-3 font-semibold whitespace-nowrap w-[15%]">Thời hạn hiệu lực</th>
+                    <th className="px-2 py-3 font-semibold whitespace-nowrap text-center w-[8%]">Kinh nghiệm</th>
+                    <th className="px-3.5 py-3 font-semibold whitespace-nowrap text-right w-[14%]">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {mentors.map((m) => (
+                <tbody className="divide-y divide-plum-900/5">
+                  {mentors.map((m: AdminMentorCvDto) => (
                     <tr
                       key={m.mentorProfileId}
-                      className="border-b border-plum-900/5 transition-colors last:border-0 hover:bg-white/[0.03]"
+                      className="transition-colors hover:bg-white/[0.03]"
                     >
                       {/* Avatar & Name */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-3.5 py-3">
                         <div
-                          className="flex items-center gap-3 cursor-pointer group/user"
+                          className="flex items-center gap-2.5 cursor-pointer group/user"
                           onClick={() => setSelectedMentorDetail(m)}
                         >
                           {m.avatarUrl ? (
                             <img
                               src={m.avatarUrl}
                               alt={m.mentorName}
-                              className="h-10 w-10 rounded-full object-cover ring-2 ring-brand-500/20"
+                              className="h-9 w-9 rounded-full object-cover ring-2 ring-brand-500/20 shrink-0"
                             />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold">
-                              <User size={18} />
+                            <div className="h-9 w-9 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold text-xs shrink-0">
+                              <User size={16} />
                             </div>
                           )}
-                          <div>
-                            <p className="font-semibold text-plum-900 group-hover/user:text-[#F27024] transition-colors">
+                          <div className="min-w-0">
+                            <p className="font-bold text-xs text-plum-900 group-hover/user:text-[#F27024] transition-colors truncate">
                               {m.mentorName}
                             </p>
-                            <p className="text-xs text-plum-400">{m.mentorEmail}</p>
+                            <p className="text-[11px] text-plum-400 truncate">{m.mentorEmail}</p>
                           </div>
                         </div>
                       </td>
 
                       {/* Position & Company */}
-                      <td className="px-5 py-3.5 text-xs">
-                        <p className="font-bold text-plum-800 flex items-center gap-1">
-                          <Briefcase size={13} className="text-brand-500 flex-shrink-0" />
-                          {m.currentPosition || 'Chưa cập nhật'}
+                      <td className="px-3 py-3 text-xs">
+                        <p className="font-bold text-plum-800 flex items-center gap-1.5 truncate">
+                          <Briefcase size={12} className="text-brand-500 shrink-0" />
+                          <span className="truncate">{m.currentPosition || 'Chưa cập nhật'}</span>
                         </p>
-                        <p className="text-plum-500 flex items-center gap-1 mt-0.5">
-                          <Building2 size={13} className="text-plum-400 flex-shrink-0" />
-                          {m.currentCompany || 'Chưa cập nhật'}
+                        <p className="text-plum-500 flex items-center gap-1.5 mt-0.5 text-[11px] truncate">
+                          <Building2 size={12} className="text-plum-400 shrink-0" />
+                          <span className="truncate">{m.currentCompany || 'Chưa cập nhật'}</span>
                         </p>
                       </td>
 
                       {/* Status */}
-                      <td className="px-5 py-3.5">
+                      <td className="px-2 py-3 text-center whitespace-nowrap">
                         <Badge
                           tone={
                             m.mentorStatus === 'ACTIVE'
-                              ? 'mint'
+                              ? 'success'
                               : m.mentorStatus === 'PAYMENT_PENDING'
                                 ? 'gold'
                                 : 'neutral'
                           }
-                          className="px-2.5 py-0.5 font-bold"
+                          className="px-2 py-0.5 font-bold text-[10px]"
                         >
                           {m.mentorStatus}
                         </Badge>
                       </td>
 
+                      {/* Package Name */}
+                      <td className="px-3 py-3 text-xs">
+                        {m.packageName ? (
+                          <div className="space-y-0.5">
+                            <div className="font-bold text-plum-900 flex items-center gap-1.5 whitespace-nowrap">
+                              <Crown size={13} className="text-amber-500 shrink-0" />
+                              <span className="truncate">{m.packageName}</span>
+                            </div>
+                            {m.subscriptionStatus && (
+                              <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                {m.subscriptionStatus}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-plum-400 italic text-xs">Chưa đăng ký</span>
+                        )}
+                      </td>
+
+                      {/* Subscription Dates (Start - End) */}
+                      <td className="px-3 py-3 text-xs whitespace-nowrap">
+                        {m.subscriptionStartDate || m.subscriptionEndDate ? (
+                          <div className="space-y-0.5 font-medium">
+                            <div className="flex items-center gap-1 text-plum-600 text-[11px]">
+                              <span className="text-[10px] text-plum-400 font-bold uppercase tracking-wider w-7">Từ:</span>
+                              <span className="font-semibold text-plum-700">{formatDate(m.subscriptionStartDate)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[11px]">
+                              <span className="text-[10px] text-brand-600 font-bold uppercase tracking-wider w-7">Đến:</span>
+                              <span className="font-bold text-plum-900">{formatDate(m.subscriptionEndDate)}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-plum-400 italic text-xs">Chưa kích hoạt</span>
+                        )}
+                      </td>
+
                       {/* Experience */}
-                      <td className="px-5 py-3.5 text-xs text-plum-700 font-semibold">
+                      <td className="px-2 py-3 text-xs text-plum-700 font-semibold whitespace-nowrap text-center">
                         {m.yearsOfExperience != null ? `${m.yearsOfExperience} Năm` : 'N/A'}
                       </td>
 
                       {/* Action buttons */}
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-3.5 py-3 whitespace-nowrap text-right">
+                        <div className="inline-flex items-center justify-end gap-1.5">
                           {/* Nút Xem CV Cam - Trắng FPT */}
                           <button
                             onClick={() => {
                               setSelectedCvMentorId(m.mentorProfileId)
                               setIsCvModalOpen(true)
                             }}
-                            className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-[#F27024] to-[#ff8c38] px-3 py-1.5 text-xs font-bold text-white hover:from-[#e05f13] hover:to-[#f27024] shadow-sm transition-all"
+                            className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-[#F27024] to-[#ff8c38] px-2.5 py-1 text-xs font-bold text-white hover:from-[#e05f13] hover:to-[#f27024] shadow-sm transition-all"
                             title="Xem CV Mentor (UC96)"
                           >
-                            <FileText size={13} /> Xem CV
+                            <FileText size={12} /> Xem CV
                           </button>
 
                           {/* Nút Chi tiết */}
                           <button
                             onClick={() => setSelectedMentorDetail(m)}
-                            className="inline-flex items-center gap-1 rounded-xl bg-plum-900/[0.05] px-2.5 py-1.5 text-xs font-bold text-plum-700 hover:bg-plum-900/[0.1] transition-all"
+                            className="inline-flex items-center gap-1 rounded-lg bg-plum-900/[0.05] px-2 py-1 text-xs font-semibold text-plum-700 hover:bg-plum-900/[0.1] transition-all"
                             title="Xem chi tiết thông tin Mentor"
                           >
-                            <Eye size={13} /> Chi tiết
+                            <Eye size={12} /> Chi tiết
                           </button>
                         </div>
                       </td>
@@ -280,9 +329,8 @@ export function AdminMentorListSection() {
                     <p className="text-xs text-plum-500 font-mono">{selectedMentorDetail.mentorEmail}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge
-                        tone={selectedMentorDetail.mentorStatus === 'ACTIVE' ? 'mint' : 'gold'}
-                        size="sm"
-                        className="font-bold"
+                        tone={selectedMentorDetail.mentorStatus === 'ACTIVE' ? 'success' : 'gold'}
+                        className="font-bold text-[10px]"
                       >
                         {selectedMentorDetail.mentorStatus}
                       </Badge>
@@ -369,6 +417,45 @@ export function AdminMentorListSection() {
                     </div>
                   </div>
                 )}
+
+                {/* Subscription Package & Validity Details */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-brand-50/80 via-white to-amber-50/50 border border-brand-500/20 shadow-sm space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-plum-900">
+                      <Crown className="h-4 w-4 text-amber-500" /> Gói Mentor & Thời hạn bản quyền
+                    </div>
+                    {selectedMentorDetail.subscriptionStatus && (
+                      <Badge
+                        tone={selectedMentorDetail.subscriptionStatus === 'ACTIVE' ? 'success' : 'gold'}
+                        className="text-[10px] font-bold"
+                      >
+                        {selectedMentorDetail.subscriptionStatus}
+                      </Badge>
+                    )}
+
+                  </div>
+
+                  <div className="space-y-1.5 pt-1 text-plum-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-plum-500">Gói đăng ký:</span>
+                      <span className="font-extrabold text-plum-900">
+                        {selectedMentorDetail.packageName || 'Chưa đăng ký gói'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-plum-500">Ngày bắt đầu:</span>
+                      <span className="font-semibold text-plum-800">
+                        {selectedMentorDetail.subscriptionStartDate ? formatDate(selectedMentorDetail.subscriptionStartDate) : 'Chưa kích hoạt'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-plum-500">Ngày kết thúc:</span>
+                      <span className="font-semibold text-brand-600">
+                        {selectedMentorDetail.subscriptionEndDate ? formatDate(selectedMentorDetail.subscriptionEndDate) : 'Chưa kích hoạt'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Bank Payout Details */}
                 {(selectedMentorDetail.bankName || selectedMentorDetail.bankAccountNumber) && (

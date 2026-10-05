@@ -46,7 +46,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
   return (
     <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200/80 dark:border-[#393a3b] p-6 shadow-sm">
       <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-[#393a3b] mb-6">
-        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+        <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#f27024] dark:text-orange-400 flex items-center justify-center font-bold">
           2
         </div>
         <div>

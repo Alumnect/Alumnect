@@ -53,6 +53,7 @@ export function useAcceptMentoringTerms() {
       })
       // Đồng thời làm mới cache trên server
       queryClient.invalidateQueries({ queryKey: MENTORING_TERMS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: ['mentor-status'] })
       toast.success('Chấp nhận điều khoản thành công!')
     },
     onError: (err) => {
