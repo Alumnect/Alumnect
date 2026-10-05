@@ -4,9 +4,11 @@ import {
   ExternalLink,
   Download,
   AlertCircle,
+  CheckCircle2,
   Clock,
   Building2,
   Briefcase,
+  X,
   User,
   ShieldAlert,
 } from 'lucide-react'

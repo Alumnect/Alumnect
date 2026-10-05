@@ -8,7 +8,7 @@
  *  - Lưới thẻ hội nhóm 3 cột chuẩn chỉ, khoảng cách rộng rãi, hiệu ứng lướt nhẹ.
  */
 import { useState } from 'react'
-import { AlertTriangle, Compass, Inbox, Loader2, Plus, Search, Users2, X } from 'lucide-react'
+import { AlertTriangle, Compass, Inbox, Loader2, Plus, Search, Sparkles, Users2, X } from 'lucide-react'
 import { Card, PageHeader } from '@/components/ui'
 import { Stagger, StaggerItem } from '@/components/motion'
 import { Button } from '@/components/ui/Button'

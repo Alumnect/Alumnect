@@ -9,7 +9,7 @@ export function Container({ className, children }: { className?: string; childre
   return <div className={cn('mx-auto w-full max-w-7xl px-5 sm:px-8', className)}>{children}</div>
 }
 
-type BadgeTone = 'brand' | 'gold' | 'aqua' | 'violet' | 'neutral' | 'success' | 'danger' | 'mint' | 'rose'
+type BadgeTone = 'brand' | 'gold' | 'aqua' | 'violet' | 'neutral' | 'success' | 'danger'
 
 const BADGE_TONES: Record<BadgeTone, string> = {
   brand: 'bg-brand-100 text-brand-700 ring-brand-300/60',
@@ -19,8 +19,6 @@ const BADGE_TONES: Record<BadgeTone, string> = {
   neutral: 'bg-plum-900/[0.05] text-plum-600 ring-plum-900/10',
   success: 'bg-mint-300/50 text-mint-700 ring-mint-400/60',
   danger: 'bg-coral-300/50 text-coral-700 ring-coral-400/60',
-  mint: 'bg-mint-300/50 text-mint-700 ring-mint-400/60',
-  rose: 'bg-coral-300/50 text-coral-700 ring-coral-400/60',
 }
 
 export function Badge({
@@ -28,13 +26,11 @@ export function Badge({
   tone = 'brand',
   className,
   icon,
-  size: _size,
 }: {
   children: ReactNode
   tone?: BadgeTone
   className?: string
   icon?: ReactNode
-  size?: string
 }) {
   return (
     <span

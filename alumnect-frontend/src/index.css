@@ -844,9 +844,9 @@ html.dark .hover\:bg-plum-50:hover {
 }
 
 /* Inputs, Textareas & Search Bars: High contrast borders and distinct surface */
-html.dark input:not([type="checkbox"]):not([type="radio"]):not(.bg-transparent):not([class*="bg-transparent"]),
-html.dark textarea:not(.bg-transparent):not([class*="bg-transparent"]),
-html.dark select:not(.bg-transparent):not([class*="bg-transparent"]) {
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
   background-color: #242526 !important;
   color: #f0f2f5 !important;
   border: 1px solid #55575a !important;

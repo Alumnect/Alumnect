@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users,
+  UserCheck,
   Target,
   UserPlus,
   Compass,
@@ -9,7 +10,7 @@ import {
   HeartHandshake,
   UserX,
 } from 'lucide-react'
-import { PageHeader, EmptyState, Skeleton, Pagination, Avatar, Card } from '@/components/ui'
+import { PageHeader, Badge, EmptyState, Skeleton, Pagination, Avatar, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import {
   UserSearchFilterBar,
@@ -76,6 +77,7 @@ export function AlumniDirectoryPage() {
   })
 
   const users = data?.content || []
+  const totalElements = data?.totalElements || 0
   const totalPages = data?.totalPages || 0
 
   // Loại trừ tài khoản của chính mình để không tạo ô trống hoặc mất thẩm mỹ trong danh bạ

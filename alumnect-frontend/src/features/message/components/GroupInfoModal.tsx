@@ -120,7 +120,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
   // Xử lý đổi tên nhóm
   const handleSaveTitle = async () => {
-    if (!conversationId || !newTitle.trim() || newTitle === conversation.title) {
+    if (!newTitle.trim() || newTitle === conversation.title) {
       setIsEditingTitle(false)
       return
     }
@@ -142,7 +142,6 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
   // Thêm thành viên
   const handleAddUser = async (targetUserId: number) => {
-    if (!conversationId) return
     try {
       const res = await addMembersMutation.mutateAsync({
         conversationId,
@@ -199,7 +198,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
   // Thực hiện xóa, rời nhóm hoặc giải tán nhóm qua Modal xác nhận
   const handleConfirmAction = async () => {
-    if (!confirmAction || !conversationId) return
+    if (!confirmAction) return
     const { type, userId } = confirmAction
 
     if (type === 'disband') {

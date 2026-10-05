@@ -205,7 +205,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
                 {post.author.fullName}
               </p>
               <p className="truncate text-[10px] text-plum-500 dark:text-[#b0b3b8]">
-                {(post.author as any).headline || 'Bài viết hội nhóm'}
+                {post.author.headline || 'Bài viết hội nhóm'}
               </p>
             </div>
           </div>

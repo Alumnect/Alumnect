@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Activity, TrendingUp } from 'lucide-react'
+import { Activity, TrendingUp, Calendar, Filter } from 'lucide-react'
 import { Card, Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { AdminDashboardSummaryDto } from '../api/adminApi'
@@ -19,7 +19,7 @@ interface RegistrationAnalyticsChartProps {
   isLoading?: boolean
 }
 
-export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: RegistrationAnalyticsChartProps) {
+export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [], isLoading }: RegistrationAnalyticsChartProps) {
   const [period, setPeriod] = useState<TimePeriod>('MONTH')
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
