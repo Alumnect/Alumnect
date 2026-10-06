@@ -233,41 +233,45 @@ export const MentorRegistrationForm: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
-      {/* Header Banner: Gradient trắng bên trái, cam bên phải (#f27024) */}
-      <div className="bg-gradient-to-r from-white via-[#fff5ee] to-[#f27024] rounded-3xl p-8 border border-orange-200/80 shadow-md relative overflow-hidden">
-        {/* Decorative background shape */}
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-white/10 backdrop-blur-[2px] pointer-events-none transform -skew-x-12 translate-x-12" />
+      {/* Header Banner: Alumnect Mentorship Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/60 dark:from-brand-950/40 dark:via-[#242526] dark:to-[#1e1f20] dark:border-[#393a3b] p-6 sm:p-8 shadow-sm">
+        {/* Glow decoration */}
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/15 blur-3xl dark:bg-brand-500/10" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
 
         <div className="relative z-10 max-w-2xl">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
             {isActive ? 'Hồ sơ người hướng dẫn' : 'Đăng ký làm người hướng dẫn'}
           </h1>
-          <p className="text-sm text-slate-600 font-medium leading-relaxed">
+          <p className="text-sm text-slate-600 dark:text-[#b0b3b8] font-medium leading-relaxed">
             {isActive
               ? 'Cập nhật thông tin hướng dẫn, lĩnh vực hỗ trợ và tài khoản nhận thanh toán của bạn.'
               : 'Chia sẻ kinh nghiệm, định hướng nghề nghiệp và đồng hành cùng mọi người trên hành trình phát triển.'}
           </p>
         </div>
 
-        {/* Trạng thái hồ sơ */}
-        <div className="mt-6 pt-4 border-t border-orange-200/80 flex flex-wrap items-center justify-between gap-4 relative z-10">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-600">Trạng thái hồ sơ:</span>
+        {/* Trạng thái hồ sơ & Hành động nhanh */}
+        <div className="mt-6 pt-4 border-t border-brand-500/15 dark:border-[#393a3b] flex flex-wrap items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs font-semibold text-slate-600 dark:text-[#b0b3b8]">Trạng thái hồ sơ:</span>
             {isActive ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold shadow-sm">
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Đang hoạt động
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-bold shadow-xs">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Đang hoạt động</span>
               </span>
             ) : isPendingPayment ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold shadow-sm">
-                <Clock className="w-3.5 h-3.5 text-amber-700" /> Chờ kích hoạt gói
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-xs font-bold shadow-xs">
+                <Clock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                <span>Chờ kích hoạt gói</span>
               </span>
             ) : data?.hasExistingRegistration ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[#d45105] border border-orange-200 text-xs font-bold shadow-sm">
-                <FileCheck2 className="w-3.5 h-3.5 text-[#f27024]" /> Bản nháp
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/50 text-[#d45105] dark:text-orange-300 border border-orange-200 dark:border-orange-800 text-xs font-bold shadow-xs">
+                <FileCheck2 className="w-3.5 h-3.5 text-[#f27024]" />
+                <span>Bản nháp</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 text-xs font-semibold shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Chưa tạo hồ sơ
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#3a3b3c] text-slate-700 dark:text-[#f0f2f5] border border-slate-200 dark:border-[#4e4f50] text-xs font-semibold">
+                Chưa tạo hồ sơ
               </span>
             )}
           </div>
@@ -276,19 +280,19 @@ export const MentorRegistrationForm: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/app/mentoring/subscription')}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-black text-xs font-bold shadow-md transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#f27024] hover:bg-[#d45105] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
               <span>Quản lý gói dịch vụ</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 text-white" />
             </button>
           ) : isPendingPayment ? (
             <button
               type="button"
               onClick={() => navigate('/app/mentoring/packages')}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-black text-xs font-bold shadow-md transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#f27024] hover:bg-[#d45105] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
-              <span>Chọn gói</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Chọn gói & Kích hoạt</span>
+              <ArrowRight className="w-3.5 h-3.5 text-white" />
             </button>
           ) : null}
         </div>
@@ -350,16 +354,16 @@ export const MentorRegistrationForm: React.FC = () => {
         />
 
         {/* Action Buttons Bar */}
-        <div className="sticky bottom-6 z-20 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 p-4 shadow-xl flex items-center justify-end gap-4">
+        <div className="sticky bottom-6 z-20 bg-white/95 dark:bg-[#242526]/95 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-[#393a3b] p-4 shadow-xl flex items-center justify-end gap-4">
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <button
               type="button"
               onClick={handleSaveDraft}
               disabled={saveMutation.isPending}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition-all disabled:opacity-50 cursor-pointer"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 dark:border-[#4e4f50] hover:bg-slate-50 dark:hover:bg-[#3a3b3c] text-slate-700 dark:text-[#f0f2f5] font-semibold text-sm transition-all disabled:opacity-50 cursor-pointer"
             >
-              <Save className="w-4 h-4 text-slate-500" />
+              <Save className="w-4 h-4 text-slate-500 dark:text-[#b0b3b8]" />
               <span>{saveMutation.isPending ? 'Đang lưu...' : 'Lưu nháp'}</span>
             </button>
 

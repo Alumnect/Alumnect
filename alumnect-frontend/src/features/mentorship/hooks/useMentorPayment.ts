@@ -57,6 +57,7 @@ export function useMentorPaymentStatus(orderCode: number | null | undefined, ena
     if (query.data?.paymentStatus === 'PAID') {
       queryClient.invalidateQueries({ queryKey: MENTOR_SUBSCRIPTION_KEYS.mySubscription })
       queryClient.invalidateQueries({ queryKey: ['mentor-registration'] })
+      queryClient.invalidateQueries({ queryKey: ['mentor-status'] })
       queryClient.invalidateQueries({ queryKey: ['user-profile'] })
       queryClient.invalidateQueries({ queryKey: ['auth'] })
     }

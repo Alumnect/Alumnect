@@ -64,9 +64,9 @@ export const APP_MORE_NAV: NavItem[] = [
 export const APP_ACCOUNT_NAV: NavItem[] = [
   { label: 'Trang cá nhân', to: '/app/profile', icon: User },
   { label: 'Đổi mật khẩu', to: '/app/change-password', icon: LockKey },
-  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
   { label: 'Bảng quản trị', to: '/admin', icon: ShieldCheck },
 ]
+
 
 /** Full flat list (kept for any "all features" surfaces). */
 export const APP_NAV: NavItem[] = [

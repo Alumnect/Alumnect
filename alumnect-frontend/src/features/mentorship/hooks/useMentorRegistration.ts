@@ -51,6 +51,7 @@ export function useSaveMentorRegistration() {
     onSuccess: (data) => {
       // Invalidate cache để đồng bộ dữ liệu mới nhất
       queryClient.invalidateQueries({ queryKey: MENTOR_REGISTRATION_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: ['mentor-status'] })
       if (data.isComplete) {
         toast.success('Chúc mừng! Bạn đã hoàn tất hồ sơ đăng ký Mentor.')
       } else {
