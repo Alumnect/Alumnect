@@ -3,7 +3,6 @@ import {
   UploadCloud,
   CheckCircle2,
   ExternalLink,
-  ShieldCheck,
   Loader2,
   FileCheck,
 } from 'lucide-react'
@@ -39,7 +38,7 @@ export const MentorCvSection: React.FC<Props> = ({
         file.type || 'application/pdf'
       )
       if (!presigned || !presigned.uploadUrl) {
-        throw new Error('Không lấy được link upload tệp tin từ hệ thống.')
+        throw new Error('Không lấy được link tải lên.')
       }
 
       // 2. Upload file trực tiếp lên R2
@@ -47,9 +46,9 @@ export const MentorCvSection: React.FC<Props> = ({
 
       // 3. Lưu trực tiếp publicUrl như các chức năng khác trong hệ thống
       onCvUploaded(presigned.publicUrl)
-      toast.success('Tải tệp CV lên hệ thống thành công!')
+      toast.success('Đã tải CV lên')
     } catch (err: any) {
-      toast.error(err.message || 'Tải CV lên kho lưu trữ thất bại. Vui lòng thử lại.')
+      toast.error(err.message || 'Tải CV thất bại, vui lòng thử lại.')
     } finally {
       setIsUploading(false)
     }
@@ -57,21 +56,11 @@ export const MentorCvSection: React.FC<Props> = ({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-      <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#f27024] flex items-center justify-center font-bold">
-            4
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-800 text-lg">Đính kèm Hồ sơ năng lực / CV</h3>
-            <p className="text-xs text-slate-500">
-              Tài liệu CV được lưu trữ an toàn, bảo mật riêng tư và chỉ người có thẩm quyền mới có thể truy cập
-            </p>
-          </div>
+      <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#f27024] flex items-center justify-center font-bold">
+          4
         </div>
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Private Document
-        </span>
+        <h3 className="font-semibold text-slate-800 text-lg">CV</h3>
       </div>
 
       <div className="max-w-2xl mx-auto">
@@ -95,8 +84,7 @@ export const MentorCvSection: React.FC<Props> = ({
             <div className="py-4 flex flex-col items-center gap-3">
               <Loader2 className="w-10 h-10 text-[#f27024] animate-spin" />
               <div>
-                <span className="text-sm font-semibold text-slate-700 block">Đang tải tệp lên kho lưu trữ đám mây...</span>
-                <span className="text-xs text-slate-400 block mt-0.5">Vui lòng đợi trong giây lát</span>
+                <span className="text-sm font-semibold text-slate-700 block">Đang tải lên...</span>
               </div>
             </div>
           ) : cvFileKey ? (
@@ -106,10 +94,10 @@ export const MentorCvSection: React.FC<Props> = ({
               </div>
               <div>
                 <span className="text-sm font-bold text-emerald-900 block">
-                  {selectedFileName || 'Tệp CV đã được đính kèm thành công'}
+                  {selectedFileName || 'Đã đính kèm CV'}
                 </span>
                 <span className="text-xs text-emerald-600 block mt-1">
-                  Nhấp vào đây nếu bạn muốn chọn tệp CV khác để thay thế
+                  Nhấp để thay tệp khác
                 </span>
               </div>
             </div>
@@ -119,8 +107,8 @@ export const MentorCvSection: React.FC<Props> = ({
                 <UploadCloud className="w-8 h-8" />
               </div>
               <div>
-                <span className="text-base font-semibold text-slate-700 block">Nhấp để chọn tệp CV tải lên</span>
-                <span className="text-xs text-slate-400 block mt-1">Hỗ trợ định dạng PDF, DOC, DOCX (Tối đa 15MB)</span>
+                <span className="text-base font-semibold text-slate-700 block">Chọn tệp CV</span>
+                <span className="text-xs text-slate-400 block mt-1">PDF, DOC, DOCX (tối đa 15MB)</span>
               </div>
             </div>
           )}
@@ -130,7 +118,7 @@ export const MentorCvSection: React.FC<Props> = ({
           <div className="mt-4 flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs">
             <span className="text-slate-700 font-medium truncate flex items-center gap-2">
               <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Tệp CV hiện tại đang lưu trữ</span>
+              <span>CV hiện tại</span>
             </span>
             <a
               href={cvDownloadUrl || cvFileKey}
@@ -138,7 +126,7 @@ export const MentorCvSection: React.FC<Props> = ({
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-[#f27024] hover:text-[#d45105] font-semibold bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-lg transition-colors"
             >
-              <span>Xem tệp CV</span>
+              <span>Xem</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Mail, Phone, GraduationCap, Building2, ExternalLink, ShieldCheck, Lock } from 'lucide-react'
+import { User, Mail, Phone, GraduationCap, Building2, ExternalLink, ShieldCheck, Lock, ChevronDown, Check } from 'lucide-react'
 import type { PersonalInfo } from '../model/mentorRegistrationTypes'
 
 interface Props {
@@ -17,11 +17,11 @@ interface Props {
 
 const FPT_CAMPUSES = [
   'FPT University Đà Nẵng',
-  'FPT University Hà Nội',
+  'FPT University Hà Nội (Hòa Lạc)',
   'FPT University TP. Hồ Chí Minh',
   'FPT University Cần Thơ',
   'FPT University Quy Nhơn',
-]
+].map((name) => ({ value: name, label: name }))
 
 export const MentorPersonalInfoSection: React.FC<Props> = ({
   personalInfo,
@@ -34,6 +34,26 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({
   onCampusChange,
   onGraduationYearChange,
 }) => {
+  const [isCampusOpen, setIsCampusOpen] = useState(false)
+  const campusRef = useRef<HTMLDivElement>(null)
+
+  // Đóng dropdown khi bấm ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (campusRef.current && !campusRef.current.contains(event.target as Node)) {
+        setIsCampusOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const campusOptions =
+    campus && !FPT_CAMPUSES.some((c) => c.value === campus)
+      ? [...FPT_CAMPUSES, { value: campus, label: campus }]
+      : FPT_CAMPUSES
+  const selectedCampus = campusOptions.find((c) => c.value === campus)
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
       <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
@@ -42,8 +62,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({
             1
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800 text-lg">Thông tin cá nhân cơ bản</h3>
-            <p className="text-xs text-slate-500">Chỉnh sửa trực tiếp thông tin của bạn ngay tại đây</p>
+            <h3 className="font-semibold text-slate-800 text-lg">Thông tin cá nhân</h3>
           </div>
         </div>
         <Link
@@ -86,7 +105,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({
               type="text"
               value={fullName}
               onChange={(e) => onFullNameChange(e.target.value)}
-              placeholder="Nhập họ và tên..."
+              placeholder="Họ và tên"
               className="w-full bg-transparent font-medium text-slate-800 text-sm focus:outline-none placeholder:text-slate-400"
             />
           </div>
@@ -94,7 +113,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({
           {/* Email (Read-only) */}
           <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-200/50">
             <span className="text-xs font-medium text-slate-500 block mb-1 flex items-center gap-1">
-              <Mail className="w-3 h-3 text-slate-400" /> Email (Tài khoản)
+              <Mail className="w-3 h-3 text-slate-400" /> Email
               <Lock className="w-3 h-3 text-slate-400 ml-auto" />
             </span>
             <span className="font-medium text-slate-700 truncate block text-sm" title={personalInfo?.email}>
@@ -111,31 +130,62 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({
               type="tel"
               value={phone}
               onChange={(e) => onPhoneChange(e.target.value)}
-              placeholder="Nhập số điện thoại..."
+              placeholder="Số điện thoại"
               className="w-full bg-transparent font-medium text-slate-800 text-sm focus:outline-none placeholder:text-slate-400"
             />
           </div>
 
-          {/* Cơ sở đào tạo (FPT Campus) */}
-          <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-200/70 focus-within:border-[#f27024] focus-within:bg-white transition-all">
-            <label className="text-xs font-semibold text-slate-600 block mb-1 flex items-center gap-1">
-              <Building2 className="w-3 h-3 text-[#f27024]" /> Cơ sở đào tạo
-            </label>
-            <select
-              value={campus}
-              onChange={(e) => onCampusChange(e.target.value)}
-              className="w-full bg-transparent font-medium text-slate-800 text-sm focus:outline-none cursor-pointer"
+          {/* Cơ sở đào tạo (dropdown tùy biến) */}
+          <div ref={campusRef} className="relative">
+            <div
+              className={`bg-slate-50/70 rounded-xl p-3 border transition-all ${
+                isCampusOpen ? 'border-[#f27024] bg-white ring-2 ring-[#f27024]/15' : 'border-slate-200/70 hover:border-slate-300'
+              }`}
             >
-              <option value="">Chọn cơ sở...</option>
-              {FPT_CAMPUSES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-              {campus && !FPT_CAMPUSES.includes(campus) && (
-                <option value={campus}>{campus}</option>
-              )}
-            </select>
+              <span className="text-xs font-semibold text-slate-600 block mb-1 flex items-center gap-1">
+                <Building2 className="w-3 h-3 text-[#f27024]" /> Cơ sở đào tạo
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsCampusOpen((prev) => !prev)}
+                className="w-full flex items-center justify-between gap-2 text-left cursor-pointer focus:outline-none"
+              >
+                <span className={`font-medium text-sm leading-snug ${selectedCampus ? 'text-slate-800' : 'text-slate-400'}`}>
+                  {selectedCampus ? selectedCampus.label : 'Chọn cơ sở đào tạo'}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200 ${
+                    isCampusOpen ? 'rotate-180 text-[#f27024]' : ''
+                  }`}
+                />
+              </button>
+            </div>
+
+            {isCampusOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden p-1.5 animate-in fade-in-50 slide-in-from-top-1 duration-150">
+                {campusOptions.map((c) => {
+                  const isSelected = c.value === campus
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => {
+                        onCampusChange(c.value)
+                        setIsCampusOpen(false)
+                      }}
+                      className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm text-left transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#fff4ec] text-[#d45105] font-semibold'
+                          : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{c.label}</span>
+                      {isSelected && <Check className="w-4 h-4 shrink-0 text-[#f27024]" />}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Năm tốt nghiệp */}
@@ -160,7 +210,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({
           {/* Chuyên ngành & Mã SV */}
           <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-200/50">
             <span className="text-xs font-medium text-slate-500 block mb-1 flex items-center gap-1">
-              <GraduationCap className="w-3 h-3 text-slate-400" /> Chuyên ngành & Mã SV
+              <GraduationCap className="w-3 h-3 text-slate-400" /> Ngành & MSSV
             </span>
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-700 truncate">

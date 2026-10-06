@@ -21,7 +21,6 @@ export function useCreateMentorPayment() {
     mutationFn: (data?: CreateMentorPaymentRequest) =>
       mentorPaymentApi.createCheckout(data),
     onSuccess: (response) => {
-      toast.success('Thông tin thanh toán PayOS đã sẵn sàng!')
       queryClient.setQueryData(MENTOR_PAYMENT_KEYS.checkout, response)
     },
     onError: (error: Error) => {

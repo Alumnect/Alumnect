@@ -50,8 +50,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
           2
         </div>
         <div>
-          <h3 className="font-semibold text-slate-800 dark:text-[#e4e6eb] text-lg">Thông tin chuyên môn & Kinh nghiệm</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Chức danh và kỹ năng được tái sử dụng trực tiếp từ hồ sơ kinh nghiệm</p>
+          <h3 className="font-semibold text-slate-800 dark:text-[#e4e6eb] text-lg">Chuyên môn</h3>
         </div>
       </div>
 
@@ -60,7 +59,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
         <div className="bg-slate-50/70 dark:bg-[#1f2022] rounded-xl p-4 border border-slate-100 dark:border-[#393a3b]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-primary-500" /> Vị trí công tác hiện tại (Từ Hồ sơ)
+              <Briefcase className="w-3.5 h-3.5 text-primary-500" /> Vị trí hiện tại
             </span>
             <button
               type="button"
@@ -90,7 +89,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
               <div className="flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
-                  <span className="font-bold">Chưa có kinh nghiệm hiện tại:</span> Bạn chưa đánh dấu công việc hiện tại trong phần Kinh nghiệm làm việc. Để hoàn tất đăng ký Mentor, bạn cần có ít nhất 1 kinh nghiệm làm việc đang công tác.
+                  <span className="font-bold">Chưa có công việc hiện tại.</span> Cần thêm ít nhất 1 kinh nghiệm đang làm việc.
                 </div>
               </div>
               <button
@@ -99,7 +98,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
                 className="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Thêm kinh nghiệm ngay</span>
+                <span>Thêm ngay</span>
               </button>
             </div>
           )}
@@ -108,7 +107,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
         {/* Danh sách kỹ năng chuyên môn */}
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Kỹ năng chuyên môn nổi bật
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Kỹ năng
           </label>
           {skills.length > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -122,13 +121,13 @@ export const MentorProfessionalSection: React.FC<Props> = ({
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 italic">Chưa cập nhật kỹ năng trên trang cá nhân.</p>
+            <p className="text-xs text-slate-400 italic">Chưa có kỹ năng.</p>
           )}
         </div>
 
         {/* Số năm kinh nghiệm & Bio Mentor */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-          <div>
+        <div className="grid grid-cols-1 gap-5 pt-2">
+          <div className="w-full sm:max-w-xs">
             <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
               Số năm kinh nghiệm <span className="text-rose-500">*</span>
             </label>
@@ -144,23 +143,22 @@ export const MentorProfessionalSection: React.FC<Props> = ({
               }}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#1f2022] text-slate-800 dark:text-[#e4e6eb] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-400/30 focus:border-primary-500 transition-all text-sm"
             />
-            <span className="text-xs text-slate-400 mt-1 block">Tổng số năm làm việc trong lĩnh vực</span>
           </div>
 
-          <div className="md:col-span-2">
+          <div className="w-full">
             <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
-              Thông điệp / Định hướng cố vấn (Bio)
+              Giới thiệu bản thân
             </label>
             <textarea
               rows={3}
               maxLength={2000}
-              placeholder="Chia sẻ lý do và định hướng bạn muốn hỗ trợ các bạn sinh viên..."
+              placeholder="Chia sẻ ngắn gọn về kinh nghiệm và điều bạn muốn hỗ trợ mọi người"
               value={bio}
               onChange={(e) => onBioChange(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-[#1f2022] text-slate-800 dark:text-[#e4e6eb] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-400/30 focus:border-primary-500 transition-all text-sm resize-none"
             />
             <div className="flex justify-between items-center text-xs text-slate-400 mt-1">
-              <span>Tùy chọn, tối đa 2000 ký tự</span>
+              <span>Tùy chọn</span>
               <span>{bio.length}/2000</span>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Shield, Sparkles, Check, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Sparkles, Check, AlertCircle } from 'lucide-react'
 import { Card, Button, Skeleton, Badge } from '@/components/ui'
 import { vnd } from '@/lib/utils'
 import { useCreateMentorPayment, useMentorPaymentStatus, useCancelMentorPayment } from '../hooks/useMentorPayment'
@@ -241,16 +241,6 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
           </div>
         </Card>
 
-        {/* Cam kết minh bạch */}
-        <div className="rounded-2xl border border-plum-900/5 bg-cream-50/50 dark:bg-[#18191a] p-4 text-xs text-plum-500 space-y-1.5">
-          <div className="flex items-center gap-1.5 font-semibold text-plum-700 dark:text-[#e4e6eb]">
-            <Shield className="h-3.5 w-3.5 text-brand-600" />
-            <span>Đối soát giao dịch tự động 24/7</span>
-          </div>
-          <p className="text-[11px] leading-relaxed">
-            Hệ thống AlumNect xác thực giao dịch qua Webhook bảo mật PayOS trong vòng 3-10 giây sau khi ngân hàng nhận tiền.
-          </p>
-        </div>
       </div>
 
       {/* Cột phải: Thẻ VietQR PayOS & Quét mã */}

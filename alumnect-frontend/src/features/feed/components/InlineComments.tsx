@@ -58,24 +58,25 @@ export function InlineComments({
   }
 
   return (
-    <div className="border-t border-slate-100 bg-slate-50/50 p-4 space-y-3.5">
+    <div className="border-t border-plum-900/[0.06] bg-slate-50/50 p-4 space-y-3 dark:border-[#393a3b] dark:bg-[#1f2022]/60">
       {/* Quick Comment Input */}
       {canInteract && viewer ? (
         <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
-          <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} />
+          <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
           <div className="relative flex-1">
             <input
               type="text"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Viết bình luận công khai..."
-              className="w-full rounded-full border border-slate-200 bg-white py-2 pl-4 pr-11 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#F27024] focus:outline-none focus:ring-2 focus:ring-[#F27024]/15 transition-all shadow-2xs"
+              maxLength={1000}
+              placeholder="Viết phản hồi công khai..."
+              className="w-full rounded-2xl border border-plum-900/10 bg-white py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] transition-all shadow-2xs"
             />
             <button
               type="submit"
               disabled={!content.trim() || createComment.isPending}
               aria-label="Gửi bình luận"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-full bg-[#F27024] text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d96010] transition-colors shadow-xs"
+              className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400 cursor-pointer"
             >
               {createComment.isPending ? (
                 <Loader2 size={13} className="animate-spin" />
@@ -86,12 +87,12 @@ export function InlineComments({
           </div>
         </form>
       ) : (
-        <div className="flex items-center justify-between rounded-xl bg-white p-3 border border-slate-200/80 shadow-2xs">
-          <p className="text-xs text-slate-500">Đăng nhập để tham gia bình luận.</p>
+        <div className="flex items-center justify-between rounded-xl bg-white p-3 border border-plum-900/10 shadow-2xs dark:border-[#393a3b] dark:bg-[#242526]">
+          <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Đăng nhập để tham gia bình luận.</p>
           <button
             type="button"
             onClick={() => promptLogin('Đăng nhập để tham gia bình luận.')}
-            className="text-xs font-bold text-[#F27024] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 dark:text-brand-400 cursor-pointer"
           >
             Đăng nhập <ArrowRight size={12} />
           </button>
@@ -103,18 +104,18 @@ export function InlineComments({
         <div className="space-y-2.5 py-1">
           <div className="flex gap-2.5 items-center">
             <Skeleton className="h-7 w-7 rounded-full shrink-0" />
-            <Skeleton className="h-8 flex-1 rounded-xl" />
+            <Skeleton className="h-8 flex-1 rounded-2xl" />
           </div>
           <div className="flex gap-2.5 items-center">
             <Skeleton className="h-7 w-7 rounded-full shrink-0" />
-            <Skeleton className="h-8 flex-1 rounded-xl" />
+            <Skeleton className="h-8 flex-1 rounded-2xl" />
           </div>
         </div>
       )}
 
       {/* Error state */}
       {!isLoading && isError && (
-        <p className="text-xs text-slate-400 py-1 text-center">Không thể tải bình luận lúc này.</p>
+        <p className="text-xs text-plum-400 py-1 text-center dark:text-[#8a8d91]">Không thể tải bình luận lúc này.</p>
       )}
 
       {/* Comment List (Top 3) */}
@@ -129,20 +130,26 @@ export function InlineComments({
                 <Avatar src={c.avatar} name={c.author} size={28} verified={c.verified} />
               </Link>
               <div className="min-w-0 flex-1">
-                <div className="rounded-2xl rounded-tl-md bg-white border border-slate-200/70 px-3.5 py-2 shadow-2xs">
+                <div className="rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
                   <div className="flex items-center justify-between gap-2">
-                    <Link
-                      to={c.authorId ? `/app/profile?userId=${c.authorId}` : '/app/profile'}
-                      className="truncate text-xs font-bold text-slate-900 hover:text-[#F27024] hover:underline transition-colors"
-                    >
-                      {c.author}
-                    </Link>
-                    <span className="shrink-0 text-[10.5px] text-slate-400 font-medium">{c.time}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Link
+                        to={c.authorId ? `/app/profile?userId=${c.authorId}` : '/app/profile'}
+                        className="truncate text-xs font-bold text-plum-900 hover:underline dark:text-white transition-colors"
+                      >
+                        {c.author}
+                      </Link>
+                      {c.role && (
+                        <span className="text-[10px] font-medium text-brand-600 bg-brand-500/10 px-1.5 py-0.2 rounded-md dark:text-brand-300">
+                          {c.role}
+                        </span>
+                      )}
+                      <span className="shrink-0 text-[10px] text-plum-400 dark:text-[#8a8d91]">
+                        • {c.time}
+                      </span>
+                    </div>
                   </div>
-                  {c.role && (
-                    <p className="text-[10px] text-slate-400 font-medium">{c.role}</p>
-                  )}
-                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap break-words leading-relaxed">
+                  <p className="mt-1 text-xs text-plum-800 dark:text-plum-200 whitespace-pre-wrap break-words leading-relaxed">
                     {c.text}
                   </p>
                 </div>
@@ -155,7 +162,7 @@ export function InlineComments({
             <div className="pt-1 text-center">
               <Link
                 to={`/app/posts/${postId}#comments`}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#F27024] hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400"
               >
                 <MessageCircle size={13} />
                 Xem tất cả {totalComments} bình luận <ArrowRight size={12} />

@@ -86,8 +86,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
           3
         </div>
         <div>
-          <h3 className="font-semibold text-slate-800 text-lg">Thiết lập Hình thức & Lĩnh vực hướng dẫn</h3>
-          <p className="text-xs text-slate-500">Tùy biến cách thức bạn sẽ kết nối và đồng hành cùng người học</p>
+          <h3 className="font-semibold text-slate-800 text-lg">Hình thức & Lĩnh vực</h3>
         </div>
       </div>
 
@@ -101,20 +100,20 @@ export const MentorMentoringSection: React.FC<Props> = ({
             {[
               {
                 value: 'ONLINE' as MentoringWorkingMode,
-                label: 'Trực tuyến (Online)',
-                desc: 'Qua Google Meet, Zoom, Teams...',
+                label: 'Trực tuyến',
+                desc: 'Meet, Zoom, Teams',
                 icon: Globe,
               },
               {
                 value: 'OFFLINE' as MentoringWorkingMode,
-                label: 'Trực tiếp (Offline)',
-                desc: 'Gặp gỡ tại quán cafe, văn phòng...',
+                label: 'Trực tiếp',
+                desc: 'Gặp mặt',
                 icon: MapPin,
               },
               {
                 value: 'BOTH' as MentoringWorkingMode,
-                label: 'Linh hoạt cả hai (Both)',
-                desc: 'Tùy theo thống nhất giữa hai bên',
+                label: 'Cả hai',
+                desc: 'Linh hoạt',
                 icon: Compass,
               },
             ].map((item) => {
@@ -165,19 +164,19 @@ export const MentorMentoringSection: React.FC<Props> = ({
               {
                 value: 'INDIVIDUAL' as MentoringType,
                 label: 'Cá nhân 1-1',
-                desc: 'Tập trung chuyên sâu cho 1 mentee',
+                desc: 'Hướng dẫn 1 người',
                 icon: User,
               },
               {
                 value: 'GROUP' as MentoringType,
-                label: 'Theo nhóm (Group)',
-                desc: 'Hỗ trợ đồng thời 2-5 mentee',
+                label: 'Theo nhóm',
+                desc: 'Nhóm từ 2 - 5 người',
                 icon: Users,
               },
               {
                 value: 'BOTH' as MentoringType,
-                label: 'Cả hai loại hình',
-                desc: 'Hỗ trợ cả 1-1 và theo nhóm',
+                label: 'Cả hai',
+                desc: 'Linh hoạt cả hai hình thức',
                 icon: Layers,
               },
             ].map((item) => {
@@ -222,17 +221,14 @@ export const MentorMentoringSection: React.FC<Props> = ({
         <div ref={dropdownRef} className="relative">
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-sm font-semibold text-slate-700">
-              Lĩnh vực ngành nghề hỗ trợ <span className="text-rose-500">*</span>
+              Lĩnh vực hỗ trợ <span className="text-rose-500">*</span>
             </label>
             {supportedIndustryIds.length > 0 && (
               <span className="text-xs font-semibold text-[#f27024] bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200/60">
-                Đã chọn {supportedIndustryIds.length} ngành
+                Đã chọn {supportedIndustryIds.length}
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 mb-2.5">
-            Nhấp vào ô chọn để mở danh mục dropdown và tích chọn một hoặc nhiều ngành nghề bạn có thể hướng dẫn
-          </p>
 
           {/* Trigger Dropdown Box */}
           <div
@@ -246,7 +242,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
             <div className="flex-1 flex flex-wrap items-center gap-1.5">
               {selectedIndustries.length === 0 ? (
                 <span className="text-sm text-slate-400">
-                  Chọn các lĩnh vực ngành nghề hỗ trợ từ danh mục...
+                  Chọn lĩnh vực...
                 </span>
               ) : (
                 selectedIndustries.map((ind) => (
@@ -281,7 +277,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                 <Search className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm ngành nghề..."
+                  placeholder="Tìm kiếm..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-sm focus:outline-none placeholder:text-slate-400"
@@ -302,7 +298,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
               <div className="max-h-60 overflow-y-auto p-1.5 divide-y divide-slate-50">
                 {filteredIndustries.length === 0 ? (
                   <div className="p-4 text-center text-xs text-slate-400">
-                    Không tìm thấy ngành nghề phù hợp
+                    Không tìm thấy
                   </div>
                 ) : (
                   filteredIndustries.map((ind) => {
@@ -336,7 +332,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
               {/* Footer info */}
               <div className="p-2.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
                 <span>
-                  Đã chọn {supportedIndustryIds.length} / {availableIndustries.length} ngành
+                  Đã chọn {supportedIndustryIds.length}/{availableIndustries.length}
                 </span>
                 <button
                   type="button"
@@ -352,17 +348,17 @@ export const MentorMentoringSection: React.FC<Props> = ({
 
         {/* Chủ đề cố vấn chuyên sâu tự do (Topics) */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            Chủ đề cố vấn chuyên sâu (Topics)
-          </label>
-          <p className="text-xs text-slate-500 mb-2">
-            Thêm các chủ đề bạn có thể hỗ trợ (VD: Review CV, Mock Interview, Định hướng Fresher...)
-          </p>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-semibold text-slate-700">
+              Chủ đề hướng dẫn
+            </label>
+            <span className="text-xs text-slate-400 font-medium">Tùy chọn</span>
+          </div>
 
           <div className="flex gap-2 mb-3">
             <input
               type="text"
-              placeholder="Nhập tên chủ đề rồi bấm Thêm..."
+              placeholder="VD: Hướng dẫn làm dự án, định hướng nghề nghiệp, phỏng vấn thử..."
               value={topicInput}
               onChange={(e) => setTopicInput(e.target.value)}
               onKeyDown={handleAddTopic}

@@ -206,7 +206,7 @@ export const MentorRegistrationForm: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
         <Loader2 className="w-10 h-10 animate-spin text-[#f27024] mb-3" />
-        <p className="text-sm font-medium">Đang tải hồ sơ đăng ký Mentor...</p>
+        <p className="text-sm font-medium">Đang tải...</p>
       </div>
     )
   }
@@ -240,12 +240,12 @@ export const MentorRegistrationForm: React.FC = () => {
 
         <div className="relative z-10 max-w-2xl">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-            {isActive ? 'Hồ sơ Cố vấn (Mentor Profile)' : 'Đăng ký trở thành Mentor'}
+            {isActive ? 'Hồ sơ người hướng dẫn' : 'Đăng ký làm người hướng dẫn'}
           </h1>
           <p className="text-sm text-slate-600 font-medium leading-relaxed">
             {isActive
-              ? 'Quản lý thông tin giới thiệu, lĩnh vực hướng dẫn và tài khoản nhận chi trả của bạn.'
-              : 'Đồng hành, chia sẻ định hướng phát triển nghề nghiệp và kết nối cơ hội việc làm vững chắc cho cộng đồng FPT University.'}
+              ? 'Cập nhật thông tin hướng dẫn, lĩnh vực hỗ trợ và tài khoản nhận thanh toán của bạn.'
+              : 'Chia sẻ kinh nghiệm, định hướng nghề nghiệp và đồng hành cùng mọi người trên hành trình phát triển.'}
           </p>
         </div>
 
@@ -255,19 +255,19 @@ export const MentorRegistrationForm: React.FC = () => {
             <span className="text-xs font-semibold text-slate-600">Trạng thái hồ sơ:</span>
             {isActive ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold shadow-sm">
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Đang hoạt động (Active Mentor)
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Đang hoạt động
               </span>
             ) : isPendingPayment ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold shadow-sm">
-                <Clock className="w-3.5 h-3.5 text-amber-700" /> Chờ kích hoạt gói (Payment Pending)
+                <Clock className="w-3.5 h-3.5 text-amber-700" /> Chờ kích hoạt gói
               </span>
             ) : data?.hasExistingRegistration ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[#d45105] border border-orange-200 text-xs font-bold shadow-sm">
-                <FileCheck2 className="w-3.5 h-3.5 text-[#f27024]" /> Đang lưu nháp (Draft)
+                <FileCheck2 className="w-3.5 h-3.5 text-[#f27024]" /> Bản nháp
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 text-slate-700 border border-slate-200 text-xs font-semibold">
-                Mới bắt đầu
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 text-xs font-semibold shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Chưa tạo hồ sơ
               </span>
             )}
           </div>
@@ -287,7 +287,7 @@ export const MentorRegistrationForm: React.FC = () => {
               onClick={() => navigate('/app/mentoring/packages')}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-black text-xs font-bold shadow-md transition-colors"
             >
-              <span>Chọn gói & Kích hoạt</span>
+              <span>Chọn gói</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : null}
@@ -350,11 +350,7 @@ export const MentorRegistrationForm: React.FC = () => {
         />
 
         {/* Action Buttons Bar */}
-        <div className="sticky bottom-6 z-20 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-500 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Hệ thống hỗ trợ lưu nháp mọi lúc, không làm mất dữ liệu của bạn</span>
-          </div>
+        <div className="sticky bottom-6 z-20 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 p-4 shadow-xl flex items-center justify-end gap-4">
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <button
@@ -374,7 +370,7 @@ export const MentorRegistrationForm: React.FC = () => {
               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#f27024] hover:bg-[#d45105] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
             >
               <CheckCircle className="w-4 h-4 text-white" />
-              <span className="text-white">{isActive ? 'Lưu cập nhật hồ sơ' : 'Hoàn tất đăng ký'}</span>
+              <span className="text-white">{isActive ? 'Lưu hồ sơ' : 'Hoàn tất'}</span>
               <ArrowRight className="w-4 h-4 ml-0.5 text-white" />
             </button>
           </div>
