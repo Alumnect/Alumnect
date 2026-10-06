@@ -1,4 +1,4 @@
-# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC27 - CANCEL AN EVENT
+# ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC27 - Hủy tổ chức sự kiện (Cancel an event)
 
 ## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
 
@@ -6,92 +6,203 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Xem_Su_Kien_Da_Tao : Alumni xem sự kiện do mình tổ chức
-    Xem_Su_Kien_Da_Tao --> Yeu_Cau_Huy : Bấm nút "Hủy sự kiện"
+    [*] --> XemSuKienDaTao : Alumni / Admin xem sự kiện trên Bảng tin, Chi tiết sự kiện hoặc Trang cá nhân
+    XemSuKienDaTao --> KiemTraThoiGianVaTrangThai : Nhấp menu "..." hoặc nút "Hủy sự kiện"
+
+    KiemTraThoiGianVaTrangThai --> VoHieuHoaThaoTac : Sự kiện đã kết thúc (endTime < now) hoặc đã bị hủy (status == CANCELLED)
+    VoHieuHoaThaoTac --> [*] : Nút bị ẩn / disabled kèm tooltip cảnh báo
+
+    KiemTraThoiGianVaTrangThai --> MoModalXacNhan : Sự kiện ACTIVE & chưa kết thúc
     
-    Yeu_Cau_Huy --> Kiem_Tra_Dang_Nhap : Kiểm tra phiên JWT
-    Kiem_Tra_Dang_Nhap --> Tu_Choi_Guest : Chưa đăng nhập (401 Unauthorized)
+    MoModalXacNhan --> HuyThaoTac : Nhấp "Giữ lại sự kiện" hoặc đóng modal
+    HuyThaoTac --> [*] : Giữ nguyên sự kiện trên giao diện
+
+    MoModalXacNhan --> GuiYeuCauHuy : Nhấp "Xác nhận hủy sự kiện"
     
-    Kiem_Tra_Dang_Nhap --> Kiem_Tra_Vai_Tro : Đã đăng nhập
-    Kiem_Tra_Vai_Tro --> Tu_Choi_Khong_Phai_Alumni : Vai trò không phải ALUMNI (403 Forbidden)
+    state GuiYeuCauHuy {
+        [*] --> GuiRequest : Client gửi DELETE /api/v1/events/{id} (Bearer JWT)
+        GuiRequest --> KiemTraXacThuc : Kiểm tra Token & Phiên làm việc
+        
+        KiemTraXacThuc --> TuChoi401 : Chưa đăng nhập / Token hết hạn
+        KiemTraXacThuc --> KiemTraVaiTro : Token hợp lệ
+        
+        KiemTraVaiTro --> TuChoi403_Role : Vai trò không phải ALUMNI hoặc ADMIN
+        KiemTraVaiTro --> KiemTraTonTai : Vai trò ALUMNI hoặc ADMIN
+        
+        KiemTraTonTai --> KhongTonTai404 : Không tìm thấy sự kiện trong CSDL
+        KiemTraTonTai --> KiemTraSoHuu : Sự kiện tồn tại
+        
+        KiemTraSoHuu --> TuChoi403_Owner : Không phải người tổ chức (organizer.id != user.id) VÀ không phải ADMIN
+        KiemTraSoHuu --> KiemTraDieuKienHuy : Là Organizer hoặc ADMIN
+        
+        KiemTraDieuKienHuy --> Loi400_DaHuy : event.status == 'CANCELLED' (Đã hủy trước đó)
+        KiemTraDieuKienHuy --> Loi400_QuaKhu : event.startTime <= now (Đã diễn ra hoặc kết thúc)
+        KiemTraDieuKienHuy --> CapNhatCSDL : Hợp lệ (ACTIVE & startTime > now)
+        
+        state CapNhatCSDL {
+            [*] --> DoiStatusSuKien : UPDATE events SET status = 'CANCELLED'
+            DoiStatusSuKien --> HuyTatCaRegistration : UPDATE event_registrations SET status = 'CANCELLED' WHERE event_id = ?
+            HuyTatCaRegistration --> LuuThanhCong : Hoàn tất Transaction
+        }
+        
+        LuuThanhCong --> ThanhCong200 : Phản hồi HTTP 200 OK kèm EventCancelResponse
+    }
+
+    ThanhCong200 --> DongModal_CapNhatUI : Đóng modal, hiển thị Toast "Hủy sự kiện thành công!"
+    DongModal_CapNhatUI --> InvalidateCache : Invalidate TanStack Query ['event-rsvp'], ['events'], ['feed'], ['post']...
+    InvalidateCache --> [*] : Thẻ sự kiện đổi badge "Đã hủy", vô hiệu hóa nút RSVP
     
-    Kiem_Tra_Vai_Tro --> Kiem_Tra_Quyen_So_Huu : Vai trò ALUMNI
-    Kiem_Tra_Quyen_So_Huu --> Tu_Choi_Khong_Phai_Organizer : user.id != event.organizer_id (403 Forbidden)
-    
-    Kiem_Tra_Quyen_So_Huu --> Kiem_Tra_Trang_Thai : Là organizer hợp lệ
-    Kiem_Tra_Trang_Thai --> Tu_Choi_Da_Huy : event.status == 'CANCELLED' (400 Bad Request)
-    
-    Kiem_Tra_Trang_Thai --> Kiem_Tra_Thoi_Gian : status == 'ACTIVE'
-    Kiem_Tra_Thoi_Gian --> Tu_Choi_Su_Kien_Qua_Khu : start_time <= now (400 Bad Request)
-    
-    Kiem_Tra_Thoi_Gian --> Mo_Modal_Xac_Nhan : Hợp lệ (start_time > now)
-    Mo_Modal_Xac_Nhan --> [*] : Bấm "Giữ lại sự kiện" (Hủy thao tác)
-    Mo_Modal_Xac_Nhan --> Thuc_Hien_Huy : Bấm "Xác nhận hủy sự kiện"
-    
-    Thuc_Hien_Huy --> Cap_Nhat_Trang_Thai_Su_Kien : UPDATE events SET status = 'CANCELLED'
-    Cap_Nhat_Trang_Thai_Su_Kien --> Cap_Nhat_Tat_Ca_Registration : UPDATE event_registrations SET status = 'CANCELLED'
-    Cap_Nhat_Tat_Ca_Registration --> Hoan_Tat_Huy : Trả về 200 OK kèm EventCancelResponse
-    Hoan_Tat_Huy --> [*] : Hiển thị Badge "Đã hủy", vô hiệu hóa RSVP & Toast thông báo thành công
+    TuChoi401 --> BaoLoiUI : Hiển thị Toast lỗi phiên đăng nhập
+    TuChoi403_Role --> BaoLoiUI : Hiển thị Toast "Chỉ cựu sinh viên mới có quyền hủy sự kiện"
+    TuChoi403_Owner --> BaoLoiUI : Hiển thị Toast "Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức"
+    KhongTonTai404 --> BaoLoiUI : Hiển thị Toast "Không tìm thấy sự kiện"
+    Loi400_DaHuy --> BaoLoiUI : Hiển thị Toast "Sự kiện này đã bị hủy trước đó"
+    Loi400_QuaKhu --> BaoLoiUI : Hiển thị Toast "Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy"
+    BaoLoiUI --> MoModalXacNhan : Giữ nguyên modal, cho phép thử lại hoặc đóng
 ```
 
-#### Mô tả chi tiết luồng xử lý bằng chữ:
-* **Bước 1 - Khởi đầu**: Cựu sinh viên (Alumni) đã tạo sự kiện truy cập trang Sự kiện (`/app/events`), Bảng tin (`/app/feed`) hoặc Chi tiết bài viết (`/app/posts/:id`). Trên sự kiện do mình tổ chức, xuất hiện nút "Hủy sự kiện".
-* **Bước 2 - Kích hoạt và cảnh báo**:
-  * Người tổ chức bấm "Hủy sự kiện".
-  * Hệ thống mở modal `CancelEventModal` hiển thị cảnh báo: hành động này sẽ hủy bỏ sự kiện, toàn bộ người đã đăng ký sẽ bị hủy tham gia và sự kiện không thể mở lại.
-  * Nếu bấm "Giữ lại sự kiện", modal đóng lại mà không có thay đổi.
-* **Bước 3 - Kiểm tra điều kiện nghiệp vụ phía máy chủ (Server Validation & RBAC)**:
-  * **Xác thực & Phân quyền**: Yêu cầu JWT hợp lệ của vai trò `ALUMNI`. Nếu không phải Alumni (ví dụ `STUDENT`, `ADMIN`), từ chối với `403 Forbidden`.
-  * **Kiểm tra quyền sở hữu (Ownership)**: Kiểm tra `event.organizer.id == current_user.id`. Nếu không trùng khớp, từ chối với `403 Forbidden` ("Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức.").
-  * **Kiểm tra trạng thái sự kiện**: Nếu sự kiện đã có `status == 'CANCELLED'`, từ chối với `400 Bad Request` ("Sự kiện này đã bị hủy trước đó.").
-  * **Kiểm tra thời gian**: Nếu sự kiện đã bắt đầu hoặc kết thúc (`start_time <= now`), từ chối với `400 Bad Request` ("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy.").
-* **Bước 4 - Cập nhật dữ liệu & phản hồi**:
-  * Cập nhật `events.status = 'CANCELLED'`.
-  * Cập nhật toàn bộ các bản ghi `event_registrations` đang `REGISTERED` thành `CANCELLED`.
-  * Trả về kết quả thành công HTTP `200 OK` kèm `EventCancelResponse`.
-  * Giao diện cập nhật: Badge sự kiện chuyển sang "Đã hủy" màu đỏ, nút RSVP bị vô hiệu hóa, thông báo toast thành công xuất hiện.
+#### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
+* **Bước 1 - Khởi đầu**: Cựu sinh viên (người tổ chức sự kiện - `isOrganizer = true`) hoặc Quản trị viên (`ADMIN`) xem sự kiện trên Trang sự kiện (`EventsPage` tại `/app/events`), Bảng tin (`FeedPage` tại `/app`), Trang chi tiết sự kiện/bài viết (`PostDetailPage` tại `/app/posts/{id}`), hoặc Trang hồ sơ cá nhân (`UserPostsView` tại `/app/profile`).
+* **Bước 2 - Kích hoạt tùy chọn hủy sự kiện**:
+  * Người tổ chức nhấp vào menu ba chấm (`PostActionMenu`) chọn mục "Hủy tổ chức sự kiện" (icon `Ban` màu hổ phách/đỏ) hoặc nhấp trực tiếp vào nút "Hủy sự kiện" trên thẻ sự kiện.
+  * *Ngoại lệ*: Nếu sự kiện đã kết thúc (`endTime < now`) hoặc đã ở trạng thái `CANCELLED`, tùy chọn hủy sẽ bị ẩn hoặc vô hiệu hóa (`disabled`) kèm tooltip giải thích, ngăn người dùng thao tác thừa.
+* **Bước 3 - Xác nhận hành động (Modal Confirmation)**:
+  * Hệ thống hiển thị hộp thoại `CancelEventModal` với mức độ cảnh báo cao:
+    * Tiêu đề: "Hủy tổ chức sự kiện" kèm icon `Ban` màu đỏ.
+    * Banner cảnh báo: *"Lưu ý: Sự kiện và danh sách đăng ký sẽ bị hủy vĩnh viễn, không thể mở lại."*
+    * Câu hỏi xác nhận: *"Bạn có chắc chắn muốn hủy sự kiện '{eventTitle}' không?"*.
+    * Nút "Giữ lại sự kiện": Đóng modal, không có bất kỳ thay đổi nào.
+    * Nút "Xác nhận hủy sự kiện": Nút bấm màu đỏ (`bg-rose-600`), kích hoạt quy trình hủy.
+* **Bước 4 - Gửi yêu cầu lên máy chủ**: Khi người dùng xác nhận, nút chuyển sang trạng thái pending (`isPending = true`, hiển thị spinner `Loader2` "Đang hủy…", khóa nút "Giữ lại sự kiện"). Client gửi yêu cầu HTTP `DELETE /api/v1/events/{id}` kèm Bearer JWT Token.
+* **Bước 5 - Xác thực & Kiểm tra nghiệp vụ tại Backend**:
+  * **Xác thực JWT**: Kiểm tra token người dùng qua Spring Security. Nếu chưa đăng nhập hoặc token không hợp lệ -> trả về **HTTP 401 Unauthorized**.
+  * **Kiểm tra vai trò (Role Check)**: Tìm tài khoản qua email. Người dùng phải có vai trò `ALUMNI` hoặc `ADMIN`. Nếu là `STUDENT` hoặc vai trò khác -> ném `ForbiddenException` ("Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện.", **HTTP 403 Forbidden**).
+  * **Kiểm tra tồn tại**: Truy vấn sự kiện qua `eventRepository.findById(eventId)`. Nếu không tồn tại -> ném `ResourceNotFoundException` ("Không tìm thấy sự kiện", **HTTP 404 Not Found**).
+  * **Kiểm tra quyền sở hữu (Ownership Check)**: So sánh `event.getOrganizer().getId().equals(user.getId())`. Nếu người yêu cầu không phải là người tạo sự kiện và đồng thời không phải là `ADMIN` -> ném `ForbiddenException` ("Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức.", **HTTP 403 Forbidden**).
+  * **Kiểm tra trạng thái sự kiện**: Nếu sự kiện đã có trạng thái `CANCELLED` -> ném `BadRequestException` ("Sự kiện này đã bị hủy trước đó.", **HTTP 400 Bad Request**).
+  * **Kiểm tra mốc thời gian**: Nếu sự kiện đã diễn ra hoặc kết thúc (`startTime.isBefore(Instant.now())`) -> ném `BadRequestException` ("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy.", **HTTP 400 Bad Request**).
+* **Bước 6 - Cập nhật cơ sở dữ liệu (Transaction)**:
+  * Cập nhật trạng thái sự kiện: `event.setStatus("CANCELLED")` và lưu vào PostgreSQL qua `eventRepository.save(event)`.
+  * Hủy toàn bộ danh sách đăng ký: Gọi `eventRegistrationRepository.cancelAllByEventId(eventId)` để chuyển toàn bộ bản ghi `event_registrations` đang `REGISTERED` sang `CANCELLED`.
+  * Ghi log hệ thống và trả về đối tượng `EventCancelResponse` kèm mã **HTTP 200 OK**.
+* **Bước 7 - Phản hồi & Đồng bộ giao diện phía Client**:
+  * Frontend nhận HTTP 200 OK, tự động đóng `CancelEventModal` và hiển thị Toast thông báo: *"Hủy sự kiện thành công!"*.
+  * Invalidate toàn bộ cache liên quan trong TanStack Query (`['event-rsvp', id]`, `['event-attendees', id]`, `['feed']`, `['posts']`, `['post']`, `['event-history']`).
+  * Giao diện cập nhật tức thì: Thẻ sự kiện hiển thị badge trạng thái "Đã hủy" màu đỏ, nút đăng ký tham gia (RSVP) bị vô hiệu hóa hoàn toàn, số người đăng ký được đóng băng.
 
 ---
 
 ### 3.2 Module 3 - Social: Feed, Posts, Events, Packages & Messaging
 
-#### 3.2.3 Hủy tổ chức sự kiện (Cancel an Event) - UC27
+#### 3.2.4 Hủy tổ chức sự kiện (Cancel an event)
 
-##### A. Bảng đặc tả Use Case chi tiết
+**Function trigger**:
+* **Navigation path**:
+  * Menu ba chấm (`PostActionMenu`) -> "Hủy tổ chức sự kiện" trên bài viết loại Sự kiện tại `FeedPage` (`/app`), `PostDetailPage` (`/app/posts/{id}`), hoặc `UserPostsView` (`/app/profile`).
+  * Nút "Hủy sự kiện" trên thẻ sự kiện tại Trang sự kiện `EventsPage` (`/app/events`).
+* **Timing Frequency**: On demand — khi cựu sinh viên tổ chức sự kiện không thể tiếp tục triển khai hoặc Quản trị viên can thiệp xử lý vi phạm.
 
-| Mục | Nội dung |
-| :--- | :--- |
-| **Use Case ID** | UC27 |
-| **Use Case Name** | Hủy sự kiện (Cancel an Event) |
-| **Module** | Module 3 - Social: Feed, Posts, Events, Packages & Messaging |
-| **Actor** | Alumni (người tổ chức / organizer) |
-| **Priority** | P0 (MoSCoW: Must Have) |
-| **Trigger** | Người tổ chức bấm vào nút "Hủy sự kiện" trên card sự kiện hoặc trang chi tiết |
-| **Preconditions** | 1. Người dùng đã đăng nhập với vai trò `ALUMNI`.<br>2. Người dùng là người tạo (organizer) của sự kiện.<br>3. Sự kiện đang ở trạng thái `ACTIVE` và chưa bắt đầu (`start_time > now`). |
-| **Postconditions** | 1. `events.status` đổi thành `CANCELLED`.<br>2. Toàn bộ `event_registrations.status` chuyển thành `CANCELLED`.<br>3. Thẻ sự kiện trên UI hiển thị badge "Đã hủy", không cho phép RSVP. |
+**Function description**:
+* **Actors/Roles**:
+  * `ALUMNI`: Cựu sinh viên là người khởi tạo và chủ trì tổ chức sự kiện (chủ sở hữu sự kiện).
+  * `ADMIN`: Quản trị viên hệ thống có thẩm quyền quản lý và can thiệp hủy sự kiện.
+  * Khách vãng lai (Guest) / Sinh viên (`STUDENT`) / Cựu sinh viên khác: Không có quyền thực hiện hành động này.
+* **Purpose**: Cho phép người tổ chức sự kiện chủ động hủy bỏ sự kiện đã lên lịch khi có phát sinh đột xuất, tự động hủy bỏ toàn bộ vé/lượt đăng ký tham gia đã ghi nhận trước đó, thông báo trạng thái tới cộng đồng và ngăn chặn mọi lượt đăng ký mới.
+* **Interface**:
+  * Tùy chọn menu `PostActionMenu`: Nút "Hủy tổ chức sự kiện" kèm icon `Ban` màu vàng cam / hổ phách (`text-amber-600`), chỉ hiển thị khi sự kiện chưa kết thúc và chưa bị hủy.
+  * Hộp thoại xác nhận `CancelEventModal`:
+    * Tiêu đề: "Hủy tổ chức sự kiện" kèm icon `Ban` màu đỏ.
+    * Banner cảnh báo: Khung viền đỏ nhạt cảnh báo hành động hủy là vĩnh viễn và không thể hoàn tác.
+    * Nội dung: Hiển thị tên sự kiện cần hủy: *"Bạn có chắc chắn muốn hủy sự kiện '{eventTitle}' không?"*.
+    * Nút "Giữ lại sự kiện": Secondary button, hủy bỏ thao tác và đóng hộp thoại.
+    * Nút "Xác nhận hủy sự kiện": Primary button màu đỏ (`bg-rose-600`), hiển thị trạng thái xoay spinner `Loader2` "Đang hủy…" trong khi chờ server xử lý.
+  * Trạng thái thẻ sự kiện sau khi hủy:
+    * Badge trạng thái: Hiển thị nhãn "Đã hủy" màu đỏ thay vì nhãn ngày/thời gian.
+    * Nút RSVP: Bị vô hiệu hóa hoàn toàn với nhãn "Sự kiện đã bị hủy".
 
-##### B. Business Rules (Quy tắc nghiệp vụ)
+**Data processing**:
+* **Client-side**:
+  * Gọi mutation `useCancelEvent().mutate({ eventId })`.
+  * Gửi HTTP `DELETE /api/v1/events/{eventId}` kèm Authorization Bearer Token.
+  * Khi thành công: Làm mới cache TanStack Query các khóa `event-rsvp`, `event-attendees`, `feed`, `posts`, `post`, `event-history`.
+* **Server-side**:
+  * Tiếp nhận yêu cầu tại `EventController.cancelEvent()`.
+  * Trích xuất email người dùng từ SecurityContext, nạp `User` từ database.
+  * Kiểm tra vai trò: Phải là `ALUMNI` hoặc `ADMIN`.
+  * Nạp `Event` theo `eventId`, kiểm tra sự tồn tại.
+  * Kiểm tra quyền sở hữu: `event.getOrganizer().getId().equals(user.getId())` hoặc vai trò là `ADMIN`.
+  * Kiểm tra điều kiện nghiệp vụ: Trạng thái hiện tại không phải `CANCELLED`, thời gian `startTime` phải sau thời điểm hiện tại `Instant.now()`.
+  * Thực thi Transaction:
+    * Đặt `event.setStatus("CANCELLED")` và lưu CSDL.
+    * Gọi `eventRegistrationRepository.cancelAllByEventId(eventId)` cập nhật toàn bộ đăng ký sang `CANCELLED`.
+  * Trả về `EventCancelResponse` với mã HTTP 200 OK.
 
-* **BR-01 (Role Restriction)**: Chỉ tài khoản có vai trò `ALUMNI` mới có quyền tổ chức và hủy sự kiện.
-* **BR-02 (Organizer Ownership)**: Chỉ chính cựu sinh viên đã tạo sự kiện (`organizer_id == user.id`) mới được phép hủy sự kiện đó.
-* **BR-03 (Time Constraint)**: Không được phép hủy sự kiện đã bắt đầu hoặc đã kết thúc (`start_time <= now()`).
-* **BR-04 (Irreversible Cancellation)**: Sự kiện sau khi đã hủy (`CANCELLED`) không thể hủy lại và không thể phục hồi về `ACTIVE`.
-* **BR-05 (Cascade Registrations Cancellation)**: Khi sự kiện bị hủy, toàn bộ các lượt đăng ký tham gia (`REGISTERED`) tự động chuyển sang `CANCELLED`.
-* **BR-06 (Disable RSVP)**: Các sự kiện có trạng thái `CANCELLED` sẽ khóa hoàn toàn chức năng đăng ký tham gia (RSVP).
+**Screen layout**:
+* Hộp thoại `CancelEventModal` hiển thị dạng cửa sổ pop-up nổi bật ở giữa màn hình, có lớp phủ mờ (backdrop), khóa thao tác nhấp ra ngoài khi request đang xử lý (`isPending = true`).
+* Giao diện thích ứng trên cả màn hình rộng (Desktop) và màn hình điện thoại (Mobile) với nút bấm to rõ, dễ thao tác.
+
+**Function details**:
+* **Data**:
+  * Input parameter: `eventId` (Long / PathVariable) — Mã định danh duy nhất của sự kiện.
+  * Header: `Authorization: Bearer <accessToken>`.
+  * Output DTO: `EventCancelResponse` gồm:
+    * `eventId` (Long): Mã sự kiện.
+    * `status` (String): "CANCELLED".
+    * `message` (String): "Hủy sự kiện thành công!".
+* **Validation**:
+  * `eventId` phải là số nguyên dương hợp lệ.
+  * Token JWT phải còn hạn và chứa thông tin người dùng hợp lệ.
+* **Business rules**:
+  * Áp dụng quy tắc `BR-EV-CANCEL-01` đến `BR-EV-CANCEL-06` (chi tiết tại mục 5.1).
+* **Error Handling**:
+  * `401 Unauthorized`: Chưa đăng nhập hoặc token hết hạn.
+  * `403 Forbidden`: Người dùng không phải Alumni/Admin hoặc không phải người tổ chức sự kiện.
+  * `404 Not Found`: Không tìm thấy sự kiện với ID tương ứng.
+  * `400 Bad Request`: Sự kiện đã bị hủy từ trước hoặc sự kiện đã diễn ra / kết thúc trong quá khứ.
+* **Normal case**:
+  * Cựu sinh viên xác nhận hủy sự kiện của mình trước giờ khai mạc -> Sự kiện đổi trạng thái sang `CANCELLED`, toàn bộ lượt đăng ký chuyển sang `CANCELLED` -> Trả về 200 OK -> UI hiển thị badge "Đã hủy", vô hiệu hóa nút RSVP.
+* **Abnormal case**:
+  * Cố gắng hủy sự kiện khi thời gian bắt đầu đã trôi qua -> Backend từ chối 400 Bad Request "Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy." -> Toast báo lỗi xuất hiện, sự kiện giữ nguyên trạng thái.
 
 ---
+
+### 5. Requirement Appendix (Phụ lục Yêu cầu)
+
+#### 5.1 Business Rules (Quy tắc Nghiệp vụ)
+
+| ID | Định nghĩa Quy tắc (Rule Definition) |
+| :--- | :--- |
+| BR-EV-CANCEL-01 | **Giới hạn Vai trò (Role Restriction)**: Chỉ tài khoản có vai trò `ALUMNI` (người tổ chức) hoặc `ADMIN` (quản trị viên hệ thống) mới được phép kích hoạt API hủy tổ chức sự kiện. Tài khoản `STUDENT` hoặc các vai trò khác bị từ chối với mã 403 Forbidden. |
+| BR-EV-CANCEL-02 | **Quyền sở hữu người tổ chức (Organizer Ownership)**: Cựu sinh viên chỉ được phép hủy các sự kiện do chính mình khởi tạo và làm chủ tọa. Người dùng khác cố ý gửi yêu cầu hủy sự kiện không thuộc quyền sở hữu của mình sẽ bị từ chối với mã lỗi 403 Forbidden. Quản trị viên (`ADMIN`) là ngoại lệ duy nhất được can thiệp hủy sự kiện của thành viên nhằm mục đích quản trị nội dung. |
+| BR-EV-CANCEL-03 | **Ràng buộc Mốc thời gian (Time Constraint)**: Tuyệt đối không được phép hủy các sự kiện đã bắt đầu hoặc đã kết thúc trong quá khứ (`event.startTime <= now()`). Nếu vi phạm, hệ thống trả về mã 400 Bad Request ("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy."). |
+| BR-EV-CANCEL-04 | **Tính Không thể Hoàn tác (Irreversible Action)**: Sự kiện sau khi đã chuyển sang trạng thái `CANCELLED` sẽ không thể khôi phục trở lại trạng thái `ACTIVE` và không thể tiếp tục gửi yêu cầu hủy lặp lại (trả về 400 Bad Request: "Sự kiện này đã bị hủy trước đó."). |
+| BR-EV-CANCEL-05 | **Hủy liên đới Danh sách Đăng ký (Cascade Registrations Cancellation)**: Khi sự kiện bị hủy, hệ thống bắt buộc phải tự động chuyển toàn bộ các bản ghi đăng ký tham gia (`event_registrations`) đang ở trạng thái `REGISTERED` sang `CANCELLED` trong cùng một Transaction để đảm bảo tính nhất quán dữ liệu. |
+| BR-EV-CANCEL-06 | **Khóa tương tác RSVP (Disable RSVP)**: Tất cả sự kiện có trạng thái `CANCELLED` phải bị khóa hoàn toàn chức năng đăng ký tham gia (RSVP) trên giao diện người dùng và từ chối các request đăng ký mới ở phía Backend. |
+
+#### 5.2 Common Requirements (Yêu cầu Chung)
+* **Bảo mật**: Mọi kết nối gọi API hủy sự kiện phải được truyền qua HTTPS với mã hóa TLS tiêu chuẩn.
+* **Toàn vẹn Dữ liệu (Atomic Transaction)**: Quá trình cập nhật trạng thái sự kiện và hủy danh sách đăng ký tham gia phải được bọc trong một `@Transactional` duy nhất. Nếu xảy ra lỗi ở bất kỳ bước nào, toàn bộ giao dịch phải được rollback.
+* **Thời gian phản hồi**: Thời gian phản hồi của API hủy sự kiện không vượt quá 1.0 giây.
+* **Ngăn chặn Double-Submit**: Nút xác nhận hủy trên giao diện người dùng phải tự động khóa tương tác (`disabled = true`) ngay khi người dùng nhấn click lần đầu tiên để tránh gửi yêu cầu trùng lặp.
 
 #### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
 
 | # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | MSG-EV-CANCEL-01 | Toast message | Hủy tổ chức sự kiện thành công | Hủy sự kiện thành công! |
-| 2 | MSG-EV-CANCEL-02 | Modal confirmation | Xác nhận trước khi hủy sự kiện | Bạn có chắc chắn muốn hủy sự kiện này? Hành động này không thể hoàn tác. |
-| 3 | MSG-EV-CANCEL-03 | Toast Error | Sự kiện đã bị hủy trước đó | Sự kiện này đã bị hủy trước đó. |
-| 4 | MSG-EV-CANCEL-04 | Toast Error | Sự kiện đã diễn ra hoặc kết thúc | Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy. |
-| 5 | MSG-EV-CANCEL-05 | Toast Error | Không phải người tổ chức sự kiện | Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức. |
-| 6 | MSG-EV-CANCEL-06 | Toast Error | Sự kiện không tồn tại | Không tìm thấy sự kiện. |
-| 7 | MSG-EV-CANCEL-07 | In line | Người dùng chưa đăng nhập gọi API | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. |
+| 1 | MSG-EV-CANCEL-01 | Toast (Success) | Hủy tổ chức sự kiện thành công | Hủy sự kiện thành công! |
+| 2 | MSG-EV-CANCEL-02 | Modal Title / Header | Tiêu đề hộp thoại xác nhận | Hủy tổ chức sự kiện |
+| 3 | MSG-EV-CANCEL-03 | Modal Banner Warning | Cảnh báo tính chất vĩnh viễn | Lưu ý: Sự kiện và danh sách đăng ký sẽ bị hủy vĩnh viễn, không thể mở lại. |
+| 4 | MSG-EV-CANCEL-04 | Modal Confirmation Text | Câu hỏi xác nhận người dùng | Bạn có chắc chắn muốn hủy sự kiện "{eventTitle}" không? |
+| 5 | MSG-EV-CANCEL-05 | Button Pending State | Khi đang xử lý hủy sự kiện | Đang hủy… |
+| 6 | MSG-EV-CANCEL-06 | Toast (Error) / API Error | Sự kiện đã bị hủy trước đó | Sự kiện này đã bị hủy trước đó. |
+| 7 | MSG-EV-CANCEL-07 | Toast (Error) / API Error | Sự kiện đã diễn ra hoặc kết thúc | Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy. |
+| 8 | MSG-EV-CANCEL-08 | Toast (Error) / API Error | Không phải người tổ chức sự kiện | Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức. |
+| 9 | MSG-EV-CANCEL-09 | Toast (Error) / API Error | Vai trò không được phép | Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện. |
+| 10 | MSG-EV-CANCEL-10 | Toast (Error) / API Error | Không tìm thấy sự kiện | Không tìm thấy sự kiện |
+
+#### 5.4 Other Requirements (Yêu cầu Khác)
+* **Khả năng tương thích thiết bị**: Giao diện Modal xác nhận hiển thị tương thích, không bị vỡ layout trên cả màn hình máy tính để bàn (Desktop), máy tính bảng (Tablet) và điện thoại thông minh (Mobile).
+* **Phím tắt hỗ trợ**: Hỗ trợ đóng modal bằng phím `Escape` khi đang ở trạng thái nhàn rỗi (chưa bấm xác nhận hủy).
 
 ---
 
@@ -99,7 +210,7 @@ stateDiagram-v2
 
 ### 3. Detail Design (Thiết kế chi tiết)
 
-#### 3.1 UC27 Hủy sự kiện (Cancel an Event)
+#### 3.1 UC27 - Hủy tổ chức sự kiện (Cancel an event)
 
 ##### 3.1.1 Class Diagram (Sơ đồ Lớp)
 
@@ -107,6 +218,7 @@ stateDiagram-v2
 classDiagram
     %% Controller Layer
     class EventController {
+        -EventService eventService
         +cancelEvent(eventId: Long, authentication: Authentication) ResponseEntity~ApiResponse~EventCancelResponse~~
     }
 
@@ -115,19 +227,27 @@ classDiagram
         -Long eventId
         -String status
         -String message
+        +builder()$
+    }
+
+    class ApiResponse~T~ {
+        -int code
+        -String message
+        -T data
+        +success(message: String, data: T)$ ApiResponse~T~
     }
 
     %% Service Layer
     class EventService {
         <<interface>>
-        +cancelEvent(eventId: Long, userEmail: String) EventCancelResponse
+        +cancelEvent(eventId: Long, email: String) EventCancelResponse
     }
 
     class EventServiceImpl {
-        -EventRepository eventRepository
-        -EventRegistrationRepository registrationRepository
         -UserRepository userRepository
-        +cancelEvent(eventId: Long, userEmail: String) EventCancelResponse
+        -EventRepository eventRepository
+        -EventRegistrationRepository eventRegistrationRepository
+        +cancelEvent(eventId: Long, email: String) EventCancelResponse
     }
 
     %% Repository Layer
@@ -139,7 +259,7 @@ classDiagram
 
     class EventRegistrationRepository {
         <<interface>>
-        +updateStatusByEventId(eventId: Long, status: RegistrationStatus) void
+        +cancelAllByEventId(eventId: Long) void
     }
 
     class UserRepository {
@@ -147,161 +267,170 @@ classDiagram
         +findByEmail(email: String) Optional~User~
     }
 
-    %% Entities
+    %% Entity Layer
     class Event {
         -Long id
         -User organizer
         -String title
+        -String description
         -Instant startTime
-        -EventStatus status
+        -Instant endTime
+        -String location
+        -Integer capacity
+        -String status
+        +setStatus(status: String) void
+        +getStatus() String
+        +getOrganizer() User
+        +getStartTime() Instant
+    }
+
+    class User {
+        -Long id
+        -String email
+        -Role role
+        +getId() Long
+        +getEmail() String
+        +getRole() Role
     }
 
     class EventRegistration {
         -Long id
         -Event event
         -User attendee
-        -RegistrationStatus status
+        -String status
+        +setStatus(status: String) void
     }
 
-    %% Frontend Components & Hooks
-    class CancelEventModal {
-        +eventId: number
-        +isOpen: boolean
-        +onConfirm() void
-    }
-
-    class useCancelEvent {
-        +mutate(eventId) void
-        +isLoading: boolean
-    }
-
-    EventController ..> EventService : calls
+    %% Relationships
+    EventController --> EventService : calls
+    EventController ..> EventCancelResponse : returns in ApiResponse
     EventServiceImpl ..|> EventService : implements
+    EventServiceImpl --> UserRepository : uses
     EventServiceImpl --> EventRepository : uses
     EventServiceImpl --> EventRegistrationRepository : uses
-    EventServiceImpl --> UserRepository : uses
-    EventServiceImpl --> Event : modifies
-    EventServiceImpl ..> EventCancelResponse : returns
-    CancelEventModal ..> useCancelEvent : invokes
-    useCancelEvent ..> EventController : HTTP DELETE
+    EventServiceImpl --> Event : updates status
+    EventServiceImpl ..> EventCancelResponse : creates
+    Event --> User : organizer
+    EventRegistration --> Event : references
+    EventRegistration --> User : attendee
 ```
 
 ###### Mô tả chi tiết cấu trúc các lớp (Class Design Description):
-* **Lớp Controller (`EventController.java`)**: Cung cấp API `DELETE /api/v1/events/{eventId}` và alias `DELETE /api/v1/events/{eventId}/cancel`, tiếp nhận yêu cầu từ Client và trích xuất email từ SecurityContext.
-* **Lớp DTO (`EventCancelResponse.java`)**: Định dạng dữ liệu phản hồi trả về gồm mã sự kiện, trạng thái mới (`CANCELLED`) và thông điệp xác nhận.
-* **Lớp Service (`EventService.java`, `EventServiceImpl.java`)**: Đảm bảo tính toàn vẹn giao dịch với `@Transactional`, kiểm tra điều kiện quyền tổ chức, thời gian bắt đầu, trạng thái hiện tại và cập nhật đồng thời trạng thái sự kiện cùng toàn bộ danh sách đăng ký.
-* **Lớp Repository & Entity (`EventRepository.java`, `EventRegistrationRepository.java`, `Event.java`)**: Quản lý dữ liệu quan hệ, cập nhật cột `status = 'CANCELLED'` và kích hoạt ràng buộc kiểm tra.
-* **Lớp Frontend (`CancelEventModal.tsx`, `useCancelEvent.ts`)**: Hộp thoại cảnh báo mức độ rủi ro cao trước khi hủy, kích hoạt mutation React Query và cập nhật lại giao diện sự kiện.
+* **Lớp Controller (`EventController.java`)**: Cung cấp endpoint HTTP `DELETE /api/v1/events/{eventId}` (và alias `DELETE /api/v1/events/{eventId}/cancel`). Tiếp nhận yêu cầu, lấy email người dùng từ `Authentication` do Spring Security cung cấp và gọi `EventService.cancelEvent()`. Trả về `ApiResponse<EventCancelResponse>` với HTTP 200 OK.
+* **Lớp DTO (`EventCancelResponse.java`)**: Chứa kết quả phản hồi nghiệp vụ sau khi hủy sự kiện thành công gồm `eventId`, `status` ("CANCELLED") và `message` ("Hủy sự kiện thành công!").
+* **Lớp Service (`EventService.java` & `EventServiceImpl.java`)**: Hiện thực nghiệp vụ kiểm tra điều kiện hủy sự kiện:
+  * Kiểm tra vai trò hợp lệ: `ALUMNI` hoặc `ADMIN`.
+  * Kiểm tra quyền sở hữu người tổ chức: `event.getOrganizer().getId().equals(user.getId())` hoặc vai trò `ADMIN`.
+  * Kiểm tra trạng thái sự kiện: Tránh hủy trùng lặp nếu đã `CANCELLED`.
+  * Kiểm tra thời gian: Không cho phép hủy sự kiện đã qua thời điểm `startTime`.
+  * Quản lý giao dịch `@Transactional`: Cập nhật `event.setStatus("CANCELLED")` và gọi `eventRegistrationRepository.cancelAllByEventId()` hủy danh sách đăng ký.
+* **Lớp Repository (`EventRepository`, `EventRegistrationRepository`, `UserRepository`)**: Cung cấp các thao tác CRUD và các câu lệnh truy vấn CSDL PostgreSQL.
+* **Lớp Entity (`Event`, `User`, `EventRegistration`)**: Ánh xạ tới các bảng CSDL tương ứng (`events`, `users`, `event_registrations`).
+
+---
 
 ##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Organizer as Người tổ chức (Alumni)
-    participant UI as CancelEventModal (FE)
-    participant Controller as EventController
-    participant Service as EventServiceImpl
+    actor Organizer as Alumni (Organizer) / Admin
+    participant UI as PostActionMenu / EventsPage (FE)
+    participant Modal as CancelEventModal (FE)
+    participant Query as TanStack Query Cache
+    participant Controller as EventController (BE)
+    participant Service as EventServiceImpl (BE)
     participant UserRepo as UserRepository
     participant EventRepo as EventRepository
     participant RegRepo as EventRegistrationRepository
     participant DB as PostgreSQL
 
-    Organizer->>UI: Bấm "Xác nhận hủy sự kiện"
-    UI->>Controller: DELETE /api/v1/events/{eventId}/cancel (Bearer JWT)
+    Organizer->>UI: Bấm "Hủy sự kiện" / "Hủy tổ chức sự kiện"
+    UI->>Modal: Mở CancelEventModal (isOpen = true)
     
-    Controller->>Service: cancelEvent(eventId, userEmail)
-    Service->>UserRepo: findByEmail(userEmail)
-    UserRepo->>DB: SELECT * FROM users WHERE email = ?
-    DB-->>UserRepo: User entity
-    UserRepo-->>Service: User organizer
-    
-    Service->>EventRepo: findById(eventId)
-    EventRepo->>DB: SELECT * FROM events WHERE id = ?
-    DB-->>EventRepo: Event entity
-    EventRepo-->>Service: Event event
-    
-    alt Trường hợp 1: Sự kiện không tồn tại
-        Service-->>Controller: throw ResourceNotFoundException("Không tìm thấy sự kiện")
-        Controller-->>UI: HTTP 404 Not Found
-        UI-->>Organizer: Hiển thị Toast lỗi "Không tìm thấy sự kiện"
+    alt Trường hợp 1: Hủy bỏ thao tác
+        Organizer->>Modal: Nhấp "Giữ lại sự kiện" hoặc đóng modal
+        Modal-->>Organizer: Đóng modal, giữ nguyên trạng thái sự kiện
+    else Trường hợp 2: Xác nhận hủy sự kiện
+        Organizer->>Modal: Nhấp "Xác nhận hủy sự kiện"
+        Note over Modal: Chuyển isPending = true ("Đang hủy…")
+        Modal->>Controller: DELETE /api/v1/events/{id} [Bearer Token]
         
-    else Trường hợp 2: Không phải người tổ chức
-        Service-->>Controller: throw ForbiddenException("Bạn không có quyền hủy sự kiện này")
-        Controller-->>UI: HTTP 403 Forbidden
-        UI-->>Organizer: Hiển thị Toast cảnh báo quyền hạn
-        
-    else Trường hợp 3: Sự kiện đã bị hủy trước đó
-        Service-->>Controller: throw BadRequestException("Sự kiện này đã bị hủy trước đó.")
-        Controller-->>UI: HTTP 400 Bad Request
-        UI-->>Organizer: Hiển thị Toast lỗi trạng thái
-        
-    else Trường hợp 4: Sự kiện đã diễn ra hoặc kết thúc (startTime <= now)
-        Service-->>Controller: throw BadRequestException("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy.")
-        Controller-->>UI: HTTP 400 Bad Request
-        UI-->>Organizer: Hiển thị Toast cảnh báo thời gian
-        
-    else Trường hợp 5: Hợp lệ (Hủy thành công)
-        Note over Service: event.setStatus(EventStatus.CANCELLED)
-        Service->>EventRepo: save(event)
-        EventRepo->>DB: UPDATE events SET status = 'CANCELLED' WHERE id = ?
-        
-        Service->>RegRepo: updateStatusByEventId(eventId, CANCELLED)
-        RegRepo->>DB: UPDATE event_registrations SET status = 'CANCELLED' WHERE event_id = ? AND status = 'REGISTERED'
-        DB-->>Service: Cập nhật thành công
-        
-        Service-->>Controller: EventCancelResponse(eventId, "CANCELLED", "Hủy sự kiện thành công!")
-        Controller-->>UI: HTTP 200 OK (ApiResponse thành công)
-        Note over UI: Invalidate cache ['events'] & ['event', eventId]
-        UI-->>Organizer: Đóng modal, hiển thị badge "Đã hủy" & Toast thành công
+        alt 2.1: Chưa đăng nhập hoặc Token không hợp lệ
+            Controller-->>Modal: HTTP 401 Unauthorized
+            Modal-->>Organizer: Toast lỗi phiên làm việc hết hạn
+        else 2.2: Token hợp lệ
+            Controller->>Service: cancelEvent(eventId, email)
+            
+            Service->>UserRepo: findByEmail(email)
+            UserRepo-->>Service: User user
+            
+            alt Vai trò không phải ALUMNI hoặc ADMIN
+                Service-->>Controller: throw ForbiddenException("Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện.")
+                Controller-->>Modal: HTTP 403 Forbidden
+                Modal-->>Organizer: Toast lỗi từ chối quyền vai trò
+            else Vai trò ALUMNI hoặc ADMIN
+                Service->>EventRepo: findById(eventId)
+                
+                alt Sự kiện không tồn tại
+                    EventRepo-->>Service: Optional.empty()
+                    Service-->>Controller: throw ResourceNotFoundException("Không tìm thấy sự kiện")
+                    Controller-->>Modal: HTTP 404 Not Found
+                    Modal-->>Organizer: Toast lỗi "Không tìm thấy sự kiện"
+                else Sự kiện tồn tại
+                    EventRepo-->>Service: Event event
+                    
+                    alt Không phải Organizer VÀ không phải ADMIN
+                        Service-->>Controller: throw ForbiddenException("Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức.")
+                        Controller-->>Modal: HTTP 403 Forbidden
+                        Modal-->>Organizer: Toast lỗi từ chối quyền sở hữu
+                    else Là Organizer hoặc ADMIN
+                        alt Sự kiện đã bị hủy trước đó (status == 'CANCELLED')
+                            Service-->>Controller: throw BadRequestException("Sự kiện này đã bị hủy trước đó.")
+                            Controller-->>Modal: HTTP 400 Bad Request
+                            Modal-->>Organizer: Toast lỗi "Sự kiện này đã bị hủy trước đó."
+                        else Sự kiện đã diễn ra hoặc kết thúc (startTime <= now)
+                            Service-->>Controller: throw BadRequestException("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy.")
+                            Controller-->>Modal: HTTP 400 Bad Request
+                            Modal-->>Organizer: Toast lỗi "Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy."
+                        else Điều kiện hợp lệ (Thành công)
+                            Service->>Service: event.setStatus("CANCELLED")
+                            Service->>EventRepo: save(event)
+                            EventRepo->>DB: UPDATE events SET status = 'CANCELLED' WHERE id = ?
+                            DB-->>EventRepo: OK
+                            
+                            Service->>RegRepo: cancelAllByEventId(eventId)
+                            RegRepo->>DB: UPDATE event_registrations SET status = 'CANCELLED' WHERE event_id = ? AND status = 'REGISTERED'
+                            DB-->>RegRepo: OK
+                            
+                            Service-->>Controller: EventCancelResponse(eventId, "CANCELLED", "Hủy sự kiện thành công!")
+                            Controller-->>Modal: HTTP 200 OK (ApiResponse thành công)
+                            
+                            Modal->>Modal: Đóng modal (onClose)
+                            Modal->>Organizer: Hiển thị Toast thành công: "Hủy sự kiện thành công!"
+                            Modal->>Query: Invalidate ['event-rsvp', id], ['event-attendees', id], ['events'], ['feed'], ['post']
+                            Query-->>Organizer: Cập nhật badge "Đã hủy" & Khóa nút RSVP tức thì
+                        end
+                    end
+                end
+            end
+        end
     end
 ```
 
 ###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
-1. **Luồng 1 - Thành công (Normal Case)**: Người tổ chức (Alumni) xác nhận hủy sự kiện hợp lệ (sự kiện chưa diễn ra, chưa bị hủy). Service cập nhật trạng thái sự kiện sang `CANCELLED`, đồng thời chuyển toàn bộ các đăng ký tham gia sang `CANCELLED`. Trả về `200 OK` kèm `EventCancelResponse`. Frontend làm mới cache dữ liệu, khóa nút RSVP và hiển thị badge "Đã hủy".
-2. **Luồng 2 - Ngoại lệ Quyền sở hữu (Ownership Violation Case)**: Người dùng khác cố tình gửi request hủy sự kiện không do mình tạo. Service từ chối với `HTTP 403 Forbidden`.
-3. **Luồng 3 - Ngoại lệ Thời gian (Time Constraint Violation Case)**: Sự kiện đang diễn ra hoặc đã kết thúc (`start_time <= now`). Hệ thống từ chối hủy với `HTTP 400 Bad Request`.
-4. **Luồng 4 - Ngoại lệ Trạng thái (Status Conflict Case)**: Sự kiện đã ở trạng thái `CANCELLED`. Hệ thống phản hồi `HTTP 400 Bad Request`.
-5. **Luồng 5 - Ngoại lệ Không tồn tại (Not Found Case)**: `eventId` không tồn tại trong CSDL. Hệ thống phản hồi `HTTP 404 Not Found`.
-
-
-### 1. Database Design
-
-Migration V14: `V14__add_event_status.sql`
-```sql
-ALTER TABLE events
-    ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'ck_events_status'
-    ) THEN
-        ALTER TABLE events
-            ADD CONSTRAINT ck_events_status CHECK (status IN ('ACTIVE', 'CANCELLED'));
-    END IF;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
-```
-
-### 2. REST API Specification
-
-* **Endpoint**: `DELETE /api/v1/events/{eventId}` (và alias `DELETE /api/v1/events/{eventId}/cancel`)
-* **Security**: Bearer JWT (Role: `ALUMNI`)
-* **Responses**:
-  * `200 OK`:
-    ```json
-    {
-      "code": 200,
-      "message": "Hủy sự kiện thành công!",
-      "data": {
-        "eventId": 100,
-        "status": "CANCELLED",
-        "message": "Hủy sự kiện thành công!"
-      }
-    }
-    ```
-  * `400 Bad Request`: "Sự kiện này đã bị hủy trước đó." hoặc "Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy."
-  * `403 Forbidden`: "Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện." hoặc "Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức."
-  * `404 Not Found`: "Không tìm thấy sự kiện"
+1. **Luồng 1 - Thành công (Normal Case)**:
+   * **Kích hoạt từ giao diện**: Người tổ chức (Alumni) hoặc Quản trị viên (Admin) nhấp tùy chọn "Hủy sự kiện" trên giao diện, hộp thoại `CancelEventModal` hiển thị cảnh báo chi tiết. Người dùng nhấn nút "Xác nhận hủy sự kiện".
+   * **Gửi yêu cầu**: Client gọi `eventApi.cancelEvent(eventId)` qua HTTP `DELETE /api/v1/events/{id}` kèm JWT Token.
+   * **Xử lý tại Backend**:
+     * `EventController` tiếp nhận và gọi `EventServiceImpl.cancelEvent()`.
+     * `EventServiceImpl` kiểm tra tài khoản người dùng, xác nhận vai trò là `ALUMNI` hoặc `ADMIN`.
+     * Nạp sự kiện từ `EventRepository`, kiểm tra quyền sở hữu của người tổ chức (hoặc thẩm quyền của Quản trị viên).
+     * Kiểm tra trạng thái hiện tại khác `CANCELLED` và thời gian bắt đầu chưa trôi qua (`startTime > now()`).
+     * Trong cùng giao dịch CSDL, cập nhật `events.status = 'CANCELLED'` và chuyển toàn bộ đăng ký trong `event_registrations` sang `CANCELLED`.
+     * Gửi phản hồi `EventCancelResponse` kèm mã HTTP 200 OK.
+   * **Đồng bộ giao diện**: Frontend đóng modal, kích hoạt Toast thành công *"Hủy sự kiện thành công!"*, invalidate cache TanStack Query, chuyển badge trạng thái sự kiện sang "Đã hủy" và vô hiệu hóa nút đăng ký tham gia (RSVP).
+2. **Luồng 2 - Ngoại lệ Xác thực (401 Unauthorized)**: Người dùng chưa đăng nhập hoặc token hết hạn bị Spring Security chặn ngay lập tức.
+3. **Luồng 3 - Ngoại lệ Quyền hạn & Sở hữu (403 Forbidden)**: Người dùng không phải là `ALUMNI`/`ADMIN` hoặc cố tình hủy sự kiện của người khác mà không phải là Admin. Backend trả về 403 Forbidden kèm thông báo lỗi cụ thể.
+4. **Luồng 4 - Ngoại lệ Trạng thái & Thời gian (400 Bad Request)**: Sự kiện đã bị hủy trước đó hoặc thời gian sự kiện đã bắt đầu / kết thúc. Backend từ chối hủy với mã 400 Bad Request.
+5. **Luồng 5 - Ngoại lệ Không tìm thấy (404 Not Found)**: Mã sự kiện không tồn tại trong cơ sở dữ liệu. Backend trả về HTTP 404 Not Found.
