@@ -193,6 +193,7 @@ public class FollowServiceImpl implements FollowService {
                     String headline = resolveHeadline(profile, expMap.get(followerUser.getId()));
 
                     String role = followerUser.getRole() != null ? followerUser.getRole().getName() : "ALUMNI";
+                    boolean isFollowing = finalFollowedUserIds.contains(followerUser.getId());
 
                     return FollowUserResponse.builder()
                             .userId(followerUser.getId())
@@ -270,6 +271,7 @@ public class FollowServiceImpl implements FollowService {
                     String headline = resolveHeadline(profile, expMap.get(followingUser.getId()));
 
                     String role = followingUser.getRole() != null ? followingUser.getRole().getName() : "ALUMNI";
+                    boolean isFollowing = finalFollowedUserIds.contains(followingUser.getId());
 
                     return FollowUserResponse.builder()
                             .userId(followingUser.getId())
