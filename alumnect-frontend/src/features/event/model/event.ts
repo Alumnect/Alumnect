@@ -16,11 +16,11 @@ export type EventRegistrationResult = z.infer<typeof eventRegistrationResultSche
 
 export const eventAttendeeSchema = z.object({
   userId: z.number(),
-  fullName: z.string().default('Ẩn danh'),
-  avatarUrl: z.string().default(''),
-  headline: z.string().default(''),
-  role: z.string().default(''),
-  registeredAt: z.string().default(''),
+  fullName: z.string().nullish().transform((v) => v || 'Ẩn danh'),
+  avatarUrl: z.string().nullish().transform((v) => v || ''),
+  headline: z.string().nullish().transform((v) => v || ''),
+  role: z.string().nullish().transform((v) => v || ''),
+  registeredAt: z.string().nullish().transform((v) => v || ''),
 })
 
 export type EventAttendee = z.infer<typeof eventAttendeeSchema>
