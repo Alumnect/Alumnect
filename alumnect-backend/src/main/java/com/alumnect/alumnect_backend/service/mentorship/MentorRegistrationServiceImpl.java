@@ -92,7 +92,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                         .currentCompany(currentExp != null ? currentExp.getCompany() : null)
                         .skills(skillNames)
                         .build())
-                .yearsOfExperience(profile != null ? profile.getYearsOfExperience() : null)
                 .bio(profile != null ? profile.getBio() : null)
                 .build();
 
@@ -142,7 +141,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         // 6. Đánh giá tính hoàn tất và danh sách các trường còn thiếu
         List<String> missingFields = evaluateMissingFields(
                 currentExp,
-                profile != null ? profile.getYearsOfExperience() : null,
                 profile != null ? profile.getWorkingMode() : null,
                 profile != null ? profile.getMentoringType() : null,
                 supportedIndustries,
@@ -184,30 +182,8 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
             throw new ForbiddenException("Bạn cần chấp nhận Điều khoản Hướng dẫn & Hỗ trợ trước khi đăng ký");
         }
 
-        // 2b. Cập nhật thông tin cá nhân cơ bản vào UserProfile nếu người dùng chỉnh sửa tại Section 1
-        UserProfile userProfile = userProfileRepository.findById(user.getId()).orElse(null);
-        if (userProfile != null) {
-            boolean userProfileUpdated = false;
-            if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
-                userProfile.setFullName(request.getFullName().trim());
-                userProfileUpdated = true;
-            }
-            if (request.getPhone() != null) {
-                userProfile.setPhone(request.getPhone().trim());
-                userProfileUpdated = true;
-            }
-            if (request.getCampus() != null && !request.getCampus().trim().isEmpty()) {
-                userProfile.setCampus(request.getCampus().trim());
-                userProfileUpdated = true;
-            }
-            if (request.getGraduationYear() != null) {
-                userProfile.setGraduationYear(request.getGraduationYear());
-                userProfileUpdated = true;
-            }
-            if (userProfileUpdated) {
-                userProfileRepository.save(userProfile);
-            }
-        }
+        // 2b. Section 1 (Thông tin cá nhân) hiển thị đồng bộ từ UserProfile theo dạng Read-Only.
+        // UserProfile là nguồn dữ liệu chuẩn (Single Source of Truth) và không bị ghi đè từ form đăng ký Mentor.
 
         // 3. Tìm hoặc khởi tạo mới MentorProfile (1-1 với User)
         MentorProfile profile = mentorProfileRepository.findByUserId(user.getId())
@@ -217,9 +193,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                         .build());
 
         // Cập nhật các trường đặc thù của MentorProfile
-        if (request.getYearsOfExperience() != null) {
-            profile.setYearsOfExperience(request.getYearsOfExperience());
-        }
         if (request.getBio() != null) {
             profile.setBio(request.getBio().trim());
         }
@@ -316,7 +289,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
 
         List<String> missingFields = evaluateMissingFields(
                 currentExp,
-                profile.getYearsOfExperience(),
                 profile.getWorkingMode(),
                 profile.getMentoringType(),
                 supportedItems,
@@ -408,7 +380,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
      */
     private List<String> evaluateMissingFields(
             Experience currentExp,
-            Integer yearsOfExperience,
             Object workingMode,
             Object mentoringType,
             List<MentorRegistrationResponse.SupportedIndustryItem> supportedIndustries,
@@ -423,9 +394,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         }
         if (currentExp == null || currentExp.getTitle() == null || currentExp.getTitle().trim().isEmpty()) {
             missing.add("currentPosition");
-        }
-        if (yearsOfExperience == null || yearsOfExperience < 0) {
-            missing.add("yearsOfExperience");
         }
         if (workingMode == null) {
             missing.add("workingMode");

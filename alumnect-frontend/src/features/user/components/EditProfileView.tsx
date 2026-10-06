@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card, toast } from '@/components/ui'
 import { ProvinceSelect } from './ProvinceSelect'
+import { CampusSelect } from './CampusSelect'
 import { useMajors } from '@/features/auth/hooks/useAuth'
 
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
@@ -206,13 +207,6 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
     }
   }
 
-  const campusOptions = [
-    'FPT University Đà Nẵng',
-    'FPT University Hà Nội (Hòa Lạc)',
-    'FPT University TP. Hồ Chí Minh',
-    'FPT University Cần Thơ',
-    'FPT University Quy Nhơn',
-  ]
 
   const navItems = [
     { id: 'overview', label: 'Thông tin cá nhân', icon: <User size={18} /> },
@@ -316,19 +310,11 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
                   Cơ sở đào tạo
                 </label>
-                <select
+                <CampusSelect
                   value={campus}
-                  onChange={(e) => setCampus(e.target.value)}
+                  onChange={setCampus}
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 font-semibold focus:border-brand-500 focus:outline-none"
-                >
-                  <option value="">-- Chọn Cơ sở FPT University --</option>
-                  {campusOptions.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>

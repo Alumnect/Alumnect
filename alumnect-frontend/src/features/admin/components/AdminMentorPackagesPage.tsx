@@ -7,9 +7,8 @@ import {
   XCircle,
   AlertCircle,
   Clock,
-  ShieldAlert,
   RotateCcw,
-  Database,
+  Check,
   WifiOff,
   Package,
   Users,
@@ -26,7 +25,7 @@ const DEFAULT_FALLBACK_PACKAGES: AdminMentorPackageDto[] = [
     id: 1,
     code: '1 Tháng',
     name: 'Gói Tiêu Chuẩn 1 Tháng',
-    description: 'Gói trải nghiệm kết nối cố vấn trong vòng 1 tháng dành cho Alumni mới gia nhập.',
+    description: 'Gói trải nghiệm kết nối cố vấn trong vòng 1 tháng dành cho cựu sinh viên mới gia nhập.',
     durationMonths: 1,
     price: 100000,
     status: 'ACTIVE',
@@ -36,7 +35,7 @@ const DEFAULT_FALLBACK_PACKAGES: AdminMentorPackageDto[] = [
     id: 2,
     code: '3 Tháng',
     name: 'Gói Phổ Biến 3 Tháng',
-    description: 'Gói cố vấn 3 tháng tối ưu chi phí, được khuyên dùng nhất cho các Mentor chính thức.',
+    description: 'Gói cố vấn 3 tháng tối ưu chi phí, được khuyên dùng nhất cho các Cố vấn chính thức.',
     durationMonths: 3,
     price: 250000,
     status: 'ACTIVE',
@@ -46,7 +45,7 @@ const DEFAULT_FALLBACK_PACKAGES: AdminMentorPackageDto[] = [
     id: 3,
     code: '6 Tháng',
     name: 'Gói Cao Cấp 6 Tháng',
-    description: 'Gói đồng hành cố vấn dài hạn 6 tháng với ưu đãi tiết kiệm cao nhất.',
+    description: 'Gói đồng hành cố vấn dài hạn 6 tháng với mức tiết kiệm cao nhất.',
     durationMonths: 6,
     price: 500000,
     status: 'ACTIVE',
@@ -55,18 +54,17 @@ const DEFAULT_FALLBACK_PACKAGES: AdminMentorPackageDto[] = [
 ]
 
 /**
- * Trang quản lý giá và trạng thái các gói Mentor dành cho Quản trị viên (UC95 & UC96).
- * Phân chia 2 mục: 1. Quản lý gói Mentor, 2. Danh sách Mentor & Xem CV/Detail.
+ * Trang quản lý giá và trạng thái các gói dịch vụ cố vấn dành cho Quản trị viên.
  */
 export function AdminMentorPackagesPage() {
   const [activeTab, setActiveTab] = useState<'PACKAGES' | 'MENTORS'>('PACKAGES')
   const { data: rawPackages, isLoading, isError, error, refetch } = useAdminMentorPackages()
   const updateMutation = useUpdateMentorPackage()
 
-  // Nếu có dữ liệu từ CSDL thì dùng, nếu lỗi kết nối thì sử dụng mảng mặc định để không làm gián đoạn UI
+  // Sử dụng dữ liệu thực tế từ hệ thống hoặc danh sách mặc định khi mất kết nối
   const displayPackages = (rawPackages && rawPackages.length > 0) ? rawPackages : DEFAULT_FALLBACK_PACKAGES
 
-  // State quản lý Modal chỉnh sửa gói Mentor
+  // State quản lý Modal chỉnh sửa gói dịch vụ
   const [selectedPkg, setSelectedPkg] = useState<AdminMentorPackageDto | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -93,7 +91,7 @@ export function AdminMentorPackagesPage() {
 
     const priceNum = parseFloat(priceInput)
     if (isNaN(priceNum) || priceNum < 0) {
-      setValidationError('Giá gói dịch vụ phải là số thực lớn hơn hoặc bằng 0')
+      setValidationError('Giá gói dịch vụ phải là số hợp lệ lớn hơn hoặc bằng 0')
       toast.error('Giá gói dịch vụ không hợp lệ')
       return
     }
@@ -110,10 +108,10 @@ export function AdminMentorPackagesPage() {
           description: descInput,
         },
       })
-      toast.success('Cập nhật cấu hình gói Mentor vào Cơ sở dữ liệu thành công!')
+      toast.success('Cập nhật gói dịch vụ thành công!')
       setIsModalOpen(false)
     } catch (err: any) {
-      const errMsg = err?.message || 'Có lỗi xảy ra khi cập nhật gói Mentor vào CSDL'
+      const errMsg = err?.message || 'Có lỗi xảy ra khi cập nhật gói dịch vụ'
       setValidationError(errMsg)
       toast.error(errMsg)
     }
@@ -126,11 +124,11 @@ export function AdminMentorPackagesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Quản lý Mentor & Gói Mentor"
-        description="Quản lý cấu hình giá niêm yết các gói dịch vụ và tra cứu thông tin chi tiết, tệp CV của các Mentor trên hệ thống."
+        title="Quản lý Cố vấn & Gói dịch vụ"
+        description="Cấu hình biểu phí các gói dịch vụ và quản lý, tra cứu hồ sơ của các Cố vấn trên hệ thống."
         action={
-          <Badge tone="gold" size="lg" className="gap-1.5 font-bold">
-            <Compass className="h-4 w-4 text-gold-600" /> UC95 & UC96 - Admin
+          <Badge tone="neutral" size="md" className="gap-1.5 font-semibold text-slate-700 bg-white border border-slate-200 shadow-2xs">
+            <Compass className="h-4 w-4 text-[#F27024]" /> Quản trị Cố vấn
           </Badge>
         }
       />
@@ -139,41 +137,42 @@ export function AdminMentorPackagesPage() {
       <div className="flex items-center gap-3 border-b border-plum-900/10 pb-3">
         <button
           onClick={() => setActiveTab('PACKAGES')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 ${activeTab === 'PACKAGES'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer ${activeTab === 'PACKAGES'
             ? 'bg-gradient-to-r from-[#F27024] via-[#f57c32] to-[#ff8c38] text-white shadow-md shadow-[#F27024]/25 scale-[1.02]'
             : 'bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] border border-slate-200/80 shadow-sm'
             }`}
         >
-          <Package className="h-4 w-4" />Quản lý gói Mentor
+          <Package className="h-4 w-4" /> Gói dịch vụ Cố vấn
         </button>
 
         <button
           onClick={() => setActiveTab('MENTORS')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 ${activeTab === 'MENTORS'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-200 cursor-pointer ${activeTab === 'MENTORS'
             ? 'bg-gradient-to-r from-[#F27024] via-[#f57c32] to-[#ff8c38] text-white shadow-md shadow-[#F27024]/25 scale-[1.02]'
             : 'bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] border border-slate-200/80 shadow-sm'
             }`}
         >
-          <Users className="h-4 w-4" />Danh sách Mentor
+          <Users className="h-4 w-4" /> Danh sách Cố vấn
         </button>
       </div>
 
-      {/* Tab 2: Danh sách Mentor (UC96) */}
+      {/* Tab 2: Danh sách Cố vấn */}
       {activeTab === 'MENTORS' && <AdminMentorListSection />}
 
-      {/* Tab 1: Quản lý Gói Mentor (UC95) */}
+      {/* Tab 1: Quản lý Gói dịch vụ */}
       {activeTab === 'PACKAGES' && (
         <div className="space-y-6">
 
           {/* Cảnh báo khi mất kết nối CSDL hoặc lỗi Token */}
+          {/* Error Banner */}
           {isError && (
             <Reveal>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-rose-500/30 bg-rose-50/70 p-4 text-rose-900 shadow-sm">
                 <div className="flex items-start gap-3">
                   <WifiOff className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-600" />
                   <div className="text-xs leading-relaxed">
-                    <span className="font-bold text-sm block mb-0.5">Không thể truy vấn CSDL Backend</span>
-                    <span>{(error as any)?.message || 'Đã có lỗi xảy ra khi gọi API /api/v1/admin/mentor-packages. Vui lòng kiểm tra Server Backend (port 8080) và quyền tài khoản ADMIN.'}</span>
+                    <span className="font-bold text-sm block mb-0.5">Không thể tải dữ liệu gói dịch vụ</span>
+                    <span>{(error as any)?.message || 'Hệ thống tạm thời không thể kết nối tới máy chủ. Vui lòng kiểm tra lại đường truyền và thử lại.'}</span>
                   </div>
                 </div>
                 <Button
@@ -182,34 +181,11 @@ export function AdminMentorPackagesPage() {
                   onClick={() => refetch()}
                   className="gap-1.5 border-rose-300 bg-white font-bold text-rose-700 hover:bg-rose-100 flex-shrink-0"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" /> Thử lại kết nối CSDL
+                  <RotateCcw className="h-3.5 w-3.5" /> Thử lại kết nối
                 </Button>
               </div>
             </Reveal>
           )}
-
-          {/* Banner Trạng thái kết nối CSDL thành công */}
-          {!isError && !isLoading && (
-            <Reveal>
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-50/60 p-3.5 px-4 text-emerald-900 backdrop-blur-md">
-                <div className="flex items-center gap-2.5 text-xs font-semibold">
-                  <Database className="h-4 w-4 text-emerald-600" />
-                  <span>Đã kết nối CSDL. Dữ liệu được đồng bộ thời gian thực.</span>
-                </div>
-                <Badge tone="mint" size="sm" className="font-bold">CSDL Live</Badge>
-              </div>
-            </Reveal>
-          )}
-
-          {/* Thông tin quy tắc bảo vệ giao dịch lịch sử */}
-          <Reveal>
-            <div className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-50/60 p-4 backdrop-blur-md">
-              <ShieldAlert className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
-              <div className="text-xs leading-relaxed text-amber-900">
-                <span className="font-bold">Quy tắc kinh doanh:</span> Thay đổi giá và trạng thái tại đây sẽ được lưu vào cơ sở dữ liệu và áp dụng cho các giao dịch mới. Tất cả các đăng ký lịch sử được giữ nguyên giá trị cũ.
-              </div>
-            </div>
-          </Reveal>
 
           {/* Loading Skeleton */}
           {isLoading && (
@@ -251,12 +227,12 @@ export function AdminMentorPackagesPage() {
                           </span>
                           <Badge tone={isActive ? 'mint' : 'rose'} size="md">
                             {isActive ? (
-                              <span className="flex items-center gap-1">
-                                <CheckCircle2 className="h-3.5 w-3.5" /> Đang bán
+                              <span className="flex items-center gap-1 font-bold">
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Đang mở bán
                               </span>
                             ) : (
-                              <span className="flex items-center gap-1">
-                                <XCircle className="h-3.5 w-3.5" /> Ngừng bán
+                              <span className="flex items-center gap-1 font-bold">
+                                <XCircle className="h-3.5 w-3.5" /> Tạm ngưng
                               </span>
                             )}
                           </Badge>
@@ -285,13 +261,13 @@ export function AdminMentorPackagesPage() {
                       {/* Action Button */}
                       <Button
                         variant={isActive ? 'primary' : 'secondary'}
-                        className={`w-full justify-center gap-2 rounded-2xl font-bold shadow-md transition-all duration-200 ${isActive
+                        className={`w-full justify-center gap-2 rounded-2xl font-bold shadow-md transition-all duration-200 cursor-pointer ${isActive
                           ? 'bg-gradient-to-r from-[#F27024] via-[#f57c32] to-[#ff8c38] text-white hover:from-[#e05f13] hover:to-[#f27024] shadow-[#F27024]/25 border-none hover:scale-[1.01] active:scale-[0.99]'
                           : 'bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] border border-slate-300/80 shadow-sm'
                           }`}
                         onClick={() => handleOpenEdit(pkg)}
                       >
-                        <Edit3 className="h-4 w-4" /> Cập nhật giá & Trạng thái
+                        <Edit3 className="h-4 w-4" /> Chỉnh sửa gói dịch vụ
                       </Button>
                     </Card>
                   </motion.div>
@@ -305,13 +281,13 @@ export function AdminMentorPackagesPage() {
             <Modal
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
-              title={`Cập nhật gói Mentor vào CSDL: ${selectedPkg.name}`}
+              title={`Chỉnh sửa gói dịch vụ: ${selectedPkg.name}`}
             >
               <form onSubmit={handleSave} className="space-y-4 pt-2">
                 {/* Price Input */}
                 <div>
                   <label className="block text-xs font-bold text-plum-800 mb-1">
-                    Giá niêm yết mới (VND) <span className="text-rose-500">*</span>
+                    Giá niêm yết (VNĐ) <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-plum-400 text-sm font-bold">₫</span>
@@ -351,7 +327,7 @@ export function AdminMentorPackagesPage() {
                         onChange={() => setStatusInput('ACTIVE')}
                         className="sr-only"
                       />
-                      <CheckCircle2 className="h-4 w-4" /> Đang kinh doanh (ACTIVE)
+                      <CheckCircle2 className="h-4 w-4" /> Đang mở bán
                     </label>
 
                     <label
@@ -368,7 +344,7 @@ export function AdminMentorPackagesPage() {
                         onChange={() => setStatusInput('INACTIVE')}
                         className="sr-only"
                       />
-                      <XCircle className="h-4 w-4" /> Ngừng kinh doanh (INACTIVE)
+                      <XCircle className="h-4 w-4" /> Tạm ngưng áp dụng
                     </label>
                   </div>
                 </div>
@@ -376,7 +352,7 @@ export function AdminMentorPackagesPage() {
                 {/* Name Input */}
                 <div>
                   <label className="block text-xs font-bold text-plum-800 mb-1">
-                    Tên hiển thị gói dịch vụ
+                    Tên gói dịch vụ
                   </label>
                   <input
                     type="text"
@@ -414,7 +390,7 @@ export function AdminMentorPackagesPage() {
                     variant="secondary"
                     onClick={() => setIsModalOpen(false)}
                     disabled={updateMutation.isPending}
-                    className="rounded-2xl font-bold bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] hover:border-[#F27024]/40 border border-slate-200 shadow-sm transition-all"
+                    className="rounded-2xl font-bold bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] hover:border-[#F27024]/40 border border-slate-200 shadow-sm transition-all cursor-pointer"
                   >
                     Hủy bỏ
                   </Button>
@@ -422,10 +398,10 @@ export function AdminMentorPackagesPage() {
                     type="submit"
                     variant="primary"
                     disabled={updateMutation.isPending}
-                    className="gap-2 font-extrabold rounded-2xl bg-gradient-to-r from-[#F27024] via-[#f57c32] to-[#ff8c38] text-white hover:from-[#e05f13] hover:to-[#f27024] shadow-lg shadow-[#F27024]/30 hover:shadow-[#F27024]/45 border-none transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="gap-2 font-extrabold rounded-2xl bg-gradient-to-r from-[#F27024] via-[#f57c32] to-[#ff8c38] text-white hover:from-[#e05f13] hover:to-[#f27024] shadow-lg shadow-[#F27024]/30 hover:shadow-[#F27024]/45 border-none transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                   >
-                    <Database className="h-4 w-4" />
-                    {updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+                    <Check className="h-4 w-4" />
+                    {updateMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
                   </Button>
                 </div>
               </form>

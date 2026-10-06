@@ -111,6 +111,7 @@ export interface FollowUserResponse {
   isAccountVerified: boolean
   isFollowing: boolean
   studentCode?: string | null
+  role?: string
 }
 
 export interface UserSkillRequest {
@@ -201,5 +202,10 @@ export interface ConnectionSuggestionResponse {
   matchScore: number
 }
 
-
-
+export const FPT_CAMPUSES = [
+  'FPT University Đà Nẵng',
+  'FPT University Hà Nội',
+  'FPT University TP. Hồ Chí Minh',
+  'FPT University Cần Thơ',
+  'FPT University Quy Nhơn',
+] as const

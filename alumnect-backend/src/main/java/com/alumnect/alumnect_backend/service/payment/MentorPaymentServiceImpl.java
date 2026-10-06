@@ -101,10 +101,10 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
 
         // 3. Kiểm tra hồ sơ Mentor (không được INCOMPLETE)
         MentorProfile profile = mentorProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new BadRequestException("Bạn cần hoàn thiện thông tin đăng ký Mentor (UC91) trước khi thanh toán gói dịch vụ."));
+                .orElseThrow(() -> new BadRequestException("Bạn cần hoàn thiện thông tin hồ sơ Mentor trước khi thanh toán gói dịch vụ."));
 
         if (profile.getMentorStatus() == MentorStatus.INCOMPLETE) {
-            throw new BadRequestException("Bạn cần hoàn thiện thông tin đăng ký Mentor (UC91) trước khi thanh toán gói dịch vụ.");
+            throw new BadRequestException("Bạn cần hoàn thiện thông tin hồ sơ Mentor trước khi thanh toán gói dịch vụ.");
         }
 
         // 3.1. Kiểm tra nếu Mentor đã có gói đang ACTIVE và chưa hết hạn thì KHÔNG tạo thanh toán mới
@@ -159,7 +159,7 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
             // Lấy gói đang chờ thanh toán gần nhất
             subscription = mentorSubscriptionRepository
                     .findFirstByMentorProfileIdAndStatusOrderByCreatedAtDesc(profile.getId(), MentorSubscriptionStatus.PENDING_PAYMENT)
-                    .orElseThrow(() -> new BadRequestException("Chưa có gói dịch vụ nào được chọn để thanh toán. Vui lòng chọn gói trước (UC92)."));
+                    .orElseThrow(() -> new BadRequestException("Chưa có gói dịch vụ nào được chọn để thanh toán. Vui lòng chọn gói dịch vụ trước."));
 
             mentorPackage = subscription.getMentorPackage();
             if (mentorPackage == null || mentorPackage.getStatus() != MentorPackageStatus.ACTIVE) {
@@ -314,6 +314,13 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
                         } else if ("CANCELLED".equalsIgnoreCase(payOsStatus)) {
                             tx.setPaymentStatus(PaymentStatus.CANCELLED);
                             paymentTransactionRepository.save(tx);
+                            if (sub != null && sub.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT) {
+                                sub.setStatus(MentorSubscriptionStatus.CANCELLED);
+                                mentorSubscriptionRepository.save(sub);
+                                if (sub.getMentorProfile() != null) {
+                                    mentorEligibilityService.recalculateMentorStatus(sub.getMentorProfile().getId());
+                                }
+                            }
                         } else if ("EXPIRED".equalsIgnoreCase(payOsStatus)) {
                             tx.setPaymentStatus(PaymentStatus.EXPIRED);
                             paymentTransactionRepository.save(tx);
@@ -380,6 +387,29 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
 
         tx.setPaymentStatus(PaymentStatus.CANCELLED);
         paymentTransactionRepository.save(tx);
+
+        // Đồng bộ hủy TOÀN BỘ các bản ghi đăng ký MentorSubscription đang ở trạng thái PENDING_PAYMENT của Mentor này
+        MentorProfile mentorProfile = null;
+        if (tx.getMentorSubscription() != null && tx.getMentorSubscription().getMentorProfile() != null) {
+            mentorProfile = tx.getMentorSubscription().getMentorProfile();
+        }
+        if (mentorProfile == null) {
+            mentorProfile = mentorProfileRepository.findByUserId(user.getId()).orElse(null);
+        }
+
+        if (mentorProfile != null) {
+            List<MentorSubscription> pendingSubs = mentorSubscriptionRepository
+                    .findByMentorProfileIdOrderByCreatedAtDesc(mentorProfile.getId())
+                    .stream()
+                    .filter(s -> s.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT)
+                    .toList();
+            for (MentorSubscription pendingSub : pendingSubs) {
+                pendingSub.setStatus(MentorSubscriptionStatus.CANCELLED);
+                mentorSubscriptionRepository.save(pendingSub);
+                log.info("Đã chuyển trạng thái subscriptionId={} sang CANCELLED theo đơn orderCode={}", pendingSub.getId(), orderCode);
+            }
+            mentorEligibilityService.recalculateMentorStatus(mentorProfile.getId());
+        }
 
         return getPaymentStatus(userEmail, orderCode);
     }

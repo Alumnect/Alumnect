@@ -1,4 +1,4 @@
-import { Container, PageHeader } from '@/components/ui'
+import { Container } from '@/components/ui'
 import { Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
 import { MentorStatusDashboard } from '@/features/mentorship'
@@ -23,22 +23,15 @@ export function MentorStatusPage() {
             Dành riêng cho Cựu sinh viên (ALUMNI)
           </h2>
           <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
-            Bảng theo dõi trạng thái Mentor và thời hạn gói dịch vụ chỉ áp dụng cho tài khoản Cựu sinh viên đã đăng ký trở thành Cố vấn.
+            Bảng theo dõi trạng thái Mentor và thời hạn gói dịch vụ chỉ áp dụng cho tài khoản Cựu sinh viên đã đăng ký trở thành Mentor.
           </p>
         </Card>
       </Container>
     )
   }
   return (
-    <Container className="py-8">
-      <PageHeader
-        icon={<Activity className="h-5 w-5 text-brand-600" />}
-        title="Tình Trạng Hồ Sơ & Gói Dịch Vụ Cố Vấn"
-        subtitle="Theo dõi tiến độ hoàn thiện hồ sơ, điều kiện kích hoạt và hạn mức duy trì mạng lưới Mentorship của bạn."
-      />
-      <div className="mt-6">
-        <MentorStatusDashboard />
-      </div>
+    <Container className="py-4 sm:py-6">
+      <MentorStatusDashboard />
     </Container>
   )
 }

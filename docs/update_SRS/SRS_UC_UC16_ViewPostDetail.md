@@ -52,7 +52,7 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect. UC16 
     - Nút Chia sẻ: Kích hoạt chức năng chia sẻ bài viết.
     - Nút Lưu bài viết: Lưu hoặc bỏ lưu bài viết vào danh mục cá nhân, hiển thị trạng thái đã lưu.
     - Nút Báo cáo: Mở biểu mẫu báo cáo bài viết vi phạm tới ban quản trị.
-  - Khu bình luận: tiêu đề "Bình luận · N", ô soạn bình luận (trạng thái chờ — đăng bình luận thuộc UC18), danh sách `CommentItem` (avatar, tên, chức danh, thời gian, nội dung; bình luận trả lời được thụt lề), nút "Xem thêm bình luận".
+  - Khu bình luận: Thiết kế tối giản, loại bỏ tiêu đề thừa "Bình luận [số]" để bố cục liền mạch; hiển thị trực tiếp ô soạn bình luận (`CommentBox`), danh sách `CommentItem` (avatar, tên, chức danh, thời gian, nội dung; hỗ trợ reply phân nhánh lồng), nút "Xem thêm bình luận".
   - Trạng thái: Loading (skeleton), Không khả dụng (404), Dành cho thành viên (403 — mời đăng nhập), Lỗi (retry), Rỗng bình luận.
 
 **Data processing**:

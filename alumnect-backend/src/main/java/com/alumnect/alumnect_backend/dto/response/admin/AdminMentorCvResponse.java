@@ -40,8 +40,6 @@ public class AdminMentorCvResponse {
     /** Công ty / tổ chức hiện tại đang làm việc */
     private String currentCompany;
 
-    /** Số năm kinh nghiệm cố vấn / làm việc */
-    private Integer yearsOfExperience;
 
     /** Lời giới thiệu / Bio cố vấn */
     private String bio;

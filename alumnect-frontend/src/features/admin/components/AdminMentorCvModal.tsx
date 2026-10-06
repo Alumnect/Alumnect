@@ -4,13 +4,9 @@ import {
   ExternalLink,
   Download,
   AlertCircle,
-  CheckCircle2,
-  Clock,
   Building2,
   Briefcase,
-  X,
   User,
-  ShieldAlert,
 } from 'lucide-react'
 import { Modal, Badge, Button, Skeleton } from '@/components/ui'
 import { useAdminMentorCv } from '../hooks/useAdmin'
@@ -23,8 +19,7 @@ interface AdminMentorCvModalProps {
 }
 
 /**
- * Modal Xem CV Mentor dành cho Quản trị viên (UC96).
- * Cho phép Admin xem, kiểm tra chi tiết CV của Mentor mà KHÔNG có các quy trình duyệt/từ chối (Approve/Reject).
+ * Modal Xem CV Cố vấn dành cho Quản trị viên.
  */
 export function AdminMentorCvModal({
   isOpen,
@@ -39,21 +34,24 @@ export function AdminMentorCvModal({
 
   const cvUrl = cvData?.cvUrl || cvData?.cvFileKey
 
+  const getStatusText = (status?: string) => {
+    switch (status) {
+      case 'ACTIVE': return 'Đang hoạt động'
+      case 'PAYMENT_PENDING':
+      case 'PENDING_PAYMENT': return 'Chờ thanh toán'
+      case 'PENDING': return 'Chờ duyệt'
+      case 'INACTIVE': return 'Ngừng hoạt động'
+      default: return status || 'Chưa kích hoạt'
+    }
+  }
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Hồ sơ & CV Chi tiết của Mentor"
+      title="Hồ sơ & CV chi tiết của Cố vấn"
     >
-      <div className="space-y-5 pt-1">
-        {/* Banner lưu ý Quy tắc UC96 */}
-        <div className="flex items-center gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-50/70 p-3 text-xs text-amber-900 backdrop-blur-sm">
-          <ShieldAlert className="h-4 w-4 flex-shrink-0 text-amber-600" />
-          <span>
-            <b>Quy tắc quản lý:</b> Xem và kiểm tra CV đối chứng thông tin Mentor. Chức năng này không làm thay đổi trạng thái hoạt động của Mentor.
-          </span>
-        </div>
-
+      <div className="space-y-4 pt-1">
         {/* Loading Skeleton */}
         {isLoading && (
           <div className="space-y-4 py-4">
@@ -74,16 +72,16 @@ export function AdminMentorCvModal({
             <div className="p-3 bg-rose-100 rounded-full">
               <AlertCircle className="h-8 w-8 text-rose-600" />
             </div>
-            <h4 className="font-bold text-base">Không thể tải tệp CV của Mentor</h4>
+            <h4 className="font-bold text-base">Không thể tải tệp CV của Cố vấn</h4>
             <p className="text-xs text-rose-700 max-w-sm">
               {(error as any)?.message ||
-                'Mentor này hiện chưa cập nhật hoặc tải lên tệp CV chuyên môn trong hệ thống.'}
+                'Cố vấn này hiện chưa cập nhật hoặc tải lên tệp CV chuyên môn trong hệ thống.'}
             </p>
             <Button
               variant="secondary"
               size="sm"
               onClick={onClose}
-              className="mt-2 rounded-xl font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-300"
+              className="mt-2 rounded-xl font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 cursor-pointer"
             >
               Đóng cửa sổ
             </Button>
@@ -92,7 +90,7 @@ export function AdminMentorCvModal({
 
         {/* Main Content when CV Data is loaded */}
         {!isLoading && cvData && cvUrl && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Header info card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
               <div className="flex items-center gap-3.5">
@@ -113,14 +111,14 @@ export function AdminMentorCvModal({
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-extrabold text-plum-900">
-                      {cvData.mentorName || mentorNameFallback || 'Mentor AlumNect'}
+                      {cvData.mentorName || mentorNameFallback || 'Cố vấn AlumNect'}
                     </h3>
                     <Badge
                       tone={cvData.mentorStatus === 'ACTIVE' ? 'mint' : 'gold'}
                       size="sm"
                       className="font-bold"
                     >
-                      {cvData.mentorStatus}
+                      {getStatusText(cvData.mentorStatus)}
                     </Badge>
                   </div>
                   <p className="text-xs text-plum-500 font-medium">{cvData.mentorEmail}</p>
@@ -136,12 +134,6 @@ export function AdminMentorCvModal({
                       <span className="flex items-center gap-1">
                         <Building2 className="h-3.5 w-3.5 text-brand-500" />
                         {cvData.currentCompany}
-                      </span>
-                    )}
-                    {cvData.yearsOfExperience != null && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5 text-gold-600" />
-                        {cvData.yearsOfExperience} Năm KN
                       </span>
                     )}
                   </div>
@@ -189,13 +181,13 @@ export function AdminMentorCvModal({
                 <span className="flex items-center gap-1.5">
                   <FileText className="h-4 w-4 text-brand-600" /> Xem trực tiếp tệp CV
                 </span>
-                <span className="text-[11px] text-slate-500 font-normal">PDF / Document Preview</span>
+                <span className="text-[11px] text-slate-500 font-normal">Định dạng PDF / Tài liệu</span>
               </div>
 
               {!previewError ? (
                 <iframe
                   src={cvUrl}
-                  title="Mentor CV Preview"
+                  title="Xem trước CV Cố vấn"
                   className="w-full h-[450px] border-none"
                   onError={() => setPreviewError(true)}
                 />
@@ -208,7 +200,7 @@ export function AdminMentorCvModal({
                     href={cvUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:underline cursor-pointer"
                   >
                     Nhấn vào đây để xem trực tiếp tệp CV <ExternalLink className="h-3.5 w-3.5" />
                   </a>
@@ -222,7 +214,7 @@ export function AdminMentorCvModal({
                 type="button"
                 variant="secondary"
                 onClick={onClose}
-                className="rounded-2xl font-bold bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] hover:border-[#F27024]/40 border border-slate-200 shadow-sm transition-all"
+                className="rounded-2xl font-bold bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] hover:border-[#F27024]/40 border border-slate-200 shadow-sm transition-all cursor-pointer"
               >
                 Đóng cửa sổ
               </Button>

@@ -12,6 +12,23 @@ export const MENTOR_PAYMENT_KEYS = {
 }
 
 /**
+ * Custom Hook lấy phiên thanh toán VietQR PayOS (UC93).
+ * Dùng useQuery để tự động reactive, render ngay khi có dữ liệu từ Backend.
+ */
+export function useMentorCheckoutSession(packageId?: number, enabled = true) {
+  return useQuery({
+    queryKey: ['mentor-payment', 'checkout', packageId ?? 'default'],
+    queryFn: () => mentorPaymentApi.createCheckout(packageId ? { packageId } : undefined),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  })
+}
+
+/**
  * Custom Hook khởi tạo giao dịch thanh toán PayOS (UC93).
  */
 export function useCreateMentorPayment() {
@@ -78,6 +95,9 @@ export function useCancelMentorPayment() {
       toast.info('Đã hủy giao dịch thanh toán thành công.')
       queryClient.invalidateQueries({ queryKey: MENTOR_PAYMENT_KEYS.status(orderCode) })
       queryClient.invalidateQueries({ queryKey: MENTOR_SUBSCRIPTION_KEYS.mySubscription })
+      queryClient.invalidateQueries({ queryKey: ['mentor-status'] })
+      queryClient.invalidateQueries({ queryKey: ['mentor-subscriptions'] })
+      queryClient.invalidateQueries({ queryKey: ['mentor-registration'] })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Không thể hủy giao dịch. Vui lòng thử lại.')

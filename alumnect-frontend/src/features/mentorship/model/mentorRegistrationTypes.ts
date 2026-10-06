@@ -17,15 +17,29 @@ export interface PersonalInfo {
   studentCode?: string | null
 }
 
+export interface SkillItem {
+  id?: number
+  groupName: string
+  skillName: string
+}
+
+export interface ExperienceItem {
+  id?: number
+  title: string
+  company: string
+  isCurrent?: boolean
+}
+
 export interface ReusedFromProfile {
   currentPosition?: string | null
   currentCompany?: string | null
+  currentExperiences?: ExperienceItem[]
   skills: string[]
+  skillItems?: SkillItem[]
 }
 
 export interface ProfessionalInfo {
   reusedFromProfile: ReusedFromProfile
-  yearsOfExperience?: number | null
   bio?: string | null
 }
 
@@ -70,7 +84,6 @@ export interface MentorRegistrationRequest {
   phone?: string | null
   campus?: string | null
   graduationYear?: number | null
-  yearsOfExperience?: number | null
   bio?: string | null
   workingMode?: MentoringWorkingMode | null
   mentoringType?: MentoringType | null

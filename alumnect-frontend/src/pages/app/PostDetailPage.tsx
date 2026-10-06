@@ -1213,14 +1213,6 @@ function CommentsSection({
 
   return (
     <section id="comments" className="space-y-4">
-      <div className="mb-4 flex items-center gap-2.5">
-        <MessageCircle size={18} className="text-brand-600" />
-        <h2 className="text-lg font-extrabold text-plum-900">Bình luận</h2>
-        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">
-          {compact(commentCount)}
-        </span>
-      </div>
-
       {/* Ô soạn & đăng bình luận gốc (UC18) */}
       <div id="comments-box">
         <CommentBox isGuest={isGuest} postId={postId} />

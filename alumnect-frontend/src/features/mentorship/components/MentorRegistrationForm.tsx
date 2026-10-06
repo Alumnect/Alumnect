@@ -32,14 +32,8 @@ export const MentorRegistrationForm: React.FC = () => {
   const { data: industries = [] } = useMentorIndustries()
   const saveMutation = useSaveMentorRegistration()
 
-  // Form State - Thông tin cá nhân cơ bản (chỉnh sửa trực tiếp tại Section 1)
-  const [fullName, setFullName] = useState<string>('')
-  const [phone, setPhone] = useState<string>('')
-  const [campus, setCampus] = useState<string>('')
-  const [graduationYear, setGraduationYear] = useState<number | null>(null)
 
   // Form State - Chuyên môn & Định hướng cố vấn
-  const [yearsOfExperience, setYearsOfExperience] = useState<number | null>(null)
   const [bio, setBio] = useState<string>('')
   const [workingMode, setWorkingMode] = useState<MentoringWorkingMode | null>(null)
   const [mentoringType, setMentoringType] = useState<MentoringType | null>(null)
@@ -53,20 +47,8 @@ export const MentorRegistrationForm: React.FC = () => {
   // Đồng bộ dữ liệu từ server khi fetch thành công
   useEffect(() => {
     if (data) {
-      // Section 1: Thông tin cá nhân
-      if (data.personalInfo) {
-        if (data.personalInfo.fullName) setFullName(data.personalInfo.fullName)
-        if (data.personalInfo.phone) setPhone(data.personalInfo.phone)
-        if (data.personalInfo.campus) setCampus(data.personalInfo.campus)
-        if (data.personalInfo.graduationYear !== undefined) {
-          setGraduationYear(data.personalInfo.graduationYear)
-        }
-      }
 
       // Section 2: Chuyên môn & Kinh nghiệm
-      if (data.professionalInfo?.yearsOfExperience !== undefined) {
-        setYearsOfExperience(data.professionalInfo.yearsOfExperience)
-      }
       if (data.professionalInfo?.bio) {
         setBio(data.professionalInfo.bio)
       }
@@ -122,14 +104,10 @@ export const MentorRegistrationForm: React.FC = () => {
   // Chuẩn bị payload gửi lên server
   const buildPayload = (): MentorRegistrationRequest => {
     return {
-      fullName: fullName ? fullName.trim() : null,
-      phone: phone ? phone.trim() : null,
-      campus: campus ? campus.trim() : null,
-      graduationYear: graduationYear === null || graduationYear === undefined ? null : Number(graduationYear),
-      yearsOfExperience:
-        yearsOfExperience === null || yearsOfExperience === undefined
-          ? null
-          : Number(yearsOfExperience),
+      fullName: data?.personalInfo?.fullName || null,
+      phone: data?.personalInfo?.phone || null,
+      campus: data?.personalInfo?.campus || null,
+      graduationYear: data?.personalInfo?.graduationYear ?? null,
       bio: bio || null,
       workingMode: workingMode || null,
       mentoringType: mentoringType || null,
@@ -156,14 +134,11 @@ export const MentorRegistrationForm: React.FC = () => {
   const handleComplete = async () => {
     // 1. Kiểm tra nhanh tại Client để hỗ trợ người dùng
     const missing: string[] = []
-    if (!fullName || !fullName.trim()) {
-      missing.push('Họ và tên')
+    if (!data?.personalInfo?.fullName || !data.personalInfo.fullName.trim()) {
+      missing.push('Họ và tên (vui lòng cập nhật tại hồ sơ cá nhân)')
     }
     if (!data?.professionalInfo?.reusedFromProfile?.currentPosition) {
-      missing.push('Chức danh công việc hiện tại (hãy cập nhật tại Profile)')
-    }
-    if (yearsOfExperience === null || yearsOfExperience === undefined || yearsOfExperience < 0) {
-      missing.push('Số năm kinh nghiệm')
+      missing.push('Chức danh công việc hiện tại (vui lòng cập nhật tại hồ sơ cá nhân)')
     }
     if (!workingMode) {
       missing.push('Hình thức hướng dẫn')
@@ -241,12 +216,12 @@ export const MentorRegistrationForm: React.FC = () => {
 
         <div className="relative z-10 max-w-2xl">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
-            {isActive ? 'Hồ sơ người hướng dẫn' : 'Đăng ký làm người hướng dẫn'}
+            {isActive ? 'Hồ sơ Mentor' : 'Đăng ký làm Mentor'}
           </h1>
           <p className="text-sm text-slate-600 dark:text-[#b0b3b8] font-medium leading-relaxed">
             {isActive
-              ? 'Cập nhật thông tin hướng dẫn, lĩnh vực hỗ trợ và tài khoản nhận thanh toán của bạn.'
-              : 'Chia sẻ kinh nghiệm, định hướng nghề nghiệp và đồng hành cùng mọi người trên hành trình phát triển.'}
+              ? 'Cập nhật thông tin Mentor, lĩnh vực hỗ trợ và tài khoản nhận thanh toán của bạn.'
+              : 'Hỗ trợ, hướng dẫn và đồng hành cùng mọi người trên hành trình phát triển.'}
           </p>
         </div>
 
@@ -300,25 +275,13 @@ export const MentorRegistrationForm: React.FC = () => {
 
       {/* Form Sections */}
       <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-        {/* Phần 1: Thông tin cá nhân cơ bản (chỉnh sửa trực tiếp tại chỗ) */}
-        <MentorPersonalInfoSection
-          personalInfo={data?.personalInfo}
-          fullName={fullName}
-          phone={phone}
-          campus={campus}
-          graduationYear={graduationYear}
-          onFullNameChange={setFullName}
-          onPhoneChange={setPhone}
-          onCampusChange={setCampus}
-          onGraduationYearChange={setGraduationYear}
-        />
+        {/* Phần 1: Thông tin cá nhân cơ bản (đồng bộ từ Hồ sơ cá nhân) */}
+        <MentorPersonalInfoSection personalInfo={data?.personalInfo} />
 
         {/* Phần 2: Thông tin chuyên môn & kinh nghiệm */}
         <MentorProfessionalSection
           professionalInfo={data?.professionalInfo}
-          yearsOfExperience={yearsOfExperience}
           bio={bio}
-          onYearsChange={setYearsOfExperience}
           onBioChange={setBio}
         />
 

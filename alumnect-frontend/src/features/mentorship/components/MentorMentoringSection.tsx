@@ -87,7 +87,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
         </div>
         <div>
           <h3 className="font-semibold text-slate-800 dark:text-[#f0f2f5] text-lg">Hình thức & Lĩnh vực</h3>
-          <p className="text-xs text-slate-500 dark:text-[#b0b3b8]">Cách thức kết nối và đồng hành cùng người học</p>
+          <p className="text-xs text-slate-500 dark:text-[#b0b3b8]">Cách thức kết nối và đồng hành</p>
         </div>
       </div>
 
@@ -125,20 +125,18 @@ export const MentorMentoringSection: React.FC<Props> = ({
                   key={item.value}
                   type="button"
                   onClick={() => onWorkingModeChange(isSelected ? null : item.value)}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                    isSelected
-                      ? 'border-[#f27024] bg-orange-50/70 dark:bg-[#f27024]/15 ring-2 ring-[#f27024]/20 shadow-sm'
-                      : 'border-slate-200 dark:border-[#393a3b] hover:border-slate-300 dark:hover:border-[#4e4f50] bg-white dark:bg-[#18191a] hover:bg-slate-50/50 dark:hover:bg-[#242526]'
-                  }`}
+                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${isSelected
+                    ? 'border-[#f27024] bg-orange-50/70 dark:bg-[#f27024]/15 ring-2 ring-[#f27024]/20 shadow-sm'
+                    : 'border-slate-200 dark:border-[#393a3b] hover:border-slate-300 dark:hover:border-[#4e4f50] bg-white dark:bg-[#18191a] hover:bg-slate-50/50 dark:hover:bg-[#242526]'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#f27024] text-white' : 'bg-slate-100 dark:bg-[#3a3b3c] text-slate-500 dark:text-[#b0b3b8]'}`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div
-                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                        isSelected ? 'border-[#f27024] bg-[#f27024]' : 'border-slate-300 dark:border-[#4e4f50]'
-                      }`}
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'border-[#f27024] bg-[#f27024]' : 'border-slate-300 dark:border-[#4e4f50]'
+                        }`}
                     >
                       {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
@@ -188,20 +186,18 @@ export const MentorMentoringSection: React.FC<Props> = ({
                   key={item.value}
                   type="button"
                   onClick={() => onMentoringTypeChange(isSelected ? null : item.value)}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                    isSelected
-                      ? 'border-[#f27024] bg-orange-50/70 dark:bg-[#f27024]/15 ring-2 ring-[#f27024]/20 shadow-sm'
-                      : 'border-slate-200 dark:border-[#393a3b] hover:border-slate-300 dark:hover:border-[#4e4f50] bg-white dark:bg-[#18191a] hover:bg-slate-50/50 dark:hover:bg-[#242526]'
-                  }`}
+                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${isSelected
+                    ? 'border-[#f27024] bg-orange-50/70 dark:bg-[#f27024]/15 ring-2 ring-[#f27024]/20 shadow-sm'
+                    : 'border-slate-200 dark:border-[#393a3b] hover:border-slate-300 dark:hover:border-[#4e4f50] bg-white dark:bg-[#18191a] hover:bg-slate-50/50 dark:hover:bg-[#242526]'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#f27024] text-white' : 'bg-slate-100 dark:bg-[#3a3b3c] text-slate-500 dark:text-[#b0b3b8]'}`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div
-                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                        isSelected ? 'border-[#f27024] bg-[#f27024]' : 'border-slate-300 dark:border-[#4e4f50]'
-                      }`}
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'border-[#f27024] bg-[#f27024]' : 'border-slate-300 dark:border-[#4e4f50]'
+                        }`}
                     >
                       {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
@@ -237,11 +233,10 @@ export const MentorMentoringSection: React.FC<Props> = ({
           {/* Trigger Dropdown Box */}
           <div
             onClick={() => setIsDropdownOpen((prev) => !prev)}
-            className={`min-h-[46px] w-full px-3.5 py-2 rounded-xl border bg-white dark:bg-[#18191a] cursor-pointer transition-all flex items-center justify-between gap-2 ${
-              isDropdownOpen
-                ? 'border-[#f27024] ring-2 ring-[#f27024]/20'
-                : 'border-slate-200 dark:border-[#393a3b] hover:border-slate-300 dark:hover:border-[#4e4f50]'
-            }`}
+            className={`min-h-[46px] w-full px-3.5 py-2 rounded-xl border bg-white dark:bg-[#18191a] cursor-pointer transition-all flex items-center justify-between gap-2 ${isDropdownOpen
+              ? 'border-[#f27024] ring-2 ring-[#f27024]/20'
+              : 'border-slate-200 dark:border-[#393a3b] hover:border-slate-300 dark:hover:border-[#4e4f50]'
+              }`}
           >
             <div className="flex-1 flex flex-wrap items-center gap-1.5">
               {selectedIndustries.length === 0 ? (
@@ -266,9 +261,8 @@ export const MentorMentoringSection: React.FC<Props> = ({
             </div>
             <div className="flex items-center gap-1 text-slate-400 dark:text-[#8a8d91] shrink-0">
               <ChevronDown
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  isDropdownOpen ? 'transform rotate-180 text-[#f27024]' : ''
-                }`}
+                className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'transform rotate-180 text-[#f27024]' : ''
+                  }`}
               />
             </div>
           </div>
@@ -311,19 +305,17 @@ export const MentorMentoringSection: React.FC<Props> = ({
                       <div
                         key={ind.id}
                         onClick={() => onIndustryToggle(ind.id)}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                          isChecked
-                            ? 'bg-orange-50 dark:bg-[#f27024]/20 text-[#d45105] dark:text-orange-300'
-                            : 'hover:bg-slate-50 dark:hover:bg-[#3a3b3c] text-slate-700 dark:text-[#f0f2f5]'
-                        }`}
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${isChecked
+                          ? 'bg-orange-50 dark:bg-[#f27024]/20 text-[#d45105] dark:text-orange-300'
+                          : 'hover:bg-slate-50 dark:hover:bg-[#3a3b3c] text-slate-700 dark:text-[#f0f2f5]'
+                          }`}
                       >
                         <span className="text-sm font-medium">{ind.name}</span>
                         <div
-                          className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
-                            isChecked
-                              ? 'border-[#f27024] bg-[#f27024] text-white'
-                              : 'border-slate-300 dark:border-[#4e4f50] bg-white dark:bg-[#18191a]'
-                          }`}
+                          className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${isChecked
+                            ? 'border-[#f27024] bg-[#f27024] text-white'
+                            : 'border-slate-300 dark:border-[#4e4f50] bg-white dark:bg-[#18191a]'
+                            }`}
                         >
                           {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                         </div>
@@ -356,10 +348,9 @@ export const MentorMentoringSection: React.FC<Props> = ({
             <label className="block text-sm font-semibold text-slate-700 dark:text-[#f0f2f5]">
               Chủ đề hướng dẫn
             </label>
-            <span className="text-xs text-slate-400 dark:text-[#8a8d91] font-medium">Tùy chọn</span>
           </div>
           <p className="text-xs text-slate-500 dark:text-[#b0b3b8] mb-2">
-            Thêm các chủ đề bạn có thể hỗ trợ (VD: Review CV, Mock Interview, Định hướng Fresher...)
+            Thêm các chủ đề bạn có thể hỗ trợ
           </p>
 
           <div className="flex gap-2 mb-3">

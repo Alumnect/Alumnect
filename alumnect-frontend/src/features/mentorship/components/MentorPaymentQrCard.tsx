@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Copy, Check, ExternalLink, Clock, ShieldCheck, QrCode } from 'lucide-react'
+import { Copy, Check, Clock, ShieldCheck, QrCode } from 'lucide-react'
 import { Card, Badge, Button } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { vnd } from '@/lib/utils'
@@ -240,29 +240,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
         </div>
       </div>
 
-      {/* Nút thanh toán trực tiếp qua PayOS Checkout link */}
-      {checkout.checkoutUrl && (
-        <div className="pt-3">
-          <a
-            href={checkout.checkoutUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full inline-block"
-          >
-            <Button
-              variant="primary"
-              size="md"
-              className="w-full flex items-center justify-center gap-2 font-bold shadow-md rounded-2xl py-3.5 bg-gradient-to-r from-brand-600 via-orange-500 to-amber-500 text-white hover:brightness-105"
-            >
-              <span>Chuyển Sang Cổng Thanh Toán PayOS (Khuyên Dùng)</span>
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          </a>
-          <p className="text-[11px] text-center text-plum-400 dark:text-zinc-400 mt-2">
-            Mở cổng thanh toán bảo mật PayOS chính thức để quét mã VietQR hoặc mở app ngân hàng tự động.
-          </p>
-        </div>
-      )}
+
 
       {/* Cam kết bảo mật */}
       <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-plum-400">

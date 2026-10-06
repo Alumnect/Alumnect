@@ -358,7 +358,6 @@ export interface AdminMentorCvDto {
   avatarUrl?: string
   currentPosition?: string
   currentCompany?: string
-  yearsOfExperience?: number
   bio?: string
   cvFileKey?: string
   cvUrl?: string

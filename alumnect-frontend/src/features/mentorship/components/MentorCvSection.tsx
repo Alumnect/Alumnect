@@ -5,7 +5,6 @@ import {
   ExternalLink,
   Loader2,
   FileCheck,
-  ShieldCheck,
 } from 'lucide-react'
 import { mentorRegistrationApi } from '../api/mentorRegistrationApi'
 import { toast } from '@/components/ui'
@@ -63,15 +62,11 @@ export const MentorCvSection: React.FC<Props> = ({
             4
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-[#f0f2f5] text-lg">Đính kèm Hồ sơ năng lực / CV</h3>
-            <p className="text-xs text-slate-500 dark:text-[#b0b3b8]">
-              Tài liệu CV được lưu trữ an toàn, bảo mật riêng tư và chỉ người có thẩm quyền mới có thể truy cập
-            </p>
+            <h3 className="font-semibold text-slate-800 dark:text-[#f0f2f5] text-lg">
+              CV của bạn <span className="text-rose-500">*</span>
+            </h3>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Private Document
-        </span>
       </div>
 
       <div className="max-w-2xl mx-auto">

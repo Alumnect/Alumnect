@@ -1,14 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Sparkles, Check, AlertCircle } from 'lucide-react'
-import { Card, Button, Skeleton, Badge } from '@/components/ui'
+import { ArrowLeft, Clock, Check, AlertCircle } from 'lucide-react'
+import { Card, Button, Skeleton } from '@/components/ui'
 import { vnd } from '@/lib/utils'
-import { useCreateMentorPayment, useMentorPaymentStatus, useCancelMentorPayment } from '../hooks/useMentorPayment'
-import { useMyMentorSubscription } from '../hooks/useMentorSubscription'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+  useMentorCheckoutSession,
+  useMentorPaymentStatus,
+  useCancelMentorPayment,
+} from '../hooks/useMentorPayment'
+import { useMyMentorSubscription, MENTOR_SUBSCRIPTION_KEYS } from '../hooks/useMentorSubscription'
 import { MentorPaymentQrCard } from './MentorPaymentQrCard'
 import { MentorPaymentSuccessCard } from './MentorPaymentSuccessCard'
 import { MentorPaymentFailedCard } from './MentorPaymentFailedCard'
-import type { MentorPaymentCheckoutResponse } from '../model/mentorPaymentTypes'
 
 interface MentorPaymentCheckoutProps {
   initialPackageId?: number
@@ -24,58 +28,58 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
   const [searchParams] = useSearchParams()
   const packageIdParam = searchParams.get('packageId')
   const targetPackageId = initialPackageId || (packageIdParam ? Number(packageIdParam) : undefined)
-
-  const [checkoutData, setCheckoutData] = useState<MentorPaymentCheckoutResponse | null>(null)
-
-  const { data: mySubscription } = useMyMentorSubscription()
-  const createMutation = useCreateMentorPayment()
-  const cancelMutation = useCancelMentorPayment()
   const orderCodeFromParam = searchParams.get('orderCode') ? Number(searchParams.get('orderCode')) : undefined
+
+  const [isCancelled, setIsCancelled] = useState(false)
+  const queryClient = useQueryClient()
+  const { data: mySubscription } = useMyMentorSubscription()
+
+  const shouldFetchCheckout =
+    !isCancelled &&
+    mySubscription?.status !== 'ACTIVE' &&
+    mySubscription?.status !== 'PAID' &&
+    !orderCodeFromParam
+
+  // Khởi tạo phiên thanh toán tự động qua useQuery - Reactive 100%, render ngay lập tức khi Backend phản hồi
+  const {
+    data: checkoutData,
+    isLoading: isLoadingCheckout,
+    isError: isCheckoutError,
+    error: checkoutError,
+    refetch: retryCheckout,
+  } = useMentorCheckoutSession(targetPackageId, shouldFetchCheckout)
+
+  const cancelMutation = useCancelMentorPayment()
   const effectiveOrderCode = checkoutData?.orderCode || orderCodeFromParam
 
   // Polling trạng thái thanh toán từ Backend (tự dừng khi đạt terminal state)
   const { data: paymentStatus, isLoading: isCheckingStatus } = useMentorPaymentStatus(
     effectiveOrderCode,
-    Boolean(effectiveOrderCode)
+    Boolean(effectiveOrderCode) && !isCancelled
   )
 
-  // Khởi tạo phiên thanh toán PayOS khi màn hình mount (bỏ qua nếu đã có active subscription hoặc có orderCode từ PayOS redirect)
-  useEffect(() => {
-    if (mySubscription?.status === 'ACTIVE' || mySubscription?.status === 'PAID') return
-    if (orderCodeFromParam) return
-
-    if (!checkoutData && !createMutation.isPending && !createMutation.isError) {
-      createMutation.mutate(
-        targetPackageId ? { packageId: targetPackageId } : undefined,
-        {
-          onSuccess: (data) => {
-            setCheckoutData(data)
-          },
-        }
-      )
-    }
-  }, [targetPackageId, mySubscription?.status, orderCodeFromParam])
-
   const handleRetryPayment = () => {
-    setCheckoutData(null)
-    createMutation.mutate(
-      targetPackageId ? { packageId: targetPackageId } : undefined,
-      {
-        onSuccess: (data) => {
-          setCheckoutData(data)
-        },
-      }
-    )
+    setIsCancelled(false)
+    retryCheckout()
   }
 
   const handleCancelPayment = async () => {
-    if (checkoutData?.orderCode) {
-      await cancelMutation.mutateAsync(checkoutData.orderCode)
-    }
-    if (onBack) {
-      onBack()
-    } else {
-      navigate('/app/mentoring/subscription')
+    try {
+      setIsCancelled(true)
+      if (effectiveOrderCode) {
+        await cancelMutation.mutateAsync(effectiveOrderCode)
+      }
+    } catch (err) {
+      console.warn('Lỗi khi hủy giao dịch thanh toán PayOS:', err)
+    } finally {
+      if (onBack) {
+        onBack()
+      } else {
+        navigate('/app/mentoring/subscription')
+      }
+      queryClient.invalidateQueries({ queryKey: ['mentor-status'] })
+      queryClient.invalidateQueries({ queryKey: ['mentor-subscriptions'] })
+      queryClient.invalidateQueries({ queryKey: MENTOR_SUBSCRIPTION_KEYS.mySubscription })
     }
   }
 
@@ -112,7 +116,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
   }
 
   // 2. Trạng thái Đang tạo phiên thanh toán PayOS
-  if (createMutation.isPending || (!checkoutData && !createMutation.isError)) {
+  if (isLoadingCheckout || (!checkoutData && !isCheckoutError)) {
     return (
       <div className="grid gap-8 lg:grid-cols-12 max-w-5xl mx-auto py-6">
         <div className="lg:col-span-5 space-y-4">
@@ -128,7 +132,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
   }
 
   // 3. Trạng thái Lỗi khi tạo đơn PayOS
-  if (createMutation.isError) {
+  if (isCheckoutError) {
     return (
       <Card hover={false} className="mx-auto max-w-lg p-8 rounded-3xl border border-rose-200 bg-rose-50/50 text-center space-y-4">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
@@ -138,7 +142,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
           Không thể tạo phiên thanh toán PayOS
         </h3>
         <p className="text-xs text-rose-700">
-          {createMutation.error?.message || 'Đã xảy ra lỗi khi kết nối với cổng thanh toán PayOS.'}
+          {checkoutError?.message || 'Đã xảy ra lỗi khi kết nối với cổng thanh toán PayOS.'}
         </p>
         <div className="pt-2 flex justify-center gap-3">
           <Button variant="secondary" size="sm" onClick={() => (onBack ? onBack() : navigate('/app/mentoring/subscription'))}>
@@ -184,7 +188,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
             Chi Tiết Thanh Toán
           </h2>
           <p className="text-xs text-plum-500 mt-1">
-            Xác nhận thông tin gói cố vấn trước khi quét mã chuyển khoản.
+            Xác nhận thông tin gói Mentor trước khi quét mã chuyển khoản.
           </p>
         </div>
 
@@ -199,9 +203,10 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
                 {checkoutData?.packageName}
               </h3>
             </div>
-            <Badge tone="brand" icon={<Sparkles className="h-3 w-3" />}>
-              {checkoutData?.durationMonths} Tháng
-            </Badge>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 dark:bg-orange-950/40 px-3 py-1 text-xs font-bold text-[#f27024] border border-orange-200/60 dark:border-orange-900/40 shadow-2xs">
+              <Clock className="h-3.5 w-3.5 text-[#f27024]" />
+              {checkoutData?.durationMonths || mySubscription?.durationMonths || 1} Tháng
+            </span>
           </div>
 
           <div className="pt-2 border-t border-plum-900/5">

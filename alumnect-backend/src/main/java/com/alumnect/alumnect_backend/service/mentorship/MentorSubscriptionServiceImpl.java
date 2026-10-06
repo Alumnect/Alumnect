@@ -3,9 +3,11 @@ package com.alumnect.alumnect_backend.service.mentorship;
 import com.alumnect.alumnect_backend.common.enums.MentorPackageStatus;
 import com.alumnect.alumnect_backend.common.enums.MentorStatus;
 import com.alumnect.alumnect_backend.common.enums.MentorSubscriptionStatus;
+import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorPackageRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorSubscriptionRepository;
+import com.alumnect.alumnect_backend.dao.payment.PaymentTransactionRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.mentorship.SelectMentorPackageRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentorPackageResponse;
@@ -14,6 +16,7 @@ import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTermsStatu
 import com.alumnect.alumnect_backend.entity.mentorship.MentorPackage;
 import com.alumnect.alumnect_backend.entity.mentorship.MentorProfile;
 import com.alumnect.alumnect_backend.entity.mentorship.MentorSubscription;
+import com.alumnect.alumnect_backend.entity.payment.PaymentTransaction;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
@@ -45,6 +48,7 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
     private final MentorProfileRepository mentorProfileRepository;
     private final MentorPackageRepository mentorPackageRepository;
     private final MentorSubscriptionRepository mentorSubscriptionRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
     private final MentoringTermsService mentoringTermsService;
     private final MentorPackageMapper mentorPackageMapper;
     private final MentorSubscriptionMapper mentorSubscriptionMapper;
@@ -91,10 +95,10 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
 
         // 3. Kiểm tra hồ sơ Mentor (phải tồn tại và không được ở trạng thái INCOMPLETE)
         MentorProfile profile = mentorProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new BadRequestException("Bạn cần hoàn thiện thông tin đăng ký Mentor (UC91) trước khi chọn gói dịch vụ."));
+                .orElseThrow(() -> new BadRequestException("Bạn cần hoàn thiện thông tin hồ sơ Mentor trước khi chọn gói dịch vụ."));
 
         if (profile.getMentorStatus() == MentorStatus.INCOMPLETE) {
-            throw new BadRequestException("Bạn cần hoàn thiện thông tin đăng ký Mentor (UC91) trước khi chọn gói dịch vụ.");
+            throw new BadRequestException("Bạn cần hoàn thiện thông tin hồ sơ Mentor trước khi chọn gói dịch vụ.");
         }
 
         // 3.1. Kiểm tra nếu Mentor đã có gói đang ACTIVE và chưa hết hạn thì KHÔNG cho phép mua gói mới
@@ -123,16 +127,27 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
         }
 
         // 5. Kiểm tra hoặc cập nhật bản ghi đăng ký đang chờ thanh toán (PENDING_PAYMENT)
-        Optional<MentorSubscription> pendingSubOpt = mentorSubscriptionRepository
-                .findFirstByMentorProfileIdAndStatusOrderByCreatedAtDesc(profile.getId(), MentorSubscriptionStatus.PENDING_PAYMENT);
+        List<MentorSubscription> pendingSubs = mentorSubscriptionRepository
+                .findByMentorProfileIdOrderByCreatedAtDesc(profile.getId())
+                .stream()
+                .filter(s -> s.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT)
+                .toList();
 
         MentorSubscription subscription;
-        if (pendingSubOpt.isPresent()) {
-            subscription = pendingSubOpt.get();
+        if (!pendingSubs.isEmpty()) {
+            subscription = pendingSubs.get(0);
             subscription.setMentorPackage(mentorPackage);
             subscription.setPriceAtPurchase(mentorPackage.getPrice());
             subscription.setDurationMonths(mentorPackage.getDurationMonths());
             log.info("Cập nhật lại thông tin chọn gói cho đăng ký id={} của mentorProfileId={}", subscription.getId(), profile.getId());
+
+            // Dọn dẹp các bản ghi PENDING_PAYMENT dư thừa còn lại nếu có
+            for (int i = 1; i < pendingSubs.size(); i++) {
+                MentorSubscription extraSub = pendingSubs.get(i);
+                extraSub.setStatus(MentorSubscriptionStatus.CANCELLED);
+                mentorSubscriptionRepository.save(extraSub);
+                log.info("Dọn dẹp bản ghi PENDING_PAYMENT dư thừa id={}", extraSub.getId());
+            }
         } else {
             subscription = MentorSubscription.builder()
                     .mentorProfile(profile)
@@ -162,7 +177,7 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
      * @return DTO thông tin đăng ký gói Mentor
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public MentorSubscriptionResponse getMySubscription(String userEmail) {
         log.info("Lấy thông tin đăng ký gói Mentor của người dùng email={}", userEmail);
 
@@ -184,12 +199,31 @@ public class MentorSubscriptionServiceImpl implements MentorSubscriptionService 
                 .filter(s -> (s.getStatus() == MentorSubscriptionStatus.ACTIVE || s.getStatus() == MentorSubscriptionStatus.PAID)
                         && s.getEndDate() != null && s.getEndDate().isAfter(now))
                 .findFirst()
-                // 2. Kế tiếp: Gói đang chờ thanh toán PENDING_PAYMENT
-                .orElseGet(() -> subscriptions.stream()
-                        .filter(s -> s.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT)
-                        .findFirst()
-                        // 3. Fallback: Bản ghi gần nhất
-                        .orElse(subscriptions.get(0)));
+                // 2. Kế tiếp: Gói đang chờ thanh toán PENDING_PAYMENT (tự đồng bộ nếu giao dịch đã CANCELLED)
+                .orElseGet(() -> {
+                    for (MentorSubscription sub : subscriptions) {
+                        if (sub.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT) {
+                            Optional<PaymentTransaction> lastTxOpt = paymentTransactionRepository
+                                    .findFirstByMentorSubscriptionIdOrderByCreatedAtDesc(sub.getId());
+                            if (lastTxOpt.isPresent() && lastTxOpt.get().getPaymentStatus() == PaymentStatus.CANCELLED) {
+                                log.info("Phát hiện subscriptionId={} PENDING_PAYMENT có giao dịch gần nhất CANCELLED. Tự động đồng bộ CANCELLED.", sub.getId());
+                                sub.setStatus(MentorSubscriptionStatus.CANCELLED);
+                                mentorSubscriptionRepository.save(sub);
+                                continue;
+                            }
+                            return sub;
+                        }
+                    }
+                    // 3. Fallback: Bản ghi gần nhất chưa bị HỦY (loại trừ gói CANCELLED)
+                    return subscriptions.stream()
+                            .filter(s -> s.getStatus() != MentorSubscriptionStatus.CANCELLED)
+                            .findFirst()
+                            .orElse(null);
+                });
+
+        if (subscription == null) {
+            throw new ResourceNotFoundException("Bạn chưa chọn gói dịch vụ Mentor nào.");
+        }
 
         return mentorSubscriptionMapper.toResponse(subscription);
     }

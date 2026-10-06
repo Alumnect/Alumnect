@@ -1,4 +1,4 @@
-import { Building, User, Hash, Lock, ShieldCheck } from 'lucide-react'
+import { Building, User, Hash } from 'lucide-react'
 
 interface Props {
   bankName: string
@@ -25,26 +25,14 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
             5
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-[#f0f2f5] text-lg">Tài khoản nhận thanh toán</h3>
-            <p className="text-xs text-slate-500 dark:text-[#b0b3b8]">
-              Thông tin được bảo mật, chỉ dùng để chi trả cho bạn
-            </p>
+            <h3 className="font-semibold text-slate-800 dark:text-[#f0f2f5] text-lg">
+              Tài khoản nhận thanh toán <span className="text-rose-500">*</span>
+            </h3>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Private 1-1
-        </span>
       </div>
 
       <div className="max-w-2xl mx-auto space-y-4">
-        {/* Security Alert banner */}
-        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a]/60 border border-slate-200/70 dark:border-[#393a3b] text-xs text-slate-600 dark:text-[#b0b3b8]">
-          <Lock className="w-4 h-4 text-slate-500 dark:text-[#8a8d91] shrink-0 mt-0.5" />
-          <p className="leading-relaxed">
-            Dữ liệu tài khoản ngân hàng được lưu trữ bảo mật, hoàn toàn tách biệt khỏi hồ sơ công khai và chỉ bộ phận kế toán có thẩm quyền đối soát chi trả mới có thể xem.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Tên ngân hàng */}
           <div className="sm:col-span-2">
