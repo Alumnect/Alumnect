@@ -52,7 +52,7 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect: bản
     - Nhấp vào bất kỳ hình ảnh nào sẽ mở `ImageViewerModal` xem ảnh toàn màn hình với bộ điều hướng chuyển ảnh trước/sau.
   - **Thanh công cụ tương tác (Action Bar)**:
     - Nút Thích: Bày tỏ cảm xúc yêu thích bài viết, hiển thị số lượt thích `{số} thích`.
-    - Nút Bình luận: Mở giao diện xem và gửi bình luận, hiển thị số lượng `{số} bình luận`.
+    - Nút Bình luận: Mở/đóng khung bình luận nhanh trực tiếp (`InlineComments`) ngay dưới bài viết, hiển thị số lượng `{số} bình luận`.
     - Nút Chia sẻ: Kích hoạt chức năng chia sẻ bài viết (sao chép liên kết hoặc gửi qua tin nhắn).
     - Nút Lưu bài viết: Lưu hoặc bỏ lưu bài viết vào danh mục cá nhân, hiển thị trạng thái đã lưu.
     - Nút Báo cáo: Mở biểu mẫu báo cáo bài viết vi phạm tới ban quản trị.

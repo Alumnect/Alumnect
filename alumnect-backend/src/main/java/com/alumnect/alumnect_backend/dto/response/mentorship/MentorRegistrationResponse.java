@@ -71,7 +71,6 @@ public class MentorRegistrationResponse {
     @AllArgsConstructor
     public static class ProfessionalInfo {
         private ReusedFromProfile reusedFromProfile;
-        private Integer yearsOfExperience;
         private String bio;
     }
 

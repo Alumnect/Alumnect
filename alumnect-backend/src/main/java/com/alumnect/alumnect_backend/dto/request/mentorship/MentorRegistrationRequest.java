@@ -38,10 +38,6 @@ public class MentorRegistrationRequest {
     /** Năm tốt nghiệp */
     private Integer graduationYear;
 
-    /** Số năm kinh nghiệm làm việc trong ngành (tối thiểu 0, tối đa 60 năm) */
-    @Min(value = 0, message = "Số năm kinh nghiệm không được âm")
-    @Max(value = 60, message = "Số năm kinh nghiệm không được vượt quá 60")
-    private Integer yearsOfExperience;
 
     /** Lời giới thiệu / định hướng cố vấn riêng biệt (tối đa 2000 ký tự) */
     @Size(max = 2000, message = "Lời giới thiệu tối đa 2000 ký tự")

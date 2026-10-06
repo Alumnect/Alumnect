@@ -79,7 +79,7 @@ export const APP_NAV: NavItem[] = [
 /** Admin dashboard navigation. */
 export const ADMIN_NAV: NavItem[] = [
   { label: 'Tổng quan', to: '/admin', icon: SquaresFour },
-  { label: 'Gói Mentor', to: '/admin/mentor-packages', icon: Compass },
+  { label: 'Quản lý Cố vấn', to: '/admin/mentor-packages', icon: Compass },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },

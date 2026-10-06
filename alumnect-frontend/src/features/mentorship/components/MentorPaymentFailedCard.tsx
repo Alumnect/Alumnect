@@ -47,7 +47,7 @@ export function MentorPaymentFailedCard({
           Không Thể Hoàn Tất Thanh Toán
         </h2>
         <p className="text-sm text-plum-600 dark:text-[#b0b3b8] max-w-md mx-auto">
-          {getStatusText()} Đừng lo lắng, gói cố vấn của bạn chưa bị trừ tiền và bạn có thể tạo lại phiên thanh toán mới bất cứ lúc nào.
+          {getStatusText()} Đừng lo lắng, gói dịch vụ Mentor của bạn chưa bị trừ tiền và bạn có thể tạo lại phiên thanh toán mới bất cứ lúc nào.
         </p>
       </div>
 

@@ -1,6 +1,7 @@
-import { CreditCard, Calendar, Clock, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { CreditCard, Calendar, Clock, ArrowRight, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
 import { Card, Badge } from '@/components/ui/primitives'
-import { ButtonLink } from '@/components/ui/Button'
+import { ButtonLink, Button } from '@/components/ui/Button'
+import { useCancelMentorPayment } from '../hooks/useMentorPayment'
 import type { MentorStatusResponse } from '../model/mentorStatusTypes'
 
 interface MentorSubscriptionSummaryCardProps {
@@ -26,6 +27,8 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
     mentorStatus,
     active,
   } = status
+
+  const cancelMutation = useCancelMentorPayment()
 
   // Định dạng tiền tệ VND
   const formatCurrency = (val?: number | null) => {
@@ -60,21 +63,21 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
 
   if (!hasSubscription) {
     return (
-      <Card hover={false} className="p-6 sm:p-8 border border-plum-900/10 bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
+      <Card hover={false} className="p-5 sm:p-7 border border-plum-900/10 bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-100 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
             <CreditCard className="h-6 w-6" />
           </div>
           <div>
             <h3 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
-              Gói Duy Trì Dịch Vụ Mentor
+              Gói Dịch Vụ Mentor
             </h3>
-            <p className="text-xs text-plum-500">Chưa ghi nhận bản ghi đăng ký gói nào trong hệ thống</p>
+            <p className="text-xs text-plum-500">Chưa có gói dịch vụ nào đang hoạt động</p>
           </div>
         </div>
 
         <p className="text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
-          Để trở thành Mentor chính thức và xuất hiện trên danh bạ cố vấn sinh viên FPTU, bạn cần lựa chọn một gói duy trì mạng lưới (1 tháng, 3 tháng hoặc 6 tháng).
+          Kích hoạt gói dịch vụ Mentor để chính thức hiện diện trên mạng lưới AlumNect, mở khóa tính năng kết nối và đồng hành chia sẻ.
         </p>
 
         <div className="pt-2">
@@ -96,8 +99,8 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
   const isPending = subscriptionStatus === 'PENDING_PAYMENT'
 
   return (
-    <Card hover={false} className="p-6 sm:p-8 border border-plum-900/10 bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-plum-900/10 pb-5 dark:border-[#393a3b]">
+    <Card hover={false} className="p-5 sm:p-7 border border-plum-900/10 bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-plum-900/10 pb-4 dark:border-[#393a3b]">
         <div className="flex items-center gap-3.5">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
             <CreditCard className="h-6 w-6" />
@@ -108,16 +111,16 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
                 {packageName || 'Gói Dịch Vụ Mentor'}
               </h3>
               {active ? (
-                <Badge tone="success" icon={<CheckCircle2 className="h-3 w-3" />} className="text-[10px]">
-                  Active
+                <Badge tone="success" icon={<CheckCircle2 className="h-3 w-3" />} className="text-[10px] font-bold">
+                  Đang hoạt động
                 </Badge>
               ) : isPending ? (
-                <Badge tone="gold" icon={<Clock className="h-3 w-3" />} className="text-[10px]">
-                  Pending Payment
+                <Badge tone="gold" icon={<Clock className="h-3 w-3" />} className="text-[10px] font-bold">
+                  Chờ thanh toán
                 </Badge>
               ) : isExpired ? (
-                <Badge tone="danger" icon={<AlertCircle className="h-3 w-3" />} className="text-[10px]">
-                  Expired
+                <Badge tone="danger" icon={<AlertCircle className="h-3 w-3" />} className="text-[10px] font-bold">
+                  Đã hết hạn
                 </Badge>
               ) : null}
             </div>
@@ -141,14 +144,27 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
               Xem các gói khác
             </ButtonLink>
           ) : isPending ? (
-            <ButtonLink
-              to="/app/mentoring/subscription?step=checkout"
-              variant="primary"
-              size="sm"
-              rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-            >
-              {pendingPaymentOrderCode ? 'Tiếp tục thanh toán VietQR' : 'Thanh toán ngay'}
-            </ButtonLink>
+            <div className="flex flex-wrap items-center gap-2">
+              <ButtonLink
+                to="/app/mentoring/subscription?step=checkout"
+                variant="primary"
+                size="sm"
+                rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+              >
+                {pendingPaymentOrderCode ? 'Tiếp tục thanh toán VietQR' : 'Thanh toán ngay'}
+              </ButtonLink>
+              {pendingPaymentOrderCode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<XCircle className="h-3.5 w-3.5 text-coral-500" />}
+                  isLoading={cancelMutation.isPending}
+                  onClick={() => cancelMutation.mutate(pendingPaymentOrderCode)}
+                >
+                  Hủy đơn
+                </Button>
+              )}
+            </div>
           ) : (
             <ButtonLink
               to="/app/mentoring/packages"
@@ -193,10 +209,10 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
             {active && remainingDays !== null && remainingDays !== undefined
               ? `Còn ${remainingDays} ngày`
               : isExpired
-              ? 'Đã hết hạn'
-              : isPending
-              ? 'Chờ thanh toán'
-              : 'N/A'}
+                ? 'Đã hết hạn'
+                : isPending
+                  ? 'Chờ thanh toán'
+                  : 'N/A'}
           </p>
         </div>
       </div>
@@ -224,7 +240,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
           <div className="space-y-1">
             <p className="font-bold">Gói dịch vụ đã hết hạn!</p>
             <p className="leading-relaxed">
-              Tài khoản Mentor của bạn tạm thời chuyển sang trạng thái EXPIRED và không thể tiếp nhận yêu cầu hướng dẫn mới. Hãy gia hạn gói để tiếp tục đồng hành cùng sinh viên. Lịch sử cố vấn trước đây vẫn được lưu trữ bảo toàn.
+              Tài khoản Mentor của bạn tạm thời chuyển sang trạng thái hết hạn và không thể tiếp nhận yêu cầu kết nối mới. Hãy gia hạn gói để tiếp tục đồng hành cùng các thành viên trong mạng lưới. Lịch sử Mentor trước đây vẫn được lưu trữ bảo toàn.
             </p>
           </div>
         </div>
@@ -234,9 +250,9 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
         <div className="rounded-2xl border border-gold-200/80 bg-gold-50/70 p-4 text-xs text-gold-800 dark:bg-gold-950/40 dark:border-gold-800/60 dark:text-gold-300 flex items-start gap-3">
           <Clock className="h-5 w-5 shrink-0 text-gold-600 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold">Đang chờ xác nhận thanh toán PayOS</p>
+            <p className="font-bold">Đang chờ xác nhận thanh toán</p>
             <p className="leading-relaxed">
-              Bạn đã chọn gói nhưng chưa hoàn tất chuyển khoản. Ngay sau khi PayOS ghi nhận thanh toán thành công, hệ thống sẽ kích hoạt trạng thái Mentor ACTIVE ngay lập tức.
+              Bạn đã chọn gói nhưng chưa hoàn tất chuyển khoản. Ngay sau khi cổng thanh toán ghi nhận thành công, hệ thống sẽ tự động kích hoạt tài khoản Mentor ngay lập tức.
             </p>
           </div>
         </div>

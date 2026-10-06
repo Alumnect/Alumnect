@@ -164,7 +164,6 @@ public class AdminMentorCvServiceImpl implements AdminMentorCvService {
                 .avatarUrl(userProfile != null ? userProfile.getAvatarUrl() : null)
                 .currentPosition(currentExp != null ? currentExp.getTitle() : null)
                 .currentCompany(currentExp != null ? currentExp.getCompany() : null)
-                .yearsOfExperience(profile.getYearsOfExperience())
                 .bio(profile.getBio())
                 .cvFileKey(cvKey)
                 .cvUrl(cvKey) // Đường dẫn xem/tải CV trực tiếp

@@ -35,4 +35,7 @@ public class FollowUserResponse {
 
     /** true nếu người xem hiện tại đang theo dõi người này */
     private Boolean isFollowing;
+
+    /** Vai trò của người dùng: STUDENT, ALUMNI, ADMIN */
+    private String role;
 }

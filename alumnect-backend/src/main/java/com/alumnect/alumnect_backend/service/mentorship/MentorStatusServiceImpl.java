@@ -102,16 +102,19 @@ public class MentorStatusServiceImpl implements MentorStatusService {
                 bankInformationComplete = isPayoutAccountComplete(payout);
             }
 
-            // Tính hoàn thiện của hồ sơ nghề nghiệp & cố vấn
+            // Tính hoàn thiện của hồ sơ năng lực & chuyên môn (tách biệt hoàn toàn khỏi CV, Ngân hàng và Điều khoản)
             MentorRegistrationResponse regResponse = mentorRegistrationService.getRegistration(userEmail);
-            if (regResponse != null) {
-                profileComplete = regResponse.isComplete();
-                missingProfileFields = regResponse.getMissingFields() != null
-                        ? regResponse.getMissingFields()
-                        : Collections.emptyList();
+            if (regResponse != null && regResponse.getMissingFields() != null) {
+                missingProfileFields = regResponse.getMissingFields().stream()
+                        .filter(f -> !List.of("cvFileKey", "payoutAccount", "termsAccepted").contains(f))
+                        .toList();
+                profileComplete = missingProfileFields.isEmpty();
+            } else {
+                profileComplete = false;
+                missingProfileFields = Collections.emptyList();
             }
         } else {
-            missingProfileFields = List.of("profile", "cvFileKey", "payoutAccount");
+            missingProfileFields = List.of("currentPosition", "workingMode", "mentoringType", "supportedIndustries");
         }
 
         // 5. Truy vấn danh sách và xác định gói Subscription hiện tại (UC92 & UC93)
@@ -127,8 +130,21 @@ public class MentorStatusServiceImpl implements MentorStatusService {
                         && s.getEndDate() != null && s.getEndDate().isAfter(now))
                 .findFirst();
 
-        // Tìm gói đang chờ thanh toán (PENDING_PAYMENT)
-        Optional<MentorSubscription> pendingSubOpt = subscriptions.stream()
+        // Đồng bộ dữ liệu: Duyệt toàn bộ các gói PENDING_PAYMENT, nếu giao dịch gần nhất đã bị HỦY (CANCELLED) thì tự động đồng bộ CANCELLED
+        for (MentorSubscription sub : subscriptions) {
+            if (sub.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT) {
+                Optional<PaymentTransaction> lastTxOpt = paymentTransactionRepository
+                        .findFirstByMentorSubscriptionIdOrderByCreatedAtDesc(sub.getId());
+                if (lastTxOpt.isPresent() && lastTxOpt.get().getPaymentStatus() == PaymentStatus.CANCELLED) {
+                    log.info("Phát hiện subscriptionId={} PENDING_PAYMENT có giao dịch gần nhất đã CANCELLED. Tự động đồng bộ CANCELLED.", sub.getId());
+                    sub.setStatus(MentorSubscriptionStatus.CANCELLED);
+                    mentorSubscriptionRepository.save(sub);
+                }
+            }
+        }
+
+        // Lấy lại gói đang chờ thanh toán hợp lệ (chưa bị hủy)
+        Optional<MentorSubscription> effectivePendingSubOpt = subscriptions.stream()
                 .filter(s -> s.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT)
                 .findFirst();
 
@@ -138,11 +154,14 @@ public class MentorStatusServiceImpl implements MentorStatusService {
                         && s.getEndDate() != null && !s.getEndDate().isAfter(now))
                 .findFirst();
 
-        // Lựa chọn gói đại diện hiển thị cho người dùng
+        // Lựa chọn gói đại diện hiển thị cho người dùng (ưu tiên Active -> Pending -> Expired, bỏ qua Cancelled)
         MentorSubscription currentSub = activeSubOpt.orElseGet(() ->
-                pendingSubOpt.orElseGet(() ->
+                effectivePendingSubOpt.orElseGet(() ->
                         expiredSubOpt.orElseGet(() ->
-                                subscriptions.isEmpty() ? null : subscriptions.get(0)
+                                subscriptions.stream()
+                                        .filter(s -> s.getStatus() != MentorSubscriptionStatus.CANCELLED)
+                                        .findFirst()
+                                        .orElse(null)
                         )
                 )
         );
@@ -171,24 +190,24 @@ public class MentorStatusServiceImpl implements MentorStatusService {
         // 8. Đánh giá chi tiết danh sách các yêu cầu còn thiếu (Missing Requirements)
         List<String> missingRequirements = new ArrayList<>();
         if (!termsAccepted) {
-            missingRequirements.add("Chưa chấp nhận Điều khoản Hướng dẫn & Hỗ trợ (UC90)");
+            missingRequirements.add("Chưa chấp nhận Điều khoản Hướng dẫn & Hỗ trợ");
         }
         if (!hasCv) {
-            missingRequirements.add("Chưa tải lên hồ sơ CV ứng tuyển Mentor (UC91)");
+            missingRequirements.add("Chưa tải lên hồ sơ CV ứng tuyển Mentor");
         }
         if (!bankInformationComplete) {
-            missingRequirements.add("Chưa cập nhật đầy đủ thông tin tài khoản ngân hàng nhận thù lao (UC91)");
+            missingRequirements.add("Chưa cập nhật đầy đủ thông tin tài khoản ngân hàng nhận thù lao");
         }
         if (!profileComplete) {
-            missingRequirements.add("Chưa hoàn tất các thông tin hồ sơ nghề nghiệp & cố vấn bắt buộc (UC91)");
+            missingRequirements.add("Chưa hoàn tất các thông tin hồ sơ nghề nghiệp & Mentor bắt buộc");
         }
         if (calculatedMentorStatus == MentorStatus.EXPIRED) {
-            missingRequirements.add("Gói duy trì dịch vụ Mentor đã hết hạn, cần gia hạn để tiếp tục hoạt động (UC92/UC93)");
+            missingRequirements.add("Gói duy trì dịch vụ Mentor đã hết hạn, cần gia hạn để tiếp tục hoạt động");
         } else if (calculatedMentorStatus == MentorStatus.PAYMENT_PENDING && activeSubOpt.isEmpty()) {
             if (pendingPaymentOrderCode != null) {
-                missingRequirements.add("Đang có đơn thanh toán gói Mentor chờ xác nhận chuyển khoản (UC93)");
+                missingRequirements.add("Đang có đơn thanh toán gói Mentor chờ xác nhận chuyển khoản");
             } else {
-                missingRequirements.add("Chưa hoàn tất thanh toán gói dịch vụ Mentor (UC92/UC93)");
+                missingRequirements.add("Chưa hoàn tất thanh toán gói dịch vụ Mentor");
             }
         }
 
@@ -201,12 +220,12 @@ public class MentorStatusServiceImpl implements MentorStatusService {
             case ACTIVE -> {
                 nextAction = "ACTIVE_DASHBOARD";
                 actionUrl = "/app/mentoring";
-                statusMessage = "Hồ sơ Mentor và gói duy trì dịch vụ của bạn đang hoạt động bình thường.";
+                statusMessage = "Hồ sơ Mentor của bạn đã sẵn sàng kết nối, hợp tác và đồng hành cùng cộng đồng AlumNect.";
             }
             case EXPIRED -> {
                 nextAction = "RENEW_SUBSCRIPTION";
                 actionUrl = "/app/mentoring/packages";
-                statusMessage = "Gói dịch vụ Mentor của bạn đã hết hạn. Vui lòng gia hạn gói để tiếp tục nhận yêu cầu cố vấn mới.";
+                statusMessage = "Gói dịch vụ Mentor của bạn đã hết hạn. Vui lòng gia hạn gói để tiếp tục nhận yêu cầu kết nối mới.";
             }
             case PAYMENT_PENDING -> {
                 if (pendingPaymentOrderCode != null) {

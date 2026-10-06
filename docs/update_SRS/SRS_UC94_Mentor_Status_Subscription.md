@@ -37,7 +37,7 @@ stateDiagram-v2
   - Nếu chưa có hồ sơ: Trả về trạng thái `NOT_REGISTERED` cùng hướng dẫn chuyển sang UC90/UC91.
   - Nếu đã có hồ sơ: Hệ thống kiểm tra 4 điều kiện nghiệp vụ cốt lõi:
     1. Đã chấp nhận phiên bản Điều khoản Mentoring mới nhất (`termsAccepted`).
-    2. Đã điền đủ thông tin hồ sơ chuyên môn bắt buộc: Lĩnh vực hỗ trợ, Bio giới thiệu, Số năm kinh nghiệm (`profileComplete`).
+    2. Đã điền đủ thông tin hồ sơ chuyên môn bắt buộc: Vị trí hiện tại, hình thức & loại hình hướng dẫn, lĩnh vực hỗ trợ (`profileComplete`).
     3. Đã tải lên tệp CV năng lực hợp lệ (`hasCv` & `cvFileKey` tồn tại).
     4. Đã khai báo tài khoản ngân hàng nhận chi trả payout (`bankInformationComplete`).
 * **Bước 4 - Kiểm tra Gói dịch vụ & Giao dịch thanh toán**:
@@ -54,8 +54,8 @@ stateDiagram-v2
   - Backend trả về DTO `MentorStatusResponse` (che số tài khoản ngân hàng dạng `**** **** 1234` để bảo mật PII).
   - Frontend render Dashboard với:
     - **Hero Card**: Tên, avatar, chức vụ và Badge trạng thái nổi bật (Pastel Premium).
-    - **Checklist Card**: Trạng thái 4 điều kiện cùng nút CTA điều hướng trực tiếp đến bước cần bổ sung.
-    - **Subscription Summary Card**: Chi tiết gói, ngày bắt đầu, ngày hết hạn, đếm ngược số ngày và thanh tiến độ thời gian.
+    - **Checklist Card (MentorRequirementChecklist)**: Trạng thái 4 điều kiện cốt lõi (Điều khoản, Hồ sơ chuyên môn, Tệp CV, Tài khoản ngân hàng). Các nút CTA hành động thích ứng trực quan theo trạng thái: hiển thị "Bổ sung" (nếu chưa đạt), "Cập nhật" (nếu đã hoàn thành), và "Xem lại" (cho Điều khoản). Khi CV chưa được tải lên, hiển thị thông báo rõ ràng *"Chưa có tệp CV, vui lòng tải tệp lên."*.
+    - **Subscription Summary Card**: Chi tiết gói, ngày bắt đầu, ngày hết hạn, đếm ngược số ngày và thanh tiến độ thời gian. Cho phép tiếp tục thanh toán, chọn gói khác hoặc hủy đơn đang chờ.
     - **Primary CTA**: Nút hành động chính tự động thích ứng với trạng thái (Gia hạn gói khi EXPIRED, Thanh toán tiếp khi PAYMENT_PENDING, Hoàn thiện hồ sơ khi INCOMPLETE).
 
 ---
@@ -312,7 +312,6 @@ classDiagram
         -Long id
         -Long userId
         -String bio
-        -Integer yearsOfExperience
         -String cvFileKey
         -String cvOriginalFilename
         -MentorStatus mentorStatus

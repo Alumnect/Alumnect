@@ -8,7 +8,7 @@
  *    / lỗi hệ thống (retry) / thành công.
  *  - Thành viên (Student/Alumni) đăng bình luận qua ô soạn (UC18); Guest được mời đăng nhập.
  */
-import { useState, useEffect, useRef, type FormEvent } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -45,7 +45,7 @@ import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { DeleteCommentModal, EditCommentModal, usePostDetail, useComments, useCreateComment } from '@/features/post'
+import { DeleteCommentModal, usePostDetail, useComments, useCreateComment, useUpdateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
 import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, PostActionMenu, type Post } from '@/features/feed'
 import { ReportPostModal } from '@/features/report'
@@ -181,7 +181,6 @@ function PostDetailCard({
 }) {
 
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
-  const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
   const isAuthor = post.authorId != null
     ? !!currentUserId && post.authorId === currentUserId
     : !!currentUserName && post.author === currentUserName
@@ -650,71 +649,162 @@ function PostDetailCard({
 }
 
 /**
- * Một mục bình luận trong luồng bình luận.
+ * Một mục bình luận trong luồng bình luận — áp dụng phong cách hội nhóm (bubble bo tròn, nhánh cây cho reply, sửa inline tại chỗ).
  * @param comment Dữ liệu bình luận đã chuẩn hóa
  */
 function CommentItem({
   comment,
+  parentAuthor,
+  postId,
+  canEdit,
   onReply,
-  onEdit,
   onDelete,
 }: {
   comment: Comment
+  parentAuthor?: string
+  postId: string
+  canEdit?: boolean
   onReply?: (id: string, name: string) => void
-  onEdit?: (comment: Comment) => void
   onDelete?: (comment: Comment) => void
 }) {
-  // Bình luận trả lời (có parentId) được thụt lề để thể hiện 1 cấp phân cấp.
   const isReply = !!comment.parentId
+  const [isEditing, setIsEditing] = useState(false)
+  const [editText, setEditText] = useState(comment.text)
+  const updateComment = useUpdateComment(postId)
+
+  const handleStartEdit = () => {
+    setEditText(comment.text)
+    setIsEditing(true)
+  }
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = editText.trim()
+    if (!trimmed || updateComment.isPending) return
+    updateComment.mutate(
+      { commentId: comment.id, content: trimmed },
+      {
+        onSuccess: () => {
+          setIsEditing(false)
+          toast.success('Đã cập nhật bình luận!')
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || err.message || 'Không thể cập nhật bình luận.')
+        },
+      }
+    )
+  }
+
   return (
     <div
       id={`comment-${comment.id}`}
-      className={cn('flex gap-3 transition-all duration-500 rounded-2xl', isReply && 'ml-10')}
+      className={cn(
+        'group flex items-start gap-2.5 transition-all duration-300',
+        isReply &&
+          'relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
+      )}
     >
-      <Link to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'} className="shrink-0">
-        <Avatar src={comment.avatar} name={comment.author} size={isReply ? 32 : 40} verified={comment.verified} />
+      <Link
+        to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
+        className="shrink-0 hover:opacity-85 transition-opacity"
+      >
+        <Avatar src={comment.avatar} name={comment.author} size={isReply ? 28 : 32} verified={comment.verified} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl rounded-tl-md bg-plum-900/[0.04] px-4 py-3">
-          <div className="flex items-baseline justify-between gap-2">
-            <Link
-              to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
-              className="hover:underline"
-            >
-              <p className="truncate text-sm font-bold text-plum-900 hover:text-brand-600">
+        <div className="rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Link
+                to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
+                className="text-xs font-bold text-plum-900 hover:underline dark:text-white transition-colors"
+              >
                 {comment.author}
-              </p>
-            </Link>
-            <span className="shrink-0 text-xs text-plum-400">{comment.time}</span>
+              </Link>
+              {comment.role && (
+                <span className="text-[10px] font-medium text-brand-600 bg-brand-500/10 px-1.5 py-0.5 rounded-md dark:text-brand-300">
+                  {comment.role}
+                </span>
+              )}
+              <span className="shrink-0 text-[10px] text-plum-400 dark:text-[#8a8d91]">
+                • {comment.time}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {canEdit && !isEditing && (
+                <button
+                  type="button"
+                  onClick={handleStartEdit}
+                  className="text-plum-400 hover:text-brand-600 transition-colors cursor-pointer"
+                  aria-label="Chỉnh sửa bình luận"
+                >
+                  <Pencil size={13} />
+                </button>
+              )}
+              {onDelete && !isEditing && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(comment)}
+                  className="text-plum-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  aria-label="Xóa bình luận"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
           </div>
-          {comment.role && <p className="truncate text-xs text-plum-500">{comment.role}</p>}
-          <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-800">{comment.text}</p>
-        </div>
-        <div className="mt-1 flex items-center pl-1">
-          {onReply && (
+
+          {isEditing ? (
+            <form onSubmit={handleSaveEdit} className="mt-2 space-y-2">
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                maxLength={1000}
+                rows={3}
+                autoFocus
+                className="w-full rounded-xl border border-plum-900/10 bg-white p-2.5 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={updateComment.isPending}
+                  className="rounded-xl px-3 py-1.5 text-xs font-medium text-plum-500 hover:bg-plum-900/5 transition-colors cursor-pointer dark:text-[#b0b3b8]"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editText.trim() || updateComment.isPending}
+                  className="rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-brand-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  {updateComment.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
+                  <span>{updateComment.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-1 text-xs text-plum-800 dark:text-plum-200 leading-relaxed">
+              {parentAuthor && (
+                <span className="mr-1.5 font-semibold text-brand-600 dark:text-brand-400">
+                  @{parentAuthor}
+                </span>
+              )}
+              <span className="whitespace-pre-wrap break-words">
+                {parentAuthor
+                  ? comment.text.replace(new RegExp(`^(@${parentAuthor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*)+`, 'i'), '').trim()
+                  : comment.text}
+              </span>
+            </div>
+          )}
+
+          {!isEditing && onReply && (
             <button
+              type="button"
               onClick={() => onReply(comment.parentId || comment.id, comment.author)}
-              className="text-xs font-bold text-plum-500 hover:text-plum-900 transition-colors"
+              className="mt-1.5 inline-block text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400 cursor-pointer"
             >
               Trả lời
-            </button>
-          )}
-          {onEdit && (
-            <button
-              type="button"
-              onClick={() => onEdit(comment)}
-              className="ml-4 inline-flex items-center gap-1 text-xs font-bold text-plum-500 transition-colors hover:text-brand-600"
-            >
-              <Pencil size={13} /> Chỉnh sửa
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => onDelete(comment)}
-              className="ml-4 inline-flex items-center gap-1 text-xs font-bold text-plum-500 transition-colors hover:text-rose-600"
-            >
-              <Trash2 size={13} /> Xóa
             </button>
           )}
         </div>
@@ -726,163 +816,167 @@ function CommentItem({
 /** Khung xương một mục bình luận trong lúc tải. */
 function CommentSkeleton() {
   return (
-    <div className="flex gap-3">
-      <Skeleton className="h-9 w-9 rounded-full" />
-      <div className="flex-1 space-y-2">
+    <div className="flex items-start gap-2.5">
+      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+      <div className="flex-1 space-y-1.5">
         <Skeleton className="h-14 w-full rounded-2xl" />
-        <Skeleton className="h-2.5 w-16" />
       </div>
     </div>
   )
 }
 
-/** Giới hạn ký tự nội dung bình luận (đồng bộ ràng buộc @Size backend UC18). */
-const COMMENT_MAX = 2000
-
 /**
- * Ô soạn bình luận ở cuối trang chi tiết (UC18 - Comment on a post).
- *  - Guest: mời đăng nhập (không hiển thị form).
- *  - Thành viên (Student/Alumni): hiển thị form soạn & gửi bình luận.
- * @param isGuest Người xem hiện tại có phải Guest hay không
- * @param postId  ID bài viết đang được bình luận
+ * Form nhập phản hồi dạng nhánh lồng trực tiếp bên dưới bình luận gốc.
  */
-function CommentBox({ isGuest, postId, replyingTo, setReplyingTo }: { isGuest: boolean; postId: string; replyingTo: { id: string; name: string } | null; setReplyingTo: (val: { id: string; name: string } | null) => void }) {
-  if (isGuest) {
-    return (
-      <Card hover={false} className="flex items-center justify-between gap-3 p-4">
-        <p className="text-sm text-plum-500">Đăng nhập để tham gia bình luận.</p>
-        <Link
-          to="/login"
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
-        >
-          Đăng nhập <ArrowRight size={14} />
-        </Link>
-      </Card>
-    )
-  }
-  return <CommentComposer postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
-}
-
-/**
- * Form soạn & gửi bình luận cho thành viên đã đăng nhập (UC18 - Comment on a post).
- * Tách riêng khỏi {@link CommentBox} để các hook luôn được gọi vô điều kiện (rules-of-hooks).
- * Validate phía client (không rỗng, tối đa {@link COMMENT_MAX} ký tự), hiển thị trạng thái
- * gửi và thông điệp lỗi nghiệp vụ từ Backend; khi thành công dọn ô nhập (hook tự chèn vào luồng).
- * @param postId ID bài viết đang được bình luận
- */
-function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string; replyingTo: { id: string; name: string } | null; setReplyingTo: (val: { id: string; name: string } | null) => void }) {
+function InlineReplyForm({
+  postId,
+  replyingTo,
+  onCancel,
+  onSuccess,
+}: {
+  postId: string
+  replyingTo: { id: string; name: string }
+  onCancel: () => void
+  onSuccess: () => void
+}) {
   const viewer = useAuthStore((s) => s.user)
-  const [content, setContent] = useState('')
-  const [expanded, setExpanded] = useState(false)
+  const [text, setText] = useState('')
   const createComment = useCreateComment(postId)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  useEffect(() => {
-    if (replyingTo) {
-      setExpanded(true)
-    }
-  }, [replyingTo])
-
-  useEffect(() => {
-    if (expanded && textareaRef.current) {
-      textareaRef.current.focus()
-    }
-  }, [expanded, replyingTo])
-
-  const trimmed = content.trim()
-  const disabled = trimmed.length === 0 || createComment.isPending
-
-  const collapse = () => {
-    setContent('')
-    setExpanded(false)
-    setReplyingTo(null)
-  }
-
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (disabled) return
-    createComment.mutate({ content: trimmed, parentId: replyingTo?.id }, {
-      onSuccess: () => {
-        collapse()
-      }
-    })
-  }
+    const trimmed = text.trim()
+    if (!trimmed || createComment.isPending) return
 
-  if (!expanded && !replyingTo) {
-    return (
-      <button
-        type="button"
-        onClick={() => setExpanded(true)}
-        className="mb-5 flex w-full items-center gap-3 rounded-2xl card-surface p-3.5 text-left transition-colors hover:bg-plum-900/[0.02]"
-      >
-        <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? 'Bạn'} size={36} verified={viewer?.verified} />
-        <span className="flex-1 rounded-full bg-plum-900/[0.05] px-4 py-2.5 text-sm text-plum-400">
-          Viết bình luận của bạn…
-        </span>
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/10 text-brand-600">
-          <Pencil size={16} />
-        </span>
-      </button>
+    createComment.mutate(
+      { content: trimmed, parentId: replyingTo.id },
+      {
+        onSuccess: () => {
+          setText('')
+          toast.success('Đã gửi phản hồi!')
+          onSuccess()
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || err.message || 'Không thể gửi phản hồi.')
+        },
+      }
     )
   }
 
   return (
-    <Card hover={false} className="mb-4 p-5">
-      <div className="mb-3 flex items-center gap-2.5">
-        <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? 'Bạn'} size={34} verified={viewer?.verified} />
-        <div className="min-w-0">
-          <h3 className="text-sm font-bold text-plum-900">Bình luận của bạn</h3>
-          <p className="text-xs text-plum-400">Tham gia thảo luận về bài viết này</p>
-        </div>
-      </div>
-
-      {replyingTo && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg bg-[#F27024]/10 px-3 py-1.5 text-xs font-semibold text-[#F27024] animate-fade-in w-fit">
-          <MessageCircle size={14} />
-          Đang trả lời {replyingTo.name}
-          <button type="button" onClick={() => setReplyingTo(null)} className="ml-2 hover:text-[#d96010]">
-            <X size={14} />
-          </button>
-        </div>
-      )}
-
-      {createComment.isError && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">
-          <AlertTriangle size={16} className="shrink-0" /> {(createComment.error as Error).message}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} noValidate>
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={3}
-          maxLength={COMMENT_MAX}
-          placeholder={replyingTo ? `Viết câu trả lời cho ${replyingTo.name}...` : "Chia sẻ bình luận của bạn…"}
-          className="w-full resize-y rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 py-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-        />
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-plum-400">
-            {content.length.toLocaleString('vi-VN')}/{COMMENT_MAX.toLocaleString('vi-VN')}
-          </span>
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" size="md" onClick={collapse} disabled={createComment.isPending}>
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              disabled={disabled}
-              leftIcon={createComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+    <div className="relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
+      <form onSubmit={handleSubmit} className="flex items-start gap-2.5 rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+        <Avatar src={viewer?.avatarUrl ?? undefined} name={viewer?.name ?? 'Bạn'} size={28} verified={viewer?.verified} className="shrink-0" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-center justify-between text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+            <span>
+              Trả lời <strong className="text-brand-600 dark:text-brand-400">@{replyingTo.name}</strong>
+            </span>
+            <button type="button" onClick={onCancel} className="hover:text-plum-800 dark:hover:text-white cursor-pointer">
+              <X size={13} />
+            </button>
+          </div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={1000}
+            rows={2}
+            autoFocus
+            placeholder={`Viết phản hồi cho ${replyingTo.name}...`}
+            className="w-full rounded-xl border border-plum-900/10 bg-white p-2.5 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-xl px-3 py-1.5 text-xs font-medium text-plum-500 hover:bg-plum-900/5 transition-colors cursor-pointer dark:text-[#b0b3b8]"
             >
-              {createComment.isPending ? 'Đang gửi…' : 'Gửi bình luận'}
-            </Button>
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={!text.trim() || createComment.isPending}
+              className="rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-brand-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+            >
+              {createComment.isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+              <span>Gửi phản hồi</span>
+            </button>
           </div>
         </div>
       </form>
-    </Card>
+    </div>
+  )
+}
+
+/**
+ * Ô soạn bình luận chính ở đầu danh sách (dạng thanh pill thanh lịch như hội nhóm).
+ */
+function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
+  const viewer = useAuthStore((s) => s.user)
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const [content, setContent] = useState('')
+  const createComment = useCreateComment(postId)
+
+  if (isGuest || !viewer) {
+    return (
+      <div className="flex items-center justify-between rounded-xl bg-white p-3 border border-plum-900/10 shadow-2xs dark:border-[#393a3b] dark:bg-[#242526]">
+        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Đăng nhập để tham gia bình luận.</p>
+        <button
+          type="button"
+          onClick={() => promptLogin('Đăng nhập để tham gia bình luận.')}
+          className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 dark:text-brand-400 cursor-pointer"
+        >
+          Đăng nhập <ArrowRight size={12} />
+        </button>
+      </div>
+    )
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = content.trim()
+    if (!trimmed || createComment.isPending) return
+
+    createComment.mutate(
+      { content: trimmed },
+      {
+        onSuccess: () => {
+          setContent('')
+          toast.success('Đã gửi bình luận!')
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || err.message || 'Không thể gửi bình luận.')
+        },
+      }
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+      <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
+      <div className="relative flex-1">
+        <input
+          type="text"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          maxLength={1000}
+          placeholder="Viết bình luận công khai..."
+          className="w-full rounded-2xl border border-plum-900/10 bg-white py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] transition-all shadow-2xs"
+        />
+        <button
+          type="submit"
+          disabled={!content.trim() || createComment.isPending}
+          aria-label="Gửi bình luận"
+          className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400 cursor-pointer"
+        >
+          {createComment.isPending ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : (
+            <Send size={13} />
+          )}
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -1038,7 +1132,6 @@ function CommentsSection({
   isGuest: boolean
 }) {
   const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null)
-  const [editingComment, setEditingComment] = useState<Comment | null>(null)
   const [deletingComment, setDeletingComment] = useState<Comment | null>(null)
   const currentUser = useAuthStore((s) => s.user)
   const {
@@ -1084,10 +1177,6 @@ function CommentsSection({
     (currentUser.role === 'STUDENT' || currentUser.role === 'ALUMNI') &&
     currentUser.id === comment.authorId
 
-  const openEditComment = (comment: Comment) => {
-    setEditingComment(comment)
-  }
-
   const openDeleteComment = (comment: Comment) => {
     setDeletingComment(comment)
   }
@@ -1124,17 +1213,9 @@ function CommentsSection({
 
   return (
     <section id="comments" className="space-y-4">
-      <div className="mb-4 flex items-center gap-2.5">
-        <MessageCircle size={18} className="text-brand-600" />
-        <h2 className="text-lg font-extrabold text-plum-900">Bình luận</h2>
-        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">
-          {compact(commentCount)}
-        </span>
-      </div>
-
       {/* Ô soạn & đăng bình luận gốc (UC18) */}
       <div id="comments-box">
-        <CommentBox isGuest={isGuest} postId={postId} replyingTo={null} setReplyingTo={setReplyingTo} />
+        <CommentBox isGuest={isGuest} postId={postId} />
       </div>
 
       {/* Danh sách bình luận theo trạng thái tải */}
@@ -1151,16 +1232,17 @@ function CommentsSection({
       ) : comments.length === 0 ? (
         <p className="py-6 text-center text-sm text-plum-400">Chưa có bình luận nào — hãy là người đầu tiên bình luận.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {rootComments.map((root) => {
             const replies = repliesByParent[root.id] || []
             return (
-              <div key={root.id} className="space-y-4">
+              <div key={root.id} className="space-y-2.5">
                 {/* Bình luận gốc */}
                 <CommentItem
                   comment={root}
+                  postId={postId}
+                  canEdit={canManageComment(root)}
                   onReply={!isGuest ? handleReply : undefined}
-                  onEdit={canManageComment(root) ? openEditComment : undefined}
                   onDelete={canManageComment(root) ? openDeleteComment : undefined}
                 />
                 {/* Các bình luận trả lời */}
@@ -1168,17 +1250,22 @@ function CommentsSection({
                   <CommentItem
                     key={reply.id}
                     comment={reply}
+                    postId={postId}
+                    parentAuthor={root.author}
+                    canEdit={canManageComment(reply)}
                     onReply={!isGuest ? handleReply : undefined}
-                    onEdit={canManageComment(reply) ? openEditComment : undefined}
                     onDelete={canManageComment(reply) ? openDeleteComment : undefined}
                   />
                 ))}
 
                 {/* Form soạn trả lời hiển thị inline ngay dưới thread này */}
                 {replyingTo?.id === root.id && (
-                  <div className="ml-10 animate-fade-in">
-                    <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
-                  </div>
+                  <InlineReplyForm
+                    postId={postId}
+                    replyingTo={replyingTo}
+                    onCancel={() => setReplyingTo(null)}
+                    onSuccess={() => setReplyingTo(null)}
+                  />
                 )}
               </div>
             )
@@ -1186,24 +1273,28 @@ function CommentsSection({
 
           {/* Các bình luận mồ côi (nếu có, để đề phòng lỗi dữ liệu) */}
           {orphanedComments.map((c) => (
-            <div key={c.id} className="space-y-4">
+            <div key={c.id} className="space-y-2.5">
               <CommentItem
                 comment={c}
+                postId={postId}
+                canEdit={canManageComment(c)}
                 onReply={!isGuest ? handleReply : undefined}
-                onEdit={canManageComment(c) ? openEditComment : undefined}
                 onDelete={canManageComment(c) ? openDeleteComment : undefined}
               />
               {replyingTo?.id === c.id && (
-                <div className="ml-10 animate-fade-in">
-                  <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
-                </div>
+                <InlineReplyForm
+                  postId={postId}
+                  replyingTo={replyingTo}
+                  onCancel={() => setReplyingTo(null)}
+                  onSuccess={() => setReplyingTo(null)}
+                />
               )}
             </div>
           ))}
 
           {/* Điều khiển tải thêm bình luận */}
           {hasNextPage && (
-            <div className="pt-1 text-center">
+            <div className="pt-2 text-center">
               <Button
                 variant="secondary"
                 size="sm"
@@ -1218,13 +1309,6 @@ function CommentsSection({
         </div>
       )}
 
-      <EditCommentModal
-        isOpen={editingComment !== null}
-        onClose={() => setEditingComment(null)}
-        onUpdated={() => {}}
-        postId={postId}
-        comment={editingComment}
-      />
       <DeleteCommentModal
         isOpen={deletingComment !== null}
         onClose={() => setDeletingComment(null)}
