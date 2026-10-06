@@ -106,7 +106,7 @@ Module 5 (Career Paths & Salary). UC50 là chức năng **ghi** đầu tiên c�
 | BR-CS-02 | `jobTitle` bắt buộc, không rỗng, tối đa 150 ký tự; `grossAmount` bắt buộc, phải > 0, tối đa `NUMERIC(12,2)` (khớp cột DB). |
 | BR-CS-03 | `industryId`, `company`, `region`, `yearsExperience` đều **tùy chọn**; nếu `industryId` có gửi lên thì phải tồn tại trong bảng `industries`, ngược lại trả 400 "Ngành nghề không tồn tại". |
 | BR-CS-04 | `currency` tùy chọn: bỏ trống/rỗng → mặc định `"VND"`; có giá trị thì phải đúng định dạng 3 chữ cái viết hoa (mã ISO 4217, VD `USD`) — sai định dạng trả 400. |
-| BR-CS-05 | **Ẩn danh theo thiết kế**: bản ghi lưu `user_id` nội bộ (phục vụ truy vết/chống spam sau này nếu cần), nhưng `SalaryContributionResponse` trả về Client **không chứa bất kỳ trường định danh nào** (không tên, không email, không userId) — Mapper cố tình không map từ `contribution.getUser()`. |
+| BR-CS-05 | Bản ghi lưu mã người dùng nội bộ để phục vụ kiểm toán, nhưng dữ liệu trả về Client tuyệt đối không chứa bất kỳ trường định danh nào nhằm đảm bảo tính ẩn danh hoàn toàn. |
 | BR-CS-06 | Nếu ngành nghề liên kết (`industry`) bị xóa sau này, bản ghi lương **không bị xóa theo** — `industry_id` chỉ `ON DELETE SET NULL` (giữ lại dữ liệu lương, chỉ mất liên kết ngành). |
 | BR-CS-07 | Chức năng yêu cầu đăng nhập (JWT); Guest bị chặn 401 (endpoint không nằm `PUBLIC_GET`). Riêng `GET /industries` (danh mục ngành cho dropdown) là **công khai**, không cần đăng nhập. |
 

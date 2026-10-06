@@ -236,7 +236,7 @@ sequenceDiagram
     Service->>UserRepo: findById(followingId)
     UserRepo-->>Service: Trả về User (following)
 
-    alt Lỗi 1: Tự theo dõi chính mình (followerId == followingId)
+    alt Luồng lỗi 1: Tự theo dõi chính mình
         Service-->>Controller: Throw BadRequestException
         Controller-->>Client: HTTP 400 Bad Request (ApiResponse Lỗi)
     

@@ -25,7 +25,7 @@ stateDiagram-v2
     
     GuiCapNhat --> Loi401 : Không có token hoặc phiên đăng nhập hết hạn
     GuiCapNhat --> Loi403_Role : Vai trò không phải STUDENT hoặc ALUMNI
-    GuiCapNhat --> Loi403_Owner : Không phải tác giả sở hữu bình luận (comment.user.id != current_user.id)
+    GuiCapNhat --> Loi403_Owner : Không phải tác giả sở hữu bình luận
     GuiCapNhat --> Loi404 : Bình luận không ACTIVE, không tồn tại hoặc sai postId
     GuiCapNhat --> Loi400 : DTO không hợp lệ / vi phạm validation
     GuiCapNhat --> ThanhCong200 : Backend cập nhật content và @PreUpdate updated_at trong DB

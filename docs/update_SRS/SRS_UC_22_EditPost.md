@@ -19,7 +19,7 @@ stateDiagram-v2
 
     GuiCapNhat --> TuChoi401 : Hết phiên đăng nhập / Token không hợp lệ
     GuiCapNhat --> TuChoi403_Role : Vai trò không phải STUDENT hoặc ALUMNI
-    GuiCapNhat --> TuChoi403_Owner : Không phải tác giả sở hữu bài viết (post.author.id != viewer.id)
+    GuiCapNhat --> TuChoi403_Owner : Không phải tác giả sở hữu bài viết
     GuiCapNhat --> KhongKhaDung404 : Bài viết không tồn tại hoặc đã bị quản trị viên ẩn (is_hidden = true)
     GuiCapNhat --> Loi400_Validation : Nội dung trống (>5000 ký tự) hoặc vi phạm ràng buộc Event/Job (sức chứa < người đăng ký, thời gian không hợp lệ)
     GuiCapNhat --> ThanhCong200 : Backend cập nhật CSDL (posts, post_media, events, job_postings) & JPA @PreUpdate updated_at

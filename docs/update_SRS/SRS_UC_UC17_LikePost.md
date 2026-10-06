@@ -88,7 +88,7 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect. UC17 
 | BR-08 | Bài viết đã bị Admin ẩn (`is_hidden = true`) không thể thích — trả về "không còn khả dụng" (404). |
 | BR-11 | Việc ẩn bài viết là xóa mềm (soft-hide) — dữ liệu vẫn giữ trong DB. Xóa bài (nếu có) sẽ CASCADE xóa các bản ghi `post_likes` liên quan (FK `ON DELETE CASCADE`). |
 | BR-12 | Guest (chưa đăng nhập) không được thích: ở Frontend nút Thích mời đăng nhập/`disabled`; ở Backend endpoint yêu cầu JWT nên Guest bị chặn 401. |
-| BR-14 | **UC17 thay thế BR-14 của UC16**: cờ `liked` trong `GET /posts` và `GET /posts/{id}` nay được tính theo người xem hiện tại (batch `findLikedPostIds`, tránh N+1). Guest luôn nhận `liked = false`. |
+| BR-14 | Cờ `liked` trong kết quả lấy bài viết được tính theo người xem hiện tại thông qua truy vấn theo lô để tối ưu hiệu năng. Khách vãng lai luôn nhận giá trị chưa thích. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 - Cập nhật lạc quan (optimistic UI) có hoàn tác (rollback) khi lỗi để phản hồi tức thì mà vẫn đảm bảo nhất quán với server.

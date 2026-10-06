@@ -297,7 +297,7 @@ sequenceDiagram
     else Trường hợp 2: Tham số limit hợp lệ (1 <= limit <= 50)
         API->>Service: getConnectionSuggestions(email, limit)
         
-        alt Luồng 2.1: Thành viên đã đăng nhập (email != null)
+        alt Luồng 2.1: Thành viên đã đăng nhập
             Service->>UserRepo: findByEmail(email)
             UserRepo->>DB: SELECT * FROM users WHERE email = ?
             DB-->>UserRepo: Current User Entity

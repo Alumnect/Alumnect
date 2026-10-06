@@ -93,7 +93,6 @@ stateDiagram-v2
 #### 3.1 Giải quyết báo cáo vi phạm
 
 ##### 3.1.1 Class Diagram (Sơ đồ Lớp)
-##### 3.1.1 Class Diagram (Sơ đồ Lớp)
 
 ```mermaid
 classDiagram

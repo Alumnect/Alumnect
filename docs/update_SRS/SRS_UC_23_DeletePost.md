@@ -25,15 +25,15 @@ stateDiagram-v2
         KiemTraTonTai --> KhongTonTai404 : Bài viết không tồn tại / status != ACTIVE
         KiemTraTonTai --> KiemTraSoHuu : Bài viết tồn tại và đang ACTIVE
         
-        KiemTraSoHuu --> TuChoi403_Owner : Không phải tác giả bài viết (post.author.id != currentUserId)
+        KiemTraSoHuu --> TuChoi403_Owner : Không phải chính tác giả tạo bài viết
         KiemTraSoHuu --> XuLyXoaMem : Chính chủ bài viết
         
         state XuLyXoaMem {
             [*] --> KiemTraEventDinhKem
-            KiemTraEventDinhKem --> HuyEventLienQuan : post.eventId != null (Cập nhật Event -> CANCELLED, hủy tất cả RSVP)
-            KiemTraEventDinhKem --> CapNhatStatusPost : post.eventId == null
+            KiemTraEventDinhKem --> HuyEventLienQuan : Bài viết có đính kèm Sự kiện (Cập nhật Event -> CANCELLED, hủy tất cả RSVP)
+            KiemTraEventDinhKem --> CapNhatStatusPost : Bài viết thông thường
             HuyEventLienQuan --> CapNhatStatusPost
-            CapNhatStatusPost --> LuuCSDL : post.setStatus(DELETED) & postRepository.save(post)
+            CapNhatStatusPost --> LuuCSDL : Chuyển trạng thái sang DELETED và lưu CSDL
         }
         
         LuuCSDL --> ThanhCong200 : Phản hồi HTTP 200 OK (ApiResponse rỗng)
@@ -151,12 +151,12 @@ stateDiagram-v2
 
 | ID | Định nghĩa Quy tắc (Rule Definition) |
 | :--- | :--- |
-| BR-DEL-01 | **Quyền sở hữu tác giả**: Chỉ chính tác giả tạo ra bài viết (`STUDENT` hoặc `ALUMNI`) mới được quyền xóa bài viết của mình thông qua chức năng này. Mọi nỗ lực xóa bài viết của người dùng khác đều bị hệ thống từ chối với mã lỗi 403 Forbidden. |
-| BR-DEL-02 | **Giới hạn quyền Admin**: Quản trị viên (Admin) không sử dụng API này để xóa bài viết của thành viên mà phải sử dụng tính năng kiểm duyệt/ẩn bài viết vi phạm (UC68) để đảm bảo tính minh bạch và lưu vết audit log. Nếu Admin gọi API này, hệ thống sẽ từ chối với 403 Forbidden ("Chỉ sinh viên và cựu sinh viên mới được xóa bài viết"). |
-| BR-DEL-03 | **Cơ chế Xóa mềm (Soft Delete)**: Hệ thống không xóa cứng (hard delete) bản ghi `Post` khỏi cơ sở dữ liệu mà chỉ chuyển đổi trạng thái sang `PostStatus.DELETED`. Dữ liệu đa phương tiện (`post_media`), bình luận (`comments`), lượt thích (`post_likes`) vẫn được lưu giữ trong CSDL để phục vụ kiểm toán và tính toàn vẹn khóa ngoại. |
-| BR-DEL-04 | **Loại trừ hiển thị**: Bài viết có trạng thái `DELETED` hoặc `HIDDEN` ngay lập tức bị loại khỏi kết quả truy vấn của Bảng tin (`Feed`), Tìm kiếm bài viết, Danh sách bài viết đã lưu (`SavedPosts`) và Hồ sơ cá nhân (`Profile`). Bất kỳ truy vấn chi tiết nào tới bài viết này đều trả về 404 Not Found ("Bài viết này không còn khả dụng"). |
-| BR-DEL-05 | **Hủy sự kiện liên đới (Cascade Cancel Event)**: Đối với bài viết loại Sự kiện (`post.eventId != null`), khi bài viết bị xóa, sự kiện gắn liền sẽ tự động chuyển trạng thái sang `CANCELLED` và hệ thống tự động hủy toàn bộ đăng ký tham dự (`event_registrations`) của tất cả thành viên. |
-| BR-DEL-06 | **Bắt buộc xác nhận trước khi xóa**: Giao diện người dùng bắt buộc phải hiển thị Modal xác nhận hành động nguy hiểm trước khi gửi lệnh xóa bài viết. Không được xóa bài viết chỉ qua một lần nhấp chuột vô tình. |
+| BR-DEL-01 | Chỉ chính tác giả tạo ra bài viết (`STUDENT` hoặc `ALUMNI`) mới được quyền xóa bài viết của mình thông qua chức năng này. |
+| BR-DEL-02 | Quản trị viên (Admin) không sử dụng API này để xóa bài viết của thành viên mà phải sử dụng tính năng kiểm duyệt/ẩn bài viết vi phạm (UC68). |
+| BR-DEL-03 | Hệ thống thực hiện xóa mềm bài viết bằng cách chuyển đổi trạng thái sang `DELETED`, không xóa cứng bản ghi khỏi cơ sở dữ liệu. |
+| BR-DEL-04 | Bài viết có trạng thái `DELETED` hoặc `HIDDEN` ngay lập tức bị loại khỏi kết quả truy vấn của Bảng tin, Tìm kiếm bài viết, Danh sách bài viết đã lưu và Trang cá nhân. |
+| BR-DEL-05 | Đối với bài viết loại Sự kiện, khi bài viết bị xóa, sự kiện gắn liền sẽ tự động chuyển trạng thái sang `CANCELLED` và hệ thống tự động hủy toàn bộ đăng ký tham dự liên quan. |
+| BR-DEL-06 | Giao diện người dùng bắt buộc phải hiển thị Modal xác nhận hành động trước khi gửi lệnh xóa bài viết. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 * **Bảo mật & Mã hóa**: Toàn bộ yêu cầu xóa bài viết phải được truyền tải qua giao thức an toàn HTTPS với mã hóa TLS.
@@ -369,12 +369,12 @@ sequenceDiagram
                 else Bài viết tồn tại và đang ACTIVE
                     PostRepo-->>Service: Post post
                     
-                    alt Người yêu cầu không phải tác giả (post.author.id != author.id)
+                    alt Người yêu cầu không phải tác giả bài viết
                         Service-->>Controller: throw ForbiddenException("Bạn chỉ được xóa bài viết của chính mình")
                         Controller-->>Modal: HTTP 403 Forbidden
                         Modal-->>Author: Toast cảnh báo "Bạn chỉ được xóa bài viết của chính mình"
                     else Xác thực chính chủ thành công
-                        opt Bài viết có đính kèm Sự kiện (post.eventId != null)
+                        opt Bài viết có đính kèm Sự kiện liên quan
                             Service->>EventRepo: findById(post.eventId)
                             EventRepo-->>Service: Event evt
                             Service->>Service: evt.setStatus("CANCELLED")

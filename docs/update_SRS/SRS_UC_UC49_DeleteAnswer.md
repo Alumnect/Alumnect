@@ -240,12 +240,12 @@ sequenceDiagram
         Note over Client: invalidate ['answers', qId] + ['question', qId] -> toast, câu trả lời + reply biến mất
     else Trường hợp 4: Hợp lệ, là REPLY (Thành công, không đổi answer_count)
         Service->>ARepo: findById(answerId) -> khớp questionId, ACTIVE
-        ARepo-->>Service: Answer (parent != null)
+        ARepo-->>Service: Câu trả lời phụ (Reply)
         Service->>VRepo: deleteByTargetTypeAndTargetIdIn(ANSWER, [answerId])
         VRepo->>DB: DELETE FROM votes WHERE target_type='ANSWER' AND target_id=?
         Service->>ARepo: delete(answer)
         ARepo->>DB: DELETE FROM answers WHERE id=?
-        Note over Service: parent != null -> KHÔNG đổi answer_count
+        Note over Service: Là câu trả lời phụ -> KHÔNG đổi answer_count
         Service-->>Ctrl: void
         Ctrl-->>Client: HTTP 200 OK
     end

@@ -9,7 +9,7 @@ stateDiagram-v2
     [*] --> XemSuKienDaTao : Alumni / Admin xem sự kiện trên Bảng tin, Chi tiết sự kiện hoặc Trang cá nhân
     XemSuKienDaTao --> KiemTraThoiGianVaTrangThai : Nhấp menu "..." hoặc nút "Hủy sự kiện"
 
-    KiemTraThoiGianVaTrangThai --> VoHieuHoaThaoTac : Sự kiện đã kết thúc (endTime < now) hoặc đã bị hủy (status == CANCELLED)
+    KiemTraThoiGianVaTrangThai --> VoHieuHoaThaoTac : Sự kiện đã kết thúc trong quá khứ hoặc đã bị hủy trước đó
     VoHieuHoaThaoTac --> [*] : Nút bị ẩn / disabled kèm tooltip cảnh báo
 
     KiemTraThoiGianVaTrangThai --> MoModalXacNhan : Sự kiện ACTIVE & chưa kết thúc
@@ -32,12 +32,12 @@ stateDiagram-v2
         KiemTraTonTai --> KhongTonTai404 : Không tìm thấy sự kiện trong CSDL
         KiemTraTonTai --> KiemTraSoHuu : Sự kiện tồn tại
         
-        KiemTraSoHuu --> TuChoi403_Owner : Không phải người tổ chức (organizer.id != user.id) VÀ không phải ADMIN
+        KiemTraSoHuu --> TuChoi403_Owner : Không phải người tổ chức VÀ không phải ADMIN
         KiemTraSoHuu --> KiemTraDieuKienHuy : Là Organizer hoặc ADMIN
         
-        KiemTraDieuKienHuy --> Loi400_DaHuy : event.status == 'CANCELLED' (Đã hủy trước đó)
-        KiemTraDieuKienHuy --> Loi400_QuaKhu : event.startTime <= now (Đã diễn ra hoặc kết thúc)
-        KiemTraDieuKienHuy --> CapNhatCSDL : Hợp lệ (ACTIVE & startTime > now)
+        KiemTraDieuKienHuy --> Loi400_DaHuy : Sự kiện đã bị hủy trước đó
+        KiemTraDieuKienHuy --> Loi400_QuaKhu : Sự kiện đã diễn ra hoặc đã kết thúc
+        KiemTraDieuKienHuy --> CapNhatCSDL : Hợp lệ (ACTIVE & chưa bắt đầu)
         
         state CapNhatCSDL {
             [*] --> DoiStatusSuKien : UPDATE events SET status = 'CANCELLED'
@@ -172,12 +172,12 @@ stateDiagram-v2
 
 | ID | Định nghĩa Quy tắc (Rule Definition) |
 | :--- | :--- |
-| BR-EV-CANCEL-01 | **Giới hạn Vai trò (Role Restriction)**: Chỉ tài khoản có vai trò `ALUMNI` (người tổ chức) hoặc `ADMIN` (quản trị viên hệ thống) mới được phép kích hoạt API hủy tổ chức sự kiện. Tài khoản `STUDENT` hoặc các vai trò khác bị từ chối với mã 403 Forbidden. |
-| BR-EV-CANCEL-02 | **Quyền sở hữu người tổ chức (Organizer Ownership)**: Cựu sinh viên chỉ được phép hủy các sự kiện do chính mình khởi tạo và làm chủ tọa. Người dùng khác cố ý gửi yêu cầu hủy sự kiện không thuộc quyền sở hữu của mình sẽ bị từ chối với mã lỗi 403 Forbidden. Quản trị viên (`ADMIN`) là ngoại lệ duy nhất được can thiệp hủy sự kiện của thành viên nhằm mục đích quản trị nội dung. |
-| BR-EV-CANCEL-03 | **Ràng buộc Mốc thời gian (Time Constraint)**: Tuyệt đối không được phép hủy các sự kiện đã bắt đầu hoặc đã kết thúc trong quá khứ (`event.startTime <= now()`). Nếu vi phạm, hệ thống trả về mã 400 Bad Request ("Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy."). |
-| BR-EV-CANCEL-04 | **Tính Không thể Hoàn tác (Irreversible Action)**: Sự kiện sau khi đã chuyển sang trạng thái `CANCELLED` sẽ không thể khôi phục trở lại trạng thái `ACTIVE` và không thể tiếp tục gửi yêu cầu hủy lặp lại (trả về 400 Bad Request: "Sự kiện này đã bị hủy trước đó."). |
-| BR-EV-CANCEL-05 | **Hủy liên đới Danh sách Đăng ký (Cascade Registrations Cancellation)**: Khi sự kiện bị hủy, hệ thống bắt buộc phải tự động chuyển toàn bộ các bản ghi đăng ký tham gia (`event_registrations`) đang ở trạng thái `REGISTERED` sang `CANCELLED` trong cùng một Transaction để đảm bảo tính nhất quán dữ liệu. |
-| BR-EV-CANCEL-06 | **Khóa tương tác RSVP (Disable RSVP)**: Tất cả sự kiện có trạng thái `CANCELLED` phải bị khóa hoàn toàn chức năng đăng ký tham gia (RSVP) trên giao diện người dùng và từ chối các request đăng ký mới ở phía Backend. |
+| BR-EV-CANCEL-01 | Chỉ tài khoản có vai trò `ALUMNI` (người tổ chức) hoặc `ADMIN` (quản trị viên hệ thống) mới được phép kích hoạt API hủy tổ chức sự kiện. |
+| BR-EV-CANCEL-02 | Cựu sinh viên chỉ được phép hủy các sự kiện do chính mình khởi tạo và làm chủ tọa. Quản trị viên (`ADMIN`) có quyền can thiệp hủy sự kiện của thành viên nhằm mục đích quản trị. |
+| BR-EV-CANCEL-03 | Tuyệt đối không được phép hủy các sự kiện đã bắt đầu hoặc đã kết thúc trong quá khứ. |
+| BR-EV-CANCEL-04 | Sự kiện sau khi đã chuyển sang trạng thái `CANCELLED` sẽ không thể khôi phục trở lại trạng thái hoạt động và không thể tiếp tục gửi yêu cầu hủy lặp lại. |
+| BR-EV-CANCEL-05 | Khi sự kiện bị hủy, hệ thống bắt buộc phải tự động chuyển toàn bộ các bản ghi đăng ký tham gia sang trạng thái `CANCELLED` trong cùng một giao dịch. |
+| BR-EV-CANCEL-06 | Tất cả sự kiện có trạng thái `CANCELLED` phải bị khóa hoàn toàn chức năng đăng ký tham gia (RSVP) trên giao diện người dùng. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 * **Bảo mật**: Mọi kết nối gọi API hủy sự kiện phải được truyền qua HTTPS với mã hóa TLS tiêu chuẩn.
