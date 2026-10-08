@@ -52,9 +52,6 @@ public class MentorProfile {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    /** Số năm kinh nghiệm làm việc trong ngành (có thể null khi lưu nháp) */
-    @Column(name = "years_of_experience")
-    private Integer yearsOfExperience;
 
     /** Lời giới thiệu / định hướng cố vấn riêng biệt */
     @Column(name = "bio", columnDefinition = "TEXT")

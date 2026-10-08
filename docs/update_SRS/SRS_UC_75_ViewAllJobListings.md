@@ -91,6 +91,16 @@ stateDiagram-v2
 
 ---
 
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-UC75-01 | Toast message | Lấy danh sách tin tuyển dụng thành công | Lấy danh sách tin tuyển dụng thành công. |
+| 2 | MSG-UC75-02 | EmptyState | Không tìm thấy tin tuyển dụng nào | Không tìm thấy tin tuyển dụng nào phù hợp với bộ lọc. |
+| 3 | MSG-UC75-03 | Toast Error | Không có quyền Quản trị viên | Bạn không có quyền truy cập chức năng này. |
+
+---
+
 ## PHẦN 2: THIẾT KẾ CHI TIẾT (REPORT 4)
 
 ### 3. Detail Design (Thiết kế chi tiết)

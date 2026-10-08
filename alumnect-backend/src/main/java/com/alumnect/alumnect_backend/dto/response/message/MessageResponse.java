@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.dto.response.message;
 
+import com.alumnect.alumnect_backend.common.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,6 +41,10 @@ public class MessageResponse {
 
     /** Thời điểm gửi tin nhắn */
     private Instant createdAt;
+
+    /** Loại tin nhắn (TEXT, SYSTEM, IMAGE, FILE) */
+    @Builder.Default
+    private MessageType type = MessageType.TEXT;
 
     /** Danh sách tệp đính kèm */
     @Builder.Default

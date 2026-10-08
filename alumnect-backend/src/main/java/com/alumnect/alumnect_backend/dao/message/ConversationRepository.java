@@ -30,12 +30,18 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     Optional<Conversation> findDirectConversationBetween(@Param("user1Id") Long user1Id, @Param("user2Id") Long user2Id);
 
     /**
-     * Lấy toàn bộ các cuộc hội thoại mà một người dùng tham gia,
+     * Lấy toàn bộ các cuộc hội thoại mà một người dùng tham gia và đã có ít nhất 1 tin nhắn,
      * sắp xếp theo thời điểm có tin nhắn mới nhất giảm dần.
      */
     @Query("SELECT DISTINCT c FROM Conversation c " +
            "JOIN c.participants cp " +
            "WHERE cp.user.id = :userId " +
+           "AND EXISTS (SELECT 1 FROM Message m WHERE m.conversation = c) " +
            "ORDER BY c.lastMessageAt DESC NULLS LAST, c.createdAt DESC")
     List<Conversation> findConversationsByUserId(@Param("userId") Long userId);
+
+    /**
+     * Tìm cuộc hội thoại gắn với Hội nhóm cộng đồng.
+     */
+    Optional<Conversation> findByCommunityGroupId(Long communityGroupId);
 }

@@ -25,8 +25,8 @@ stateDiagram-v2
     state XuLyGuiNgay {
         [*] --> LuuSystemNotificationSENT : Lưu status = SENT, tính expiresAt
         LuuSystemNotificationSENT --> TaoNotificationChoUser : Batch insert bảng notifications
-        TaoNotificationChoUser --> DayWebSocketRealtime : Bắn WebSocket STOMP tới /user/queue/notifications
-        DayWebSocketRealtime --> UserNhanRealtime : User nhận Toast nổi, badge chuông nhảy số
+        TaoNotificationChoUser --> DayWebSocketRealtime : Phát thông điệp STOMP tới /user/queue/notifications
+        DayWebSocketRealtime --> UserNhanRealtime : User nhận thông báo nổi, badge chuông nhảy số
     }
 
     state XuLyHenGio {
@@ -346,7 +346,7 @@ sequenceDiagram
 * **HTTP Status**: `200 OK`
 
 #### 3. Hủy thông báo hẹn giờ
-* **Đường dẫn**: `DELETE /api/v1/admin/notifications/1`
+* **Đường dẫn**: `DELETE /api/v1/admin/notifications/{id}`
 * **HTTP Status**: `200 OK`
 * **Response Payload**:
 ```json

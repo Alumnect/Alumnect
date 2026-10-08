@@ -30,6 +30,7 @@ export function SmartImage({
           src={src}
           alt={alt}
           loading="lazy"
+          decoding="async"
           onLoad={() => setStatus('loaded')}
           onError={() => setStatus('error')}
           className={cn(

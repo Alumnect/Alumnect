@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Inbox, Trash2 } from 'lucide-react'
+import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Inbox, Trash2, Building2, Coins, Mail } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel, Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -138,64 +138,121 @@ export default function AdminPostDetailPage() {
               <div className="space-y-4">
                 {/* --- Thẻ thông tin Tuyển dụng (nếu là bài RECRUITMENT) --- */}
                 {post.type === 'RECRUITMENT' && post.job && (
-                  <div className="mb-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
-                      <h3 className="flex items-center gap-2 font-bold text-brand-900 text-base dark:text-[#f0f2f5]">
-                        <Briefcase size={18} className="text-brand-600 dark:text-brand-400 animate-pulse" />
-                        <span>Tuyển dụng: <span className="text-plum-900 dark:text-[#f0f2f5]">{post.job.title}</span></span>
-                      </h3>
-                      {post.job.applyUrl && (
-                        <a
-                          href={post.job.applyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-[#F27024] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#d96010] transition-colors"
-                        >
-                          Ứng tuyển <ExternalLink size={12} />
-                        </a>
-                      )}
-                    </div>
-                    <div className="p-5 space-y-4">
-                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
-                        <p className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5] mb-2">Công ty: {post.job.company}</p>
-                        <div className="grid gap-3 sm:grid-cols-2 text-xs font-medium text-plum-800 dark:text-[#f0f2f5]">
-                          <div>
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Địa điểm</p>
-                            {post.job.location ? (
-                              <span className="inline-flex items-center gap-1">
-                                <MapPin size={14} className="text-brand-500" /> {post.job.location}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">Chưa cập nhật</span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Mức lương & Liên hệ</p>
-                            <div className="flex flex-col gap-1">
-                              {(post.job.salaryMin || post.job.salaryMax) ? (
-                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                  {post.job.salaryMin && post.job.salaryMax
-                                    ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
-                                    : post.job.salaryMin
-                                    ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
-                                    : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
-                                </span>
-                              ) : (
-                                <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">Thỏa thuận</span>
-                              )}
-                              {post.job.contactEmail && (
-                                <span className="inline-flex items-center gap-1 text-slate-600 dark:text-[#b0b3b8]">
-                                  <Inbox size={14} className="text-plum-400 dark:text-[#b0b3b8]" /> {post.job.contactEmail}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                  <div className="mb-4 overflow-hidden rounded-2xl border border-orange-200 bg-white shadow-sm ring-1 ring-orange-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
+                    {/* Header Tuyển dụng */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-amber-50/40 to-white px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-100 text-[#F27024] shadow-2xs dark:bg-orange-500/20 dark:text-orange-400">
+                          <Briefcase size={20} />
+                        </span>
+                        <div>
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-[#F27024] dark:text-orange-400">
+                            Cơ hội việc làm
+                          </span>
+                          <h3 className="text-base font-bold text-plum-900 dark:text-[#f0f2f5] leading-snug">
+                            {post.job.title}
+                          </h3>
                         </div>
                       </div>
+
+                      {post.job.company && (
+                        <div className="flex items-center gap-1.5 rounded-xl bg-white/90 px-3 py-1.5 border border-orange-200/80 text-xs font-bold text-slate-800 shadow-2xs dark:border-[#4e4f50] dark:bg-[#242526] dark:text-[#f0f2f5]">
+                          <Building2 size={15} className="text-[#F27024]" />
+                          <span>{post.job.company}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-5 space-y-4">
+                      {/* Box Kêu gọi Ứng tuyển */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/30 p-3.5 shadow-xs dark:border-[#393a3b] dark:bg-none dark:bg-[#3a3b3c]">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">Hồ sơ & Ứng tuyển</p>
+                          <p className="text-[11px] text-slate-500 dark:text-[#b0b3b8] mt-0.5">
+                            {post.job.applyUrl
+                              ? 'Ứng tuyển qua liên kết chính thức của nhà tuyển dụng'
+                              : post.job.contactEmail
+                              ? `Email: ${post.job.contactEmail}`
+                              : 'Liên hệ người đăng bài để biết thêm chi tiết'}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {post.job.contactEmail && (
+                            <a
+                              href={`mailto:${post.job.contactEmail}?subject=${encodeURIComponent(`Ứng tuyển vị trí ${post.job.title} - ${post.job.company}`)}`}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs dark:border-[#4e4f50] dark:bg-[#242526] dark:text-slate-200"
+                            >
+                              <Mail size={13} className="text-slate-500 dark:text-slate-400" />
+                              <span>Email</span>
+                            </a>
+                          )}
+                          {post.job.applyUrl && (
+                            <a
+                              href={post.job.applyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#F27024] to-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:from-[#d96010] hover:to-amber-700 transition-all cursor-pointer"
+                            >
+                              <span>Ứng tuyển</span>
+                              <ExternalLink size={12} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Chi tiết Mức lương, Email, Địa điểm */}
+                      <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
+                        <div>
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Mức lương</p>
+                          <div className="flex items-center gap-1.5 text-xs font-semibold">
+                            <Coins size={14} className="text-emerald-500 shrink-0" />
+                            {(post.job.salaryMin || post.job.salaryMax) ? (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                {post.job.salaryMin && post.job.salaryMax
+                                  ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VNĐ`
+                                  : post.job.salaryMin
+                                  ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VNĐ`
+                                  : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VNĐ`}
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 dark:text-[#b0b3b8] font-medium">Thỏa thuận</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Liên hệ tuyển dụng</p>
+                          <div className="flex items-center gap-1.5 text-xs font-semibold">
+                            <Mail size={14} className="text-sky-500 shrink-0" />
+                            {post.job.contactEmail ? (
+                              <a
+                                href={`mailto:${post.job.contactEmail}`}
+                                className="text-sky-600 hover:underline dark:text-sky-400 truncate"
+                              >
+                                {post.job.contactEmail}
+                              </a>
+                            ) : (
+                              <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">—</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {post.job.location && (
+                          <div className="col-span-1 sm:col-span-2 mt-1 border-t border-slate-200/60 dark:border-[#4e4f50] pt-3">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Địa điểm làm việc</p>
+                            <p className="flex items-start gap-1.5 text-xs font-medium text-plum-800 dark:text-[#f0f2f5]">
+                              <MapPin size={14} className="text-[#F27024] shrink-0 mt-0.5" />
+                              <span className="leading-relaxed">{post.job.location}</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
                       {post.content && (
                         <div>
-                          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Mô tả công việc</p>
-                          <p className="whitespace-pre-line text-sm leading-relaxed text-plum-800 dark:text-[#e4e6eb]">{post.content}</p>
+                          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#F27024] dark:text-orange-400">Mô tả công việc</p>
+                          <p className="whitespace-pre-line text-xs leading-relaxed text-plum-800 dark:text-[#e4e6eb]">{post.content}</p>
                         </div>
                       )}
                     </div>

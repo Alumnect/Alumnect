@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Avatar, SmartImage, toast } from '@/components/ui'
 import { useMajors, usePresignedUrl } from '@/features/auth/hooks/useAuth'
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
+import { CampusSelect } from './CampusSelect'
 import type { UserProfileResponse, UpdateProfileRequest, UserSkillRequest } from '../model/userTypes'
 
 interface EditProfileModalProps {
@@ -211,13 +212,6 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
     }
   }
 
-  const campusOptions = [
-    'FPT University Đà Nẵng',
-    'FPT University Hà Nội (Hòa Lạc)',
-    'FPT University TP. Hồ Chí Minh',
-    'FPT University Cần Thơ',
-    'FPT University Quy Nhơn',
-  ]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
@@ -419,19 +413,11 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                 <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
                   Cơ sở đào tạo
                 </label>
-                <select
+                <CampusSelect
                   value={campus}
-                  onChange={(e) => setCampus(e.target.value)}
+                  onChange={setCampus}
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                >
-                  <option value="">-- Chọn Cơ sở FPT University --</option>
-                  {campusOptions.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>

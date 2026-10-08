@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -91,7 +92,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                         .currentCompany(currentExp != null ? currentExp.getCompany() : null)
                         .skills(skillNames)
                         .build())
-                .yearsOfExperience(profile != null ? profile.getYearsOfExperience() : null)
                 .bio(profile != null ? profile.getBio() : null)
                 .build();
 
@@ -141,7 +141,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         // 6. Đánh giá tính hoàn tất và danh sách các trường còn thiếu
         List<String> missingFields = evaluateMissingFields(
                 currentExp,
-                profile != null ? profile.getYearsOfExperience() : null,
                 profile != null ? profile.getWorkingMode() : null,
                 profile != null ? profile.getMentoringType() : null,
                 supportedIndustries,
@@ -183,30 +182,8 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
             throw new ForbiddenException("Bạn cần chấp nhận Điều khoản Hướng dẫn & Hỗ trợ trước khi đăng ký");
         }
 
-        // 2b. Cập nhật thông tin cá nhân cơ bản vào UserProfile nếu người dùng chỉnh sửa tại Section 1
-        UserProfile userProfile = userProfileRepository.findById(user.getId()).orElse(null);
-        if (userProfile != null) {
-            boolean userProfileUpdated = false;
-            if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
-                userProfile.setFullName(request.getFullName().trim());
-                userProfileUpdated = true;
-            }
-            if (request.getPhone() != null) {
-                userProfile.setPhone(request.getPhone().trim());
-                userProfileUpdated = true;
-            }
-            if (request.getCampus() != null && !request.getCampus().trim().isEmpty()) {
-                userProfile.setCampus(request.getCampus().trim());
-                userProfileUpdated = true;
-            }
-            if (request.getGraduationYear() != null) {
-                userProfile.setGraduationYear(request.getGraduationYear());
-                userProfileUpdated = true;
-            }
-            if (userProfileUpdated) {
-                userProfileRepository.save(userProfile);
-            }
-        }
+        // 2b. Section 1 (Thông tin cá nhân) hiển thị đồng bộ từ UserProfile theo dạng Read-Only.
+        // UserProfile là nguồn dữ liệu chuẩn (Single Source of Truth) và không bị ghi đè từ form đăng ký Mentor.
 
         // 3. Tìm hoặc khởi tạo mới MentorProfile (1-1 với User)
         MentorProfile profile = mentorProfileRepository.findByUserId(user.getId())
@@ -216,9 +193,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                         .build());
 
         // Cập nhật các trường đặc thù của MentorProfile
-        if (request.getYearsOfExperience() != null) {
-            profile.setYearsOfExperience(request.getYearsOfExperience());
-        }
         if (request.getBio() != null) {
             profile.setBio(request.getBio().trim());
         }
@@ -239,8 +213,13 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         // 4. Đồng bộ danh mục ngành nghề hỗ trợ (mentor_supported_fields FK -> industries.id)
         if (request.getSupportedIndustryIds() != null) {
             mentorSupportedFieldRepository.deleteByMentorProfileId(savedProfile.getId());
-            if (!request.getSupportedIndustryIds().isEmpty()) {
-                List<Industry> industries = industryRepository.findAllById(request.getSupportedIndustryIds());
+            mentorSupportedFieldRepository.flush(); // Bắt buộc flush DELETE SQL xuống PostgreSQL trước khi chèn danh sách mới
+            List<Long> distinctIndustryIds = request.getSupportedIndustryIds().stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!distinctIndustryIds.isEmpty()) {
+                List<Industry> industries = industryRepository.findAllById(distinctIndustryIds);
                 List<MentorSupportedField> supportedFields = industries.stream()
                         .map(ind -> MentorSupportedField.builder()
                                 .mentorProfile(savedProfile)
@@ -248,13 +227,16 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                                 .build())
                         .collect(Collectors.toList());
                 mentorSupportedFieldRepository.saveAll(supportedFields);
+                mentorSupportedFieldRepository.flush();
             }
         }
 
         // 5. Đồng bộ danh sách chủ đề cố vấn chuyên sâu tự do (mentor_topics)
         if (request.getMentoringTopics() != null) {
             mentorTopicRepository.deleteByMentorProfileId(savedProfile.getId());
+            mentorTopicRepository.flush(); // Bắt buộc flush DELETE SQL xuống PostgreSQL trước khi chèn danh sách mới
             List<MentorTopic> topics = request.getMentoringTopics().stream()
+                    .filter(Objects::nonNull)
                     .map(String::trim)
                     .filter(t -> !t.isEmpty())
                     .distinct()
@@ -265,6 +247,7 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
                     .collect(Collectors.toList());
             if (!topics.isEmpty()) {
                 mentorTopicRepository.saveAll(topics);
+                mentorTopicRepository.flush();
             }
         }
 
@@ -306,7 +289,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
 
         List<String> missingFields = evaluateMissingFields(
                 currentExp,
-                profile.getYearsOfExperience(),
                 profile.getWorkingMode(),
                 profile.getMentoringType(),
                 supportedItems,
@@ -398,7 +380,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
      */
     private List<String> evaluateMissingFields(
             Experience currentExp,
-            Integer yearsOfExperience,
             Object workingMode,
             Object mentoringType,
             List<MentorRegistrationResponse.SupportedIndustryItem> supportedIndustries,
@@ -413,9 +394,6 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         }
         if (currentExp == null || currentExp.getTitle() == null || currentExp.getTitle().trim().isEmpty()) {
             missing.add("currentPosition");
-        }
-        if (yearsOfExperience == null || yearsOfExperience < 0) {
-            missing.add("yearsOfExperience");
         }
         if (workingMode == null) {
             missing.add("workingMode");
@@ -438,4 +416,19 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
 
         return missing;
     }
+
+    /**
+     * Kiểm tra tính hoàn thiện 100% của hồ sơ Mentor (tái sử dụng từ UC91).
+     * Dùng chung cho UC92, UC93, UC94 nhằm tránh duplicate logic thẩm định hồ sơ.
+     *
+     * @param userEmail Email của người dùng đã xác thực
+     * @return true nếu hồ sơ đã điền đầy đủ và thỏa mãn mọi ràng buộc UC91
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isMentorProfileComplete(String userEmail) {
+        MentorRegistrationResponse response = getRegistration(userEmail);
+        return response != null && response.isComplete();
+    }
 }
+

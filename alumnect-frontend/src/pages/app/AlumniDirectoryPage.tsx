@@ -108,18 +108,20 @@ export function AlumniDirectoryPage() {
     data: followingData,
     isLoading: isFollowingLoading,
   } = useUserFollowing(Number(currentUserId) || 0, 50, {
-    enabled: activeTab === 'network' && !!currentUserId && networkSubTab === 'following',
+    enabled: activeTab === 'network' && !!currentUserId,
   })
 
   const {
     data: followersData,
     isLoading: isFollowersLoading,
   } = useUserFollowers(Number(currentUserId) || 0, 50, {
-    enabled: activeTab === 'network' && !!currentUserId && networkSubTab === 'followers',
+    enabled: activeTab === 'network' && !!currentUserId,
   })
 
   const followingUsers = followingData?.pages.flatMap((p) => p.content) || []
   const followersUsers = followersData?.pages.flatMap((p) => p.content) || []
+  const followingCount = followingData?.pages[0]?.totalElements ?? followingUsers.length
+  const followersCount = followersData?.pages[0]?.totalElements ?? followersUsers.length
 
   const activeNetworkUsers = networkSubTab === 'following' ? followingUsers : followersUsers
   const filteredNetworkUsers = activeNetworkUsers.filter((u) => {
@@ -152,13 +154,6 @@ export function AlumniDirectoryPage() {
         icon={<Users size={22} className="text-brand-500" />}
         title="Mạng lưới & Danh bạ AlumNect"
         subtitle="Khám phá và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University."
-        actions={
-          totalElements > 0 && activeTab === 'directory' ? (
-            <Badge tone="brand" className="px-3.5 py-1 text-xs">
-              <UserCheck size={13} /> {totalElements} Thành viên
-            </Badge>
-          ) : undefined
-        }
       />
 
       {/* Main Tabs Navigation - Chỉ hiển thị khi người dùng đã đăng nhập */}
@@ -377,7 +372,7 @@ export function AlumniDirectoryPage() {
                     : 'bg-plum-900/5 text-plum-600 hover:bg-plum-900/10 dark:text-plum-300',
                 )}
               >
-                Đang theo dõi ({followingUsers.length})
+                Đang theo dõi ({followingCount})
               </button>
               <button
                 type="button"
@@ -389,7 +384,7 @@ export function AlumniDirectoryPage() {
                     : 'bg-plum-900/5 text-plum-600 hover:bg-plum-900/10 dark:text-plum-300',
                 )}
               >
-                Người theo dõi ({followersUsers.length})
+                Người theo dõi ({followersCount})
               </button>
             </div>
 
@@ -461,7 +456,6 @@ export function AlumniDirectoryPage() {
                         src={member.avatarUrl || undefined}
                         name={member.fullName}
                         size={48}
-                        verified={member.isAccountVerified}
                       />
                     </Link>
                     <div className="min-w-0 flex-1">
@@ -472,7 +466,7 @@ export function AlumniDirectoryPage() {
                         {member.fullName}
                       </Link>
                       <p className="truncate text-xs text-plum-500 dark:text-plum-400 mt-0.5">
-                        {member.headline || 'Thành viên AlumNect'}
+                        {member.headline || 'Cựu sinh viên FPTU'}
                       </p>
                     </div>
                   </div>

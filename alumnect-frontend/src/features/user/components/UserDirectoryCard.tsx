@@ -83,7 +83,6 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                 src={user.avatarUrl || undefined}
                 name={user.fullName}
                 size={84}
-                verified={user.isAccountVerified}
                 ring
                 className="mx-auto"
               />

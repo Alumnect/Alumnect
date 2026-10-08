@@ -14,9 +14,9 @@ stateDiagram-v2
     CheckingAuthentication --> ProcessingGuest : Khách vãng lai (Chưa đăng nhập / Token null)
     CheckingAuthentication --> ProcessingLoggedInUser : Thành viên đã xác thực (Student / Alumni)
 
-    ProcessingGuest --> QueryingActiveAlumni : Truy vấn cựu sinh viên (role = 'ALUMNI', status = 'ACTIVE')
+    ProcessingGuest --> QueryingActiveAlumni : Truy vấn thành viên (role != 'ADMIN', status = 'ACTIVE')
     ProcessingLoggedInUser --> FilteringExcludedIds : Lấy danh sách ID đã follow + ID chính mình
-    FilteringExcludedIds --> QueryingCandidateAlumni : Truy vấn ứng viên (role = 'ALUMNI', status = 'ACTIVE', id NOT IN excludedIds)
+    FilteringExcludedIds --> QueryingCandidateAlumni : Truy vấn ứng viên (role != 'ADMIN', status = 'ACTIVE', id NOT IN excludedIds)
     
     QueryingActiveAlumni --> BatchFetchingData : Nạp song song Primary Experience, Followers Count, Following Count
     QueryingCandidateAlumni --> BatchFetchingData : Nạp song song Primary Experience, Followers Count, Following Count
@@ -25,7 +25,7 @@ stateDiagram-v2
     CalculatingScores --> SortingAndLimiting : Sắp xếp giảm dần theo matchScore và cắt lấy Top limit
     SortingAndLimiting --> ReturningJsonResponse : Trả về ApiResponse<List<ConnectionSuggestionResponse>> (200 OK)
     
-    ReturningJsonResponse --> RenderingWidget : Hiển thị danh sách cựu sinh viên gợi ý trên Sidebar
+    ReturningJsonResponse --> RenderingWidget : Hiển thị danh sách thành viên gợi ý trên Sidebar
     
     RenderingWidget --> ClickingProfileLink : Bấm vào Avatar / Tên để xem chi tiết (/app/profile?userId=...)
     RenderingWidget --> ClickingFollowButton : Bấm nút "Theo dõi"
@@ -45,8 +45,8 @@ stateDiagram-v2
 * **Bước 2 - Các bước chuyển tiếp**:
   * Component `ConnectionSuggestionsWidget` trên Sidebar bên phải tự động kích hoạt API `GET /api/v1/users/suggestions?limit=4`.
   * **Backend tiếp nhận yêu cầu & phân nhánh**:
-    * *Trường hợp 1 (Thành viên đã đăng nhập)*: Trích xuất thông tin người dùng hiện tại (chuyên ngành `majorId`, niên khóa `cohort`, thành phố `city`). Đồng thời, truy vấn danh sách `followingIds` mà người này đã theo dõi để tạo tập loại trừ `excludedIds` (ID chính mình + danh sách đã follow). Chỉ lấy ứng viên là Cựu sinh viên (`role = 'ALUMNI'`) có trạng thái `ACTIVE`.
-    * *Trường hợp 2 (Khách vãng lai)*: Hệ thống chỉ truy vấn các cựu sinh viên (`role = 'ALUMNI'`) có trạng thái `ACTIVE`.
+    * *Trường hợp 1 (Thành viên đã đăng nhập)*: Trích xuất thông tin người dùng hiện tại (chuyên ngành `majorId`, niên khóa `cohort`, thành phố `city`). Đồng thời, truy vấn danh sách `followingIds` mà người này đã theo dõi để tạo tập loại trừ `excludedIds` (ID chính mình + danh sách đã follow). Lấy ứng viên là Sinh viên và Cựu sinh viên (`role != 'ADMIN'`) có trạng thái `ACTIVE`.
+    * *Trường hợp 2 (Khách vãng lai)*: Hệ thống truy vấn các thành viên Sinh viên và Cựu sinh viên (`role != 'ADMIN'`) có trạng thái `ACTIVE`.
   * **Tải hàng loạt (Batch Fetching) chống N+1 Query**: Thực hiện các câu truy vấn SQL gom nhóm song song để nạp kinh nghiệm làm việc chính (`isPrimary = true`), số lượng follower, số lượng following, kỹ năng và quan hệ kết nối chung (Mutual Connections / Bạn chung) cho toàn bộ ứng viên.
   * **Thuật toán tính điểm tương quan (`matchScore`) & Phân tầng ưu tiên**:
     * **(1) Bạn chung / Kết nối chung (Mutual Connections)**: Trọng số ưu tiên hàng đầu (`+50đ` đến `+80đ`, trong đó 50đ cho bạn chung đầu tiên + 5đ cho mỗi bạn chung kế tiếp).
@@ -80,7 +80,7 @@ stateDiagram-v2
 * **Function description**:
   * **Actors/Roles**: Khách vãng lai (Guest), Sinh viên (Student), Cựu sinh viên (Alumni).
   * **Target Audience**: Thành viên cộng đồng FPT University có nhiều điểm tương quan nhất (ưu tiên bạn chung, cùng công ty, cùng ngành, cùng khóa).
-  * **Purpose**: Tự động gợi ý các thành viên phù hợp nhất dựa trên quan hệ bạn chung, kinh nghiệm làm việc thực tế, sự tương quan chuyên ngành và niên khóa, thúc đẩy tinh thần kết nối tiền bối - hậu bối trong cộng đồng FPT University.
+  * **Purpose**: Tự động gợi ý các thành viên phù hợp nhất (bao gồm cả Sinh viên và Cựu sinh viên) dựa trên quan hệ bạn chung, kinh nghiệm làm việc thực tế, sự tương quan chuyên ngành và niên khóa, thúc đẩy tinh thần kết nối tiền bối - hậu bối và bạn học cùng khóa trong cộng đồng FPT University.
   * **Interface**:
     * **Vị trí 1 (Sidebar Bảng tin)**: Tiêu đề widget *"Gợi ý kết nối"* cùng nút bấm *"Xem tất cả"* sang trang Danh bạ, hiển thị thẻ avatar tròn, họ tên, khóa học & ngành, nút Theo dõi nhanh.
     * **Vị trí 2 (Tab Gợi ý kết nối trên trang Danh bạ)**: Lưới 3 cột đồng bộ mẫu thẻ `UserDirectoryCard`, hiển thị avatar, họ tên, headline chức danh, nhãn nổi bật `x bạn chung`, tag ngành/khóa/nơi ở, công ty làm việc, danh sách kỹ năng, số follower, nút Theo dõi (màu cam FPT) và nút Nhắn tin.
@@ -91,7 +91,7 @@ stateDiagram-v2
   1. Frontend gọi `GET /api/v1/users/suggestions?limit={n}` (mặc định `limit = 4` cho Sidebar, `limit = 24` cho Tab Danh bạ).
   2. Backend kiểm tra tham số `limit` ($1 \le \text{limit} \le 50$). Nếu sai, ném `BadRequestException("Số lượng gợi ý (limit) phải từ 1 đến 50.")`.
   3. Trích xuất email từ JWT trong `SecurityContextHolder` (nếu có).
-  4. Thực hiện lọc ứng viên có `account_status = 'ACTIVE'` và `role != 'ADMIN'`, loại trừ ID chính mình và danh sách đã theo dõi.
+  4. Thực hiện lọc ứng viên có `account_status = 'ACTIVE'` và `role != 'ADMIN'` (bao gồm cả Sinh viên và Cựu sinh viên), loại trừ ID chính mình và danh sách đã theo dõi.
   5. Nạp song song thông tin kinh nghiệm chính, số lượng follower/following, kỹ năng và kết nối chung theo lô (Batch Fetching).
   6. Chấm điểm `matchScore` theo trọng số bạn chung và hồ sơ, thực hiện phân tầng sắp xếp ưu tiên bạn chung lên đầu.
   7. Trả về `ApiResponse<List<ConnectionSuggestionResponse>>` với mã HTTP `200 OK`.
@@ -107,7 +107,7 @@ stateDiagram-v2
   * **Business rules**:
     * **BR-SUGG-01**: Tuyệt đối không bao giờ gợi ý tài khoản của chính người dùng đang đăng nhập trong danh sách kết nối (được lọc ở cả Backend và Frontend để không tạo khoảng trắng trong lưới).
     * **BR-SUGG-02**: Các tài khoản đã được người xem bấm "Theo dõi" trước đó sẽ tự động bị loại khỏi danh sách gợi ý.
-    * **BR-SUGG-03**: Đối tượng gợi ý bắt buộc phải có tài khoản đang hoạt động (`account_status = 'ACTIVE'`) và không phải là quản trị viên (`role != 'ADMIN'`).
+    * **BR-SUGG-03**: Đối tượng gợi ý bắt buộc phải có tài khoản đang hoạt động (`account_status = 'ACTIVE'`) và không phải là quản trị viên (`role != 'ADMIN'`), bao gồm cả Sinh viên và Cựu sinh viên.
     * **BR-SUGG-04**: Bạn chung (Mutual connections) là yếu tố ưu tiên hàng đầu (`+50đ` đến `+80đ`). Người có bạn chung luôn được xếp trước người không có bạn chung.
     * **BR-SUGG-05**: Điểm bổ sung theo độ tương đồng hồ sơ: Cùng công ty (`+35đ`), Cùng ngành (`+30đ`), Cùng khóa (`+25đ`), Kỹ năng tương đồng (tối đa `+20đ`), Cùng thành phố (`+15đ`), Kinh nghiệm công tác (`+15đ`), Tài khoản xác minh (`+10đ`), Điểm uy tín follower (tối đa `+10đ`).
     * **BR-SUGG-06**: Khi khách chưa đăng nhập bấm "Theo dõi", hệ thống hiển thị thông báo yêu cầu đăng nhập thân thiện (`LoginPromptModal`) và điều hướng tới trang xác thực.
@@ -136,9 +136,8 @@ stateDiagram-v2
 | **BR-SUGG-08** | Không sử dụng phân trang số trang (1, 2, 3...) cho Gợi ý kết nối mà hiển thị danh sách Top đề xuất tinh tuyển; thiết kế thẻ đồng bộ chuẩn `UserDirectoryCard`. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-* Giao diện tuân thủ tiêu chuẩn Pastel Premium: Nền Card trắng `#ffffff`, viền nhẹ `border-plum-900/10`, hiệu ứng hover nhẹ nhàng, typography Inter/Outfit chuẩn chỉ, tuyệt đối không có hiệu ứng đổi màu cam chói mắt khi di chuột.
-* Ảnh đại diện Avatar hiển thị tròn trịa sạch sẽ, không hiển thị icon tích cam đè lên ảnh.
-* Nạp dữ liệu tối ưu qua Batch Fetching chống 100% lỗi N+1 Query.
+* Giao diện thẻ người dùng đồng nhất giữa các màn hình danh bạ và gợi ý kết nối.
+* Nạp dữ liệu tối ưu qua Batch Fetching triệt tiêu lỗi N+1 Query.
 * Tích hợp cơ chế Optimistic Update khi bấm nút Theo dõi để phản hồi tức thì cho người dùng.
 
 #### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
@@ -298,7 +297,7 @@ sequenceDiagram
     else Trường hợp 2: Tham số limit hợp lệ (1 <= limit <= 50)
         API->>Service: getConnectionSuggestions(email, limit)
         
-        alt Luồng 2.1: Thành viên đã đăng nhập (email != null)
+        alt Luồng 2.1: Thành viên đã đăng nhập
             Service->>UserRepo: findByEmail(email)
             UserRepo->>DB: SELECT * FROM users WHERE email = ?
             DB-->>UserRepo: Current User Entity
@@ -308,12 +307,12 @@ sequenceDiagram
             DB-->>FollowRepo: List of followedIds
             
             Service->>UserRepo: findCandidatesForSuggestions(currentUser.id, excludedSet)
-            UserRepo->>DB: SELECT u FROM users u WHERE status='ACTIVE' AND role='ALUMNI' AND id != ? AND id NOT IN (?)
-            DB-->>UserRepo: List<User> alumniCandidates
+            UserRepo->>DB: SELECT u FROM users u WHERE status='ACTIVE' AND role != 'ADMIN' AND id != ? AND id NOT IN (?)
+            DB-->>UserRepo: List<User> candidates
         else Luồng 2.2: Khách vãng lai (Guest - email == null)
             Service->>UserRepo: findGuestCandidates()
-            UserRepo->>DB: SELECT u FROM users u WHERE status='ACTIVE' AND role='ALUMNI' ORDER BY verified DESC, createdAt DESC
-            DB-->>UserRepo: List<User> guestAlumniCandidates
+            UserRepo->>DB: SELECT u FROM users u WHERE status='ACTIVE' AND role != 'ADMIN' ORDER BY verified DESC, createdAt DESC
+            DB-->>UserRepo: List<User> guestCandidates
         end
         
         par Tải dữ liệu song song (Batch Fetching chống N+1)
@@ -330,11 +329,11 @@ sequenceDiagram
             DB-->>FollowRepo: Map<UserId, FollowingCount>
         end
         
-        Note over Service: Tính điểm tương quan (MatchScore):<br/>- Đã có kinh nghiệm/công ty: +40đ (Guest) / +20đ (User)<br/>- Cùng chuyên ngành: +40đ | Cùng niên khóa: +30đ | Cùng TP: +20đ<br/>- Tài khoản xác minh: +30đ (Guest) / +10đ (User) | Followers
+        Note over Service: Tính điểm tương quan (MatchScore):<br/>- Bạn chung: +50..80đ | Cùng công ty: +35đ | Cùng ngành: +30đ<br/>- Cùng khóa: +25đ (lệch 1: +15đ, lệch 2: +8đ) | Kỹ năng: max +20đ | Cùng TP: +15đ<br/>- Kinh nghiệm: +15đ | Xác minh: +10đ | Followers: +1..10đ
         Service->>Service: Sắp xếp giảm dần theo matchScore và lấy Top limit
         Service-->>API: List<ConnectionSuggestionResponse>
         API-->>UI: HTTP 200 OK { error: 0, message: "Lấy danh sách gợi ý kết nối thành công!", data: [...] }
-        UI-->>User: Render danh sách cựu sinh viên gợi ý kèm nút Theo dõi tức thì
+        UI-->>User: Render danh sách thành viên gợi ý kèm nút Theo dõi tức thì
     end
 ```
 
@@ -342,12 +341,12 @@ sequenceDiagram
 1. **Luồng 1 - Lỗi tham số đầu vào (`limit <= 0` hoặc `limit > 50`)**:
    - Controller kiểm tra tham số `limit`, ném ngoại lệ `BadRequestException`. `GlobalExceptionHandler` bắt và trả về HTTP `400 Bad Request` cùng thông điệp lỗi tiếng Việt. Frontend xử lý bắt lỗi và ẩn widget an toàn.
 2. **Luồng 2 - Thành công (Cá nhân hóa theo người dùng đăng nhập)**:
-   - Controller trích xuất email người dùng, gọi Service lấy danh sách các cựu sinh viên `ALUMNI` (loại trừ ID chính mình và những người đã theo dõi).
+   - Controller trích xuất email người dùng, gọi Service lấy danh sách các ứng viên thành viên (`role != 'ADMIN'`, bao gồm Sinh viên và Cựu sinh viên, loại trừ ID chính mình và những người đã theo dõi).
    - Nạp song song dữ liệu kinh nghiệm chính và số followers/following qua 3 câu truy vấn SQL gom nhóm.
    - Chấm điểm tương quan theo ngành học, niên khóa, tỉnh thành, kinh nghiệm công ty, trạng thái xác thực và số follower.
    - Sắp xếp giảm dần theo điểm số, cắt lấy Top `limit` bản ghi và trả về HTTP `200 OK` cho Client render widget.
 3. **Luồng 3 - Thành công (Khách vãng lai - Guest)**:
-   - Không có thông tin email, Service truy vấn danh sách các cựu sinh viên `ALUMNI` đang hoạt động trong hệ thống.
+   - Không có thông tin email, Service truy vấn danh sách các thành viên tiêu biểu (`role != 'ADMIN'`) đang hoạt động trong hệ thống.
    - Ưu tiên cựu sinh viên đã có kinh nghiệm làm việc / công ty (+40đ), có tích xanh xác thực (+30đ) và nhiều người theo dõi nhất (+1..20đ).
    - Đóng gói danh sách cựu sinh viên tiêu biểu trả về cho Client. Khi khách bấm nút "Theo dõi", giao diện hiển thị popup thông báo đăng nhập.
 

@@ -1,5 +1,6 @@
 /**
- * AnswersSection — Khu vực câu trả lời dưới một câu hỏi.
+ * AnswersSection — Khu vực câu trả lời dưới một câu hỏi (Forum).
+ * Áp dụng phong cách bình luận hội nhóm (bong bóng bo tròn, thanh pill thanh lịch, nhánh cây cho câu trả lời con).
  *
  * Trách nhiệm:
  *  - Hiển thị danh sách câu trả lời GỐC (infinite scroll), mỗi câu kèm các reply lồng bên dưới.
@@ -10,7 +11,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil, ChevronUp } from 'lucide-react'
+import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil, Trash2, X, ChevronUp, ArrowRight } from 'lucide-react'
 import { Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -53,17 +54,32 @@ function absoluteTime(iso: string): string {
 }
 
 /**
- * Khi tạo reply cho một comment con, phần @tên và nội dung được ngăn cách bằng 2 dấu cách.
- * Gộp lại thành 1 khoảng trắng cho gọn; @tên để chữ thường (không tô màu/đậm).
+ * Làm sạch nội dung câu trả lời, loại bỏ các chuỗi @tên lặp lại ở đầu nếu đã hiển thị qua tag parentAuthor.
  */
-function renderAnswerBody(body: string): string {
-  const m = body.match(/^(@\S[^]*?)\s{2,}([\s\S]*)$/)
-  return m ? `${m[1]} ${m[2]}` : body
+function cleanAnswerBody(body: string, parentAuthor?: string): { mention?: string; cleanText: string } {
+  if (!body) return { cleanText: '' }
+  let text = body.trim()
+  let mention = parentAuthor
+
+  // Nếu body bắt đầu bằng @Tên, bóc tách ra nếu chưa có parentAuthor
+  const match = text.match(/^@([^\s\n]+(?:\s+[^\s\n]+)?)\s*([\s\S]*)$/)
+  if (match) {
+    if (!mention) {
+      mention = match[1]
+    }
+  }
+
+  // Nếu có mention (hoặc parentAuthor), loại bỏ toàn bộ các tiền tố @mention lặp lại ở đầu text
+  if (mention) {
+    const escaped = mention.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    text = text.replace(new RegExp(`^(@${escaped}\\s*)+`, 'i'), '').trim()
+  }
+
+  return { mention, cleanText: text || body }
 }
 
 /**
  * Form gọn dùng cho SỬA câu trả lời (UC48) và REPLY một câu trả lời gốc.
- * Cùng validate Zod với form tạo mới; tự chọn mutation theo `mode`.
  */
 function InlineAnswerForm({
   questionId,
@@ -82,7 +98,6 @@ function InlineAnswerForm({
   replyingToName?: string
   onDone: () => void
 }) {
-  const user = useAuthStore((s) => s.user)
   const create = useCreateAnswer(questionId)
   const update = useUpdateAnswer(questionId)
   const {
@@ -103,12 +118,17 @@ function InlineAnswerForm({
     else create.mutate({ input: values, parentId }, { onSuccess: onDone })
   }
 
-  const placeholder = mode === 'edit' ? 'Chỉnh sửa câu trả lời…' : replyingToName ? `Trả lời ${replyingToName}…` : 'Viết phản hồi của bạn…'
+  const placeholder =
+    mode === 'edit'
+      ? 'Chỉnh sửa câu trả lời…'
+      : replyingToName
+      ? `Trả lời ${replyingToName}…`
+      : 'Viết phản hồi của bạn…'
 
-  const formInner = (
-    <form onSubmit={handleSubmit(onSubmit)} className="min-w-0 flex-1">
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-2">
       {error && (
-        <div className="mb-2 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
+        <div className="flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
           <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
         </div>
       )}
@@ -118,57 +138,63 @@ function InlineAnswerForm({
         rows={mode === 'edit' ? 3 : 2}
         maxLength={MAX_BODY}
         placeholder={placeholder}
-        className="w-full resize-y rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] px-3.5 py-2.5 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        className="w-full rounded-xl border border-plum-900/10 bg-white p-2.5 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white"
       />
-      {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body.message}</p>}
-      <div className="mt-1.5 flex items-center justify-end gap-2">
-        <Button type="button" variant="secondary" size="sm" onClick={onDone} disabled={isPending}>
-          Hủy
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          size="sm"
-          disabled={isPending || bodyLength === 0}
-          leftIcon={isPending ? <Loader2 size={14} className="animate-spin" /> : undefined}
+      {errors.body && <p className="text-xs text-rose-500">{errors.body.message}</p>}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onDone}
+          disabled={isPending}
+          className="rounded-xl px-3 py-1.5 text-xs font-medium text-plum-500 hover:bg-plum-900/5 transition-colors cursor-pointer dark:text-[#b0b3b8]"
         >
-          {mode === 'edit' ? (isPending ? 'Đang lưu…' : 'Lưu') : isPending ? 'Đang gửi…' : 'Gửi'}
-        </Button>
+          Hủy
+        </button>
+        <button
+          type="submit"
+          disabled={isPending || bodyLength === 0}
+          className="rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-brand-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+        >
+          {isPending ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : mode === 'edit' ? null : (
+            <Send size={13} />
+          )}
+          <span>{mode === 'edit' ? (isPending ? 'Đang lưu…' : 'Lưu thay đổi') : isPending ? 'Đang gửi…' : 'Gửi trả lời'}</span>
+        </button>
       </div>
     </form>
-  )
-
-  // Chế độ SỬA: form thay thế bong bóng tại chỗ (không thêm avatar).
-  // Chế độ REPLY: kèm avatar người trả lời bên trái như ô bình luận Facebook.
-  if (mode === 'edit') return <div className="mt-2">{formInner}</div>
-  return (
-    <div className="mt-2 flex gap-2.5">
-      <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={30} verified={user?.verified} />
-      {formInner}
-    </div>
   )
 }
 
 /**
- * Một câu trả lời dạng "comment bubble" (giống Facebook): avatar ngoài, nội dung trong bong bóng.
- * Kèm nút "Trả lời" (chỉ với câu trả lời gốc) + "Chỉnh sửa" (chỉ tác giả), và các reply lồng bên dưới.
+ * Một câu trả lời dạng "comment bubble" bo tròn phong cách hội nhóm.
+ * Kèm nút "Trả lời", "Chỉnh sửa", "Xóa", chip upvote, và các phản hồi lồng bên dưới.
  */
-function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionId: string; isReply?: boolean }) {
+function AnswerBubble({
+  a,
+  questionId,
+  parentAuthor,
+  isReply = false,
+}: {
+  a: Answer
+  questionId: string
+  parentAuthor?: string
+  isReply?: boolean
+}) {
   const user = useAuthStore((s) => s.user)
   const canEdit = !!user && !!a.authorId && String(user.id) === a.authorId
   const canReply = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
   const canVote = canReply
   const [editing, setEditing] = useState(false)
   const [replying, setReplying] = useState(false)
-  const [showReplies, setShowReplies] = useState(false)
+  const [showReplies, setShowReplies] = useState(true)
   const [deleting, setDeleting] = useState(false)
 
   const profileLink = a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'
-  const replyCount = a.replies.length
-  // Reply luôn gộp vào luồng của câu trả lời GỐC (2 cấp): với comment con thì parent là câu gốc của nó.
+  const replyCount = a.replies?.length ?? 0
   const replyParentId = isReply ? (a.parentId ?? undefined) : a.id
 
-  // Bình chọn (UC43): state cục bộ cập nhật lạc quan, cùng pattern với UC42 (Vote a question)/UC17 (Like a post).
   const [voted, setVoted] = useState(a.voted)
   const [votes, setVotes] = useState(a.votes)
   useEffect(() => {
@@ -203,222 +229,265 @@ function AnswerBubble({ a, questionId, isReply = false }: { a: Answer; questionI
   }
 
   return (
-    <div className="flex gap-2.5">
-      <Link to={profileLink} className="shrink-0">
-        <Avatar src={a.avatar} name={a.author} size={isReply ? 30 : 38} verified={a.verified} />
+    <div
+      className={cn(
+        'group flex items-start gap-2.5 transition-all duration-300',
+        isReply &&
+          'relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
+      )}
+    >
+      <Link to={profileLink} className="shrink-0 hover:opacity-85 transition-opacity">
+        <Avatar src={a.avatar} name={a.author} size={isReply ? 28 : 32} verified={a.verified} />
       </Link>
       <div className="min-w-0 flex-1">
-        {editing ? (
-          <InlineAnswerForm questionId={questionId} mode="edit" answerId={a.id} initialBody={a.body} onDone={() => setEditing(false)} />
-        ) : (
-          <>
-            {/* Bong bóng nội dung (gọn kiểu bình luận FB): tên · thời gian + headline + nội dung */}
-            <div className="inline-block max-w-full rounded-2xl rounded-tl-md bg-plum-900/[0.05] px-3.5 py-2">
-              <div className="flex items-baseline gap-1.5">
-                <Link to={profileLink} className="hover:underline">
-                  <span className="text-[13px] font-bold text-plum-900 hover:text-brand-600">{a.author}</span>
-                </Link>
-                {(a.createdAt || a.time) && (
-                  <span className="shrink-0 text-[11px] text-plum-400" title={absoluteTime(a.createdAt)}>
-                    · {relativeTime(a.createdAt) || a.time}
-                  </span>
-                )}
-              </div>
-              {a.authorHeadline ? <p className="truncate text-[11px] text-plum-400">{a.authorHeadline}</p> : null}
-              <p className="mt-0.5 whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-plum-800">{renderAnswerBody(a.body)}</p>
+        <div className="rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Link to={profileLink} className="text-xs font-bold text-plum-900 hover:underline dark:text-white transition-colors">
+                {a.author}
+              </Link>
+              {a.authorHeadline && (
+                <span className="text-[10px] font-medium text-brand-600 bg-brand-500/10 px-1.5 py-0.5 rounded-md dark:text-brand-300">
+                  {a.authorHeadline}
+                </span>
+              )}
+              {(a.createdAt || a.time) && (
+                <span className="shrink-0 text-[10px] text-plum-400 dark:text-[#8a8d91]" title={absoluteTime(a.createdAt)}>
+                  • {relativeTime(a.createdAt) || a.time}
+                </span>
+              )}
+              {a.edited && (
+                <span className="text-[10px] text-plum-400 dark:text-[#8a8d91]">• Đã chỉnh sửa</span>
+              )}
             </div>
 
-            {/* Hàng hành động kiểu FB: chip bình chọn tách riêng (nền bo tròn) + nhóm link Trả lời/Chỉnh sửa */}
-            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="text-plum-400 hover:text-brand-600 transition-colors cursor-pointer"
+                  aria-label="Chỉnh sửa câu trả lời"
+                >
+                  <Pencil size={13} />
+                </button>
+              )}
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setDeleting(true)}
+                  className="text-plum-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  aria-label="Xóa câu trả lời"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {editing ? (
+            <InlineAnswerForm
+              questionId={questionId}
+              mode="edit"
+              answerId={a.id}
+              initialBody={a.body}
+              onDone={() => setEditing(false)}
+            />
+          ) : (
+            (() => {
+              const { mention, cleanText } = cleanAnswerBody(a.body, parentAuthor)
+              return (
+                <div className="mt-1 text-xs text-plum-800 dark:text-plum-200 leading-relaxed">
+                  {mention && (
+                    <span className="mr-1.5 font-semibold text-brand-600 dark:text-brand-400">
+                      @{mention}
+                    </span>
+                  )}
+                  <span className="whitespace-pre-wrap break-words">
+                    {cleanText}
+                  </span>
+                </div>
+              )
+            })()
+          )}
+
+          {/* Action Row: vote button & reply button */}
+          {!editing && (
+            <div className="mt-2 flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={handleVote}
                 aria-pressed={voted}
-                aria-label={voted ? 'Bỏ bình chọn câu trả lời' : 'Bình chọn câu trả lời'}
+                aria-label={voted ? 'Bỏ bình chọn' : 'Bình chọn'}
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold transition-colors',
-                  voted ? 'bg-brand-500/10 text-brand-600' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.08] hover:text-brand-600',
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold transition-all cursor-pointer',
+                  voted
+                    ? 'bg-brand-500/10 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400'
+                    : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.08] hover:text-brand-600 dark:bg-[#242526] dark:text-[#b0b3b8] dark:hover:text-white'
                 )}
               >
-                <ChevronUp size={14} strokeWidth={2.5} />
-                {votes}
+                <ChevronUp size={13} strokeWidth={2.5} />
+                <span>{votes}</span>
               </button>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
-                {canReply && (
-                  <button type="button" onClick={() => setReplying((v) => !v)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
-                    Trả lời
-                  </button>
-                )}
-                {canEdit && (
-                  <button type="button" onClick={() => setEditing(true)} className="font-semibold text-plum-500 transition-colors hover:text-brand-600">
-                    Chỉnh sửa
-                  </button>
-                )}
-                {canEdit && (
-                  <button type="button" onClick={() => setDeleting(true)} className="font-semibold text-plum-500 transition-colors hover:text-rose-600">
-                    Xóa
-                  </button>
-                )}
-                {a.edited && <span className="text-plum-400">Đã chỉnh sửa</span>}
-              </div>
+
+              {canReply && (
+                <button
+                  type="button"
+                  onClick={() => setReplying((v) => !v)}
+                  className="text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400 cursor-pointer"
+                >
+                  Trả lời
+                </button>
+              )}
             </div>
-          </>
-        )}
+          )}
+        </div>
 
-        {/* Form reply — gộp vào luồng câu trả lời gốc; reply cho comment con thì nhắc tên (@) người đó */}
+        {/* Form reply lồng */}
         {replying && (
-          <InlineAnswerForm
-            questionId={questionId}
-            mode="reply"
-            parentId={replyParentId}
-            replyingToName={a.author}
-            initialBody={isReply ? `@${a.author}  ` : ''}
-            onDone={() => {
-              setReplying(false)
-              if (!isReply) setShowReplies(true)
-            }}
-          />
+          <div className="relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
+            <div className="rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+              <div className="flex items-center justify-between text-[11px] text-plum-500 dark:text-[#b0b3b8] mb-1">
+                <span>
+                  Trả lời <strong className="text-brand-600 dark:text-brand-400">@{a.author}</strong>
+                </span>
+                <button type="button" onClick={() => setReplying(false)} className="hover:text-plum-800 dark:hover:text-white cursor-pointer">
+                  <X size={13} />
+                </button>
+              </div>
+              <InlineAnswerForm
+                questionId={questionId}
+                mode="reply"
+                parentId={replyParentId}
+                replyingToName={a.author}
+                initialBody=""
+                onDone={() => {
+                  setReplying(false)
+                  if (!isReply) setShowReplies(true)
+                }}
+              />
+            </div>
+          </div>
         )}
 
-        {/* Reply lồng (2 cấp) — thu gọn mặc định, kiểu "Xem N phản hồi" của FB/TikTok */}
+        {/* Reply list lồng (2 cấp) */}
         {replyCount > 0 && (
-          <div className="mt-2">
+          <div className="mt-2 space-y-2.5">
             {!showReplies ? (
               <button
                 type="button"
                 onClick={() => setShowReplies(true)}
-                className="ml-1 flex items-center gap-2 text-xs font-semibold text-plum-500 transition-colors hover:text-brand-600"
+                className="ml-1 flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400 cursor-pointer"
               >
-                <span className="h-3.5 w-4 shrink-0 rounded-bl-lg border-b-2 border-l-2 border-plum-900/15" />
+                <span className="h-3 w-3.5 shrink-0 rounded-bl-lg border-b-2 border-l-2 border-brand-500/30" />
                 Xem {replyCount} phản hồi
               </button>
             ) : (
-              <div className="space-y-3 border-l-2 border-plum-900/[0.06] pl-3.5">
+              <div className="space-y-2.5">
                 {a.replies.map((r) => (
-                  <AnswerBubble key={r.id} a={{ ...r, replies: [] }} questionId={questionId} isReply />
+                  <AnswerBubble
+                    key={r.id}
+                    a={{ ...r, replies: [] }}
+                    questionId={questionId}
+                    parentAuthor={a.author}
+                    isReply
+                  />
                 ))}
-                <button type="button" onClick={() => setShowReplies(false)} className="text-xs font-semibold text-plum-400 transition-colors hover:text-plum-700">
-                  Ẩn phản hồi
-                </button>
+                {replyCount > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowReplies(false)}
+                    className="ml-8 text-[11px] font-semibold text-plum-400 hover:text-plum-600 dark:text-[#8a8d91] dark:hover:text-[#b0b3b8] cursor-pointer"
+                  >
+                    Ẩn phản hồi
+                  </button>
+                )}
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Modal xác nhận xóa câu trả lời/reply (UC49) — mở khi tác giả bấm "Xóa" */}
-      {deleting && <DeleteAnswerModal questionId={questionId} answerId={a.id} onClose={() => setDeleting(false)} onDeleted={() => setDeleting(false)} />}
+      {deleting && (
+        <DeleteAnswerModal
+          questionId={questionId}
+          answerId={a.id}
+          onClose={() => setDeleting(false)}
+          onDeleted={() => setDeleting(false)}
+        />
+      )}
     </div>
   )
 }
 
-/** Form gửi câu trả lời GỐC mới — chỉ dành cho Student/Alumni (ô thu gọn kiểu bình luận FB/IG). */
+/** Form gửi câu trả lời GỐC mới — dạng pill thanh lịch phong cách hội nhóm. */
 function AnswerForm({ questionId }: { questionId: string }) {
   const user = useAuthStore((s) => s.user)
-  const [expanded, setExpanded] = useState(false)
   const { mutate, isPending, error } = useCreateAnswer(questionId)
-  const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors },
-  } = useForm<CreateAnswerInput>({
-    resolver: zodResolver(createAnswerSchema),
-    defaultValues: { body: '' },
-  })
-  const bodyLength = watch('body')?.length ?? 0
+  const [body, setBody] = useState('')
 
-  /** Thu gọn form về ô "Viết câu trả lời…" và xóa nội dung/lỗi đang nhập. */
-  const collapse = () => {
-    reset()
-    setExpanded(false)
-  }
-
-  const onSubmit = (values: CreateAnswerInput) => {
-    mutate({ input: values }, { onSuccess: () => collapse() })
-  }
-
-  // Trạng thái THU GỌN: một ô bấm để mở form (avatar + placeholder dạng pill).
-  if (!expanded) {
-    return (
-      <button
-        type="button"
-        onClick={() => setExpanded(true)}
-        className="mb-5 flex w-full items-center gap-3 rounded-2xl card-surface p-3.5 text-left transition-colors hover:bg-plum-900/[0.02]"
-      >
-        <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={36} verified={user?.verified} />
-        <span className="flex-1 rounded-full bg-plum-900/[0.05] px-4 py-2.5 text-sm text-plum-400">Viết câu trả lời của bạn…</span>
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/10 text-brand-600">
-          <Pencil size={16} />
-        </span>
-      </button>
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = body.trim()
+    if (!trimmed || isPending) return
+    mutate(
+      { input: { body: trimmed } },
+      {
+        onSuccess: () => {
+          setBody('')
+        },
+      }
     )
   }
 
-  // Trạng thái MỞ RỘNG: form nhập đầy đủ với nút Hủy / Gửi.
   return (
-    <Card hover={false} className="mb-5 p-5">
-      <div className="mb-3 flex items-center gap-2.5">
-        <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={34} verified={user?.verified} />
-        <div className="min-w-0">
-          <h3 className="text-sm font-bold text-plum-900">Câu trả lời của bạn</h3>
-          <p className="text-xs text-plum-400">Chia sẻ kiến thức hoặc kinh nghiệm của bạn</p>
-        </div>
-      </div>
-
+    <div className="mb-4">
       {error && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">
-          <AlertTriangle size={16} className="shrink-0" /> {(error as Error).message}
+        <div className="mb-2 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
+          <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
         </div>
       )}
-
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <textarea
-          {...register('body')}
-          autoFocus
-          rows={4}
-          maxLength={MAX_BODY}
-          placeholder="Chia sẻ câu trả lời của bạn…"
-          className="w-full resize-y rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 py-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-        />
-        {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body.message}</p>}
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-plum-400">
-            {bodyLength.toLocaleString('vi-VN')}/{MAX_BODY.toLocaleString('vi-VN')}
-          </span>
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" size="md" onClick={collapse} disabled={isPending}>
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              disabled={isPending || bodyLength === 0}
-              leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            >
-              {isPending ? 'Đang gửi…' : 'Gửi câu trả lời'}
-            </Button>
-          </div>
+      <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+        <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={32} verified={user?.verified} className="shrink-0" />
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            maxLength={MAX_BODY}
+            placeholder="Chia sẻ câu trả lời hoặc thảo luận..."
+            className="w-full rounded-2xl border border-plum-900/10 bg-white py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] transition-all shadow-2xs"
+          />
+          <button
+            type="submit"
+            disabled={!body.trim() || isPending}
+            aria-label="Gửi câu trả lời"
+            className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400 cursor-pointer"
+          >
+            {isPending ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Send size={13} />
+            )}
+          </button>
         </div>
       </form>
-    </Card>
+    </div>
   )
 }
 
 /**
- * Khu vực câu trả lời của một câu hỏi.
+ * Khu vực câu trả lời của một câu hỏi (Forum).
  * @param questionId ID câu hỏi
  * @param count Số câu trả lời (lấy từ chi tiết câu hỏi) để hiển thị huy hiệu đếm
  */
 export function AnswersSection({ questionId, count }: { questionId: string; count: number }) {
   const user = useAuthStore((s) => s.user)
+  const promptLogin = useLoginPrompt((s) => s.open)
   const canAnswer = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
   const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useAnswers(questionId)
   const answers = data?.pages.flatMap((p) => p.items) ?? []
-  // Số câu trả lời GỐC thực tế từ API (khớp danh sách bên dưới); khi chưa tải xong thì tạm dùng `count`.
   const total = data?.pages[0]?.total ?? count
 
   return (
@@ -434,20 +503,34 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
       {canAnswer ? (
         <AnswerForm questionId={questionId} />
       ) : !user ? (
-        <Card hover={false} className="mb-5 p-4 text-center text-sm text-plum-500">
-          Đăng nhập bằng tài khoản Sinh viên/Cựu sinh viên để trả lời câu hỏi này.
-        </Card>
+        <div className="mb-4 flex items-center justify-between rounded-xl bg-white p-3 border border-plum-900/10 shadow-2xs dark:border-[#393a3b] dark:bg-[#242526]">
+          <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Đăng nhập để tham gia trả lời câu hỏi này.</p>
+          <button
+            type="button"
+            onClick={() => promptLogin('Đăng nhập để tham gia trả lời câu hỏi này.')}
+            className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 dark:text-brand-400 cursor-pointer"
+          >
+            Đăng nhập <ArrowRight size={12} />
+          </button>
+        </div>
       ) : null}
 
       {/* Danh sách câu trả lời theo trạng thái */}
       {isLoading ? (
-        <Card hover={false} className="p-5">
-          <div className="space-y-2.5">
-            <div className="h-4 w-40 animate-pulse rounded bg-plum-900/[0.06]" />
-            <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.05]" />
-            <div className="h-3.5 w-2/3 animate-pulse rounded bg-plum-900/[0.05]" />
+        <div className="space-y-3 py-1">
+          <div className="flex items-start gap-2.5">
+            <div className="h-8 w-8 rounded-full bg-plum-900/[0.06] animate-pulse shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-14 w-full rounded-2xl bg-plum-900/[0.04] animate-pulse" />
+            </div>
           </div>
-        </Card>
+          <div className="flex items-start gap-2.5">
+            <div className="h-8 w-8 rounded-full bg-plum-900/[0.06] animate-pulse shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-14 w-full rounded-2xl bg-plum-900/[0.04] animate-pulse" />
+            </div>
+          </div>
+        </div>
       ) : isError ? (
         <Card hover={false} className="flex flex-col items-center gap-3 p-8 text-center">
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
@@ -467,19 +550,19 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
         </Card>
       ) : (
         <>
-          <div className="space-y-5">
+          <div className="space-y-3">
             {answers.map((a) => (
               <AnswerBubble key={a.id} a={a} questionId={questionId} />
             ))}
           </div>
           {hasNextPage && (
-            <div className="pt-4 text-center">
+            <div className="pt-3 text-center">
               <Button
                 variant="secondary"
-                size="md"
+                size="sm"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                leftIcon={isFetchingNextPage ? <Loader2 size={16} className="animate-spin" /> : undefined}
+                leftIcon={isFetchingNextPage ? <Loader2 size={15} className="animate-spin" /> : undefined}
               >
                 {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm câu trả lời'}
               </Button>
@@ -490,3 +573,4 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
     </section>
   )
 }
+

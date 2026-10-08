@@ -93,7 +93,65 @@ stateDiagram-v2
 #### 3.1 Giải quyết báo cáo vi phạm
 
 ##### 3.1.1 Class Diagram (Sơ đồ Lớp)
-*(Tương tự như Class Diagram của UC69, sử dụng chung các lớp Controller, Service, Repository, Entity, và DTO của module Reports)*
+
+```mermaid
+classDiagram
+    class AdminReportController {
+        -AdminReportService adminReportService
+        +getReports(query, reason, status, postId, page, size) ResponseEntity
+        +getReportDetail(id) ResponseEntity
+    }
+    
+    class AdminReportResponse {
+        -Long id
+        -Long postId
+        -String postContent
+        -String postStatus
+        -Long postAuthorId
+        -String postAuthorName
+        -String postAuthorEmail
+        -Long reporterId
+        -String reporterName
+        -String reporterEmail
+        -String reporterAvatarUrl
+        -ReportReason reason
+        -String description
+        -ReportStatus status
+        -Instant createdAt
+    }
+    
+    class AdminReportService {
+        <<interface>>
+        +getReportDetail(id) AdminReportResponse
+    }
+    
+    class AdminReportServiceImpl {
+        -ReportRepository reportRepository
+        -AdminReportMapper adminReportMapper
+        +getReportDetail(id) AdminReportResponse
+    }
+    
+    class ReportRepository {
+        <<interface>>
+        +findById(id) Optional~Report~
+    }
+    
+    class Report {
+        -Long id
+        -User reporter
+        -Post post
+        -ReportReason reason
+        -String description
+        -ReportStatus status
+        -Instant createdAt
+    }
+
+    AdminReportController --> AdminReportService : uses
+    AdminReportServiceImpl ..|> AdminReportService : implements
+    AdminReportServiceImpl --> ReportRepository : uses
+    AdminReportServiceImpl --> Report : reads
+```
+
 
 ##### 3.1.2 Sequence Diagram (Sơ đồ Tuần tự)
 

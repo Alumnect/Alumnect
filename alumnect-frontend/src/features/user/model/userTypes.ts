@@ -111,6 +111,7 @@ export interface FollowUserResponse {
   isAccountVerified: boolean
   isFollowing: boolean
   studentCode?: string | null
+  role?: string
 }
 
 export interface UserSkillRequest {
@@ -159,6 +160,7 @@ export interface UserDirectoryResponse {
 
 export interface UserSearchParams {
   query?: string
+  name?: string
   role?: string
   majorId?: number
   cohort?: number
@@ -166,6 +168,7 @@ export interface UserSearchParams {
   skill?: string
   company?: string
   page?: number
+  size?: number
   sortBy?: string
   sortDirection?: string
 }
@@ -199,5 +202,10 @@ export interface ConnectionSuggestionResponse {
   matchScore: number
 }
 
-
-
+export const FPT_CAMPUSES = [
+  'FPT University Đà Nẵng',
+  'FPT University Hà Nội',
+  'FPT University TP. Hồ Chí Minh',
+  'FPT University Cần Thơ',
+  'FPT University Quy Nhơn',
+] as const

@@ -1,4 +1,4 @@
-import { MentoringTermsGate, MentorRegistrationForm } from '@/features/mentorship'
+import { MentoringTermsGate, MentorRegistrationForm, useMentoringTermsStatus } from '@/features/mentorship'
 import { Container, Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
 import { Award } from 'lucide-react'
@@ -17,7 +17,7 @@ function BecomeMentorContent() {
           Dành riêng cho Cựu sinh viên (ALUMNI)
         </h2>
         <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
-          Chương trình đăng ký trở thành Mentor hiện tại chỉ áp dụng cho tài khoản Cựu sinh viên đã được hệ thống xác thực. Bạn có thể tham gia với vai trò Student để tìm kiếm người hướng dẫn phù hợp.
+          Chương trình đăng ký trở thành Mentor hiện tại chỉ áp dụng cho tài khoản Cựu sinh viên đã được hệ thống xác thực. Bạn có thể tham gia với vai trò Student để tìm kiếm Mentor phù hợp.
         </p>
       </Card>
     )
@@ -32,6 +32,16 @@ function BecomeMentorContent() {
  * Nếu Alumni chưa chấp nhận điều khoản, hệ thống sẽ tự động hiển thị UC90 Terms Gate trước.
  */
 export function BecomeMentorPage() {
+  const { data: termsStatus } = useMentoringTermsStatus()
+
+  if (termsStatus && !termsStatus.accepted) {
+    return (
+      <MentoringTermsGate source="BECOME_MENTOR">
+        <BecomeMentorContent />
+      </MentoringTermsGate>
+    )
+  }
+
   return (
     <Container className="py-8">
       <MentoringTermsGate source="BECOME_MENTOR">

@@ -34,25 +34,29 @@ stateDiagram-v2
 - **Bước 4 - Xác thực & phân quyền tại Backend**: Endpoint không công khai → Spring Security chặn Guest với **401**. Tại Service, chỉ `STUDENT`/`ALUMNI` được bình luận (vai trò khác → **403**); bài đã ẩn/không tồn tại → **404**.
 - **Bước 5 - Kiểm tra trả lời (nếu có)**: Nếu `parentId` khác null, bình luận cha phải thuộc đúng bài viết này và đang ACTIVE, ngược lại → **404**. Bảng chỉ hỗ trợ 1 cấp nên trả lời-của-trả lời được quy về bình luận gốc.
 - **Bước 6 - Lưu & cập nhật**: Lưu bình luận `status = ACTIVE` và tăng bộ đếm `comment_count` của bài viết trong cùng một transaction; trả về `CommentResponse` (201).
-- **Bước 7 - Hiển thị**: Frontend chèn bình luận mới vào cuối luồng bình luận (thứ tự cũ→mới) và tăng số đếm "Bình luận · N" ngay lập tức, dọn sạch ô nhập.
+- **Bước 7 - Hiển thị**: Frontend chèn bình luận mới vào luồng thảo luận và cập nhật tăng số đếm bình luận trên thanh tương tác của bài viết ngay lập tức, dọn sạch ô nhập.
 
 ### 3.2 Module 3 - Social: Feed, Posts, Events, Packages & Messaging
-Module chứa các tính năng tương tác cộng đồng của AlumNect. UC18 nối tiếp UC16 (View Post Detail):
+Module chứa các tính năng tương tác cộng đồng của AlumNect. UC18 nối tiếp UC16 (View Post Detail) và tích hợp cùng UC15 (View Community Feed):
 cho phép thành viên tham gia thảo luận bằng cách đăng bình luận (và trả lời 1 cấp) trên bài viết.
 
 #### 3.2.1 Bình luận bài viết (Comment on a post)
 
 **Function trigger**:
-- **Navigation path**: Ô soạn bình luận ở cuối trang chi tiết bài viết `/app/posts/{id}`.
+- **Navigation path**:
+  - **Trên Bảng tin News Feed (`/app/feed`)**: Bấm nút "Bình luận" trên thanh tương tác bài viết để mở khung bình luận nhanh tại chỗ (`InlineComments`).
+  - **Trên trang Chi tiết bài viết (`/app/posts/{id}`)**: Khu vực bình luận hiển thị trực tiếp ngay bên dưới nội dung bài viết.
 - **Timing Frequency**: On-demand — mỗi lần người dùng bấm "Gửi".
 
 **Function description**:
 - **Actors/Roles**: Student, Alumni (đã đăng nhập). Admin/Guest không được bình luận (Admin → 403; Guest bị chặn ở Frontend/401).
 - **Purpose**: Cho phép thành viên đăng bình luận trên bài viết để tham gia thảo luận cộng đồng.
 - **Interface**:
-  - Ô soạn (`CommentComposer`): avatar người dùng, textarea "Viết bình luận…", bộ đếm ký tự `N/2000`, nút "Gửi".
-  - Trạng thái: nút Gửi vô hiệu khi rỗng/đang gửi; spinner "Đang gửi…"; thông điệp lỗi nghiệp vụ; Guest → lời mời đăng nhập.
-  - Bình luận mới xuất hiện cuối luồng với thời gian "vừa xong".
+  - **Nút Bình luận trên thanh tương tác bài viết**: Hiển thị số lượng `{số} bình luận`. Khi bấm sẽ mở/đóng khung bình luận nhanh trên News Feed hoặc cuộn tới ô bình luận trên trang chi tiết.
+  - **Ô soạn bình luận (`CommentComposer` / `CommentBox`)**: Ảnh đại diện người dùng, khung nhập nội dung (input/textarea bo tròn hiện đại), nút "Gửi". Thiết kế tối giản, liền mạch, **không lặp lại tiêu đề "Bình luận [số]"** bên dưới bài viết.
+  - **Khung bình luận nhanh trên News Feed (`InlineComments`)**: Trượt mở mượt mà ngay dưới thẻ bài viết, hiển thị form nhập nhanh và 3 bình luận gần nhất kèm liên kết điều hướng xem toàn bộ thảo luận.
+  - **Trạng thái giao diện**: Nút Gửi bị vô hiệu hóa khi nội dung trống hoặc đang gửi; hiển thị trạng thái đang xử lý (Loading); hiển thị thông báo lỗi khi vi phạm nghiệp vụ; hiển thị modal mời đăng nhập khi người dùng là Guest.
+  - **Bình luận mới**: Tự động hiển thị trong luồng thảo luận sau khi gửi thành công.
 
 **Data processing**:
 1. Frontend gọi `POST /api/v1/posts/{id}/comments` với body `{ content, parentId? }`.
@@ -64,8 +68,9 @@ cho phép thành viên tham gia thảo luận bằng cách đăng bình luận (
 7. Frontend chèn bình luận vào cuối cache `['post-comments', id]` + tăng `comments` trong cache `['post', id]`.
 
 **Screen layout**:
-- Ô soạn nằm ngay dưới tiêu đề "Bình luận · N", phía trên danh sách bình luận (bố cục 1 cột `max-w-2xl`).
-- Responsive: textarea co giãn theo bề rộng; trả lời được thụt lề (`ml-10`).
+- **Tại Trang chi tiết**: Ô soạn nằm liền mạch ngay dưới thanh tương tác bài viết (loại bỏ tiêu đề ngăn cách), phía trên danh sách bình luận (bố cục 1 cột `max-w-2xl`).
+- **Tại News Feed**: Khung bình luận nhanh trượt mở êm ái bên dưới bài viết, hiển thị tinh gọn top 3 phản hồi.
+- **Responsive**: Ô nhập co giãn theo bề rộng; bình luận trả lời dạng nhánh cây được thụt lề rõ ràng (`ml-10`).
 
 **Function details**:
 - **Data**: `CreateCommentRequest` (`content`, `parentId?`); `CommentResponse` (`id, author, role, avatar, verified, time, text, parentId`).

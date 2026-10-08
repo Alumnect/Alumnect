@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> TiepNhanYeuCauAn : PUT /api/v1/admin/posts/:id/status (hidden=true)
+    [*] --> TiepNhanYeuCauAn : PUT /api/v1/admin/posts/{id}/status (hidden=true)
     TiepNhanYeuCauAn --> KiemTraQuyenAdmin : Xác thực JWT Role ADMIN
     KiemTraQuyenAdmin --> TuChoi : 403 Forbidden
     KiemTraQuyenAdmin --> TimKiemBaiViet : Tìm Post có event_id trong Database
@@ -88,6 +88,18 @@ stateDiagram-v2
 #### 5.2 Common Requirements (Yêu cầu Chung)
 *   Thực hiện trong Transaction (`@Transactional`) để đảm bảo tính toàn vẹn dữ liệu.
 *   Ghi log chi tiết hành động can thiệp của Quản trị viên.
+
+---
+
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
+
+| # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | MSG-UC74-01 | Toast message | Ẩn sự kiện vi phạm thành công | Ẩn bài viết sự kiện thành công. |
+| 2 | MSG-UC74-02 | Toast message | Mở lại hiển thị sự kiện thành công | Mở ẩn bài viết sự kiện thành công. |
+| 3 | MSG-UC74-03 | Modal confirm | Xác nhận thao tác ẩn sự kiện vi phạm | Bạn có chắc chắn muốn ẩn sự kiện này khỏi bảng tin cộng đồng? |
+| 4 | MSG-UC74-04 | Toast Error | Sự kiện không tồn tại | Không tìm thấy bài viết sự kiện. |
+| 5 | MSG-UC74-05 | Toast Error | Không có quyền Quản trị viên | Bạn không có quyền thực hiện thao tác này. |
 
 ---
 

@@ -5369,6 +5369,705 @@
             ]
         },
         {
+            "name": "93. Thanh toán gói Mentor - PayOS Gateway (UC93)",
+            "description": "Các API phục vụ tạo giao dịch PayOS, tra cứu trạng thái thanh toán, hủy giao dịch và Webhook IPN xử lý kích hoạt/gia hạn gói dịch vụ Mentor (UC93)",
+            "item": [
+                {
+                    "name": "93.1 Tạo Checkout thanh toán gói Mentor (PayOS)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.test(\"Response contains checkoutUrl and orderCode\", function () {",
+                                    "    pm.expect(jsonData.data.orderCode).to.be.a(\"number\");",
+                                    "    pm.expect(jsonData.data.checkoutUrl).to.be.a(\"string\");",
+                                    "    pm.collectionVariables.set(\"mentorOrderCode\", jsonData.data.orderCode);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/payment/checkout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "payment",
+                                "checkout"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"packageId\": 1\n}"
+                        },
+                        "description": "Cựu sinh viên khởi tạo đơn hàng thanh toán PayOS cho gói dịch vụ Mentor"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "93.2 Tra cứu trạng thái giao dịch thanh toán (Polling)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.test(\"Payment status is valid\", function () {",
+                                    "    pm.expect([\"PENDING\", \"PAID\", \"FAILED\", \"EXPIRED\", \"CANCELLED\"]).to.include(jsonData.data.paymentStatus);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/payment/status/{{mentorOrderCode}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "payment",
+                                "status",
+                                "{{mentorOrderCode}}"
+                            ]
+                        },
+                        "description": "Frontend thực hiện Polling định kỳ 3 giây để kiểm tra kết quả giao dịch"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "93.3 Hủy giao dịch thanh toán đang PENDING",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.test(\"Status is CANCELLED\", function () {",
+                                    "    pm.expect(jsonData.data.paymentStatus).to.eql(\"CANCELLED\");",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/payment/cancel/{{mentorOrderCode}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "payment",
+                                "cancel",
+                                "{{mentorOrderCode}}"
+                            ]
+                        },
+                        "description": "Người dùng chủ động hủy link thanh toán PayOS khi đang ở trạng thái chờ"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "93.4 Tạo thanh toán thất bại - Gói không tồn tại (400 Bad Request)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 400\", function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/payment/checkout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "payment",
+                                "checkout"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"packageId\": 99999\n}"
+                        },
+                        "description": "Gửi packageId không tồn tại, mong đợi lỗi 400 Bad Request"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "93.5 Tạo thanh toán thất bại - Chưa xác thực (401 Unauthorized)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 401\", function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/payment/checkout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "payment",
+                                "checkout"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"packageId\": 1\n}"
+                        },
+                        "description": "Không truyền Access Token, mong đợi lỗi 401 Unauthorized"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "93.6 Webhook PayOS IPN Kích hoạt gói Mentor",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 or 400 for mock signature\", function () {",
+                                    "    pm.expect([200, 400]).to.include(pm.response.code);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/subscriptions/payment/webhook",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "subscriptions",
+                                "payment",
+                                "webhook"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"00\",\n  \"desc\": \"success\",\n  \"data\": {\n    \"orderCode\": 123456789,\n    \"amount\": 300000,\n    \"description\": \"ALUMNECT 123456\",\n    \"accountNumber\": \"99998888\",\n    \"reference\": \"FT2610019999\",\n    \"transactionDateTime\": \"2026-10-01 20:30:00\",\n    \"currency\": \"VND\",\n    \"paymentLinkId\": \"link-123\",\n    \"code\": \"00\",\n    \"desc\": \"success\"\n  },\n  \"signature\": \"mock_signature\"\n}"
+                        },
+                        "description": "Webhook IPN công khai do PayOS gọi về sau khi khách chuyển khoản thành công"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "94. Xem trạng thái Mentor & Subscription (UC94)",
+            "description": "Các API phục vụ truy vấn và tổng hợp trạng thái Mentor Profile, CV, Ngân hàng, Điều khoản và Gói Subscription (UC94)",
+            "item": [
+                {
+                    "name": "94.0 Đăng nhập Alumni (Tự động lưu Token)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var res = pm.response.json();",
+                                    "    if (res.data && res.data.accessToken) {",
+                                    "        pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                                    "        pm.collectionVariables.set('jwtToken', res.data.accessToken);",
+                                    "    }",
+                                    "}",
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"alumni.dung@gmail.com\",\n  \"password\": \"Password@123\"\n}"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.1 TC01/TC08 — Xem trạng thái Mentor & Subscription (TC-BE-01)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Response code is 0 and has required fields\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data).to.have.property('mentorStatus');",
+                                    "    pm.expect(jsonData.data).to.have.property('active');",
+                                    "    pm.expect(jsonData.data).to.have.property('profileComplete');",
+                                    "    pm.expect(jsonData.data).to.have.property('hasCv');",
+                                    "    pm.expect(jsonData.data).to.have.property('bankInformationComplete');",
+                                    "    pm.expect(jsonData.data).to.have.property('termsAccepted');",
+                                    "    pm.expect(jsonData.data).to.have.property('hasSubscription');",
+                                    "    pm.expect(jsonData.data).to.have.property('missingRequirements');",
+                                    "    pm.expect(jsonData.data.mentorStatus).to.be.oneOf(['INCOMPLETE', 'PAYMENT_PENDING', 'ACTIVE', 'EXPIRED']);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status"
+                            ]
+                        },
+                        "description": "Lấy tổng hợp toàn bộ trạng thái Mentor và Subscription của Alumni"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.2 TC02 — Kiểm tra trạng thái CV trong Mentor Status (TC-BE-02)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"CV metadata is present and valid\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data).to.have.property('hasCv');",
+                                    "    pm.expect(jsonData.data).to.have.property('cvStatus');",
+                                    "    pm.expect(['UPLOADED', 'MISSING']).to.include(jsonData.data.cvStatus);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status"
+                            ]
+                        },
+                        "description": "Xác nhận trường dữ liệu CV và cvStatus hoạt động chuẩn xác"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.3 TC03 — Kiểm tra trạng thái tài khoản ngân hàng thụ hưởng (TC-BE-03)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Bank information fields are verified\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data).to.have.property('bankInformationComplete');",
+                                    "    pm.expect(jsonData.data).to.have.property('bankInformationStatus');",
+                                    "    if (jsonData.data.maskedAccountNumber) {",
+                                    "        pm.expect(jsonData.data.maskedAccountNumber).to.include('****');",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status"
+                            ]
+                        },
+                        "description": "Kiểm tra tính an toàn PII và trạng thái khai báo ngân hàng"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.4 TC04 — Kiểm tra trạng thái Điều khoản Mentoring (TC-BE-04)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Terms acceptance status matches UC90\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data).to.have.property('termsAccepted');",
+                                    "    pm.expect(jsonData.data).to.have.property('currentTermsVersion');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status"
+                            ]
+                        },
+                        "description": "Xác nhận trạng thái chấp thuận điều khoản từ UC90"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.5 TC05/TC06 — Kiểm tra gói Subscription và alias my-status (TC-BE-05)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Subscription and alias endpoint work properly\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error).to.eql(0);",
+                                    "    pm.expect(jsonData.data).to.have.property('hasSubscription');",
+                                    "    pm.expect(jsonData.data).to.have.property('startedAt');",
+                                    "    pm.expect(jsonData.data).to.have.property('expiredAt');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status/my-status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status",
+                                "my-status"
+                            ]
+                        },
+                        "description": "Gọi alias endpoint /mentoring/status/my-status kiểm tra tính nhất quán"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.6 TC07 — Kiểm tra Next Action và URL điều hướng (TC-BE-06)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"NextAction and ActionUrl are valid for UI navigation\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data).to.have.property('nextAction');",
+                                    "    pm.expect(jsonData.data).to.have.property('actionUrl');",
+                                    "    pm.expect(jsonData.data.actionUrl).to.be.a('string');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status"
+                            ]
+                        },
+                        "description": "Kiểm tra hệ thống cung cấp đúng đường dẫn chuyển hướng người dùng tiếp theo"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.7 TC09 — Từ chối khi STUDENT truy cập Mentor Status riêng tư (TC-BE-07)",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "pm.sendRequest({",
+                                    "    url: pm.collectionVariables.get('baseUrl') + '/auth/login',",
+                                    "    method: 'POST',",
+                                    "    header: { 'Content-Type': 'application/json' },",
+                                    "    body: {",
+                                    "        mode: 'raw',",
+                                    "        raw: JSON.stringify({",
+                                    "            email: 'student.an@fpt.edu.vn',",
+                                    "            password: 'Password@123'",
+                                    "        })",
+                                    "    }",
+                                    "}, function (err, res) {",
+                                    "    if (!err && res.code === 200) {",
+                                    "        var json = res.json();",
+                                    "        pm.collectionVariables.set('studentToken', json.data.accessToken);",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 403 Forbidden\", function () {",
+                                    "    pm.response.to.have.status(403);",
+                                    "});",
+                                    "pm.test(\"Message forbids non-Alumni access\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.message).to.include('Chức năng chỉ dành cho Cựu sinh viên');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{studentToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status"
+                            ]
+                        },
+                        "description": "Bảo mật: Phân quyền chặn vai trò STUDENT xem trạng thái Mentor"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "94.8 TC10 — Từ chối khi không có JWT Token (TC-BE-08)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 401 Unauthorized or 403\", function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "status"
+                            ]
+                        },
+                        "description": "Bảo mật: Từ chối truy cập không có xác thực JWT Bearer"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
             "name": "96. Admin Xem CV Mentor (UC96)",
             "description": "Các API phục vụ cho Quản trị viên xem chi tiết CV và thông tin Mentor (UC96)",
             "item": [

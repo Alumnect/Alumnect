@@ -40,13 +40,11 @@ export function useSelectMentorPackage() {
   return useMutation({
     mutationFn: (data: SelectMentorPackageRequest) =>
       mentorSubscriptionApi.selectPackage(data),
-    onSuccess: (response) => {
-      toast.success(
-        `Đã chọn gói ${response.packageName} thành công! Đang chuyển hướng sang thanh toán...`
-      )
+    onSuccess: () => {
       // Invalidate queries liên quan để tự động làm mới UI
       queryClient.invalidateQueries({ queryKey: MENTOR_SUBSCRIPTION_KEYS.mySubscription })
       queryClient.invalidateQueries({ queryKey: ['mentor-registration'] })
+      queryClient.invalidateQueries({ queryKey: ['mentor-status'] })
     },
     onError: (error: Error) => {
       // Hiển thị trực tiếp thông điệp nghiệp vụ từ Backend

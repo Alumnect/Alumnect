@@ -18,6 +18,8 @@ interface ExperienceFormModalProps {
   onClose: () => void
   mode: 'create' | 'edit' | 'promote' | 'rejoin'
   experience?: ExperienceResponse | null // Used for edit or promote source
+  defaultPrimary?: boolean
+  onSuccess?: () => void
 }
 
 /**
@@ -29,6 +31,8 @@ export function ExperienceFormModal({
   onClose,
   mode,
   experience,
+  defaultPrimary = false,
+  onSuccess,
 }: ExperienceFormModalProps) {
   // Input fields state
   const [title, setTitle] = useState('')
@@ -167,7 +171,7 @@ export function ExperienceFormModal({
         setEndMonth('')
         setEndYear('')
         setIsCurrent(true)
-        setIsPrimary(false)
+        setIsPrimary(defaultPrimary)
         setDescription('')
         setLatitude(undefined)
         setLongitude(undefined)
@@ -178,7 +182,7 @@ export function ExperienceFormModal({
         setGeocodingProvider(undefined)
       }
     }
-  }, [isOpen, mode, experience])
+  }, [isOpen, mode, experience, defaultPrimary])
 
   const handlePlaceSelect = (data: any) => {
     if (!data) {
@@ -281,6 +285,7 @@ export function ExperienceFormModal({
         })
       }
       toast.success(mode === 'create' || mode === 'rejoin' ? 'Đã thêm kinh nghiệm làm việc thành công!' : 'Đã cập nhật kinh nghiệm làm việc!')
+      onSuccess?.()
       onClose()
     } catch (err: any) {
       console.error('Lỗi khi lưu kinh nghiệm:', err)

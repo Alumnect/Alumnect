@@ -15,6 +15,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { X, Loader2, AlertTriangle, LayoutGrid, GraduationCap, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { toast } from '@/components/ui'
@@ -138,11 +139,11 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
   // Portal ra thẳng <body> để thoát khỏi ancestor có transform/filter (motion.div bọc <Outlet/>
   // trong AppShell) — nếu không, `fixed inset-0` sẽ neo theo phần tử đó thay vì viewport.
   return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4" onClick={onClose}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={TRANSITION.overlay} className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4" onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        transition={TRANSITION.pop}
         className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl card-surface p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >

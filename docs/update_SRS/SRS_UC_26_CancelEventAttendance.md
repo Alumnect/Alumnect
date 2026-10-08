@@ -87,7 +87,7 @@ stateDiagram-v2
         *   `attendeeCount` (int): Số lượng người tham gia sau khi giảm.
         *   `capacity` (Integer | null): Sức chứa tối đa của sự kiện.
 
-**Business Logic / Rules**:
+#### 5.1 Business Rules (Quy tắc Nghiệp vụ)
 *   **BR-01 (RBAC)**: Chỉ người dùng đăng nhập với vai trò `STUDENT` hoặc `ALUMNI` mới được quyền hủy đăng ký tham gia sự kiện.
 *   **BR-02 (Ownership)**: Người dùng chỉ được hủy lượt đăng ký của chính tài khoản mình đang đăng nhập.
 *   **BR-03 (Registration Status)**: Người dùng phải đang ở trạng thái `REGISTERED` trong bảng `event_registrations`. Nếu chưa từng đăng ký hoặc đã hủy trước đó, hệ thống chặn lại và báo lỗi.
@@ -96,7 +96,7 @@ stateDiagram-v2
 *   **BR-06 (Atomic Decrement)**: Giảm trường `attendee_count` trong bảng `events` an toàn chống xung đột đa luồng: `SET attendee_count = GREATEST(0, attendee_count - 1)`.
 *   **BR-07 (Re-registerable)**: Sau khi hủy, người dùng vẫn có thể đăng ký lại sự kiện đó (nếu sự kiện vẫn còn chỗ và chưa diễn ra) theo quy trình UC25.
 
-**Error & Notification Messages**:
+#### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
 *   `MSG20_SUCCESS`: "Hủy đăng ký tham gia sự kiện thành công!" (HTTP 200)
 *   `MSG20_ERR_PAST`: "Sự kiện đã kết thúc hoặc đang diễn ra, không thể hủy đăng ký." (HTTP 400)
 *   `MSG20_ERR_NOT_REGISTERED`: "Bạn chưa đăng ký tham gia sự kiện này." (HTTP 400)

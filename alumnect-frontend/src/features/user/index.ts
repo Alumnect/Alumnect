@@ -6,6 +6,7 @@ export * from './hooks/useUserQueries'
 export { ChangePasswordForm } from './components/ChangePasswordForm'
 export { EditProfileModal } from './components/EditProfileModal'
 export { EditProfileView } from './components/EditProfileView'
+export { CampusSelect } from './components/CampusSelect'
 
 export { ExperienceFormModal } from './components/ExperienceFormModal'
 export { PlaceAutocomplete } from './components/PlaceAutocomplete'

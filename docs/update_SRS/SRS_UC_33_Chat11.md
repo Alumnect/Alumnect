@@ -23,7 +23,7 @@ stateDiagram-v2
         [*] --> KiemTraIdempotentHoiThoai: Kiểm tra/Khởi tạo hội thoại theo directKey
         KiemTraIdempotentHoiThoai --> LuuDatabase: Lưu Message, Attachments & cập nhật last_message_at
         LuuDatabase --> CapNhatNguoiDoc: Đánh dấu đã đọc tin nhắn cho người gửi
-        CapNhatNguoiDoc --> PhatSongWebSocket: Bắn STOMP frame tới người nhận (/user/queue/messages)
+        CapNhatNguoiDoc --> PhatSongWebSocket: Phát sóng thông điệp STOMP tới người nhận (/user/queue/messages)
     }
     
     XuLyLuuVaPhatSong --> CapNhatGiaoDienRealtime: Trả lời HTTP 200 OK
@@ -43,24 +43,27 @@ stateDiagram-v2
     4. Nạp tin nhắn mới nhất của toàn bộ cuộc trò chuyện bằng truy vấn tối ưu PostgreSQL `DISTINCT ON (conversation_id)`.
     5. Đếm số lượng tin nhắn chưa đọc của từng cuộc trò chuyện bằng truy vấn gom nhóm native SQL `GROUP BY conversation_id`.
     Toàn bộ dữ liệu được ghép nối (in-memory mapping) trong bộ nhớ và trả về tức thì cho Client.
-  * **Mở / Khởi tạo cuộc hội thoại 1-1 an toàn (Idempotent)**:
-    * Nếu mở cuộc trò chuyện từ danh bạ/hồ sơ (`targetUserId`), hệ thống gọi `POST /api/v1/conversations/direct/{targetUserId}`.
-    * Hệ thống tính toán khóa duy nhất `directKey = Math.min(u1, u2) + "_" + Math.max(u1, u2)` và kiểm tra trong bảng `conversations`. Khóa `direct_key` được bảo vệ bởi ràng buộc `UNIQUE (direct_key)` trong cơ sở dữ liệu PostgreSQL. Nếu phát sinh tranh chấp đồng thời (race condition khi cả 2 cùng bấm nhắn tin), ngoại lệ duplicate key được xử lý tự động và trả về đúng bản ghi cuộc hội thoại đã được tạo trước đó.
+  * **Mở / Khởi tạo cuộc hội thoại 1-1 an toàn (Draft Mode & Idempotent)**:
+    * Khi người dùng mở cuộc trò chuyện từ danh bạ/hồ sơ (`targetUserId`), hệ thống gọi `POST /api/v1/conversations/direct/{targetUserId}`.
+    * Hệ thống tính toán khóa duy nhất `directKey = Math.min(u1, u2) + "_" + Math.max(u1, u2)` và kiểm tra trong bảng `conversations`.
+    * **Cơ chế Draft Conversation**: Nếu 2 người chưa từng nhắn tin, hệ thống **không tạo bản ghi rỗng vào CSDL** nhằm chống spam và tiết kiệm tài nguyên. Thay vào đó, API trả về đối tượng Draft (`id = null`) với thông tin người nhận (`recipientName`, `recipientAvatar`, `recipientMajor`) để Frontend hiển thị khung chat.
+    * Khi gửi tin nhắn đầu tiên, backend kiểm tra quan hệ Theo dõi (Follow). Nếu người nhận chưa follow người gửi, cuộc trò chuyện được đánh dấu là Tin nhắn chờ (`is_accepted = false`). Đồng thời gán `direct_key` được bảo vệ bởi ràng buộc `UNIQUE (direct_key)`.
   * **Tải lịch sử tin nhắn (Infinite Scroll)**:
     * Client nạp tin nhắn qua hook `useMessages` gọi `GET /api/v1/conversations/{conversationId}/messages?page={page}&size=30`.
     * Hệ thống kiểm tra quyền thành viên (`existsByConversationIdAndUserId`).
     * Dữ liệu tin nhắn được sắp xếp giảm dần theo thời gian tạo (`createdAt DESC`). Khi người dùng cuộn lên trên đỉnh khung chat, hệ thống tự động tải thêm trang tiếp theo và neo giữ vị trí cuộn mượt mà (scroll anchoring) không gây giật màn hình.
-  * **Soạn thảo và Gửi tin nhắn**:
+  * **Soạn thảo và Gửi tin nhắn với Optimistic UI**:
     * Người dùng nhập nội dung văn bản (tối đa 5000 ký tự) và/hoặc tải tệp tin đa phương tiện (ảnh, video, tài liệu) lên Cloudflare R2 qua Presigned URL rồi bấm "Gửi".
+    * **Kỹ thuật Optimistic UI**: Hook `useSendMessage` lập tức tạo một tin nhắn tạm thời (`id = -Date.now()`, `status = 'sending'`) hiển thị ngay trên khung chat ở trạng thái đang gửi và cập nhật đoạn trích tin nhắn đưa hội thoại lên đầu danh sách trước khi máy chủ phản hồi.
     * Hệ thống kiểm tra: Nếu cả văn bản và danh sách đính kèm đều rỗng, từ chối yêu cầu và trả về lỗi HTTP 400 Bad Request (`MSG-CHAT-04`).
 * **Bước 3 - Kết thúc**:
-  * Hệ thống lưu bản ghi `Message` và các bản ghi `MessageAttachment` vào cơ sở dữ liệu PostgreSQL trong cùng một Transaction an toàn.
+  * Hệ thống lưu bản ghi `Message` (tự động phân loại `message_type`: `TEXT`, `IMAGE`, `FILE`) và các bản ghi `MessageAttachment` vào PostgreSQL trong cùng Transaction an toàn.
   * Cập nhật thời điểm `last_message_at` của cuộc hội thoại để tự động đưa hội thoại lên đầu danh sách.
   * Bản ghi `ConversationParticipant` của người gửi tự động cập nhật `last_read_message_id = savedMessage.id`.
-  * Trả về HTTP 200 OK kèm `MessageResponse` cho người gửi. Hook `useSendMessage` lập tức chèn tin nhắn vào trang đầu của cache React Query `['messages', conversationId]` và cập nhật `lastMessage` của `['conversations']`.
+  * Trả về HTTP 200 OK kèm `MessageResponse` cho người gửi. Hook `useSendMessage` hoán đổi mượt mà tin nhắn tạm với dữ liệu chính thức từ server, chuyển trạng thái sang đã gửi thành công. Nếu xảy ra lỗi mạng hoặc máy chủ, tin nhắn được đánh dấu trạng thái lỗi (`status = 'error'`) kèm thông báo toast.
   * Đồng thời, backend gọi `SimpMessagingTemplate.convertAndSendToUser` đẩy tin nhắn theo thời gian thực tới kênh cá nhân `/user/queue/messages` của người nhận.
   * Client của người nhận nhận được frame STOMP, hook `useWebSocketChat` tự động cập nhật trực tiếp cache React Query `['messages', conversationId]` và tăng `unreadCount` trong danh sách `['conversations']` **mà không cần gọi lại HTTP REST API**, đảm bảo độ trễ gần như bằng 0 và không tốn băng thông máy chủ.
-  * Nếu người nhận đang mở cửa sổ chat của cuộc trò chuyện đó, hook `useMarkAsRead` tự động gọi `POST /api/v1/conversations/{id}/read` để cập nhật trạng thái đã đọc.
+  * Nếu người nhận đang mở cửa sổ chat của cuộc trò chuyện đó, hook `useMarkAsRead` tự động gọi `POST /api/v1/conversations/{conversationId}/read` để cập nhật trạng thái đã đọc.
 
 ---
 
@@ -70,7 +73,7 @@ Module Tin nhắn cung cấp khả năng kết nối, giao lưu và trao đổi 
 #### 3.2.1 Nhắn tin trực tiếp 1-1 (Direct Messaging)
 
 **Function trigger**:
-* **Navigation path**: Thanh điều hướng chính -> icon "Tin nhắn" (`/app/messages`), hoặc từ Hồ sơ cá nhân / Danh bạ cựu sinh viên click nút "Nhắn tin" (`/app/messages?userId={targetUserId}`).
+* **Navigation path**: Thanh điều hướng chính -> mục "Tin nhắn" (`/app/messages`), hoặc từ Hồ sơ cá nhân / Danh bạ cựu sinh viên click nút "Nhắn tin" (`/app/messages?userId={targetUserId}`).
 * **Timing Frequency**: On demand (bất cứ khi nào người dùng muốn trò chuyện hoặc có tin nhắn mới đẩy về qua socket).
 
 **Function description**:
@@ -78,7 +81,15 @@ Module Tin nhắn cung cấp khả năng kết nối, giao lưu và trao đổi 
 * **Purpose**: Cho phép thành viên trao đổi tin nhắn văn bản, gửi ảnh, video, tài liệu công việc/học tập theo thời gian thực (realtime) với độ trễ dưới 50ms.
 * **Interface**:
   * **Cột trái (ConversationList)**: Ô tìm kiếm cuộc trò chuyện, danh sách đối phương kèm Avatar, tên, chuyên ngành, tin nhắn mới nhất, thời gian và huy hiệu số tin chưa đọc (Unread badge).
-  * **Cột phải (ChatWindow)**: Header đối phương kèm chấm trạng thái hoạt động, khung cuộn lịch sử tin nhắn hỗ trợ Infinite Scroll (tin nhắn người gửi màu tím lavender `#7f86ee` bên phải, tin nhắn đối phương màu trắng bên trái), thanh soạn thảo kèm nút đính kèm tệp tin và nút Gửi.
+  * **Cột phải (ChatWindow)**: Header đối phương kèm trạng thái hoạt động, khung cuộn lịch sử tin nhắn hỗ trợ Infinite Scroll.
+  * **Bong bóng tin nhắn (`MessageBubble`)**:
+    - **Căn lề bố cục**: Tin nhắn của người gửi (`isMe`) căn phải, tin nhắn của đối phương (`!isMe`) căn trái.
+    - **Thời gian tin nhắn**: Dòng thời gian gửi tin nhắn được căn chỉnh theo mép tương ứng của bong bóng chat (`isMe` căn phải, `!isMe` căn trái), nằm ngay dưới chân mỗi bong bóng chat.
+    - **Thẻ liên kết tương tác nhúng trong tin nhắn**:
+      + `SharedPostBubbleCard`: Thẻ bài viết bảng tin được chia sẻ (tác giả, avatar, nội dung trích dẫn, ảnh thu nhỏ, nút xem chi tiết).
+      + `SharedGroupBubbleCard`: Thẻ hội nhóm được chia sẻ (ảnh bìa, tên nhóm, số thành viên, mô tả tóm tắt, nút xem nhóm).
+      + `SharedGroupPostBubbleCard`: Thẻ bài viết trong hội nhóm được chia sẻ.
+  * **Thanh soạn thảo**: Kèm nút đính kèm tệp tin đa phương tiện và nút Gửi.
 
 **Data processing**:
 * Trích xuất email người dùng từ JWT SecurityContext.
@@ -89,7 +100,7 @@ Module Tin nhắn cung cấp khả năng kết nối, giao lưu và trao đổi 
 * Client nhận STOMP frame và cập nhật trực tiếp cache React Query in-memory.
 
 **Screen layout**:
-* `Figure 33.1`: Giao diện hộp thư tin nhắn AlumNect trên nền canvas kem ấm (`#faf4ec`), khung thẻ kính mờ Pastel Premium (`bg-white/70 backdrop-blur-xl`).
+* `Figure 33.1`: Giao diện hộp thư tin nhắn và cửa sổ trò chuyện trực tiếp 1-1.
 
 **Function details**:
 * **Data**: `conversationId`, `recipientId`, `content`, `attachments` (`mediaType`, `url`, `fileName`, `fileSize`).
@@ -513,7 +524,7 @@ sequenceDiagram
 
 ##### 3.1.3 Thiết kế Cơ sở Dữ liệu & Ràng buộc (Database Schema Design)
 
-Cơ sở dữ liệu hỗ trợ tính năng Nhắn tin trực tiếp 1-1 gồm 4 bảng trong PostgreSQL, tuân thủ các migration `V8__create_chat_and_messaging_tables.sql` và `V9__add_direct_key_to_conversations.sql`:
+Cơ sở dữ liệu hỗ trợ phân hệ Nhắn tin gồm 4 bảng trong PostgreSQL, tuân thủ các migration `V1__init_database_schema.sql`, `V3__add_group_chat_and_stranger_features.sql` và `V7__add_message_type_column.sql`:
 
 ```mermaid
 erDiagram
@@ -522,18 +533,25 @@ erDiagram
     messages ||--o{ message_attachments : "đính kèm"
     users ||--o{ conversation_participants : "tham gia"
     users ||--o{ messages : "gửi"
+    users ||--o{ conversations : "tạo (created_by)"
 
     conversations {
         bigint id PK "GENERATED ALWAYS AS IDENTITY"
+        varchar type "NOT NULL DEFAULT 'DIRECT' CHECK (type IN ('DIRECT', 'GROUP'))"
+        varchar title "Tiêu đề nhóm trò chuyện (nếu là GROUP)"
+        varchar avatar_url "Đường dẫn ảnh đại diện nhóm (Cloudflare R2)"
+        bigint created_by FK "REFERENCES users(id) ON DELETE SET NULL"
+        varchar direct_key UK "UNIQUE: min_max của 2 user IDs (DIRECT)"
         timestamptz created_at "NOT NULL DEFAULT now()"
         timestamptz last_message_at "Thời điểm tin nhắn mới nhất"
-        varchar direct_key UK "UNIQUE: min_max của 2 user IDs"
     }
 
     conversation_participants {
         bigint id PK "GENERATED ALWAYS AS IDENTITY"
         bigint conversation_id FK "REFERENCES conversations(id) ON DELETE CASCADE"
         bigint user_id FK "REFERENCES users(id) ON DELETE CASCADE"
+        varchar role "NOT NULL DEFAULT 'MEMBER' CHECK (role IN ('ADMIN', 'MEMBER'))"
+        boolean is_accepted "NOT NULL DEFAULT true (false nếu là tin nhắn chờ)"
         bigint last_read_message_id FK "REFERENCES messages(id) ON DELETE SET NULL"
         boolean is_archived "NOT NULL DEFAULT false"
         timestamptz joined_at "NOT NULL DEFAULT now()"
@@ -543,6 +561,7 @@ erDiagram
         bigint id PK "GENERATED ALWAYS AS IDENTITY"
         bigint conversation_id FK "REFERENCES conversations(id) ON DELETE CASCADE"
         bigint sender_id FK "REFERENCES users(id) ON DELETE CASCADE"
+        varchar message_type "NOT NULL DEFAULT 'TEXT' CHECK (message_type IN ('TEXT', 'SYSTEM', 'IMAGE', 'FILE'))"
         text content "Nội dung tin nhắn văn bản"
         boolean is_deleted "NOT NULL DEFAULT false"
         timestamptz created_at "NOT NULL DEFAULT now()"
@@ -562,28 +581,35 @@ erDiagram
 ###### Chi tiết các bảng và ràng buộc:
 1. **Bảng `conversations`**:
    * `id`: Khóa chính (BIGINT, tự tăng).
+   * `type`: Phân loại hội thoại (`DIRECT` hoặc `GROUP`), có ràng buộc `ck_conversations_type CHECK (type IN ('DIRECT', 'GROUP'))`.
+   * `title`: Tên nhóm trò chuyện (VARCHAR(255), áp dụng cho nhóm).
+   * `avatar_url`: Ảnh đại diện nhóm trò chuyện (VARCHAR(500)).
+   * `created_by`: Khóa ngoại người khởi tạo nhóm liên kết `users(id) ON DELETE SET NULL`.
+   * `direct_key`: Khóa chuỗi định danh duy nhất hội thoại 1-1 (VARCHAR(100), dạng `{minUserId}_{maxUserId}`).
    * `created_at`: Thời điểm khởi tạo cuộc hội thoại (`TIMESTAMPTZ`, mặc định `now()`).
    * `last_message_at`: Thời điểm phát sinh tin nhắn mới nhất (`TIMESTAMPTZ`), phục vụ sắp xếp danh sách hội thoại.
-   * `direct_key`: Khóa chuỗi định danh duy nhất hội thoại 1-1 (VARCHAR(100), dạng `{minUserId}_{maxUserId}`).
    * Ràng buộc: `uq_conversations_direct_key UNIQUE (direct_key)`.
-   * Chỉ mục: `idx_conversations_direct_key ON conversations (direct_key)`.
+   * Chỉ mục: `idx_conversations_direct_key ON conversations (direct_key)`, `idx_conversations_type ON conversations (type)`.
 2. **Bảng `conversation_participants`**:
    * `id`: Khóa chính (BIGINT, tự tăng).
    * `conversation_id`: Khóa ngoại liên kết tới `conversations(id)` (`ON DELETE CASCADE`).
    * `user_id`: Khóa ngoại liên kết tới `users(id)` (`ON DELETE CASCADE`).
+   * `role`: Vai trò trong hội thoại (`ADMIN` hoặc `MEMBER`), ràng buộc `ck_conversation_participants_role`.
+   * `is_accepted`: Trạng thái chấp nhận cuộc trò chuyện (BOOLEAN, mặc định `true`, bằng `false` khi là tin nhắn chờ từ người lạ).
    * `last_read_message_id`: Khóa ngoại liên kết tới `messages(id)` (`ON DELETE SET NULL`), lưu vết tin nhắn cuối cùng người dùng đã đọc.
    * `is_archived`: Cờ lưu trữ (BOOLEAN, mặc định `false`).
    * `joined_at`: Thời điểm tham gia (`TIMESTAMPTZ`, mặc định `now()`).
    * Ràng buộc: `uq_conversation_participants_conv_user UNIQUE (conversation_id, user_id)`.
-   * Chỉ mục: `idx_conversation_participants_user_id`, `idx_conversation_participants_conv_id`.
+   * Chỉ mục: `idx_conversation_participants_user_id`, `idx_conversation_participants_conv_id`, `idx_conversation_participants_accepted`.
 3. **Bảng `messages`**:
    * `id`: Khóa chính (BIGINT, tự tăng).
    * `conversation_id`: Khóa ngoại liên kết tới `conversations(id)` (`ON DELETE CASCADE`).
    * `sender_id`: Khóa ngoại liên kết tới `users(id)` (`ON DELETE CASCADE`).
-   * `content`: Nội dung văn bản (TEXT, cho phép null nếu có tệp đính kèm).
+   * `message_type`: Phân loại tin nhắn (`TEXT`, `SYSTEM`, `IMAGE`, `FILE`), có ràng buộc `ck_messages_message_type`.
+   * `content`: Nội dung văn bản (TEXT, cho phép null nếu chỉ gửi tệp đính kèm).
    * `is_deleted`: Cờ xóa mềm (BOOLEAN, mặc định `false`).
    * `created_at`: Thời điểm gửi tin nhắn (`TIMESTAMPTZ`, mặc định `now()`).
-   * Chỉ mục: `idx_messages_conversation_created ON messages (conversation_id, created_at DESC)`, `idx_messages_sender_id ON messages (sender_id)`.
+   * Chỉ mục: `idx_messages_conversation_created ON messages (conversation_id, created_at DESC)`, `idx_messages_sender_id ON messages (sender_id)`, `idx_messages_type ON messages (message_type)`.
 4. **Bảng `message_attachments`**:
    * `id`: Khóa chính (BIGINT, tự tăng).
    * `message_id`: Khóa ngoại liên kết tới `messages(id)` (`ON DELETE CASCADE`).

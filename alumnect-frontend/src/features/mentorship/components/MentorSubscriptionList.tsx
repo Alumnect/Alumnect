@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import { Award, AlertCircle } from 'lucide-react'
+import { Award, AlertCircle, ArrowRight } from 'lucide-react'
 import { Card, Skeleton, Badge, Button } from '@/components/ui'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { vnd } from '@/lib/utils'
+import { toast } from '@/components/ui/Toast'
 import {
   useMentorPackages,
   useMyMentorSubscription,
@@ -12,6 +13,10 @@ import { MentorSubscriptionCard } from './MentorSubscriptionCard'
 
 /**
  * Component hiển thị danh sách gói Mentor và quản lý thao tác lựa chọn gói (UC92).
+ * Tích hợp chuẩn Premium Pastel UI:
+ * - VIP Banner hiển thị chi tiết trạng thái gói đã kích hoạt của Mentor.
+ * - Danh sách gói đồng bộ căn chỉnh 100% về kích thước, chiều cao và nhãn.
+ * - Cơ chế bảo vệ và hướng dẫn người dùng trực quan khi đã có gói hiệu lực.
  */
 export function MentorSubscriptionList() {
   const navigate = useNavigate()
@@ -19,16 +24,33 @@ export function MentorSubscriptionList() {
   const { data: mySubscription, isLoading: isLoadingSub } = useMyMentorSubscription()
   const selectMutation = useSelectMentorPackage()
 
+  const isCurrentlyActive =
+    (mySubscription?.status === 'ACTIVE' || mySubscription?.status === 'PAID') &&
+    (!mySubscription.endDate || new Date(mySubscription.endDate).getTime() > Date.now())
+
   const handleSelectPackage = async (packageId: number) => {
+    if (isCurrentlyActive) {
+      toast.info('Bạn đang có gói Mentor còn hiệu lực. Vui lòng sử dụng hết gói hiện tại trước khi đăng ký hoặc gia hạn gói mới.')
+      return
+    }
     try {
       const result = await selectMutation.mutateAsync({ packageId })
       // Sau khi chọn gói thành công, điều hướng sang màn hình thanh toán UC93
       if (result) {
-        navigate('/app/mentoring/subscription')
+        navigate(`/app/mentoring/subscription?step=checkout&packageId=${packageId}`)
       }
     } catch {
       // Lỗi đã được xử lý tự động bởi hook
     }
+  }
+
+  const formatExpiry = (dateStr?: string) => {
+    if (!dateStr) return ''
+    return new Date(dateStr).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
   }
 
   if (isLoadingPackages || isLoadingSub) {
@@ -65,79 +87,90 @@ export function MentorSubscriptionList() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Thẻ hiển thị gói đã chọn / trạng thái hiện tại nếu người dùng đã đăng ký trước đó */}
-      {mySubscription && (
+    <div className="space-y-3.5">
+      {/* 1. Thông báo gói Mentor hiện tại nếu đã kích hoạt hoặc đang chờ thanh toán (không hiển thị đơn đã hủy) */}
+      {mySubscription && mySubscription.status !== 'CANCELLED' && (
         <Reveal>
-          <Card hover={false} className="p-6 rounded-3xl border border-plum-900/10 bg-white dark:bg-[#242526] shadow-sm">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-600">
-                  <Award className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-plum-900 dark:text-[#e4e6eb] text-base">
-                      {mySubscription.packageName}
-                    </span>
-                    <Badge
-                      tone={
-                        mySubscription.status === 'PAID'
-                          ? 'success'
-                          : mySubscription.status === 'PENDING_PAYMENT'
-                          ? 'gold'
-                          : 'neutral'
-                      }
-                      className="px-2.5 py-0.5 text-xs font-semibold"
-                    >
-                      {mySubscription.status === 'PAID'
-                        ? 'Đã kích hoạt'
-                        : mySubscription.status === 'PENDING_PAYMENT'
-                        ? 'Chờ thanh toán'
-                        : mySubscription.status}
-                    </Badge>
-                  </div>
-                  <p className="mt-0.5 text-xs text-plum-500">
-                    Giá giao dịch: <strong className="text-plum-900 dark:text-[#e4e6eb]">{vnd(mySubscription.priceAtPurchase)}</strong> | Thời hạn {mySubscription.durationMonths} tháng
-                  </p>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white shrink-0 shadow-xs">
+                <Award className="h-4 w-4" />
               </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                <h3 className="font-bold text-sm text-slate-800 dark:text-[#f0f2f5]">
+                  {mySubscription.packageName}
+                </h3>
+                {isCurrentlyActive ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                    Đang hoạt động
+                  </span>
+                ) : mySubscription.status === 'PENDING_PAYMENT' ? (
+                  <Badge tone="gold" className="text-[10px] px-2 py-0.5">
+                    Chờ thanh toán
+                  </Badge>
+                ) : mySubscription.status === 'EXPIRED' ? (
+                  <Badge tone="danger" className="text-[10px] px-2 py-0.5">
+                    Đã hết hạn
+                  </Badge>
+                ) : null}
+                <span className="text-xs text-slate-500 dark:text-[#b0b3b8]">
+                  {vnd(mySubscription.priceAtPurchase)} / {mySubscription.durationMonths} tháng
+                </span>
+                {mySubscription.endDate && (
+                  <span className="text-xs text-slate-500 dark:text-[#b0b3b8]">
+                    • Hạn dùng: {formatExpiry(mySubscription.endDate)}
+                  </span>
+                )}
+              </div>
+            </div>
 
+            {/* Cụm nút hành động */}
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
               {mySubscription.status === 'PENDING_PAYMENT' && (
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="w-full sm:w-auto font-medium"
-                    onClick={() => navigate('/app/mentoring/subscription')}
-                  >
-                    Thanh toán ngay
-                  </Button>
-                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="rounded-lg px-3.5 py-1.5 font-semibold text-xs shadow-xs"
+                  onClick={() => navigate('/app/mentoring/subscription?step=checkout')}
+                >
+                  Thanh toán ngay
+                </Button>
+              )}
+
+              {isCurrentlyActive && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="rounded-lg px-3.5 py-1.5 font-semibold text-xs flex items-center gap-1.5 shadow-xs"
+                  onClick={() => navigate('/app/mentoring')}
+                >
+                  <span>Bảng tin Mentor</span>
+                  <ArrowRight size={13} />
+                </Button>
               )}
             </div>
-          </Card>
+          </div>
         </Reveal>
       )}
 
-      {/* Danh sách các gói Mentor khả dụng */}
+      {/* 2. Danh sách các gói Mentor */}
       <div>
-        <div className="mb-6">
-          <h2 className="font-heading text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Các Gói Dịch Vụ Đồng Hành Cố Vấn
+        <div className="text-center max-w-xl mx-auto mb-2.5">
+          <h2 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-[#f0f2f5] tracking-tight">
+            Gói dịch vụ Mentor
           </h2>
-          <p className="text-xs text-plum-500 mt-1">
-            Chọn gói phù hợp với kế hoạch thời gian và đóng góp của bạn cho cộng đồng FPT Alumni.
-          </p>
         </div>
 
-        <Stagger className="grid gap-6 md:grid-cols-3" gap={0.1}>
+        <Stagger className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto" gap={0.1}>
           {packages?.map((pkg) => (
             <StaggerItem key={pkg.id}>
               <MentorSubscriptionCard
                 pkg={pkg}
-                isSelected={mySubscription?.packageId === pkg.id}
+                isSelected={mySubscription?.status === 'PENDING_PAYMENT' && mySubscription?.packageId === pkg.id}
                 isPendingSelection={selectMutation.isPending}
+                isCurrentlyActive={isCurrentlyActive}
+                isCurrentActivePackage={isCurrentlyActive && mySubscription?.packageId === pkg.id}
+                activeEndDate={mySubscription?.endDate}
                 onSelect={handleSelectPackage}
               />
             </StaggerItem>

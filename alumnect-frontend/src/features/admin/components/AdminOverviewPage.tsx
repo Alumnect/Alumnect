@@ -185,10 +185,9 @@ export function AdminOverviewPage() {
                     <Avatar name={p.fullName} size={42} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-plum-900">{p.fullName}</p>
-                      <p className="text-xs text-plum-400">
-                        Năm tốt nghiệp: {p.graduationYear} · Ngành: {p.majorCode}
+                      <p className="text-xs text-plum-500 font-medium">
+                        Ngành: {p.majorCode}
                       </p>
-                      {p.note && <p className="mt-1 text-xs italic text-plum-500">"{p.note}"</p>}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">

@@ -71,7 +71,6 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
       email: googleData?.email || '',
       password: '',
       token: googleData?.token || '',
-      note: '',
     },
   })
 
@@ -128,11 +127,8 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           fullName: data.fullName,
           role: data.role,
           majorId: Number(data.majorId),
-          cohort: Number(data.cohort),
           studentCode: data.studentCode,
-          graduationYear: data.graduationYear ? Number(data.graduationYear) : undefined,
           proofUrl: data.proofUrl || undefined,
-          note: data.note || undefined,
         })
       } else {
         await registerMutation.mutateAsync({
@@ -141,11 +137,8 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           password: data.password,
           role: data.role,
           majorId: Number(data.majorId),
-          cohort: Number(data.cohort),
           studentCode: data.studentCode,
-          graduationYear: data.graduationYear ? Number(data.graduationYear) : undefined,
           proofUrl: data.proofUrl || undefined,
-          note: data.note || undefined,
         })
         toast.success('Đăng ký thành công! Vui lòng nhập mã OTP gửi tới email.')
         onSuccess(data.email, data.role)
@@ -222,7 +215,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         />
 
         <Field
-          label="Email FPT"
+          label="Email"
           type="email"
           placeholder="you@fpt.edu.vn"
           trailing={<Mail size={16} />}
@@ -242,7 +235,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.06] hover:text-plum-900 transition-colors"
+                className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-700 dark:text-[#b0b3b8] dark:hover:text-white transition-colors cursor-pointer"
                 aria-label="Ẩn/hiện mật khẩu"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -275,24 +268,13 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           )}
         </label>
 
-        <div className="grid grid-cols-2 gap-3">
-          {/* Mã số sinh viên */}
-          <Field
-            label="Mã số sinh viên"
-            placeholder="HE180000"
-            error={errors.studentCode?.message}
-            {...register('studentCode')}
-          />
-
-          {/* Khóa học */}
-          <Field
-            label="Khóa học"
-            type="number"
-            placeholder="Ví dụ: 18"
-            error={errors.cohort?.message}
-            {...register('cohort')}
-          />
-        </div>
+        {/* Mã số sinh viên */}
+        <Field
+          label="Mã số sinh viên"
+          placeholder="Ví dụ: HE180000"
+          error={errors.studentCode?.message}
+          {...register('studentCode')}
+        />
 
         {/* Các trường đặc thù của ALUMNI */}
         {currentRole === 'ALUMNI' && (
@@ -301,14 +283,6 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
               <GraduationCap size={16} />
               <span>Yêu cầu xác minh cho Cựu sinh viên</span>
             </div>
-
-            <Field
-              label="Năm tốt nghiệp"
-              type="number"
-              placeholder="2022"
-              error={errors.graduationYear?.message}
-              {...register('graduationYear')}
-            />
 
             {/* Upload tệp tin minh chứng tốt nghiệp */}
             <div className="block">
@@ -346,19 +320,6 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
                 <span className="mt-1 block text-xs font-medium text-coral-500">{uploadError}</span>
               )}
             </div>
-
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-semibold text-plum-700">Ghi chú cho Admin (Tùy chọn)</span>
-              <textarea
-                placeholder="Mô tả hoặc thông tin bổ sung để duyệt nhanh hơn..."
-                className="w-full rounded-xl border border-plum-900/10 bg-cream-100 p-3 text-sm text-plum-900 placeholder:text-plum-400 transition-colors focus:border-brand-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/25"
-                rows={2}
-                {...register('note')}
-              />
-              {errors.note && (
-                <span className="mt-1 block text-xs font-medium text-coral-500">{errors.note.message}</span>
-              )}
-            </label>
           </div>
         )}
 

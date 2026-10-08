@@ -1,9 +1,13 @@
 package com.alumnect.alumnect_backend.mapper.message;
 
+import com.alumnect.alumnect_backend.common.enums.ConversationType;
+import com.alumnect.alumnect_backend.common.enums.MessageType;
 import com.alumnect.alumnect_backend.dto.response.message.ConversationResponse;
 import com.alumnect.alumnect_backend.dto.response.message.MessageAttachmentResponse;
 import com.alumnect.alumnect_backend.dto.response.message.MessageResponse;
+import com.alumnect.alumnect_backend.dto.response.message.ParticipantResponse;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
+import com.alumnect.alumnect_backend.entity.message.ConversationParticipant;
 import com.alumnect.alumnect_backend.entity.message.Message;
 import com.alumnect.alumnect_backend.entity.message.MessageAttachment;
 import com.alumnect.alumnect_backend.entity.user.User;
@@ -15,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Lớp Mapper chuyển đổi giữa Entity và DTO cho chức năng Tin nhắn (UC33).
+ * Lớp Mapper chuyển đổi giữa Entity và DTO cho chức năng Tin nhắn (trực tiếp 1-1, nhóm chat, người lạ).
  */
 @Component
 public class MessageMapper {
@@ -58,6 +62,7 @@ public class MessageMapper {
                 .senderName(senderName)
                 .senderAvatar(senderAvatar)
                 .content(message.getContent())
+                .type(message.getType() != null ? message.getType() : MessageType.TEXT)
                 .isDeleted(message.isDeleted())
                 .createdAt(message.getCreatedAt())
                 .attachments(attachments)
@@ -65,35 +70,89 @@ public class MessageMapper {
     }
 
     /**
-     * Chuyển đổi Conversation sang ConversationResponse tóm tắt cho danh sách chat.
+     * Chuyển đổi Conversation 1-1 sang ConversationResponse tóm tắt cho danh sách chat.
      */
     public ConversationResponse toConversationResponse(
             Conversation conversation,
             User recipient,
             UserProfile recipientProfile,
             String lastMessageSnippet,
-            long unreadCount) {
+            long unreadCount,
+            boolean isAccepted) {
 
         if (conversation == null) return null;
 
-        String recipientName = recipientProfile != null && recipientProfile.getFullName() != null
-                ? recipientProfile.getFullName()
-                : (recipient != null ? recipient.getEmail() : "Người dùng");
-        String recipientAvatar = recipientProfile != null ? recipientProfile.getAvatarUrl() : null;
-        String recipientMajor = recipientProfile != null && recipientProfile.getMajor() != null
-                ? recipientProfile.getMajor().getName()
-                : null;
+        boolean isGroup = conversation.getType() == ConversationType.GROUP;
+
+        String title;
+        String avatarUrl;
+        String recipientName = null;
+        String recipientAvatar = null;
+        String recipientMajor = null;
+        Long recipientId = null;
+
+        if (isGroup) {
+            title = conversation.getTitle() != null ? conversation.getTitle() : "Nhóm trò chuyện";
+            avatarUrl = conversation.getAvatarUrl();
+            recipientName = title;
+            recipientAvatar = avatarUrl;
+        } else {
+            recipientId = recipient != null ? recipient.getId() : null;
+            recipientName = recipientProfile != null && recipientProfile.getFullName() != null
+                    ? recipientProfile.getFullName()
+                    : (recipient != null ? recipient.getEmail() : "Người dùng");
+            recipientAvatar = recipientProfile != null ? recipientProfile.getAvatarUrl() : null;
+            recipientMajor = recipientProfile != null && recipientProfile.getMajor() != null
+                    ? recipientProfile.getMajor().getName()
+                    : null;
+            title = recipientName;
+            avatarUrl = recipientAvatar;
+        }
+
+        Long communityGroupId = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getId() : null;
+        String communityGroupName = conversation.getCommunityGroup() != null ? conversation.getCommunityGroup().getName() : null;
 
         return ConversationResponse.builder()
                 .id(conversation.getId())
+                .type(conversation.getType())
+                .isGroup(isGroup)
+                .title(title)
+                .avatarUrl(avatarUrl)
                 .createdAt(conversation.getCreatedAt())
                 .lastMessageAt(conversation.getLastMessageAt() != null ? conversation.getLastMessageAt() : conversation.getCreatedAt())
-                .recipientId(recipient != null ? recipient.getId() : null)
+                .recipientId(recipientId)
                 .recipientName(recipientName)
                 .recipientAvatar(recipientAvatar)
                 .recipientMajor(recipientMajor)
+                .memberCount(conversation.getParticipants() != null ? conversation.getParticipants().size() : 2)
+                .isAccepted(isAccepted)
+                .adminId(conversation.getCreatedBy() != null ? conversation.getCreatedBy().getId() : null)
                 .lastMessage(lastMessageSnippet)
                 .unreadCount(unreadCount)
+                .communityGroupId(communityGroupId)
+                .communityGroupName(communityGroupName)
+                .build();
+    }
+
+    /**
+     * Chuyển đổi ConversationParticipant sang ParticipantResponse.
+     */
+    public ParticipantResponse toParticipantResponse(ConversationParticipant cp, UserProfile profile) {
+        if (cp == null) return null;
+        User user = cp.getUser();
+        String fullName = profile != null && profile.getFullName() != null
+                ? profile.getFullName()
+                : (user != null ? user.getEmail() : "Thành viên");
+        String avatar = profile != null ? profile.getAvatarUrl() : null;
+        String major = profile != null && profile.getMajor() != null ? profile.getMajor().getName() : null;
+
+        return ParticipantResponse.builder()
+                .userId(user != null ? user.getId() : null)
+                .fullName(fullName)
+                .avatar(avatar)
+                .major(major)
+                .role(cp.getRole())
+                .joinedAt(cp.getJoinedAt())
                 .build();
     }
 }

@@ -68,7 +68,7 @@ Module Quản trị hệ thống quản lý các tài khoản người dùng, b�
 *   **Interface**:
     *   **Nút kích hoạt**: Nút bấm màu Cam - Trắng FPT (`#F27024`) có icon `<FileText />` trực tiếp tại bảng danh sách người dùng.
     *   **Giao diện Modal (`AdminMentorCvModal`)**:
-        - Thẻ thông tin Mentor: Ảnh đại diện, Họ tên, Email, Vị trí hiện tại, Công ty, Số năm kinh nghiệm, Lĩnh vực cố vấn hỗ trợ.
+        - Thẻ thông tin Mentor: Ảnh đại diện, Họ tên, Email, Vị trí hiện tại, Công ty, Lĩnh vực cố vấn hỗ trợ.
         - Khung xem tệp trực tiếp (`<iframe src={cvUrl} />`).
         - Nút hành động: "Mở trong tab mới", "Tải về tệp CV", "Đóng cửa sổ".
         - Banner cảnh báo quy tắc nghiệp vụ UC96.
@@ -81,7 +81,7 @@ Module Quản trị hệ thống quản lý các tài khoản người dùng, b�
 5. Trả về kết quả JSON chuẩn `ApiResponse<AdminMentorCvResponse>`.
 
 **Function details**:
-*   **Data**: `mentorProfileId`, `userId`, `mentorName`, `mentorEmail`, `avatarUrl`, `currentPosition`, `currentCompany`, `yearsOfExperience`, `bio`, `cvFileKey`, `cvUrl`, `mentorStatus`, `supportedFields`.
+*   **Data**: `mentorProfileId`, `userId`, `mentorName`, `mentorEmail`, `avatarUrl`, `currentPosition`, `currentCompany`, `bio`, `cvFileKey`, `cvUrl`, `mentorStatus`, `supportedFields`.
 *   **Validation**: Kiểm tra mã tệp CV `cvFileKey != null && !cvFileKey.isEmpty()`.
 *   **Business rules**: **BR-96**: Chức năng Xem CV Mentor chỉ dùng cho mục đích kiểm tra đối chứng. Hệ thống KHÔNG cung cấp các thao tác Phê duyệt CV (Approve CV), Từ chối CV (Reject CV), Duyệt Mentor hoặc Từ chối Mentor. Trạng thái của Mentor hoàn toàn độc lập và được duy trì theo chu trình đăng ký gói dịch vụ.
 *   **Error Handling**:
@@ -107,7 +107,7 @@ Module Quản trị hệ thống quản lý các tài khoản người dùng, b�
 | 1 | MSG_UC96_01 | Toast / Modal | Tải thông tin CV Mentor thành công | Tải CV Mentor thành công |
 | 2 | MSG_UC96_02 | Inline Error | Không tìm thấy hồ sơ Mentor | Không tìm thấy hồ sơ Mentor với ID: {mentorId} |
 | 3 | MSG_UC96_03 | Inline Error | Mentor chưa cập nhật tệp CV | Mentor này chưa cập nhật tệp CV lên hệ thống |
-| 4 | MSG_UC96_04 | Alert Banner | Từ chối truy cập do thiếu quyền Admin | Access Denied: Bạn không có quyền truy cập chức năng này |
+| 4 | MSG_UC96_04 | Alert Banner | Từ chối truy cập do thiếu quyền Admin | Access Denied: Người dùng không có quyền truy cập chức năng này |
 
 ---
 
@@ -154,7 +154,6 @@ classDiagram
         -String avatarUrl
         -String currentPosition
         -String currentCompany
-        -Integer yearsOfExperience
         -String bio
         -String cvFileKey
         -String cvUrl
@@ -184,7 +183,6 @@ classDiagram
     class MentorProfile {
         -Long id
         -User user
-        -Integer yearsOfExperience
         -String bio
         -String cvFileKey
         -MentorStatus mentorStatus
@@ -268,7 +266,6 @@ sequenceDiagram
 | :--- | :--- | :--- | :--- |
 | `id` | `BIGINT GENERATED ALWAYS AS IDENTITY` | NO | Khóa chính |
 | `user_id` | `BIGINT` | NO | FK liên kết bảng `users` (1-1) |
-| `years_of_experience` | `INTEGER` | YES | Số năm kinh nghiệm làm việc |
 | `bio` | `TEXT` | YES | Lời giới thiệu cố vấn |
 | `working_mode` | `VARCHAR(20)` | YES | ONLINE, OFFLINE, BOTH |
 | `mentoring_type` | `VARCHAR(20)` | YES | INDIVIDUAL, GROUP, BOTH |

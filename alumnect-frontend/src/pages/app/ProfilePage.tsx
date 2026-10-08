@@ -106,8 +106,13 @@ export function ProfilePage() {
       setActiveTab('saved')
     } else if (tab === 'posts') {
       setActiveTab('posts')
-    } else if (edit === 'true') {
+    } else if (edit === 'true' || searchParams.get('action') === 'add-experience' || searchParams.get('addExperience') === 'true') {
       setActiveTab('about')
+      if (searchParams.get('action') === 'add-experience' || searchParams.get('addExperience') === 'true') {
+        setFormMode('create')
+        setExpToEdit(null)
+        setIsExpModalOpen(true)
+      }
     } else if (tab === 'profile') {
       setActiveTab('profile')
     }
@@ -467,8 +472,16 @@ export function ProfilePage() {
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-plum-900 tracking-tight">
                   {profile.fullName}
                 </h1>
-                {profile.isAccountVerified && (
-                  <BadgeCheck className="text-brand-500 fill-brand-100" size={24} />
+                {isAlumni ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-[#d45105] dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
+                    <GraduationCap size={13} className="shrink-0" />
+                    Cựu sinh viên
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200/80 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-950/40 dark:border-blue-800/60 dark:text-blue-300">
+                    <GraduationCap size={13} className="shrink-0" />
+                    Sinh viên
+                  </span>
                 )}
                 {profile.studentCode && (
                   <span className="text-xs sm:text-sm font-semibold text-plum-500 bg-plum-900/[0.04] px-2.5 py-0.5 rounded-full border border-plum-900/10 self-center">

@@ -294,5 +294,5 @@ erDiagram
         timestamptz created_at
     }
 ```
-* Bảng `votes` copy nguyên định nghĩa từ blueprint thiết kế gốc (`E:\Database Alumnect.sql`) — đa hình dùng chung cho câu hỏi (`QUESTION`) và câu trả lời (`ANSWER`, chưa triển khai nghiệp vụ). Ràng buộc `UNIQUE (user_id, target_type, target_id)` đảm bảo mỗi người chỉ bình chọn 1 lần/đối tượng; `CHECK (value IN (-1, 1))` cho phép mở rộng downvote sau này dù UC42 chỉ dùng `value = 1`. Index `(target_type, target_id)` phục vụ tính cờ `voted` theo lô khi hiển thị danh sách.
+* Bảng `votes` được thiết kế theo cấu trúc cơ sở dữ liệu chuẩn của AlumNect — đa hình dùng chung cho câu hỏi (`QUESTION`) và câu trả lời (`ANSWER`, chưa triển khai nghiệp vụ). Ràng buộc `UNIQUE (user_id, target_type, target_id)` đảm bảo mỗi người chỉ bình chọn 1 lần/đối tượng; `CHECK (value IN (-1, 1))` cho phép mở rộng downvote sau này dù UC42 chỉ dùng `value = 1`. Index `(target_type, target_id)` phục vụ tính cờ `voted` theo lô khi hiển thị danh sách.
 * Không đổi cấu trúc bảng `questions` — cột `vote_count` đã có sẵn từ V1 (UC38), chỉ được cập nhật giá trị đồng thời khi ghi/xóa `votes`.

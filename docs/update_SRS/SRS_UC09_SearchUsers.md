@@ -7,7 +7,7 @@
 ```mermaid
 stateDiagram-v2
     [*] --> ViewingDirectory : Người dùng truy cập /app/alumni
-    ViewingDirectory --> SearchingKeyword : Nhập từ khóa tìm kiếm (Tên, Kỹ năng, Công ty, Mã SV)
+    ViewingDirectory --> SearchingKeyword : Nhập từ khóa tìm kiếm (Tên, Email, Kỹ năng, Công ty, Mã SV)
     ViewingDirectory --> FilteringCategory : Chọn nhanh chuyên ngành gợi ý (SE, AI, IA...)
     ViewingDirectory --> ApplyingAdvancedFilters : Mở Modal lọc (Vai trò, Chuyên ngành, Niên khóa, Tỉnh thành, Sắp xếp)
     SearchingKeyword --> FetchingUsers : Kích hoạt debounce 350ms gọi GET /api/v1/users/search
@@ -72,12 +72,12 @@ stateDiagram-v2
     * `size` phải nằm trong khoảng từ 1 đến 100.
     * Từ khóa `query` không vượt quá 255 ký tự.
   * **Business rules**:
-    * **BR-01**: Chỉ hiển thị các tài khoản ở trạng thái hoạt động (`accountStatus = ACTIVE`).
-    * **BR-02**: Loại trừ tài khoản quản trị viên (`ADMIN`) khỏi danh bạ thành viên công khai.
-    * **BR-03**: Khách vãng lai chưa đăng nhập vẫn có quyền tìm kiếm và xem danh bạ; khi bấm "Theo dõi" hoặc "Nhắn tin" hệ thống sẽ mở Modal yêu cầu đăng nhập.
-    * **BR-04**: Với thành viên đã đăng nhập, hệ thống tự động xác định trạng thái `isFollowing` và loại trừ hồ sơ của chính người xem khỏi kết quả tìm kiếm/danh bạ để đảm bảo trải nghiệm người dùng tự nhiên và không sinh ra ô trống trong lưới.
-    * **BR-05**: Tìm kiếm từ khóa không phân biệt hoa thường và so khớp mờ trên nhiều trường dữ liệu (họ tên, chức danh, mã SV, kỹ năng, công ty, chuyên ngành). Hỗ trợ tiếng Việt không dấu (PostgreSQL `unaccent`) cho phép gõ từ khóa không dấu vẫn tìm thấy nội dung có dấu và ngược lại.
-    * **BR-06**: Loại trừ hoàn toàn hồ sơ của chính mình tại cả tầng truy vấn cơ sở dữ liệu (`UserSpecification.filterUsers`) lẫn tầng hiển thị giao diện Client (`displayedUsers`), đảm bảo lưới CSS Grid 3 cột luôn được xếp khít liền mạch, không bị lủng ô trống.
+    * **BR-01**: Chỉ hiển thị hồ sơ của các thành viên đang ở trạng thái hoạt động bình thường trong mạng lưới. Các tài khoản đang chờ phê duyệt hoặc bị khóa không được xuất hiện trong kết quả.
+    * **BR-02**: Tài khoản Quản trị viên hệ thống không được hiển thị trên danh bạ thành viên công khai của cộng đồng.
+    * **BR-03**: Khách vãng lai chưa đăng nhập vẫn có quyền tìm kiếm và tra cứu danh bạ; khi thực hiện các hành động kết nối (như Theo dõi hoặc Nhắn tin), hệ thống sẽ yêu cầu đăng nhập.
+    * **BR-04**: Với thành viên đã đăng nhập, hệ thống tự động xác định mối quan hệ kết nối (đã theo dõi hay chưa) đối với từng người dùng trong danh sách kết quả.
+    * **BR-05**: Tìm kiếm từ khóa không phân biệt chữ hoa, chữ thường và dấu tiếng Việt (gõ không dấu vẫn tìm thấy nội dung có dấu và ngược lại). Hệ thống so khớp từ khóa với họ tên, email, chức danh nghề nghiệp, mã sinh viên, kỹ năng, công ty làm việc, chuyên ngành đào tạo và tỉnh thành.
+    * **BR-06**: Hệ thống tự động loại trừ chính hồ sơ của người đang tìm kiếm ra khỏi kết quả để tránh người dùng tự kết nối với chính mình.
   * **Error Handling**:
     * Trả về HTTP 400 Bad Request kèm thông điệp tiếng Việt nếu `page < 0` hoặc `size` vượt quá giới hạn.
     * Trả về HTTP 500 Internal Server Error nếu xảy ra lỗi kết nối cơ sở dữ liệu.
@@ -92,16 +92,16 @@ stateDiagram-v2
 
 | ID | Định nghĩa Quy tắc (Rule Definition) |
 | :--- | :--- |
-| BR-01 | Chỉ các tài khoản có trạng thái `account_status = 'ACTIVE'` mới được xuất hiện trên kết quả tìm kiếm danh bạ. |
-| BR-02 | Tài khoản mang vai trò `ADMIN` bị loại trừ khỏi kết quả tìm kiếm danh bạ cộng đồng. |
-| BR-03 | API tìm kiếm `/api/v1/users/search` là công khai (Public GET); không bắt buộc Token xác thực. |
-| BR-04 | Khi người dùng đã đăng nhập, hệ thống tự động ánh xạ quan hệ `follows` để trả về cờ `isFollowing = true/false`. |
-| BR-05 | Giá trị phân trang mặc định là `page = 0`, `size = 12`; `size` tối đa không vượt quá 100 bản ghi mỗi trang. |
-| BR-06 | Tự động loại trừ ID của người dùng đang đăng nhập khỏi kết quả tìm kiếm (`id != currentViewerId`) để tránh kết nối chính mình và không tạo ô trống trong layout. |
-| BR-07 | Tích hợp tìm kiếm tiếng Việt toàn diện không dấu qua hàm `unaccent()` của PostgreSQL trên các trường họ tên, thành phố, chuyên ngành. |
+| BR-01 | Chỉ các tài khoản thành viên đang ở trạng thái hoạt động mới được xuất hiện trên kết quả tìm kiếm danh bạ. |
+| BR-02 | Tài khoản mang vai trò Quản trị viên hệ thống bị loại trừ khỏi kết quả tìm kiếm danh bạ cộng đồng. |
+| BR-03 | Tính năng tra cứu và xem danh bạ thành viên là công khai đối với tất cả người dùng, không bắt buộc đăng nhập. |
+| BR-04 | Khi người dùng đã đăng nhập, hệ thống tự động hiển thị trạng thái theo dõi/kết nối tương ứng với từng thành viên. |
+| BR-05 | Kết quả tìm kiếm danh bạ được chia theo trang với số lượng cố định 12 thành viên mỗi trang và tối đa không quá 100 thành viên. |
+| BR-06 | Người dùng không nhìn thấy chính hồ sơ của mình trong danh sách kết quả tìm kiếm danh bạ. |
+| BR-07 | Hệ thống hỗ trợ tìm kiếm linh hoạt bằng tiếng Việt có dấu hoặc không dấu trên các thông tin cá nhân, chức danh, kỹ năng và học vấn của thành viên. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-* Giao diện tuân thủ tiêu chuẩn Pastel Premium: Canvas `#faf4ec`, Card bề mặt trắng bo góc lớn `rounded-3xl`, viền `border-plum-900/10`, hiệu ứng kính mờ `glassmorphism`, bóng đổ mềm và chuyển động mượt mà bằng Framer Motion.
+* Giao diện bố cục dạng lưới thẻ tương thích tốt trên cả máy tính để bàn và thiết bị di động.
 * Hỗ trợ tìm kiếm từ khóa tức thì với cơ chế debounce 350ms để tối ưu tải máy chủ.
 * Dữ liệu phân trang đầy đủ, có nút điều hướng Trang trước / Trang sau và hiển thị tổng số kết quả.
 
@@ -332,7 +332,7 @@ sequenceDiagram
      2. Đếm số followers qua `countFollowersByUserIds(userIds)`.
      3. Đếm số following qua `countFollowingByUserIds(userIds)`.
      4. Kiểm tra trạng thái đã follow của người xem qua `findByFollowerIdAndFollowingIdIn(viewerId, userIds)`.
-   * Toàn bộ dữ liệu được nạp vào các Map tra cứu trong bộ nhớ RAM (`expMap`, `followersCountMap`, `followingCountMap`, `followedUserIds`). Vòng lặp map DTO chỉ thực hiện ghép nối dữ liệu trong bộ nhớ mà **không bắn thêm bất kỳ câu truy vấn SQL nào xuống Database** (triệt tiêu hoàn toàn lỗi N+1 Query).
+   * Toàn bộ dữ liệu được nạp vào các Map tra cứu trong bộ nhớ RAM (`expMap`, `followersCountMap`, `followingCountMap`, `followedUserIds`). Vòng lặp map DTO chỉ thực hiện ghép nối dữ liệu trong bộ nhớ mà **không thực thi thêm bất kỳ câu truy vấn SQL nào xuống Database** (triệt tiêu hoàn toàn lỗi N+1 Query).
    * Kết quả được đóng gói thành `PageResponse<UserDirectoryResponse>` và phản hồi cho Client với mã HTTP 200 OK.
 2. **Luồng 2 - Ngoại lệ Validation tham số (Validation Error Case)**:
    * Client gửi tham số phân trang âm hoặc không hợp lệ (ví dụ `page = -1`). `UserController` phát hiện và ném `BadRequestException`. `GlobalExceptionHandler` bắt và trả về HTTP 400 Bad Request kèm thông báo lỗi tiếng Việt.

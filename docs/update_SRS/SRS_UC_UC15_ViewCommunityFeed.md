@@ -43,10 +43,20 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect: bản
 - **Actors/Roles**: Guest, Student, Alumni (Admin không phải actor chính của UC này nhưng kỹ thuật vẫn xem được bảng tin như một thành viên).
 - **Purpose**: Cho phép mọi đối tượng xem hoạt động mới nhất của cộng đồng cựu sinh viên; xếp hạng thông minh nhằm cá nhân hóa nội dung phù hợp với từng sinh viên/cựu sinh viên FPT trên cùng một dòng thời gian thống nhất.
 - **Interface**:
-  - Ô soạn bài (`Composer`, chỉ Student/Alumni).
-  - Thanh chip lọc chuyên mục tinh gọn: Tất cả, Thành tựu, Tuyển dụng, Sự kiện.
-  - Danh sách `PostCard`: avatar, tên tác giả, tick xanh xác thực, chuyên ngành/vai trò, loại bài viết, thời gian tương đối, nội dung, ảnh đính kèm, số like/comment/repost, các nút tương tác.
-  - Trạng thái: Loading (`PostSkeleton` × 3), Rỗng (`FeedEmpty`), Lỗi (`FeedError` + nút Thử lại), Infinite Scroll tải trang mượt mà.
+  - Danh sách `PostCard`: avatar, tên tác giả, tick xanh xác thực, chuyên ngành/vai trò, loại bài viết, thời gian tương đối, nội dung văn bản.
+  - **Lưới ảnh thông minh (Smart Photo Grid)**:
+    - 1 ảnh: Chiều rộng toàn phần (`max-h-[520px]`), tự động căn tỉ lệ cân đối, bo góc mềm mại.
+    - 2 ảnh: Lưới 2 cột tỉ lệ 4:3 hiện đại.
+    - 3 ảnh: Bố cục 1 ảnh lớn bên trái chiếm 50% và 2 ảnh nhỏ xếp dọc bên phải.
+    - 4+ ảnh: Lưới 2x2, ảnh thứ 4 có lớp phủ tối màu bán trong suốt hiển thị số lượng ảnh còn lại (`+{n}`).
+    - Nhấp vào bất kỳ hình ảnh nào sẽ mở `ImageViewerModal` xem ảnh toàn màn hình với bộ điều hướng chuyển ảnh trước/sau.
+  - **Thanh công cụ tương tác (Action Bar)**:
+    - Nút Thích: Bày tỏ cảm xúc yêu thích bài viết, hiển thị số lượt thích `{số} thích`.
+    - Nút Bình luận: Mở/đóng khung bình luận nhanh trực tiếp (`InlineComments`) ngay dưới bài viết, hiển thị số lượng `{số} bình luận`.
+    - Nút Chia sẻ: Kích hoạt chức năng chia sẻ bài viết (sao chép liên kết hoặc gửi qua tin nhắn).
+    - Nút Lưu bài viết: Lưu hoặc bỏ lưu bài viết vào danh mục cá nhân, hiển thị trạng thái đã lưu.
+    - Nút Báo cáo: Mở biểu mẫu báo cáo bài viết vi phạm tới ban quản trị.
+  - Trạng thái giao diện: Đang tải (`PostSkeleton`), Dữ liệu trống (`FeedEmpty`), Báo lỗi (`FeedError` kèm nút Thử lại), Tải thêm bài viết tự động khi cuộn trang (Infinite Scroll).
 
 **Thuật toán xếp hạng thông minh cá nhân hóa (Smart Ranking Formula 2.0)**:
 Hệ thống sử dụng mô hình kết hợp (Hybrid Content-based + Social Graph + Logarithmic Engagement + Smooth Gravity Time-Decay) lấy cảm hứng từ Facebook, Instagram, LinkedIn và Reddit:

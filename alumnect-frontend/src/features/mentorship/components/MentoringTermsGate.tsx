@@ -88,7 +88,7 @@ export function MentoringTermsGate({
 
   // 4. Nếu người dùng CHƯA chấp nhận phiên bản điều khoản hiện tại: Hiển thị UC90
   return (
-    <div className="w-full h-[calc(100vh-8rem)] min-h-[500px] flex flex-col min-h-0">
+    <div className="w-full h-full min-h-0 flex flex-col">
       <MentoringTerms source={source} />
     </div>
   )

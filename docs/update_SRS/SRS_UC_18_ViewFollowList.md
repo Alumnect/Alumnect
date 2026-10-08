@@ -240,7 +240,7 @@ sequenceDiagram
         DB-->>ProfileRepo: Trả về List<UserProfile>
         ProfileRepo-->>Service: List<UserProfile> (Batch Fetch chống N+1)
 
-        opt Nếu người xem đã đăng nhập (viewerEmail != null)
+        opt Nếu người xem đã đăng nhập
             Service->>FollowRepo: findByFollowerIdAndFollowingIdIn(viewerId, followerIds)
             FollowRepo->>DB: SELECT * FROM follows WHERE follower_id = ? AND following_id IN (...)
             DB-->>FollowRepo: Trả về danh sách đã follow
