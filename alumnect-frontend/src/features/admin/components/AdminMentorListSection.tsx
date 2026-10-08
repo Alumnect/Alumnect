@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   Users,
   Search,
@@ -11,13 +10,11 @@ import {
   User,
   CreditCard,
   Target,
-  Sparkles,
-  ShieldAlert,
   Crown,
+  RotateCcw,
 } from 'lucide-react'
 import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Reveal } from '@/components/motion'
 import { useAdminMentors } from '../hooks/useAdmin'
 import { AdminMentorCvModal } from './AdminMentorCvModal'
 import type { AdminMentorCvDto } from '../api/adminApi'
@@ -31,27 +28,32 @@ export function AdminMentorListSection() {
   const [page, setPage] = useState(0)
 
   // UC96 Custom hook lấy danh sách Mentor phân trang
-  const { data, isLoading, isError, error } = useAdminMentors({
+  const { data, isLoading, isError, error, refetch } = useAdminMentors({
     keyword: keyword || undefined,
     page,
     size: 10,
   })
 
-  // State quản lý Modal Xem CV & Drawer xem Chi tiết
+  // State quản lý Modal Xem CV & Modal xem Chi tiết
   const [selectedCvMentorId, setSelectedCvMentorId] = useState<number | null>(null)
   const [isCvModalOpen, setIsCvModalOpen] = useState(false)
   const [selectedMentorDetail, setSelectedMentorDetail] = useState<AdminMentorCvDto | null>(null)
 
   const mentors = data?.content || []
   const totalPages = data?.totalPages || 0
+  const totalElements = data?.totalElements || 0
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'N/A'
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
+    if (!dateStr) return '—'
+    try {
+      return new Date(dateStr).toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    } catch {
+      return dateStr
+    }
   }
 
   const getMentorStatusInfo = (status?: string) => {
@@ -66,7 +68,7 @@ export function AdminMentorListSection() {
       case 'INACTIVE':
         return { text: 'Ngừng hoạt động', tone: 'neutral' as const }
       case 'REJECTED':
-        return { text: 'Bị từ chối', tone: 'rose' as const }
+        return { text: 'Bị từ chối', tone: 'danger' as const }
       default:
         return { text: status || 'Chưa kích hoạt', tone: 'neutral' as const }
     }
@@ -91,71 +93,74 @@ export function AdminMentorListSection() {
   }
 
   const formatWorkingMode = (mode?: string) => {
-    if (!mode) return ''
+    if (!mode) return 'Chưa cập nhật'
     switch (mode.toUpperCase()) {
-      case 'ONLINE': return 'Trực tuyến'
-      case 'OFFLINE': return 'Gặp mặt trực tiếp'
-      case 'HYBRID': return 'Linh hoạt (Trực tuyến & Trực tiếp)'
-      default: return mode
+      case 'ONLINE':
+        return 'Trực tuyến'
+      case 'OFFLINE':
+        return 'Gặp mặt trực tiếp'
+      case 'HYBRID':
+        return 'Linh hoạt (Trực tuyến & Trực tiếp)'
+      default:
+        return mode
     }
   }
 
   const formatMentoringType = (type?: string) => {
-    if (!type) return ''
+    if (!type) return 'Chưa cập nhật'
     switch (type.toUpperCase()) {
       case 'ONE_ON_ONE':
-      case '1:1': return 'Cố vấn kèm 1:1'
-      case 'GROUP': return 'Cố vấn nhóm'
-      default: return type
+      case '1:1':
+        return 'Cố vấn kèm 1:1'
+      case 'GROUP':
+        return 'Cố vấn nhóm'
+      default:
+        return type
     }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Banner giới thiệu danh sách */}
-      <Reveal>
-        <div className="flex items-center justify-between gap-4 rounded-2xl border border-brand-500/20 bg-brand-50/60 p-4 backdrop-blur-md">
-          <div className="flex items-center gap-3 text-xs leading-relaxed text-brand-900">
-            <Sparkles className="h-5 w-5 flex-shrink-0 text-brand-500" />
-            <div>
-              <span className="font-bold text-sm block mb-0.5">Danh sách Cố vấn</span>
-              <span>
-                Tra cứu, đối chứng thông tin chuyên môn và xem tệp CV của các Cố vấn trên hệ thống AlumNect.
-              </span>
-            </div>
-          </div>
-        </div>
-      </Reveal>
-
-      {/* Control Bar: Search Input */}
-      <Card hover={false} className="p-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-3 h-4 w-4 text-plum-400" />
-            <input
-              type="text"
-              value={keyword}
-              onChange={(e) => {
-                setKeyword(e.target.value)
+    <div className="space-y-4">
+      {/* Control Bar: Search Input & Metrics */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value)
+              setPage(0)
+            }}
+            placeholder="Tìm theo tên cố vấn, email, vị trí..."
+            className="w-full h-9 rounded-lg border border-slate-300 bg-white pl-9 pr-8 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+          />
+          {keyword && (
+            <button
+              type="button"
+              onClick={() => {
+                setKeyword('')
                 setPage(0)
               }}
-              placeholder="Tìm theo tên, email, vị trí..."
-              className="w-full rounded-2xl border border-plum-900/15 bg-white pl-10 pr-4 py-2 text-xs font-semibold text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
-          </div>
-
-          <div className="text-xs font-semibold text-plum-500">
-            Tổng số: <span className="font-bold text-brand-600">{data?.totalElements || 0}</span> Cố vấn
-          </div>
+              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5"
+              title="Xóa tìm kiếm"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
-      </Card>
+
+        <div className="text-xs text-slate-500 self-end sm:self-center">
+          Tổng cộng: <strong className="text-slate-900 font-semibold">{totalElements}</strong> Cố vấn
+        </div>
+      </div>
 
       {/* Loading Skeleton */}
       {isLoading && (
         <Card hover={false} className="p-6 space-y-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
+              <Skeleton className="h-9 w-9 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-1/4" />
                 <Skeleton className="h-3 w-1/3" />
@@ -167,154 +172,156 @@ export function AdminMentorListSection() {
 
       {/* Error state */}
       {isError && (
-        <EmptyState
-          icon={<Users size={24} />}
-          title="Lỗi tải danh sách Mentor"
-          description={(error as any)?.message || 'Không thể kết nối CSDL.'}
-        />
+        <Card hover={false} className="p-8 text-center border-red-200 bg-red-50/30">
+          <div className="space-y-3">
+            <Users className="mx-auto h-8 w-8 text-red-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Lỗi tải danh sách Cố vấn</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              {(error as any)?.message || 'Không thể kết nối máy chủ cơ sở dữ liệu.'}
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => refetch()}
+              className="gap-1.5 text-xs font-medium"
+            >
+              <RotateCcw size={13} /> Thử lại
+            </Button>
+          </div>
+        </Card>
       )}
 
       {/* Empty State */}
       {!isLoading && !isError && mentors.length === 0 && (
         <EmptyState
-          icon={<Users size={24} />}
-          title="Không tìm thấy Mentor"
-          description="Hãy thử thay đổi từ khóa tìm kiếm."
+          icon={<Users size={28} className="text-slate-400" />}
+          title="Không tìm thấy Cố vấn nào"
+          description={
+            keyword
+              ? `Không có kết quả nào phù hợp với từ khóa "${keyword}".`
+              : 'Hiện chưa có hồ sơ Cố vấn nào trên hệ thống.'
+          }
         />
       )}
 
       {/* Mentor Table */}
       {!isLoading && !isError && mentors.length > 0 && (
-        <Reveal>
-          <div className="space-y-4">
-            <Card hover={false} className="overflow-hidden p-0 border border-plum-900/10 shadow-sm">
-              <table className="w-full text-sm table-auto">
+        <div className="space-y-4">
+          <Card hover={false} className="p-0 border border-slate-200 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
                 <thead>
-                  <tr className="border-b border-plum-900/8 text-left text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
-                    <th className="px-3.5 py-3 font-semibold whitespace-nowrap w-[22%]">Cố vấn</th>
-                    <th className="px-3 py-3 font-semibold whitespace-nowrap w-[20%]">Vị trí & Tổ chức</th>
-                    <th className="px-2 py-3 font-semibold whitespace-nowrap text-center w-[12%]">Trạng thái</th>
-                    <th className="px-3 py-3 font-semibold whitespace-nowrap w-[18%]">Gói dịch vụ</th>
-                    <th className="px-3 py-3 font-semibold whitespace-nowrap w-[15%]">Thời hạn hiệu lực</th>
-                    <th className="px-3.5 py-3 font-semibold whitespace-nowrap text-right w-[13%]">Thao tác</th>
+                  <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50">
+                    <th className="px-4 py-3.5 w-[25%]">Cố vấn</th>
+                    <th className="px-4 py-3.5 w-[22%]">Vị trí & Tổ chức</th>
+                    <th className="px-3 py-3.5 text-center w-[12%]">Trạng thái</th>
+                    <th className="px-4 py-3.5 w-[23%]">Gói dịch vụ & Hiệu lực</th>
+                    <th className="px-4 py-3.5 text-right w-[18%]">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-plum-900/5">
+                <tbody className="divide-y divide-slate-100">
                   {mentors.map((m: AdminMentorCvDto) => {
                     const statusInfo = getMentorStatusInfo(m.mentorStatus)
                     const subInfo = getSubStatusInfo(m.subscriptionStatus)
                     return (
-                      <tr
-                        key={m.mentorProfileId}
-                        className="transition-colors hover:bg-white/[0.03]"
-                      >
+                      <tr key={m.mentorProfileId} className="transition-colors hover:bg-slate-50/70">
                         {/* Avatar & Name */}
-                        <td className="px-3.5 py-3">
+                        <td className="px-4 py-3.5">
                           <div
-                            className="flex items-center gap-2.5 cursor-pointer group/user"
+                            className="flex items-center gap-3 cursor-pointer group/user"
                             onClick={() => setSelectedMentorDetail(m)}
                           >
                             {m.avatarUrl ? (
                               <img
                                 src={m.avatarUrl}
                                 alt={m.mentorName}
-                                className="h-9 w-9 rounded-full object-cover ring-2 ring-brand-500/20 shrink-0"
+                                className="h-9 w-9 rounded-full object-cover border border-slate-200 shrink-0"
                               />
                             ) : (
-                              <div className="h-9 w-9 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold text-xs shrink-0">
-                                <User size={16} />
+                              <div className="h-9 w-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-medium text-xs shrink-0">
+                                <User size={15} />
                               </div>
                             )}
                             <div className="min-w-0">
-                              <p className="font-bold text-xs text-plum-900 group-hover/user:text-[#F27024] transition-colors truncate">
+                              <p className="font-semibold text-xs text-slate-900 group-hover/user:text-[#F27024] transition-colors truncate">
                                 {m.mentorName}
                               </p>
-                              <p className="text-[11px] text-plum-400 truncate">{m.mentorEmail}</p>
+                              <p className="text-[11px] text-slate-400 truncate">{m.mentorEmail}</p>
                             </div>
                           </div>
                         </td>
 
                         {/* Position & Company */}
-                        <td className="px-3 py-3 text-xs">
-                          <p className="font-bold text-plum-800 flex items-center gap-1.5 truncate">
-                            <Briefcase size={12} className="text-brand-500 shrink-0" />
+                        <td className="px-4 py-3.5 text-xs">
+                          <p className="font-medium text-slate-800 flex items-center gap-1.5 truncate">
+                            <Briefcase size={13} className="text-slate-400 shrink-0" />
                             <span className="truncate">{m.currentPosition || 'Chưa cập nhật'}</span>
                           </p>
-                          <p className="text-plum-500 flex items-center gap-1.5 mt-0.5 text-[11px] truncate">
-                            <Building2 size={12} className="text-plum-400 shrink-0" />
+                          <p className="text-slate-500 flex items-center gap-1.5 mt-0.5 text-[11px] truncate">
+                            <Building2 size={13} className="text-slate-400 shrink-0" />
                             <span className="truncate">{m.currentCompany || 'Chưa cập nhật'}</span>
                           </p>
                         </td>
 
                         {/* Status */}
-                        <td className="px-2 py-3 text-center whitespace-nowrap">
-                          <Badge
-                            tone={statusInfo.tone}
-                            className="px-2 py-0.5 font-bold text-[10px]"
-                          >
+                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                          <Badge tone={statusInfo.tone} className="px-2 py-0.5 font-medium text-[11px]">
                             {statusInfo.text}
                           </Badge>
                         </td>
 
-                        {/* Package Name */}
-                        <td className="px-3 py-3 text-xs">
+                        {/* Package Name & Dates */}
+                        <td className="px-4 py-3.5 text-xs">
                           {m.packageName ? (
-                            <div className="space-y-0.5">
-                              <div className="font-bold text-plum-900 flex items-center gap-1.5 whitespace-nowrap">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 font-medium text-slate-900">
                                 <Crown size={13} className="text-amber-500 shrink-0" />
                                 <span className="truncate">{m.packageName}</span>
+                                {m.subscriptionStatus && (
+                                  <span
+                                    className={`inline-block text-[10px] font-medium px-1.5 py-0.2 rounded border ${subInfo.className}`}
+                                  >
+                                    {subInfo.text}
+                                  </span>
+                                )}
                               </div>
-                              {m.subscriptionStatus && (
-                                <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded border ${subInfo.className}`}>
-                                  {subInfo.text}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-plum-400 italic text-xs">Chưa đăng ký</span>
-                          )}
-                        </td>
-
-                        {/* Subscription Dates (Start - End) */}
-                        <td className="px-3 py-3 text-xs whitespace-nowrap">
-                          {m.subscriptionStartDate || m.subscriptionEndDate ? (
-                            <div className="space-y-0.5 font-medium">
-                              <div className="flex items-center gap-1 text-plum-600 text-[11px]">
-                                <span className="text-[10px] text-plum-400 font-bold uppercase tracking-wider w-7">Từ:</span>
-                                <span className="font-semibold text-plum-700">{formatDate(m.subscriptionStartDate)}</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-[11px]">
-                                <span className="text-[10px] text-brand-600 font-bold uppercase tracking-wider w-7">Đến:</span>
-                                <span className="font-bold text-plum-900">{formatDate(m.subscriptionEndDate)}</span>
+                              <div className="text-[11px] text-slate-400 flex items-center gap-2 font-mono">
+                                <span>Từ: {formatDate(m.subscriptionStartDate)}</span>
+                                <span>-</span>
+                                <span>Đến: {formatDate(m.subscriptionEndDate)}</span>
                               </div>
                             </div>
                           ) : (
-                            <span className="text-plum-400 italic text-xs">Chưa kích hoạt</span>
+                            <span className="text-slate-400 italic text-xs">Chưa đăng ký gói</span>
                           )}
                         </td>
 
                         {/* Action buttons */}
-                        <td className="px-3.5 py-3 whitespace-nowrap text-right">
+                        <td className="px-4 py-3.5 whitespace-nowrap text-right">
                           <div className="inline-flex items-center justify-end gap-1.5">
                             {/* Nút Xem CV */}
                             <button
+                              type="button"
                               onClick={() => {
                                 setSelectedCvMentorId(m.mentorProfileId)
                                 setIsCvModalOpen(true)
                               }}
-                              className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-[#F27024] to-[#ff8c38] px-2.5 py-1 text-xs font-bold text-white hover:from-[#e05f13] hover:to-[#f27024] shadow-sm transition-all cursor-pointer"
-                              title="Xem tệp hồ sơ CV"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
+                              title="Xem tệp CV"
                             >
-                              <FileText size={12} /> Xem CV
+                              <FileText size={13} className="text-slate-500" />
+                              <span>Xem CV</span>
                             </button>
 
                             {/* Nút Chi tiết */}
                             <button
+                              type="button"
                               onClick={() => setSelectedMentorDetail(m)}
-                              className="inline-flex items-center gap-1 rounded-lg bg-plum-900/[0.05] px-2 py-1 text-xs font-semibold text-plum-700 hover:bg-plum-900/[0.1] transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
                               title="Xem thông tin chi tiết"
                             >
-                              <Eye size={12} /> Chi tiết
+                              <Eye size={13} className="text-slate-500" />
+                              <span>Chi tiết</span>
                             </button>
                           </div>
                         </td>
@@ -323,115 +330,139 @@ export function AdminMentorListSection() {
                   })}
                 </tbody>
               </table>
-            </Card>
+            </div>
+          </Card>
 
-            {/* Pagination Controls */}
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        </Reveal>
+          {/* Phân trang chuẩn */}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
       )}
 
-      {/* Modal Xem CV Cố vấn */}
+      {/* Modal Xem CV Cố vấn (Popup xem tài liệu lớn) */}
       <AdminMentorCvModal
         isOpen={isCvModalOpen}
         onClose={() => setIsCvModalOpen(false)}
         mentorProfileId={selectedCvMentorId}
       />
 
-      {/* Drawer xem Chi tiết toàn bộ thông tin Cố vấn */}
-      {selectedMentorDetail !== null &&
-        createPortal(
-          <div className="fixed inset-0 z-50 overflow-hidden bg-plum-900/40 backdrop-blur-sm animate-fade-in flex justify-end">
-            <div className="relative w-full max-w-lg bg-white h-full shadow-2xl overflow-y-auto p-6 flex flex-col justify-between">
-              <div className="space-y-6">
-                {/* Header Drawer */}
-                <div className="flex items-center justify-between pb-4 border-b border-plum-900/10">
-                  <h3 className="font-extrabold text-lg text-plum-900">Chi tiết hồ sơ Cố vấn</h3>
-                  <button
-                    onClick={() => setSelectedMentorDetail(null)}
-                    className="p-1.5 rounded-full text-plum-400 hover:bg-slate-100 hover:text-plum-900 transition-colors cursor-pointer"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
+      {/* Modal Chi tiết Hồ sơ Cố vấn (Popup chuẩn 640px) */}
+      {selectedMentorDetail !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-slate-900/50 transition-opacity"
+            onClick={() => setSelectedMentorDetail(null)}
+          />
 
-                {/* Mentor Card */}
-                <div className="flex items-center gap-4">
-                  {selectedMentorDetail.avatarUrl ? (
-                    <img
-                      src={selectedMentorDetail.avatarUrl}
-                      alt={selectedMentorDetail.mentorName}
-                      className="h-16 w-16 rounded-full object-cover ring-4 ring-brand-500/15"
-                    />
-                  ) : (
-                    <div className="h-16 w-16 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold text-xl">
-                      <User size={32} />
-                    </div>
-                  )}
+          {/* Modal Container */}
+          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col overflow-hidden text-slate-800">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white shrink-0">
+              <div>
+                <h2 className="text-[20px] font-semibold text-slate-900 leading-tight">
+                  Chi tiết hồ sơ Cố vấn
+                </h2>
+                <p className="text-[13px] text-slate-500 mt-0.5">
+                  Thông tin chuyên môn, gói dịch vụ và tài khoản nhận chi trả.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMentorDetail(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                aria-label="Đóng"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-                  <div>
-                    <h4 className="font-extrabold text-lg text-plum-900">
+            {/* Scrollable Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              {/* Profile Card Summary */}
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                {selectedMentorDetail.avatarUrl ? (
+                  <img
+                    src={selectedMentorDetail.avatarUrl}
+                    alt={selectedMentorDetail.mentorName}
+                    className="h-14 w-14 rounded-full object-cover border border-slate-300 shrink-0"
+                  />
+                ) : (
+                  <div className="h-14 w-14 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-semibold text-xl shrink-0">
+                    <User size={24} />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-semibold text-slate-900">
                       {selectedMentorDetail.mentorName}
-                    </h4>
-                    <p className="text-xs text-plum-500 font-mono">{selectedMentorDetail.mentorEmail}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge
-                        tone={getMentorStatusInfo(selectedMentorDetail.mentorStatus).tone}
-                        className="font-bold text-[10px]"
-                      >
-                        {getMentorStatusInfo(selectedMentorDetail.mentorStatus).text}
-                      </Badge>
-                    </div>
+                    </h3>
+                    <Badge
+                      tone={getMentorStatusInfo(selectedMentorDetail.mentorStatus).tone}
+                      className="text-[11px] font-medium px-2 py-0.5"
+                    >
+                      {getMentorStatusInfo(selectedMentorDetail.mentorStatus).text}
+                    </Badge>
                   </div>
+                  <p className="text-xs text-slate-500 mt-0.5">{selectedMentorDetail.mentorEmail}</p>
                 </div>
+              </div>
 
-                {/* Professional Info */}
-                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-plum-900/5 text-xs text-plum-700">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-brand-500 flex-shrink-0" />
-                    <span>Vị trí hiện tại: <b>{selectedMentorDetail.currentPosition || 'Chưa cập nhật'}</b></span>
+              {/* Nhóm 1: Thông tin chuyên môn */}
+              <div className="space-y-3">
+                <h4 className="text-[13px] font-semibold uppercase tracking-wider text-slate-500">
+                  Thông tin chuyên môn
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Vị trí hiện tại:</span>
+                    <span className="font-medium text-slate-800">
+                      {selectedMentorDetail.currentPosition || 'Chưa cập nhật'}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-brand-500 flex-shrink-0" />
-                    <span>Công ty / Tổ chức: <b>{selectedMentorDetail.currentCompany || 'Chưa cập nhật'}</b></span>
+
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Công ty / Tổ chức:</span>
+                    <span className="font-medium text-slate-800">
+                      {selectedMentorDetail.currentCompany || 'Chưa cập nhật'}
+                    </span>
                   </div>
-                  {selectedMentorDetail.workingMode && (
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-brand-500 flex-shrink-0" />
-                      <span>Hình thức cố vấn: <b>{formatWorkingMode(selectedMentorDetail.workingMode)}</b></span>
-                    </div>
-                  )}
-                  {selectedMentorDetail.mentoringType && (
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-brand-500 flex-shrink-0" />
-                      <span>Loại hình cố vấn: <b>{formatMentoringType(selectedMentorDetail.mentoringType)}</b></span>
-                    </div>
-                  )}
+
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Hình thức cố vấn:</span>
+                    <span className="font-medium text-slate-800">
+                      {formatWorkingMode(selectedMentorDetail.workingMode)}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Loại hình cố vấn:</span>
+                    <span className="font-medium text-slate-800">
+                      {formatMentoringType(selectedMentorDetail.mentoringType)}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Bio */}
                 {selectedMentorDetail.bio && (
-                  <div>
-                    <h5 className="text-xs font-bold text-plum-800 uppercase tracking-wide mb-1">
-                      Lời giới thiệu cố vấn
-                    </h5>
-                    <p className="text-xs leading-relaxed text-plum-600 bg-cream-50 p-3 rounded-2xl border border-plum-900/5">
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white text-xs">
+                    <span className="text-slate-400 block mb-1">Lời giới thiệu (Bio):</span>
+                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
                       {selectedMentorDetail.bio}
                     </p>
                   </div>
                 )}
 
-                {/* Supported fields */}
+                {/* Supported Fields */}
                 {selectedMentorDetail.supportedFields && selectedMentorDetail.supportedFields.length > 0 && (
-                  <div>
-                    <h5 className="text-xs font-bold text-plum-800 uppercase tracking-wide mb-2">
-                      Lĩnh vực hỗ trợ chuyên môn
-                    </h5>
+                  <div className="space-y-1.5">
+                    <span className="text-xs text-slate-500 font-medium block">
+                      Lĩnh vực hỗ trợ chuyên môn:
+                    </span>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedMentorDetail.supportedFields.map((field, idx) => (
                         <span
                           key={idx}
-                          className="rounded-xl bg-brand-50 text-brand-700 border border-brand-200/60 px-3 py-1 text-xs font-bold"
+                          className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium"
                         >
                           {field}
                         </span>
@@ -442,15 +473,15 @@ export function AdminMentorListSection() {
 
                 {/* Topics */}
                 {selectedMentorDetail.topics && selectedMentorDetail.topics.length > 0 && (
-                  <div>
-                    <h5 className="text-xs font-bold text-plum-800 uppercase tracking-wide mb-2">
-                      Chủ đề cố vấn chuyên sâu
-                    </h5>
+                  <div className="space-y-1.5">
+                    <span className="text-xs text-slate-500 font-medium block">
+                      Chủ đề cố vấn chuyên sâu:
+                    </span>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedMentorDetail.topics.map((topic, idx) => (
                         <span
                           key={idx}
-                          className="rounded-xl bg-slate-100 text-plum-800 border border-slate-200 px-3 py-1 text-xs font-bold"
+                          className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium"
                         >
                           {topic}
                         </span>
@@ -458,86 +489,101 @@ export function AdminMentorListSection() {
                     </div>
                   </div>
                 )}
+              </div>
 
-                {/* Subscription Package & Validity Details */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-brand-50/80 via-white to-amber-50/50 border border-brand-500/20 shadow-sm space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-bold text-plum-900">
-                      <Crown className="h-4 w-4 text-amber-500" /> Gói dịch vụ & Thời hạn hiệu lực
-                    </div>
-                    {selectedMentorDetail.subscriptionStatus && (
-                      <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded border ${getSubStatusInfo(selectedMentorDetail.subscriptionStatus).className}`}>
-                        {getSubStatusInfo(selectedMentorDetail.subscriptionStatus).text}
-                      </span>
-                    )}
-
+              {/* Nhóm 2: Gói dịch vụ & Thời hạn */}
+              <div className="space-y-3 pt-2 border-t border-slate-200">
+                <h4 className="text-[13px] font-semibold uppercase tracking-wider text-slate-500">
+                  Gói dịch vụ & Thời hạn
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Gói đăng ký:</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedMentorDetail.packageName || 'Chưa đăng ký gói'}
+                    </span>
                   </div>
 
-                  <div className="space-y-1.5 pt-1 text-plum-700">
-                    <div className="flex items-center justify-between">
-                      <span className="text-plum-500">Gói đăng ký:</span>
-                      <span className="font-extrabold text-plum-900">
-                        {selectedMentorDetail.packageName || 'Chưa đăng ký gói'}
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Trạng thái hiệu lực:</span>
+                    <span className="font-medium text-slate-800">
+                      {getSubStatusInfo(selectedMentorDetail.subscriptionStatus).text}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Ngày kích hoạt:</span>
+                    <span className="font-mono text-slate-700">
+                      {formatDate(selectedMentorDetail.subscriptionStartDate)}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                    <span className="text-slate-400 block mb-1">Ngày hết hạn:</span>
+                    <span className="font-mono text-slate-700">
+                      {formatDate(selectedMentorDetail.subscriptionEndDate)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Nhóm 3: Tài khoản thanh toán (nếu có) */}
+              {(selectedMentorDetail.bankName || selectedMentorDetail.bankAccountNumber) && (
+                <div className="space-y-3 pt-2 border-t border-slate-200">
+                  <h4 className="text-[13px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <CreditCard size={14} /> Tài khoản ngân hàng nhận chi trả
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                      <span className="text-slate-400 block mb-1">Ngân hàng:</span>
+                      <span className="font-medium text-slate-800">
+                        {selectedMentorDetail.bankName || '—'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-plum-500">Ngày bắt đầu:</span>
-                      <span className="font-semibold text-plum-800">
-                        {selectedMentorDetail.subscriptionStartDate ? formatDate(selectedMentorDetail.subscriptionStartDate) : 'Chưa kích hoạt'}
+
+                    <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                      <span className="text-slate-400 block mb-1">Số tài khoản:</span>
+                      <span className="font-mono font-medium text-slate-800">
+                        {selectedMentorDetail.bankAccountNumber || '—'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-plum-500">Ngày kết thúc:</span>
-                      <span className="font-semibold text-brand-600">
-                        {selectedMentorDetail.subscriptionEndDate ? formatDate(selectedMentorDetail.subscriptionEndDate) : 'Chưa kích hoạt'}
+
+                    <div className="p-3 rounded-lg border border-slate-200 bg-white">
+                      <span className="text-slate-400 block mb-1">Chủ tài khoản:</span>
+                      <span className="font-medium text-slate-800 uppercase">
+                        {selectedMentorDetail.bankAccountHolder || '—'}
                       </span>
                     </div>
                   </div>
                 </div>
-
-                {/* Bank Payout Details */}
-                {(selectedMentorDetail.bankName || selectedMentorDetail.bankAccountNumber) && (
-                  <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2 text-xs">
-                    <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                      <CreditCard className="h-4 w-4 text-amber-600" /> Tài khoản ngân hàng nhận chi trả
-                    </div>
-                    <div className="text-amber-800 font-mono text-[11px] space-y-0.5">
-                      <p>Ngân hàng: <b>{selectedMentorDetail.bankName}</b></p>
-                      <p>Số tài khoản: <b>{selectedMentorDetail.bankAccountNumber}</b></p>
-                      <p>Chủ tài khoản: <b>{selectedMentorDetail.bankAccountHolder}</b></p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Action button to open CV */}
-                <div className="pt-2">
-                  <Button
-                    variant="primary"
-                    className="w-full justify-center gap-2 rounded-2xl font-bold bg-gradient-to-r from-[#F27024] via-[#f57c32] to-[#ff8c38] text-white hover:from-[#e05f13] hover:to-[#f27024] shadow-md shadow-[#F27024]/20 border-none cursor-pointer"
-                    onClick={() => {
-                      setSelectedCvMentorId(selectedMentorDetail.mentorProfileId)
-                      setIsCvModalOpen(true)
-                    }}
-                  >
-                    <FileText className="h-4 w-4" /> Xem tệp CV trực tiếp
-                  </Button>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="pt-4 border-t border-plum-900/10">
-                <Button
-                  variant="secondary"
-                  className="w-full justify-center rounded-xl font-bold cursor-pointer"
-                  onClick={() => setSelectedMentorDetail(null)}
-                >
-                  Đóng cửa sổ
-                </Button>
-              </div>
+              )}
             </div>
-          </div>,
-          document.body
-        )}
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCvMentorId(selectedMentorDetail.mentorProfileId)
+                  setIsCvModalOpen(true)
+                }}
+                className="px-3.5 py-2 text-xs font-medium text-[#F27024] bg-orange-50 border border-orange-200 hover:bg-orange-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <FileText size={14} />
+                <span>Xem tệp CV gốc</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedMentorDetail(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

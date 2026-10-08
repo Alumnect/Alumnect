@@ -147,9 +147,9 @@ export function AdminBroadcastPage() {
         }
       />
 
-      {/* Tabs lọc trạng thái chính (Section 9: [All], [Scheduled], [Active], [Expired], [Archived]) */}
-      <div className="mb-4">
-        <div className="flex flex-wrap gap-2 border-b border-plum-900/10 pb-3">
+      {/* Tabs lọc trạng thái chính & Thời gian */}
+      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
@@ -158,48 +158,44 @@ export function AdminBroadcastPage() {
                 setPage(0)
               }}
               className={cn(
-                'rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer border',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
                 statusFilter === tab.value
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 border-gold-400/60 shadow-sm'
-                  : 'bg-white text-plum-700 border-plum-900/10 hover:bg-plum-50/70 hover:border-plum-900/20'
+                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-xs'
+                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
               )}
             >
               {tab.label}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Tabs lọc thời gian & Thống kê số lượng */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Time filter tabs */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-plum-500 flex items-center gap-1">
-            <Calendar size={13} className="text-gold-500" /> Mốc thời gian:
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {TIME_TABS.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => {
-                  setTimeFilter(t.value)
-                  setPage(0)
-                }}
-                className={cn(
-                  'rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer',
-                  timeFilter === t.value
-                    ? 'bg-plum-900 text-white shadow-xs'
-                    : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
-                )}
-              >
-                {t.name}
-              </button>
-            ))}
+        {/* Time filter tabs & Thống kê */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-plum-500 flex items-center gap-1">
+              <Calendar size={13} className="text-gold-500" /> Mốc thời gian:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {TIME_TABS.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => {
+                    setTimeFilter(t.value)
+                    setPage(0)
+                  }}
+                  className={cn(
+                    'rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer select-none',
+                    timeFilter === t.value
+                      ? 'bg-plum-900 text-white shadow-xs'
+                      : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                  )}
+                >
+                  {t.name}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Count */}
-        <div className="flex items-center gap-3">
           <span className="text-xs text-plum-400 font-medium">
             Tổng cộng: <strong className="text-plum-900 font-bold">{totalElements}</strong> thông báo
           </span>
