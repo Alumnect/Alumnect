@@ -12,13 +12,7 @@ import { ADMIN_SECTIONS } from './adminSectionsData'
 import { useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
 import type { AdminVerificationRequestDto } from '../api/adminApi'
 import { AdminReportsQueue } from './AdminReportsQueue'
-
-const REJECT_REASON_TEMPLATES = [
-  'Ảnh minh chứng mờ, không nhìn rõ thông tin.',
-  'Thông tin chuyên ngành hoặc năm tốt nghiệp không khớp.',
-  'Hình ảnh không phải là bằng tốt nghiệp hoặc chứng nhận hợp lệ.',
-  'Mã số sinh viên / hồ sơ không tìm thấy trên hệ thống.',
-]
+import { AdminVerificationDetailModal } from './AdminVerificationDetailModal'
 
 export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
   const s = ADMIN_SECTIONS[sectionKey]
@@ -41,47 +35,29 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
 
   const reviewMutation = useReviewVerification()
 
-  // Modal Review state
-  const [selectedReq, setSelectedReq] = useState<AdminVerificationRequestDto | null>(null)
-  const [reviewAction, setReviewAction] = useState<'APPROVED' | 'REJECTED' | null>(null)
-  const [reviewNote, setReviewNote] = useState('')
-
-  // Preview Lightbox state (dành cho xem ảnh minh chứng full size)
-  const [previewProofUrl, setPreviewProofUrl] = useState<string | null>(null)
-
-  // Detail Modal state (dành cho xem đầy đủ chi tiết hồ sơ)
+  // Detail Modal state (Chi tiết xác minh)
   const [detailReq, setDetailReq] = useState<AdminVerificationRequestDto | null>(null)
 
-  useEffect(() => {
-    if ((selectedReq && reviewAction) || previewProofUrl || detailReq) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [selectedReq, reviewAction, previewProofUrl, detailReq])
-
-  const handleReviewSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedReq || !reviewAction) return
-
+  const handleReviewSubmit = async (
+    id: number,
+    status: 'APPROVED' | 'REJECTED',
+    reviewNote: string
+  ) => {
     try {
       await reviewMutation.mutateAsync({
-        id: selectedReq.id,
-        status: reviewAction,
-        reviewNote: reviewNote || (reviewAction === 'APPROVED' ? 'Minh chứng tốt nghiệp hợp lệ. Đã phê duyệt quyền Cựu sinh viên.' : 'Minh chứng không hợp lệ.'),
+        id,
+        status,
+        reviewNote,
       })
-      setSelectedReq(null)
-      setReviewAction(null)
-      setReviewNote('')
-      if (detailReq?.id === selectedReq.id) {
-        setDetailReq(null)
-      }
-      toast.success(reviewAction === 'APPROVED' ? 'Đã phê duyệt hồ sơ cựu sinh viên thành công!' : 'Đã từ chối hồ sơ xác thực.')
+      setDetailReq((prev) => (prev && prev.id === id ? { ...prev, status, reviewNote, reviewedBy: 'Quản trị viên' } : prev))
+      toast.success(
+        status === 'APPROVED'
+          ? 'Đã phê duyệt hồ sơ cựu sinh viên thành công!'
+          : 'Đã từ chối hồ sơ xác thực.'
+      )
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra khi duyệt hồ sơ')
+      throw err
     }
   }
 
@@ -131,9 +107,9 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                 statusFilter === tab.key
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-sm'
+                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-xs'
                   : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
               )}
             >
@@ -190,10 +166,16 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                 </thead>
                 <tbody className="divide-y divide-plum-900/5">
                   {requests.map((r) => (
-                    <tr key={r.id} className="transition-colors hover:bg-plum-900/[0.015]">
+                    <tr
+                      key={r.id}
+                      className="transition-colors hover:bg-plum-900/[0.015] group"
+                    >
                       {/* Cột 1: Cựu sinh viên (Avatar + Tên + Email) */}
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
+                        <div
+                          className="flex items-center gap-3 cursor-pointer group/user"
+                          onClick={() => setDetailReq(r)}
+                        >
                           <Avatar
                             src={r.avatarUrl}
                             name={r.fullName}
@@ -201,7 +183,9 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                             className="border border-gold-300 shrink-0"
                           />
                           <div className="min-w-0">
-                            <p className="font-bold text-plum-950 truncate">{r.fullName}</p>
+                            <p className="font-bold text-plum-950 group-hover/user:text-gold-600 transition-colors truncate">
+                              {r.fullName}
+                            </p>
                             <p className="text-xs text-plum-400 truncate">{r.email || 'Chưa có email'}</p>
                           </div>
                         </div>
@@ -214,52 +198,49 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                         </span>
                       </td>
 
-                      {/* Cột 3: Ảnh minh chứng (Thumbnail nút nhấp xem) */}
+                      {/* Cột 3: Minh chứng (Bấm để mở modal Chi tiết xác minh & xem trực tiếp tài liệu) */}
                       <td className="px-5 py-4 text-center">
                         <button
-                          onClick={() => setPreviewProofUrl(r.proofUrl)}
-                          className="group inline-flex items-center gap-1.5 rounded-xl border border-plum-900/10 bg-cream-50 px-3 py-1.5 text-xs font-bold text-plum-700 transition-all hover:border-gold-400 hover:bg-gold-50 hover:text-gold-700 shadow-2xs"
+                          type="button"
+                          onClick={() => setDetailReq(r)}
+                          className="group/btn inline-flex items-center gap-1.5 rounded-xl border border-plum-900/10 bg-cream-50 px-3 py-1.5 text-xs font-bold text-plum-700 transition-all hover:border-gold-400 hover:bg-gold-50 hover:text-gold-700 shadow-2xs cursor-pointer"
+                          title="Xem chi tiết tài liệu minh chứng"
                         >
-                          <FileImage size={14} className="text-gold-600 transition-transform group-hover:scale-110" />
-                          <span>Xem ảnh</span>
+                          <FileImage size={14} className="text-gold-600 transition-transform group-hover/btn:scale-110" />
+                          <span>Xem minh chứng</span>
                         </button>
                       </td>
 
-                      {/* Cột 5: Thao tác / Trạng thái */}
+                      {/* Cột 4: Thao tác / Trạng thái */}
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => setDetailReq(r)}
-                            className="h-8 px-2.5 text-xs font-bold bg-plum-900/[0.04] text-plum-700 hover:bg-plum-900/[0.08]"
-                            title="Xem đầy đủ hồ sơ"
+                            className="h-8 px-3 text-xs font-bold bg-plum-900/[0.04] text-plum-700 hover:bg-plum-900/[0.08] cursor-pointer flex items-center gap-1"
+                            title="Xem chi tiết hồ sơ xác minh"
                           >
                             <Eye size={13} />
+                            <span>Chi tiết</span>
                           </Button>
 
                           {r.status === 'PENDING' ? (
                             <>
                               <Button
                                 size="sm"
-                                onClick={() => {
-                                  setSelectedReq(r)
-                                  setReviewAction('APPROVED')
-                                  setReviewNote('Minh chứng hợp lệ. Đã phê duyệt quyền Cựu sinh viên.')
-                                }}
-                                className="h-8 px-3 text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs"
+                                onClick={() => setDetailReq(r)}
+                                className="h-8 px-3 text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs cursor-pointer"
+                                title="Mở hồ sơ để phê duyệt"
                               >
                                 Duyệt
                               </Button>
                               <Button
                                 size="sm"
                                 variant="secondary"
-                                onClick={() => {
-                                  setSelectedReq(r)
-                                  setReviewAction('REJECTED')
-                                  setReviewNote('')
-                                }}
-                                className="h-8 px-3 text-xs font-bold border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                                onClick={() => setDetailReq(r)}
+                                className="h-8 px-3 text-xs font-bold border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                                title="Mở hồ sơ để từ chối"
                               >
                                 Từ chối
                               </Button>
@@ -290,226 +271,14 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
         )}
       </Reveal>
 
-      {/* 1. Modal Xem Chi Tiết Hồ Sơ (Full Detail Modal) */}
-      {detailReq &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-              onClick={() => setDetailReq(null)}
-            />
-            <Card hover={false} className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-plum-950/15 rounded-3xl pop">
-              {/* Banner Header - Clean white style matching user modals */}
-              <div className="relative bg-white p-6 border-b border-slate-100 rounded-t-3xl">
-                <button
-                  onClick={() => setDetailReq(null)}
-                  className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
-                  title="Đóng cửa sổ"
-                >
-                  <X size={18} />
-                </button>
-
-                <div className="flex items-center gap-4">
-                  <Avatar 
-                    src={detailReq.avatarUrl} 
-                    name={detailReq.fullName} 
-                    size={64} 
-                    className="border-2 border-slate-100 ring-2 ring-slate-100 shadow-sm shrink-0 bg-white" 
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-xl font-bold text-plum-900 tracking-tight">{detailReq.fullName}</h2>
-                      <span className={cn(
-                        "rounded-full px-3 py-0.5 text-xs font-bold border",
-                        detailReq.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        detailReq.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
-                        'bg-amber-50 text-amber-700 border-amber-200'
-                      )}>
-                        {detailReq.status === 'APPROVED' ? 'Đã phê duyệt' : detailReq.status === 'REJECTED' ? 'Đã từ chối' : 'Chờ duyệt'}
-                      </span>
-                    </div>
-                    <p className="text-slate-500 text-xs mt-1 truncate font-medium">{detailReq.email || 'Chưa cập nhật email'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Body Content */}
-              <div className="p-6 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-3 p-4 rounded-xl bg-brand-50/40 border border-brand-100">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Thông tin đăng ký</h4>
-                    <div>
-                      <span className="text-xs text-plum-500 block">Chuyên ngành</span>
-                      <span className="font-bold text-plum-900">{detailReq.majorName ? `${detailReq.majorCode} - ${detailReq.majorName}` : detailReq.majorCode}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-plum-500 block">Thời điểm gửi yêu cầu</span>
-                      <span className="font-bold text-plum-900">{new Date(detailReq.createdAt).toLocaleString('vi-VN')}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 p-4 rounded-xl bg-brand-50/40 border border-brand-100">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Kiểm duyệt của Admin</h4>
-                    <div>
-                      <span className="text-xs text-plum-500 block">Người duyệt</span>
-                      <span className="font-bold text-plum-900">{detailReq.reviewedBy || 'Chưa xét duyệt'}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-plum-500 block">Ghi chú duyệt của Admin</span>
-                      <span className="italic font-medium text-plum-800">{detailReq.reviewNote || 'Chưa có nhận xét'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Xem minh chứng bằng */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">Ảnh minh chứng tốt nghiệp</h4>
-                  </div>
-                  <div className="relative overflow-hidden rounded-xl border border-brand-100 bg-brand-50/20 max-h-80 flex items-center justify-center p-2">
-                    <img
-                      src={detailReq.proofUrl}
-                      alt="Minh chứng"
-                      className="max-h-80 w-auto object-contain cursor-pointer transition-transform hover:scale-105 rounded-lg"
-                      onClick={() => setPreviewProofUrl(detailReq.proofUrl)}
-                    />
-                  </div>
-                </div>
-
-                {/* Nút thao tác dưới Modal chi tiết */}
-                {detailReq.status === 'PENDING' && (
-                  <div className="mt-6 flex justify-end gap-3 border-t border-plum-900/8 pt-4">
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setSelectedReq(detailReq)
-                        setReviewAction('REJECTED')
-                        setReviewNote('')
-                      }}
-                      className="border border-red-200 text-red-600 hover:bg-red-50 font-bold"
-                    >
-                      Từ chối hồ sơ
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setSelectedReq(detailReq)
-                        setReviewAction('APPROVED')
-                        setReviewNote('Minh chứng hợp lệ. Đã phê duyệt quyền Cựu sinh viên.')
-                      }}
-                      className="bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 font-bold shadow-sm"
-                    >
-                      Phê duyệt hồ sơ
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>,
-          document.body
-        )}
-
-      {/* 2. Lightbox Xem Ảnh Minh Chứng Chuẩn Messenger */}
-      {previewProofUrl && (
-        <ImageViewerModal
-          isOpen={!!previewProofUrl}
-          onClose={() => setPreviewProofUrl(null)}
-          src={previewProofUrl}
-          fileName="Minh chứng tốt nghiệp"
-        />
-      )}
-
-      {/* 3. Modal Phê duyệt / Từ chối (Review Confirmation Modal) */}
-      {selectedReq && reviewAction &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-              onClick={() => {
-                setSelectedReq(null)
-                setReviewAction(null)
-              }}
-            />
-            <Card hover={false} className="relative z-10 w-full max-w-md bg-white p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
-              <div className="flex items-center gap-2 mb-2">
-                {reviewAction === 'APPROVED' ? (
-                  <CheckCircle2 size={22} className="text-emerald-600" />
-                ) : (
-                  <AlertTriangle size={22} className="text-red-600" />
-                )}
-                <h3 className="text-lg font-bold text-plum-950">
-                  {reviewAction === 'APPROVED' ? 'Duyệt hồ sơ cựu sinh viên' : 'Từ chối hồ sơ cựu sinh viên'}
-                </h3>
-              </div>
-
-              <p className="mt-1 text-sm text-plum-600 leading-relaxed">
-                {reviewAction === 'APPROVED'
-                  ? `Xác nhận phê duyệt vai trò Cựu sinh viên cho `
-                  : `Nhập lý do từ chối hồ sơ xác minh của `}
-                <strong className="text-plum-950 font-bold">{selectedReq.fullName}</strong>.
-              </p>
-
-              {/* Template gợi ý lý do từ chối nhanh */}
-              {reviewAction === 'REJECTED' && (
-                <div className="mt-3 space-y-1.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400">Gợi ý lý do từ chối nhanh:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {REJECT_REASON_TEMPLATES.map((tmpl, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setReviewNote(tmpl)}
-                        className="rounded-lg bg-plum-900/[0.04] px-2.5 py-1 text-[11px] font-medium text-plum-700 hover:bg-plum-900/[0.08] text-left transition-colors"
-                      >
-                        {tmpl}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleReviewSubmit} className="mt-4">
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-wider text-plum-400">
-                    {reviewAction === 'APPROVED' ? 'Ghi chú duyệt (Tùy chọn)' : 'Lý do từ chối (Bắt buộc)'}
-                  </span>
-                  <textarea
-                    required={reviewAction === 'REJECTED'}
-                    value={reviewNote}
-                    onChange={(e) => setReviewNote(e.target.value)}
-                    placeholder={
-                      reviewAction === 'APPROVED'
-                        ? 'Ví dụ: Minh chứng tốt nghiệp hợp lệ.'
-                        : 'Lý do chi tiết cho cựu sinh viên...'
-                    }
-                    className="mt-1.5 h-24 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.02] p-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-gold-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gold-400/25"
-                  />
-                </label>
-
-                <div className="mt-5 flex justify-end gap-2.5">
-                  <Button type="button" variant="secondary" onClick={() => setSelectedReq(null)} className="font-bold">
-                    Hủy
-                  </Button>
-                  <Button
-                    type="submit"
-                    className={cn(
-                      'font-bold text-white shadow-sm',
-                      reviewAction === 'APPROVED'
-                        ? 'bg-emerald-600 hover:bg-emerald-700'
-                        : 'bg-red-600 hover:bg-red-700'
-                    )}
-                    disabled={reviewMutation.isPending}
-                  >
-                    {reviewMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-                    {reviewAction === 'APPROVED' ? 'Phê duyệt' : 'Từ chối'}
-                  </Button>
-                </div>
-              </form>
-            </Card>
-          </div>,
-          document.body
-        )}
+      {/* Modal Chi tiết xác minh (2 cột: Thông tin hồ sơ 35% & Minh chứng trực tiếp 65%) */}
+      <AdminVerificationDetailModal
+        isOpen={detailReq !== null}
+        onClose={() => setDetailReq(null)}
+        request={detailReq}
+        onReviewSubmit={handleReviewSubmit}
+        isSubmitting={reviewMutation.isPending}
+      />
     </div>
   )
 }

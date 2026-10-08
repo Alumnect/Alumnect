@@ -374,9 +374,9 @@ export function AdminReportsQueue() {
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
                 statusFilter === tab.key
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-sm'
+                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-xs'
                   : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
               )}
             >

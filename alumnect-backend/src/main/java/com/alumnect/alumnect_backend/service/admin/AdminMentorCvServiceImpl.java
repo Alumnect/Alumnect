@@ -54,9 +54,10 @@ public class AdminMentorCvServiceImpl implements AdminMentorCvService {
     public AdminMentorCvResponse getMentorCv(Long mentorProfileId) {
         log.info("Quản trị viên truy vấn CV của Mentor có Profile ID: {}", mentorProfileId);
 
-        // 1. Tìm hồ sơ Mentor theo ID
+        // 1. Tìm hồ sơ Mentor theo Profile ID hoặc User ID
         MentorProfile profile = mentorProfileRepository.findById(mentorProfileId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ Mentor với ID: " + mentorProfileId));
+                .orElseGet(() -> mentorProfileRepository.findByUserId(mentorProfileId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ Mentor với ID: " + mentorProfileId)));
 
         // 2. Kiểm tra sự tồn tại của tệp CV
         if (profile.getCvFileKey() == null || profile.getCvFileKey().trim().isEmpty()) {
