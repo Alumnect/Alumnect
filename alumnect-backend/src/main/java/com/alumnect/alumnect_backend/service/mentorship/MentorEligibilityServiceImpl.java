@@ -30,6 +30,7 @@ public class MentorEligibilityServiceImpl implements MentorEligibilityService {
     private final MentorSubscriptionRepository mentorSubscriptionRepository;
     private final MentorRegistrationService mentorRegistrationService;
     private final MentoringTermsService mentoringTermsService;
+    private final MentorReputationService mentorReputationService;
 
     /**
      * Tính toán lại và cập nhật trạng thái Mentor của hồ sơ.
@@ -88,6 +89,10 @@ public class MentorEligibilityServiceImpl implements MentorEligibilityService {
 
         profile.setMentorStatus(newStatus);
         mentorProfileRepository.save(profile);
+
+        if (newStatus == MentorStatus.ACTIVE && (profile.getReputationScore() == null || profile.getReputationScore() == 0)) {
+            mentorReputationService.initializeBaseScore(profile);
+        }
 
         return newStatus;
     }

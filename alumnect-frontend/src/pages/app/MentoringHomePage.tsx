@@ -1,4 +1,4 @@
-import { MentoringTermsGate, useMentoringTermsStatus } from '@/features/mentorship'
+import { MentoringTermsGate, MentorshipLoadingSkeleton, useMentoringTermsStatus } from '@/features/mentorship'
 import { Container, Card, Badge } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
@@ -13,16 +13,21 @@ import {
   UserCheck,
   Activity,
   Clock,
+  Trophy,
 } from 'lucide-react'
 
 function MentoringHomeContent() {
   const user = useAuthStore((s) => s.user)
   const isAlumni = user?.role === 'ALUMNI'
-  const { data: status } = useMentorStatus(isAlumni)
+  const { data: status, isLoading: isLoadingStatus } = useMentorStatus(isAlumni)
   const mentorStatus = status?.mentorStatus
   const isMentorActive = mentorStatus === 'ACTIVE'
   const isPaymentPending = mentorStatus === 'PAYMENT_PENDING'
   const isExpired = mentorStatus === 'EXPIRED'
+
+  if (isAlumni && isLoadingStatus) {
+    return <MentorshipLoadingSkeleton variant="home" />
+  }
 
   return (
     <div className="space-y-6 py-4">
@@ -166,6 +171,16 @@ function MentoringHomeContent() {
             ) : null}
 
             <ButtonLink
+              to="/app/mentoring/ranking"
+              variant="outline"
+              size="sm"
+              leftIcon={<Trophy className="h-3.5 w-3.5 text-gold-500" />}
+              className="text-plum-700 hover:text-brand-600 dark:text-[#e4e6eb]"
+            >
+              Bảng xếp hạng Mentor
+            </ButtonLink>
+
+            <ButtonLink
               to="/app/mentoring/terms"
               variant="ghost"
               size="sm"
@@ -179,7 +194,7 @@ function MentoringHomeContent() {
       </div>
 
       {/* Lợi ích và các tính năng cốt lõi */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
         <Card hover className="p-5 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-2">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
             <Compass className="h-5 w-5" />
@@ -226,7 +241,7 @@ function MentoringHomeContent() {
           <span className="text-xs text-plum-500">Cập nhật theo mạng lưới cựu sinh viên</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
           {[
             {
               name: 'Nguyễn Hoàng Long',
@@ -285,7 +300,15 @@ function MentoringHomeContent() {
  * Người dùng chỉ có thể vào trang này khi đã chấp nhận phiên bản điều khoản hiện tại.
  */
 export function MentoringHomePage() {
-  const { data: termsStatus } = useMentoringTermsStatus()
+  const { data: termsStatus, isLoading: isLoadingTerms } = useMentoringTermsStatus()
+
+  if (isLoadingTerms) {
+    return (
+      <Container className="py-2 sm:py-4">
+        <MentorshipLoadingSkeleton variant="home" />
+      </Container>
+    )
+  }
 
   // Khi chưa chấp nhận điều khoản: Hiển thị MentoringTermsGate trực tiếp để vừa vặn trọn vẹn màn hình không bị thanh cuộn ngoài
   if (termsStatus && !termsStatus.accepted) {

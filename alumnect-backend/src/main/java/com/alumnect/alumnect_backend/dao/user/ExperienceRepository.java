@@ -17,6 +17,7 @@ public interface ExperienceRepository extends JpaRepository<Experience, Long> {
     List<Experience> findByUserIdAndIsCurrentTrue(Long userId);
     Optional<Experience> findByUserIdAndIsPrimaryTrue(Long userId);
     List<Experience> findByUserIdInAndIsPrimaryTrue(Collection<Long> userIds);
+    List<Experience> findByUserIdIn(Collection<Long> userIds);
     
     @Query("SELECT e FROM Experience e WHERE e.user.id IN :userIds ORDER BY e.startDate ASC, e.endDate ASC, e.id ASC")
     List<Experience> findByUserIdsSortedChronologically(@Param("userIds") List<Long> userIds);

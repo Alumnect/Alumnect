@@ -6158,6 +6158,630 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "97. Xem bảng xếp hạng Mentor (UC97)",
+            "description": "Các API phục vụ cho người dùng (Student/Alumni) xem bảng xếp hạng Mentor theo lĩnh vực chuyên môn (UC97)",
+            "item": [
+                {
+                    "name": "97.0 Đăng nhập lấy Token xác thực (Student / Alumni)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var res = pm.response.json();",
+                                    "    if (res.data && res.data.accessToken) {",
+                                    "        pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                                    "        pm.collectionVariables.set('jwtToken', res.data.accessToken);",
+                                    "    }",
+                                    "}",
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"alumni.dung@gmail.com\",\n  \"password\": \"Password@123\"\n}"
+                        },
+                        "description": "Đăng nhập để tự động lưu accessToken và jwtToken vào collection variables"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.1 Lấy bảng xếp hạng Mentor thành công - Có Mentor ACTIVE (TC-BE-01)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"ApiResponse format is valid\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res.error).to.eql(0);",
+                                    "    pm.expect(res.data).to.have.property('content');",
+                                    "    pm.expect(res.data).to.have.property('totalElements');",
+                                    "    pm.expect(res.data).to.have.property('pageNumber');",
+                                    "    pm.expect(res.data).to.have.property('pageSize');",
+                                    "    if (res.data.content.length > 0) {",
+                                    "        var first = res.data.content[0];",
+                                    "        pm.expect(first).to.have.property('rank');",
+                                    "        pm.expect(first.rank).to.eql(1);",
+                                    "        pm.expect(first).to.have.property('mentorId');",
+                                    "        pm.expect(first).to.have.property('userId');",
+                                    "        pm.expect(first).to.have.property('fullName');",
+                                    "        pm.expect(first).to.have.property('fieldId');",
+                                    "        pm.expect(first).to.have.property('fieldName');",
+                                    "        pm.expect(first).to.have.property('reputationScore');",
+                                    "        pm.expect(first).to.have.property('completedTasks');",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=1&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lấy bảng xếp hạng Mentor lĩnh vực Công nghệ thông tin (fieldId=1), page=0, size=10"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.2 Lấy bảng xếp hạng theo lĩnh vực khác - Field 2 (TC-BE-02)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Returned items belong to field 2\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res.error).to.eql(0);",
+                                    "    res.data.content.forEach(function(item) {",
+                                    "        pm.expect(item.fieldId).to.eql(2);",
+                                    "    });",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=2&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "2"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lấy bảng xếp hạng lĩnh vực Tài chính - Ngân hàng (fieldId=2), đảm bảo dữ liệu cô lập"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.3 Bảng xếp hạng lĩnh vực chưa có Mentor ACTIVE - Danh sách rỗng (TC-BE-03)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Empty list returned with totalElements = 0\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res.error).to.eql(0);",
+                                    "    pm.expect(res.data.content).to.be.an('array');",
+                                    "    pm.expect(res.data.content.length).to.eql(0);",
+                                    "    pm.expect(res.data.totalElements).to.eql(0);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=11&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "11"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lĩnh vực chưa có Mentor nào tham gia, trả về mảng rỗng và totalElements=0 mà không gây lỗi"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.4 Lấy bảng xếp hạng với fieldId không tồn tại - 404 Not Found (TC-BE-04)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 404 Not Found\", function () {",
+                                    "    pm.response.to.have.status(404);",
+                                    "});",
+                                    "pm.test(\"Error message in Vietnamese from GlobalExceptionHandler\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res.error).to.not.eql(0);",
+                                    "    pm.expect(res.message).to.include(\"Không tìm thấy lĩnh vực chuyên môn\");",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=99999&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "99999"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Gửi fieldId không tồn tại trong DB, mong đợi HTTP 404 và message lỗi tiếng Việt rõ ràng"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.5 Kiểm tra Mentor hết hạn Subscription không xuất hiện (TC-BE-05)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"All returned mentors are ACTIVE with valid subscription\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res.error).to.eql(0);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=1&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Xác nhận các Mentor hết hạn gói (endDate < now) bị loại hoàn toàn khỏi ranking"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.6 Kiểm tra Mentor không ACTIVE không xuất hiện (TC-BE-06)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=1&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Mentor có trạng thái INCOMPLETE hoặc PAYMENT_PENDING không được tính vào bảng xếp hạng"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.7 Kiểm tra thứ tự sắp xếp theo Reputation Score và Completed Tasks (TC-BE-07)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"List is sorted by reputationScore DESC, completedTasks DESC\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    var list = res.data.content;",
+                                    "    for (var i = 0; i < list.length - 1; i++) {",
+                                    "        var cur = list[i];",
+                                    "        var next = list[i + 1];",
+                                    "        if (cur.reputationScore === next.reputationScore) {",
+                                    "            pm.expect(cur.completedTasks).to.be.at.least(next.completedTasks);",
+                                    "        } else {",
+                                    "            pm.expect(cur.reputationScore).to.be.above(next.reputationScore);",
+                                    "        }",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=1&page=0&size=20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Kiểm tra danh sách trả về tuân thủ đúng thuật toán sắp xếp BR-04"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.8 Kiểm tra Tie-break giữ nguyên thứ tự ổn định deterministic (TC-BE-08)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Deterministic tie-break by mentorId ASC\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    var list = res.data.content;",
+                                    "    for (var i = 0; i < list.length - 1; i++) {",
+                                    "        var cur = list[i];",
+                                    "        var next = list[i + 1];",
+                                    "        if (cur.reputationScore === next.reputationScore && cur.completedTasks === next.completedTasks && cur.rating === next.rating) {",
+                                    "            pm.expect(cur.mentorId).to.be.below(next.mentorId);",
+                                    "        }",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=1&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Khi các chỉ số uy tín trùng nhau, thứ tự vẫn deterministic theo mentorId ASC"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.9 Phân trang - Rank page 1 tiếp nối page 0 không reset (TC-BE-09)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200 OK\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.test(\"Page 1 ranks start from 11 onwards (BR-05)\", function () {",
+                                    "    var res = pm.response.json();",
+                                    "    if (res.data.content.length > 0) {",
+                                    "        pm.expect(res.data.content[0].rank).to.eql(11);",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=1&page=1&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Kiểm tra tính thứ hạng liên tục qua phân trang, không reset về 1 tại page 1"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "97.10 Chặn truy cập khi không có Token - 401 Unauthorized (TC-BE-10)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 401 or 403\", function () {",
+                                    "    pm.expect([401, 403]).to.include(pm.response.code);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/ranking?fieldId=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "ranking"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Gọi API khi chưa đăng nhập / không có Bearer token, mong đợi HTTP 401 hoặc 403"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

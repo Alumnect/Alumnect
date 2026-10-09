@@ -6,6 +6,7 @@ import type { MentoringEntrySource } from '../model/mentoringTermsTypes'
 import { Card } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { MentorshipLoadingSkeleton } from './MentorshipLoadingSkeleton'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -47,6 +48,10 @@ export function MentoringTerms({
   const currentVersion = statusData?.currentVersion ?? '1.0'
   const isAlreadyAccepted = Boolean(statusData?.accepted)
 
+  if (isStatusLoading) {
+    return <MentorshipLoadingSkeleton variant="terms" />
+  }
+
   const handleBack = () => {
     if (onBack) {
       onBack()
@@ -85,14 +90,14 @@ export function MentoringTerms({
   }
 
   return (
-    <div className="w-full h-full flex flex-col lg:flex-row gap-4 sm:gap-5 min-h-0 overflow-y-auto lg:overflow-hidden">
+    <div className="grid w-full grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-[minmax(18rem,25.625rem)_minmax(0,1fr)]">
       {/* CỘT TRÁI: Bảng thông tin, quy tắc tóm tắt & hộp cam kết */}
       <Card
         hover={false}
-        className="w-full lg:w-[380px] xl:w-[410px] shrink-0 h-full max-h-full flex flex-col min-h-0 border border-plum-900/[0.08] bg-white p-4 sm:p-5 shadow-soft dark:bg-[#242526] dark:border-[#393a3b]"
+        className="w-full self-start border border-plum-900/[0.08] bg-white p-4 sm:p-5 shadow-soft xl:sticky xl:top-20 dark:bg-[#242526] dark:border-[#393a3b]"
       >
         {/* Phần nội dung phía trên: Tiêu đề + 3 Nguyên tắc (flex-1 min-h-0 overflow-y-auto chống tràn/lọt chữ) */}
-        <div className="flex-1 min-h-0 flex flex-col space-y-3 overflow-y-auto pr-1 [scrollbar-gutter:stable]">
+        <div className="space-y-3">
           {/* Header tiêu đề */}
           <div className="space-y-1 border-b border-plum-900/[0.06] pb-2.5 dark:border-[#393a3b]">
             {isAlreadyAccepted && (
@@ -268,7 +273,7 @@ export function MentoringTerms({
       {/* CỘT PHẢI: Khung đọc văn bản điều khoản (Document Reader) toàn màn hình */}
       <Card
         hover={false}
-        className="flex-1 min-h-0 h-full max-h-full flex flex-col border border-plum-900/[0.08] bg-white p-3 sm:p-4 shadow-soft dark:bg-[#242526] dark:border-[#393a3b]"
+        className="min-w-0 border border-plum-900/[0.08] bg-white p-3 sm:p-4 shadow-soft dark:bg-[#242526] dark:border-[#393a3b]"
       >
         <MentoringTermsContent version={currentVersion} />
       </Card>

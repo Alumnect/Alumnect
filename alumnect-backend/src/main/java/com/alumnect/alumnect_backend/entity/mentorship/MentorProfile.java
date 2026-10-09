@@ -77,6 +77,26 @@ public class MentorProfile {
     @Builder.Default
     private MentorStatus mentorStatus = MentorStatus.INCOMPLETE;
 
+    /** Điểm uy tín tổng hợp của Mentor (tính theo hoạt động cố vấn, đánh giá và phản hồi) */
+    @Column(name = "reputation_score", nullable = false)
+    @Builder.Default
+    private Integer reputationScore = 0;
+
+    /** Tổng số nhiệm vụ / phiên cố vấn đã hoàn thành */
+    @Column(name = "completed_tasks", nullable = false)
+    @Builder.Default
+    private Integer completedTasks = 0;
+
+    /** Điểm đánh giá trung bình (thang điểm 0.00 đến 5.00) */
+    @Column(name = "rating", nullable = false, precision = 3, scale = 2)
+    @Builder.Default
+    private java.math.BigDecimal rating = java.math.BigDecimal.ZERO;
+
+    /** Tổng số lượng đánh giá nhận được từ người học */
+    @Column(name = "review_count", nullable = false)
+    @Builder.Default
+    private Integer reviewCount = 0;
+
     /** Danh sách lĩnh vực hỗ trợ chuẩn liên kết với industries */
     @OneToMany(mappedBy = "mentorProfile", fetch = FetchType.LAZY)
     @Builder.Default
@@ -105,6 +125,18 @@ public class MentorProfile {
         updatedAt = Instant.now();
         if (mentorStatus == null) {
             mentorStatus = MentorStatus.INCOMPLETE;
+        }
+        if (reputationScore == null) {
+            reputationScore = 0;
+        }
+        if (completedTasks == null) {
+            completedTasks = 0;
+        }
+        if (rating == null) {
+            rating = java.math.BigDecimal.ZERO;
+        }
+        if (reviewCount == null) {
+            reviewCount = 0;
         }
     }
 
