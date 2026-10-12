@@ -14,6 +14,8 @@ export const mentoringAttachmentSchema = z.object({
 
 export const createMentoringRequestSchema = z
   .object({
+    mentorId: z.number().optional().nullable(),
+
     title: z
       .string()
       .trim()

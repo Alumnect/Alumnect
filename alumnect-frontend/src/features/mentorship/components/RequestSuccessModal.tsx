@@ -58,10 +58,31 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
             </div>
           </div>
 
-          {/* Nội dung kết quả phân phối (Matching & Distribution) */}
+          {/* Nội dung kết quả phân phối (Matching & Distribution hoặc Direct Request) */}
           <div className="my-5 space-y-4">
             {/* Box thông báo trạng thái phân phối */}
-            {data.matchedCount > 0 ? (
+            {data.requestType === 'DIRECT' || data.targetMentorId ? (
+              <div className="rounded-2xl border border-mint-200/80 bg-mint-50/70 p-4 dark:border-mint-800/40 dark:bg-mint-950/30">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint-600 text-white shadow-xs">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-mint-900 dark:text-mint-200">
+                        Đã gửi trực tiếp tới {data.targetMentorName || 'Mentor'}
+                      </span>
+                      <Badge tone="mint" className="text-[10px]">
+                        Gửi trực tiếp
+                      </Badge>
+                    </div>
+                    <p className="text-xs leading-relaxed text-mint-800/90 dark:text-mint-300/80">
+                      {data.distributionNote || 'Yêu cầu đã được gửi trực tiếp tới Mentor được chọn và đang chờ phản hồi tiếp nhận.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : data.matchedCount > 0 ? (
               <div className="rounded-2xl border border-brand-200/70 bg-brand-50/70 p-4 dark:border-brand-800/40 dark:bg-brand-950/30">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white shadow-xs">
@@ -107,6 +128,12 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
 
             {/* Chi tiết tóm tắt yêu cầu */}
             <div className="rounded-2xl border border-plum-900/[0.08] bg-cream-50/60 p-4 space-y-2.5 text-xs dark:bg-white/[0.03] dark:border-[#393a3b]">
+              {data.targetMentorName && (
+                <div className="flex justify-between items-center py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
+                  <span className="text-plum-500 dark:text-[#8f9399]">Mentor nhận yêu cầu:</span>
+                  <span className="font-bold text-brand-700 dark:text-brand-300">{data.targetMentorName}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
                 <span className="text-plum-500 dark:text-[#8f9399]">Tiêu đề:</span>
                 <span className="font-bold text-plum-900 max-w-[280px] truncate dark:text-[#e4e6eb]">{data.title}</span>

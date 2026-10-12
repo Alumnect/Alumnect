@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.dto.response.mentorship;
 
 import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringRequestType;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
@@ -14,8 +15,8 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * DTO phản hồi sau khi tạo yêu cầu Mentoring chung thành công (UC100).
- * Bảo mật thông tin riêng tư của các Mentor recipient theo quy định BR-08.
+ * DTO phản hồi sau khi tạo yêu cầu Mentoring thành công (UC100, UC101).
+ * Hỗ trợ cả yêu cầu chung (GENERAL) và yêu cầu trực tiếp gửi tới Mentor cụ thể (DIRECT).
  */
 @Data
 @Builder
@@ -25,6 +26,21 @@ public class CreateMentoringRequestResponse {
 
     /** Khóa chính ID của yêu cầu Mentoring vừa tạo */
     private Long id;
+
+    /** Loại yêu cầu: GENERAL (chung - UC100) hoặc DIRECT (trực tiếp - UC101) */
+    private MentoringRequestType requestType;
+
+    /** ID của Mentor đích (chỉ có khi requestType là DIRECT) */
+    private Long targetMentorId;
+
+    /** Họ tên Mentor đích (chỉ có khi requestType là DIRECT) */
+    private String targetMentorName;
+
+    /** URL ảnh đại diện Mentor đích (chỉ có khi requestType là DIRECT) */
+    private String targetMentorAvatar;
+
+    /** Chức danh / Khẩu hiệu nghề nghiệp Mentor đích (chỉ có khi requestType là DIRECT) */
+    private String targetMentorHeadline;
 
     /** Tiêu đề yêu cầu */
     private String title;

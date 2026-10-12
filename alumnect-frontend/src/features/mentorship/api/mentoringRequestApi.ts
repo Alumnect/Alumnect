@@ -16,11 +16,23 @@ interface PageResponse<T> {
 
 export const mentoringRequestApi = {
   /**
-   * Tạo yêu cầu Mentoring chung (UC100).
+   * Tạo yêu cầu Mentoring (UC100 nếu payload không có mentorId, UC101 nếu có mentorId).
    * Endpoint: POST /api/v1/mentoring/requests
    */
   createRequest: async (payload: CreateMentoringRequestPayload): Promise<CreateMentoringRequestData> => {
     const res = await http.post<any, ApiResponse<CreateMentoringRequestData>>('/mentoring/requests', payload)
+    return res.data
+  },
+
+  /**
+   * Gửi yêu cầu cố vấn trực tiếp tới Mentor cụ thể (UC101).
+   * Endpoint: POST /api/v1/mentors/{mentorId}/requests
+   */
+  createDirectRequest: async (mentorId: number, payload: CreateMentoringRequestPayload): Promise<CreateMentoringRequestData> => {
+    const res = await http.post<any, ApiResponse<CreateMentoringRequestData>>(`/mentors/${mentorId}/requests`, {
+      ...payload,
+      mentorId,
+    })
     return res.data
   },
 

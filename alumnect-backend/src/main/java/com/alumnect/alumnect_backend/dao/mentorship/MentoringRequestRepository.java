@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.dao.mentorship;
 
+import com.alumnect.alumnect_backend.common.enums.MentoringRequestType;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository truy vấn và lưu trữ dữ liệu bảng mentoring_requests (UC100).
+ * Repository truy vấn và lưu trữ dữ liệu bảng mentoring_requests (UC100, UC101).
  */
 @Repository
 public interface MentoringRequestRepository extends JpaRepository<MentoringRequest, Long> {
@@ -31,6 +32,25 @@ public interface MentoringRequestRepository extends JpaRepository<MentoringReque
      * @return Trang danh sách yêu cầu
      */
     Page<MentoringRequest> findByStudentIdOrderByCreatedAtDesc(Long studentId, Pageable pageable);
+
+    /**
+     * Lấy danh sách yêu cầu Mentoring do sinh viên tạo lọc theo loại yêu cầu (GENERAL hoặc DIRECT).
+     *
+     * @param studentId ID tài khoản sinh viên
+     * @param requestType Loại yêu cầu
+     * @param pageable Đối tượng phân trang
+     * @return Trang danh sách yêu cầu
+     */
+    Page<MentoringRequest> findByStudentIdAndRequestTypeOrderByCreatedAtDesc(Long studentId, MentoringRequestType requestType, Pageable pageable);
+
+    /**
+     * Lấy danh sách yêu cầu gửi trực tiếp tới một Mentor cụ thể (UC101, phục vụ UC102 tiếp theo).
+     *
+     * @param targetMentorId ID hồ sơ Mentor nhận yêu cầu
+     * @param pageable Đối tượng phân trang
+     * @return Trang danh sách yêu cầu gửi trực tiếp tới Mentor
+     */
+    Page<MentoringRequest> findByTargetMentorIdOrderByCreatedAtDesc(Long targetMentorId, Pageable pageable);
 
     /**
      * Tìm chi tiết một yêu cầu mentoring theo ID và studentId của chủ sở hữu.

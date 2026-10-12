@@ -89,3 +89,6 @@ export * from './hooks/useCreateMentoringRequest'
 export * from './components/CreateMentoringRequestForm'
 export * from './components/RequestSuccessModal'
 
+// UC101 exports (Chọn Mentor & Gửi yêu cầu cố vấn trực tiếp)
+export * from './components/SelectedMentorCard'
+

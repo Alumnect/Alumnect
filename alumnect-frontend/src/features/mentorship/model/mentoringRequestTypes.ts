@@ -83,9 +83,17 @@ export interface MentoringAttachmentItem {
 }
 
 /**
- * Payload gửi lên API tạo yêu cầu Mentoring chung (UC100).
+ * Loại yêu cầu Mentoring:
+ * - GENERAL: Yêu cầu mở chung, matching tự động (UC100).
+ * - DIRECT: Yêu cầu gửi trực tiếp tới Mentor cụ thể (UC101).
+ */
+export type MentoringRequestType = 'GENERAL' | 'DIRECT'
+
+/**
+ * Payload gửi lên API tạo yêu cầu Mentoring (UC100 & UC101).
  */
 export interface CreateMentoringRequestPayload {
+  mentorId?: number | null
   title: string
   description: string
   industryId: number
@@ -111,10 +119,15 @@ export interface MentoringAttachmentResponseData {
 }
 
 /**
- * Dữ liệu trả về khi tạo yêu cầu Mentoring thành công (UC100).
+ * Dữ liệu trả về khi tạo yêu cầu Mentoring thành công (UC100 & UC101).
  */
 export interface CreateMentoringRequestData {
   id: number
+  requestType?: MentoringRequestType
+  targetMentorId?: number | null
+  targetMentorName?: string | null
+  targetMentorAvatar?: string | null
+  targetMentorHeadline?: string | null
   title: string
   description: string
   industryId: number

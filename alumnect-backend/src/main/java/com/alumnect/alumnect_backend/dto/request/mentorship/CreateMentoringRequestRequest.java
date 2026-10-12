@@ -19,14 +19,18 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * DTO nhận dữ liệu gửi lên khi sinh viên tạo yêu cầu Mentoring chung (UC100).
- * Tuyệt đối không yêu cầu mentorId (General Request - BR-01).
+ * DTO nhận dữ liệu gửi lên khi sinh viên tạo yêu cầu Mentoring (UC100, UC101).
+ * Nếu mentorId được cung cấp -> Yêu cầu gửi trực tiếp tới Mentor cụ thể (UC101).
+ * Nếu mentorId là null -> Yêu cầu mở chung, matching tự động (UC100).
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateMentoringRequestRequest {
+
+    /** Định danh của Mentor nhận yêu cầu (chỉ dùng cho yêu cầu trực tiếp UC101, null nếu UC100) */
+    private Long mentorId;
 
     /** Tiêu đề ngắn gọn mô tả nhu cầu cố vấn */
     @NotBlank(message = "Tiêu đề yêu cầu không được để trống")

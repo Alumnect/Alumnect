@@ -8168,6 +8168,522 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "101. Chọn Mentor & Gửi yêu cầu trực tiếp (UC101)",
+      "item": [
+        {
+          "name": "101.0 Đăng nhập Student - Lấy Token xác thực",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"accessToken\", jsonData.data.token);",
+                  "    pm.collectionVariables.set(\"jwtToken\", jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"student@fpt.edu.vn\",\n    \"password\": \"Pass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Đăng nhập với tài khoản sinh viên để lấy JWT token cho các kịch bản UC101"
+          },
+          "response": []
+        },
+        {
+          "name": "101.1 Gửi yêu cầu trực tiếp tới Mentor hợp lệ - Thành công",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Kiểm tra phản hồi tạo Direct Request thành công\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.requestType).to.eql(\"DIRECT\");",
+                  "    pm.expect(jsonData.data.targetMentorId).to.not.be.null;",
+                  "    pm.expect(jsonData.data.matchedCount).to.eql(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 1,\n    \"title\": \"Cố vấn định hướng kiến trúc Microservices và Clean Code\",\n    \"description\": \"Em là sinh viên K18 chuẩn bị làm đồ án tốt nghiệp, mong muốn được anh hướng dẫn phương pháp thiết kế Microservices và triển khai CI/CD chuẩn.\",\n    \"industryId\": 1,\n    \"budgetMin\": 100000,\n    \"budgetMax\": 300000,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"TECHNICAL_CONSULTING\",\n    \"expectedDeadline\": \"2026-11-20T00:00:00Z\",\n    \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Gửi yêu cầu Mentoring trực tiếp tới Mentor đã chọn qua POST /api/v1/mentoring/requests (UC101)"
+          },
+          "response": []
+        },
+        {
+          "name": "101.2 Gửi yêu cầu qua endpoint /mentors/{mentorId}/requests - Thành công",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Kiểm tra phản hồi tạo Direct Request qua Mentor controller\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.requestType).to.eql(\"DIRECT\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Nhờ anh review CV ứng tuyển vị trí Backend Engineer\",\n    \"description\": \"Em muốn ứng tuyển vào công ty công nghệ lớn, mong anh góp ý giúp CV và cách trả lời câu hỏi phỏng vấn kỹ thuật.\",\n    \"industryId\": 1,\n    \"budgetMin\": 150000,\n    \"budgetMax\": 350000,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"RESUME_REVIEW\",\n    \"expectedDeadline\": \"2026-11-25T00:00:00Z\",\n    \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentors/1/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentors",
+                "1",
+                "requests"
+              ]
+            },
+            "description": "Gửi yêu cầu cố vấn trực tiếp thông qua endpoint POST /api/v1/mentors/{mentorId}/requests"
+          },
+          "response": []
+        },
+        {
+          "name": "101.3 Gửi yêu cầu qua endpoint /mentoring/requests/direct - Thành công",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 1,\n    \"title\": \"Tư vấn chuẩn bị phỏng vấn Mock Interview\",\n    \"description\": \"Em muốn tham gia một buổi phỏng vấn thử về System Design và cơ sở dữ liệu phân tán.\",\n    \"industryId\": 1,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"MOCK_INTERVIEW\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/direct",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "direct"
+              ]
+            },
+            "description": "Gửi yêu cầu cố vấn trực tiếp thông qua endpoint chuyên biệt POST /api/v1/mentoring/requests/direct"
+          },
+          "response": []
+        },
+        {
+          "name": "101.4 Gửi yêu cầu thất bại - Lĩnh vực không thuộc Supported Fields của Mentor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Kiểm tra thông báo lỗi unsupported field\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "    pm.expect(jsonData.message).to.include(\"Lĩnh vực chuyên môn được chọn không nằm trong danh mục hỗ trợ của Mentor\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 1,\n    \"title\": \"Cần cố vấn về kỹ năng thiết kế đồ họa 3D UI/UX\",\n    \"description\": \"Em muốn học thêm về thiết kế giao diện Figma nâng cao và render hình ảnh phục vụ đồ án.\",\n    \"industryId\": 99999,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"TECHNICAL_CONSULTING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Kiểm tra lỗi khi chọn lĩnh vực mà Mentor không đăng ký hỗ trợ"
+          },
+          "response": []
+        },
+        {
+          "name": "101.5 Gửi yêu cầu thất bại - Mentor không tồn tại (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 999999,\n    \"title\": \"Cố vấn định hướng kiến trúc Microservices\",\n    \"description\": \"Mô tả chi tiết nhu cầu hỗ trợ về lập trình và thiết kế phần mềm...\",\n    \"industryId\": 1,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"TECHNICAL_CONSULTING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Kiểm tra lỗi khi gửi yêu cầu tới mentorId không tồn tại trong hệ thống"
+          },
+          "response": []
+        },
+        {
+          "name": "101.6 Gửi yêu cầu thất bại - Thiếu thông tin bắt buộc (Validation 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 1,\n    \"title\": \"\",\n    \"description\": \"Ngắn\",\n    \"industryId\": 1,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"TECHNICAL_CONSULTING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Kiểm tra Bean Validation khi thiếu tiêu đề và mô tả không đủ 20 ký tự"
+          },
+          "response": []
+        },
+        {
+          "name": "101.7 Gửi yêu cầu thất bại - Ngân sách không hợp lệ (Min > Max)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 1,\n    \"title\": \"Cần cố vấn định hướng nghề nghiệp IT\",\n    \"description\": \"Mô tả chi tiết mục tiêu nghề nghiệp và các khó khăn cần tư vấn...\",\n    \"industryId\": 1,\n    \"budgetMin\": 500000,\n    \"budgetMax\": 200000,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"CAREER_ORIENTATION\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Kiểm tra lỗi nghiệp vụ khi budgetMax nhỏ hơn budgetMin"
+          },
+          "response": []
+        },
+        {
+          "name": "101.8 Gửi yêu cầu thất bại - Thời hạn trong quá khứ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 1,\n    \"title\": \"Cần cố vấn định hướng nghề nghiệp IT\",\n    \"description\": \"Mô tả chi tiết mục tiêu nghề nghiệp và các khó khăn cần tư vấn...\",\n    \"industryId\": 1,\n    \"expectedDeadline\": \"2020-01-01T00:00:00Z\",\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"CAREER_ORIENTATION\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Kiểm tra lỗi nghiệp vụ khi thời hạn hoàn thành nằm ở quá khứ"
+          },
+          "response": []
+        },
+        {
+          "name": "101.9 Gửi yêu cầu thất bại - Không có JWT Token (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 1,\n    \"title\": \"Cần cố vấn định hướng nghề nghiệp IT\",\n    \"description\": \"Mô tả chi tiết mục tiêu nghề nghiệp và các khó khăn cần tư vấn...\",\n    \"industryId\": 1,\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"CAREER_ORIENTATION\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Kiểm tra chặn bảo mật khi request không truyền Bearer JWT token"
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

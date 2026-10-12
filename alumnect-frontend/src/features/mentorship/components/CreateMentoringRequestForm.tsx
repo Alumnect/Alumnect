@@ -15,8 +15,9 @@ import {
   Send,
   FileCheck,
 } from 'lucide-react'
-import { Card } from '@/components/ui'
+import { Card, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
+import { useAuthStore } from '@/store/authStore'
 import {
   createMentoringRequestSchema,
   type CreateMentoringRequestFormInput,
@@ -34,10 +35,13 @@ import { mentorRegistrationApi } from '../api/mentorRegistrationApi'
 import { mentoringRequestApi } from '../api/mentoringRequestApi'
 import { useCreateMentoringRequest } from '../hooks/useCreateMentoringRequest'
 import type { SupportedIndustryItem } from '../model/mentorRegistrationTypes'
+import type { MentorDetailData } from '../model/mentorDetailTypes'
 
 interface CreateMentoringRequestFormProps {
   onSuccess: (data: CreateMentoringRequestData) => void
   onCancel?: () => void
+  targetMentor?: MentorDetailData | null
+  isDirectRequest?: boolean
 }
 
 interface LocalFileItem {
@@ -51,12 +55,14 @@ interface LocalFileItem {
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
 /**
- * Biểu mẫu tạo yêu cầu Mentoring chung (UC100).
+ * Biểu mẫu tạo yêu cầu Mentoring (UC100 - General Request & UC101 - Direct Request).
  * Thiết kế tuân thủ nghiêm ngặt Pastel Premium Design System của AlumNect.
  */
 export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProps> = ({
   onSuccess,
   onCancel,
+  targetMentor,
+  isDirectRequest = false,
 }) => {
   const [industries, setIndustries] = useState<SupportedIndustryItem[]>([])
   const [loadingIndustries, setLoadingIndustries] = useState(true)
@@ -76,7 +82,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     defaultValues: {
       title: '',
       description: '',
-      industryId: 0,
+      industryId: (isDirectRequest && targetMentor?.supportedFields?.[0]?.id) || 0,
+      mentorId: (isDirectRequest && targetMentor?.mentorId) || null,
       budgetMin: null,
       budgetMax: null,
       workingMode: 'ONLINE',
@@ -87,8 +94,31 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     },
   })
 
-  // Tải danh mục ngành nghề (Industries) từ Backend
+  const currentUser = useAuthStore((s) => s.user)
+  const isSelfMentor = Boolean(
+    isDirectRequest && targetMentor && currentUser && String(currentUser.id) === String(targetMentor.userId)
+  )
+
+  // Tải danh mục ngành nghề (Industries) từ Backend hoặc lọc theo Mentor hỗ trợ (UC101)
   useEffect(() => {
+    if (isDirectRequest && targetMentor) {
+      if (targetMentor.supportedFields && targetMentor.supportedFields.length > 0) {
+        const supported = targetMentor.supportedFields.map((sf) => ({ id: sf.id, name: sf.name }))
+        setIndustries(supported)
+        setValue('industryId', supported[0].id, { shouldValidate: true })
+        setValue('mentorId', targetMentor.mentorId, { shouldValidate: true })
+        setLoadingIndustries(false)
+        return
+      } else {
+        setIndustries([])
+        setValue('industryId', 0, { shouldValidate: true })
+        setValue('mentorId', targetMentor.mentorId, { shouldValidate: true })
+        setLoadingIndustries(false)
+        setServerError('Mentor này chưa thiết lập lĩnh vực chuyên môn hỗ trợ nào trong hệ thống.')
+        return
+      }
+    }
+
     let mounted = true
     mentorRegistrationApi
       .getIndustries()
@@ -96,7 +126,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
         if (mounted) {
           setIndustries(data || [])
           if (data && data.length > 0) {
-            setValue('industryId', data[0].id)
+            setValue('industryId', data[0].id, { shouldValidate: true })
           }
           setLoadingIndustries(false)
         }
@@ -108,7 +138,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     return () => {
       mounted = false
     }
-  }, [setValue])
+  }, [isDirectRequest, targetMentor, setValue])
 
   // Xử lý chọn tệp đính kèm và upload lên Cloudflare R2 qua Presigned URL
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +146,9 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     if (!files || files.length === 0) return
 
     if (attachedFiles.length + files.length > 5) {
-      setServerError('Chỉ được đính kèm tối đa 5 tệp tin')
+      const msg = 'Chỉ được đính kèm tối đa 5 tệp tin'
+      setServerError(msg)
+      toast.warning(msg)
       return
     }
 
@@ -128,7 +160,9 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
       // Kiểm tra dung lượng nhỏ hơn 10 MB (BR-07)
       if (file.size >= MAX_FILE_SIZE) {
-        setServerError(`Tệp tin "${file.name}" vượt quá giới hạn 10 MB (${(file.size / (1024 * 1024)).toFixed(2)} MB)`)
+        const msg = `Tệp tin "${file.name}" vượt quá giới hạn 10 MB (${(file.size / (1024 * 1024)).toFixed(2)} MB)`
+        setServerError(msg)
+        toast.warning(msg)
         continue
       }
 
@@ -167,8 +201,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
         ])
       } catch (err: any) {
         console.error('Lỗi tải tệp lên R2:', err)
+        const errMsg = err.message || 'Tải tệp thất bại'
+        toast.error(`Không thể tải tệp "${item.file.name}": ${errMsg}`)
         setAttachedFiles((prev) =>
-          prev.map((f) => (f.id === item.id ? { ...f, uploading: false, error: err.message || 'Tải tệp thất bại' } : f))
+          prev.map((f) => (f.id === item.id ? { ...f, uploading: false, error: errMsg } : f))
         )
       }
     }
@@ -189,12 +225,54 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     )
   }
 
+  // Xử lý khi Form vi phạm validate client
+  const onInvalid = (fieldErrors: any) => {
+    const errorFields = Object.keys(fieldErrors)
+    if (errorFields.length > 0) {
+      const firstError = fieldErrors[errorFields[0]]
+      const message = firstError?.message || 'Vui lòng kiểm tra lại thông tin yêu cầu còn thiếu hoặc chưa hợp lệ'
+      setServerError(message)
+      toast.error(message)
+      const el = document.querySelector(`[name="${errorFields[0]}"]`) || document.getElementById(errorFields[0])
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
+
   // Submit Form
   const onSubmit = (formData: any) => {
-    // Kiểm tra nếu còn file đang uploading
+    // 1. Kiểm tra tự gửi yêu cầu cho chính mình
+    if (isSelfMentor) {
+      const msg = 'Bạn không thể tự gửi yêu cầu cố vấn cho chính tài khoản Mentor của mình'
+      setServerError(msg)
+      toast.error(msg)
+      return
+    }
+
+    // 2. Kiểm tra lĩnh vực hợp lệ đối với Mentor được chọn (UC101)
+    if (isDirectRequest && targetMentor) {
+      if (!targetMentor.supportedFields || targetMentor.supportedFields.length === 0) {
+        const msg = `Mentor ${targetMentor.fullName} chưa thiết lập lĩnh vực hỗ trợ. Vui lòng chọn Mentor khác.`
+        setServerError(msg)
+        toast.error(msg)
+        return
+      }
+
+      const selectedId = Number(formData.industryId)
+      const isSupported = targetMentor.supportedFields.some((sf) => sf.id === selectedId)
+      if (!isSupported) {
+        const msg = `Lĩnh vực chuyên môn được chọn không nằm trong danh mục hỗ trợ của Mentor ${targetMentor.fullName}.`
+        setServerError(msg)
+        toast.error(msg)
+        return
+      }
+    }
+
+    // 3. Kiểm tra nếu còn file đang uploading
     const stillUploading = attachedFiles.some((f) => f.uploading)
     if (stillUploading) {
-      setServerError('Vui lòng đợi các tệp tin đính kèm hoàn tất tải lên trước khi gửi yêu cầu')
+      const msg = 'Vui lòng đợi các tệp tin đính kèm hoàn tất tải lên trước khi gửi yêu cầu'
+      setServerError(msg)
+      toast.warning(msg)
       return
     }
 
@@ -204,6 +282,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
         title: formData.title,
         description: formData.description,
         industryId: Number(formData.industryId),
+        mentorId: isDirectRequest && targetMentor ? targetMentor.mentorId : undefined,
         budgetMin: formData.budgetMin !== null && formData.budgetMin !== undefined ? Number(formData.budgetMin) : null,
         budgetMax: formData.budgetMax !== null && formData.budgetMax !== undefined ? Number(formData.budgetMax) : null,
         workingMode: formData.workingMode,
@@ -214,10 +293,20 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       },
       {
         onSuccess: (data) => {
+          toast.success(isDirectRequest ? 'Gửi yêu cầu cố vấn trực tiếp thành công!' : 'Tạo yêu cầu mentoring thành công!')
           onSuccess(data)
         },
         onError: (err: any) => {
-          setServerError(err.message || 'Đã có lỗi xảy ra khi tạo yêu cầu. Vui lòng thử lại.')
+          let errorMsg = err.message || 'Đã có lỗi xảy ra khi tạo yêu cầu. Vui lòng thử lại.'
+          if (err.data && typeof err.data === 'object' && err.data.data && typeof err.data.data === 'object') {
+            const fieldErrors = Object.values(err.data.data) as string[]
+            if (fieldErrors.length > 0) {
+              errorMsg = fieldErrors.join('. ')
+            }
+          }
+          setServerError(errorMsg)
+          toast.error(errorMsg)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         },
       }
     )
@@ -228,7 +317,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
   const selectedTaskType = watch('taskType')
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 text-left">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6 text-left">
       {/* Alert Banner hiển thị lỗi nghiệp vụ từ Server */}
       {serverError && (
         <div className="rounded-2xl border border-coral-200/80 bg-coral-50/80 p-4 flex items-start gap-3 text-coral-900 text-sm dark:bg-coral-950/40 dark:border-coral-800/40 dark:text-coral-200 animate-fade-in">
@@ -258,7 +347,9 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               1. Thông tin yêu cầu hỗ trợ
             </h3>
             <p className="text-xs text-plum-500 dark:text-[#8f9399]">
-              Mô tả rõ ràng vấn đề và kỳ vọng để hệ thống matching Mentor chuẩn xác nhất
+              {isDirectRequest && targetMentor
+                ? `Mô tả rõ ràng vấn đề và kỳ vọng để gửi trực tiếp tới Mentor ${targetMentor.fullName}`
+                : 'Mô tả rõ ràng vấn đề và kỳ vọng để hệ thống matching Mentor chuẩn xác nhất'}
             </p>
           </div>
         </div>
@@ -317,7 +408,9 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               2. Lĩnh vực / Chuyên môn hỗ trợ
             </h3>
             <p className="text-xs text-plum-500 dark:text-[#8f9399]">
-              Hệ thống sẽ matching và phân phối tới các Mentor có chuyên môn trong lĩnh vực này
+              {isDirectRequest && targetMentor
+                ? `Chỉ hiển thị các lĩnh vực chuyên môn mà Mentor ${targetMentor.fullName} hỗ trợ tiếp nhận`
+                : 'Hệ thống sẽ matching và phân phối tới các Mentor có chuyên môn trong lĩnh vực này'}
             </p>
           </div>
         </div>
@@ -640,7 +733,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           type="submit"
           variant="primary"
           size="lg"
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || isSelfMentor}
           leftIcon={
             createMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -650,7 +743,15 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           }
           className="w-full sm:w-auto rounded-2xl font-bold px-8 shadow-sm"
         >
-          {createMutation.isPending ? 'Đang tạo & Matching...' : 'Đăng yêu cầu Mentoring'}
+          {isSelfMentor
+            ? 'Không thể gửi cho chính mình'
+            : createMutation.isPending
+            ? isDirectRequest
+              ? 'Đang gửi yêu cầu trực tiếp...'
+              : 'Đang tạo & Matching...'
+            : isDirectRequest
+            ? 'Gửi yêu cầu tới Mentor'
+            : 'Đăng yêu cầu Mentoring'}
         </Button>
       </div>
     </form>

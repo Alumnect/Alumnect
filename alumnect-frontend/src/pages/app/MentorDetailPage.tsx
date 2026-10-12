@@ -3,6 +3,8 @@ import { ArrowLeft, Search, Trophy } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Container } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
+import { toast } from '@/components/ui'
+import { useAuthStore } from '@/store/authStore'
 import {
   MentoringTermsGate,
   useMentorDetail,
@@ -24,6 +26,8 @@ function MentorDetailContent() {
   const params = useParams<{ id?: string; mentorId?: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const currentUser = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   // Xác định định danh hợp lệ
   const effectiveId = params.id || params.mentorId || searchParams.get('mentorId') || searchParams.get('userId') || ''
@@ -31,12 +35,23 @@ function MentorDetailContent() {
   // Truy vấn dữ liệu chi tiết Mentor qua React Query
   const { data: mentor, isLoading, isError, error, refetch } = useMentorDetail(effectiveId)
 
-  // Cuộn mượt đến thẻ yêu cầu cố vấn khi bấm nút CTA từ Header
-  const handleScrollToRequest = () => {
-    const el = document.getElementById('mentor-request-card')
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  // Chuyển hướng sang trang tạo yêu cầu cố vấn trực tiếp (UC101)
+  const handleGoToDirectRequest = () => {
+    if (!mentor) return
+    if (!isAuthenticated) {
+      toast.info('Vui lòng đăng nhập để gửi yêu cầu cố vấn')
+      navigate('/auth/login')
+      return
     }
+    if (currentUser && mentor.userId && String(currentUser.id) === String(mentor.userId)) {
+      toast.warning('Bạn không thể gửi yêu cầu cố vấn cho chính tài khoản của mình')
+      return
+    }
+    if (!mentor.canReceiveRequest) {
+      toast.warning(mentor.availabilityReason || 'Mentor hiện đang tạm ngưng tiếp nhận yêu cầu mới')
+      return
+    }
+    navigate(`/app/mentoring/mentors/${mentor.mentorId}/request`)
   }
 
   return (
@@ -120,7 +135,7 @@ function MentorDetailContent() {
           {/* SECTION B — Mentor Hero Profile Header (Thanh thoát, không lặp stats) */}
           <MentorProfileHeader
             mentor={mentor}
-            onRequestMentor={handleScrollToRequest}
+            onRequestMentor={handleGoToDirectRequest}
           />
 
           {/* Bố cục nội dung 2 cột đáp ứng (Desktop: 2/3 - 1/3, Mobile: 1 cột) */}

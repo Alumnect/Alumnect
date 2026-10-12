@@ -26,6 +26,15 @@ public interface MentorSupportedFieldRepository extends JpaRepository<MentorSupp
     List<MentorSupportedField> findByIndustryId(Long industryId);
 
     /**
+     * Kiểm tra xem Mentor có hỗ trợ một lĩnh vực ngành nghề cụ thể hay không (phục vụ validate UC101).
+     *
+     * @param mentorProfileId ID hồ sơ Mentor
+     * @param industryId ID lĩnh vực chuyên môn (ngành nghề)
+     * @return true nếu Mentor có đăng ký hỗ trợ lĩnh vực này
+     */
+    boolean existsByMentorProfileIdAndIndustryId(Long mentorProfileId, Long industryId);
+
+    /**
      * Lấy danh sách lĩnh vực hỗ trợ theo danh sách ID hồ sơ Mentor (Batch fetch).
      */
     List<MentorSupportedField> findByMentorProfileIdIn(java.util.Collection<Long> mentorProfileIds);

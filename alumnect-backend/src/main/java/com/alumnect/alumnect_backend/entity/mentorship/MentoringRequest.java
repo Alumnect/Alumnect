@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.entity.mentorship;
 
+import com.alumnect.alumnect_backend.common.enums.MentoringRequestType;
 import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringType;
@@ -33,8 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Entity ánh xạ bảng mentoring_requests — lưu thông tin yêu cầu Mentoring chung do sinh viên tạo (UC100).
- * Request không gán đích danh mentorId mà hệ thống sẽ tự động matching và phân phối tới các Mentor phù hợp.
+ * Entity ánh xạ bảng mentoring_requests — lưu thông tin yêu cầu Mentoring của sinh viên.
+ * Hỗ trợ cả yêu cầu chung (GENERAL - UC100) và yêu cầu trực tiếp gửi tới Mentor cụ thể (DIRECT - UC101).
  */
 @Entity
 @Table(name = "mentoring_requests")
@@ -59,6 +60,17 @@ public class MentoringRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "industry_id", nullable = false)
     private Industry industry;
+
+    /** Loại yêu cầu: GENERAL (chung - UC100) hoặc DIRECT (trực tiếp - UC101) */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "request_type", nullable = false, length = 20)
+    @Builder.Default
+    private MentoringRequestType requestType = MentoringRequestType.GENERAL;
+
+    /** Mentor được chọn trực tiếp nếu là yêu cầu DIRECT (UC101, null nếu GENERAL) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_mentor_id")
+    private MentorProfile targetMentor;
 
     /** Tiêu đề ngắn gọn mô tả nhu cầu cố vấn */
     @Column(name = "title", nullable = false, length = 200)
@@ -134,6 +146,9 @@ public class MentoringRequest {
         updatedAt = Instant.now();
         if (status == null) {
             status = MentoringRequestStatus.OPEN;
+        }
+        if (requestType == null) {
+            requestType = MentoringRequestType.GENERAL;
         }
         if (matchedCount == null) {
             matchedCount = 0;

@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringRequestRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.CreateMentoringRequestResponse;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller tiếp nhận và xử lý các yêu cầu liên quan đến Yêu cầu Mentoring chung (UC100).
+ * Controller tiếp nhận và xử lý các yêu cầu liên quan đến Yêu cầu Mentoring (UC100 - General & UC101 - Direct).
  * Tiền tố toàn cục "/api/v1" được cấu hình tự động thông qua WebMvcConfig.
  * Endpoint chính: /api/v1/mentoring/requests
  */
@@ -30,30 +31,63 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/mentoring/requests")
 @RequiredArgsConstructor
-@Tag(name = "Mentoring Request", description = "Các API tạo và quản lý Yêu cầu Mentoring chung (UC100)")
+@Tag(name = "Mentoring Request", description = "Các API tạo và quản lý Yêu cầu Mentoring (UC100 & UC101)")
 public class MentoringRequestController {
 
     private final MentoringRequestService mentoringRequestService;
 
     /**
-     * API Tạo mới yêu cầu Mentoring chung (UC100).
+     * API Tạo mới yêu cầu Mentoring (UC100 hoặc UC101 tùy thuộc vào mentorId trong payload).
      * Yêu cầu xác thực Bearer JWT Token của sinh viên trong Security Context.
-     * Hệ thống tự động kiểm tra điều khoản Mentoring (UC90), lưu yêu cầu và matching phân phối nội bộ.
+     * Hệ thống tự động kiểm tra điều khoản Mentoring (UC90), lưu yêu cầu và điều phối matching nội bộ hoặc gửi trực tiếp.
      *
      * @param request DTO chứa thông tin yêu cầu tạo
      * @return ResponseEntity chứa ApiResponse bọc đối tượng CreateMentoringRequestResponse
      */
     @PostMapping
-    @Operation(summary = "Tạo yêu cầu mentoring chung", description = "Cho phép sinh viên tạo yêu cầu hỗ trợ và tự động matching phân phối tới Mentor phù hợp")
+    @Operation(summary = "Tạo yêu cầu mentoring", description = "Cho phép sinh viên tạo yêu cầu hỗ trợ (chung UC100 nếu mentorId=null hoặc trực tiếp UC101 nếu mentorId được chỉ định)")
     public ResponseEntity<ApiResponse<CreateMentoringRequestResponse>> createMentoringRequest(
             @Valid @RequestBody CreateMentoringRequestRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        log.info("Nhận request tạo Mentoring Request từ user: {}", email);
+        log.info("Nhận request tạo Mentoring Request từ user: {}, mentorId={}", email, request.getMentorId());
+
+        CreateMentoringRequestResponse response = mentoringRequestService.createMentoringRequest(email, request);
+        String successMessage = request.getMentorId() != null
+                ? "Gửi yêu cầu cố vấn trực tiếp thành công"
+                : "Tạo yêu cầu mentoring thành công";
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(successMessage, response));
+    }
+
+    /**
+     * API Gửi yêu cầu cố vấn trực tiếp tới Mentor cụ thể (UC101 — Direct Mentoring Request).
+     * Cho phép truyền mentorId trên path param hoặc trong request body.
+     *
+     * @param pathMentorId ID Mentor truyền qua path (tùy chọn)
+     * @param request DTO chứa thông tin yêu cầu tạo
+     * @return ResponseEntity chứa ApiResponse bọc đối tượng CreateMentoringRequestResponse
+     */
+    @PostMapping({"/direct", "/direct/{mentorId:\\d+}"})
+    @Operation(summary = "Gửi yêu cầu cố vấn trực tiếp (UC101)", description = "Cho phép sinh viên gửi yêu cầu cố vấn trực tiếp tới Mentor đã chọn")
+    public ResponseEntity<ApiResponse<CreateMentoringRequestResponse>> createDirectMentoringRequest(
+            @PathVariable(value = "mentorId", required = false) Long pathMentorId,
+            @Valid @RequestBody CreateMentoringRequestRequest request) {
+
+        if (pathMentorId != null) {
+            request.setMentorId(pathMentorId);
+        }
+        if (request.getMentorId() == null) {
+            throw new BadRequestException("Thiếu định danh Mentor (mentorId) cho yêu cầu cố vấn trực tiếp");
+        }
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Nhận request gửi Mentoring Request trực tiếp tới mentorId={} từ user: {}", request.getMentorId(), email);
 
         CreateMentoringRequestResponse response = mentoringRequestService.createMentoringRequest(email, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Tạo yêu cầu mentoring thành công", response));
+                .body(ApiResponse.success("Gửi yêu cầu cố vấn trực tiếp thành công", response));
     }
 
     /**
