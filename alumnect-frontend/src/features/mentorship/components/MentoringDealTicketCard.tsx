@@ -98,8 +98,7 @@ export function MentoringDealTicketCard({
       const updated = await confirmMutation.mutateAsync(deal.id)
       refetch()
       if (updated.status === 'DEAL_CONFIRMED') {
-        toast.success('Xác nhận Deal thành công! Đang mở cổng thanh toán PayOS...')
-        setIsPaymentModalOpen(true)
+        toast.success('Hai bên đã chốt thỏa thuận thành công!')
       } else {
         toast.success('Đã xác nhận thỏa thuận. Đang chờ đối phương xác nhận.')
       }

@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   Loader2,
   Sparkles,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
@@ -73,6 +75,26 @@ export function MentoringTaskPaymentModal({
       )
     }
   }, [isOpen, deal])
+
+  const handleRetryCheckout = () => {
+    if (!deal) return
+    createCheckoutMutation.mutate(
+      { dealId: deal.id },
+      {
+        onSuccess: (data) => {
+          setCheckoutData(data)
+          setTimeLeft(15 * 60)
+        },
+        onError: (err: any) => {
+          const msg =
+            err?.response?.data?.message ||
+            err?.message ||
+            'Không thể tạo phiên thanh toán. Vui lòng thử lại sau.'
+          toast.error(msg)
+        },
+      }
+    )
+  }
 
   // Reset state khi đóng modal
   useEffect(() => {
@@ -376,7 +398,46 @@ export function MentoringTaskPaymentModal({
               </div>
             </div>
           </div>
-        ) : null}
+        ) : (
+          /* Trạng thái lỗi không tạo được link PayOS */
+          <div className="py-8 text-center space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 ring-8 ring-rose-50/50 dark:bg-rose-950/50 dark:text-rose-400 dark:ring-rose-900/20">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-plum-900 dark:text-[#f0f2f5]">
+                Chưa thể tạo liên kết thanh toán
+              </h3>
+              <p className="text-xs text-plum-500 dark:text-[#b0b3b8] max-w-sm mx-auto">
+                Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="rounded-xl px-4 text-xs font-bold text-plum-600 hover:text-plum-900"
+              >
+                Đóng
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleRetryCheckout}
+                disabled={createCheckoutMutation.isPending}
+                className="rounded-xl px-4 text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white flex items-center gap-1.5"
+              >
+                {createCheckoutMutation.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                <span>Thử lại</span>
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
