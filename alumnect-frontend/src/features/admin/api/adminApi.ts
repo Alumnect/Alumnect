@@ -9,7 +9,7 @@ export interface AdminDashboardSummaryDto {
   totalUsers: number
   totalStudents: number
   totalAlumni: number
-  pendingAlumniVerifications: number
+  pendingVerifications: number
   dailyRegistrations?: DayRegistrationStatDto[]
   registrationsLast7Days?: DayRegistrationStatDto[]
   registrationsByMonth?: DayRegistrationStatDto[]
