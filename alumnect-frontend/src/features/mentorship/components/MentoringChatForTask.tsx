@@ -520,6 +520,13 @@ export function MentoringChatForTask({
 
             const messageElements = messages.map((msg) => {
               const isMe = msg.senderId === currentNumId
+
+              // Bỏ hiển thị tin nhắn hệ thống thông báo xác nhận tự động
+              const isSystemConfirmMsg = /\[HỆ THỐNG\].*(xác nhận|đồng ý)/i.test(msg.content || '')
+              if (isSystemConfirmMsg) {
+                return null
+              }
+
               const isDealMsg = /deal\s*ticket|deal\s*#|phiên\s*bản/i.test(msg.content || '')
 
               if (isDealMsg) {
@@ -527,6 +534,11 @@ export function MentoringChatForTask({
                 const verNum = verMatch
                   ? parseInt(verMatch[1], 10)
                   : currentDeal.version
+
+                // Mỗi phiên bản chỉ render 1 thẻ Ticket duy nhất, tránh bị lặp
+                if (renderedVersions.has(verNum)) {
+                  return null
+                }
                 renderedVersions.add(verNum)
 
                 const matchedSnapshot =
