@@ -56,9 +56,6 @@ function MentoringDealsContent() {
 
   const statusTabs: { label: string; value?: MentoringDealStatus; count?: number }[] = [
     { label: 'Tất cả thỏa thuận', value: undefined },
-    { label: 'Đang thương lượng', value: 'PROPOSED' },
-    { label: 'Chờ đối tác xác nhận', value: 'STUDENT_CONFIRMED' },
-    { label: 'Đã chốt & Khóa Snapshot', value: 'DEAL_CONFIRMED' },
     { label: 'Đã hủy', value: 'CANCELLED' },
   ]
 

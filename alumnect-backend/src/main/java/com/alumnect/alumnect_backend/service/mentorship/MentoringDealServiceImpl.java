@@ -121,14 +121,13 @@ public class MentoringDealServiceImpl implements MentoringDealService {
             conversation = conversationRepository.findDirectConversationBetween(targetStudentId, targetMentorId).orElse(null);
         }
 
-        // Kiểm tra nếu Request đã chốt với Mentor khác
+        // Kiểm tra nếu Request đã hoàn tất thanh toán với Mentor khác
         if (request.getRequestId() != null) {
             List<MentoringDeal> existingDealsForRequest = dealRepository.findByRequestId(request.getRequestId());
-            boolean alreadyLockedWithOther = existingDealsForRequest.stream()
-                    .anyMatch(d -> (d.getStatus() == MentoringDealStatus.DEAL_CONFIRMED || Boolean.TRUE.equals(d.getIsLocked()) || Boolean.TRUE.equals(d.getIsPaid()))
-                            && !d.getMentor().getId().equals(targetMentorId));
-            if (alreadyLockedWithOther) {
-                throw new ConflictException("Yêu cầu này đã chốt thỏa thuận và chọn Cố vấn khác rồi.");
+            boolean alreadyPaidWithOther = existingDealsForRequest.stream()
+                    .anyMatch(d -> Boolean.TRUE.equals(d.getIsPaid()) && !d.getMentor().getId().equals(targetMentorId));
+            if (alreadyPaidWithOther) {
+                throw new ConflictException("Yêu cầu này đã được thanh toán và giao cho Cố vấn khác rồi.");
             }
 
             // Quy tắc: 1 người 1 deal cho mỗi yêu cầu/task. Không tạo thêm deal mới nếu deal hiện tại chưa thanh toán

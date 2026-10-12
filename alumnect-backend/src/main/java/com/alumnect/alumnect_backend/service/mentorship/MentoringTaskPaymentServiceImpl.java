@@ -90,6 +90,16 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
             throw new ConflictException("Thỏa thuận Deal này đã được thanh toán và kích hoạt Task trước đó rồi.");
         }
 
+        // Kiểm tra nếu Request này đã có Deal khác thanh toán thành công
+        if (deal.getRequestId() != null) {
+            boolean otherPaid = dealRepository.findByRequestIdAndIdNot(deal.getRequestId(), deal.getId())
+                    .stream()
+                    .anyMatch(d -> Boolean.TRUE.equals(d.getIsPaid()));
+            if (otherPaid) {
+                throw new ConflictException("Yêu cầu cố vấn này đã được thanh toán và giao cho một Cố vấn khác rồi.");
+            }
+        }
+
         Instant now = Instant.now();
 
         // 5. Kiểm tra nếu đã có giao dịch PENDING còn hiệu lực -> tái sử dụng đơn hàng hiện có để tránh tạo đơn rác
@@ -363,6 +373,37 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
                 messageRepository.save(systemMsg);
             } catch (Exception ex) {
                 log.warn("Không thể lưu tin nhắn hệ thống thanh toán: {}", ex.getMessage());
+            }
+        }
+
+        // 5. Tự động hủy tất cả các Deal khác cho cùng Request này (sinh viên chốt và thanh toán thì mentor này nhận task, các mentor khác bị hủy)
+        if (deal.getRequestId() != null) {
+            List<MentoringDeal> otherDeals = dealRepository.findByRequestIdAndIdNot(deal.getRequestId(), deal.getId());
+            for (MentoringDeal otherDeal : otherDeals) {
+                if (otherDeal.getStatus() != MentoringDealStatus.CANCELLED) {
+                    otherDeal.setStatus(MentoringDealStatus.CANCELLED);
+                    otherDeal.setIsLocked(false);
+                    otherDeal.setUpdatedBy(deal.getStudent());
+                    otherDeal.setUpdatedAt(now);
+                    dealRepository.save(otherDeal);
+
+                    // Gửi thông báo hủy vào cuộc trò chuyện của Mentor bị hủy nếu có
+                    if (otherDeal.getConversation() != null) {
+                        try {
+                            Message cancelMsg = Message.builder()
+                                    .conversation(otherDeal.getConversation())
+                                    .sender(deal.getStudent())
+                                    .content("[HỆ THỐNG] Yêu cầu cố vấn này đã được Học viên thanh toán và lựa chọn Cố vấn khác. Thỏa thuận này đã được tự động hủy bỏ.")
+                                    .type(MessageType.SYSTEM)
+                                    .createdAt(now)
+                                    .build();
+                            messageRepository.save(cancelMsg);
+                        } catch (Exception ex) {
+                            log.warn("Không thể lưu tin nhắn hủy tự động cho deal {}: {}", otherDeal.getId(), ex.getMessage());
+                        }
+                    }
+                    log.info("Đã tự động hủy dealId={} của Mentor khác do dealId={} đã thanh toán thành công", otherDeal.getId(), deal.getId());
+                }
             }
         }
     }

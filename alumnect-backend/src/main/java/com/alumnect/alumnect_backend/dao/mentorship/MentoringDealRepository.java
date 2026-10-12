@@ -49,7 +49,12 @@ public interface MentoringDealRepository extends JpaRepository<MentoringDeal, Lo
      */
     @Query("SELECT d FROM MentoringDeal d " +
            "WHERE (d.student.id = :userId OR d.mentor.id = :userId) " +
-           "AND (:status IS NULL OR d.status = :status)")
+           "AND (" +
+           "  (:status IS NULL AND d.status NOT IN (com.alumnect.alumnect_backend.common.enums.MentoringDealStatus.CANCELLED, com.alumnect.alumnect_backend.common.enums.MentoringDealStatus.REJECTED)) " +
+           "  OR (:status = com.alumnect.alumnect_backend.common.enums.MentoringDealStatus.CANCELLED AND d.status IN (com.alumnect.alumnect_backend.common.enums.MentoringDealStatus.CANCELLED, com.alumnect.alumnect_backend.common.enums.MentoringDealStatus.REJECTED)) " +
+           "  OR (:status IS NOT NULL AND :status != com.alumnect.alumnect_backend.common.enums.MentoringDealStatus.CANCELLED AND d.status = :status)" +
+           ") " +
+           "ORDER BY d.updatedAt DESC")
     Page<MentoringDeal> findByParticipantAndStatus(
             @Param("userId") Long userId,
             @Param("status") MentoringDealStatus status,
