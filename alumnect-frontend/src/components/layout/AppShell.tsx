@@ -28,7 +28,7 @@ import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
-import { useMentoringTermsStatus } from '@/features/mentorship/hooks/useMentoringTerms'
+import { MentorshipLayout } from '@/features/mentorship'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 /* ----------------------------- small popover ----------------------------- */
@@ -123,10 +123,6 @@ export function AppShell() {
 
   // Kiểm tra điều khoản Mentoring khi đang ở các trang thuộc /app/mentoring
   const isMentoringRoute = location.pathname.startsWith('/app/mentoring')
-  const { data: termsStatus } = useMentoringTermsStatus(isAuthenticated && isMentoringRoute)
-  const isMentoringTermsView =
-    location.pathname === '/app/mentoring/terms' ||
-    (isMentoringRoute && termsStatus !== undefined && !termsStatus.accepted)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
@@ -447,8 +443,8 @@ export function AppShell() {
           ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
           : location.pathname === '/app/messages'
           ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100vh-3.85rem)] overflow-y-auto no-scrollbar"
-          : isMentoringTermsView
-          ? "max-w-[1560px] px-3 sm:px-6 lg:px-8 py-2 sm:py-3 h-[calc(100vh-4.25rem)] max-h-[calc(100vh-4.25rem)] overflow-hidden"
+          : isMentoringRoute
+          ? "max-w-[1560px] px-3 sm:px-6 lg:px-8 pb-28 pt-4 lg:pb-10"
           : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
         <motion.div
@@ -456,9 +452,15 @@ export function AppShell() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={TRANSITION.page}
-          className={location.pathname === '/app/messages' || isMentoringTermsView ? "h-full min-h-0" : undefined}
+          className={location.pathname === '/app/messages' ? "h-full min-h-0" : undefined}
         >
-          <Outlet />
+          {isMentoringRoute ? (
+            <MentorshipLayout>
+              <Outlet />
+            </MentorshipLayout>
+          ) : (
+            <Outlet />
+          )}
         </motion.div>
       </main>
 

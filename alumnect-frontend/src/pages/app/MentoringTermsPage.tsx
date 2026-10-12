@@ -12,7 +12,7 @@ export function MentoringTermsPage() {
   const source: MentoringEntrySource = sourceParam === 'BECOME_MENTOR' ? 'BECOME_MENTOR' : 'MENTORING_HOME'
 
   return (
-    <div className="w-full h-full flex flex-col min-h-0">
+    <div className="w-full">
       <MentoringTerms source={source} />
     </div>
   )
