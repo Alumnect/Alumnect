@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
-import { Calendar, DollarSign, ArrowRight } from 'lucide-react'
+import { Calendar, DollarSign, ArrowRight, CreditCard } from 'lucide-react'
 import { Card, Avatar, Button } from '@/components/ui'
 import { MentoringDealBadge } from './MentoringDealBadge'
 import type { MentoringDeal } from '../model/mentoringDealTypes'
@@ -98,15 +98,27 @@ export function MentoringDealCard({ deal, onViewDetail }: MentoringDealCardProps
           </div>
         </div>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => onViewDetail(deal)}
-          rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-          className="rounded-xl font-bold text-xs"
-        >
-          Xem & Xác nhận
-        </Button>
+        {deal.status === 'DEAL_CONFIRMED' && !deal.isPaid ? (
+          <button
+            type="button"
+            onClick={() => onViewDetail(deal)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm shadow-emerald-500/25 hover:shadow hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+          >
+            <CreditCard className="h-3.5 w-3.5" />
+            <span>Thanh toán ngay</span>
+            <ArrowRight className="h-3 w-3" />
+          </button>
+        ) : (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onViewDetail(deal)}
+            rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+            className="rounded-xl font-bold text-xs"
+          >
+            {deal.isPaid ? 'Xem Task' : 'Xem & Xác nhận'}
+          </Button>
+        )}
       </div>
     </Card>
   )

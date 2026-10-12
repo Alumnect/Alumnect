@@ -214,18 +214,18 @@ export function MentoringDealActionModal({
 
                   {/* Nút Thanh toán khi DEAL_CONFIRMED & chưa thanh toán */}
                   {deal.status === 'DEAL_CONFIRMED' && !deal.isPaid && (
-                    <Button
-                      variant="primary"
+                    <button
+                      type="button"
                       onClick={() => {
                         if (onPaymentRedirect) onPaymentRedirect(deal)
                         else setIsPaymentModalOpen(true)
                       }}
-                      className="rounded-xl font-black bg-mint-600 hover:bg-mint-700 shadow-md shadow-mint-500/20 text-xs text-white"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 shadow-md shadow-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
                     >
-                      <CreditCard className="h-3.5 w-3.5 mr-1" />
-                      Thanh toán Task (UC105)
-                      <ExternalLink className="h-3 w-3 ml-1" />
-                    </Button>
+                      <CreditCard className="h-4 w-4 text-white" />
+                      <span>Thanh toán Task</span>
+                      <ExternalLink className="h-3.5 w-3.5 text-white/90" />
+                    </button>
                   )}
 
                   {/* Khi DEAL_CONFIRMED & đã thanh toán */}
