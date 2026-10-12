@@ -116,8 +116,6 @@ export function AdminMentorCvModal({
         document.body.style.overflow = ''
         window.removeEventListener('keydown', handleKeyDown)
       }
-    } else {
-      document.body.style.overflow = ''
     }
   }, [isOpen, onClose])
 

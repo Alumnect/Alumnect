@@ -272,6 +272,7 @@ export function AdminReportsQueue() {
         })
         
         setSelectedReport(null)
+        toast.success('Đã xử lý báo cáo thành công!')
       } else if (type === 'DISMISS') {
         // Cập nhật trạng thái báo cáo sang DISMISSED (không thay đổi trạng thái bài viết)
         await updateStatusMutation.mutateAsync({ id, status: 'DISMISSED' })
