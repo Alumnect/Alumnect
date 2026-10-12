@@ -12,10 +12,12 @@ import {
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
 import type { MentoringTicketData } from './MentoringTicketDetailModal'
 
 interface MentoringDiscordTicketEmbedProps {
   ticket: MentoringTicketData
+  isMe?: boolean
   isRecipient?: boolean
   canAct?: boolean
   onConfirm?: () => Promise<void> | void
@@ -28,6 +30,7 @@ interface MentoringDiscordTicketEmbedProps {
 
 export function MentoringDiscordTicketEmbed({
   ticket,
+  isMe = false,
   isRecipient = false,
   canAct = false,
   onConfirm,
@@ -105,16 +108,16 @@ export function MentoringDiscordTicketEmbed({
   }
 
   return (
-    <div className="flex w-full flex-col gap-1.5 py-2 my-1 animate-fade-in">
+    <div className={cn("flex w-full flex-col gap-1.5 py-2 my-1 animate-fade-in", isMe ? "items-end" : "items-start")}>
       {/* 1. Header Người gửi tin nhắn (Avatar + Tên + Giờ) */}
-      <div className="flex items-center gap-2.5 px-1">
+      <div className={cn("flex items-center gap-2.5 px-1", isMe ? "flex-row-reverse" : "flex-row")}>
         <Avatar
           src={ticket.senderAvatar || undefined}
           name={ticket.senderName}
           size={36}
           className="ring-1 ring-white/10 shrink-0"
         />
-        <div className="flex items-baseline gap-2">
+        <div className={cn("flex items-baseline gap-2", isMe ? "flex-row-reverse" : "flex-row")}>
           <span className="text-sm font-bold text-gray-900 dark:text-[#f0f2f5]">
             {ticket.senderName}
           </span>
@@ -128,13 +131,13 @@ export function MentoringDiscordTicketEmbed({
 
       {/* 2. Tin nhắn văn bản đi kèm (nếu có) */}
       {accompanyingText && (
-        <div className="ml-11 max-w-xl rounded-2xl bg-gray-100 dark:bg-[#2b2d31] px-4 py-2 text-sm text-gray-800 dark:text-gray-200 shadow-2xs">
+        <div className={cn("max-w-xl rounded-2xl px-4 py-2 text-sm shadow-2xs", isMe ? "mr-0 sm:mr-11 bg-brand-600 text-white" : "ml-0 sm:ml-11 bg-gray-100 dark:bg-[#2b2d31] text-gray-800 dark:text-gray-200")}>
           {accompanyingText}
         </div>
       )}
 
       {/* 3. Thẻ tương tác Ticket phong cách Discord Embed */}
-      <div className="ml-0 sm:ml-11 max-w-xl overflow-hidden rounded-2xl border-l-4 border-blue-500 bg-[#181f2a] p-4 sm:p-5 text-white shadow-xl">
+      <div className={cn("w-full max-w-xl overflow-hidden rounded-2xl border-l-4 border-blue-500 bg-[#181f2a] p-4 sm:p-5 text-white shadow-xl", isMe ? "mr-0 sm:mr-11 self-end" : "ml-0 sm:ml-11 self-start")}>
         {/* Header Thẻ: Icon + Loại Ticket + Mã + Status */}
         <div className="flex items-start justify-between gap-3 pb-3 border-b border-gray-800/80">
           <div className="flex items-center gap-3">
@@ -312,7 +315,12 @@ export function MentoringDiscordTicketEmbed({
 
       {/* Hiển thị thời gian gửi dưới thẻ */}
       {timeString && (
-        <span className="ml-1 sm:ml-12 text-[10px] text-gray-400 dark:text-gray-500">
+        <span
+          className={cn(
+            'text-[10px] text-gray-400 dark:text-gray-500',
+            isMe ? 'mr-1 sm:mr-12 text-right' : 'ml-1 sm:ml-12 text-left'
+          )}
+        >
           {timeString}
         </span>
       )}

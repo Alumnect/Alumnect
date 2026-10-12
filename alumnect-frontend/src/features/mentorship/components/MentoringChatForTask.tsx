@@ -535,10 +535,15 @@ export function MentoringChatForTask({
                   !isReadOnly &&
                   Boolean(currentDeal.canConfirm)
 
+                const isTicketFromMe = ticket.senderId
+                  ? ticket.senderId === currentNumId
+                  : isMe
+
                 return (
                   <MentoringDiscordTicketEmbed
                     key={msg.id}
                     ticket={ticket}
+                    isMe={isTicketFromMe}
                     isRecipient={isRecipient}
                     canAct={canAct}
                     onConfirm={handleConfirmAndPay}
@@ -565,6 +570,7 @@ export function MentoringChatForTask({
             // Nếu chưa có tin nhắn nào render phiên bản active hiện tại, hiển thị thẻ tương tác của Deal mới nhất
             const shouldRenderActiveTicket = !renderedVersions.has(currentDeal.version)
             const activeTicket = buildTicketData(null, currentDeal.version)
+            const isActiveFromMe = activeTicket.senderId === currentNumId
             const isActiveRecipient = activeTicket.senderId
               ? activeTicket.senderId !== currentNumId
               : !isMentor
@@ -597,6 +603,7 @@ export function MentoringChatForTask({
                   <MentoringDiscordTicketEmbed
                     key={`deal-active-${currentDeal.id}-${currentDeal.version}`}
                     ticket={activeTicket}
+                    isMe={isActiveFromMe}
                     isRecipient={isActiveRecipient}
                     canAct={canActActive}
                     onConfirm={handleConfirmAndPay}
