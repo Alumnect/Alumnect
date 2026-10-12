@@ -81,3 +81,16 @@ export * from './components/MentorRequestActionCard'
 export * from './components/MentorDetailSkeleton'
 export * from './components/MentorDetailErrorState'
 
+// UC104 exports (Thỏa thuận & xác nhận Mentoring Deal)
+export * from './model/mentoringDealTypes'
+export * from './api/mentoringDealApi'
+export * from './hooks/useMentoringDeals'
+export * from './components/MentoringDealBadge'
+export * from './components/MentoringDealSnapshotCard'
+export * from './components/MentoringDealHistoryTimeline'
+export * from './components/MentoringDealFormModal'
+export * from './components/MentoringDealActionModal'
+export * from './components/MentoringDealCard'
+export * from './components/MentoringDealChatHeaderAction'
+
+

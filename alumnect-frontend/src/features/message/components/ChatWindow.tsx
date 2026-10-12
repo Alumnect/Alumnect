@@ -8,6 +8,7 @@ import { GroupInfoModal } from './GroupInfoModal'
 import { useAuthStore } from '@/store/authStore'
 import { useAcceptConversation, useDeleteConversation } from '../hooks/useChat'
 import { type Conversation, type Message, type SendMessagePayload, isGroupConversation } from '../model/types'
+import { MentoringDealChatHeaderAction } from '@/features/mentorship'
 
 interface ChatWindowProps {
   conversation: Conversation | null
@@ -227,6 +228,12 @@ export function ChatWindow({
 
         {/* Nút tác vụ header */}
         <div className="flex items-center gap-2">
+          {!isGroup && conversation.id && conversation.recipientId && (
+            <MentoringDealChatHeaderAction
+              conversationId={conversation.id}
+              recipientId={conversation.recipientId}
+            />
+          )}
           {isGroup && conversation.communityGroupId && (
             <Link
               to={`/app/groups/${conversation.communityGroupId}`}

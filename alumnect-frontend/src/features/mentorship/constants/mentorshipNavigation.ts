@@ -5,6 +5,7 @@ import {
   BriefcaseBusiness,
   FileText,
   GraduationCap,
+  Handshake,
   LayoutDashboard,
   Search,
   UserCheck,
@@ -51,6 +52,12 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         label: 'Bảng xếp hạng Mentor',
         to: '/app/mentoring/ranking',
         icon: Users,
+        audience: 'common',
+      },
+      {
+        label: 'Thỏa thuận Mentoring Deal',
+        to: '/app/mentoring/deals',
+        icon: Handshake,
         audience: 'common',
       },
       {
