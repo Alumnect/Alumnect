@@ -33,7 +33,7 @@ import {
   Flag,
 } from 'lucide-react'
 import { TRANSITION } from '@/lib/motion'
-import { Avatar, Badge, Card, ImageCarousel, toast, ImageViewerModal } from '@/components/ui'
+import { Avatar, Badge, Card, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { UpcomingEventsWidget, CancelEventModal, useCancelEvent, EventRsvpButton } from '@/features/event'

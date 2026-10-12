@@ -158,7 +158,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
                   variant="outline"
                   size="sm"
                   leftIcon={<XCircle className="h-3.5 w-3.5 text-coral-500" />}
-                  isLoading={cancelMutation.isPending}
+                  disabled={cancelMutation.isPending}
                   onClick={() => cancelMutation.mutate(pendingPaymentOrderCode)}
                 >
                   Hủy đơn

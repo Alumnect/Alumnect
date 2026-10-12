@@ -120,7 +120,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
   // Xử lý đổi tên nhóm
   const handleSaveTitle = async () => {
-    if (!newTitle.trim() || newTitle === conversation.title) {
+    if (!conversationId || !newTitle.trim() || newTitle === conversation.title) {
       setIsEditingTitle(false)
       return
     }
@@ -144,7 +144,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
   const handleAddUser = async (targetUserId: number) => {
     try {
       const res = await addMembersMutation.mutateAsync({
-        conversationId,
+        conversationId: conversationId!,
         payload: { memberIds: [targetUserId] },
       })
       if (onConversationUpdated && res?.data) {
@@ -203,7 +203,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
     if (type === 'disband') {
       try {
-        await deleteConversationMutation.mutateAsync(conversationId)
+        await deleteConversationMutation.mutateAsync(conversationId!)
         toast.success('Đã giải tán nhóm trò chuyện thành công')
         setConfirmAction(null)
         onLeftGroup()
@@ -216,7 +216,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
     try {
       const newAdminId = type === 'transfer_and_leave' ? (selectedNewAdminId ?? undefined) : undefined
-      await removeMemberMutation.mutateAsync({ conversationId, userId, newAdminId })
+      await removeMemberMutation.mutateAsync({ conversationId: conversationId!, userId, newAdminId })
       if (type === 'leave' || type === 'transfer_and_leave') {
         toast.success('Đã rời khỏi nhóm')
         setConfirmAction(null)

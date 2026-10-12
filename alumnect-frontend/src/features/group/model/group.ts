@@ -194,6 +194,7 @@ export interface GroupPostAuthor {
   avatarUrl: string
   groupRole: GroupRole | null
   roleLabel: string
+  headline?: string
 }
 
 /** Dữ liệu bài viết / thảo luận trong hội nhóm */

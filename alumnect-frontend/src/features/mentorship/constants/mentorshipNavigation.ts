@@ -46,7 +46,6 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         to: '/app/mentoring/discover',
         icon: Search,
         audience: 'common',
-        planned: true,
       },
       {
         label: 'Bảng xếp hạng Mentor',

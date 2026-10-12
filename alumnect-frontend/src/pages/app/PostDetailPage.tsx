@@ -1124,7 +1124,7 @@ export function PostDetailPage() {
  */
 function CommentsSection({
   postId,
-  commentCount,
+  commentCount: _commentCount,
   isGuest,
 }: {
   postId: string

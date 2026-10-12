@@ -12,7 +12,6 @@ import {
   CreditCard,
   Target,
   Sparkles,
-  ShieldAlert,
   Crown,
 } from 'lucide-react'
 import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'

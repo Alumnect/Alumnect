@@ -12,7 +12,6 @@ import {
   Send,
   ShieldCheck,
   Trash2,
-  X,
   Loader2,
 } from 'lucide-react'
 import { toast, ImageViewerModal, ImageCarousel } from '@/components/ui'

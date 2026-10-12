@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { AnimatedBackground } from '@/components/motion'
 import { useAuthStore } from '@/store/authStore'
 import { useMentorStatus } from '../hooks/useMentorStatus'
 import { MENTORSHIP_NAVIGATION, type MentorshipNavigationItem } from '../constants/mentorshipNavigation'
@@ -49,17 +48,30 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         key={item.to}
         to={item.to}
         end={item.end}
-        data-id={item.to}
         onClick={onNavigate}
         className={cn(
-          'group flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-all duration-200',
+          'group relative flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-colors duration-150',
           isActive
             ? 'text-brand-700 dark:text-brand-300'
-            : 'text-plum-600 hover:-translate-y-0.5 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
+            : 'text-plum-600 hover:bg-plum-900/[0.04] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-white/[0.05] dark:hover:text-white',
         )}
       >
-        <Icon className={cn('h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110', isActive ? 'text-brand-600' : 'text-plum-400 dark:text-[#8f9399]')} />
-        <span className="min-w-0 truncate">{item.label}</span>
+        {isActive && (
+          <motion.span
+            layoutId="mentorship-sidebar-active-indicator"
+            className="absolute inset-0 rounded-2xl bg-brand-100/85 shadow-[inset_3px_0_0_#f75512] dark:bg-brand-500/15"
+            transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+          />
+        )}
+        <span className="relative z-10 flex w-full items-center gap-3">
+          <Icon
+            className={cn(
+              'h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110',
+              isActive ? 'text-brand-600' : 'text-plum-400 dark:text-[#8f9399]',
+            )}
+          />
+          <span className="min-w-0 truncate">{item.label}</span>
+        </span>
       </NavLink>
     )
   }
@@ -68,17 +80,15 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
     <div className="pr-1">
       <nav aria-label="Điều hướng Mentorship" className="space-y-5">
         {sections.map((section) => (
-          <section key={section.label} className="border-t border-plum-900/[0.07] pt-4 first:border-t-0 first:pt-0 dark:border-[#393a3b]">
-            <h3 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-plum-400 dark:text-[#8f9399]">{section.label}</h3>
+          <section
+            key={section.label}
+            className="border-t border-plum-900/[0.07] pt-4 first:border-t-0 first:pt-0 dark:border-[#393a3b]"
+          >
+            <h3 className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-plum-400 dark:text-[#8f9399]">
+              {section.label}
+            </h3>
             <div className="space-y-1">
-              <AnimatedBackground
-                value={section.items.find(isItemActive)?.to}
-                enableHover
-                className="rounded-2xl bg-brand-100/85 shadow-[inset_3px_0_0_#f75512] dark:bg-brand-500/15"
-                transition={{ type: 'spring', bounce: 0.18, duration: 0.34 }}
-              >
-                {section.items.map(renderItem)}
-              </AnimatedBackground>
+              {section.items.map(renderItem)}
             </div>
           </section>
         ))}

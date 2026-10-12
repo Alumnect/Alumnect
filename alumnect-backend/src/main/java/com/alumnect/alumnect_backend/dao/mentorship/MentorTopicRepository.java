@@ -21,6 +21,11 @@ public interface MentorTopicRepository extends JpaRepository<MentorTopic, Long> 
     List<MentorTopic> findByMentorProfileId(Long mentorProfileId);
 
     /**
+     * Lấy danh sách chủ đề cố vấn theo danh sách ID hồ sơ Mentor (Batch fetch).
+     */
+    List<MentorTopic> findByMentorProfileIdIn(java.util.Collection<Long> mentorProfileIds);
+
+    /**
      * Xóa các chủ đề cố vấn của một hồ sơ Mentor để đồng bộ mới.
      */
     @Modifying

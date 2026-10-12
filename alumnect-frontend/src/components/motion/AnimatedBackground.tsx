@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, type Transition } from 'motion/react'
+import { AnimatePresence, motion, type Transition } from 'framer-motion'
 import {
   Children,
   cloneElement,
