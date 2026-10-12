@@ -80,8 +80,8 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
             throw new ForbiddenException("Chỉ có Học viên (Student) tham gia Deal mới có quyền thực hiện thanh toán nhiệm vụ này.");
         }
 
-        // 3. Tiền điều kiện: Deal phải ở trạng thái DEAL_CONFIRMED và đã khóa snapshot
-        if (deal.getStatus() != MentoringDealStatus.DEAL_CONFIRMED || !Boolean.TRUE.equals(deal.getIsLocked())) {
+        // 3. Tiền điều kiện: Deal phải ở trạng thái DEAL_CONFIRMED
+        if (deal.getStatus() != MentoringDealStatus.DEAL_CONFIRMED) {
             throw new ConflictException("Thỏa thuận Deal chưa được cả hai bên xác nhận hoàn tất (DEAL_CONFIRMED). Không thể thanh toán.");
         }
 
@@ -324,6 +324,7 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
         // 2. Cập nhật Deal
         deal.setIsPaid(true);
         deal.setPaidAt(now);
+        deal.setIsLocked(true);
         dealRepository.save(deal);
 
         // 3. Tạo MentoringTask ở giai đoạn PREPARATION nếu chưa có

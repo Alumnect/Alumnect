@@ -409,7 +409,11 @@ export function MentoringTaskPaymentModal({
                 Chưa thể tạo liên kết thanh toán
               </h3>
               <p className="text-xs text-plum-500 dark:text-[#b0b3b8] max-w-sm mx-auto">
-                Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.
+                {createCheckoutMutation.error
+                  ? ((createCheckoutMutation.error as any)?.response?.data?.message ||
+                     createCheckoutMutation.error?.message ||
+                     'Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.')
+                  : 'Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.'}
               </p>
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
