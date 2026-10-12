@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus, ShieldCheck } from 'lucide-react'
 import { Container, Button, EmptyState } from '@/components/ui'
@@ -34,12 +34,25 @@ function MentoringDealsContent() {
   // Tìm deal từ danh sách hiện tại
   const foundInList = dealIdFromUrl ? deals.find((d) => d.id === dealIdFromUrl) || null : null
 
-  // Hỗ trợ tải Deal trực tiếp nếu mở theo link dealId trên URL mà chưa có trong danh sách trang hiện tại
-  const { data: detailDataFromUrl } = useDealDetail(
-    dealIdFromUrl && !foundInList ? dealIdFromUrl : undefined
-  )
+  // Hỗ trợ tải Deal trực tiếp nếu mở theo link dealId trên URL
+  const { data: detailDataFromUrl } = useDealDetail(dealIdFromUrl || undefined)
 
-  const activeChatDeal = foundInList || detailDataFromUrl?.deal || null
+  // Giữ deal hiện tại vào state cache để tránh unmount đột ngột khi danh sách thỏa thuận refetch
+  const [activeDealCache, setActiveDealCache] = useState<MentoringDeal | null>(null)
+
+  useEffect(() => {
+    if (detailDataFromUrl?.deal) {
+      setActiveDealCache(detailDataFromUrl.deal)
+    } else if (foundInList) {
+      setActiveDealCache(foundInList)
+    } else if (!dealIdFromUrl) {
+      setActiveDealCache(null)
+    }
+  }, [detailDataFromUrl?.deal, foundInList, dealIdFromUrl])
+
+  const activeChatDeal = dealIdFromUrl
+    ? detailDataFromUrl?.deal || activeDealCache || foundInList || null
+    : null
 
   const handleOpenDetail = (deal: MentoringDeal) => {
     setSelectedDealForDetail(deal)

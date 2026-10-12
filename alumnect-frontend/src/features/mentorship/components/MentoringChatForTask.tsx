@@ -128,7 +128,7 @@ export function MentoringChatForTask({
       status = 'SUPERSEDED'
     } else if (currentDeal.status === 'DEAL_CONFIRMED') {
       status = 'CONFIRMED'
-    } else if (currentDeal.status === 'REJECTED') {
+    } else if (currentDeal.status === 'REJECTED' || currentDeal.status === 'CANCELLED') {
       status = 'REJECTED'
     } else {
       status = 'PENDING'
@@ -161,7 +161,11 @@ export function MentoringChatForTask({
           ? isSender
             ? partnerName
             : 'Bạn'
-          : undefined,
+          : currentDeal.status === 'REJECTED' || currentDeal.status === 'CANCELLED'
+            ? currentDeal.updatedByUserId === currentNumId
+              ? 'Bạn'
+              : currentDeal.updatedByName || partnerName
+            : undefined,
       handledAt: currentDeal.lockedAt || undefined,
       taskScope: s.taskScope,
       expectedResult: s.expectedResult,
@@ -227,12 +231,12 @@ export function MentoringChatForTask({
   // Xử lý Student / Mentor chọn: "Từ chối"
   const handleRejectDeal = async () => {
     try {
+      setIsRejectDialogOpen(false)
       await rejectMutation.mutateAsync({
         dealId: currentDeal.id,
         reason: rejectReason.trim() || 'Từ chối đề xuất Deal',
       })
       toast.success('Đã từ chối Deal Ticket thành công.')
-      setIsRejectDialogOpen(false)
       setRejectReason('')
       refetchDeal()
       onDealUpdated?.()
@@ -268,8 +272,13 @@ export function MentoringChatForTask({
     }
   }, [currentDeal.conversationId, partnerId])
 
-  // Lắng nghe WebSocket tin nhắn thời gian thực
-  useWebSocketChat()
+  // Lắng nghe WebSocket tin nhắn thời gian thực và đồng bộ Ticket tức thời
+  useWebSocketChat((newMsg) => {
+    if (!resolvedConversationId || newMsg.conversationId === resolvedConversationId) {
+      refetchDeal()
+      onDealUpdated?.()
+    }
+  })
 
   // Lấy lịch sử tin nhắn của cuộc trò chuyện Chat for Task
   const {
@@ -368,8 +377,7 @@ export function MentoringChatForTask({
   // Trạng thái chỉ đọc nếu Deal bị SUPERSEDED (Request đã chọn Mentor khác) hoặc bị HỦY
   const isSuperseded = currentDeal.status === 'SUPERSEDED'
   const isCancelled = currentDeal.status === 'CANCELLED'
-  const isRejected = currentDeal.status === 'REJECTED'
-  const isReadOnly = isSuperseded || isCancelled || isRejected
+  const isReadOnly = isSuperseded || isCancelled
 
   return (
     <div className="flex h-[calc(100vh-140px)] min-h-[580px] flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#1e1f20]">

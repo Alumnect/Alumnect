@@ -12,26 +12,32 @@ import com.alumnect.alumnect_backend.dao.message.ConversationParticipantReposito
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
 import com.alumnect.alumnect_backend.dao.message.MessageRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
+import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dto.request.mentorship.ProposeDealRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.UpdateDealRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealSnapshotResponse;
+import com.alumnect.alumnect_backend.dto.response.message.MessageResponse;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDealSnapshot;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.message.ConversationParticipant;
 import com.alumnect.alumnect_backend.entity.message.Message;
 import com.alumnect.alumnect_backend.entity.user.User;
+import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringDealMapper;
+import com.alumnect.alumnect_backend.mapper.message.MessageMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +63,9 @@ public class MentoringDealServiceImpl implements MentoringDealService {
     private final MessageRepository messageRepository;
     private final MentoringTaskRepository taskRepository;
     private final MentoringDealMapper dealMapper;
+    private final UserProfileRepository userProfileRepository;
+    private final MessageMapper messageMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     /**
      * Khởi tạo đề xuất thỏa thuận Mentoring Deal mới giữa Student và Mentor.
@@ -736,9 +745,28 @@ public class MentoringDealServiceImpl implements MentoringDealService {
                     .createdAt(Instant.now())
                     .build();
 
-            messageRepository.save(message);
+            Message savedMessage = messageRepository.save(message);
             conversation.setLastMessageAt(Instant.now());
             conversationRepository.save(conversation);
+
+            // Bắn WebSocket Realtime tới tất cả thành viên trong cuộc trò chuyện (Direct Messaging)
+            UserProfile senderProfile = userProfileRepository.findById(sender.getId()).orElse(null);
+            MessageResponse response = messageMapper.toMessageResponse(savedMessage, senderProfile);
+
+            List<ConversationParticipant> participants = participantRepository.findByConversationId(conversation.getId());
+            for (ConversationParticipant participant : participants) {
+                try {
+                    messagingTemplate.convertAndSendToUser(
+                            participant.getUser().getId().toString(),
+                            WebSocketDestinations.USER_QUEUE_MESSAGES,
+                            response
+                    );
+                    log.info("WebSocket deal system message push to User ID: {} for conversation {}",
+                            participant.getUser().getId(), conversation.getId());
+                } catch (Exception ex) {
+                    log.error("WebSocket push failed for User {}: {}", participant.getUser().getId(), ex.getMessage());
+                }
+            }
         } catch (Exception ex) {
             log.warn("Không thể gửi tin nhắn hệ thống vào cuộc hội thoại conversationId={}: {}",
                     conversation.getId(), ex.getMessage());
