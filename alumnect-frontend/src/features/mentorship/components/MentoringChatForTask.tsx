@@ -9,9 +9,6 @@ import {
   ChevronUp,
   Edit3,
   CheckCircle2,
-  RefreshCw,
-  CreditCard,
-  XCircle,
   AlertCircle,
   ArrowRight,
 } from 'lucide-react'
@@ -647,7 +644,7 @@ export function MentoringChatForTask({
                   className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-orange-50/60 px-3 text-xs font-bold text-brand-700 shadow-2xs transition-all hover:bg-brand-100 hover:border-brand-300 active:scale-95 dark:border-brand-800/40 dark:bg-brand-950/40 dark:text-brand-300"
                 >
                   <Handshake className="h-4 w-4 shrink-0 text-brand-600 dark:text-brand-400" />
-                  <span className="font-heading font-black">{isMentor ? 'Deal lại' : 'Thỏa thuận Deal'}</span>
+                  <span className="font-heading font-black">Giao dịch</span>
                   <ChevronUp
                     className={`h-3.5 w-3.5 text-brand-500 transition-transform duration-200 ${
                       isDealMenuOpen ? 'rotate-180' : ''
@@ -662,7 +659,7 @@ export function MentoringChatForTask({
                       <div className="flex items-center gap-1.5">
                         <Handshake className="h-4 w-4 text-brand-600" />
                         <span className="font-heading text-xs font-black text-plum-900 dark:text-[#f0f2f5]">
-                          Tiện ích Thỏa thuận Deal
+                          Giao dịch thỏa thuận
                         </span>
                       </div>
                       <span className="rounded-full bg-plum-100 px-2 py-0.5 text-[10px] font-bold text-plum-600 dark:bg-white/10 dark:text-plum-300">
@@ -736,94 +733,6 @@ export function MentoringChatForTask({
                               </p>
                               <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
                                 Xem và điền lại phạm vi, giá, deadline hoặc kết quả kỳ vọng
-                              </p>
-                            </div>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsDealMenuOpen(false)
-                              setIsAdjustDialogOpen(true)
-                            }}
-                            className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-amber-50/80 dark:hover:bg-white/5"
-                          >
-                            <div className="rounded-lg bg-amber-100/70 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-                              <RefreshCw className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-amber-800 dark:text-amber-300">
-                                Revert (Yêu cầu Mentor deal lại)
-                              </p>
-                              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                Yêu cầu Mentor điều chỉnh lại giá, hạn chót hoặc nội dung
-                              </p>
-                            </div>
-                          </button>
-
-                          {currentDeal.status !== 'DEAL_CONFIRMED' && !currentDeal.isPaid && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsDealMenuOpen(false)
-                                handleConfirmAndPay()
-                              }}
-                              className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-emerald-50/80 dark:hover:bg-white/5"
-                            >
-                              <div className="rounded-lg bg-emerald-100/70 p-1.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-                                <CheckCircle2 className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-emerald-700 dark:text-emerald-300">
-                                  Chấp nhận & Thanh toán
-                                </p>
-                                <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                  Đồng ý với Deal Ticket và mở cổng thanh toán PayOS
-                                </p>
-                              </div>
-                            </button>
-                          )}
-
-                          {currentDeal.status === 'DEAL_CONFIRMED' && !currentDeal.isPaid && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsDealMenuOpen(false)
-                                setIsPaymentModalOpen(true)
-                              }}
-                              className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-emerald-50/80 dark:hover:bg-white/5"
-                            >
-                              <div className="rounded-lg bg-emerald-100/70 p-1.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-                                <CreditCard className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-emerald-700 dark:text-emerald-300">
-                                  Thanh toán Task ngay
-                                </p>
-                                <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                  Thanh toán để chuyển Task sang PREPARATION
-                                </p>
-                              </div>
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsDealMenuOpen(false)
-                              setIsRejectDialogOpen(true)
-                            }}
-                            className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-rose-50/80 dark:hover:bg-white/5"
-                          >
-                            <div className="rounded-lg bg-rose-100/70 p-1.5 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
-                              <XCircle className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-rose-700 dark:text-rose-300">
-                                Từ chối thỏa thuận
-                              </p>
-                              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                Hủy bỏ đề xuất thỏa thuận này
                               </p>
                             </div>
                           </button>

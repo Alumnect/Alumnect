@@ -334,7 +334,7 @@ export function MentoringTicketDetailModal({
                 )}
               </button>
 
-              {/* Nút Revert (Yêu cầu Mentor deal lại) */}
+              {/* Nút Deal lại */}
               {onRevert && (
                 <button
                   type="button"
@@ -343,7 +343,7 @@ export function MentoringTicketDetailModal({
                   className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-amber-500/80 bg-amber-50 px-5 py-2.5 text-sm font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/30 dark:border-amber-600 dark:text-amber-300"
                 >
                   <RefreshCw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <span>Revert (Deal lại)</span>
+                  <span>Deal lại</span>
                 </button>
               )}
 
@@ -367,12 +367,26 @@ export function MentoringTicketDetailModal({
                 )}
               </button>
             </>
-          ) : ticket.status === 'CONFIRMED' && !ticket.isPaid && !ticket.isMentor && onPay ? (
+          ) : ticket.status === 'CONFIRMED' && !ticket.isPaid && !ticket.isMentor ? (
             <div className="flex w-full items-center justify-between gap-3">
               <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                 Thanh toán để chuyển Task sang PREPARATION!
               </span>
               <div className="flex items-center gap-2">
+                {/* Nút Deal lại nếu sinh viên bấm nhầm Xác nhận */}
+                {onRevert && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose()
+                      onRevert()
+                    }}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-amber-500/80 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 dark:bg-amber-950/30 dark:border-amber-600 dark:text-amber-300"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>Deal lại</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={onClose}
@@ -380,14 +394,16 @@ export function MentoringTicketDetailModal({
                 >
                   Đóng
                 </button>
-                <button
-                  type="button"
-                  onClick={onPay}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span>Thanh toán Task ngay</span>
-                </button>
+                {onPay && (
+                  <button
+                    type="button"
+                    onClick={onPay}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    <span>Thanh toán Task ngay</span>
+                  </button>
+                )}
               </div>
             </div>
           ) : (

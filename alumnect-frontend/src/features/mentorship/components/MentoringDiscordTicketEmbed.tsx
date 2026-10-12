@@ -294,17 +294,17 @@ export function MentoringDiscordTicketEmbed({
                     )}
                   </button>
 
-                  {/* Nút Revert (Yêu cầu deal lại) */}
+                  {/* Nút Deal lại */}
                   {onRevert && (
                     <button
                       type="button"
                       onClick={onRevert}
                       disabled={isRejecting || isConfirming}
                       title="Yêu cầu điều chỉnh lại giá, hạn chót hoặc nội dung"
-                      className="inline-flex items-center justify-center gap-1 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
                     >
                       <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                      <span>Revert</span>
+                      <span>Deal lại</span>
                     </button>
                   )}
 
@@ -331,15 +331,32 @@ export function MentoringDiscordTicketEmbed({
               )
             ) : ticket.status === 'CONFIRMED' ? (
               <div className="flex items-center gap-2">
-                {!ticket.isPaid && !ticket.isMentor && onPay ? (
-                  <button
-                    type="button"
-                    onClick={onPay}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-95"
-                  >
-                    <CreditCard className="h-3.5 w-3.5" />
-                    <span>Thanh toán Task ngay</span>
-                  </button>
+                {!ticket.isPaid && !ticket.isMentor ? (
+                  <>
+                    {/* Thêm nút Deal lại khi đã bấm Xác nhận nhưng muốn đàm phán lại trước khi thanh toán */}
+                    {onRevert && (
+                      <button
+                        type="button"
+                        onClick={onRevert}
+                        disabled={isRejecting || isConfirming}
+                        title="Hủy xác nhận và yêu cầu điều chỉnh lại (Deal lại)"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                        <span>Deal lại</span>
+                      </button>
+                    )}
+                    {onPay && (
+                      <button
+                        type="button"
+                        onClick={onPay}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-95"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        <span>Thanh toán Task ngay</span>
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                     {ticket.isPaid

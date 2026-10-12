@@ -650,11 +650,13 @@ public class MentoringDealServiceImpl implements MentoringDealService {
             throw new ForbiddenException("Chỉ Học viên (Student) mới có quyền gửi yêu cầu điều chỉnh Deal Ticket.");
         }
 
-        if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED) {
-            throw new ConflictException("Không thể yêu cầu điều chỉnh thỏa thuận đã được cả hai bên xác nhận và khóa.");
+        if (Boolean.TRUE.equals(deal.getIsPaid())) {
+            throw new ConflictException("Không thể yêu cầu điều chỉnh thỏa thuận đã thanh toán thành công.");
         }
 
         Instant now = Instant.now();
+        deal.setIsLocked(false);
+        deal.setLockedAt(null);
         deal.setStatus(MentoringDealStatus.SUPERSEDED);
         deal.setStudentConfirmed(false);
         deal.setStudentConfirmedAt(null);
