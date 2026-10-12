@@ -5,6 +5,9 @@ import type {
   CreateMentoringRequestData,
   MentoringRequestDetailData,
   MentorResponseItem,
+  MentorIncomingRequestData,
+  MentorIncomingRequestDetailData,
+  RespondMentoringRequestPayload,
 } from '../model/mentoringRequestTypes'
 
 interface PageResponse<T> {
@@ -92,5 +95,63 @@ export const mentoringRequestApi = {
     if (!response.ok) {
       throw new Error(`Tải tệp tin lên kho lưu trữ thất bại: ${response.statusText}`)
     }
+  },
+
+  /**
+   * Lấy danh sách yêu cầu Mentoring gửi đến Mentor có phân trang và bộ lọc (UC103).
+   * Endpoint: GET /api/v1/mentoring/requests/incoming
+   */
+  getIncomingRequests: async (params?: {
+    status?: string
+    requestType?: string
+    page?: number
+    size?: number
+  }): Promise<PageResponse<MentorIncomingRequestData>> => {
+    const res = await http.get<any, ApiResponse<PageResponse<MentorIncomingRequestData>>>(
+      '/mentoring/requests/incoming',
+      { params }
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy chi tiết một yêu cầu Mentoring gửi đến Mentor (UC103).
+   * Endpoint: GET /api/v1/mentoring/requests/incoming/{requestId}
+   */
+  getIncomingRequestDetail: async (requestId: number): Promise<MentorIncomingRequestDetailData> => {
+    const res = await http.get<any, ApiResponse<MentorIncomingRequestDetailData>>(
+      `/mentoring/requests/incoming/${requestId}`
+    )
+    return res.data
+  },
+
+  /**
+   * Mentor chấp nhận (ACCEPT) yêu cầu Mentoring (UC103).
+   * Endpoint: POST /api/v1/mentoring/requests/{requestId}/accept
+   */
+  acceptIncomingRequest: async (
+    requestId: number,
+    payload?: RespondMentoringRequestPayload
+  ): Promise<MentorIncomingRequestDetailData> => {
+    const res = await http.post<any, ApiResponse<MentorIncomingRequestDetailData>>(
+      `/mentoring/requests/${requestId}/accept`,
+      payload || {}
+    )
+    return res.data
+  },
+
+  /**
+   * Mentor từ chối (DECLINE) yêu cầu Mentoring (UC103).
+   * Endpoint: POST /api/v1/mentoring/requests/{requestId}/decline
+   */
+  declineIncomingRequest: async (
+    requestId: number,
+    payload?: RespondMentoringRequestPayload
+  ): Promise<MentorIncomingRequestDetailData> => {
+    const res = await http.post<any, ApiResponse<MentorIncomingRequestDetailData>>(
+      `/mentoring/requests/${requestId}/decline`,
+      payload || {}
+    )
+    return res.data
   },
 }

@@ -37,6 +37,8 @@ import { CreateMentoringRequestPage } from '@/pages/app/CreateMentoringRequestPa
 import { CreateDirectMentoringRequestPage } from '@/pages/app/CreateDirectMentoringRequestPage'
 import { MyMentoringRequestsPage } from '@/pages/app/MyMentoringRequestsPage'
 import { MentoringRequestDetailPage } from '@/pages/app/MentoringRequestDetailPage'
+import IncomingMentoringRequestsPage from '@/pages/app/IncomingMentoringRequestsPage'
+import IncomingMentoringRequestDetailPage from '@/pages/app/IncomingMentoringRequestDetailPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -100,6 +102,11 @@ function App() {
             <Route path="mentoring/requests/create" element={<ProtectedRoute><CreateMentoringRequestPage /></ProtectedRoute>} />
             <Route path="mentoring/mentors/:mentorId/request" element={<ProtectedRoute><CreateDirectMentoringRequestPage /></ProtectedRoute>} />
             <Route path="mentors/:mentorId/request" element={<ProtectedRoute><CreateDirectMentoringRequestPage /></ProtectedRoute>} />
+            <Route path="mentoring/incoming-requests" element={<ProtectedRoute><IncomingMentoringRequestsPage /></ProtectedRoute>} />
+            <Route path="mentoring/incoming-requests/:id" element={<ProtectedRoute><IncomingMentoringRequestDetailPage /></ProtectedRoute>} />
+            <Route path="mentoring/requests/incoming" element={<Navigate to="/app/mentoring/incoming-requests" replace />} />
+            <Route path="mentoring/requests/incoming/:id" element={<ProtectedRoute><IncomingMentoringRequestDetailPage /></ProtectedRoute>} />
+            <Route path="mentoring/requests/manage" element={<Navigate to="/app/mentoring/incoming-requests" replace />} />
           </Route>
 
           {/* Direct redirect for /mentoring */}

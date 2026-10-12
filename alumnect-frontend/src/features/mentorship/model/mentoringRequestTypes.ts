@@ -201,3 +201,77 @@ export interface UploadingFileState {
   fileUrl?: string
   errorMessage?: string
 }
+
+/**
+ * Payload phản hồi (chấp nhận hoặc từ chối) yêu cầu Mentoring của Mentor (UC103).
+ */
+export interface RespondMentoringRequestPayload {
+  responseNote?: string
+}
+
+/**
+ * Dữ liệu một yêu cầu Mentoring trong danh sách gửi đến của Mentor (UC103).
+ */
+export interface MentorIncomingRequestData {
+  id: number
+  distributionId: number
+  requestType: MentoringRequestType
+  title: string
+  description: string
+  industryId: number
+  industryName: string
+  studentId: number
+  studentName: string
+  studentAvatar?: string | null
+  studentHeadline?: string | null
+  budgetMin?: number | null
+  budgetMax?: number | null
+  workingMode: MentoringWorkingMode
+  participationType: MentoringType
+  taskType: MentoringTaskType
+  expectedDeadline?: string | null
+  distributionStatus: string
+  responseStatus: MentoringResponseStatus
+  responseNote?: string | null
+  distributedAt: string
+  respondedAt?: string | null
+  requestStatus: MentoringRequestStatus
+  attachmentCount: number
+  createdAt: string
+}
+
+/**
+ * Dữ liệu chi tiết một yêu cầu Mentoring gửi đến Mentor kèm cờ quyền hành động (UC103).
+ */
+export interface MentorIncomingRequestDetailData {
+  id: number
+  distributionId: number
+  requestType: MentoringRequestType
+  title: string
+  description: string
+  industryId: number
+  industryName: string
+  studentId: number
+  studentName: string
+  studentAvatar?: string | null
+  studentHeadline?: string | null
+  studentEmail?: string | null
+  budgetMin?: number | null
+  budgetMax?: number | null
+  workingMode: MentoringWorkingMode
+  participationType: MentoringType
+  taskType: MentoringTaskType
+  expectedDeadline?: string | null
+  requestStatus: MentoringRequestStatus
+  attachments: MentoringAttachmentResponseData[]
+  distributionStatus: string
+  responseStatus: MentoringResponseStatus
+  responseNote?: string | null
+  distributedAt: string
+  respondedAt?: string | null
+  canRespond: boolean
+  canMessage: boolean
+  createdAt: string
+  updatedAt?: string | null
+}
+

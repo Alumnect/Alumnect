@@ -145,4 +145,110 @@ public class MentoringRequestController {
         List<MentorResponseItemResponse> response = mentoringRequestService.getRequestResponses(email, id);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách phản hồi thành công", response));
     }
+
+    // ==============================================================================
+    // UC103 — VIEW & RESPOND TO MENTORING REQUESTS (MENTOR INCOMING REQUESTS)
+    // ==============================================================================
+
+    /**
+     * API Lấy danh sách yêu cầu Mentoring được gửi hoặc phân phối đến Mentor đang đăng nhập (UC103).
+     * Endpoint: GET /api/v1/mentoring/requests/incoming
+     * Hỗ trợ lọc theo trạng thái phản hồi (status: WAITING, ACCEPTED, DECLINED) và loại yêu cầu (requestType: GENERAL, DIRECT).
+     *
+     * @param status Trạng thái phản hồi cần lọc (tùy chọn)
+     * @param requestType Loại yêu cầu cần lọc GENERAL hoặc DIRECT (tùy chọn)
+     * @param page Số thứ tự trang (mặc định 0)
+     * @param size Số lượng bản ghi mỗi trang (mặc định 10)
+     * @return ResponseEntity chứa ApiResponse bọc PageResponse của MentorIncomingRequestResponse
+     */
+    @GetMapping("/incoming")
+    @Operation(summary = "Lấy danh sách yêu cầu hướng dẫn gửi đến Mentor (UC103)", description = "Xem danh sách các yêu cầu Mentoring được phân phối hoặc gửi trực tiếp tới Mentor hiện tại kèm bộ lọc trạng thái")
+    public ResponseEntity<ApiResponse<PageResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestResponse>>> getIncomingRequests(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String requestType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Mentor {} truy vấn danh sách incoming requests: status={}, requestType={}, page={}, size={}",
+                email, status, requestType, page, size);
+
+        PageResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestResponse> response =
+                mentoringRequestService.getIncomingRequests(email, status, requestType, page, size);
+
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách yêu cầu nhận được thành công", response));
+    }
+
+    /**
+     * API Xem thông tin chi tiết một yêu cầu Mentoring gửi đến Mentor (UC103).
+     * Endpoint: GET /api/v1/mentoring/requests/incoming/{requestId}
+     * Kiểm tra chặt chẽ: Mentor chỉ xem được yêu cầu thực sự được phân phối/gửi đến mình.
+     *
+     * @param requestId ID của yêu cầu Mentoring
+     * @return ResponseEntity chứa ApiResponse bọc MentorIncomingRequestDetailResponse
+     */
+    @GetMapping("/incoming/{requestId:\\d+}")
+    @Operation(summary = "Xem chi tiết yêu cầu hướng dẫn gửi đến (UC103)", description = "Lấy thông tin chi tiết của một yêu cầu Mentoring dành riêng cho Mentor tiếp nhận")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestDetailResponse>> getIncomingRequestDetail(
+            @PathVariable Long requestId) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Mentor {} xem chi tiết incoming request ID={}", email, requestId);
+
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestDetailResponse response =
+                mentoringRequestService.getIncomingRequestDetail(email, requestId);
+
+        return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết yêu cầu nhận được thành công", response));
+    }
+
+    /**
+     * API Mentor chấp nhận (ACCEPT) yêu cầu Mentoring (UC103).
+     * Endpoint: POST /api/v1/mentoring/requests/{requestId}/accept
+     * Hỗ trợ alias: POST /api/v1/mentoring/requests/incoming/{requestId}/accept
+     * Xác thực: Mentor ACTIVE, subscription hợp lệ, yêu cầu OPEN và chưa phản hồi.
+     * Lưu ý nghiệp vụ: ACCEPTED chỉ đồng ý trao đổi, KHÔNG tự động tạo Deal hay trừ phí.
+     *
+     * @param requestId ID của yêu cầu Mentoring
+     * @param requestDto DTO chứa lời nhắn phản hồi tùy chọn
+     * @return ResponseEntity chứa ApiResponse bọc MentorIncomingRequestDetailResponse đã cập nhật
+     */
+    @PostMapping({"/{requestId:\\d+}/accept", "/incoming/{requestId:\\d+}/accept"})
+    @Operation(summary = "Chấp nhận yêu cầu mentoring (UC103)", description = "Mentor đồng ý tiếp nhận trao đổi với sinh viên về yêu cầu cố vấn")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestDetailResponse>> acceptIncomingRequest(
+            @PathVariable Long requestId,
+            @Valid @RequestBody(required = false) com.alumnect.alumnect_backend.dto.request.mentorship.RespondMentoringRequestRequest requestDto) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Mentor {} thực hiện ACCEPT yêu cầu ID={}", email, requestId);
+
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestDetailResponse response =
+                mentoringRequestService.acceptIncomingRequest(email, requestId, requestDto);
+
+        return ResponseEntity.ok(ApiResponse.success("Chấp nhận yêu cầu mentoring thành công", response));
+    }
+
+    /**
+     * API Mentor từ chối (DECLINE) yêu cầu Mentoring (UC103).
+     * Endpoint: POST /api/v1/mentoring/requests/{requestId}/decline
+     * Hỗ trợ alias: POST /api/v1/mentoring/requests/incoming/{requestId}/decline
+     * Xác thực: Mentor ACTIVE, subscription hợp lệ, yêu cầu OPEN và chưa phản hồi.
+     *
+     * @param requestId ID của yêu cầu Mentoring
+     * @param requestDto DTO chứa lời nhắn / lý do từ chối tùy chọn
+     * @return ResponseEntity chứa ApiResponse bọc MentorIncomingRequestDetailResponse đã cập nhật
+     */
+    @PostMapping({"/{requestId:\\d+}/decline", "/incoming/{requestId:\\d+}/decline"})
+    @Operation(summary = "Từ chối yêu cầu mentoring (UC103)", description = "Mentor từ chối yêu cầu cố vấn từ sinh viên")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestDetailResponse>> declineIncomingRequest(
+            @PathVariable Long requestId,
+            @Valid @RequestBody(required = false) com.alumnect.alumnect_backend.dto.request.mentorship.RespondMentoringRequestRequest requestDto) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Mentor {} thực hiện DECLINE yêu cầu ID={}", email, requestId);
+
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestDetailResponse response =
+                mentoringRequestService.declineIncomingRequest(email, requestId, requestDto);
+
+        return ResponseEntity.ok(ApiResponse.success("Từ chối yêu cầu mentoring thành công", response));
+    }
 }

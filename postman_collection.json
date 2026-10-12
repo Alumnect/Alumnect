@@ -8962,6 +8962,457 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "103. Xem và phản hồi yêu cầu Mentoring (UC103)",
+      "description": "API cho UC103: Mentor xem danh sách incoming requests, xem chi tiết, và phản hồi ACCEPT hoặc DECLINE yêu cầu cố vấn.",
+      "item": [
+        {
+          "name": "103.1 Lấy danh sách yêu cầu Mentoring gửi đến Mentor (GET /mentoring/requests/incoming)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response structure contains content list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property(\"content\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/incoming?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "incoming"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Mentor lấy danh sách các yêu cầu cố vấn được phân phối hoặc gửi trực tiếp tới mình (phân trang)"
+          },
+          "response": []
+        },
+        {
+          "name": "103.2 Lọc yêu cầu theo trạng thái WAITING (GET /mentoring/requests/incoming?status=WAITING)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response filtered by WAITING\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/incoming?status=WAITING&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "incoming"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "WAITING"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Mentor lọc danh sách yêu cầu đang chờ phản hồi (WAITING)"
+          },
+          "response": []
+        },
+        {
+          "name": "103.3 Lọc yêu cầu gửi trực tiếp DIRECT (GET /mentoring/requests/incoming?requestType=DIRECT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response filtered by DIRECT\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/incoming?requestType=DIRECT&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "incoming"
+              ],
+              "query": [
+                {
+                  "key": "requestType",
+                  "value": "DIRECT"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Mentor lọc danh sách yêu cầu được gửi trực tiếp (DIRECT)"
+          },
+          "response": []
+        },
+        {
+          "name": "103.4 Xem chi tiết yêu cầu Mentoring gửi đến (GET /mentoring/requests/incoming/:requestId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Detail response contains student info and canRespond flag\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property(\"studentName\");",
+                  "    pm.expect(jsonData.data).to.have.property(\"canRespond\");",
+                  "    pm.expect(jsonData.data).to.have.property(\"responseStatus\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/incoming/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "incoming",
+                "1"
+              ]
+            },
+            "description": "Mentor xem chi tiết nội dung yêu cầu cố vấn kèm thông tin sinh viên và trạng thái phản hồi của bản thân"
+          },
+          "response": []
+        },
+        {
+          "name": "103.5 Mentor ACCEPT yêu cầu Mentoring (POST /mentoring/requests/:requestId/accept)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response status updated to ACCEPTED\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.responseStatus).to.eql(\"ACCEPTED\");",
+                  "    pm.expect(jsonData.data.canMessage).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responseNote\": \"Tôi rất sẵn lòng hỗ trợ trao đổi về chủ đề kiến trúc Spring Boot này.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/1/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "1",
+                "accept"
+              ]
+            },
+            "description": "Mentor chấp nhận yêu cầu cố vấn (ACCEPTED). Lưu ý: Không tự động tạo Deal theo Rule 4."
+          },
+          "response": []
+        },
+        {
+          "name": "103.6 Mentor DECLINE yêu cầu Mentoring (POST /mentoring/requests/:requestId/decline)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response status updated to DECLINED\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.responseStatus).to.eql(\"DECLINED\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responseNote\": \"Hiện tại tôi đang bận dự án và kín lịch, hẹn gặp lại bạn trong dịp khác nhé.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/1/decline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "1",
+                "decline"
+              ]
+            },
+            "description": "Mentor từ chối yêu cầu cố vấn (DECLINED)"
+          },
+          "response": []
+        },
+        {
+          "name": "103.7 Lỗi khi Mentor cố phản hồi lại yêu cầu đã xử lý (409 Conflict)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 409 Conflict\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responseNote\": \"Thử gửi lại phản hồi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/1/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "1",
+                "accept"
+              ]
+            },
+            "description": "Kiểm tra chặn phản hồi trùng lặp (Rule 8 / Concurrency)"
+          },
+          "response": []
+        },
+        {
+          "name": "103.8 Lỗi khi truy cập yêu cầu không được phân phối (403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/incoming/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "incoming",
+                "999999"
+              ]
+            },
+            "description": "Kiểm tra chặn truy cập trái phép khi Mentor cố xem yêu cầu không được phân phối cho mình"
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
