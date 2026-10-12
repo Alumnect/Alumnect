@@ -527,19 +527,40 @@ export function MentoringChatForTask({
                             type="button"
                             onClick={() => {
                               setIsDealMenuOpen(false)
-                              setIsAdjustDialogOpen(true)
+                              setIsCreateDealModalOpen(true)
                             }}
                             className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 dark:hover:bg-white/5"
                           >
                             <div className="rounded-lg bg-brand-100/70 p-1.5 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
-                              <RefreshCw className="h-4 w-4" />
+                              <Edit3 className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
                               <p className="font-bold text-plum-900 dark:text-[#f0f2f5]">
-                                Yêu cầu điều chỉnh Deal (Deal lại)
+                                Mở bảng Đề xuất / Điều chỉnh Deal
                               </p>
                               <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                Gửi ghi chú yêu cầu Mentor cập nhật lại giá hoặc hạn chót
+                                Xem và điền lại phạm vi, giá, deadline hoặc kết quả kỳ vọng
+                              </p>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsDealMenuOpen(false)
+                              setIsAdjustDialogOpen(true)
+                            }}
+                            className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-amber-50/80 dark:hover:bg-white/5"
+                          >
+                            <div className="rounded-lg bg-amber-100/70 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                              <RefreshCw className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-amber-800 dark:text-amber-300">
+                                Revert (Yêu cầu Mentor deal lại)
+                              </p>
+                              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+                                Yêu cầu Mentor điều chỉnh lại giá, hạn chót hoặc nội dung
                               </p>
                             </div>
                           </button>
@@ -554,14 +575,14 @@ export function MentoringChatForTask({
                               className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-emerald-50/80 dark:hover:bg-white/5"
                             >
                               <div className="rounded-lg bg-emerald-100/70 p-1.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-                                <CreditCard className="h-4 w-4" />
+                                <CheckCircle2 className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-emerald-700 dark:text-emerald-300">
-                                  Xác nhận & Thanh toán
+                                  Chấp nhận & Thanh toán
                                 </p>
                                 <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                  Đồng ý điều khoản và mở cổng thanh toán PayOS
+                                  Đồng ý với Deal Ticket và mở cổng thanh toán PayOS
                                 </p>
                               </div>
                             </button>
@@ -684,24 +705,38 @@ export function MentoringChatForTask({
               placeholder="Ví dụ: Mong muốn giảm giá xuống 400.000đ hoặc kéo dài deadline thêm 3 ngày..."
               className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 shadow-xs focus:border-brand-500 focus:outline-none dark:bg-[#3a3b3c] dark:border-white/10 dark:text-[#f0f2f5]"
             />
-            <div className="flex justify-end gap-2.5 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => setIsAdjustDialogOpen(false)}
-                disabled={adjustMutation.isPending}
+                onClick={() => {
+                  setIsAdjustDialogOpen(false)
+                  setIsCreateDealModalOpen(true)
+                }}
+                className="text-[11px] border-plum-900/15"
               >
-                Hủy
+                <Edit3 className="h-3.5 w-3.5 mr-1" />
+                Mở bảng tự điều chỉnh
               </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleRequestAdjustment}
-                disabled={adjustMutation.isPending}
-                className="bg-brand-600 hover:bg-brand-700 text-white"
-              >
-                {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAdjustDialogOpen(false)}
+                  disabled={adjustMutation.isPending}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleRequestAdjustment}
+                  disabled={adjustMutation.isPending}
+                  className="bg-brand-600 hover:bg-brand-700 text-white"
+                >
+                  {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu Revert'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

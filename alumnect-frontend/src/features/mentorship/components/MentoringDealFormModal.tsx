@@ -11,6 +11,7 @@ import {
   type ProposalSource,
 } from '../model/mentoringDealTypes'
 import { useProposeDeal, useUpdateDealTerms } from '../hooks/useMentoringDeals'
+import { useAuthStore } from '@/store/authStore'
 
 interface MentoringDealFormModalProps {
   isOpen: boolean
@@ -28,6 +29,7 @@ interface MentoringDealFormModalProps {
 /**
  * Modal form đề xuất mới hoặc điều chỉnh điều khoản Mentoring Deal (UC104).
  * Validate dữ liệu nghiêm ngặt bằng react-hook-form + zod, phong cách Pastel Premium.
+ * Hỗ trợ cả Sinh viên và Cố vấn (Mentor) mở và điều chỉnh điều khoản.
  */
 export function MentoringDealFormModal({
   isOpen,
@@ -41,6 +43,10 @@ export function MentoringDealFormModal({
   proposalSource,
   onSuccess,
 }: MentoringDealFormModalProps) {
+  const currentUserId = useAuthStore((state) => state.user?.id)
+  const currentNumId = Number(currentUserId) || 0
+  const isMentor = deal ? deal.mentorId === currentNumId : (mentorId === currentNumId)
+
   const isEdit = mode === 'edit'
   const proposeMutation = useProposeDeal()
   const updateMutation = useUpdateDealTerms()
@@ -159,12 +165,16 @@ export function MentoringDealFormModal({
             <h3 className="font-heading text-lg font-black text-plum-900 dark:text-[#f0f2f5]">
               {isEdit
                 ? `Điều chỉnh điều khoản Deal #${deal?.id}`
+                : isMentor
+                ? 'Gửi yêu cầu Deal lại / Tạo Deal Ticket'
                 : 'Đề xuất Thỏa thuận Mentoring Deal'}
             </h3>
             <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
               {isEdit
-                ? 'Chỉnh sửa điều khoản sẽ sinh Snapshot phiên bản mới và yêu cầu bên kia xác nhận lại.'
-                : 'Thỏa thuận chi tiết về phạm vi công việc, giá và kết quả kỳ vọng trước khi chốt.'}
+                ? 'Chỉnh sửa điều khoản sẽ sinh Snapshot phiên bản mới và yêu cầu đối tác xác nhận lại.'
+                : isMentor
+                ? 'Điều chỉnh phạm vi công việc, giá và hạn chót để gửi Ticket yêu cầu cho Sinh viên.'
+                : 'Thỏa thuận chi tiết về phạm vi công việc, giá và kết quả kỳ vọng gửi cho Mentor.'}
             </p>
           </div>
         </div>
@@ -359,6 +369,8 @@ export function MentoringDealFormModal({
                 ? 'Đang xử lý...'
                 : isEdit
                 ? 'Lưu & Cập nhật Snapshot mới'
+                : isMentor
+                ? 'Gửi yêu cầu Deal lại cho Sinh viên'
                 : 'Gửi Đề xuất Thỏa thuận'}
             </Button>
           </div>

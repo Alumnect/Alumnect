@@ -325,7 +325,7 @@ export function MentoringDealTicketCard({
                   </Button>
                 )}
 
-                {/* Yêu cầu điều chỉnh & Từ chối khi chưa khóa */}
+                {/* Revert, Mở bảng Deal & Từ chối khi chưa khóa */}
                 {!deal.isLocked && deal.status !== 'DEAL_CONFIRMED' && (
                   <>
                     <Button
@@ -335,7 +335,16 @@ export function MentoringDealTicketCard({
                       className="rounded-xl px-2.5 py-1 text-[11px] font-bold text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-950/30"
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
-                      Yêu cầu điều chỉnh
+                      Revert (Yêu cầu điều chỉnh)
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="rounded-xl px-2.5 py-1 text-[11px] font-bold border-plum-900/15 text-plum-800 hover:bg-plum-50 dark:border-white/10 dark:text-[#e4e6eb] dark:hover:bg-white/5"
+                    >
+                      <Edit3 className="h-3 w-3 mr-1" />
+                      Mở bảng Deal
                     </Button>
                     <Button
                       variant="ghost"
@@ -547,24 +556,38 @@ export function MentoringDealTicketCard({
               placeholder="Ví dụ: Mong muốn giảm giá xuống 400.000đ hoặc kéo dài deadline thêm 3 ngày..."
               className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 shadow-xs focus:border-brand-500 focus:outline-none dark:bg-[#3a3b3c] dark:border-white/10 dark:text-[#f0f2f5]"
             />
-            <div className="flex justify-end gap-2.5 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => setIsAdjustDialogOpen(false)}
-                disabled={adjustMutation.isPending}
+                onClick={() => {
+                  setIsAdjustDialogOpen(false)
+                  setIsEditModalOpen(true)
+                }}
+                className="text-[11px] border-plum-900/15"
               >
-                Hủy
+                <Edit3 className="h-3.5 w-3.5 mr-1" />
+                Mở bảng tự điều chỉnh
               </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleRequestAdjustment}
-                disabled={adjustMutation.isPending}
-                className="bg-brand-600 hover:bg-brand-700 text-white"
-              >
-                {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAdjustDialogOpen(false)}
+                  disabled={adjustMutation.isPending}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleRequestAdjustment}
+                  disabled={adjustMutation.isPending}
+                  className="bg-brand-600 hover:bg-brand-700 text-white"
+                >
+                  {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu Revert'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
