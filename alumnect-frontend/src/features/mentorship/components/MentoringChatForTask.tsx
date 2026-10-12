@@ -172,6 +172,8 @@ export function MentoringChatForTask({
       deadline: s.deadline,
       workingMode: s.workingMode,
       participationType: s.participationType,
+      isPaid: currentDeal.isPaid,
+      isMentor: isMentor,
     }
   }
 
@@ -548,6 +550,8 @@ export function MentoringChatForTask({
                     canAct={canAct}
                     onConfirm={handleConfirmAndPay}
                     onReject={() => setIsRejectDialogOpen(true)}
+                    onRevert={() => setIsAdjustDialogOpen(true)}
+                    onPay={() => setIsPaymentModalOpen(true)}
                     onViewDetail={() => {
                       setSelectedTicketModal(ticket)
                       setIsTicketDetailModalOpen(true)
@@ -608,6 +612,8 @@ export function MentoringChatForTask({
                     canAct={canActActive}
                     onConfirm={handleConfirmAndPay}
                     onReject={() => setIsRejectDialogOpen(true)}
+                    onRevert={() => setIsAdjustDialogOpen(true)}
+                    onPay={() => setIsPaymentModalOpen(true)}
                     onViewDetail={() => {
                       setSelectedTicketModal(activeTicket)
                       setIsTicketDetailModalOpen(true)
@@ -997,6 +1003,14 @@ export function MentoringChatForTask({
           onReject={() => {
             setIsTicketDetailModalOpen(false)
             setIsRejectDialogOpen(true)
+          }}
+          onRevert={() => {
+            setIsTicketDetailModalOpen(false)
+            setIsAdjustDialogOpen(true)
+          }}
+          onPay={() => {
+            setIsTicketDetailModalOpen(false)
+            setIsPaymentModalOpen(true)
           }}
           isConfirming={confirmMutation.isPending}
           isRejecting={rejectMutation.isPending}

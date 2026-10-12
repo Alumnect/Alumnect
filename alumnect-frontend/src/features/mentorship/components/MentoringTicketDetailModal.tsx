@@ -6,6 +6,8 @@ import {
   Info,
   Loader2,
   CalendarClock,
+  RefreshCw,
+  CreditCard,
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { format } from 'date-fns'
@@ -43,6 +45,8 @@ export interface MentoringTicketData {
   extensionReason?: string
 
   createdAt?: string
+  isPaid?: boolean
+  isMentor?: boolean
 }
 
 interface MentoringTicketDetailModalProps {
@@ -53,6 +57,8 @@ interface MentoringTicketDetailModalProps {
   canAct?: boolean
   onConfirm?: () => Promise<void> | void
   onReject?: () => void
+  onRevert?: () => void
+  onPay?: () => void
   isConfirming?: boolean
   isRejecting?: boolean
 }
@@ -65,6 +71,8 @@ export function MentoringTicketDetailModal({
   canAct = false,
   onConfirm,
   onReject,
+  onRevert,
+  onPay,
   isConfirming = false,
   isRejecting = false,
 }: MentoringTicketDetailModalProps) {
@@ -314,7 +322,7 @@ export function MentoringTicketDetailModal({
                 type="button"
                 onClick={onReject}
                 disabled={isRejecting || isConfirming}
-                className="inline-flex items-center justify-center rounded-2xl border-2 border-red-500 px-6 py-2.5 text-sm font-bold text-red-500 transition-all hover:bg-red-50 active:scale-95 disabled:opacity-50 dark:border-red-500/80 dark:text-red-400 dark:hover:bg-red-950/30"
+                className="inline-flex items-center justify-center rounded-2xl border-2 border-red-500 px-5 py-2.5 text-sm font-bold text-red-500 transition-all hover:bg-red-50 active:scale-95 disabled:opacity-50 dark:border-red-500/80 dark:text-red-400 dark:hover:bg-red-950/30"
               >
                 {isRejecting ? (
                   <>
@@ -326,12 +334,25 @@ export function MentoringTicketDetailModal({
                 )}
               </button>
 
-              {/* Nút Xác nhận chính màu xanh */}
+              {/* Nút Revert (Yêu cầu Mentor deal lại) */}
+              {onRevert && (
+                <button
+                  type="button"
+                  onClick={onRevert}
+                  disabled={isRejecting || isConfirming}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-amber-500/80 bg-amber-50 px-5 py-2.5 text-sm font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/30 dark:border-amber-600 dark:text-amber-300"
+                >
+                  <RefreshCw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <span>Revert (Deal lại)</span>
+                </button>
+              )}
+
+              {/* Nút Xác nhận chính màu cam */}
               <button
                 type="button"
                 onClick={onConfirm}
                 disabled={isConfirming || isRejecting}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-orange-600 active:scale-95 disabled:opacity-50"
               >
                 {isConfirming ? (
                   <>
@@ -346,13 +367,38 @@ export function MentoringTicketDetailModal({
                 )}
               </button>
             </>
+          ) : ticket.status === 'CONFIRMED' && !ticket.isPaid && !ticket.isMentor && onPay ? (
+            <div className="flex w-full items-center justify-between gap-3">
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                Thanh toán để chuyển Task sang PREPARATION!
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-2xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 shadow-2xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  onClick={onPay}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span>Thanh toán Task ngay</span>
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="flex w-full items-center justify-between">
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {ticket.status === 'PENDING'
                   ? 'Đang chờ đối phương xác nhận'
                   : ticket.status === 'CONFIRMED'
-                  ? 'Ticket đã được xác nhận'
+                  ? ticket.isPaid
+                    ? 'Deal đã thanh toán và Task đang ở trạng thái chuẩn bị'
+                    : 'Ticket đã được xác nhận'
                   : ticket.status === 'REJECTED'
                   ? 'Ticket đã bị từ chối'
                   : 'Ticket đã được thay thế'}
