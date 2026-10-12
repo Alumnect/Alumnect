@@ -1,5 +1,12 @@
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
-import { MentoringTermsGate, MentorshipLoadingSkeleton, useMentoringTermsStatus } from '@/features/mentorship'
+import { Link } from 'react-router-dom'
+import {
+  MentoringTermsGate,
+  MentorshipLoadingSkeleton,
+  useMentoringTermsStatus,
+  MentorCard,
+  useMentorSearch,
+} from '@/features/mentorship'
 import type { MentorStatusResponse } from '@/features/mentorship/model/mentorStatusTypes'
 import { Container, Card, Badge } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
@@ -54,6 +61,15 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
   const isMentorActive = mentorStatus === 'ACTIVE'
   const isPaymentPending = mentorStatus === 'PAYMENT_PENDING'
   const isExpired = mentorStatus === 'EXPIRED'
+
+  // Lấy danh sách Mentor thật tiêu biểu từ hệ thống (sắp xếp theo điểm uy tín cao nhất)
+  const { data: mentorsData, isLoading: isLoadingMentors } = useMentorSearch({
+    page: 0,
+    size: 6,
+    sortBy: 'reputationScore',
+    sortDir: 'desc',
+  })
+  const topMentors = mentorsData?.content ?? []
 
   return (
     <motion.div
@@ -289,63 +305,53 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
         </Card>
       </motion.div>
 
-      {/* 3. Danh sách người hướng dẫn nổi bật */}
+      {/* 3. Danh sách người hướng dẫn nổi bật - Lấy từ dữ liệu thật của hệ thống */}
       <motion.div variants={itemVariants} className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Mentor Tiêu Biểu Mạng Lưới FPT
-          </h2>
-          <span className="text-xs text-plum-500">Cập nhật theo mạng lưới cựu sinh viên</span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h2 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+              Mentor Tiêu Biểu Mạng Lưới FPT
+            </h2>
+            <p className="text-xs text-plum-500">Các Mentor uy tín và tích cực nhất đang đồng hành cùng sinh viên</p>
+          </div>
+          <Link
+            to="/app/mentoring/discover"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
+          >
+            <span>Khám phá tất cả Mentor</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-          {[
-            {
-              name: 'Nguyễn Hoàng Long',
-              role: 'Kiến trúc sư phần mềm cấp cao @ TechCom',
-              major: 'Kỹ thuật phần mềm (SE)',
-              cohort: 'K14',
-              topics: ['Kiến trúc hệ thống', 'Microservices', 'Spring Boot'],
-            },
-            {
-              name: 'Phạm Thu Trang',
-              role: 'Trưởng nhóm sản phẩm @ VNG Corporation',
-              major: 'Quản trị kinh doanh (BA)',
-              cohort: 'K13',
-              topics: ['Quản lý sản phẩm', 'Agile/Scrum', 'Phát triển sự nghiệp'],
-            },
-            {
-              name: 'Lê Tuấn Hưng',
-              role: 'Chuyên gia nghiên cứu AI @ FPT AI Center',
-              major: 'Trí tuệ nhân tạo (AI)',
-              cohort: 'K15',
-              topics: ['Deep Learning', 'Computer Vision', 'Nghiên cứu khoa học'],
-            },
-          ].map((m, idx) => (
-            <Card key={idx} hover className="p-4 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-2.5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-heading text-sm font-bold text-plum-900 dark:text-[#e4e6eb]">{m.name}</h4>
-                  <p className="text-[11px] text-plum-500 dark:text-[#8a8d91]">{m.role}</p>
+        {isLoadingMentors ? (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="rounded-3xl border border-plum-900/[0.08] bg-white p-5 space-y-4 dark:border-[#393a3b] dark:bg-[#242526]"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-14 w-14 rounded-full shimmer" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-3/4 rounded-md shimmer" />
+                    <div className="h-3 w-1/2 rounded-md shimmer" />
+                  </div>
                 </div>
-                <Badge tone="brand" className="text-[10px]">
-                  {m.cohort}
-                </Badge>
+                <div className="h-10 w-full rounded-md shimmer" />
               </div>
-              <p className="text-xs text-plum-600 dark:text-[#b0b3b8]">Chuyên ngành: {m.major}</p>
-              <div className="flex flex-wrap gap-1 pt-0.5">
-                {m.topics.map((t, tidx) => (
-                  <span
-                    key={tidx}
-                    className="inline-block rounded-md bg-plum-900/[0.04] px-2 py-0.5 text-[10px] font-medium text-plum-600 dark:bg-white/[0.05] dark:text-[#b0b3b8]"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : topMentors.length > 0 ? (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {topMentors.map((mentor) => (
+              <MentorCard key={mentor.mentorId} mentor={mentor} />
+            ))}
+          </div>
+        ) : (
+          <Card className="p-8 text-center border border-plum-900/[0.08] bg-white/60 dark:border-[#393a3b] dark:bg-[#242526]">
+            <p className="text-xs text-plum-500">Chưa có Mentor nào trong danh sách tiêu biểu.</p>
+          </Card>
+        )}
       </motion.div>
     </motion.div>
   )
