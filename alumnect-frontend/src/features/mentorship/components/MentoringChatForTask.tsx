@@ -520,14 +520,9 @@ export function MentoringChatForTask({
 
             const messageElements = messages.map((msg) => {
               const isMe = msg.senderId === currentNumId
-
-              // Bỏ hiển thị tin nhắn hệ thống thông báo xác nhận tự động
-              const isSystemConfirmMsg = /\[HỆ THỐNG\].*(xác nhận|đồng ý)/i.test(msg.content || '')
-              if (isSystemConfirmMsg) {
-                return null
-              }
-
-              const isDealMsg = /deal\s*ticket|deal\s*#|phiên\s*bản/i.test(msg.content || '')
+              // Các tin nhắn hành động (Xác nhận, Từ chối, Hủy bỏ) là thông báo trạng thái, không phải đề xuất Ticket mới
+              const isActionNotice = /đã\s*(?:xác\s*nhận|từ\s*chối|hủy\s*bỏ)|cả\s*hai\s*bên\s*xác\s*nhận/i.test(msg.content || '')
+              const isDealMsg = !isActionNotice && /deal\s*ticket|deal\s*#|phiên\s*bản/i.test(msg.content || '')
 
               if (isDealMsg) {
                 const verMatch = (msg.content || '').match(/(?:Phiên bản|v)\s*(\d+)/i)
@@ -535,47 +530,46 @@ export function MentoringChatForTask({
                   ? parseInt(verMatch[1], 10)
                   : currentDeal.version
 
-                // Mỗi phiên bản chỉ render 1 thẻ Ticket duy nhất, tránh bị lặp
-                if (renderedVersions.has(verNum)) {
-                  return null
+                // Mỗi phiên bản (version) chỉ render đúng 1 thẻ Ticket Embed duy nhất trong luồng chat
+                if (!renderedVersions.has(verNum)) {
+                  renderedVersions.add(verNum)
+
+                  const matchedSnapshot =
+                    detailData?.snapshots?.find((s) => s.version === verNum) || null
+                  const ticket = buildTicketData(matchedSnapshot, verNum, msg.createdAt)
+                  const isRecipient = ticket.senderId
+                    ? ticket.senderId !== currentNumId
+                    : !isMentor
+                  const canAct =
+                    ticket.status === 'PENDING' &&
+                    isRecipient &&
+                    !isReadOnly &&
+                    Boolean(currentDeal.canConfirm)
+
+                  const isTicketFromMe = ticket.senderId
+                    ? ticket.senderId === currentNumId
+                    : isMe
+
+                  return (
+                    <MentoringDiscordTicketEmbed
+                      key={msg.id}
+                      ticket={ticket}
+                      isMe={isTicketFromMe}
+                      isRecipient={isRecipient}
+                      canAct={canAct}
+                      onConfirm={handleConfirmAndPay}
+                      onReject={() => setIsRejectDialogOpen(true)}
+                      onRevert={() => setIsCreateDealModalOpen(true)}
+                      onPay={() => setIsPaymentModalOpen(true)}
+                      onViewDetail={() => {
+                        setSelectedTicketModal(ticket)
+                        setIsTicketDetailModalOpen(true)
+                      }}
+                      isConfirming={confirmMutation.isPending}
+                      isRejecting={rejectMutation.isPending}
+                    />
+                  )
                 }
-                renderedVersions.add(verNum)
-
-                const matchedSnapshot =
-                  detailData?.snapshots?.find((s) => s.version === verNum) || null
-                const ticket = buildTicketData(matchedSnapshot, verNum, msg.createdAt)
-                const isRecipient = ticket.senderId
-                  ? ticket.senderId !== currentNumId
-                  : !isMentor
-                const canAct =
-                  ticket.status === 'PENDING' &&
-                  isRecipient &&
-                  !isReadOnly &&
-                  Boolean(currentDeal.canConfirm)
-
-                const isTicketFromMe = ticket.senderId
-                  ? ticket.senderId === currentNumId
-                  : isMe
-
-                return (
-                  <MentoringDiscordTicketEmbed
-                    key={msg.id}
-                    ticket={ticket}
-                    isMe={isTicketFromMe}
-                    isRecipient={isRecipient}
-                    canAct={canAct}
-                    onConfirm={handleConfirmAndPay}
-                    onReject={() => setIsRejectDialogOpen(true)}
-                    onRevert={() => setIsCreateDealModalOpen(true)}
-                    onPay={() => setIsPaymentModalOpen(true)}
-                    onViewDetail={() => {
-                      setSelectedTicketModal(ticket)
-                      setIsTicketDetailModalOpen(true)
-                    }}
-                    isConfirming={confirmMutation.isPending}
-                    isRejecting={rejectMutation.isPending}
-                  />
-                )
               }
 
               return (

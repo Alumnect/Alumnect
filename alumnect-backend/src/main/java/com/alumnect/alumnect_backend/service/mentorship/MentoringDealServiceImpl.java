@@ -418,12 +418,20 @@ public class MentoringDealServiceImpl implements MentoringDealService {
             // Chưa thanh toán thì chưa khóa vĩnh viễn (khi thanh toán rồi mới khóa)
             deal.setIsLocked(false);
             deal.setLockedAt(now);
+
+            sendDealSystemMessage(deal.getConversation(), currentUser,
+                    String.format("[HỆ THỐNG] Deal Ticket #%d (Phiên bản %d) đã được CẢ HAI BÊN XÁC NHẬN! Sẵn sàng mở thanh toán (UC105).",
+                            deal.getId(), deal.getVersion()));
         } else {
             if (isStudent) {
                 deal.setStatus(MentoringDealStatus.STUDENT_CONFIRMED);
             } else {
                 deal.setStatus(MentoringDealStatus.MENTOR_CONFIRMED);
             }
+
+            sendDealSystemMessage(deal.getConversation(), currentUser,
+                    String.format("[HỆ THỐNG] %s đã xác nhận Deal Ticket #%d (Phiên bản %d). Đang chờ bên còn lại xác nhận.",
+                            getUserDisplayName(currentUser), deal.getId(), deal.getVersion()));
         }
 
         MentoringDeal savedDeal = dealRepository.save(deal);
