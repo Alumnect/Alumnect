@@ -112,6 +112,15 @@ public class MentoringDealResponse {
     /** Thời điểm cập nhật gần nhất */
     private Instant updatedAt;
 
+    /** Cờ đánh dấu Deal đã được thanh toán (UC105) */
+    private Boolean isPaid;
+
+    /** Thời điểm hoàn tất thanh toán */
+    private Instant paidAt;
+
+    /** ID của Mentoring Task nếu đã được kích hoạt sau thanh toán */
+    private Long taskId;
+
     /** Người dùng đang đăng nhập có quyền xác nhận phiên bản hiện tại không */
     private Boolean canConfirm;
 

@@ -117,6 +117,15 @@ public class MentoringDeal {
     @Column(name = "locked_at")
     private Instant lockedAt;
 
+    /** Cờ đánh dấu Deal đã được thanh toán (UC105) */
+    @Column(name = "is_paid", nullable = false)
+    @Builder.Default
+    private Boolean isPaid = false;
+
+    /** Thời điểm hoàn tất thanh toán Task */
+    @Column(name = "paid_at")
+    private Instant paidAt;
+
     /** Người tạo / đề xuất thỏa thuận ban đầu */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

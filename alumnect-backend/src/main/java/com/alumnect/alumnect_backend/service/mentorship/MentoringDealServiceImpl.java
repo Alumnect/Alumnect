@@ -6,6 +6,7 @@ import com.alumnect.alumnect_backend.common.enums.MessageType;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealSnapshotRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationParticipantRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
 import com.alumnect.alumnect_backend.dao.message.MessageRepository;
@@ -53,6 +54,7 @@ public class MentoringDealServiceImpl implements MentoringDealService {
     private final ConversationRepository conversationRepository;
     private final ConversationParticipantRepository participantRepository;
     private final MessageRepository messageRepository;
+    private final MentoringTaskRepository taskRepository;
     private final MentoringDealMapper dealMapper;
 
     /**
@@ -534,6 +536,10 @@ public class MentoringDealServiceImpl implements MentoringDealService {
 
         response.setCanConfirm(canConfirm);
         response.setCanEdit(canEdit);
+
+        // Bổ sung taskId nếu Deal đã được kích hoạt Task sau khi thanh toán (UC105)
+        taskRepository.findByDealId(deal.getId()).ifPresent(task -> response.setTaskId(task.getId()));
+
         return response;
     }
 

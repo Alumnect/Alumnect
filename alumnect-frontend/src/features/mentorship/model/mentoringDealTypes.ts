@@ -69,6 +69,9 @@ export interface MentoringDeal {
   status: MentoringDealStatus
   isLocked: boolean
   lockedAt?: string | null
+  isPaid?: boolean
+  paidAt?: string | null
+  taskId?: number | null
   createdByUserId: number
   createdByName?: string
   updatedByUserId: number

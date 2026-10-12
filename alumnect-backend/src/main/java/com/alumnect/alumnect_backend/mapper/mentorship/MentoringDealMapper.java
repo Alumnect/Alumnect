@@ -36,6 +36,7 @@ public interface MentoringDealMapper {
     @Mapping(target = "updatedByName", source = "updatedBy.profile.fullName")
     @Mapping(target = "canConfirm", ignore = true)
     @Mapping(target = "canEdit", ignore = true)
+    @Mapping(target = "taskId", ignore = true)
     MentoringDealResponse toResponse(MentoringDeal deal);
 
     /**

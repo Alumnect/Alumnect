@@ -4,24 +4,37 @@ import type { MentoringDealStatus } from '../model/mentoringDealTypes'
 interface MentoringDealBadgeProps {
   status: MentoringDealStatus
   isLocked?: boolean
+  isPaid?: boolean
   className?: string
 }
 
 /**
- * Component hiển thị huy hiệu trạng thái Mentoring Deal với phong cách Pastel Premium (UC104).
+ * Component hiển thị huy hiệu trạng thái Mentoring Deal với phong cách Pastel Premium (UC104 & UC105).
  */
 export function MentoringDealBadge({
   status,
   isLocked,
+  isPaid,
   className = '',
 }: MentoringDealBadgeProps) {
-  if (status === 'DEAL_CONFIRMED' || isLocked) {
+  if (isPaid) {
     return (
       <span
         className={`inline-flex items-center gap-1.5 rounded-full bg-mint-50 px-3 py-1 text-xs font-black text-mint-700 ring-1 ring-mint-500/20 dark:bg-mint-950/40 dark:text-mint-300 dark:ring-mint-500/30 ${className}`}
       >
-        <ShieldCheck className="h-3.5 w-3.5 text-mint-600 dark:text-mint-400" />
-        <span>Đã chốt & Khóa Snapshot</span>
+        <CheckCircle2 className="h-3.5 w-3.5 text-mint-600 dark:text-mint-400" />
+        <span>Đã thanh toán • Task sẵn sàng</span>
+      </span>
+    )
+  }
+
+  if (status === 'DEAL_CONFIRMED' || isLocked) {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-500/30 ${className}`}
+      >
+        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+        <span>Đã chốt • Chờ thanh toán</span>
       </span>
     )
   }

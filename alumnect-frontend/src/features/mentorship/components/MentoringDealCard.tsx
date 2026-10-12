@@ -38,7 +38,11 @@ export function MentoringDealCard({ deal, onViewDetail }: MentoringDealCardProps
             v{deal.version}
           </span>
         </div>
-        <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} />
+        <MentoringDealBadge
+          status={deal.status}
+          isLocked={deal.isLocked}
+          isPaid={deal.isPaid}
+        />
       </div>
 
       {/* Thông tin 2 bên tham gia (Student & Mentor) */}

@@ -14,6 +14,7 @@ import { Button, ConfirmModal, toast } from '@/components/ui'
 import { MentoringDealSnapshotCard } from './MentoringDealSnapshotCard'
 import { MentoringDealHistoryTimeline } from './MentoringDealHistoryTimeline'
 import { MentoringDealFormModal } from './MentoringDealFormModal'
+import { MentoringTaskPaymentModal } from './MentoringTaskPaymentModal'
 import { useConfirmDeal, useCancelDeal, useDealDetail } from '../hooks/useMentoringDeals'
 import type { MentoringDeal } from '../model/mentoringDealTypes'
 
@@ -25,7 +26,7 @@ interface MentoringDealActionModalProps {
 }
 
 /**
- * Modal trung tâm xem chi tiết Snapshot, xác nhận 2 bên và quản lý vòng đời Deal (UC104).
+ * Modal trung tâm xem chi tiết Snapshot, xác nhận 2 bên và quản lý vòng đời Deal (UC104 & UC105).
  * Có thể mở từ cuộc trò chuyện Direct Messaging hoặc từ trang danh sách Deals.
  */
 export function MentoringDealActionModal({
@@ -37,6 +38,7 @@ export function MentoringDealActionModal({
   const [activeTab, setActiveTab] = useState<'snapshot' | 'history'>('snapshot')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   const { data: detailData, isLoading, refetch } = useDealDetail(dealId)
   const confirmMutation = useConfirmDeal()
@@ -210,20 +212,28 @@ export function MentoringDealActionModal({
                     </Button>
                   )}
 
-                  {/* Nút Thanh toán khi DEAL_CONFIRMED */}
-                  {deal.status === 'DEAL_CONFIRMED' && (
+                  {/* Nút Thanh toán khi DEAL_CONFIRMED & chưa thanh toán */}
+                  {deal.status === 'DEAL_CONFIRMED' && !deal.isPaid && (
                     <Button
                       variant="primary"
                       onClick={() => {
                         if (onPaymentRedirect) onPaymentRedirect(deal)
-                        else toast.success('Chuyển hướng đến màn hình thanh toán ký quỹ (UC105)...')
+                        else setIsPaymentModalOpen(true)
                       }}
                       className="rounded-xl font-black bg-mint-600 hover:bg-mint-700 shadow-md shadow-mint-500/20 text-xs text-white"
                     >
                       <CreditCard className="h-3.5 w-3.5 mr-1" />
-                      Tiến hành thanh toán (UC105)
+                      Thanh toán Task (UC105)
                       <ExternalLink className="h-3 w-3 ml-1" />
                     </Button>
+                  )}
+
+                  {/* Khi DEAL_CONFIRMED & đã thanh toán */}
+                  {deal.status === 'DEAL_CONFIRMED' && deal.isPaid && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-mint-50 text-mint-700 border border-mint-200 text-xs font-bold dark:bg-mint-950/40 dark:text-mint-300 dark:border-mint-800/40">
+                      <CheckCircle2 className="h-4 w-4 text-mint-600" />
+                      <span>Đã thanh toán • Task #{deal.taskId || ''} (PREPARATION)</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -231,6 +241,19 @@ export function MentoringDealActionModal({
           )}
         </div>
       </div>
+
+      {/* Modal thanh toán PayOS VietQR UC105 */}
+      {isPaymentModalOpen && deal && (
+        <MentoringTaskPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          deal={deal}
+          onSuccess={() => {
+            setIsPaymentModalOpen(false)
+            refetch()
+          }}
+        />
+      )}
 
       {/* Modal chỉnh sửa điều khoản nếu được mở */}
       {isEditModalOpen && deal && (

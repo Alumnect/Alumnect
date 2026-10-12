@@ -1,0 +1,368 @@
+package com.alumnect.alumnect_backend.service.mentorship;
+
+import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
+import com.alumnect.alumnect_backend.common.enums.MessageType;
+import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
+import com.alumnect.alumnect_backend.dao.message.MessageRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.CreateTaskPaymentRequest;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskPaymentCheckoutResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskPaymentStatusResponse;
+import com.alumnect.alumnect_backend.entity.message.Message;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskPayment;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
+import com.alumnect.alumnect_backend.exception.ConflictException;
+import com.alumnect.alumnect_backend.exception.ForbiddenException;
+import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.integration.payos.PayOSGateway;
+import com.alumnect.alumnect_backend.mapper.mentorship.MentoringTaskMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+import vn.payos.model.v2.paymentRequests.PaymentLink;
+import vn.payos.model.v2.paymentRequests.PaymentLinkItem;
+import vn.payos.model.webhooks.Webhook;
+import vn.payos.model.webhooks.WebhookData;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+
+/**
+ * Triển khai dịch vụ thanh toán Mentoring Task qua cổng PayOS (UC105).
+ * Hỗ trợ tạo Payment Link, VietQR, Polling trạng thái realtime và xử lý Webhook IPN an toàn.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentService {
+
+    private final MentoringDealRepository dealRepository;
+    private final MentoringTaskRepository taskRepository;
+    private final MentoringTaskPaymentRepository paymentRepository;
+    private final MessageRepository messageRepository;
+    private final PayOSGateway payOSGateway;
+    private final MentoringTaskMapper taskMapper;
+
+    @Value("${app.payos.payment-expiration-minutes:15}")
+    private int expirationMinutes;
+
+    @Value("${app.payos.task-return-url:http://localhost:5173/app/mentoring/deals?payment=success}")
+    private String taskReturnUrl;
+
+    @Value("${app.payos.task-cancel-url:http://localhost:5173/app/mentoring/deals?payment=cancelled}")
+    private String taskCancelUrl;
+
+    @Override
+    @Transactional
+    public MentoringTaskPaymentCheckoutResponse createTaskPayment(Long currentUserId, CreateTaskPaymentRequest request) {
+        log.info("Bắt đầu khởi tạo giao dịch thanh toán Task cho dealId={} bởi userId={}", request.getDealId(), currentUserId);
+
+        // 1. Kiểm tra tồn tại thỏa thuận Deal
+        MentoringDeal deal = dealRepository.findById(request.getDealId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Mentoring Deal với ID: " + request.getDealId()));
+
+        // 2. Chỉ có Học viên (Student) của Deal mới được quyền thanh toán
+        if (!deal.getStudent().getId().equals(currentUserId)) {
+            throw new ForbiddenException("Chỉ có Học viên (Student) tham gia Deal mới có quyền thực hiện thanh toán nhiệm vụ này.");
+        }
+
+        // 3. Tiền điều kiện: Deal phải ở trạng thái DEAL_CONFIRMED và đã khóa snapshot
+        if (deal.getStatus() != MentoringDealStatus.DEAL_CONFIRMED || !Boolean.TRUE.equals(deal.getIsLocked())) {
+            throw new ConflictException("Thỏa thuận Deal chưa được cả hai bên xác nhận hoàn tất (DEAL_CONFIRMED). Không thể thanh toán.");
+        }
+
+        // 4. Kiểm tra Deal đã được thanh toán hoặc đã tạo Task chưa
+        if (Boolean.TRUE.equals(deal.getIsPaid()) || taskRepository.existsByDealId(deal.getId())) {
+            throw new ConflictException("Thỏa thuận Deal này đã được thanh toán và kích hoạt Task trước đó rồi.");
+        }
+
+        Instant now = Instant.now();
+
+        // 5. Kiểm tra nếu đã có giao dịch PENDING còn hiệu lực -> tái sử dụng đơn hàng hiện có để tránh tạo đơn rác
+        Optional<MentoringTaskPayment> existingPendingOpt = paymentRepository.findFirstByDealIdAndPaymentStatusOrderByCreatedAtDesc(
+                deal.getId(), PaymentStatus.PENDING);
+
+        if (existingPendingOpt.isPresent()) {
+            MentoringTaskPayment existing = existingPendingOpt.get();
+            if (existing.getPaymentExpiresAt().isAfter(now)) {
+                log.info("Tái sử dụng giao dịch PENDING id={}, orderCode={} cho dealId={}", existing.getId(), existing.getOrderCode(), deal.getId());
+                return taskMapper.toCheckoutResponse(existing);
+            }
+        }
+
+        // 6. Sinh mã đơn hàng PayOS duy nhất (orderCode nguyên dương 53-bit)
+        long orderCode = (System.currentTimeMillis() % 100000000000L) + (long) (Math.random() * 900 + 100);
+        Instant paymentExpiresAt = now.plus(Duration.ofMinutes(expirationMinutes));
+        BigDecimal amount = deal.getAgreedPrice();
+
+        // Mô tả chuyển khoản không dấu tối đa 25 ký tự
+        String description = "TASK " + (orderCode % 1000000);
+
+        // 7. Gọi PayOS SDK tạo Payment Link
+        CreatePaymentLinkRequest payOSRequest = CreatePaymentLinkRequest.builder()
+                .orderCode(orderCode)
+                .amount(amount.longValue())
+                .description(description)
+                .returnUrl(taskReturnUrl)
+                .cancelUrl(taskCancelUrl)
+                .expiredAt(paymentExpiresAt.getEpochSecond())
+                .items(List.of(PaymentLinkItem.builder()
+                        .name("Mentoring Task #" + deal.getId())
+                        .quantity(1)
+                        .price(amount.longValue())
+                        .build()))
+                .build();
+
+        CreatePaymentLinkResponse payOSResponse;
+        try {
+            payOSResponse = payOSGateway.createPaymentLink(payOSRequest);
+        } catch (Exception ex) {
+            log.error("Lỗi khi kết nối cổng PayOS tạo payment link cho orderCode={}: {}", orderCode, ex.getMessage());
+            throw new BadRequestException("Không thể khởi tạo liên kết thanh toán PayOS. Vui lòng thử lại sau.");
+        }
+
+        String actualDescription = (payOSResponse.getDescription() != null && !payOSResponse.getDescription().isBlank())
+                ? payOSResponse.getDescription()
+                : description;
+
+        // 8. Lưu bản ghi MentoringTaskPayment ở trạng thái PENDING
+        MentoringTaskPayment payment = MentoringTaskPayment.builder()
+                .deal(deal)
+                .student(deal.getStudent())
+                .orderCode(orderCode)
+                .amount(amount)
+                .paymentStatus(PaymentStatus.PENDING)
+                .paymentMethod("PAYOS")
+                .paymentReference(payOSResponse.getPaymentLinkId())
+                .description(actualDescription)
+                .qrCodeUrl(payOSResponse.getQrCode())
+                .checkoutUrl(payOSResponse.getCheckoutUrl())
+                .accountNumber(payOSResponse.getAccountNumber())
+                .accountName(payOSResponse.getAccountName())
+                .bin(payOSResponse.getBin())
+                .paymentExpiresAt(paymentExpiresAt)
+                .build();
+
+        MentoringTaskPayment savedPayment = paymentRepository.save(payment);
+        log.info("Khởi tạo thành công giao dịch Task Payment id={}, orderCode={} cho dealId={}",
+                savedPayment.getId(), orderCode, deal.getId());
+
+        return taskMapper.toCheckoutResponse(savedPayment);
+    }
+
+    @Override
+    @Transactional
+    public MentoringTaskPaymentStatusResponse checkTaskPaymentStatus(Long currentUserId, Long orderCode) {
+        log.info("Kiểm tra trạng thái Task Payment orderCode={} bởi userId={}", orderCode, currentUserId);
+
+        MentoringTaskPayment payment = paymentRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch thanh toán với mã đơn: " + orderCode));
+
+        MentoringDeal deal = payment.getDeal();
+        // Kiểm tra quyền: Student hoặc Mentor của Deal được phép tra cứu
+        if (!deal.getStudent().getId().equals(currentUserId) && !deal.getMentor().getId().equals(currentUserId)) {
+            throw new ForbiddenException("Bạn không có quyền xem thông tin giao dịch thanh toán này.");
+        }
+
+        // Nếu đã PAID, trả về kết quả thành công ngay
+        if (payment.getPaymentStatus() == PaymentStatus.PAID) {
+            MentoringTaskPaymentStatusResponse response = taskMapper.toStatusResponse(payment);
+            response.setMessage("Thanh toán thành công. Task đang ở giai đoạn chuẩn bị (PREPARATION).");
+            return response;
+        }
+
+        // Nếu đang PENDING, chủ động tra cứu (Fallback Polling) từ PayOS Gateway
+        if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            try {
+                PaymentLink paymentLink = payOSGateway.getPaymentLinkInformation(orderCode);
+                String payOsStatus = paymentLink.getStatus().toString();
+
+                if ("PAID".equalsIgnoreCase(payOsStatus)) {
+                    log.info("Phát hiện orderCode={} đã PAID từ PayOS qua Polling! Tiến hành kích hoạt Task...", orderCode);
+                    activateTaskUponPaymentSuccess(payment);
+                    MentoringTaskPaymentStatusResponse response = taskMapper.toStatusResponse(payment);
+                    response.setMessage("Thanh toán thành công. Mentoring Task đã chính thức được kích hoạt!");
+                    return response;
+                } else if ("CANCELLED".equalsIgnoreCase(payOsStatus)) {
+                    payment.setPaymentStatus(PaymentStatus.CANCELLED);
+                    paymentRepository.save(payment);
+                } else if ("EXPIRED".equalsIgnoreCase(payOsStatus)) {
+                    payment.setPaymentStatus(PaymentStatus.EXPIRED);
+                    paymentRepository.save(payment);
+                }
+            } catch (Exception ex) {
+                log.warn("Không thể kiểm tra trạng thái từ PayOS Gateway cho orderCode={}: {}", orderCode, ex.getMessage());
+            }
+        }
+
+        MentoringTaskPaymentStatusResponse response = taskMapper.toStatusResponse(payment);
+        if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            response.setMessage("Giao dịch đang chờ thanh toán qua VietQR / PayOS.");
+        } else if (payment.getPaymentStatus() == PaymentStatus.CANCELLED) {
+            response.setMessage("Giao dịch thanh toán đã bị hủy.");
+        } else if (payment.getPaymentStatus() == PaymentStatus.EXPIRED) {
+            response.setMessage("Giao dịch thanh toán đã hết hạn.");
+        } else {
+            response.setMessage("Giao dịch thanh toán thất bại.");
+        }
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public MentoringTaskPaymentStatusResponse cancelTaskPayment(Long currentUserId, Long orderCode) {
+        log.info("Học viên userId={} yêu cầu hủy giao dịch Task Payment orderCode={}", currentUserId, orderCode);
+
+        MentoringTaskPayment payment = paymentRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch thanh toán với mã đơn: " + orderCode));
+
+        if (!payment.getStudent().getId().equals(currentUserId)) {
+            throw new ForbiddenException("Chỉ người thực hiện thanh toán mới có quyền hủy đơn thanh toán này.");
+        }
+
+        if (payment.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new ConflictException("Không thể hủy giao dịch đã thanh toán thành công.");
+        }
+
+        if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            try {
+                payOSGateway.cancelPaymentLink(orderCode, "Học viên chủ động hủy giao dịch");
+            } catch (Exception ex) {
+                log.warn("Không thể hủy link trên PayOS cho orderCode={}: {}", orderCode, ex.getMessage());
+            }
+            payment.setPaymentStatus(PaymentStatus.CANCELLED);
+            paymentRepository.save(payment);
+        }
+
+        MentoringTaskPaymentStatusResponse response = taskMapper.toStatusResponse(payment);
+        response.setMessage("Đã hủy bỏ giao dịch thanh toán thành công.");
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public void handlePayOSWebhook(Webhook webhook) {
+        log.info("Tiếp nhận Webhook IPN từ PayOS cho Mentoring Task Payment");
+
+        WebhookData data;
+        try {
+            data = payOSGateway.verifyPaymentWebhookData(webhook);
+        } catch (Exception ex) {
+            log.error("Xác thực chữ ký Webhook PayOS thất bại: {}", ex.getMessage());
+            throw new BadRequestException("Chữ ký Webhook PayOS không hợp lệ.");
+        }
+
+        if (data == null || data.getOrderCode() == null) {
+            throw new BadRequestException("Dữ liệu Webhook PayOS không hợp lệ.");
+        }
+
+        Long orderCode = data.getOrderCode();
+        log.info("Webhook PayOS hợp lệ cho Task Payment orderCode={}, code={}, amount={}", orderCode, data.getCode(), data.getAmount());
+
+        // Khóa bi quan bản ghi giao dịch (Pessimistic Write Lock)
+        Optional<MentoringTaskPayment> paymentOpt = paymentRepository.findForUpdateByOrderCode(orderCode);
+        if (paymentOpt.isEmpty()) {
+            log.info("orderCode={} không thuộc bảng mentoring_task_payments, bỏ qua.", orderCode);
+            return;
+        }
+
+        MentoringTaskPayment payment = paymentOpt.get();
+
+        // Idempotency: nếu đã PAID thì không xử lý lại
+        if (payment.getPaymentStatus() == PaymentStatus.PAID) {
+            log.info("Giao dịch Task Payment orderCode={} đã được xử lý PAID trước đó. Bỏ qua idempotency.", orderCode);
+            return;
+        }
+
+        // Đối soát số tiền
+        if (data.getAmount() != null && payment.getAmount().longValue() != data.getAmount()) {
+            log.error("Lệch số tiền thanh toán Webhook! Dự kiến={}, Thực nhận={}", payment.getAmount(), data.getAmount());
+            payment.setPaymentStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+            throw new ConflictException("Số tiền thanh toán không khớp với đơn hàng.");
+        }
+
+        // Kích hoạt Task
+        activateTaskUponPaymentSuccess(payment);
+    }
+
+    /**
+     * Logic kích hoạt Mentoring Task và đánh dấu thanh toán hoàn tất (Source of Truth).
+     */
+    private void activateTaskUponPaymentSuccess(MentoringTaskPayment payment) {
+        Instant now = Instant.now();
+        MentoringDeal deal = payment.getDeal();
+
+        // 1. Cập nhật Payment
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaidAt(now);
+
+        // 2. Cập nhật Deal
+        deal.setIsPaid(true);
+        deal.setPaidAt(now);
+        dealRepository.save(deal);
+
+        // 3. Tạo MentoringTask ở giai đoạn PREPARATION nếu chưa có
+        MentoringTask task = taskRepository.findByDealId(deal.getId()).orElse(null);
+        if (task == null) {
+            String shortTitle = deal.getTaskScope().length() > 60
+                    ? deal.getTaskScope().substring(0, 57).trim() + "..."
+                    : deal.getTaskScope();
+
+            task = MentoringTask.builder()
+                    .deal(deal)
+                    .student(deal.getStudent())
+                    .mentor(deal.getMentor())
+                    .taskTitle(shortTitle)
+                    .taskScope(deal.getTaskScope())
+                    .agreedPrice(deal.getAgreedPrice())
+                    .deadline(deal.getDeadline())
+                    .workingMode(deal.getWorkingMode())
+                    .participationType(deal.getParticipationType())
+                    .taskType(deal.getTaskType())
+                    .expectedResult(deal.getExpectedResult())
+                    .status(MentoringTaskStatus.PREPARATION)
+                    .startedAt(now)
+                    .build();
+
+            task = taskRepository.save(task);
+            log.info("Kích hoạt thành công Mentoring Task id={} cho dealId={} ở trạng thái PREPARATION", task.getId(), deal.getId());
+        }
+
+        payment.setTask(task);
+        paymentRepository.save(payment);
+
+        // 4. Tự động gửi tin nhắn hệ thống vào cuộc hội thoại Direct Messaging giữa hai bên
+        if (deal.getConversation() != null) {
+            try {
+                String formattedPrice = NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(deal.getAgreedPrice());
+                Message systemMsg = Message.builder()
+                        .conversation(deal.getConversation())
+                        .sender(deal.getStudent())
+                        .content("🎉 Học viên đã hoàn tất thanh toán thành công số tiền " + formattedPrice +
+                                " cho Deal #" + deal.getId() + ". Mentoring Task #" + task.getId() +
+                                " đã chính thức được kích hoạt và chuyển sang giai đoạn CHUẨN BỊ (PREPARATION)!")
+                        .type(MessageType.SYSTEM)
+                        .createdAt(now)
+                        .build();
+                messageRepository.save(systemMsg);
+            } catch (Exception ex) {
+                log.warn("Không thể lưu tin nhắn hệ thống thanh toán: {}", ex.getMessage());
+            }
+        }
+    }
+}
