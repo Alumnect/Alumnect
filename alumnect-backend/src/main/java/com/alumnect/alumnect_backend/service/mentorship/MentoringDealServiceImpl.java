@@ -125,26 +125,40 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         if (request.getRequestId() != null) {
             List<MentoringDeal> existingDealsForRequest = dealRepository.findByRequestId(request.getRequestId());
             boolean alreadyLockedWithOther = existingDealsForRequest.stream()
-                    .anyMatch(d -> (d.getStatus() == MentoringDealStatus.DEAL_CONFIRMED || Boolean.TRUE.equals(d.getIsLocked()))
+                    .anyMatch(d -> (d.getStatus() == MentoringDealStatus.DEAL_CONFIRMED || Boolean.TRUE.equals(d.getIsLocked()) || Boolean.TRUE.equals(d.getIsPaid()))
                             && !d.getMentor().getId().equals(targetMentorId));
             if (alreadyLockedWithOther) {
-                throw new ConflictException("Request này đã chốt thỏa thuận và chọn Mentor khác rồi.");
+                throw new ConflictException("Yêu cầu này đã chốt thỏa thuận và chọn Cố vấn khác rồi.");
             }
-        }
 
-        // Đánh dấu các Deal trước đó trong cuộc hội thoại (nếu có) thành SUPERSEDED
-        if (conversation != null) {
-            dealRepository.findFirstByConversationIdOrderByUpdatedAtDesc(conversation.getId()).ifPresent(previousDeal -> {
-                if (!Boolean.TRUE.equals(previousDeal.getIsLocked()) &&
-                        previousDeal.getStatus() != MentoringDealStatus.DEAL_CONFIRMED &&
-                        previousDeal.getStatus() != MentoringDealStatus.CANCELLED &&
-                        previousDeal.getStatus() != MentoringDealStatus.REJECTED &&
-                        previousDeal.getStatus() != MentoringDealStatus.SUPERSEDED) {
-                    previousDeal.setStatus(MentoringDealStatus.SUPERSEDED);
-                    previousDeal.setUpdatedAt(Instant.now());
-                    dealRepository.save(previousDeal);
-                }
-            });
+            // Quy tắc: 1 người 1 deal cho mỗi yêu cầu/task. Không tạo thêm deal mới nếu deal hiện tại chưa thanh toán
+            Optional<MentoringDeal> existingUnpaidDeal = existingDealsForRequest.stream()
+                    .filter(d -> d.getMentor().getId().equals(targetMentorId)
+                            && !Boolean.TRUE.equals(d.getIsPaid())
+                            && d.getStatus() != MentoringDealStatus.CANCELLED
+                            && d.getStatus() != MentoringDealStatus.REJECTED)
+                    .findFirst();
+            if (existingUnpaidDeal.isPresent()) {
+                throw new ConflictException(String.format(
+                        "Đã tồn tại Deal #%d cho yêu cầu này giữa bạn và đối tác đang chờ xử lý/thanh toán. Mỗi người chỉ có một Deal duy nhất cho yêu cầu này, vui lòng tiếp tục thương lượng hoặc điều chỉnh trên Deal hiện tại.",
+                        existingUnpaidDeal.get().getId()
+                ));
+            }
+        } else {
+            // Không qua Request (Deal trực tiếp trong cuộc hội thoại): kiểm tra giữa 2 người dùng
+            List<MentoringDealStatus> activeStatuses = List.of(
+                    MentoringDealStatus.PROPOSED,
+                    MentoringDealStatus.STUDENT_CONFIRMED,
+                    MentoringDealStatus.MENTOR_CONFIRMED,
+                    MentoringDealStatus.DEAL_CONFIRMED,
+                    MentoringDealStatus.SUPERSEDED
+            );
+            List<MentoringDeal> activeDeals = dealRepository.findActiveDealsBetweenUsers(targetStudentId, targetMentorId, activeStatuses);
+            boolean hasActiveUnpaid = activeDeals.stream()
+                    .anyMatch(d -> d.getRequestId() == null && !Boolean.TRUE.equals(d.getIsPaid()));
+            if (hasActiveUnpaid) {
+                throw new ConflictException("Đã tồn tại thỏa thuận Deal giữa hai bên chưa thanh toán. Vui lòng tiếp tục thương lượng hoặc điều chỉnh trên Deal hiện tại.");
+            }
         }
 
         // Xác định proposal source
@@ -259,14 +273,22 @@ public class MentoringDealServiceImpl implements MentoringDealService {
             throw new ForbiddenException("Bạn không có quyền chỉnh sửa thỏa thuận này.");
         }
 
-        // Kiểm tra trạng thái khóa bất biến (sau khi cả hai confirm)
-        if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED) {
-            throw new ConflictException("Thỏa thuận đã được hai bên xác nhận và khóa, không thể chỉnh sửa điều khoản.");
+        // Kiểm tra trạng thái thanh toán: nếu đã thanh toán thì task đã hình thành, không thể sửa điều khoản
+        if (Boolean.TRUE.equals(deal.getIsPaid())) {
+            throw new ConflictException("Thỏa thuận đã thanh toán thành công và chuyển sang Task, không thể chỉnh sửa điều khoản.");
         }
 
         if (deal.getStatus() == MentoringDealStatus.CANCELLED) {
             throw new BadRequestException("Thỏa thuận đã bị hủy bỏ, không thể chỉnh sửa điều khoản.");
         }
+
+        if (deal.getStatus() == MentoringDealStatus.REJECTED) {
+            throw new BadRequestException("Thỏa thuận đã bị từ chối, không thể chỉnh sửa điều khoản.");
+        }
+
+        // Mở khóa nếu trước đó đang ở trạng thái khóa hoặc DEAL_CONFIRMED (do lỡ bấm nhầm hoặc deal lại)
+        deal.setIsLocked(false);
+        deal.setLockedAt(null);
 
         // Tăng phiên bản thỏa thuận
         int nextVersion = deal.getVersion() + 1;

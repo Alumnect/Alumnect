@@ -47,7 +47,9 @@ export function MentoringDealFormModal({
   const currentNumId = Number(currentUserId) || 0
   const isMentor = deal ? deal.mentorId === currentNumId : (mentorId === currentNumId)
 
-  const isEdit = mode === 'edit'
+  const isEdit =
+    mode === 'edit' ||
+    Boolean(deal?.id && deal?.status !== 'CANCELLED' && deal?.status !== 'REJECTED')
   const proposeMutation = useProposeDeal()
   const updateMutation = useUpdateDealTerms()
 

@@ -752,7 +752,7 @@ export function MentoringChatForTask({
         <MentoringDealFormModal
           isOpen={isCreateDealModalOpen}
           onClose={() => setIsCreateDealModalOpen(false)}
-          mode="create"
+          mode={currentDeal?.id ? 'edit' : 'create'}
           deal={currentDeal}
           conversationId={resolvedConversationId}
           mentorId={isMentor ? currentNumId : partnerId}
