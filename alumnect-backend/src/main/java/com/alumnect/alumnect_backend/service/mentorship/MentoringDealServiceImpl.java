@@ -407,30 +407,16 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         deal.setUpdatedAt(now);
 
         // Kiểm tra xem cả hai bên đã cùng xác nhận hay chưa
+        // Kiểm tra xem cả hai bên đã cùng xác nhận hay chưa
         if (Boolean.TRUE.equals(deal.getStudentConfirmed()) && Boolean.TRUE.equals(deal.getMentorConfirmed())) {
             deal.setStatus(MentoringDealStatus.DEAL_CONFIRMED);
-            deal.setIsLocked(true);
+            // Chưa thanh toán thì chưa khóa vĩnh viễn (khi thanh toán rồi mới khóa)
+            deal.setIsLocked(false);
             deal.setLockedAt(now);
 
             sendDealSystemMessage(deal.getConversation(), currentUser,
-                    String.format("[HỆ THỐNG] Deal Ticket #%d (Phiên bản %d) đã được CẢ HAI BÊN XÁC NHẬN! Snapshot điều khoản đã được khóa và sẵn sàng mở thanh toán (UC105).",
+                    String.format("[HỆ THỐNG] Deal Ticket #%d (Phiên bản %d) đã được CẢ HAI BÊN XÁC NHẬN! Sẵn sàng mở thanh toán (UC105).",
                             deal.getId(), deal.getVersion()));
-
-            // Nếu Deal gắn với RequestId, đánh dấu các Deal của các Mentor khác là SUPERSEDED và thông báo chỉ đọc
-            if (deal.getRequestId() != null) {
-                List<MentoringDeal> otherDeals = dealRepository.findByRequestIdAndIdNot(deal.getRequestId(), deal.getId());
-                for (MentoringDeal other : otherDeals) {
-                    if (other.getStatus() != MentoringDealStatus.DEAL_CONFIRMED && other.getStatus() != MentoringDealStatus.CANCELLED) {
-                        other.setStatus(MentoringDealStatus.SUPERSEDED);
-                        other.setUpdatedAt(now);
-                        other.setUpdatedBy(currentUser);
-                        dealRepository.save(other);
-
-                        sendDealSystemMessage(other.getConversation(), currentUser,
-                                "[HỆ THỐNG] Request đã chọn Mentor khác. Cuộc trao đổi Deal này chuyển sang chế độ chỉ đọc, không nhận hoặc chốt Deal mới.");
-                    }
-                }
-            }
         } else {
             if (isStudent) {
                 deal.setStatus(MentoringDealStatus.STUDENT_CONFIRMED);
@@ -707,15 +693,14 @@ public class MentoringDealServiceImpl implements MentoringDealService {
 
         boolean isStudent = deal.getStudent().getId().equals(currentUserId);
         boolean isMentor = deal.getMentor().getId().equals(currentUserId);
-        boolean isLocked = Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED;
-        boolean isClosed = isLocked
+        boolean isPaid = Boolean.TRUE.equals(deal.getIsPaid());
+        boolean isClosed = isPaid
                 || deal.getStatus() == MentoringDealStatus.CANCELLED
-                || deal.getStatus() == MentoringDealStatus.REJECTED
-                || deal.getStatus() == MentoringDealStatus.SUPERSEDED;
+                || deal.getStatus() == MentoringDealStatus.REJECTED;
 
-        // Quyền xác nhận: nếu chưa bị kết thúc/khóa và người dùng hiện tại chưa xác nhận phiên bản này
+        // Quyền xác nhận: nếu chưa thanh toán/hủy/chốt và người dùng hiện tại chưa xác nhận phiên bản này
         boolean canConfirm = false;
-        if (!isClosed) {
+        if (!isClosed && deal.getStatus() != MentoringDealStatus.DEAL_CONFIRMED) {
             if (isStudent && !Boolean.TRUE.equals(deal.getStudentConfirmed())) {
                 canConfirm = true;
             } else if (isMentor && !Boolean.TRUE.equals(deal.getMentorConfirmed())) {
@@ -723,8 +708,10 @@ public class MentoringDealServiceImpl implements MentoringDealService {
             }
         }
 
-        // Quyền chỉnh sửa: người tham gia có thể chỉnh sửa nếu chưa bị khóa và chưa hủy
-        boolean canEdit = (isStudent || isMentor) && !isLocked && deal.getStatus() != MentoringDealStatus.CANCELLED;
+        // Quyền chỉnh sửa (trả giá / deal lại): người tham gia có thể chỉnh sửa/trả giá lại nếu chưa thanh toán và chưa hủy
+        boolean canEdit = (isStudent || isMentor) && !isPaid
+                && deal.getStatus() != MentoringDealStatus.CANCELLED
+                && deal.getStatus() != MentoringDealStatus.REJECTED;
 
         response.setCanConfirm(canConfirm);
         response.setCanEdit(canEdit);

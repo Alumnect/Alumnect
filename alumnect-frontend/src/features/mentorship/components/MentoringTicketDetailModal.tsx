@@ -367,13 +367,13 @@ export function MentoringTicketDetailModal({
                 )}
               </button>
             </>
-          ) : ticket.status === 'CONFIRMED' && !ticket.isPaid && !ticket.isMentor ? (
+          ) : ticket.status === 'CONFIRMED' && !ticket.isPaid ? (
             <div className="flex w-full items-center justify-between gap-3">
               <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                Thanh toán để chuyển Task sang PREPARATION!
+                {!ticket.isMentor ? 'Thanh toán để chuyển Task sang PREPARATION!' : 'Đã chốt thỏa thuận • Chờ Học viên thanh toán'}
               </span>
               <div className="flex items-center gap-2">
-                {/* Nút Deal lại nếu sinh viên bấm nhầm Xác nhận */}
+                {/* Nút Deal lại nếu một trong hai bên muốn điều chỉnh lại trước khi thanh toán */}
                 {onRevert && (
                   <button
                     type="button"
@@ -394,7 +394,7 @@ export function MentoringTicketDetailModal({
                 >
                   Đóng
                 </button>
-                {onPay && (
+                {!ticket.isMentor && onPay && (
                   <button
                     type="button"
                     onClick={onPay}

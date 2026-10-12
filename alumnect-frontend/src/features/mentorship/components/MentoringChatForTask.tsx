@@ -547,7 +547,7 @@ export function MentoringChatForTask({
                     canAct={canAct}
                     onConfirm={handleConfirmAndPay}
                     onReject={() => setIsRejectDialogOpen(true)}
-                    onRevert={() => setIsAdjustDialogOpen(true)}
+                    onRevert={() => setIsCreateDealModalOpen(true)}
                     onPay={() => setIsPaymentModalOpen(true)}
                     onViewDetail={() => {
                       setSelectedTicketModal(ticket)
@@ -609,7 +609,7 @@ export function MentoringChatForTask({
                     canAct={canActActive}
                     onConfirm={handleConfirmAndPay}
                     onReject={() => setIsRejectDialogOpen(true)}
-                    onRevert={() => setIsAdjustDialogOpen(true)}
+                    onRevert={() => setIsCreateDealModalOpen(true)}
                     onPay={() => setIsPaymentModalOpen(true)}
                     onViewDetail={() => {
                       setSelectedTicketModal(activeTicket)
@@ -915,7 +915,7 @@ export function MentoringChatForTask({
           }}
           onRevert={() => {
             setIsTicketDetailModalOpen(false)
-            setIsAdjustDialogOpen(true)
+            setIsCreateDealModalOpen(true)
           }}
           onPay={() => {
             setIsTicketDetailModalOpen(false)

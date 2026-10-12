@@ -331,9 +331,9 @@ export function MentoringDiscordTicketEmbed({
               )
             ) : ticket.status === 'CONFIRMED' ? (
               <div className="flex items-center gap-2">
-                {!ticket.isPaid && !ticket.isMentor ? (
+                {!ticket.isPaid ? (
                   <>
-                    {/* Thêm nút Deal lại khi đã bấm Xác nhận nhưng muốn đàm phán lại trước khi thanh toán */}
+                    {/* Cả Sinh viên và Mentor đều có thể Deal lại trước khi thanh toán nếu muốn trả giá tiếp */}
                     {onRevert && (
                       <button
                         type="button"
@@ -346,7 +346,7 @@ export function MentoringDiscordTicketEmbed({
                         <span>Deal lại</span>
                       </button>
                     )}
-                    {onPay && (
+                    {!ticket.isMentor && onPay ? (
                       <button
                         type="button"
                         onClick={onPay}
@@ -355,13 +355,15 @@ export function MentoringDiscordTicketEmbed({
                         <CreditCard className="h-3.5 w-3.5" />
                         <span>Thanh toán Task ngay</span>
                       </button>
+                    ) : (
+                      <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        Đã chốt • Chờ thanh toán
+                      </span>
                     )}
                   </>
                 ) : (
                   <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                    {ticket.isPaid
-                      ? 'Đã thanh toán (Task PREPARATION)'
-                      : `Đã xác nhận ${ticket.handlerName ? `(${ticket.handlerName})` : ''}`}
+                    Đã thanh toán (Task PREPARATION)
                   </span>
                 )}
               </div>
