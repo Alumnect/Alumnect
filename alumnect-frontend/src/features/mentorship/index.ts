@@ -94,6 +94,8 @@ export * from './components/MentoringDealCard'
 export * from './components/MentoringDealChatHeaderAction'
 export * from './components/MentoringDealTicketCard'
 export * from './components/MentoringChatForTask'
+export * from './components/MentoringTicketDetailModal'
+export * from './components/MentoringDiscordTicketEmbed'
 
 // UC105 exports (Thanh toán Mentoring Task)
 export * from './model/mentoringTaskTypes'
