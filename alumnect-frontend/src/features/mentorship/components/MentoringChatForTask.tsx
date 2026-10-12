@@ -8,7 +8,6 @@ import {
   Handshake,
   ChevronUp,
   Edit3,
-  CheckCircle2,
   AlertCircle,
   ArrowRight,
 } from 'lucide-react'
@@ -701,28 +700,6 @@ export function MentoringChatForTask({
                               </p>
                               <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
                                 Điều chỉnh giá, hạn chót, phạm vi hoặc hình thức học
-                              </p>
-                            </div>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsDealMenuOpen(false)
-                              setCreateProposalSource('REQUEST_ACCEPTANCE')
-                              setIsCreateDealModalOpen(true)
-                            }}
-                            className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-mint-50/80 dark:hover:bg-white/5"
-                          >
-                            <div className="rounded-lg bg-mint-100/70 p-1.5 text-mint-600 dark:bg-mint-950/60 dark:text-mint-400">
-                              <CheckCircle2 className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-plum-900 dark:text-[#f0f2f5]">
-                                Chấp nhận theo Request
-                              </p>
-                              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                Giữ nguyên điều kiện và mức giá đề xuất của học viên
                               </p>
                             </div>
                           </button>
