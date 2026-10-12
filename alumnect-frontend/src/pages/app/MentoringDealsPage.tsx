@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus, ShieldCheck } from 'lucide-react'
 import { Container, Button, EmptyState } from '@/components/ui'
@@ -24,7 +24,6 @@ function MentoringDealsContent() {
   const [selectedStatus, setSelectedStatus] = useState<MentoringDealStatus | undefined>(undefined)
   const [page, setPage] = useState(0)
   const [selectedDealForDetail, setSelectedDealForDetail] = useState<MentoringDeal | null>(null)
-  const [activeChatDeal, setActiveChatDeal] = useState<MentoringDeal | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
@@ -32,21 +31,15 @@ function MentoringDealsContent() {
   const deals = pageData?.content || []
   const totalPages = pageData?.totalPages || 0
 
-  // Hỗ trợ tải Deal trực tiếp nếu mở theo link dealId trên URL
+  // Tìm deal từ danh sách hiện tại
+  const foundInList = dealIdFromUrl ? deals.find((d) => d.id === dealIdFromUrl) || null : null
+
+  // Hỗ trợ tải Deal trực tiếp nếu mở theo link dealId trên URL mà chưa có trong danh sách trang hiện tại
   const { data: detailDataFromUrl } = useDealDetail(
-    dealIdFromUrl && !activeChatDeal ? dealIdFromUrl : undefined
+    dealIdFromUrl && !foundInList ? dealIdFromUrl : undefined
   )
 
-  useEffect(() => {
-    if (dealIdFromUrl) {
-      const foundInList = deals.find((d) => d.id === dealIdFromUrl)
-      if (foundInList) {
-        setActiveChatDeal(foundInList)
-      } else if (detailDataFromUrl?.deal) {
-        setActiveChatDeal(detailDataFromUrl.deal)
-      }
-    }
-  }, [dealIdFromUrl, deals, detailDataFromUrl])
+  const activeChatDeal = foundInList || detailDataFromUrl?.deal || null
 
   const handleOpenDetail = (deal: MentoringDeal) => {
     setSelectedDealForDetail(deal)
@@ -54,13 +47,11 @@ function MentoringDealsContent() {
   }
 
   const handleOpenChat = (deal: MentoringDeal) => {
-    setActiveChatDeal(deal)
     setSearchParams({ dealId: String(deal.id) })
   }
 
   const handleCloseChat = () => {
-    setActiveChatDeal(null)
-    setSearchParams({})
+    setSearchParams({}, { replace: true })
   }
 
   const statusTabs: { label: string; value?: MentoringDealStatus; count?: number }[] = [
