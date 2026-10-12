@@ -26,12 +26,14 @@ import {
   useRejectDeal,
   useRequestAdjustment,
   useDealByConversation,
+  useDealDetail,
 } from '../hooks/useMentoringDeals'
 import { useAuthStore } from '@/store/authStore'
 
 interface MentoringDealTicketCardProps {
-  conversationId: number
+  conversationId?: number | null
   recipientId: number | string
+  dealId?: number
   onPaymentSuccess?: () => void
 }
 
@@ -45,6 +47,7 @@ interface MentoringDealTicketCardProps {
 export function MentoringDealTicketCard({
   conversationId,
   recipientId,
+  dealId,
   onPaymentSuccess,
 }: MentoringDealTicketCardProps) {
   const currentUserId = useAuthStore((state) => state.user?.id)
@@ -63,13 +66,22 @@ export function MentoringDealTicketCard({
   const [isAdjustDialogOpen, setIsAdjustDialogOpen] = useState(false)
   const [adjustNote, setAdjustNote] = useState('')
 
-  const { data: detailData, isLoading, refetch } = useDealByConversation(conversationId)
+  const safeConvId = typeof conversationId === 'number' && conversationId > 0 ? conversationId : undefined
+  const { data: convData, isLoading: isLoadingConv, refetch: refetchConv } = useDealByConversation(safeConvId)
+  const { data: detailDataById, isLoading: isLoadingDetail, refetch: refetchDetail } = useDealDetail(dealId)
+
+  const detailData = dealId ? (detailDataById || convData) : convData
+  const isLoading = dealId ? (isLoadingDetail && !detailData) : isLoadingConv
+  const refetch = () => {
+    if (dealId) refetchDetail()
+    if (safeConvId) refetchConv()
+  }
+
+  const deal = detailData?.deal
 
   const confirmMutation = useConfirmDeal()
   const rejectMutation = useRejectDeal()
   const adjustMutation = useRequestAdjustment()
-
-  const deal = detailData?.deal
 
   const currentNumId = Number(currentUserId) || 0
   const recipientNumId = Number(recipientId) || 0

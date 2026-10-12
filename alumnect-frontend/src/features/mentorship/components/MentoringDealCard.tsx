@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
-import { Calendar, DollarSign, ArrowRight, CreditCard } from 'lucide-react'
+import { Calendar, DollarSign, ArrowRight, CreditCard, MessagesSquare } from 'lucide-react'
 import { Card, Avatar, Button } from '@/components/ui'
 import { MentoringDealBadge } from './MentoringDealBadge'
 import type { MentoringDeal } from '../model/mentoringDealTypes'
@@ -8,12 +8,19 @@ import type { MentoringDeal } from '../model/mentoringDealTypes'
 interface MentoringDealCardProps {
   deal: MentoringDeal
   onViewDetail: (deal: MentoringDeal) => void
+  onOpenChat?: (deal: MentoringDeal) => void
+  isActive?: boolean
 }
 
 /**
  * Thẻ hiển thị tóm tắt một Deal trong danh sách các thỏa thuận (UC104).
  */
-export function MentoringDealCard({ deal, onViewDetail }: MentoringDealCardProps) {
+export function MentoringDealCard({
+  deal,
+  onViewDetail,
+  onOpenChat,
+  isActive = false,
+}: MentoringDealCardProps) {
   const formattedPrice = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
@@ -26,7 +33,11 @@ export function MentoringDealCard({ deal, onViewDetail }: MentoringDealCardProps
   return (
     <Card
       hover={true}
-      className="border border-plum-900/[0.08] bg-white p-5 shadow-xs transition-all hover:shadow-md dark:bg-[#242526] dark:border-[#393a3b] space-y-4"
+      className={`border bg-white p-5 shadow-xs transition-all hover:shadow-md dark:bg-[#242526] space-y-4 ${
+        isActive
+          ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-50/20 dark:bg-brand-950/20'
+          : 'border-plum-900/[0.08] dark:border-[#393a3b]'
+      }`}
     >
       {/* Header: ID, Version, Status */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-plum-900/[0.05] pb-3 dark:border-white/5">
@@ -85,7 +96,7 @@ export function MentoringDealCard({ deal, onViewDetail }: MentoringDealCardProps
         </p>
       </div>
 
-      {/* Giá, Deadline & Nút chi tiết */}
+      {/* Giá, Deadline & Nút hành động */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-plum-900/[0.05] dark:border-white/5 text-xs">
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 font-bold text-mint-700 dark:text-mint-400">
@@ -98,27 +109,40 @@ export function MentoringDealCard({ deal, onViewDetail }: MentoringDealCardProps
           </div>
         </div>
 
-        {deal.status === 'DEAL_CONFIRMED' && !deal.isPaid ? (
-          <button
-            type="button"
-            onClick={() => onViewDetail(deal)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm shadow-emerald-500/25 hover:shadow hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
-          >
-            <CreditCard className="h-3.5 w-3.5" />
-            <span>Thanh toán ngay</span>
-            <ArrowRight className="h-3 w-3" />
-          </button>
-        ) : (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onViewDetail(deal)}
-            rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-            className="rounded-xl font-bold text-xs"
-          >
-            {deal.isPaid ? 'Xem Task' : 'Xem & Xác nhận'}
-          </Button>
-        )}
+        <div className="flex items-center gap-1.5">
+          {onOpenChat && (
+            <button
+              type="button"
+              onClick={() => onOpenChat(deal)}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200/60 dark:bg-brand-950/50 dark:text-brand-300 dark:border-brand-800/40 transition-all cursor-pointer"
+              title="Mở Chat for Task riêng"
+            >
+              <MessagesSquare className="h-3.5 w-3.5" />
+              <span>Chat for Task</span>
+            </button>
+          )}
+
+          {deal.status === 'DEAL_CONFIRMED' && !deal.isPaid ? (
+            <button
+              type="button"
+              onClick={() => onViewDetail(deal)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm shadow-emerald-500/25 transition-all cursor-pointer"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>Thanh toán</span>
+            </button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onViewDetail(deal)}
+              rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+              className="rounded-xl font-bold text-xs"
+            >
+              Chi tiết
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   )

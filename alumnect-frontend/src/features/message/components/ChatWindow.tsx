@@ -8,7 +8,6 @@ import { GroupInfoModal } from './GroupInfoModal'
 import { useAuthStore } from '@/store/authStore'
 import { useAcceptConversation, useDeleteConversation } from '../hooks/useChat'
 import { type Conversation, type Message, type SendMessagePayload, isGroupConversation } from '../model/types'
-import { MentoringDealChatHeaderAction, MentoringDealTicketCard } from '@/features/mentorship'
 
 interface ChatWindowProps {
   conversation: Conversation | null
@@ -228,12 +227,6 @@ export function ChatWindow({
 
         {/* Nút tác vụ header */}
         <div className="flex items-center gap-2">
-          {!isGroup && conversation.id && conversation.recipientId && (
-            <MentoringDealChatHeaderAction
-              conversationId={conversation.id}
-              recipientId={conversation.recipientId}
-            />
-          )}
           {isGroup && conversation.communityGroupId && (
             <Link
               to={`/app/groups/${conversation.communityGroupId}`}
@@ -288,17 +281,6 @@ export function ChatWindow({
             </Button>
           </div>
         </div>
-      )}
-
-      {/* Thẻ Deal Ticket gắn với cuộc trò chuyện 1-1 (UC104 & UC105) */}
-      {!isGroup && conversation.id && conversation.recipientId && (
-        <MentoringDealTicketCard
-          conversationId={conversation.id}
-          recipientId={conversation.recipientId}
-          onPaymentSuccess={() => {
-            scrollToBottom('smooth')
-          }}
-        />
       )}
 
       {/* Danh sách tin nhắn - cuộn độc lập mượt mà */}

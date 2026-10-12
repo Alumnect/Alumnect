@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus, ShieldCheck } from 'lucide-react'
 import { Container, Button, EmptyState } from '@/components/ui'
 import {
@@ -6,29 +7,60 @@ import {
   MentoringDealCard,
   MentoringDealActionModal,
   MentoringDealFormModal,
+  MentoringChatForTask,
   useMyDeals,
+  useDealDetail,
   type MentoringDeal,
   type MentoringDealStatus,
 } from '@/features/mentorship'
 
 /**
- * Nội dung trang danh sách Thỏa thuận Mentoring Deals (UC104).
+ * Nội dung trang danh sách Thỏa thuận Mentoring Deals & Chat for Task (UC104 & UC105).
  */
 function MentoringDealsContent() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const dealIdFromUrl = searchParams.get('dealId') ? Number(searchParams.get('dealId')) : null
+
   const [selectedStatus, setSelectedStatus] = useState<MentoringDealStatus | undefined>(undefined)
   const [page, setPage] = useState(0)
-  const [selectedDeal, setSelectedDeal] = useState<MentoringDeal | null>(null)
+  const [selectedDealForDetail, setSelectedDealForDetail] = useState<MentoringDeal | null>(null)
+  const [activeChatDeal, setActiveChatDeal] = useState<MentoringDeal | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const { data: pageData, isLoading, isError, error, refetch } = useMyDeals(selectedStatus, page, 9)
-
   const deals = pageData?.content || []
   const totalPages = pageData?.totalPages || 0
 
+  // Hỗ trợ tải Deal trực tiếp nếu mở theo link dealId trên URL
+  const { data: detailDataFromUrl } = useDealDetail(
+    dealIdFromUrl && !activeChatDeal ? dealIdFromUrl : undefined
+  )
+
+  useEffect(() => {
+    if (dealIdFromUrl) {
+      const foundInList = deals.find((d) => d.id === dealIdFromUrl)
+      if (foundInList) {
+        setActiveChatDeal(foundInList)
+      } else if (detailDataFromUrl?.deal) {
+        setActiveChatDeal(detailDataFromUrl.deal)
+      }
+    }
+  }, [dealIdFromUrl, deals, detailDataFromUrl])
+
   const handleOpenDetail = (deal: MentoringDeal) => {
-    setSelectedDeal(deal)
+    setSelectedDealForDetail(deal)
     setIsDetailModalOpen(true)
+  }
+
+  const handleOpenChat = (deal: MentoringDeal) => {
+    setActiveChatDeal(deal)
+    setSearchParams({ dealId: String(deal.id) })
+  }
+
+  const handleCloseChat = () => {
+    setActiveChatDeal(null)
+    setSearchParams({})
   }
 
   const statusTabs: { label: string; value?: MentoringDealStatus; count?: number }[] = [
@@ -68,113 +100,126 @@ function MentoringDealsContent() {
         </div>
       </div>
 
-      {/* Tabs Lọc trạng thái */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-plum-900/[0.08] pb-3 dark:border-white/10">
-        {statusTabs.map((tab) => {
-          const isActive = selectedStatus === tab.value
-          return (
-            <button
-              key={tab.label}
-              type="button"
-              onClick={() => {
-                setSelectedStatus(tab.value)
-                setPage(0)
-              }}
-              className={`rounded-2xl px-4 py-2 text-xs font-bold transition-all ${isActive
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-white text-plum-600 hover:bg-plum-50 border border-plum-900/10 dark:bg-[#242526] dark:text-[#b0b3b8] dark:border-white/10 dark:hover:bg-white/5'
-                }`}
-            >
-              {tab.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Nội dung danh sách Deals */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="h-56 rounded-3xl bg-plum-100/50 animate-pulse dark:bg-white/5"
-            />
-          ))}
-        </div>
-      ) : isError ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-6 text-center space-y-3 dark:bg-rose-950/20 dark:border-rose-900/30">
-          <p className="text-xs font-bold text-rose-700 dark:text-rose-300">
-            {error?.message || 'Không thể tải danh sách thỏa thuận Mentoring Deals.'}
-          </p>
-          <Button variant="secondary" size="sm" onClick={() => refetch()} className="font-bold">
-            Thử lại
-          </Button>
-        </div>
-      ) : deals.length === 0 ? (
-        <EmptyState
-          title="Chưa có thỏa thuận nào"
-          description={
-            selectedStatus
-              ? 'Không có thỏa thuận nào ở trạng thái này. Bạn có thể chọn tab lọc khác.'
-              : 'Hãy bắt đầu đề xuất thỏa thuận Mentoring Deal với Mentor hoặc trao đổi trong tin nhắn để tạo Deal đầu tiên.'
-          }
-          action={
-            <Button onClick={() => setIsCreateModalOpen(true)}>
-              <Plus size={16} className="mr-1.5" />
-              Tạo đề xuất Deal mới
-            </Button>
-          }
+      {/* Nếu đang mở Chat for Task riêng biệt của một Deal */}
+      {activeChatDeal ? (
+        <MentoringChatForTask
+          deal={activeChatDeal}
+          onBack={handleCloseChat}
+          onDealUpdated={refetch}
         />
       ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {deals.map((deal) => (
-              <MentoringDealCard
-                key={deal.id}
-                deal={deal}
-                onViewDetail={handleOpenDetail}
-              />
-            ))}
+        <>
+          {/* Tabs Lọc trạng thái */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-plum-900/[0.08] pb-3 dark:border-white/10">
+            {statusTabs.map((tab) => {
+              const isActive = selectedStatus === tab.value
+              return (
+                <button
+                  key={tab.label}
+                  type="button"
+                  onClick={() => {
+                    setSelectedStatus(tab.value)
+                    setPage(0)
+                  }}
+                  className={`rounded-2xl px-4 py-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-brand-600 text-white shadow-xs'
+                      : 'bg-white text-plum-600 hover:bg-plum-50 border border-plum-900/10 dark:bg-[#242526] dark:text-[#b0b3b8] dark:border-white/10 dark:hover:bg-white/5'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              )
+            })}
           </div>
 
-          {/* Phân trang */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                className="rounded-xl font-bold text-xs"
-              >
-                Trang trước
-              </Button>
-              <span className="text-xs font-bold text-plum-600 dark:text-[#b0b3b8] px-3">
-                Trang {page + 1} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => p + 1)}
-                className="rounded-xl font-bold text-xs"
-              >
-                Trang tiếp
+          {/* Nội dung danh sách Deals */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="h-56 rounded-3xl bg-plum-100/50 animate-pulse dark:bg-white/5"
+                />
+              ))}
+            </div>
+          ) : isError ? (
+            <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-6 text-center space-y-3 dark:bg-rose-950/20 dark:border-rose-900/30">
+              <p className="text-xs font-bold text-rose-700 dark:text-rose-300">
+                {error?.message || 'Không thể tải danh sách thỏa thuận Mentoring Deals.'}
+              </p>
+              <Button variant="secondary" size="sm" onClick={() => refetch()} className="font-bold">
+                Thử lại
               </Button>
             </div>
+          ) : deals.length === 0 ? (
+            <EmptyState
+              title="Chưa có thỏa thuận nào"
+              description={
+                selectedStatus
+                  ? 'Không có thỏa thuận nào ở trạng thái này. Bạn có thể chọn tab lọc khác.'
+                  : 'Hãy bắt đầu đề xuất thỏa thuận Mentoring Deal với Mentor để mở Chat for Task riêng và trao đổi chốt Deal.'
+              }
+              action={
+                <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus size={16} className="mr-1.5" />
+                  Tạo đề xuất Deal mới
+                </Button>
+              }
+            />
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {deals.map((deal) => (
+                  <MentoringDealCard
+                    key={deal.id}
+                    deal={deal}
+                    onViewDetail={handleOpenDetail}
+                    onOpenChat={handleOpenChat}
+                  />
+                ))}
+              </div>
+
+              {/* Phân trang */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    className="rounded-xl font-bold text-xs"
+                  >
+                    Trang trước
+                  </Button>
+                  <span className="text-xs font-bold text-plum-600 dark:text-[#b0b3b8] px-3">
+                    Trang {page + 1} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="rounded-xl font-bold text-xs"
+                  >
+                    Trang tiếp
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {/* Modal chi tiết và Xác nhận Deal */}
-      {isDetailModalOpen && selectedDeal && (
+      {isDetailModalOpen && selectedDealForDetail && (
         <MentoringDealActionModal
           isOpen={isDetailModalOpen}
           onClose={() => {
             setIsDetailModalOpen(false)
             refetch()
           }}
-          dealId={selectedDeal.id}
+          dealId={selectedDealForDetail.id}
         />
       )}
 
