@@ -15,9 +15,10 @@ interface PendingAttachment {
 interface MessageInputProps {
   onSendMessage: (content: string, attachments: PendingAttachment[]) => Promise<void>
   disabled?: boolean
+  leftActions?: React.ReactNode
 }
 
-export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
+export function MessageInput({ onSendMessage, disabled, leftActions }: MessageInputProps) {
   const [content, setContent] = useState('')
   const [attachments, setAttachments] = useState<PendingAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -126,6 +127,9 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
             <Paperclip size={18} />
           )}
         </button>
+
+        {/* Tiện ích mở rộng nghiệp vụ (ví dụ: Deal lại, tạo Deal Ticket) */}
+        {leftActions}
 
         {/* Khung nhập văn bản */}
         <input
