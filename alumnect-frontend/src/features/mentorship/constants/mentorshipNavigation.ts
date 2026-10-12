@@ -7,6 +7,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Search,
+  Send,
   UserCheck,
   Users,
   WalletCards,
@@ -51,6 +52,12 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         label: 'Bảng xếp hạng Mentor',
         to: '/app/mentoring/ranking',
         icon: Users,
+        audience: 'common',
+      },
+      {
+        label: 'Tạo yêu cầu Mentoring',
+        to: '/app/mentoring/requests/create',
+        icon: Send,
         audience: 'common',
       },
       {

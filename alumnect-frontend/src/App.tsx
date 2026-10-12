@@ -33,6 +33,7 @@ import { MentorStatusPage } from '@/pages/app/MentorStatusPage'
 import { MentorRankingPage } from '@/pages/app/MentorRankingPage'
 import { MentorDiscoverPage } from '@/pages/app/MentorDiscoverPage'
 import { MentorDetailPage } from '@/pages/app/MentorDetailPage'
+import { CreateMentoringRequestPage } from '@/pages/app/CreateMentoringRequestPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -91,6 +92,7 @@ function App() {
             <Route path="mentoring/mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
             <Route path="mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
             <Route path="mentors" element={<Navigate to="/app/mentoring/discover" replace />} />
+            <Route path="mentoring/requests/create" element={<ProtectedRoute><CreateMentoringRequestPage /></ProtectedRoute>} />
           </Route>
 
           {/* Direct redirect for /mentoring */}

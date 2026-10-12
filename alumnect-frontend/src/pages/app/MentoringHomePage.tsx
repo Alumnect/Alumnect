@@ -205,6 +205,16 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
             ) : null}
 
             <ButtonLink
+              to="/app/mentoring/requests/create"
+              variant={isMentorActive ? "outline" : "primary"}
+              size="sm"
+              leftIcon={<Sparkles className="h-3.5 w-3.5" />}
+              className="shadow-xs"
+            >
+              Tạo yêu cầu Mentoring
+            </ButtonLink>
+
+            <ButtonLink
               to="/app/mentoring/discover"
               variant="outline"
               size="sm"

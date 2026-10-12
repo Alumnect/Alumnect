@@ -81,3 +81,11 @@ export * from './components/MentorRequestActionCard'
 export * from './components/MentorDetailSkeleton'
 export * from './components/MentorDetailErrorState'
 
+// UC100 exports (Tạo yêu cầu Mentoring chung)
+export * from './model/mentoringRequestTypes'
+export * from './model/mentoringRequestSchema'
+export * from './api/mentoringRequestApi'
+export * from './hooks/useCreateMentoringRequest'
+export * from './components/CreateMentoringRequestForm'
+export * from './components/RequestSuccessModal'
+

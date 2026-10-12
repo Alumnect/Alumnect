@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, X, ArrowUpDown, Trophy, ArrowLeft } from 'lucide-react'
+import { Search, X, ArrowUpDown, Trophy, ArrowLeft, Send } from 'lucide-react'
 import { SelectDropdown } from '@/components/ui'
 
 interface MentorSearchHeaderProps {
@@ -65,6 +65,14 @@ export function MentorSearchHeader({
         </div>
 
         <div className="flex items-center gap-3 text-xs font-bold">
+          <Link
+            to="/app/mentoring/requests/create"
+            className="inline-flex items-center gap-1.5 text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-400"
+          >
+            <Send className="h-3.5 w-3.5" />
+            <span>Tạo yêu cầu chung</span>
+          </Link>
+          <span className="text-plum-200 dark:text-plum-700">|</span>
           <Link
             to="/app/mentoring/ranking"
             className="inline-flex items-center gap-1.5 text-gold-600 transition-colors hover:text-gold-700 dark:text-gold-400"
