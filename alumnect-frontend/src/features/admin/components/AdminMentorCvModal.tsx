@@ -1,15 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   FileText,
   ExternalLink,
   Download,
   AlertCircle,
-  Building2,
-  Briefcase,
-  User,
+  X,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Loader2,
+  RefreshCw,
+  FileCode,
+  FileSpreadsheet,
 } from 'lucide-react'
-import { Modal, Badge, Button, Skeleton } from '@/components/ui'
+import { Badge, Skeleton, toast } from '@/components/ui'
 import { useAdminMentorCv } from '../hooks/useAdmin'
+import { renderAsync } from 'docx-preview'
 
 interface AdminMentorCvModalProps {
   isOpen: boolean
@@ -18,210 +25,550 @@ interface AdminMentorCvModalProps {
   mentorNameFallback?: string
 }
 
-/**
- * Modal Xem CV Cố vấn dành cho Quản trị viên.
- */
+type CvFormatType = 'PDF' | 'DOCX' | 'DOC' | 'UNKNOWN'
+type DocViewerMode = 'CLIENT_DOCX' | 'OFFICE_ONLINE' | 'GOOGLE_DOCS'
+
 export function AdminMentorCvModal({
   isOpen,
   onClose,
   mentorProfileId,
   mentorNameFallback,
 }: AdminMentorCvModalProps) {
-  const { data: cvData, isLoading, isError, error } = useAdminMentorCv(mentorProfileId)
-  const [previewError, setPreviewError] = useState(false)
+  // Lấy dữ liệu CV từ API
+  const { data: cvData, isLoading, isError, error, refetch } = useAdminMentorCv(mentorProfileId)
 
-  if (!isOpen) return null
+  // Document Viewer States
+  const [zoom, setZoom] = useState<number>(100)
+  const [previewLoading, setPreviewLoading] = useState<boolean>(true)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [docViewerMode, setDocViewerMode] = useState<DocViewerMode>('CLIENT_DOCX')
+  const [isDownloading, setIsDownloading] = useState<boolean>(false)
+
+  // Ref container cho docx-preview
+  const docxContainerRef = useRef<HTMLDivElement>(null)
 
   const cvUrl = cvData?.cvUrl || cvData?.cvFileKey
 
-  const getStatusText = (status?: string) => {
-    switch (status) {
-      case 'ACTIVE': return 'Đang hoạt động'
-      case 'PAYMENT_PENDING':
-      case 'PENDING_PAYMENT': return 'Chờ thanh toán'
-      case 'PENDING': return 'Chờ duyệt'
-      case 'INACTIVE': return 'Ngừng hoạt động'
-      default: return status || 'Chưa kích hoạt'
+  // Trích xuất định dạng và tên file
+  const getFileExtension = (url?: string | null): string => {
+    if (!url) return ''
+    try {
+      const cleanUrl = url.split('?')[0]
+      const lastDot = cleanUrl.lastIndexOf('.')
+      if (lastDot !== -1) {
+        return cleanUrl.substring(lastDot + 1).toLowerCase()
+      }
+    } catch {
+      // fallback
+    }
+    return ''
+  }
+
+  const fileExt = getFileExtension(cvUrl)
+
+  const cvFormat: CvFormatType = (() => {
+    if (fileExt === 'pdf') return 'PDF'
+    if (fileExt === 'docx') return 'DOCX'
+    if (fileExt === 'doc') return 'DOC'
+    if (cvUrl?.toLowerCase().includes('.pdf')) return 'PDF'
+    if (cvUrl?.toLowerCase().includes('.docx')) return 'DOCX'
+    if (cvUrl?.toLowerCase().includes('.doc')) return 'DOC'
+    return 'PDF'
+  })()
+
+  const fileName = (() => {
+    if (!cvUrl) return 'CV_Mentor.pdf'
+    try {
+      const cleanUrl = cvUrl.split('?')[0]
+      const rawName = cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1)
+      if (rawName && rawName.trim().length > 0) {
+        return decodeURIComponent(rawName)
+      }
+    } catch {
+      // fallback
+    }
+    const ext = fileExt || (cvFormat === 'DOCX' ? 'docx' : cvFormat === 'DOC' ? 'doc' : 'pdf')
+    const safeName = (cvData?.mentorName || mentorNameFallback || 'Mentor').replace(/\s+/g, '_')
+    return `CV_${safeName}.${ext}`
+  })()
+
+  // Reset zoom và preview state khi mở modal hoặc thay đổi mentor
+  useEffect(() => {
+    if (isOpen) {
+      setZoom(100)
+      setPreviewLoading(true)
+      setPreviewError(null)
+      setDocViewerMode(cvFormat === 'DOCX' ? 'CLIENT_DOCX' : 'OFFICE_ONLINE')
+    }
+  }, [isOpen, mentorProfileId, cvUrl, cvFormat])
+
+  // Khóa cuộn trang khi modal mở & xử lý phím Escape
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose()
+        }
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => {
+        document.body.style.overflow = ''
+        window.removeEventListener('keydown', handleKeyDown)
+      }
+    } else {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen, onClose])
+
+  // Render DOCX trực tiếp bằng docx-preview
+  const renderDocxFile = useCallback(async () => {
+    if (!cvUrl || !docxContainerRef.current) return
+    setPreviewLoading(true)
+    setPreviewError(null)
+
+    try {
+      docxContainerRef.current.innerHTML = ''
+      const res = await fetch(cvUrl)
+      if (!res.ok) {
+        throw new Error(`Không thể tải tệp (HTTP ${res.status})`)
+      }
+      const blob = await res.blob()
+
+      await renderAsync(blob, docxContainerRef.current, undefined, {
+        inWrapper: true,
+        ignoreWidth: false,
+        ignoreHeight: false,
+        breakPages: true,
+        renderHeaders: true,
+        renderFooters: true,
+      })
+
+      setPreviewLoading(false)
+    } catch (err: any) {
+      console.warn('DOCX render error:', err)
+      setDocViewerMode('OFFICE_ONLINE')
+      setPreviewLoading(false)
+    }
+  }, [cvUrl])
+
+  useEffect(() => {
+    if (isOpen && cvFormat === 'DOCX' && docViewerMode === 'CLIENT_DOCX' && cvUrl) {
+      renderDocxFile()
+    }
+  }, [isOpen, cvFormat, docViewerMode, cvUrl, renderDocxFile])
+
+  // Zoom handlers
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 15, 200))
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 15, 60))
+  const handleResetZoom = () => setZoom(100)
+
+  // Xử lý tải file gốc
+  const handleDownloadCv = async () => {
+    if (!cvUrl) {
+      toast.error('Không tìm thấy đường dẫn tệp CV hợp lệ')
+      return
+    }
+
+    try {
+      setIsDownloading(true)
+      const res = await fetch(cvUrl)
+      if (!res.ok) {
+        throw new Error('Lỗi khi tải tệp từ máy chủ lưu trữ')
+      }
+      const blob = await res.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(blobUrl)
+
+      toast.success(`Đã tải xuống: ${fileName}`)
+    } catch {
+      const a = document.createElement('a')
+      a.href = cvUrl
+      a.download = fileName
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } finally {
+      setIsDownloading(false)
     }
   }
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Hồ sơ & CV chi tiết của Cố vấn"
-    >
-      <div className="space-y-4 pt-1">
-        {/* Loading Skeleton */}
-        {isLoading && (
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-14 w-14 rounded-full" />
-              <div className="space-y-2 flex-1">
-                <Skeleton className="h-5 w-1/3 rounded-lg" />
-                <Skeleton className="h-4 w-1/2 rounded-lg" />
-              </div>
-            </div>
-            <Skeleton className="h-64 w-full rounded-2xl" />
-          </div>
-        )}
+  if (!isOpen) return null
 
-        {/* Error Exception Flow: CV không tồn tại hoặc lỗi kết nối */}
-        {(isError || (!isLoading && !cvUrl)) && (
-          <div className="flex flex-col items-center justify-center p-8 text-center bg-rose-50/60 rounded-2xl border border-rose-200 text-rose-900 space-y-3">
-            <div className="p-3 bg-rose-100 rounded-full">
-              <AlertCircle className="h-8 w-8 text-rose-600" />
+  // URL nhúng cho trình xem ngoài
+  const officeOnlineUrl = cvUrl
+    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(cvUrl)}`
+    : ''
+  const googleDocsUrl = cvUrl
+    ? `https://docs.google.com/viewer?url=${encodeURIComponent(cvUrl)}&embedded=true`
+    : ''
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-slate-900/50 transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Main Modal Container */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="relative z-10 w-full max-w-[1200px] w-[92vw] h-[90vh] max-h-[90vh] bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col overflow-hidden text-slate-800"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <header className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between gap-4 shrink-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-[20px] font-semibold text-slate-900 leading-tight">
+                CV Cố vấn
+              </h2>
+              {cvData?.mentorStatus && (
+                <Badge
+                  tone={cvData.mentorStatus === 'ACTIVE' ? 'success' : 'gold'}
+                  className="text-[11px] font-medium px-2 py-0.5"
+                >
+                  {cvData.mentorStatus === 'ACTIVE' ? 'Đang hoạt động' : cvData.mentorStatus}
+                </Badge>
+              )}
             </div>
-            <h4 className="font-bold text-base">Không thể tải tệp CV của Cố vấn</h4>
-            <p className="text-xs text-rose-700 max-w-sm">
-              {(error as any)?.message ||
-                'Cố vấn này hiện chưa cập nhật hoặc tải lên tệp CV chuyên môn trong hệ thống.'}
+            <p className="text-[13px] text-slate-500 mt-0.5 truncate">
+              {cvData?.mentorName || mentorNameFallback || 'Cố vấn'}
+              {cvData?.mentorEmail && ` · ${cvData.mentorEmail}`}
+              {cvData?.currentPosition && ` · ${cvData.currentPosition}`}
             </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onClose}
-              className="mt-2 rounded-xl font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 cursor-pointer"
-            >
-              Đóng cửa sổ
-            </Button>
           </div>
-        )}
 
-        {/* Main Content when CV Data is loaded */}
-        {!isLoading && cvData && cvUrl && (
-          <div className="space-y-4">
-            {/* Header info card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <div className="flex items-center gap-3.5">
-                <div className="relative">
-                  {cvData.avatarUrl ? (
-                    <img
-                      src={cvData.avatarUrl}
-                      alt={cvData.mentorName}
-                      className="h-14 w-14 rounded-full object-cover ring-2 ring-brand-500/20 shadow-sm"
-                    />
-                  ) : (
-                    <div className="h-14 w-14 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold text-lg">
-                      <User className="h-7 w-7 text-brand-600" />
-                    </div>
-                  )}
-                </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            aria-label="Đóng"
+          >
+            <X size={18} />
+          </button>
+        </header>
 
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-extrabold text-plum-900">
-                      {cvData.mentorName || mentorNameFallback || 'Cố vấn AlumNect'}
-                    </h3>
-                    <Badge
-                      tone={cvData.mentorStatus === 'ACTIVE' ? 'mint' : 'gold'}
-                      size="sm"
-                      className="font-bold"
-                    >
-                      {getStatusText(cvData.mentorStatus)}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-plum-500 font-medium">{cvData.mentorEmail}</p>
+        {/* Action Toolbar */}
+        <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          {/* File format indicator & name */}
+          <div className="flex items-center gap-2 min-w-0">
+            {cvFormat === 'PDF' ? (
+              <FileText className="h-4 w-4 text-red-500 shrink-0" />
+            ) : cvFormat === 'DOCX' ? (
+              <FileCode className="h-4 w-4 text-blue-500 shrink-0" />
+            ) : (
+              <FileSpreadsheet className="h-4 w-4 text-indigo-500 shrink-0" />
+            )}
+            <span className="font-medium text-xs text-slate-800 truncate max-w-[240px] sm:max-w-md">
+              {fileName}
+            </span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold uppercase bg-slate-200 text-slate-700">
+              {cvFormat}
+            </span>
+          </div>
 
-                  <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[11px] font-semibold text-plum-600">
-                    {cvData.currentPosition && (
-                      <span className="flex items-center gap-1">
-                        <Briefcase className="h-3.5 w-3.5 text-brand-500" />
-                        {cvData.currentPosition}
-                      </span>
-                    )}
-                    {cvData.currentCompany && (
-                      <span className="flex items-center gap-1">
-                        <Building2 className="h-3.5 w-3.5 text-brand-500" />
-                        {cvData.currentCompany}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+          {/* Controls: Zoom, View Switcher & Actions */}
+          <div className="flex items-center gap-2">
+            {/* Zoom Controls */}
+            <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                disabled={zoom <= 60 || !cvUrl}
+                className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded disabled:opacity-30 transition-colors"
+                title="Thu nhỏ"
+              >
+                <ZoomOut className="h-3.5 w-3.5" />
+              </button>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 self-end sm:self-center">
-                <a
-                  href={cvUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#F27024] bg-orange-50 hover:bg-orange-100 rounded-xl border border-orange-200/80 transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" /> Mở trong tab mới
-                </a>
-                <a
-                  href={cvUrl}
-                  download
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-[#F27024] to-[#ff8c38] hover:from-[#e05f13] hover:to-[#f27024] rounded-xl shadow-sm transition-all"
-                >
-                  <Download className="h-3.5 w-3.5" /> Tải về
-                </a>
-              </div>
+              <span className="px-2 text-[11px] font-mono font-medium text-slate-700 min-w-[42px] text-center select-none">
+                {zoom}%
+              </span>
+
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                disabled={zoom >= 200 || !cvUrl}
+                className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded disabled:opacity-30 transition-colors"
+                title="Phóng to"
+              >
+                <ZoomIn className="h-3.5 w-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetZoom}
+                disabled={zoom === 100 || !cvUrl}
+                className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded disabled:opacity-30 transition-colors border-l border-slate-100"
+                title="Đặt lại 100%"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </button>
             </div>
 
-            {/* Supported fields tags */}
-            {cvData.supportedFields && cvData.supportedFields.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-bold text-plum-700 mr-1">Lĩnh vực cố vấn:</span>
-                {cvData.supportedFields.map((field, idx) => (
-                  <span
-                    key={idx}
-                    className="rounded-lg bg-brand-50/80 text-brand-700 border border-brand-200/60 px-2.5 py-0.5 text-[11px] font-bold"
+            {/* Switcher cho DOCX */}
+            {(cvFormat === 'DOCX' || cvFormat === 'DOC') && (
+              <div className="hidden sm:flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-0.5 text-[11px]">
+                {cvFormat === 'DOCX' && (
+                  <button
+                    type="button"
+                    onClick={() => setDocViewerMode('CLIENT_DOCX')}
+                    className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                      docViewerMode === 'CLIENT_DOCX'
+                        ? 'bg-slate-900 text-white font-medium'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
                   >
-                    {field}
-                  </span>
-                ))}
+                    Xem trực tiếp
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setDocViewerMode('OFFICE_ONLINE')}
+                  className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                    docViewerMode === 'OFFICE_ONLINE'
+                      ? 'bg-slate-900 text-white font-medium'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  Office Online
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocViewerMode('GOOGLE_DOCS')}
+                  className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                    docViewerMode === 'GOOGLE_DOCS'
+                      ? 'bg-slate-900 text-white font-medium'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  Google Viewer
+                </button>
               </div>
             )}
 
-            {/* Embedded CV Document Viewer */}
-            <div className="rounded-2xl border border-plum-900/10 overflow-hidden bg-slate-100 shadow-inner">
-              <div className="bg-slate-200/80 px-4 py-2 flex items-center justify-between border-b border-slate-300/80 text-xs font-bold text-slate-700">
-                <span className="flex items-center gap-1.5">
-                  <FileText className="h-4 w-4 text-brand-600" /> Xem trực tiếp tệp CV
-                </span>
-                <span className="text-[11px] text-slate-500 font-normal">Định dạng PDF / Tài liệu</span>
-              </div>
+            {/* Mở tab mới */}
+            {cvUrl && (
+              <a
+                href={cvUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors inline-flex items-center"
+                title="Mở tab mới"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
 
-              {!previewError ? (
-                <iframe
-                  src={cvUrl}
-                  title="Xem trước CV Cố vấn"
-                  className="w-full h-[450px] border-none"
-                  onError={() => setPreviewError(true)}
-                />
+            {/* Nút Tải CV */}
+            <button
+              type="button"
+              disabled={!cvUrl || isLoading || isDownloading}
+              onClick={handleDownloadCv}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#F27024] hover:bg-[#d95d16] rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isDownloading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <div className="p-8 text-center space-y-2">
-                  <p className="text-xs font-bold text-slate-700">
-                    Trình duyệt không hỗ trợ xem trực tiếp định dạng tệp này.
-                  </p>
-                  <a
-                    href={cvUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:underline cursor-pointer"
+                <Download className="h-3.5 w-3.5" />
+              )}
+              <span>{isDownloading ? 'Đang tải...' : 'Tải CV'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Document Viewer Canvas */}
+        <div className="flex-1 overflow-auto bg-slate-100 p-4 relative flex flex-col items-center">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="w-full max-w-md my-auto p-6 bg-white rounded-xl border border-slate-200 shadow-sm text-center space-y-3">
+              <Loader2 className="h-7 w-7 text-[#F27024] animate-spin mx-auto" />
+              <h4 className="font-semibold text-sm text-slate-800">
+                Đang tải hồ sơ CV Cố vấn...
+              </h4>
+              <div className="space-y-1.5 pt-1">
+                <Skeleton className="h-3.5 w-3/4 mx-auto" />
+                <Skeleton className="h-3.5 w-1/2 mx-auto" />
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {(isError || (!isLoading && !cvUrl)) && (
+            <div className="w-full max-w-md my-auto p-6 text-center bg-white rounded-xl border border-slate-200 shadow-sm space-y-3">
+              <AlertCircle className="h-8 w-8 text-amber-500 mx-auto" />
+              <h4 className="font-semibold text-sm text-slate-900">
+                Không thể tải tệp CV của Cố vấn
+              </h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {(error as any)?.message ||
+                  'Cố vấn này hiện chưa cập nhật hoặc chưa có tệp CV trong hệ thống.'}
+              </p>
+              <div className="pt-2 flex justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => refetch()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg cursor-pointer"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Thử lại
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg cursor-pointer"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Viewer Canvas when CV URL is loaded */}
+          {!isLoading && cvUrl && (
+            <div className="w-full h-full flex flex-col items-center">
+              {/* PDF Viewer */}
+              {cvFormat === 'PDF' && (
+                <div
+                  className="w-full h-full flex justify-center transition-transform duration-150"
+                  style={{
+                    transform: `scale(${zoom / 100})`,
+                    transformOrigin: 'top center',
+                  }}
+                >
+                  <iframe
+                    src={`${cvUrl}#toolbar=1&navpanes=1&scrollbar=1&zoom=${zoom}`}
+                    title="Xem trước CV PDF"
+                    className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                    onLoad={() => setPreviewLoading(false)}
+                    onError={() => {
+                      setPreviewLoading(false)
+                      setPreviewError('Trình duyệt không hỗ trợ xem trực tiếp PDF này.')
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* DOCX Viewer */}
+              {cvFormat === 'DOCX' && (
+                <>
+                  {docViewerMode === 'CLIENT_DOCX' ? (
+                    <div className="w-full h-full overflow-auto flex flex-col items-center">
+                      {previewLoading && (
+                        <div className="my-12 flex flex-col items-center gap-2">
+                          <Loader2 className="h-7 w-7 text-[#F27024] animate-spin" />
+                          <span className="text-xs font-medium text-slate-600">
+                            Đang xử lý nội dung Word (.DOCX)...
+                          </span>
+                        </div>
+                      )}
+                      <div
+                        ref={docxContainerRef}
+                        className="docx-viewer-wrapper w-full max-w-[850px] transition-transform duration-150 py-2"
+                        style={{
+                          transform: `scale(${zoom / 100})`,
+                          transformOrigin: 'top center',
+                        }}
+                      />
+                    </div>
+                  ) : docViewerMode === 'OFFICE_ONLINE' ? (
+                    <div
+                      className="w-full h-full flex justify-center transition-transform duration-150"
+                      style={{
+                        transform: `scale(${zoom / 100})`,
+                        transformOrigin: 'top center',
+                      }}
+                    >
+                      <iframe
+                        src={officeOnlineUrl}
+                        title="Office Online Viewer DOCX"
+                        className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-full h-full flex justify-center transition-transform duration-150"
+                      style={{
+                        transform: `scale(${zoom / 100})`,
+                        transformOrigin: 'top center',
+                      }}
+                    >
+                      <iframe
+                        src={googleDocsUrl}
+                        title="Google Docs Viewer DOCX"
+                        className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* DOC Viewer */}
+              {cvFormat === 'DOC' && (
+                <div
+                  className="w-full h-full flex justify-center transition-transform duration-150"
+                  style={{
+                    transform: `scale(${zoom / 100})`,
+                    transformOrigin: 'top center',
+                  }}
+                >
+                  <iframe
+                    src={docViewerMode === 'GOOGLE_DOCS' ? googleDocsUrl : officeOnlineUrl}
+                    title="Xem trước tài liệu Word DOC"
+                    className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                  />
+                </div>
+              )}
+
+              {/* Preview error fallback notice */}
+              {previewError && (
+                <div className="absolute inset-x-4 top-4 mx-auto max-w-lg p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm text-xs text-amber-900 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span>{previewError} Hãy nhấn nút "Tải CV" để xem tệp gốc.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewError(null)
+                      if (cvFormat === 'DOCX') renderDocxFile()
+                    }}
+                    className="px-2 py-1 rounded bg-white border border-amber-300 text-xs font-medium cursor-pointer"
                   >
-                    Nhấn vào đây để xem trực tiếp tệp CV <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                    Thử lại
+                  </button>
                 </div>
               )}
             </div>
+          )}
+        </div>
 
-            {/* Modal Close Footer */}
-            <div className="flex justify-end pt-3 border-t border-plum-900/10">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={onClose}
-                className="rounded-2xl font-bold bg-white text-slate-700 hover:bg-orange-50 hover:text-[#F27024] hover:border-[#F27024]/40 border border-slate-200 shadow-sm transition-all cursor-pointer"
-              >
-                Đóng cửa sổ
-              </Button>
-            </div>
+        {/* Footer */}
+        <footer className="px-6 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 shrink-0">
+          <div>
+            Bản xem trước tệp tài liệu phục vụ quản trị và kiểm duyệt hồ sơ.
           </div>
-        )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+          >
+            Đóng
+          </button>
+        </footer>
       </div>
-    </Modal>
+    </div>,
+    document.body
   )
 }
