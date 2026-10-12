@@ -7367,6 +7367,194 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "99. Xem chi tiết Mentor (UC99)",
+            "item": [
+                {
+                    "name": "99.0 Đăng nhập lấy Token xác thực (Student / Alumni)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.data && jsonData.data.token) {",
+                                    "    pm.collectionVariables.set(\"accessToken\", jsonData.data.token);",
+                                    "    pm.collectionVariables.set(\"jwtToken\", jsonData.data.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"student@fpt.edu.vn\",\n    \"password\": \"Pass123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Đăng nhập để lấy JWT token gán vào accessToken và jwtToken"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.1 Xem chi tiết Mentor ACTIVE - Thành công (TC-01)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "1"
+                            ]
+                        },
+                        "description": "Lấy thông tin chi tiết công khai của Mentor ACTIVE. Kiểm tra dữ liệu trả về gồm Profile Header, About, Skills, Supported Fields, Career Timeline, Reputation, Completed Tasks và canReceiveRequest = true."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.2 Xem chi tiết Mentor theo đường dẫn /mentoring/mentors/{mentorId} (TC-02)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/mentors/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "mentors",
+                                "1"
+                            ]
+                        },
+                        "description": "Kiểm tra đường dẫn chuẩn thuộc module Hướng dẫn & Hỗ trợ (Mentoring)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.3 Xem chi tiết Mentor qua fallback userId (TC-03)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/101",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "101"
+                            ]
+                        },
+                        "description": "Kiểm tra cơ chế định danh linh hoạt: fallback tìm kiếm theo user_id nếu không khớp mentor_profile_id"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.4 Xem chi tiết Mentor không ACTIVE hoặc hết hạn (TC-07)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "2"
+                            ]
+                        },
+                        "description": "Mentor không ACTIVE: vẫn xem được thông tin công khai nếu có, nhưng canReceiveRequest = false và có availabilityReason giải thích"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.5 Xem chi tiết Mentor không tồn tại - Thất bại 404 (TC-08)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/99999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "99999"
+                            ]
+                        },
+                        "description": "Định danh không tồn tại trong hệ thống. Kỳ vọng HTTP 404 Not Found"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.6 Xem chi tiết Mentor không truyền JWT Token - Thất bại 401 (TC-09)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "1"
+                            ]
+                        },
+                        "description": "Yêu cầu không có Bearer token. Kỳ vọng HTTP 401 / 403 từ Spring Security"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

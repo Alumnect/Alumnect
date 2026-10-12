@@ -57,7 +57,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           <div className="shrink-0">{getRankBadge(mentor.rank)}</div>
 
           <Link
-            to={`/app/profile?userId=${mentor.userId}`}
+            to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
             className="shrink-0 transition-transform duration-200 hover:scale-105"
           >
             <Avatar
@@ -71,7 +71,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Link
-                to={`/app/profile?userId=${mentor.userId}`}
+                to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
                 className="font-heading text-sm sm:text-base font-extrabold text-plum-900 hover:text-brand-600 transition-colors truncate dark:text-[#e4e6eb] dark:hover:text-brand-400"
               >
                 {mentor.fullName}
@@ -120,12 +120,12 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
             </div>
           )}
 
-          {/* Nút Xem hồ sơ */}
+          {/* Nút Xem chi tiết hồ sơ Mentor */}
           <Link
-            to={`/app/profile?userId=${mentor.userId}`}
-            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-plum-900/5 px-3 py-2 text-xs font-bold text-plum-700 transition-colors hover:bg-brand-500 hover:text-white sm:col-auto sm:py-1.5 dark:bg-white/5 dark:text-[#e4e6eb] dark:hover:bg-brand-600"
+            to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
+            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 px-3.5 py-2 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-500 hover:text-white sm:col-auto sm:py-1.5 dark:bg-brand-950/40 dark:text-brand-300 dark:hover:bg-brand-600"
           >
-            <span>Hồ sơ</span>
+            <span>Chi tiết</span>
             <ExternalLink className="h-3 w-3" />
           </Link>
         </div>

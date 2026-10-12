@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, AlertCircle, RefreshCw, SearchX } from 'lucide-react'
-import { EmptyState, Skeleton } from '@/components/ui'
+import { AlertCircle, RefreshCw, SearchX } from 'lucide-react'
+import { EmptyState, Skeleton, Pagination } from '@/components/ui'
 import { MentorCard } from './MentorCard'
 import type { MentorSearchPageResponse } from '../model/mentorSearchTypes'
 
@@ -121,65 +121,12 @@ export function MentorDirectoryList({
         ))}
       </div>
 
-      {/* Điều khiển phân trang (Pagination) */}
-      {totalPages > 1 && (
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-plum-900/[0.07] pt-4 sm:flex-row dark:border-[#393a3b]">
-          <span className="text-xs font-medium text-plum-500 dark:text-[#8f9399]">
-            Trang {currentPage + 1} / {totalPages} (Tổng số {data.totalElements} Mentor)
-          </span>
-
-          <div className="flex items-center gap-1.5">
-            {/* Nút trang trước */}
-            <button
-              type="button"
-              disabled={currentPage === 0}
-              onClick={() => onPageChange(currentPage - 1)}
-              aria-label="Trang trước"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-plum-900/10 bg-white text-plum-700 shadow-2xs transition-colors hover:bg-brand-50 hover:text-brand-700 disabled:pointer-events-none disabled:opacity-40 dark:border-[#393a3b] dark:bg-[#2b2c2d] dark:text-[#e4e6eb]"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-
-            {/* Các số trang */}
-            {Array.from({ length: totalPages }, (_, i) => i)
-              .filter((i) => i === 0 || i === totalPages - 1 || Math.abs(i - currentPage) <= 1)
-              .map((i, index, array) => {
-                const prev = array[index - 1]
-                const showEllipsis = prev !== undefined && i - prev > 1
-
-                return (
-                  <div key={i} className="flex items-center">
-                    {showEllipsis && (
-                      <span className="px-1 text-xs text-plum-400">...</span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => onPageChange(i)}
-                      className={`h-9 min-w-9 rounded-xl px-2 text-xs font-bold transition-all ${
-                        currentPage === i
-                          ? 'bg-brand-600 text-white shadow-xs'
-                          : 'border border-plum-900/10 bg-white text-plum-700 hover:bg-brand-50 hover:text-brand-700 dark:border-[#393a3b] dark:bg-[#2b2c2d] dark:text-[#e4e6eb]'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  </div>
-                )
-              })}
-
-            {/* Nút trang tiếp theo */}
-            <button
-              type="button"
-              disabled={currentPage >= totalPages - 1}
-              onClick={() => onPageChange(currentPage + 1)}
-              aria-label="Trang sau"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-plum-900/10 bg-white text-plum-700 shadow-2xs transition-colors hover:bg-brand-50 hover:text-brand-700 disabled:pointer-events-none disabled:opacity-40 dark:border-[#393a3b] dark:bg-[#2b2c2d] dark:text-[#e4e6eb]"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Điều khiển phân trang chuẩn (Pagination) */}
+      <Pagination
+        page={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
     </div>
   )
 }

@@ -56,7 +56,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
           <div className="space-y-3">
             <div className="relative mx-auto inline-block">
               <Link
-                to={`/app/profile?userId=${mentor.userId}`}
+                to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
                 className="block transition-transform duration-300 hover:scale-105"
               >
                 <Avatar
@@ -71,7 +71,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
 
             <div>
               <Link
-                to={`/app/profile?userId=${mentor.userId}`}
+                to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
                 className="line-clamp-1 text-base font-extrabold text-plum-900 transition-colors hover:text-brand-600 dark:text-[#e4e6eb] dark:hover:text-brand-400"
               >
                 {mentor.fullName}
@@ -118,10 +118,10 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
 
           <div className="pt-3">
             <Link
-              to={`/app/profile?userId=${mentor.userId}`}
+              to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-plum-900/5 py-2 text-xs font-bold text-plum-700 transition-colors hover:bg-brand-500 hover:text-white dark:bg-white/5 dark:text-[#e4e6eb] dark:hover:bg-brand-600"
             >
-              <span>Xem hồ sơ</span>
+              <span>Xem chi tiết cố vấn</span>
               <ArrowRight className="h-3 w-3" />
             </Link>
           </div>

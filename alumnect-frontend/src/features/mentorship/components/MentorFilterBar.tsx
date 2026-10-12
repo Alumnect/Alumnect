@@ -99,16 +99,16 @@ export function MentorFilterBar({
   ]
 
   return (
-    <div className="relative z-30 rounded-3xl border border-plum-900/10 bg-white/70 p-4 shadow-sm backdrop-blur-md space-y-3 dark:border-[#393a3b] dark:bg-[#242526]/70">
+    <div className="relative z-10 rounded-2xl border border-plum-900/10 bg-white/70 p-3 sm:p-3.5 shadow-2xs backdrop-blur-md space-y-2.5 dark:border-[#393a3b] dark:bg-[#242526]/70">
       {/* Tiêu đề & nút Reset bộ lọc */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-brand-600" />
+          <Filter className="h-3.5 w-3.5 text-brand-600" />
           <span className="text-xs font-bold uppercase tracking-wider text-plum-700 dark:text-[#e4e6eb]">
             Bộ lọc tiêu chí
           </span>
           {activeFilterCount > 0 && (
-            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
               {activeFilterCount} đang áp dụng
             </span>
           )}
@@ -127,7 +127,7 @@ export function MentorFilterBar({
       </div>
 
       {/* Grid 4 dropdowns chuẩn đồng bộ với hệ thống */}
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {/* 1. Lĩnh vực / Ngành nghề */}
         <SelectDropdown
           value={params.fieldId ?? ''}

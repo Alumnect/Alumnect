@@ -102,7 +102,7 @@ export function SelectDropdown<T extends string | number = string | number>({
   const shouldSearch = searchable || options.length > 8
 
   return (
-    <div className={cn('relative w-full', open ? 'z-50' : 'z-auto', className)} ref={containerRef}>
+    <div className={cn('relative w-full', open ? 'z-30' : 'z-auto', className)} ref={containerRef}>
       {/* Trigger Button */}
       <button
         type="button"
@@ -148,7 +148,7 @@ export function SelectDropdown<T extends string | number = string | number>({
             exit={{ opacity: 0, scale: 0.96, y: actualDirection === 'top' ? 4 : -4 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
             className={cn(
-              'absolute z-50 min-w-full w-max max-w-[calc(100vw-2rem)] sm:max-w-xs overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-2xl shadow-plum-950/20 dark:border-[#393a3b] dark:bg-[#242526] dark:shadow-black/70',
+              'absolute z-30 min-w-full w-max max-w-[calc(100vw-2rem)] sm:max-w-xs overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-2xl shadow-plum-950/20 dark:border-[#393a3b] dark:bg-[#242526] dark:shadow-black/70',
               actualAlign === 'right' ? 'right-0 left-auto' : 'left-0',
               actualDirection === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5',
               panelClassName

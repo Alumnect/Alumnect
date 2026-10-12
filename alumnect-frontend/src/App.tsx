@@ -32,6 +32,7 @@ import { MentorSubscriptionPage } from '@/pages/app/MentorSubscriptionPage'
 import { MentorStatusPage } from '@/pages/app/MentorStatusPage'
 import { MentorRankingPage } from '@/pages/app/MentorRankingPage'
 import { MentorDiscoverPage } from '@/pages/app/MentorDiscoverPage'
+import { MentorDetailPage } from '@/pages/app/MentorDetailPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -87,6 +88,8 @@ function App() {
             <Route path="mentoring/ranking" element={<ProtectedRoute><MentorRankingPage /></ProtectedRoute>} />
             <Route path="mentoring/discover" element={<ProtectedRoute><MentorDiscoverPage /></ProtectedRoute>} />
             <Route path="mentoring/search" element={<Navigate to="/app/mentoring/discover" replace />} />
+            <Route path="mentoring/mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
+            <Route path="mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
             <Route path="mentors" element={<Navigate to="/app/mentoring/discover" replace />} />
           </Route>
 
