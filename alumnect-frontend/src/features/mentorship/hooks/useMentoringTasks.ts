@@ -75,10 +75,10 @@ export function useCancelTaskPayment() {
   return useMutation<
     MentoringTaskPaymentStatusResponse,
     Error,
-    { paymentId: number; reason?: string }
+    { orderCode: number; reason?: string }
   >({
-    mutationFn: ({ paymentId, reason }) =>
-      mentoringTaskApi.cancelPayment(paymentId, reason),
+    mutationFn: ({ orderCode, reason }) =>
+      mentoringTaskApi.cancelPayment(orderCode, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.all })
       queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.all })
@@ -91,16 +91,16 @@ export function useCancelTaskPayment() {
  * Tự động dừng polling khi thanh toán thành công (PAID) hoặc hủy/hết hạn.
  */
 export function useTaskPaymentPolling(
-  paymentId?: number,
+  orderCode?: number,
   isEnabled = false,
   onPaid?: (res: MentoringTaskPaymentStatusResponse) => void
 ) {
   const queryClient = useQueryClient()
 
   const query = useQuery<MentoringTaskPaymentStatusResponse, Error>({
-    queryKey: TASK_QUERY_KEYS.paymentStatus(paymentId),
-    queryFn: () => mentoringTaskApi.checkPaymentStatus(paymentId!),
-    enabled: isEnabled && typeof paymentId === 'number' && paymentId > 0,
+    queryKey: TASK_QUERY_KEYS.paymentStatus(orderCode),
+    queryFn: () => mentoringTaskApi.checkPaymentStatus(orderCode!),
+    enabled: isEnabled && typeof orderCode === 'number' && orderCode > 0,
     refetchInterval: (queryResult) => {
       const data = queryResult.state.data
       if (!data) return 3000

@@ -30,10 +30,10 @@ export const mentoringTaskApi = {
    * Tra cứu trạng thái thanh toán & kích hoạt Task (Polling fallback).
    */
   checkPaymentStatus: async (
-    paymentId: number
+    orderCode: number
   ): Promise<MentoringTaskPaymentStatusResponse> => {
     const res = await http.get<any, ApiResponse<MentoringTaskPaymentStatusResponse>>(
-      `/mentoring/task-payments/${paymentId}/status`
+      `/mentoring/task-payments/${orderCode}/status`
     )
     return res.data
   },
@@ -42,11 +42,11 @@ export const mentoringTaskApi = {
    * Hủy phiên thanh toán chưa hoàn tất.
    */
   cancelPayment: async (
-    paymentId: number,
+    orderCode: number,
     reason?: string
   ): Promise<MentoringTaskPaymentStatusResponse> => {
     const res = await http.post<any, ApiResponse<MentoringTaskPaymentStatusResponse>>(
-      `/mentoring/task-payments/${paymentId}/cancel`,
+      `/mentoring/task-payments/${orderCode}/cancel`,
       null,
       { params: reason ? { reason } : undefined }
     )

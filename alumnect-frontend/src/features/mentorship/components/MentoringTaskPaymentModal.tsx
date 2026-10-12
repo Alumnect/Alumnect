@@ -96,8 +96,8 @@ export function MentoringTaskPaymentModal({
 
   // Polling trạng thái thanh toán từ PayOS
   useTaskPaymentPolling(
-    checkoutData?.paymentId,
-    isOpen && Boolean(checkoutData?.paymentId) && !paidResult,
+    checkoutData?.orderCode,
+    isOpen && Boolean(checkoutData?.orderCode) && !paidResult,
     (res) => {
       setPaidResult(res)
       toast.success(
@@ -125,7 +125,7 @@ export function MentoringTaskPaymentModal({
     }
     try {
       await cancelPaymentMutation.mutateAsync({
-        paymentId: checkoutData.paymentId,
+        orderCode: checkoutData.orderCode,
         reason: 'Học viên hủy giao dịch thanh toán Task',
       })
       toast.success('Đã hủy giao dịch thanh toán.')

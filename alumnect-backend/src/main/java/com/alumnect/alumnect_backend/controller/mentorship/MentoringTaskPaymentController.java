@@ -34,7 +34,7 @@ public class MentoringTaskPaymentController {
     private final MentoringTaskPaymentService taskPaymentService;
     private final UserRepository userRepository;
 
-    @PostMapping
+    @PostMapping(value = {"", "/checkout"})
     @Operation(summary = "Khởi tạo thanh toán Task từ Deal đã chốt (DEAL_CONFIRMED)",
                description = "Tạo đơn hàng PayOS, sinh mã VietQR và link checkout cho Học viên (Student)")
     public ResponseEntity<ApiResponse<MentoringTaskPaymentCheckoutResponse>> createTaskPayment(
