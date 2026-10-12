@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Copy, Check, Clock, ShieldCheck, QrCode } from 'lucide-react'
-import { Card, Badge, Button } from '@/components/ui'
+import { Card, Badge } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { vnd } from '@/lib/utils'
 import type { MentorPaymentCheckoutResponse } from '../model/mentorPaymentTypes'

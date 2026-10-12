@@ -15,16 +15,11 @@ import {
   RotateCcw,
   RotateCw,
   Loader2,
-  RefreshCw,
   User,
   GraduationCap,
-  Calendar,
   ShieldCheck,
   Clock,
   AlertTriangle,
-  Mail,
-  BookOpen,
-  Sparkles,
 } from 'lucide-react'
 import { Badge, Button, Avatar, toast } from '@/components/ui'
 import { cn } from '@/lib/utils'

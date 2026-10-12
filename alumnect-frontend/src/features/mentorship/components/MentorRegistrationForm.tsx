@@ -6,7 +6,6 @@ import {
   ArrowRight,
   AlertCircle,
   Clock,
-  Loader2,
   FileCheck2,
 } from 'lucide-react'
 import {
@@ -19,6 +18,7 @@ import { MentorProfessionalSection } from './MentorProfessionalSection'
 import { MentorMentoringSection } from './MentorMentoringSection'
 import { MentorCvSection } from './MentorCvSection'
 import { MentorPayoutBankSection } from './MentorPayoutBankSection'
+import { MentorshipLoadingSkeleton } from './MentorshipLoadingSkeleton'
 import type {
   MentoringWorkingMode,
   MentoringType,
@@ -179,10 +179,7 @@ export const MentorRegistrationForm: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500">
-        <Loader2 className="w-10 h-10 animate-spin text-[#f27024] mb-3" />
-        <p className="text-sm font-medium">Đang tải...</p>
-      </div>
+      <MentorshipLoadingSkeleton variant="registration" />
     )
   }
 
