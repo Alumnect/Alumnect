@@ -27,15 +27,21 @@ public interface MentoringRequestDistributionRepository extends JpaRepository<Me
      * @param requestId ID yêu cầu
      * @return Danh sách các phân phối
      */
-    List<MentoringRequestDistribution> findByRequestId(Long requestId);
+    /**
+     * Lấy danh sách các bản ghi phân phối của một yêu cầu sắp xếp theo thời điểm gửi tăng dần.
+     *
+     * @param requestId ID yêu cầu
+     * @return Danh sách các phân phối theo thứ tự thời gian
+     */
+    List<MentoringRequestDistribution> findByRequestIdOrderByDistributedAtAsc(Long requestId);
 
     /**
-     * Lấy danh sách yêu cầu phân phối tới một Mentor cụ thể theo thứ tự phân phối mới nhất.
+     * Lấy danh sách các bản ghi phân phối cho nhiều yêu cầu (Batch query tối ưu cho danh sách).
      *
-     * @param mentorProfileId ID hồ sơ Mentor
-     * @return Danh sách các yêu cầu phân phối tới Mentor
+     * @param requestIds Danh sách ID các yêu cầu
+     * @return Danh sách phân phối
      */
-    List<MentoringRequestDistribution> findByMentorProfileIdOrderByDistributedAtDesc(Long mentorProfileId);
+    List<MentoringRequestDistribution> findByRequestIdIn(java.util.Collection<Long> requestIds);
 
     /**
      * Đếm số lượng Mentor đã nhận được phân phối cho một yêu cầu cụ thể.

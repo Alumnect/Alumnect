@@ -119,7 +119,41 @@ export interface MentoringAttachmentResponseData {
 }
 
 /**
- * Dữ liệu trả về khi tạo yêu cầu Mentoring thành công (UC100 & UC101).
+ * Trạng thái phản hồi của Mentor theo thuật ngữ nghiệp vụ hiển thị cho sinh viên (UC102).
+ */
+export type MentoringResponseStatus = 'WAITING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED'
+
+/**
+ * Cấu trúc thông tin phản hồi của một Mentor đối với yêu cầu Mentoring (UC102).
+ */
+export interface MentorResponseItem {
+  mentorProfileId: number
+  mentorUserId: number
+  mentorName: string
+  mentorAvatar?: string | null
+  mentorHeadline?: string | null
+  supportedFields: string[]
+  distributionStatus: string
+  responseStatus: MentoringResponseStatus
+  responseNote?: string | null
+  distributedAt: string
+  respondedAt?: string | null
+  canMessage: boolean
+}
+
+/**
+ * Tổng hợp số liệu phản hồi từ các Mentor đối với yêu cầu (UC102).
+ */
+export interface MentoringResponseSummary {
+  totalDistributed: number
+  waitingCount: number
+  acceptedCount: number
+  declinedCount: number
+  expiredCount: number
+}
+
+/**
+ * Dữ liệu trả về khi tạo hoặc xem danh sách yêu cầu Mentoring (UC100, UC101, UC102).
  */
 export interface CreateMentoringRequestData {
   id: number
@@ -142,7 +176,18 @@ export interface CreateMentoringRequestData {
   matchedCount: number
   distributionNote: string
   attachments: MentoringAttachmentResponseData[]
+  responseSummary?: MentoringResponseSummary
+  directMentorResponseStatus?: string
   createdAt: string
+  updatedAt?: string
+}
+
+/**
+ * Dữ liệu chi tiết đầy đủ của yêu cầu Mentoring kèm danh sách phản hồi từ Mentor (UC102).
+ */
+export interface MentoringRequestDetailData extends CreateMentoringRequestData {
+  responseSummary: MentoringResponseSummary
+  mentorResponses: MentorResponseItem[]
 }
 
 /**

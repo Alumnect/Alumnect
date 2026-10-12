@@ -61,11 +61,11 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         audience: 'common',
       },
       {
-        label: 'Yêu cầu mentoring của tôi',
+        label: 'Yêu cầu Mentoring của tôi',
         to: '/app/mentoring/requests',
+        activePaths: ['/app/mentoring/requests'],
         icon: BookOpen,
         audience: 'common',
-        planned: true,
       },
       {
         label: 'Buổi hướng dẫn',

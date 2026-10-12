@@ -32,11 +32,37 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
     [hasMentorProfile, isAlumni],
   )
 
+  const activeItemTo = useMemo(() => {
+    const allItems = sections.flatMap((section) => section.items)
+
+    // 1. Kiểm tra khớp chính xác URL (Exact match)
+    const exactMatch = allItems.find((item) => {
+      const paths = item.activePaths ?? [item.to]
+      return paths.includes(location.pathname)
+    })
+    if (exactMatch) return exactMatch.to
+
+    // 2. Kiểm tra khớp tiền tố (Prefix match) cho các trang con chi tiết (ngoại trừ item có end: true)
+    const prefixMatches = allItems.filter((item) => {
+      if (item.end) return false
+      const paths = item.activePaths ?? [item.to]
+      return paths.some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
+    })
+
+    if (prefixMatches.length === 0) return null
+    if (prefixMatches.length === 1) return prefixMatches[0].to
+
+    // 3. Nếu có nhiều mục cùng khớp tiền tố, ưu tiên mục có đường dẫn dài nhất (chi tiết nhất)
+    prefixMatches.sort((a, b) => {
+      const maxA = Math.max(...(a.activePaths ?? [a.to]).map((p) => p.length))
+      const maxB = Math.max(...(b.activePaths ?? [b.to]).map((p) => p.length))
+      return maxB - maxA
+    })
+    return prefixMatches[0].to
+  }, [sections, location.pathname])
+
   const isItemActive = (item: MentorshipNavigationItem) => {
-    const activePaths = item.activePaths ?? [item.to]
-    return item.end
-      ? location.pathname === item.to
-      : activePaths.some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
+    return item.to === activeItemTo
   }
 
   const renderItem = (item: MentorshipNavigationItem) => {

@@ -74,6 +74,10 @@ public class MentoringRequestDistribution {
     @Column(name = "responded_at")
     private Instant respondedAt;
 
+    /** Lời nhắn hoặc lý do phản hồi của Mentor (nếu có) */
+    @Column(name = "response_note", length = 500)
+    private String responseNote;
+
     /** Thời điểm tạo bản ghi */
     @Column(name = "created_at", nullable = false)
     @Builder.Default

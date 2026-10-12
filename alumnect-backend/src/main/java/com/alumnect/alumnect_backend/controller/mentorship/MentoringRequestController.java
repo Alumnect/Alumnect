@@ -4,8 +4,11 @@ import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringRequestRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.CreateMentoringRequestResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentorResponseItemResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringRequestDetailResponse;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringRequestService;
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -90,15 +93,19 @@ public class MentoringRequestController {
                 .body(ApiResponse.success("Gửi yêu cầu cố vấn trực tiếp thành công", response));
     }
 
+
     /**
-     * API Lấy danh sách yêu cầu Mentoring của sinh viên đang đăng nhập (phân trang).
+     * API Lấy danh sách yêu cầu Mentoring của sinh viên đang đăng nhập (phân trang, UC102).
+     * Hỗ trợ cả 2 endpoint:
+     * - GET /api/v1/mentoring/requests
+     * - GET /api/v1/mentoring/requests/my
      *
      * @param page Số thứ tự trang (mặc định 0)
      * @param size Số lượng bản ghi mỗi trang (mặc định 10)
      * @return ResponseEntity chứa ApiResponse bọc PageResponse
      */
-    @GetMapping
-    @Operation(summary = "Lấy danh sách yêu cầu mentoring của tôi", description = "Xem danh sách các yêu cầu mentoring đã tạo của sinh viên hiện tại")
+    @GetMapping({"", "/my"})
+    @Operation(summary = "Lấy danh sách yêu cầu mentoring của tôi (UC102)", description = "Xem danh sách các yêu cầu mentoring đã tạo của sinh viên hiện tại kèm thống kê phản hồi")
     public ResponseEntity<ApiResponse<PageResponse<CreateMentoringRequestResponse>>> getMyRequests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -109,16 +116,33 @@ public class MentoringRequestController {
     }
 
     /**
-     * API Lấy thông tin chi tiết một yêu cầu Mentoring theo ID.
+     * API Lấy thông tin chi tiết một yêu cầu Mentoring kèm danh sách phản hồi từ các Mentor (UC102).
+     * - Nếu GENERAL: Trả về các Mentor thực sự được phân phối.
+     * - Nếu DIRECT: Trả về duy nhất Mentor đích.
+     * Kiểm tra quyền sở hữu: Chỉ sinh viên tạo mới được xem.
      *
      * @param id ID của yêu cầu Mentoring
-     * @return ResponseEntity chứa ApiResponse bọc chi tiết yêu cầu
+     * @return ResponseEntity chứa ApiResponse bọc chi tiết yêu cầu kèm phản hồi
      */
-    @GetMapping("/{id}")
-    @Operation(summary = "Xem chi tiết yêu cầu mentoring", description = "Lấy thông tin chi tiết một yêu cầu mentoring theo ID của sinh viên sở hữu")
-    public ResponseEntity<ApiResponse<CreateMentoringRequestResponse>> getRequestDetail(@PathVariable Long id) {
+    @GetMapping("/{id:\\d+}")
+    @Operation(summary = "Xem chi tiết yêu cầu mentoring và phản hồi của Mentor (UC102)", description = "Lấy thông tin chi tiết một yêu cầu mentoring kèm trạng thái phản hồi của từng Mentor liên quan")
+    public ResponseEntity<ApiResponse<MentoringRequestDetailResponse>> getRequestDetail(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        CreateMentoringRequestResponse response = mentoringRequestService.getRequestDetail(email, id);
+        MentoringRequestDetailResponse response = mentoringRequestService.getRequestDetailWithResponses(email, id);
         return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết yêu cầu thành công", response));
+    }
+
+    /**
+     * API Lấy danh sách phản hồi từ các Mentor đối với một yêu cầu cụ thể (UC102 sub-resource).
+     *
+     * @param id ID của yêu cầu Mentoring
+     * @return ResponseEntity chứa ApiResponse bọc danh sách MentorResponseItemResponse
+     */
+    @GetMapping("/{id:\\d+}/responses")
+    @Operation(summary = "Lấy danh sách phản hồi của Mentor đối với yêu cầu (UC102)", description = "Trả về danh sách Mentor liên quan và trạng thái phản hồi của từng Mentor")
+    public ResponseEntity<ApiResponse<List<MentorResponseItemResponse>>> getRequestResponses(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<MentorResponseItemResponse> response = mentoringRequestService.getRequestResponses(email, id);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách phản hồi thành công", response));
     }
 }

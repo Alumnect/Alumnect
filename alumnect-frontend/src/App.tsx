@@ -35,6 +35,8 @@ import { MentorDiscoverPage } from '@/pages/app/MentorDiscoverPage'
 import { MentorDetailPage } from '@/pages/app/MentorDetailPage'
 import { CreateMentoringRequestPage } from '@/pages/app/CreateMentoringRequestPage'
 import { CreateDirectMentoringRequestPage } from '@/pages/app/CreateDirectMentoringRequestPage'
+import { MyMentoringRequestsPage } from '@/pages/app/MyMentoringRequestsPage'
+import { MentoringRequestDetailPage } from '@/pages/app/MentoringRequestDetailPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -93,6 +95,8 @@ function App() {
             <Route path="mentoring/mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
             <Route path="mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
             <Route path="mentors" element={<Navigate to="/app/mentoring/discover" replace />} />
+            <Route path="mentoring/requests" element={<ProtectedRoute><MyMentoringRequestsPage /></ProtectedRoute>} />
+            <Route path="mentoring/requests/:id" element={<ProtectedRoute><MentoringRequestDetailPage /></ProtectedRoute>} />
             <Route path="mentoring/requests/create" element={<ProtectedRoute><CreateMentoringRequestPage /></ProtectedRoute>} />
             <Route path="mentoring/mentors/:mentorId/request" element={<ProtectedRoute><CreateDirectMentoringRequestPage /></ProtectedRoute>} />
             <Route path="mentors/:mentorId/request" element={<ProtectedRoute><CreateDirectMentoringRequestPage /></ProtectedRoute>} />

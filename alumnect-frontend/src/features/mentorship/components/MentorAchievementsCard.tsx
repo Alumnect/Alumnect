@@ -36,7 +36,7 @@ export function MentorAchievementsCard({ mentor }: MentorAchievementsCardProps) 
             {mentor.reputationScore}
           </p>
           <p className="mt-0.5 text-[10px] text-gold-700/80 dark:text-gold-300/80">
-            Tính theo UC97
+            Hệ thống xếp hạng
           </p>
         </div>
 

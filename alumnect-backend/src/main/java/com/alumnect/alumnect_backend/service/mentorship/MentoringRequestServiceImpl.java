@@ -41,9 +41,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentorResponseItemResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringRequestDetailResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringResponseSummaryResponse;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Lớp triển khai dịch vụ nghiệp vụ cho Mentoring Request (UC100 - Yêu cầu chung & UC101 - Yêu cầu trực tiếp).
@@ -345,12 +351,13 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
     }
 
     /**
-     * Lấy danh sách các yêu cầu Mentoring của sinh viên đang đăng nhập (phân trang).
+     * Lấy danh sách các yêu cầu Mentoring của sinh viên đang đăng nhập (phân trang, UC102).
+     * Tự động tổng hợp số liệu phản hồi từ các Mentor cho từng yêu cầu phục vụ danh sách My Requests.
      *
      * @param userEmail Email của sinh viên đăng nhập
      * @param page Số thứ tự trang
      * @param size Số bản ghi mỗi trang
-     * @return Danh sách phân trang các yêu cầu
+     * @return Danh sách phân trang các yêu cầu kèm tóm tắt phản hồi
      */
     @Override
     @Transactional(readOnly = true)
@@ -361,8 +368,16 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         Pageable pageable = PageRequest.of(page, size);
         Page<MentoringRequest> pageResult = mentoringRequestRepository.findByStudentIdOrderByCreatedAtDesc(student.getId(), pageable);
 
-        List<CreateMentoringRequestResponse> content = pageResult.getContent().stream()
-                .map(this::mapToResponse)
+        List<MentoringRequest> requests = pageResult.getContent();
+        List<Long> requestIds = requests.stream().map(MentoringRequest::getId).toList();
+
+        Map<Long, List<MentoringRequestDistribution>> distributionsByRequestId = requestIds.isEmpty()
+                ? Collections.emptyMap()
+                : mentoringRequestDistributionRepository.findByRequestIdIn(requestIds).stream()
+                        .collect(Collectors.groupingBy(d -> d.getRequest().getId()));
+
+        List<CreateMentoringRequestResponse> content = requests.stream()
+                .map(req -> mapToResponseWithSummary(req, distributionsByRequestId.getOrDefault(req.getId(), Collections.emptyList())))
                 .toList();
 
         return PageResponse.<CreateMentoringRequestResponse>builder()
@@ -377,6 +392,7 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
 
     /**
      * Lấy thông tin chi tiết một yêu cầu Mentoring theo ID của sinh viên sở hữu.
+     * Kiểm tra quyền sở hữu chặt chẽ: chỉ sinh viên tạo mới được phép xem (UC102 BR).
      *
      * @param userEmail Email của sinh viên đăng nhập
      * @param requestId ID của yêu cầu Mentoring
@@ -388,16 +404,169 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         User student = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin tài khoản người dùng: " + userEmail));
 
-        MentoringRequest mentoringRequest = mentoringRequestRepository.findByIdAndStudentId(requestId, student.getId())
+        MentoringRequest mentoringRequest = mentoringRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
 
-        return mapToResponse(mentoringRequest);
+        if (!mentoringRequest.getStudent().getId().equals(student.getId())) {
+            log.warn("User ID={} cố tình xem yêu cầu ID={} của User ID={}", student.getId(), requestId, mentoringRequest.getStudent().getId());
+            throw new ForbiddenException("Bạn không có quyền xem yêu cầu cố vấn này");
+        }
+
+        List<MentoringRequestDistribution> distributions = mentoringRequestDistributionRepository.findByRequestIdOrderByDistributedAtAsc(requestId);
+        return mapToResponseWithSummary(mentoringRequest, distributions);
     }
 
     /**
-     * Tiện ích chuyển đổi Entity MentoringRequest sang Response DTO (hỗ trợ cả GENERAL và DIRECT).
+     * Lấy thông tin chi tiết một yêu cầu Mentoring kèm toàn bộ phản hồi từ các Mentor liên quan (UC102).
+     * Phân biệt rõ ràng theo quy tắc nghiệp vụ:
+     * - Nếu GENERAL (UC100): Trả về đúng danh sách các Mentor thực sự được phân phối yêu cầu.
+     * - Nếu DIRECT (UC101): Trả về DUY NHẤT Mentor đích đã được chỉ định (tuyệt đối không hiển thị Mentor khác).
+     * Kiểm tra quyền sở hữu: Sinh viên chỉ xem được yêu cầu do chính mình tạo.
+     *
+     * @param userEmail Email của sinh viên đăng nhập
+     * @param requestId ID của yêu cầu Mentoring
+     * @return DTO chi tiết yêu cầu kèm danh sách phản hồi của Mentor
      */
-    private CreateMentoringRequestResponse mapToResponse(MentoringRequest entity) {
+    @Override
+    @Transactional(readOnly = true)
+    public MentoringRequestDetailResponse getRequestDetailWithResponses(String userEmail, Long requestId) {
+        User student = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin tài khoản người dùng: " + userEmail));
+
+        MentoringRequest mentoringRequest = mentoringRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
+
+        if (!mentoringRequest.getStudent().getId().equals(student.getId())) {
+            log.warn("Truy cập trái phép: User ID={} cố truy xuất phản hồi của yêu cầu ID={} thuộc về User ID={}",
+                    student.getId(), requestId, mentoringRequest.getStudent().getId());
+            throw new ForbiddenException("Bạn không có quyền xem yêu cầu cố vấn này");
+        }
+
+        List<MentoringRequestAttachment> atts = mentoringRequestAttachmentRepository.findByRequestId(mentoringRequest.getId());
+        List<MentoringAttachmentResponse> attResponses = atts.stream()
+                .map(a -> MentoringAttachmentResponse.builder()
+                        .id(a.getId())
+                        .fileName(a.getFileName())
+                        .fileUrl(a.getFileUrl())
+                        .fileSize(a.getFileSize())
+                        .fileType(a.getFileType())
+                        .createdAt(a.getCreatedAt())
+                        .build())
+                .toList();
+
+        MentoringRequestType reqType = mentoringRequest.getRequestType() != null
+                ? mentoringRequest.getRequestType()
+                : MentoringRequestType.GENERAL;
+
+        List<MentoringRequestDistribution> distributions = mentoringRequestDistributionRepository.findByRequestIdOrderByDistributedAtAsc(requestId);
+
+        List<MentorResponseItemResponse> mentorResponses = new ArrayList<>();
+        MentoringResponseSummaryResponse summary;
+
+        if (reqType == MentoringRequestType.DIRECT) {
+            // UC101: Yêu cầu trực tiếp — CHỈ HIỂN THỊ DUY NHẤT MENTOR ĐƯỢC CHỌN
+            MentorProfile targetMentor = mentoringRequest.getTargetMentor();
+            MentoringRequestDistribution targetDist = distributions.stream()
+                    .filter(d -> targetMentor != null && d.getMentorProfile().getId().equals(targetMentor.getId()))
+                    .findFirst()
+                    .orElse(!distributions.isEmpty() ? distributions.get(0) : null);
+
+            if (targetDist != null) {
+                MentorResponseItemResponse item = mapDistributionToResponseItem(targetDist);
+                mentorResponses.add(item);
+                summary = buildResponseSummary(List.of(targetDist));
+            } else if (targetMentor != null) {
+                // Dự phòng nếu chưa có record distribution
+                MentorResponseItemResponse fallbackItem = mapMentorProfileToDefaultResponseItem(targetMentor, mentoringRequest.getCreatedAt());
+                mentorResponses.add(fallbackItem);
+                summary = MentoringResponseSummaryResponse.builder()
+                        .totalDistributed(1)
+                        .waitingCount(1)
+                        .acceptedCount(0)
+                        .declinedCount(0)
+                        .expiredCount(0)
+                        .build();
+            } else {
+                summary = MentoringResponseSummaryResponse.builder().build();
+            }
+        } else {
+            // UC100: Yêu cầu chung — Hiển thị danh sách các Mentor đã thực sự được phân phối
+            for (MentoringRequestDistribution dist : distributions) {
+                mentorResponses.add(mapDistributionToResponseItem(dist));
+            }
+            summary = buildResponseSummary(distributions);
+        }
+
+        Long targetMentorId = null;
+        String targetMentorName = null;
+        String targetMentorAvatar = null;
+        String targetMentorHeadline = null;
+
+        if (mentoringRequest.getTargetMentor() != null) {
+            targetMentorId = mentoringRequest.getTargetMentor().getId();
+            User mUser = mentoringRequest.getTargetMentor().getUser();
+            if (mUser != null) {
+                UserProfile mProfile = userProfileRepository.findById(mUser.getId()).orElse(null);
+                targetMentorName = mProfile != null ? mProfile.getFullName() : mUser.getEmail();
+                targetMentorAvatar = mProfile != null ? mProfile.getAvatarUrl() : null;
+                targetMentorHeadline = mProfile != null ? mProfile.getHeadline() : null;
+            }
+        }
+
+        String distributionNote;
+        if (reqType == MentoringRequestType.DIRECT) {
+            distributionNote = "Yêu cầu cố vấn của bạn đã được gửi trực tiếp tới Mentor " + (targetMentorName != null ? targetMentorName : "") + ". Vui lòng chờ Mentor phản hồi.";
+        } else if (summary.getTotalDistributed() > 0) {
+            distributionNote = "Đã tự động phân phối yêu cầu tới " + summary.getTotalDistributed() + " Mentor phù hợp trong mạng lưới.";
+        } else {
+            distributionNote = "Hiện tại chưa tìm thấy Mentor phù hợp. Yêu cầu của bạn đã được ghi nhận vào hệ thống và sẽ sẵn sàng phân phối khi có Mentor mới.";
+        }
+
+        return MentoringRequestDetailResponse.builder()
+                .id(mentoringRequest.getId())
+                .requestType(reqType)
+                .targetMentorId(targetMentorId)
+                .targetMentorName(targetMentorName)
+                .targetMentorAvatar(targetMentorAvatar)
+                .targetMentorHeadline(targetMentorHeadline)
+                .title(mentoringRequest.getTitle())
+                .description(mentoringRequest.getDescription())
+                .industryId(mentoringRequest.getIndustry().getId())
+                .industryName(mentoringRequest.getIndustry().getName())
+                .budgetMin(mentoringRequest.getBudgetMin())
+                .budgetMax(mentoringRequest.getBudgetMax())
+                .workingMode(mentoringRequest.getWorkingMode())
+                .participationType(mentoringRequest.getParticipationType())
+                .taskType(mentoringRequest.getTaskType())
+                .expectedDeadline(mentoringRequest.getExpectedDeadline())
+                .status(mentoringRequest.getStatus())
+                .matchedCount(reqType == MentoringRequestType.DIRECT ? 1 : summary.getTotalDistributed())
+                .distributionNote(distributionNote)
+                .attachments(attResponses)
+                .createdAt(mentoringRequest.getCreatedAt())
+                .updatedAt(mentoringRequest.getUpdatedAt())
+                .responseSummary(summary)
+                .mentorResponses(mentorResponses)
+                .build();
+    }
+
+    /**
+     * Lấy danh sách phản hồi của các Mentor đối với một yêu cầu Mentoring cụ thể (UC102).
+     *
+     * @param userEmail Email của sinh viên đăng nhập
+     * @param requestId ID của yêu cầu Mentoring
+     * @return Danh sách phản hồi của các Mentor
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<MentorResponseItemResponse> getRequestResponses(String userEmail, Long requestId) {
+        return getRequestDetailWithResponses(userEmail, requestId).getMentorResponses();
+    }
+
+    /**
+     * Tiện ích chuyển đổi Entity MentoringRequest sang Response DTO kèm theo số liệu thống kê phản hồi.
+     */
+    private CreateMentoringRequestResponse mapToResponseWithSummary(MentoringRequest entity, List<MentoringRequestDistribution> distributions) {
         List<MentoringRequestAttachment> atts = mentoringRequestAttachmentRepository.findByRequestId(entity.getId());
         List<MentoringAttachmentResponse> attResponses = atts.stream()
                 .map(a -> MentoringAttachmentResponse.builder()
@@ -427,11 +596,37 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             }
         }
 
+        MentoringResponseSummaryResponse summary;
+        String directMentorResponseStatus = null;
+
+        if (reqType == MentoringRequestType.DIRECT) {
+            MentoringRequestDistribution targetDist = distributions.stream()
+                    .filter(d -> entity.getTargetMentor() != null && d.getMentorProfile().getId().equals(entity.getTargetMentor().getId()))
+                    .findFirst()
+                    .orElse(!distributions.isEmpty() ? distributions.get(0) : null);
+
+            if (targetDist != null) {
+                directMentorResponseStatus = mapDistributionStatusToBusiness(targetDist.getStatus());
+                summary = buildResponseSummary(List.of(targetDist));
+            } else {
+                directMentorResponseStatus = "WAITING";
+                summary = MentoringResponseSummaryResponse.builder()
+                        .totalDistributed(1)
+                        .waitingCount(1)
+                        .acceptedCount(0)
+                        .declinedCount(0)
+                        .expiredCount(0)
+                        .build();
+            }
+        } else {
+            summary = buildResponseSummary(distributions);
+        }
+
         String distributionNote;
         if (reqType == MentoringRequestType.DIRECT) {
             distributionNote = "Yêu cầu cố vấn của bạn đã được gửi trực tiếp tới Mentor " + (targetMentorName != null ? targetMentorName : "") + ". Vui lòng chờ Mentor phản hồi.";
-        } else if (entity.getMatchedCount() > 0) {
-            distributionNote = "Đã tự động phân phối yêu cầu tới " + entity.getMatchedCount() + " Mentor phù hợp trong mạng lưới.";
+        } else if (summary.getTotalDistributed() > 0) {
+            distributionNote = "Đã tự động phân phối yêu cầu tới " + summary.getTotalDistributed() + " Mentor phù hợp trong mạng lưới.";
         } else {
             distributionNote = "Hiện tại chưa tìm thấy Mentor phù hợp. Yêu cầu của bạn đã được ghi nhận vào hệ thống và sẽ sẵn sàng phân phối khi có Mentor mới.";
         }
@@ -454,10 +649,127 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .taskType(entity.getTaskType())
                 .expectedDeadline(entity.getExpectedDeadline())
                 .status(entity.getStatus())
-                .matchedCount(entity.getMatchedCount())
+                .matchedCount(reqType == MentoringRequestType.DIRECT ? 1 : summary.getTotalDistributed())
                 .distributionNote(distributionNote)
                 .attachments(attResponses)
+                .responseSummary(summary)
+                .directMentorResponseStatus(directMentorResponseStatus)
                 .createdAt(entity.getCreatedAt())
                 .build();
+    }
+
+    /**
+     * Tiện ích chuyển đổi một bản ghi distribution sang MentorResponseItemResponse.
+     */
+    private MentorResponseItemResponse mapDistributionToResponseItem(MentoringRequestDistribution dist) {
+        MentorProfile profile = dist.getMentorProfile();
+        User mentorUser = profile.getUser();
+        UserProfile userProfile = mentorUser != null ? userProfileRepository.findById(mentorUser.getId()).orElse(null) : null;
+
+        String name = userProfile != null ? userProfile.getFullName() : (mentorUser != null ? mentorUser.getEmail() : "Mentor");
+        String avatar = userProfile != null ? userProfile.getAvatarUrl() : null;
+        String headline = userProfile != null ? userProfile.getHeadline() : null;
+
+        List<String> supportedFields = mentorSupportedFieldRepository.findByMentorProfileId(profile.getId()).stream()
+                .map(sf -> sf.getIndustry().getName())
+                .toList();
+
+        String businessStatus = mapDistributionStatusToBusiness(dist.getStatus());
+        boolean canMessage = dist.getStatus() == MentoringDistributionStatus.ACCEPTED;
+
+        return MentorResponseItemResponse.builder()
+                .mentorProfileId(profile.getId())
+                .mentorUserId(mentorUser != null ? mentorUser.getId() : null)
+                .mentorName(name)
+                .mentorAvatar(avatar)
+                .mentorHeadline(headline)
+                .supportedFields(supportedFields)
+                .distributionStatus(dist.getStatus())
+                .responseStatus(businessStatus)
+                .responseNote(dist.getResponseNote())
+                .distributedAt(dist.getDistributedAt())
+                .respondedAt(dist.getRespondedAt())
+                .canMessage(canMessage)
+                .build();
+    }
+
+    /**
+     * Tiện ích tạo fallback response item khi MentorProfile chưa có distribution record.
+     */
+    private MentorResponseItemResponse mapMentorProfileToDefaultResponseItem(MentorProfile profile, Instant createdAt) {
+        User mentorUser = profile.getUser();
+        UserProfile userProfile = mentorUser != null ? userProfileRepository.findById(mentorUser.getId()).orElse(null) : null;
+
+        String name = userProfile != null ? userProfile.getFullName() : (mentorUser != null ? mentorUser.getEmail() : "Mentor");
+        String avatar = userProfile != null ? userProfile.getAvatarUrl() : null;
+        String headline = userProfile != null ? userProfile.getHeadline() : null;
+
+        List<String> supportedFields = mentorSupportedFieldRepository.findByMentorProfileId(profile.getId()).stream()
+                .map(sf -> sf.getIndustry().getName())
+                .toList();
+
+        return MentorResponseItemResponse.builder()
+                .mentorProfileId(profile.getId())
+                .mentorUserId(mentorUser != null ? mentorUser.getId() : null)
+                .mentorName(name)
+                .mentorAvatar(avatar)
+                .mentorHeadline(headline)
+                .supportedFields(supportedFields)
+                .distributionStatus(MentoringDistributionStatus.PENDING)
+                .responseStatus("WAITING")
+                .distributedAt(createdAt)
+                .canMessage(false)
+                .build();
+    }
+
+    /**
+     * Tiện ích tổng hợp số lượng trạng thái phản hồi của danh sách phân phối.
+     */
+    private MentoringResponseSummaryResponse buildResponseSummary(List<MentoringRequestDistribution> distributions) {
+        int total = distributions.size();
+        int waiting = 0;
+        int accepted = 0;
+        int declined = 0;
+        int expired = 0;
+
+        for (MentoringRequestDistribution dist : distributions) {
+            if (dist.getStatus() == null) {
+                waiting++;
+                continue;
+            }
+            switch (dist.getStatus()) {
+                case PENDING -> waiting++;
+                case ACCEPTED -> accepted++;
+                case REJECTED -> declined++;
+                case EXPIRED -> expired++;
+            }
+        }
+
+        return MentoringResponseSummaryResponse.builder()
+                .totalDistributed(total)
+                .waitingCount(waiting)
+                .acceptedCount(accepted)
+                .declinedCount(declined)
+                .expiredCount(expired)
+                .build();
+    }
+
+    /**
+     * Ánh xạ trạng thái phân phối từ database sang thuật ngữ nghiệp vụ hiển thị cho sinh viên:
+     * PENDING -> WAITING
+     * ACCEPTED -> ACCEPTED
+     * REJECTED -> DECLINED
+     * EXPIRED -> EXPIRED
+     */
+    private String mapDistributionStatusToBusiness(MentoringDistributionStatus status) {
+        if (status == null) {
+            return "WAITING";
+        }
+        return switch (status) {
+            case ACCEPTED -> "ACCEPTED";
+            case REJECTED -> "DECLINED";
+            case EXPIRED -> "EXPIRED";
+            default -> "WAITING";
+        };
     }
 }

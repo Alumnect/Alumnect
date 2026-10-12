@@ -209,7 +209,7 @@ export function AdminUsersPage() {
                                 setIsCvModalOpen(true)
                               }}
                               className="inline-flex items-center gap-1 rounded-lg bg-orange-50 px-2 py-1.5 text-xs font-bold text-[#F27024] hover:bg-orange-100 border border-orange-200/80 shadow-sm transition-all"
-                              title="Xem CV Mentor (UC96)"
+                              title="Xem CV Mentor"
                             >
                               <FileText size={13} /> CV Mentor
                             </button>

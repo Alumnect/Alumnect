@@ -84,6 +84,12 @@ public class CreateMentoringRequestResponse {
     /** Danh sách tài liệu đính kèm */
     private List<MentoringAttachmentResponse> attachments;
 
+    /** Tổng hợp số liệu phản hồi từ các Mentor (UC102) */
+    private MentoringResponseSummaryResponse responseSummary;
+
+    /** Trạng thái phản hồi của Mentor đích nếu là yêu cầu DIRECT (UC102): WAITING, ACCEPTED, DECLINED */
+    private String directMentorResponseStatus;
+
     /** Thời điểm tạo yêu cầu */
     private Instant createdAt;
 }

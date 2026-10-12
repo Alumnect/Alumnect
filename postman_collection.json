@@ -8684,6 +8684,284 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "102. Xem phản hồi yêu cầu Mentoring (UC102)",
+      "description": "API cho UC102: Xem danh sách yêu cầu Mentoring của Student, xem chi tiết yêu cầu và danh sách Mentor cùng trạng thái phản hồi (WAITING, ACCEPTED, DECLINED).",
+      "item": [
+        {
+          "name": "102.1 Lấy danh sách yêu cầu Mentoring của tôi (GET /mentoring/requests)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response structure contains content or list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Student lấy danh sách các yêu cầu Mentoring của bản thân (phân trang)"
+          },
+          "response": []
+        },
+        {
+          "name": "102.2 Lấy chi tiết yêu cầu Mentoring kèm danh sách phản hồi (GET /mentoring/requests/:id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Detail response contains mentorResponses and summary\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property(\"mentorResponses\");",
+                  "    pm.expect(jsonData.data).to.have.property(\"responseSummary\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "1"
+              ]
+            },
+            "description": "Xem chi tiết một yêu cầu cố vấn cùng danh sách Mentor và phản hồi tương ứng (General: các Mentor được phân phối; Direct: duy nhất Mentor nhận yêu cầu)"
+          },
+          "response": []
+        },
+        {
+          "name": "102.3 Lấy danh sách phản hồi Mentor của yêu cầu (GET /mentoring/requests/:id/responses)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is list of mentor responses\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(Array.isArray(jsonData.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/1/responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "1",
+                "responses"
+              ]
+            },
+            "description": "Lấy danh sách các Mentor phản hồi kèm trạng thái WAITING/ACCEPTED/DECLINED và ghi chú phản hồi"
+          },
+          "response": []
+        },
+        {
+          "name": "102.4 Lỗi khi yêu cầu không tồn tại (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "999999"
+              ]
+            },
+            "description": "Kiểm tra lỗi trả về khi requestId không tồn tại trong hệ thống"
+          },
+          "response": []
+        },
+        {
+          "name": "102.5 Lỗi khi truy cập yêu cầu của Student khác (403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests",
+                "2"
+              ]
+            },
+            "description": "Kiểm tra chặn truy cập trái phép khi Student A truy cập yêu cầu của Student B"
+          },
+          "response": []
+        },
+        {
+          "name": "102.6 Lỗi khi không có JWT Token (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "requests"
+              ]
+            },
+            "description": "Kiểm tra bảo mật khi không truyền Bearer token"
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

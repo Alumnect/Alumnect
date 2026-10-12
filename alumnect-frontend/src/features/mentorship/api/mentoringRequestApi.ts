@@ -3,6 +3,8 @@ import type { ApiResponse } from '@/features/auth/api/authApi'
 import type {
   CreateMentoringRequestPayload,
   CreateMentoringRequestData,
+  MentoringRequestDetailData,
+  MentorResponseItem,
 } from '../model/mentoringRequestTypes'
 
 interface PageResponse<T> {
@@ -37,7 +39,7 @@ export const mentoringRequestApi = {
   },
 
   /**
-   * Lấy danh sách yêu cầu Mentoring của sinh viên hiện tại có phân trang.
+   * Lấy danh sách yêu cầu Mentoring của sinh viên hiện tại có phân trang (UC102).
    * Endpoint: GET /api/v1/mentoring/requests
    */
   getMyRequests: async (page = 0, size = 10): Promise<PageResponse<CreateMentoringRequestData>> => {
@@ -48,11 +50,20 @@ export const mentoringRequestApi = {
   },
 
   /**
-   * Lấy chi tiết một yêu cầu Mentoring theo ID.
+   * Lấy chi tiết một yêu cầu Mentoring kèm toàn bộ phản hồi từ Mentor (UC102).
    * Endpoint: GET /api/v1/mentoring/requests/{id}
    */
-  getRequestDetail: async (id: number): Promise<CreateMentoringRequestData> => {
-    const res = await http.get<any, ApiResponse<CreateMentoringRequestData>>(`/mentoring/requests/${id}`)
+  getRequestDetail: async (id: number): Promise<MentoringRequestDetailData> => {
+    const res = await http.get<any, ApiResponse<MentoringRequestDetailData>>(`/mentoring/requests/${id}`)
+    return res.data
+  },
+
+  /**
+   * Lấy danh sách phản hồi từ Mentor đối với yêu cầu cụ thể (UC102 sub-resource).
+   * Endpoint: GET /api/v1/mentoring/requests/{id}/responses
+   */
+  getRequestResponses: async (id: number): Promise<MentorResponseItem[]> => {
+    const res = await http.get<any, ApiResponse<MentorResponseItem[]>>(`/mentoring/requests/${id}/responses`)
     return res.data
   },
 

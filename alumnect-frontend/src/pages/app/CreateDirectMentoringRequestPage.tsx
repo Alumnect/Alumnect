@@ -358,7 +358,7 @@ function CreateDirectMentoringRequestContent() {
             </h1>
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 border border-brand-200/60 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-800/40">
               <Sparkles className="h-3.5 w-3.5 text-brand-500" />
-              <span>Direct Request (UC101)</span>
+              <span>Yêu cầu trực tiếp</span>
             </span>
           </div>
           <p className="text-xs sm:text-sm text-plum-600 dark:text-[#8f9399]">
