@@ -4,7 +4,6 @@ import {
   MapPin,
   Briefcase,
   GraduationCap,
-  BadgeCheck,
   Calendar,
   Mail,
   Phone,

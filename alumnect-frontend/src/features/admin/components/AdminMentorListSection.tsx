@@ -12,7 +12,6 @@ import {
   CreditCard,
   Target,
   Sparkles,
-  ShieldAlert,
   Crown,
 } from 'lucide-react'
 import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
@@ -346,7 +345,7 @@ export function AdminMentorListSection() {
               <div className="space-y-6">
                 {/* Header Drawer */}
                 <div className="flex items-center justify-between pb-4 border-b border-plum-900/10">
-                  <h3 className="font-extrabold text-lg text-plum-900">Chi tiết hồ sơ Cố vấn</h3>
+                  <h3 className="font-extrabold text-lg text-plum-900">Chi tiết hồ sơ Mentor</h3>
                   <button
                     onClick={() => setSelectedMentorDetail(null)}
                     className="p-1.5 rounded-full text-plum-400 hover:bg-slate-100 hover:text-plum-900 transition-colors cursor-pointer"

@@ -21,6 +21,11 @@ public interface MentorSupportedFieldRepository extends JpaRepository<MentorSupp
     List<MentorSupportedField> findByMentorProfileId(Long mentorProfileId);
 
     /**
+     * Lấy danh sách lĩnh vực hỗ trợ theo danh sách ID hồ sơ Mentor (Batch fetch).
+     */
+    List<MentorSupportedField> findByMentorProfileIdIn(java.util.Collection<Long> mentorProfileIds);
+
+    /**
      * Xóa toàn bộ liên kết lĩnh vực của một hồ sơ Mentor để đồng bộ mới.
      */
     @Modifying

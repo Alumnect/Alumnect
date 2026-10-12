@@ -436,11 +436,16 @@
   pointer-events: none;
 }
 
-/* Shimmer skeleton (light) */
+/* Shimmer skeleton (light & dark) */
 .shimmer {
-  background: linear-gradient(100deg, rgb(50 44 63 / 0.04) 30%, rgb(50 44 63 / 0.09) 50%, rgb(50 44 63 / 0.04) 70%);
+  background: linear-gradient(90deg, rgba(50, 44, 63, 0.04) 25%, rgba(50, 44, 63, 0.09) 50%, rgba(50, 44, 63, 0.04) 75%);
   background-size: 200% 100%;
-  animation: shimmer 2.6s linear infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+:is(.dark) .shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0.04) 75%);
+  background-size: 200% 100%;
 }
 
 /* Spotlight hover glow (driven by --mx / --my CSS vars set in JS) */

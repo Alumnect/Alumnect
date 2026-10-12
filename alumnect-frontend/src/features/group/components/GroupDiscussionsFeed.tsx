@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { MessageSquare, Pin, Loader2 } from 'lucide-react'
+import { MessageSquare, Loader2 } from 'lucide-react'
 import { Card, Skeleton } from '@/components/ui/primitives'
 import { Reveal } from '@/components/motion'
 import { Button } from '@/components/ui/Button'

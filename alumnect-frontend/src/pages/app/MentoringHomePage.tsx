@@ -1,4 +1,6 @@
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { MentoringTermsGate, MentorshipLoadingSkeleton, useMentoringTermsStatus } from '@/features/mentorship'
+import type { MentorStatusResponse } from '@/features/mentorship/model/mentorStatusTypes'
 import { Container, Card, Badge } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
@@ -14,25 +16,57 @@ import {
   Activity,
   Clock,
   Trophy,
+  Search,
 } from 'lucide-react'
 
-function MentoringHomeContent() {
+// Hiệu ứng chuyển động mượt mà theo từng tầng (Staggered Animation)
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.09,
+      delayChildren: 0.04,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.42,
+      ease: 'easeOut',
+    },
+  },
+}
+
+type MentoringHomeContentProps = {
+  status?: MentorStatusResponse
+}
+
+function MentoringHomeContent({ status }: MentoringHomeContentProps) {
   const user = useAuthStore((s) => s.user)
   const isAlumni = user?.role === 'ALUMNI'
-  const { data: status, isLoading: isLoadingStatus } = useMentorStatus(isAlumni)
   const mentorStatus = status?.mentorStatus
   const isMentorActive = mentorStatus === 'ACTIVE'
   const isPaymentPending = mentorStatus === 'PAYMENT_PENDING'
   const isExpired = mentorStatus === 'EXPIRED'
 
-  if (isAlumni && isLoadingStatus) {
-    return <MentorshipLoadingSkeleton variant="home" />
-  }
-
   return (
-    <div className="space-y-6 py-4">
-      {/* Hero Banner: Tối giản, gọn gàng, không có khối phụ rườm rà */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 border border-brand-500/20 shadow-xs dark:bg-[#242526] dark:border-[#393a3b] dark:from-brand-950/20">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6 py-4"
+    >
+      {/* 1. Hero Banner: Tối giản, gọn gàng, hiệu ứng hào quang mờ */}
+      <motion.div
+        variants={itemVariants}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 border border-brand-500/20 shadow-xs dark:bg-[#242526] dark:border-[#393a3b] dark:from-brand-950/20"
+      >
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-500/5" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
 
@@ -171,6 +205,16 @@ function MentoringHomeContent() {
             ) : null}
 
             <ButtonLink
+              to="/app/mentoring/discover"
+              variant="outline"
+              size="sm"
+              leftIcon={<Search className="h-3.5 w-3.5 text-brand-600" />}
+              className="text-plum-700 hover:text-brand-600 dark:text-[#e4e6eb]"
+            >
+              Tìm kiếm Mentor
+            </ButtonLink>
+
+            <ButtonLink
               to="/app/mentoring/ranking"
               variant="outline"
               size="sm"
@@ -191,10 +235,13 @@ function MentoringHomeContent() {
             </ButtonLink>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Lợi ích và các tính năng cốt lõi */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+      {/* 2. Lợi ích và các tính năng cốt lõi */}
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3"
+      >
         <Card hover className="p-5 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-2">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
             <Compass className="h-5 w-5" />
@@ -230,10 +277,10 @@ function MentoringHomeContent() {
             Hệ thống quản lý nguồn quỹ an toàn, thanh toán minh bạch và hỗ trợ hòa giải kịp thời từ Ban Quản trị.
           </p>
         </Card>
-      </div>
+      </motion.div>
 
-      {/* Danh sách người hướng dẫn nổi bật */}
-      <div className="space-y-4">
+      {/* 3. Danh sách người hướng dẫn nổi bật */}
+      <motion.div variants={itemVariants} className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
             Mentor Tiêu Biểu Mạng Lưới FPT
@@ -289,8 +336,8 @@ function MentoringHomeContent() {
             </Card>
           ))}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -300,30 +347,43 @@ function MentoringHomeContent() {
  * Người dùng chỉ có thể vào trang này khi đã chấp nhận phiên bản điều khoản hiện tại.
  */
 export function MentoringHomePage() {
+  const user = useAuthStore((s) => s.user)
+  const isAlumni = user?.role === 'ALUMNI'
   const { data: termsStatus, isLoading: isLoadingTerms } = useMentoringTermsStatus()
+  const { data: status, isLoading: isLoadingStatus } = useMentorStatus(isAlumni)
 
-  if (isLoadingTerms) {
-    return (
-      <Container className="py-2 sm:py-4">
-        <MentorshipLoadingSkeleton variant="home" />
-      </Container>
-    )
-  }
-
-  // Khi chưa chấp nhận điều khoản: Hiển thị MentoringTermsGate trực tiếp để vừa vặn trọn vẹn màn hình không bị thanh cuộn ngoài
-  if (termsStatus && !termsStatus.accepted) {
-    return (
-      <MentoringTermsGate source="MENTORING_HOME">
-        <MentoringHomeContent />
-      </MentoringTermsGate>
-    )
-  }
+  // Gom chung trạng thái loading ban đầu: Tránh tình trạng flash giật skeleton 2 lần
+  const isInitialLoading = isLoadingTerms || (isAlumni && isLoadingStatus)
 
   return (
     <Container className="py-2 sm:py-4">
-      <MentoringTermsGate source="MENTORING_HOME">
-        <MentoringHomeContent />
-      </MentoringTermsGate>
+      <AnimatePresence mode="wait">
+        {isInitialLoading ? (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <MentorshipLoadingSkeleton variant="home" />
+          </motion.div>
+        ) : !termsStatus?.accepted ? (
+          <motion.div
+            key="terms-gate"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MentoringTermsGate source="MENTORING_HOME">
+              <MentoringHomeContent status={status} />
+            </MentoringTermsGate>
+          </motion.div>
+        ) : (
+          <MentoringHomeContent key="home-content" status={status} />
+        )}
+      </AnimatePresence>
     </Container>
   )
 }

@@ -58,3 +58,26 @@ export * from './components/MentorFieldSelector'
 export * from './components/MentorRankingCard'
 export * from './components/MentorRankingPodium'
 export * from './components/MentorRankingList'
+
+// UC98 exports (Tìm kiếm & lọc Mentor)
+export * from './model/mentorSearchTypes'
+export * from './api/mentorSearchApi'
+export * from './hooks/useMentorSearch'
+export * from './components/MentorCard'
+export * from './components/MentorSearchHeader'
+export * from './components/MentorFilterBar'
+export * from './components/MentorDirectoryList'
+
+// UC99 exports (Xem chi tiết Mentor)
+export * from './model/mentorDetailTypes'
+export * from './api/mentorDetailApi'
+export * from './hooks/useMentorDetail'
+export * from './components/MentorProfileHeader'
+export * from './components/MentorAboutSection'
+export * from './components/MentorExpertiseSection'
+export * from './components/MentorExperienceTimeline'
+export * from './components/MentorAchievementsCard'
+export * from './components/MentorRequestActionCard'
+export * from './components/MentorDetailSkeleton'
+export * from './components/MentorDetailErrorState'
+

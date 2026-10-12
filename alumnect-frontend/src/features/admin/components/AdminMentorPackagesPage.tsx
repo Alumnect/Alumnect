@@ -125,9 +125,9 @@ export function AdminMentorPackagesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Quản lý Cố vấn & Gói dịch vụ"
-        description="Cấu hình biểu phí các gói dịch vụ và quản lý, tra cứu hồ sơ của các Cố vấn trên hệ thống."
-        action={
-          <Badge tone="neutral" size="md" className="gap-1.5 font-semibold text-slate-700 bg-white border border-slate-200 shadow-2xs">
+        subtitle="Cấu hình biểu phí các gói dịch vụ và quản lý, tra cứu hồ sơ của các Cố vấn trên hệ thống."
+        actions={
+          <Badge tone="neutral" className="gap-1.5 font-semibold text-slate-700 bg-white border border-slate-200 shadow-2xs">
             <Compass className="h-4 w-4 text-[#F27024]" /> Quản trị Cố vấn
           </Badge>
         }

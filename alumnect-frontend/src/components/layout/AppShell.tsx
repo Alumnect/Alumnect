@@ -28,6 +28,7 @@ import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { MentorshipLayout } from '@/features/mentorship'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
@@ -238,7 +239,7 @@ export function AppShell() {
       </div>
 
       {/* ===== top header ===== */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 shadow-xs dark:bg-[#242526] dark:border-[#393a3b]">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 shadow-xs dark:bg-[#242526] dark:border-[#393a3b]">
         {/* Top FPT Brand Accent Bar */}
         <div className="h-1 bg-gradient-to-r from-[#F27024] via-[#004F9E] to-[#009A3E]" />
         <div className="mx-auto flex h-15 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
@@ -447,21 +448,30 @@ export function AppShell() {
           ? "max-w-[1560px] px-3 sm:px-6 lg:px-8 pb-28 pt-4 lg:pb-10"
           : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={TRANSITION.page}
-          className={location.pathname === '/app/messages' ? "h-full min-h-0" : undefined}
-        >
+        <ErrorBoundary>
           {isMentoringRoute ? (
             <MentorshipLayout>
-              <Outlet />
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={TRANSITION.page}
+              >
+                <Outlet />
+              </motion.div>
             </MentorshipLayout>
           ) : (
-            <Outlet />
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={TRANSITION.page}
+              className={location.pathname === '/app/messages' ? "h-full min-h-0" : undefined}
+            >
+              <Outlet />
+            </motion.div>
           )}
-        </motion.div>
+        </ErrorBoundary>
       </main>
 
       {/* ===== mobile bottom tab bar ===== */}

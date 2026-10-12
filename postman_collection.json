@@ -6782,6 +6782,779 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "98. Tìm kiếm & lọc Mentor (UC98)",
+            "item": [
+                {
+                    "name": "98.0 Đăng nhập lấy Token xác thực (Student / Alumni)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.data && jsonData.data.token) {",
+                                    "    pm.collectionVariables.set(\"accessToken\", jsonData.data.token);",
+                                    "    pm.collectionVariables.set(\"jwtToken\", jsonData.data.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"student@fpt.edu.vn\",\n    \"password\": \"Pass123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Đăng nhập với tài khoản sinh viên/người dùng để lưu accessToken vào collection variables"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.1 Tìm kiếm Mentor - Danh sách mặc định (Default List)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lấy danh sách Mentor ACTIVE mặc định khi chưa áp dụng bộ lọc nào"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.2 Tìm kiếm Mentor - Theo từ khóa (Keyword)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?keyword=Spring Boot&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "keyword",
+                                    "value": "Spring Boot"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Tìm kiếm Mentor theo từ khóa tự do (họ tên, kỹ năng, vị trí công tác)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.3 Tìm kiếm Mentor - Lọc theo Ngành nghề (Field/Industry)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?fieldId=1&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lọc danh sách Mentor hỗ trợ lĩnh vực chuyên môn cụ thể (Field / Industry ID)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.4 Tìm kiếm Mentor - Lọc theo Chuyên ngành (Specialization/Major)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?specialization=SE&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "specialization",
+                                    "value": "SE"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lọc danh sách Mentor theo chuyên ngành học (Specialization / Major)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.5 Tìm kiếm Mentor - Lọc theo Kỹ năng (Skills)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?skill=Java&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skill",
+                                    "value": "Java"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lọc danh sách Mentor sở hữu kỹ năng chuyên môn cụ thể"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.6 Tìm kiếm Mentor - Lọc theo Hình thức hướng dẫn (Working Mode)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?workingMode=ONLINE&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "workingMode",
+                                    "value": "ONLINE"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lọc danh sách Mentor theo hình thức: ONLINE, OFFLINE, BOTH"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.7 Tìm kiếm Mentor - Lọc theo Loại hình cố vấn (Mentoring Type)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?mentoringType=INDIVIDUAL&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "mentoringType",
+                                    "value": "INDIVIDUAL"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lọc danh sách Mentor theo loại hình: INDIVIDUAL, GROUP, BOTH"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.8 Tìm kiếm Mentor - Kết hợp nhiều bộ lọc (Combined Filters)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?fieldId=1&workingMode=ONLINE&mentoringType=INDIVIDUAL&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "workingMode",
+                                    "value": "ONLINE"
+                                },
+                                {
+                                    "key": "mentoringType",
+                                    "value": "INDIVIDUAL"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Kết hợp nhiều tiêu chí lọc đồng thời theo logic AND"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.9 Tìm kiếm Mentor - Từ khóa kết hợp nhiều bộ lọc (Keyword + Filters)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?keyword=Senior&fieldId=1&workingMode=ONLINE&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "keyword",
+                                    "value": "Senior"
+                                },
+                                {
+                                    "key": "fieldId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "workingMode",
+                                    "value": "ONLINE"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Tìm kiếm kết hợp từ khóa và bộ lọc đồng thời"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.10 Tìm kiếm Mentor - Không có kết quả (Empty Page)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?keyword=ChuoiKyTuKhongTheTimThayXYZ999&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "keyword",
+                                    "value": "ChuoiKyTuKhongTheTimThayXYZ999"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Khi không tìm thấy Mentor nào thỏa mãn, trả danh sách rỗng hợp lệ (không lỗi hệ thống)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.11 Tìm kiếm Mentor - Bộ lọc không hợp lệ (Invalid Filter / 400 Bad Request)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?fieldId=999999&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "fieldId",
+                                    "value": "999999"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Truyền ID lĩnh vực không tồn tại, mong đợi Backend trả 400 Bad Request với thông báo Tiếng Việt"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.12 Tìm kiếm Mentor - Phân trang (Pagination)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?page=1&size=5",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "5"
+                                }
+                            ]
+                        },
+                        "description": "Kiểm tra cơ chế phân trang với pageNumber = 1 và pageSize = 5"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.13 Tìm kiếm Mentor - Chặn truy cập khi chưa đăng nhập (401 Unauthorized)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Không truyền Bearer token xác thực, mong đợi HTTP 401 Unauthorized"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.14 Tìm kiếm Mentor - Xác minh Mentor INACTIVE bị loại trừ",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors?page=0&size=50",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "50"
+                                }
+                            ]
+                        },
+                        "description": "Kiểm tra toàn bộ kết quả trả về chỉ bao gồm các Mentor có trạng thái ACTIVE và gói dịch vụ còn hiệu lực"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "98.15 Lấy danh mục tùy chọn bộ lọc (Filter Options)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/filter-options",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "filter-options"
+                            ]
+                        },
+                        "description": "Lấy danh mục dữ liệu thực tế gồm ngành nghề, chuyên ngành, hình thức, loại hình và kỹ năng phổ biến"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "99. Xem chi tiết Mentor (UC99)",
+            "item": [
+                {
+                    "name": "99.0 Đăng nhập lấy Token xác thực (Student / Alumni)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.data && jsonData.data.token) {",
+                                    "    pm.collectionVariables.set(\"accessToken\", jsonData.data.token);",
+                                    "    pm.collectionVariables.set(\"jwtToken\", jsonData.data.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"student@fpt.edu.vn\",\n    \"password\": \"Pass123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Đăng nhập để lấy JWT token gán vào accessToken và jwtToken"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.1 Xem chi tiết Mentor ACTIVE - Thành công (TC-01)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "1"
+                            ]
+                        },
+                        "description": "Lấy thông tin chi tiết công khai của Mentor ACTIVE. Kiểm tra dữ liệu trả về gồm Profile Header, About, Skills, Supported Fields, Career Timeline, Reputation, Completed Tasks và canReceiveRequest = true."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.2 Xem chi tiết Mentor theo đường dẫn /mentoring/mentors/{mentorId} (TC-02)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentoring/mentors/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentoring",
+                                "mentors",
+                                "1"
+                            ]
+                        },
+                        "description": "Kiểm tra đường dẫn chuẩn thuộc module Hướng dẫn & Hỗ trợ (Mentoring)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.3 Xem chi tiết Mentor qua fallback userId (TC-03)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/101",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "101"
+                            ]
+                        },
+                        "description": "Kiểm tra cơ chế định danh linh hoạt: fallback tìm kiếm theo user_id nếu không khớp mentor_profile_id"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.4 Xem chi tiết Mentor không ACTIVE hoặc hết hạn (TC-07)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "2"
+                            ]
+                        },
+                        "description": "Mentor không ACTIVE: vẫn xem được thông tin công khai nếu có, nhưng canReceiveRequest = false và có availabilityReason giải thích"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.5 Xem chi tiết Mentor không tồn tại - Thất bại 404 (TC-08)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/99999",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "99999"
+                            ]
+                        },
+                        "description": "Định danh không tồn tại trong hệ thống. Kỳ vọng HTTP 404 Not Found"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "99.6 Xem chi tiết Mentor không truyền JWT Token - Thất bại 401 (TC-09)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/mentors/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "mentors",
+                                "1"
+                            ]
+                        },
+                        "description": "Yêu cầu không có Bearer token. Kỳ vọng HTTP 401 / 403 từ Spring Security"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

@@ -183,7 +183,7 @@ export function GroupDetailHeader({
           onClose={() => setShareModalOpen(false)}
           shareItem={{
             title: group.name,
-            subtitle: `${group.memberCount} thành viên • ${group.shortDescription || group.description || 'Hội nhóm trên AlumNect'}`,
+            subtitle: `${group.memberCount} thành viên • ${group.description || 'Hội nhóm trên AlumNect'}`,
             thumbnail: group.coverImageUrl,
             url: `${window.location.origin}/app/groups/${group.id}`,
             typeLabel: 'hội nhóm',
