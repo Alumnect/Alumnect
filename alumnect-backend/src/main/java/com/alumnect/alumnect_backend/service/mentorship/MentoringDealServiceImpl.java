@@ -290,10 +290,6 @@ public class MentoringDealServiceImpl implements MentoringDealService {
             throw new BadRequestException("Thỏa thuận đã bị hủy bỏ, không thể chỉnh sửa điều khoản.");
         }
 
-        if (deal.getStatus() == MentoringDealStatus.REJECTED) {
-            throw new BadRequestException("Thỏa thuận đã bị từ chối, không thể chỉnh sửa điều khoản.");
-        }
-
         // Mở khóa nếu trước đó đang ở trạng thái khóa hoặc DEAL_CONFIRMED (do lỡ bấm nhầm hoặc deal lại)
         deal.setIsLocked(false);
         deal.setLockedAt(null);
@@ -719,8 +715,7 @@ public class MentoringDealServiceImpl implements MentoringDealService {
 
         // Quyền chỉnh sửa (trả giá / deal lại): người tham gia có thể chỉnh sửa/trả giá lại nếu chưa thanh toán và chưa hủy
         boolean canEdit = (isStudent || isMentor) && !isPaid
-                && deal.getStatus() != MentoringDealStatus.CANCELLED
-                && deal.getStatus() != MentoringDealStatus.REJECTED;
+                && deal.getStatus() != MentoringDealStatus.CANCELLED;
 
         response.setCanConfirm(canConfirm);
         response.setCanEdit(canEdit);

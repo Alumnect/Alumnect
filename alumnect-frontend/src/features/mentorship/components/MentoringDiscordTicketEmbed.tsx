@@ -368,9 +368,22 @@ export function MentoringDiscordTicketEmbed({
                 )}
               </div>
             ) : ticket.status === 'REJECTED' ? (
-              <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
-                Đã từ chối {ticket.handlerName ? `(${ticket.handlerName})` : ''}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                  Đã từ chối {ticket.handlerName ? `(${ticket.handlerName})` : ''}
+                </span>
+                {onRevert && (
+                  <button
+                    type="button"
+                    onClick={onRevert}
+                    title="Đề xuất lại các điều khoản mới (Deal lại)"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>Deal lại</span>
+                  </button>
+                )}
+              </div>
             ) : (
               <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
                 Đã thay thế bởi phiên bản mới
