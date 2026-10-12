@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
+import com.alumnect.alumnect_backend.common.enums.ProposalSource;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.user.User;
 import jakarta.persistence.*;
@@ -47,6 +48,21 @@ public class MentoringDeal {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id")
     private Conversation conversation;
+
+    /** ID của Mentoring Request liên kết với thỏa thuận (UC104) */
+    @Column(name = "request_id")
+    private Long requestId;
+
+    /** Loại Ticket (Mặc định là DEAL) */
+    @Column(name = "ticket_type", length = 20, nullable = false)
+    @Builder.Default
+    private String ticketType = "DEAL";
+
+    /** Nguồn gốc đề xuất: REQUEST_ACCEPTANCE hoặc RENEGOTIATION */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "proposal_source", length = 30, nullable = false)
+    @Builder.Default
+    private ProposalSource proposalSource = ProposalSource.RENEGOTIATION;
 
     /** Phạm vi công việc / nội dung chi tiết của Task cần thực hiện */
     @Column(name = "task_scope", columnDefinition = "TEXT", nullable = false)

@@ -45,7 +45,7 @@ public class MentoringTaskPaymentController {
                 .body(ApiResponse.success("Khởi tạo thông tin thanh toán Mentoring Task thành công", response));
     }
 
-    @GetMapping("/{orderCode}/status")
+    @GetMapping(value = {"/{orderCode}/status", "/{orderCode}"})
     @Operation(summary = "Tra cứu trạng thái thanh toán Task (Polling & Realtime check)",
                description = "Kiểm tra kết quả thanh toán theo orderCode và kích hoạt Task sang PREPARATION nếu thành công")
     public ResponseEntity<ApiResponse<MentoringTaskPaymentStatusResponse>> checkTaskPaymentStatus(

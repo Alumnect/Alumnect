@@ -6,47 +6,34 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> CHƯA_CÓ_DEAL: Mentor đã ACCEPT Request / Hai bên trao đổi qua Chat
-    CHƯA_CÓ_DEAL --> PROPOSED: Một bên khởi tạo đề xuất Deal (Snapshot v1)
+    [*] --> CHƯA_CÓ_DEAL: Mentor đã ACCEPT Request / Có Chat for Task riêng gắn với Request
     
-    PROPOSED --> STUDENT_CONFIRMED: Student bấm xác nhận Deal
-    PROPOSED --> MENTOR_CONFIRMED: Mentor bấm xác nhận Deal
+    CHƯA_CÓ_DEAL --> MENTOR_CONFIRMED: Mentor "Chấp nhận Deal theo Request" (proposal_source = REQUEST_ACCEPTANCE)
+    CHƯA_CÓ_DEAL --> MENTOR_CONFIRMED: Mentor "Deal lại / Tạo Deal Ticket" (proposal_source = RENEGOTIATION)
     
-    STUDENT_CONFIRMED --> PROPOSED: Một bên thay đổi điều khoản (Sinh Snapshot v+1, reset xác nhận)
-    MENTOR_CONFIRMED --> PROPOSED: Một bên thay đổi điều khoản (Sinh Snapshot v+1, reset xác nhận)
+    MENTOR_CONFIRMED --> DEAL_CONFIRMED: Student chọn "Xác nhận & thanh toán" (Khóa Deal, chọn Mentor cho Request)
+    MENTOR_CONFIRMED --> SUPERSEDED: Student chọn "Yêu cầu điều chỉnh" (Phiên bản cũ SUPERSEDED, chờ Mentor gửi ticket mới)
+    MENTOR_CONFIRMED --> REJECTED: Student chọn "Từ chối" (Từ chối đề xuất, chưa tạo Task)
     
-    STUDENT_CONFIRMED --> DEAL_CONFIRMED: Bên Mentor xác nhận tiếp theo (Cả 2 đã xác nhận)
-    MENTOR_CONFIRMED --> DEAL_CONFIRMED: Bên Student xác nhận tiếp theo (Cả 2 đã xác nhận)
+    SUPERSEDED --> MENTOR_CONFIRMED: Mentor gửi Deal Ticket phiên bản mới (v+1)
     
-    DEAL_CONFIRMED --> KHÓA_SNAPSHOT: Hệ thống khóa bất biến Snapshot & Ghi nhận DEAL_CONFIRMED
-    KHÓA_SNAPSHOT --> SẴN_SÀNG_THANH_TOÁN: Sẵn sàng kích hoạt UC105 (Thanh toán Deal)
+    DEAL_CONFIRMED --> SẴN_SÀNG_THANH_TOÁN: Mở thanh toán UC105, các chat khác của Request chuyển read-only
     
-    PROPOSED --> CANCELLED: Một bên hủy bỏ thỏa thuận
-    STUDENT_CONFIRMED --> CANCELLED: Một bên hủy bỏ thỏa thuận
-    MENTOR_CONFIRMED --> CANCELLED: Một bên hủy bỏ thỏa thuận
-    
-    CANCELLED --> [*]
-    SẴN_SÀNG_THANH_TOÁN --> [*]
+    DEAL_CONFIRMED --> [*]
+    REJECTED --> [*]
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-* **Bước 1 - Khởi đầu (Trigger)**: Sau khi Mentor chấp thuận Mentoring Request của Student, hai bên tiến hành trao đổi làm rõ yêu cầu thông qua tính năng Direct Messaging hiện có. Một trong hai bên (Student hoặc Mentor) nhấn "Đề xuất Deal" từ cửa sổ chat hoặc trang Quản lý Deal để mở form khởi tạo các điều khoản.
-* **Bước 2 - Đề xuất & Lưu Snapshot v1**: Người đề xuất điền các thông tin: Phạm vi công việc (`task_scope`), Giá thỏa thuận (`agreed_price`), Hạn chót (`deadline`), Hình thức làm việc (`working_mode`), Hình thức tham gia (`participation_type`), Loại nhiệm vụ (`task_type`), Kết quả kỳ vọng (`expected_result`) và Ghi chú. Hệ thống kiểm tra tính hợp lệ dữ liệu, tạo bản ghi `MentoringDeal` ở trạng thái `PROPOSED` (nếu người tạo chưa xác nhận) hoặc tự động đánh dấu xác nhận của bên khởi tạo, đồng thời lưu bản chụp điều khoản đầu tiên `MentoringDealSnapshot` với `version = 1`. Hệ thống tự động đẩy một tin nhắn thông báo (System Message) vào cuộc hội thoại Direct Messaging giữa hai bên.
-* **Bước 3 - Trao đổi & Điều chỉnh điều khoản (Negotiation & Re-snapshotting)**: Nếu một trong hai bên cảm thấy các điều khoản chưa phù hợp, họ có thể chỉnh sửa các thông số thỏa thuận. Mỗi lần điều chỉnh:
-  - Hệ thống tăng số thứ tự phiên bản (`version = version + 1`).
-  - Hệ thống tạo một bản ghi `MentoringDealSnapshot` mới tương ứng với phiên bản mới.
-  - Hệ thống xóa bỏ/reset trạng thái xác nhận trước đó của cả hai bên (`student_confirmed = false`, `mentor_confirmed = false`), đưa trạng thái Deal về `PROPOSED`.
-  - Hệ thống tự động gửi tin nhắn hệ thống vào chat thông báo phiên bản mới cần được cả hai bên xem xét và xác nhận lại.
-* **Bước 4 - Xác nhận thỏa thuận (Confirmation)**:
-  - Khi Mentor bấm "Xác nhận Deal": Hệ thống kiểm tra quyền hạn, đánh dấu `mentor_confirmed = true` và lưu thời điểm `mentor_confirmed_at`. Nếu Student chưa xác nhận, Deal chuyển trạng thái `MENTOR_CONFIRMED`.
-  - Khi Student bấm "Xác nhận Deal": Hệ thống kiểm tra quyền hạn, đánh dấu `student_confirmed = true` và lưu thời điểm `student_confirmed_at`. Nếu Mentor chưa xác nhận, Deal chuyển trạng thái `STUDENT_CONFIRMED`.
-* **Bước 5 - Khóa Snapshot & Kết thúc (Deal Locking & Settlement Readiness)**:
-  - Ngay khi cả hai bên đều đã hoàn tất xác nhận (`student_confirmed == true` VÀ `mentor_confirmed == true`), hệ thống tự động:
-    1. Chuyển trạng thái Deal thành `DEAL_CONFIRMED`.
-    2. Thiết lập cờ `is_locked = true` trên Deal và trên bản chụp `MentoringDealSnapshot` hiện tại.
-    3. Lưu thời điểm khóa `locked_at`.
-    4. Gửi tin nhắn hệ thống chúc mừng hai bên đã chốt Deal thành công.
-  - Sau thời điểm này, không bên nào được phép chỉnh sửa các điều khoản hoặc hủy bỏ Deal qua chức năng thỏa thuận này nữa. Deal chính thức bước vào trạng thái sẵn sàng để thanh toán ở luồng UC105.
+* **Tiền điều kiện**: Mentor đã ACCEPT Request; có Chat for Task riêng gắn với Request; Request chưa chốt với Mentor khác.
+* **Bước 1 - Khởi đầu (Trigger)**: Sinh viên (Student) và Cố vấn (Mentor) trao đổi trong Chat for Task. Mentor chọn:
+  - **"Chấp nhận Deal theo Request"** (`proposal_source = REQUEST_ACCEPTANCE`): Hệ thống tạo Deal Ticket giữ nguyên điều kiện và Giá đề xuất cụ thể của Student; tự động xác nhận từ phía Mentor (`mentor_confirmed = true`).
+  - **"Deal lại / Tạo Deal Ticket"** (`proposal_source = RENEGOTIATION`): Mentor điền Task Scope, Price, Deadline, Working Mode, Participation Type, Task Type, Expected Result và ghi chú; gửi Deal Ticket ngay trong chat; tự động xác nhận từ phía Mentor.
+* **Bước 2 - Hiển thị thẻ Deal Ticket trong Chat**: Hệ thống hiển thị thẻ Deal Ticket mới nhất ngay trong Chat for Task (`MentoringDealTicketCard`), gồm đầy đủ: nội dung, phiên bản, người gửi, thời điểm, trạng thái. Ticket loại `DEAL` gắn với `request_id` và `conversation_id`; chưa cần Task tồn tại.
+* **Bước 3 - Phản hồi từ Student**: Student xem Deal Ticket trong chat và có 3 lựa chọn:
+  1. **"Xác nhận & thanh toán"**: Ghi nhận Student đồng ý cùng phiên bản Mentor đã xác nhận. Hệ thống khóa Deal Snapshot (`is_locked = true`, `DEAL_CONFIRMED`), chọn Mentor này cho Request và lập tức mở cổng thanh toán UC105. Mỗi Request chỉ chốt một Mentor; các cuộc chat khác gắn với Request này giữ nguyên lịch sử, chuyển sang chế độ read-only với thông báo *"Request đã chọn Mentor khác; không nhận/chốt Deal mới"*.
+  2. **"Yêu cầu điều chỉnh"**: Phiên bản Deal Ticket hiện tại chuyển sang trạng thái `SUPERSEDED` và không thể thanh toán; hai bên tiếp tục chat; Mentor gửi phiên bản Deal Ticket mới (v+1).
+  3. **"Từ chối"**: Chuyển trạng thái Deal thành `REJECTED`, chỉ từ chối đề xuất này, chưa tạo Task.
+* **Hậu điều kiện**: Deal ở trạng thái `DEAL_CONFIRMED`, snapshot bị khóa và sẵn sàng cho thanh toán UC105.
 
 ---
 
@@ -57,8 +44,9 @@ Module Mentorship là phân hệ cốt lõi kết nối sinh viên/người họ
 
 **Function trigger**:
 * **Navigation path**:
-  - Lối vào 1: Trang Trò chuyện trực tiếp (`/app/messages` -> Chọn cuộc hội thoại 1-1 giữa Student và Mentor -> Nút "Deal #ID" hoặc "Đề xuất Deal" trên Header).
-  - Lối vào 2: Trang Danh sách thỏa thuận Mentoring Deals (`/app/mentoring/deals` -> Tab trạng thái hoặc nút "Tạo đề xuất Deal mới").
+  - Lối vào 1: Trực tiếp trong Chat for Task (`/app/messages` -> Thẻ `MentoringDealTicketCard` ghim trên đỉnh danh sách tin nhắn).
+  - Lối vào 2: Header action trong Chat (`MentoringDealChatHeaderAction` trên thanh công cụ chat).
+  - Lối vào 3: Trang Danh sách thỏa thuận Mentoring Deals (`/app/mentoring/deals`).
 * **Timing Frequency**: On demand (bất cứ khi nào hai bên có nhu cầu thiết lập, đàm phán hoặc xác nhận điều khoản hướng dẫn).
 
 **Function description**:
@@ -67,52 +55,62 @@ Module Mentorship là phân hệ cốt lõi kết nối sinh viên/người họ
   - `Mentor` (Cựu sinh viên / Chuyên gia hướng dẫn có tài khoản Mentor hợp lệ).
 * **Purpose**: Thiết lập một thỏa thuận ràng buộc rõ ràng, minh bạch về phạm vi công việc, chi phí, hạn chót và kết quả nghiệm thu giữa Student và Mentor trước khi tiến hành thanh toán và bàn giao kết quả.
 * **Interface**:
+  - Thẻ Deal Ticket trong Chat (`MentoringDealTicketCard`): Hiển thị mã Ticket, phiên bản, nguồn gốc đề xuất, phạm vi, giá, hạn chót, kết quả kỳ vọng, trạng thái xác nhận của 2 bên; các nút "Chấp nhận theo Request", "Deal lại / Tạo Deal Ticket" cho Mentor; các nút "Xác nhận & thanh toán", "Yêu cầu điều chỉnh", "Từ chối" cho Student; và nút "Xem Task" sau khi thanh toán.
   - Danh sách Deal (`MentoringDealsPage`): Bộ lọc trạng thái tab, thanh tìm kiếm, thẻ tóm tắt Deal (`MentoringDealCard`), Skeleton loading, Empty state thân thiện.
-  - Modal Form Đề xuất / Điều chỉnh (`MentoringDealFormModal`): Các trường nhập liệu Task Scope, Giá, Hạn chót, Hình thức làm việc, Loại nhiệm vụ, Kết quả kỳ vọng, Ghi chú; kiểm tra lỗi hiển thị ngay dưới trường nhập liệu (inline error).
-  - Modal Chi tiết & Thao tác Deal (`MentoringDealActionModal`): Hiển thị Deal Snapshot hiện tại (`MentoringDealSnapshotCard`), trạng thái xác nhận của hai bên, Lịch sử các phiên bản (`MentoringDealHistoryTimeline`), nút tác vụ Xác nhận, Điều chỉnh điều khoản, Hủy thỏa thuận.
-  - Header Action trong Chat (`MentoringDealChatHeaderAction`): Nhận diện thỏa thuận gắn liền với cuộc hội thoại và mở xem nhanh chi tiết.
+  - Modal Form Đề xuất / Điều chỉnh (`MentoringDealFormModal`): Các trường nhập liệu Task Scope, Giá, Hạn chót, Hình thức làm việc, Loại nhiệm vụ, Kết quả kỳ vọng, Ghi chú.
+  - Modal Chi tiết & Thao tác Deal (`MentoringDealActionModal`): Hiển thị Deal Snapshot hiện tại, lịch sử các phiên bản, nút tác vụ xác nhận và thanh toán.
 
 **Data processing**:
-1. **Khởi tạo Đề xuất (Propose Deal)**:
-   - Hệ thống xác định danh tính người dùng hiện tại từ JWT (`SecurityUtils.getCurrentUserId()`).
-   - Kiểm tra `mentorId` và `studentId` hợp lệ, tồn tại trong bảng `users`.
-   - Đảm bảo người tạo đề xuất chính là một trong hai bên (`studentId` hoặc `mentorId`).
-   - Kiểm tra xem giữa 2 người này đã có Deal nào đang mở (chưa hoàn tất hoặc chưa hủy) hay chưa để tránh trùng lặp.
+1. **Khởi tạo Đề xuất / Deal Ticket**:
+   - Xác định vai trò Mentor/Student.
+   - Ghi nhận `request_id`, `ticket_type = 'DEAL'`, `proposal_source` (`REQUEST_ACCEPTANCE` hoặc `RENEGOTIATION`).
+   - Kiểm tra Request chưa bị chốt với Mentor khác.
+   - Tự động đánh dấu các Deal chưa chốt trước đó trong cùng cuộc hội thoại thành `SUPERSEDED`.
    - Lưu bản ghi vào bảng `mentoring_deals` với `version = 1`.
    - Lưu bản chụp tương ứng vào bảng `mentoring_deal_snapshots`.
-   - Nếu có `conversationId`, tạo tin nhắn hệ thống loại `SYSTEM` vào bảng `messages` để thông báo cho đối tác.
-2. **Cập nhật Điều khoản (Update Deal Terms)**:
-   - Kiểm tra Deal tồn tại và người dùng là người tham gia (Student hoặc Mentor).
-   - Kiểm tra trạng thái Deal: Nếu đã là `DEAL_CONFIRMED` hoặc `is_locked == true` -> ném ngoại lệ `ConflictException` (Bất biến).
-   - Tăng `version = version + 1`, cập nhật các điều khoản mới trên `mentoring_deals`.
-   - Reset xác nhận: `student_confirmed = false`, `mentor_confirmed = false`, `status = PROPOSED`.
-   - Lưu bản chụp phiên bản mới vào `mentoring_deal_snapshots`.
-   - Tự động ghi log tin nhắn hệ thống vào cuộc hội thoại.
-3. **Xác nhận Deal (Confirm Deal)**:
-   - Kiểm tra Deal chưa bị khóa và chưa bị hủy.
-   - Nếu người gọi là Student: Kiểm tra nếu đã xác nhận trước đó -> báo lỗi; cập nhật `student_confirmed = true`, `student_confirmed_at = now()`.
-   - Nếu người gọi là Mentor: Kiểm tra nếu đã xác nhận trước đó -> báo lỗi; cập nhật `mentor_confirmed = true`, `mentor_confirmed_at = now()`.
-   - Nếu sau cập nhật, cả hai bên đều đã xác nhận (`student_confirmed == true` VÀ `mentor_confirmed == true`):
-     - Gán `status = DEAL_CONFIRMED`.
-     - Gán `is_locked = true`, `locked_at = now()`.
-     - Cập nhật bản chụp snapshot hiện tại `is_locked = true`.
-   - Gửi tin nhắn hệ thống vào Chat.
-4. **Hủy Deal (Cancel Deal)**:
+   - Gửi tin nhắn hệ thống vào Chat for Task.
+2. **Yêu cầu Điều chỉnh (Request Adjustment)**:
+   - Chỉ Student được quyền thực hiện khi Deal chưa khóa.
+   - Chuyển trạng thái Deal sang `SUPERSEDED`.
+   - Gửi tin nhắn hệ thống thông báo Mentor gửi lại Deal Ticket mới.
+3. **Từ chối (Reject Deal)**:
+   - Chuyển trạng thái Deal sang `REJECTED`.
+   - Gửi tin nhắn hệ thống thông báo từ chối.
+4. **Xác nhận Deal & Khóa Snapshot (Confirm & Lock)**:
+   - Khi Student chọn "Xác nhận & thanh toán" trên phiên bản Mentor đã xác nhận:
+     - Gán `status = DEAL_CONFIRMED`, `is_locked = true`, `locked_at = now()`.
+     - Nếu có `request_id`: tìm các Deal của các Mentor khác cho cùng Request này và đánh dấu `SUPERSEDED`, gửi tin nhắn thông báo cuộc trao đổi chuyển sang chỉ đọc vì *"Request đã chọn Mentor khác"*.
+     - Mở giao diện thanh toán UC105.
+5. **Hủy Deal (Cancel Deal)**:
    - Chỉ cho phép hủy khi Deal chưa bị khóa (`DEAL_CONFIRMED`).
    - Gán `status = CANCELLED`, ghi chú lý do hủy.
 
-**Screen layout**:
-* *Figure 1: Giao diện Trang danh sách Mentoring Deals (`/app/mentoring/deals`)*
-* *Figure 2: Giao diện Modal Đề xuất / Điều chỉnh điều khoản Deal*
-* *Figure 3: Giao diện Modal Chi tiết Snapshot, Lịch sử Timeline và Thao tác Xác nhận Deal*
-* *Figure 4: Nút tích hợp nhanh Deal trên Header thanh công cụ Trò chuyện Direct Messaging*
-
 **Function details**:
-* **Data**:
-  - `deal_id` (Long, Khóa chính).
-  - `mentor_id`, `student_id` (Long, Khóa ngoại tới `users`).
-  - `conversation_id` (Long, Khóa ngoại tới `conversations`, nullable).
-  - `task_scope` (Text, 10 - 5000 ký tự).
+* **Data Fields**:
+  - `task_scope`: Phạm vi công việc.
+  - `agreed_price`: Mức giá thỏa thuận (VND).
+  - `deadline`: Hạn chót hoàn thành.
+  - `working_mode`: ONLINE, OFFLINE, BOTH.
+  - `participation_type`: INDIVIDUAL, GROUP.
+  - `task_type`: CONSULTATION, PROJECT_MENTORING...
+  - `expected_result`: Kết quả kỳ vọng đầu ra.
+  - `ticket_id`: Mã định danh Deal Ticket.
+  - `ticket_type`: DEAL.
+  - `request_id`: ID của Mentoring Request.
+  - `conversation_id`: ID cuộc trò chuyện Chat for Task.
+  - `deal_version`: Phiên bản Snapshot.
+  - `proposal_source`: REQUEST_ACCEPTANCE, RENEGOTIATION.
+  - `student_confirmation`: Trạng thái xác nhận của Học viên.
+  - `mentor_confirmation`: Trạng thái xác nhận của Cố vấn.
+* **Business rules**:
+  - BR-DEAL-01: Deal Ticket thuộc UC104; không thêm mã UC riêng. Thay đổi deadline trước khi Task bắt đầu nằm trong Deal Ticket; sau khi Task hoạt động dùng Deadline Extension Ticket tại UC109.
+  - BR-DEAL-02: Chat for Task là mục riêng trong Mentoring, tái sử dụng hạ tầng nhắn tin nhưng bổ sung liên kết Request/Task, tin hệ thống và thẻ Ticket nghiệp vụ. Deal Ticket do Student/Mentor xử lý, không gửi Admin.
+  - BR-DEAL-03: Mỗi Request chốt đúng một Mentor; các chat khác giữ lịch sử, chuyển read-only với thông báo “Request đã chọn Mentor khác”; không nhận/chốt Deal mới.
+  - BR-DEAL-04: Sau khi cả hai confirm, snapshot bị khóa bất biến, không bên nào được tự ý sửa Deal.
+* **Error Handling**:
+  - Vi phạm định dạng/bỏ trống dữ liệu -> Trả về HTTP 400 Bad Request kèm chi tiết lỗi từng trường.
+  - Request đã chốt với Mentor khác -> Trả về HTTP 409 Conflict.
+  - Không tìm thấy Deal/User/Hội thoại -> Trả về HTTP 404 Not Found. `task_scope` (Text, 10 - 5000 ký tự).
   - `agreed_price` (BigDecimal, >= 0 VND).
   - `deadline` (Timestamp with time zone, thời điểm tương lai).
   - `working_mode` (Enum: ONLINE, OFFLINE, BOTH).

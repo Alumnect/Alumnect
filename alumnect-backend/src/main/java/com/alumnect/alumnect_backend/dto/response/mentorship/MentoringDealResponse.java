@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
+import com.alumnect.alumnect_backend.common.enums.ProposalSource;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -19,8 +20,20 @@ import java.time.Instant;
 @AllArgsConstructor
 public class MentoringDealResponse {
 
-    /** ID định danh của thỏa thuận Deal */
+    /** ID định danh của thỏa thuận Deal / Ticket */
     private Long id;
+
+    /** ID của Ticket (tương đương id của Deal) */
+    private Long ticketId;
+
+    /** Loại Ticket: DEAL */
+    private String ticketType;
+
+    /** Nguồn gốc đề xuất: REQUEST_ACCEPTANCE hoặc RENEGOTIATION */
+    private ProposalSource proposalSource;
+
+    /** ID của Mentoring Request liên kết */
+    private Long requestId;
 
     /** ID của Học viên (Student) */
     private Long studentId;

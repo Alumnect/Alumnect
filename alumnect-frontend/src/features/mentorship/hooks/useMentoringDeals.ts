@@ -135,3 +135,43 @@ export function useCancelDeal() {
     },
   })
 }
+
+/**
+ * Mutation từ chối Deal Ticket (UC104).
+ */
+export function useRejectDeal() {
+  const queryClient = useQueryClient()
+
+  return useMutation<MentoringDeal, Error, { dealId: number; reason?: string }>({
+    mutationFn: ({ dealId, reason }) => mentoringDealApi.rejectDeal(dealId, reason),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.detail(data.id) })
+      if (data.conversationId) {
+        queryClient.invalidateQueries({
+          queryKey: DEAL_QUERY_KEYS.byConversation(data.conversationId),
+        })
+      }
+    },
+  })
+}
+
+/**
+ * Mutation yêu cầu điều chỉnh Deal Ticket (UC104).
+ */
+export function useRequestAdjustment() {
+  const queryClient = useQueryClient()
+
+  return useMutation<MentoringDeal, Error, { dealId: number; note?: string }>({
+    mutationFn: ({ dealId, note }) => mentoringDealApi.requestAdjustment(dealId, note),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.detail(data.id) })
+      if (data.conversationId) {
+        queryClient.invalidateQueries({
+          queryKey: DEAL_QUERY_KEYS.byConversation(data.conversationId),
+        })
+      }
+    },
+  })
+}

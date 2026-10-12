@@ -21,6 +21,7 @@ public interface MentoringDealMapper {
      * @param deal Entity thỏa thuận Deal
      * @return DTO phản hồi Deal
      */
+    @Mapping(target = "ticketId", source = "id")
     @Mapping(target = "studentId", source = "student.id")
     @Mapping(target = "studentName", source = "student.profile.fullName")
     @Mapping(target = "studentAvatar", source = "student.profile.avatarUrl")

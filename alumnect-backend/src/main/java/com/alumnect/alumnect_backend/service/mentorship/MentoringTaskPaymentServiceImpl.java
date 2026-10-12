@@ -327,6 +327,7 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
                     .deal(deal)
                     .student(deal.getStudent())
                     .mentor(deal.getMentor())
+                    .conversation(deal.getConversation())
                     .taskTitle(shortTitle)
                     .taskScope(deal.getTaskScope())
                     .agreedPrice(deal.getAgreedPrice())
@@ -353,9 +354,9 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
                 Message systemMsg = Message.builder()
                         .conversation(deal.getConversation())
                         .sender(deal.getStudent())
-                        .content("🎉 Học viên đã hoàn tất thanh toán thành công số tiền " + formattedPrice +
-                                " cho Deal #" + deal.getId() + ". Mentoring Task #" + task.getId() +
-                                " đã chính thức được kích hoạt và chuyển sang giai đoạn CHUẨN BỊ (PREPARATION)!")
+                        .content("🎉 Thanh toán thành công (" + formattedPrice + ")! Deal Ticket #" + deal.getId() +
+                                " đã chuyển thành Mentoring Task #" + task.getId() +
+                                " (giai đoạn PREPARATION). Hãy bắt đầu chuẩn bị thực hiện Task!")
                         .type(MessageType.SYSTEM)
                         .createdAt(now)
                         .build();

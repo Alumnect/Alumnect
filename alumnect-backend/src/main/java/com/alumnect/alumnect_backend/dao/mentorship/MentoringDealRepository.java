@@ -73,4 +73,21 @@ public interface MentoringDealRepository extends JpaRepository<MentoringDeal, Lo
             @Param("mentorId") Long mentorId,
             @Param("activeStatuses") List<MentoringDealStatus> activeStatuses
     );
+
+    /**
+     * Tìm tất cả thỏa thuận Deal theo mã Request.
+     *
+     * @param requestId ID của Mentoring Request
+     * @return Danh sách các Deal liên kết với Request
+     */
+    List<MentoringDeal> findByRequestId(Long requestId);
+
+    /**
+     * Tìm các thỏa thuận Deal khác cùng mã Request ngoại trừ Deal hiện tại.
+     *
+     * @param requestId ID của Mentoring Request
+     * @param id ID của Deal hiện tại cần loại trừ
+     * @return Danh sách các Deal khác cùng Request
+     */
+    List<MentoringDeal> findByRequestIdAndIdNot(Long requestId, Long id);
 }

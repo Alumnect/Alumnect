@@ -8,6 +8,7 @@ import {
   type ProposeDealFormData,
   type UpdateDealFormData,
   type MentoringDeal,
+  type ProposalSource,
 } from '../model/mentoringDealTypes'
 import { useProposeDeal, useUpdateDealTerms } from '../hooks/useMentoringDeals'
 
@@ -18,7 +19,9 @@ interface MentoringDealFormModalProps {
   deal?: MentoringDeal
   mentorId?: number
   studentId?: number
+  requestId?: number | null
   conversationId?: number | null
+  proposalSource?: ProposalSource
   onSuccess?: (deal: MentoringDeal) => void
 }
 
@@ -33,7 +36,9 @@ export function MentoringDealFormModal({
   deal,
   mentorId,
   studentId,
+  requestId,
   conversationId,
+  proposalSource,
   onSuccess,
 }: MentoringDealFormModalProps) {
   const isEdit = mode === 'edit'
@@ -110,6 +115,8 @@ export function MentoringDealFormModal({
         const payload = {
           ...data,
           mentorId: mentorId || data.mentorId,
+          requestId: requestId || null,
+          proposalSource: proposalSource || 'RENEGOTIATION',
           agreedPrice: Number(data.agreedPrice),
           deadline: new Date(data.deadline).toISOString(),
         }

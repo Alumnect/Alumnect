@@ -16,6 +16,12 @@ public enum MentoringDealStatus {
     /** Cả hai bên đã cùng xác nhận Snapshot. Thỏa thuận đã bị khóa và sẵn sàng thanh toán UC105 */
     DEAL_CONFIRMED,
 
+    /** Phiên bản Deal Ticket cũ đã bị thay thế bởi phiên bản mới (không được xác nhận/thanh toán) */
+    SUPERSEDED,
+
+    /** Học viên hoặc Mentor từ chối đề xuất Deal Ticket */
+    REJECTED,
+
     /** Thỏa thuận đã bị hủy bỏ bởi một trong hai bên */
     CANCELLED
 }

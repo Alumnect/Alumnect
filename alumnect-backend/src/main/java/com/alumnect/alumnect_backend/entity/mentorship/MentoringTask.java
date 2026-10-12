@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
+import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,6 +33,11 @@ public class MentoringTask {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deal_id", nullable = false, unique = true)
     private MentoringDeal deal;
+
+    /** Cuộc trò chuyện Chat for Task riêng gắn với Task */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conversation_id")
+    private Conversation conversation;
 
     /** Học viên (Student) nhận hướng dẫn và là người thanh toán */
     @ManyToOne(fetch = FetchType.LAZY)

@@ -61,6 +61,28 @@ export function MentoringDealBadge({
     )
   }
 
+  if (status === 'REJECTED') {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-700 ring-1 ring-rose-500/20 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-500/30 ${className}`}
+      >
+        <XCircle className="h-3.5 w-3.5 text-rose-500" />
+        <span>Đã từ chối đề xuất</span>
+      </span>
+    )
+  }
+
+  if (status === 'SUPERSEDED') {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700 ring-1 ring-amber-500/20 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-500/30 ${className}`}
+      >
+        <Clock className="h-3.5 w-3.5 text-amber-500" />
+        <span>Bản cũ đã thay thế (Yêu cầu điều chỉnh)</span>
+      </span>
+    )
+  }
+
   if (status === 'CANCELLED') {
     return (
       <span

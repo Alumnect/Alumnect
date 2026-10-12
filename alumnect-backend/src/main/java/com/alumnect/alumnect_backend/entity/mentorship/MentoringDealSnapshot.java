@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.entity.mentorship;
 import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
+import com.alumnect.alumnect_backend.common.enums.ProposalSource;
 import com.alumnect.alumnect_backend.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,6 +36,17 @@ public class MentoringDealSnapshot {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deal_id", nullable = false)
     private MentoringDeal deal;
+
+    /** Loại Ticket: DEAL */
+    @Column(name = "ticket_type", length = 20, nullable = false)
+    @Builder.Default
+    private String ticketType = "DEAL";
+
+    /** Nguồn gốc đề xuất: REQUEST_ACCEPTANCE hoặc RENEGOTIATION */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "proposal_source", length = 30, nullable = false)
+    @Builder.Default
+    private ProposalSource proposalSource = ProposalSource.RENEGOTIATION;
 
     /** Số thứ tự phiên bản của snapshot này */
     @Column(name = "version", nullable = false)

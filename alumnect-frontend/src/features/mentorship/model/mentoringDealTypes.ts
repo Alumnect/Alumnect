@@ -19,6 +19,11 @@ export type MentoringTaskType =
   | 'OTHER'
 
 /**
+ * Nguồn gốc đề xuất thỏa thuận Deal (UC104).
+ */
+export type ProposalSource = 'REQUEST_ACCEPTANCE' | 'RENEGOTIATION'
+
+/**
  * Trạng thái của Mentoring Deal qua các giai đoạn (UC104).
  */
 export type MentoringDealStatus =
@@ -26,6 +31,8 @@ export type MentoringDealStatus =
   | 'STUDENT_CONFIRMED'
   | 'MENTOR_CONFIRMED'
   | 'DEAL_CONFIRMED'
+  | 'SUPERSEDED'
+  | 'REJECTED'
   | 'CANCELLED'
 
 /**
@@ -45,6 +52,10 @@ export interface PageResponse<T> {
  */
 export interface MentoringDeal {
   id: number
+  ticketId?: number
+  ticketType?: string
+  proposalSource?: ProposalSource
+  requestId?: number | null
   studentId: number
   studentName?: string
   studentAvatar?: string | null
@@ -88,6 +99,8 @@ export interface MentoringDeal {
 export interface MentoringDealSnapshot {
   id: number
   dealId: number
+  ticketType?: string
+  proposalSource?: ProposalSource
   version: number
   taskScope: string
   agreedPrice: number
@@ -118,7 +131,9 @@ export interface MentoringDealDetail {
 export interface ProposeDealPayload {
   mentorId: number
   studentId?: number
+  requestId?: number | null
   conversationId?: number | null
+  proposalSource?: ProposalSource
   taskScope: string
   agreedPrice: number
   deadline: string

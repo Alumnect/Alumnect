@@ -81,4 +81,25 @@ public interface MentoringDealService {
      * @return DTO thông tin Deal đã chuyển sang trạng thái CANCELLED
      */
     MentoringDealResponse cancelDeal(Long currentUserId, Long dealId, String reason);
+
+    /**
+     * Từ chối đề xuất thỏa thuận Deal Ticket (UC104).
+     *
+     * @param currentUserId ID người dùng thực hiện từ chối
+     * @param dealId ID của thỏa thuận Deal
+     * @param reason Lý do từ chối tùy chọn
+     * @return DTO thông tin Deal chuyển sang trạng thái REJECTED
+     */
+    MentoringDealResponse rejectDeal(Long currentUserId, Long dealId, String reason);
+
+    /**
+     * Yêu cầu điều chỉnh thỏa thuận Deal (UC104).
+     * Phiên bản hiện tại sẽ chuyển sang trạng thái SUPERSEDED để Mentor gửi lại phiên bản mới.
+     *
+     * @param currentUserId ID người dùng thực hiện yêu cầu (Student)
+     * @param dealId ID của thỏa thuận Deal
+     * @param note Ghi chú nội dung yêu cầu điều chỉnh
+     * @return DTO thông tin Deal chuyển sang trạng thái SUPERSEDED
+     */
+    MentoringDealResponse requestAdjustment(Long currentUserId, Long dealId, String note);
 }

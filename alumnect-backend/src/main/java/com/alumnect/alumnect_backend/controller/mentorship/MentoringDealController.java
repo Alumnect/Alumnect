@@ -163,6 +163,42 @@ public class MentoringDealController {
     }
 
     /**
+     * API từ chối thỏa thuận Deal Ticket (UC104).
+     *
+     * @param id ID của thỏa thuận Deal
+     * @param reason Lý do từ chối tùy chọn
+     * @return Phản hồi chuẩn chứa thông tin Deal đã từ chối
+     */
+    @PostMapping("/{id}/reject")
+    @Operation(summary = "Từ chối Deal Ticket", description = "Student hoặc Mentor từ chối Deal Ticket đề xuất (UC104)")
+    public ResponseEntity<ApiResponse<MentoringDealResponse>> rejectDeal(
+            @PathVariable Long id,
+            @RequestParam(required = false) String reason
+    ) {
+        Long currentUserId = getCurrentUserId();
+        MentoringDealResponse response = dealService.rejectDeal(currentUserId, id, reason);
+        return ResponseEntity.ok(ApiResponse.success("Từ chối thỏa thuận Deal Ticket thành công.", response));
+    }
+
+    /**
+     * API yêu cầu điều chỉnh Deal Ticket (UC104).
+     *
+     * @param id ID của thỏa thuận Deal
+     * @param note Ghi chú yêu cầu điều chỉnh tùy chọn
+     * @return Phản hồi chuẩn chứa thông tin Deal đã chuyển sang SUPERSEDED
+     */
+    @PostMapping("/{id}/request-adjustment")
+    @Operation(summary = "Yêu cầu điều chỉnh Deal Ticket", description = "Student yêu cầu Mentor điều chỉnh lại điều khoản Deal Ticket (UC104)")
+    public ResponseEntity<ApiResponse<MentoringDealResponse>> requestAdjustment(
+            @PathVariable Long id,
+            @RequestParam(required = false) String note
+    ) {
+        Long currentUserId = getCurrentUserId();
+        MentoringDealResponse response = dealService.requestAdjustment(currentUserId, id, note);
+        return ResponseEntity.ok(ApiResponse.success("Gửi yêu cầu điều chỉnh thỏa thuận Deal thành công.", response));
+    }
+
+    /**
      * Lấy ID người dùng đang đăng nhập từ Security Context.
      */
     private Long getCurrentUserId() {

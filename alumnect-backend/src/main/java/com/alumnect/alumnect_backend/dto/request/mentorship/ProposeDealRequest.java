@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.dto.request.mentorship;
 import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
+import com.alumnect.alumnect_backend.common.enums.ProposalSource;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +33,13 @@ public class ProposeDealRequest {
 
     /** ID cuộc trò chuyện Direct Messaging liên kết (tùy chọn) */
     private Long conversationId;
+
+    /** ID của Mentoring Request liên kết với thỏa thuận (UC104) */
+    private Long requestId;
+
+    /** Nguồn gốc đề xuất: REQUEST_ACCEPTANCE hoặc RENEGOTIATION (mặc định RENEGOTIATION) */
+    @Builder.Default
+    private ProposalSource proposalSource = ProposalSource.RENEGOTIATION;
 
     /** Phạm vi công việc / nội dung chi tiết của Task */
     @NotBlank(message = "Phạm vi công việc (Task Scope) không được để trống.")

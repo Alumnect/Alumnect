@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.dto.response.mentorship;
 import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
+import com.alumnect.alumnect_backend.common.enums.ProposalSource;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -23,6 +24,12 @@ public class MentoringDealSnapshotResponse {
 
     /** ID của thỏa thuận Deal */
     private Long dealId;
+
+    /** Loại Ticket: DEAL */
+    private String ticketType;
+
+    /** Nguồn gốc đề xuất: REQUEST_ACCEPTANCE hoặc RENEGOTIATION */
+    private ProposalSource proposalSource;
 
     /** Số thứ tự phiên bản snapshot */
     private Integer version;

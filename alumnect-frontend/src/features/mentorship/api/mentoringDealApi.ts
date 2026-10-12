@@ -98,4 +98,28 @@ export const mentoringDealApi = {
     )
     return res.data
   },
+
+  /**
+   * Từ chối Deal Ticket (UC104).
+   */
+  rejectDeal: async (dealId: number, reason?: string): Promise<MentoringDeal> => {
+    const res = await http.post<any, ApiResponse<MentoringDeal>>(
+      `/mentoring/deals/${dealId}/reject`,
+      null,
+      { params: reason ? { reason } : undefined }
+    )
+    return res.data
+  },
+
+  /**
+   * Yêu cầu điều chỉnh Deal Ticket (UC104).
+   */
+  requestAdjustment: async (dealId: number, note?: string): Promise<MentoringDeal> => {
+    const res = await http.post<any, ApiResponse<MentoringDeal>>(
+      `/mentoring/deals/${dealId}/request-adjustment`,
+      null,
+      { params: note ? { note } : undefined }
+    )
+    return res.data
+  },
 }
