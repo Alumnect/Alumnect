@@ -129,7 +129,7 @@ export function useToggleGroupPostLikeMutation(groupId: number) {
       qc.setQueryData<GroupPost>(groupPostKeys.detail(groupId, postId), (old) => old && confirmed(old))
     },
     onError: (err: Error, postId, context) => {
-      context?.previousLists.forEach(([key, data]) => qc.setQueryData(key, data))
+      context?.previousLists?.forEach(([key, data]) => qc.setQueryData(key, data))
       if (context?.previousDetail) qc.setQueryData(groupPostKeys.detail(groupId, postId), context.previousDetail)
       toast.error(err.message || 'Thao tác không thành công.')
     },

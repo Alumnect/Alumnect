@@ -9,7 +9,6 @@ import {
   Building2,
   User,
   CreditCard,
-  Target,
   Crown,
   RotateCcw,
 } from 'lucide-react'
@@ -360,7 +359,7 @@ export function AdminMentorListSection() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white shrink-0">
               <div>
                 <h2 className="text-[20px] font-semibold text-slate-900 leading-tight">
-                  Chi tiết hồ sơ Cố vấn
+                  Chi tiết hồ sơ Mentor
                 </h2>
                 <p className="text-[13px] text-slate-500 mt-0.5">
                   Thông tin chuyên môn, gói dịch vụ và tài khoản nhận chi trả.

@@ -1,10 +1,6 @@
-import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import { 
-  Inbox, Loader2, CheckCircle2, 
-  Eye, X, AlertTriangle, FileImage
-} from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, ImageViewerModal, Pagination } from '@/components/ui'
+import { useState } from 'react'
+import { Inbox, Eye, FileImage } from 'lucide-react'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'

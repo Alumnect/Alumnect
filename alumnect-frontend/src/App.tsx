@@ -30,6 +30,9 @@ import { MentoringTermsPage } from '@/pages/app/MentoringTermsPage'
 import { BecomeMentorPage } from '@/pages/app/BecomeMentorPage'
 import { MentorSubscriptionPage } from '@/pages/app/MentorSubscriptionPage'
 import { MentorStatusPage } from '@/pages/app/MentorStatusPage'
+import { MentorRankingPage } from '@/pages/app/MentorRankingPage'
+import { MentorDiscoverPage } from '@/pages/app/MentorDiscoverPage'
+import { MentorDetailPage } from '@/pages/app/MentorDetailPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -82,6 +85,12 @@ function App() {
             <Route path="mentoring/subscription" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
             <Route path="mentoring/status" element={<ProtectedRoute><MentorStatusPage /></ProtectedRoute>} />
             <Route path="mentoring/my-status" element={<Navigate to="/app/mentoring/status" replace />} />
+            <Route path="mentoring/ranking" element={<ProtectedRoute><MentorRankingPage /></ProtectedRoute>} />
+            <Route path="mentoring/discover" element={<ProtectedRoute><MentorDiscoverPage /></ProtectedRoute>} />
+            <Route path="mentoring/search" element={<Navigate to="/app/mentoring/discover" replace />} />
+            <Route path="mentoring/mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
+            <Route path="mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
+            <Route path="mentors" element={<Navigate to="/app/mentoring/discover" replace />} />
           </Route>
 
           {/* Direct redirect for /mentoring */}

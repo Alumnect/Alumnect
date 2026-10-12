@@ -13,12 +13,10 @@ import {
   ChevronRight,
   RefreshCw,
   AlertTriangle,
-  UserCheck,
   ShieldCheck,
-  Bell,
   Sparkles,
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, Button } from '@/components/ui'
+import { PageHeader, Badge, Card, EmptyState, Skeleton, Button } from '@/components/ui'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import {
