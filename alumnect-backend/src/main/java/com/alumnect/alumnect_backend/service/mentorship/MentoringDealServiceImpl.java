@@ -274,8 +274,10 @@ public class MentoringDealServiceImpl implements MentoringDealService {
     }
 
     /**
-     * Hai bên cùng xác nhận một phiên bản: khóa Deal, chọn Mentor cho Request và đóng các luồng cạnh tranh (atomic).
-     * Unique index uq_mentoring_deals_request_confirmed là chốt chặn cuối cùng ở tầng cơ sở dữ liệu.
+     * Hai bên cùng xác nhận một phiên bản: khóa Deal ở trạng thái DEAL_CONFIRMED.
+     * Lưu ý nghiệp vụ: Chỉ chốt Mentor thắng cuộc và đóng các luồng đàm phán khác SAU KHI
+     * thanh toán thành công (xử lý tại MentoringTaskPaymentServiceImpl.activateTaskUponPaymentSuccess).
+     * Tại thời điểm xác nhận Deal, Request vẫn mở để Học viên có thể xem xét và thanh toán.
      */
     private void finalizeConfirmedDeal(MentoringRequest mentoringRequest, MentoringDeal deal, User actor, Instant now) {
         deal.setStatus(MentoringDealStatus.DEAL_CONFIRMED);
@@ -283,42 +285,11 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         deal.setLockedAt(now);
         dealRepository.saveAndFlush(deal);
 
-        mentoringRequest.setSelectedMentor(deal.getMentor());
-        mentoringRequest.setConfirmedDeal(deal);
-        mentoringRequest.setStatus(MentoringRequestStatus.MATCHED);
-        requestRepository.saveAndFlush(mentoringRequest);
-
-        // 1. Đóng các luồng Deal của Mentor khác cùng Request (giữ nguyên lịch sử phiên bản)
-        for (MentoringDeal other : dealRepository.findByRequestIdAndIdNot(mentoringRequest.getId(), deal.getId())) {
-            if (other.getStatus() != MentoringDealStatus.CANCELLED) {
-                other.setStatus(MentoringDealStatus.CANCELLED);
-                other.setUpdatedBy(actor);
-                other.setUpdatedAt(now);
-                dealRepository.save(other);
-                log.info("Đóng Deal id={} của Mentor khác do Request id={} đã chốt Deal id={}",
-                        other.getId(), mentoringRequest.getId(), deal.getId());
-            }
-        }
-
-        // 2. Các phản hồi còn đang chờ không thể ACCEPT nữa
-        for (MentoringRequestDistribution pending : distributionRepository
-                .findByRequestIdAndStatus(mentoringRequest.getId(), MentoringDistributionStatus.PENDING)) {
-            pending.setStatus(MentoringDistributionStatus.EXPIRED);
-            distributionRepository.save(pending);
-        }
-
-        // 3. Thông báo vào các Chat for Task khác (chuyển chỉ đọc theo trạng thái Request, không xóa lịch sử)
-        for (Conversation other : conversationRepository.findByMentoringRequestIdOrderByCreatedAtAsc(mentoringRequest.getId())) {
-            if (!Objects.equals(other.getId(), deal.getConversation().getId())) {
-                conversationService.postSystemMessage(other, actor, MentoringConversationServiceImpl.READ_ONLY_OTHER_MENTOR);
-            }
-        }
-
         conversationService.postSystemMessage(deal.getConversation(), actor, String.format(
                 "Hai bên đã xác nhận Deal Ticket phiên bản %d. Deal đã được khóa, Học viên vui lòng thanh toán để kích hoạt Task.",
                 deal.getVersion()));
-        log.info("Request id={} đã chốt Mentor userId={} với Deal id={} phiên bản {}",
-                mentoringRequest.getId(), deal.getMentor().getId(), deal.getId(), deal.getVersion());
+        log.info("Hai bên đã xác nhận Deal id={} phiên bản {} cho Request id={}. Đang chờ thanh toán để kích hoạt Task.",
+                deal.getId(), deal.getVersion(), mentoringRequest.getId());
     }
 
     // =====================================================================
@@ -495,8 +466,9 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         boolean pendingMentor = deal.getStatus() == MentoringDealStatus.STUDENT_CONFIRMED
                 && !Boolean.TRUE.equals(deal.getMentorConfirmed());
         boolean isPaid = Boolean.TRUE.equals(deal.getIsPaid());
-        boolean isConfirmedDealOfRequest = mentoringRequest != null && mentoringRequest.getConfirmedDeal() != null
-                && Objects.equals(mentoringRequest.getConfirmedDeal().getId(), deal.getId());
+        boolean requestCanAcceptPayment = mentoringRequest != null
+                && mentoringRequest.getStatus() == MentoringRequestStatus.OPEN
+                && mentoringRequest.getSelectedMentor() == null;
 
         response.setReadOnlyReason(readOnlyReason);
         response.setCanConfirm(writable && requestOpen && ((isStudent && pendingStudent) || (isMentor && pendingMentor)));
@@ -504,7 +476,7 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         response.setCanRequestAdjustment(writable && requestOpen && isStudent && pendingStudent);
         response.setCanEdit(writable && requestOpen && isMentor && !isPaid && !Boolean.TRUE.equals(deal.getIsLocked()));
         response.setCanPay(isStudent && !isPaid && deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED
-                && Boolean.TRUE.equals(deal.getIsLocked()) && isConfirmedDealOfRequest);
+                && Boolean.TRUE.equals(deal.getIsLocked()) && requestCanAcceptPayment);
         taskRepository.findByDealId(deal.getId()).ifPresent(task -> response.setTaskId(task.getId()));
         return response;
     }

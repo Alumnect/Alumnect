@@ -34,4 +34,10 @@ public interface MentoringTaskPaymentRepository extends JpaRepository<MentoringT
 
     /** Tìm giao dịch thanh toán đã thành công (PAID) của một Deal */
     Optional<MentoringTaskPayment> findFirstByDealIdAndPaymentStatus(Long dealId, PaymentStatus status);
+
+    /** Tìm giao dịch thanh toán PENDING của một Request */
+    Optional<MentoringTaskPayment> findFirstByRequestIdAndPaymentStatusOrderByCreatedAtDesc(Long requestId, PaymentStatus status);
+
+    /** Tìm tất cả giao dịch thanh toán theo Request và trạng thái */
+    List<MentoringTaskPayment> findByRequestIdAndPaymentStatus(Long requestId, PaymentStatus status);
 }

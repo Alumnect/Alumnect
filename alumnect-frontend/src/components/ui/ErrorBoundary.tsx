@@ -9,20 +9,22 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean
   error: Error | null
+  errorInfo: ErrorInfo | null
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false, error: null, errorInfo: null }
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error caught by ErrorBoundary:', error, errorInfo)
+    this.setState({ errorInfo })
   }
 
   handleReload = () => {
@@ -51,8 +53,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             Hệ thống gặp lỗi không mong muốn trong khi hiển thị nội dung. Bạn có thể thử tải lại trang hoặc quay về trang chủ.
           </p>
           {this.state.error?.message && (
-            <div className="mt-3 max-w-lg rounded-xl border border-plum-900/10 bg-plum-50/50 px-3.5 py-2 text-left font-mono text-[11px] text-plum-700 dark:border-[#393a3b] dark:bg-[#2b2c2d] dark:text-[#c0c2c6]">
-              {this.state.error.message}
+            <div className="mt-3 max-w-2xl w-full rounded-xl border border-plum-900/10 bg-plum-50/50 px-3.5 py-2 text-left font-mono text-[11px] text-plum-700 dark:border-[#393a3b] dark:bg-[#2b2c2d] dark:text-[#c0c2c6]">
+              <div className="font-bold text-coral-600 dark:text-coral-400">{this.state.error.message}</div>
+              {this.state.errorInfo?.componentStack && (
+                <pre className="mt-2 text-[10px] text-plum-500 overflow-x-auto whitespace-pre-wrap max-h-40">
+                  {this.state.errorInfo.componentStack}
+                </pre>
+              )}
             </div>
           )}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

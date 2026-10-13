@@ -30,6 +30,11 @@ public class MentoringTaskPayment {
     @JoinColumn(name = "deal_id", nullable = false)
     private MentoringDeal deal;
 
+    /** Yêu cầu Mentoring gắn với giao dịch */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id")
+    private MentoringRequest request;
+
     /** Người thực hiện thanh toán (Student) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
@@ -39,6 +44,12 @@ public class MentoringTaskPayment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     private MentoringTask task;
+
+    /** Phiên bản khóa lạc quan (Optimistic Concurrency Control) */
+    @Version
+    @Column(name = "version", nullable = false)
+    @Builder.Default
+    private Integer version = 0;
 
     /** Mã đơn hàng PayOS duy nhất (orderCode kiểu số nguyên 53-bit) */
     @Column(name = "order_code", nullable = false, unique = true)

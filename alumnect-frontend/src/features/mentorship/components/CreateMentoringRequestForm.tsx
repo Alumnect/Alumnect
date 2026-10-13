@@ -288,7 +288,9 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
         workingMode: formData.workingMode,
         participationType: formData.participationType,
         taskType: formData.taskType,
-        expectedDeadline: formData.expectedDeadline ? new Date(formData.expectedDeadline).toISOString() : null,
+        expectedDeadline: formData.expectedDeadline
+          ? new Date(`${formData.expectedDeadline}T23:59:59.999Z`).toISOString()
+          : null,
         attachments: formData.attachments || [],
       },
       {
@@ -419,22 +421,21 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           <label htmlFor="industryId" className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
             Lĩnh vực ngành nghề <span className="text-coral-500">*</span>
           </label>
-          {loadingIndustries ? (
-            <div className="h-12 w-full animate-pulse rounded-2xl bg-plum-900/[0.05] dark:bg-white/[0.05]" />
-          ) : (
-            <select
-              id="industryId"
-              {...register('industryId')}
-              className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 text-sm font-semibold text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb]"
-            >
-              <option value="" disabled>-- Chọn lĩnh vực cần hỗ trợ --</option>
-              {industries.map((ind) => (
-                <option key={ind.id} value={ind.id}>
-                  {ind.name}
-                </option>
-              ))}
-            </select>
-          )}
+          <select
+            id="industryId"
+            disabled={loadingIndustries}
+            {...register('industryId')}
+            className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 text-sm font-semibold text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 disabled:opacity-60 disabled:cursor-not-allowed dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb]"
+          >
+            <option value="" disabled>
+              {loadingIndustries ? '-- Đang tải danh mục lĩnh vực... --' : '-- Chọn lĩnh vực cần hỗ trợ --'}
+            </option>
+            {industries.map((ind) => (
+              <option key={ind.id} value={ind.id}>
+                {ind.name}
+              </option>
+            ))}
+          </select>
           {errors.industryId && (
             <p className="text-xs font-semibold text-coral-600 dark:text-coral-400 pt-0.5">
               {errors.industryId.message}
@@ -628,7 +629,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           <input
             id="expectedDeadline"
             type="date"
-            min={new Date().toISOString().split('T')[0]}
+            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
             {...register('expectedDeadline')}
             className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb]"
           />
@@ -735,23 +736,27 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           size="lg"
           disabled={createMutation.isPending || isSelfMentor}
           leftIcon={
-            createMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )
+            <span key={createMutation.isPending ? 'loading-icon' : 'idle-icon'} className="inline-flex items-center">
+              {createMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </span>
           }
           className="w-full sm:w-auto rounded-2xl font-bold px-8 shadow-sm"
         >
-          {isSelfMentor
-            ? 'Không thể gửi cho chính mình'
-            : createMutation.isPending
-            ? isDirectRequest
-              ? 'Đang gửi yêu cầu trực tiếp...'
-              : 'Đang tạo & Matching...'
-            : isDirectRequest
-            ? 'Gửi yêu cầu tới Mentor'
-            : 'Đăng yêu cầu Mentoring'}
+          <span>
+            {isSelfMentor
+              ? 'Không thể gửi cho chính mình'
+              : createMutation.isPending
+              ? isDirectRequest
+                ? 'Đang gửi yêu cầu trực tiếp...'
+                : 'Đang tạo & Matching...'
+              : isDirectRequest
+              ? 'Gửi yêu cầu tới Mentor'
+              : 'Đăng yêu cầu Mentoring'}
+          </span>
         </Button>
       </div>
     </form>

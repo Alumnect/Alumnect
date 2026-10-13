@@ -7,6 +7,7 @@ import type { Message } from '../model/types'
 import { SharedPostBubbleCard } from './SharedPostBubbleCard'
 import { SharedGroupBubbleCard } from './SharedGroupBubbleCard'
 import { SharedGroupPostBubbleCard } from './SharedGroupPostBubbleCard'
+import { parseAdjustmentMessage } from '@/features/mentorship'
 
 interface MessageBubbleProps {
   message: Message
@@ -40,6 +41,31 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
             message.content
           )
       )
+
+  const adj = parseAdjustmentMessage(message.content)
+  if (adj) {
+    return (
+      <div className={cn('my-2 flex w-full flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
+        <div className="max-w-md overflow-hidden rounded-2xl border border-amber-300/80 border-l-4 border-l-amber-500 bg-[#fdfaf5] p-3.5 text-xs text-gray-900 shadow-sm dark:border-amber-700/60 dark:bg-[#252422] dark:text-gray-100">
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-amber-200/60 dark:border-gray-700">
+            <span className="font-heading font-black text-amber-800 dark:text-amber-300">
+              TICKET YÊU CẦU ĐIỀU CHỈNH
+            </span>
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+              v{adj.version}
+            </span>
+          </div>
+          <div className="mt-2.5 rounded-xl border border-amber-300/60 bg-amber-50/90 p-2.5 font-bold text-amber-950 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-100">
+            "{adj.note}"
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+            <span>{adj.senderName} yêu cầu điều chỉnh</span>
+            {formattedTime && <span>{formattedTime}</span>}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (isSystemNotice) {
     return (

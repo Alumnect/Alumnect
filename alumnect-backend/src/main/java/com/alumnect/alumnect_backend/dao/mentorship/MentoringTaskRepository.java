@@ -23,6 +23,12 @@ public interface MentoringTaskRepository extends JpaRepository<MentoringTask, Lo
     /** Kiểm tra xem Deal đã được tạo Task hay chưa */
     boolean existsByDealId(Long dealId);
 
+    /** Tìm Task theo requestId */
+    Optional<MentoringTask> findByRequestId(Long requestId);
+
+    /** Kiểm tra xem Request đã được kích hoạt Task hay chưa */
+    boolean existsByRequestId(Long requestId);
+
     /** Lấy danh sách Task của người dùng (Student hoặc Mentor) */
     @Query("SELECT t FROM MentoringTask t WHERE t.student.id = :userId OR t.mentor.id = :userId ORDER BY t.createdAt DESC")
     Page<MentoringTask> findByParticipant(@Param("userId") Long userId, Pageable pageable);

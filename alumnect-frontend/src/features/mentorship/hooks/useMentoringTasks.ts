@@ -29,6 +29,8 @@ export const TASK_QUERY_KEYS = {
   payments: () => [...TASK_QUERY_KEYS.all, 'payment'] as const,
   paymentStatus: (orderCode?: number) =>
     [...TASK_QUERY_KEYS.payments(), orderCode] as const,
+  checkoutSession: (dealId?: number) =>
+    [...TASK_QUERY_KEYS.payments(), 'checkout', dealId] as const,
 }
 
 /**
@@ -147,6 +149,23 @@ export function useCreateTaskPaymentCheckout() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.all })
     },
+  })
+}
+
+/**
+ * Hook lấy phiên thanh toán VietQR PayOS cho Mentoring Task (UC105).
+ * Dùng useQuery reactive, cache 5 phút để hiển thị tức thì không bị treo loading spinner.
+ */
+export function useTaskPaymentCheckoutSession(dealId?: number, isEnabled = true) {
+  return useQuery<MentoringTaskPaymentCheckoutResponse, Error>({
+    queryKey: TASK_QUERY_KEYS.checkoutSession(dealId),
+    queryFn: () => mentoringTaskApi.createPaymentCheckout({ dealId: dealId! }),
+    enabled: Boolean(dealId && dealId > 0) && isEnabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
   })
 }
 

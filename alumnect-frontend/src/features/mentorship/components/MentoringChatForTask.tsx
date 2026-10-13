@@ -15,6 +15,7 @@ import {
   History,
   Loader2,
   MessagesSquare,
+  RefreshCw,
   ThumbsUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -35,6 +36,8 @@ import { MentoringDealFormModal } from './MentoringDealFormModal'
 import { MentoringTaskPaymentModal } from './MentoringTaskPaymentModal'
 import { MentoringTaskDetailModal } from './MentoringTaskDetailModal'
 import { MentoringDiscordTicketEmbed } from './MentoringDiscordTicketEmbed'
+import { MentoringAdjustmentTicketEmbed } from './MentoringAdjustmentTicketEmbed'
+import { parseAdjustmentMessage } from '../model/mentoringAdjustmentTypes'
 import { MentoringTicketDetailModal, type MentoringTicketData } from './MentoringTicketDetailModal'
 import { useMentoringConversation } from '../hooks/useMentoringConversation'
 import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
@@ -305,6 +308,39 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     }
   }
 
+  const buildAdjustmentTicket = (
+    message: Message,
+    adj: { senderName: string; version: number; note: string },
+    snapshot?: MentoringDealSnapshot
+  ): MentoringTicketData => {
+    const isSuperseded = Boolean(deal && deal.version > adj.version)
+    const status: MentoringTicketData['status'] = isSuperseded ? 'SUPERSEDED' : 'ADJUSTMENT'
+
+    return {
+      ticketType: 'ADJUSTMENT',
+      ticketCode: `#ADJ-${String(deal?.id ?? snapshot?.dealId ?? 0).padStart(3, '0')}`,
+      version: adj.version,
+      dealId: deal?.id ?? snapshot?.dealId ?? 0,
+      senderId: message.senderId,
+      senderName: message.senderName || adj.senderName,
+      senderAvatar: message.senderAvatar,
+      senderRole: 'Học viên',
+      status,
+      adjustmentNote: adj.note,
+      taskScope: snapshot?.taskScope ?? deal?.taskScope,
+      expectedResult: snapshot?.expectedResult ?? deal?.expectedResult,
+      agreedPrice: Number(snapshot?.agreedPrice ?? deal?.agreedPrice ?? 0),
+      deadline: snapshot?.deadline ?? deal?.deadline,
+      workingMode: snapshot?.workingMode ?? deal?.workingMode,
+      participationType: snapshot?.participationType ?? deal?.participationType,
+      taskType: snapshot?.taskType ?? deal?.taskType,
+      proposalSource: snapshot?.proposalSource ?? deal?.proposalSource,
+      createdAt: message.createdAt,
+      isPaid: deal?.isPaid,
+      isMentor,
+    }
+  }
+
   /** Hành động hợp lệ trên một phiên bản (chỉ phiên bản mới nhất mới có hành động) */
   const actionsFor = (version: number) => {
     const isLatest = Boolean(deal && version === deal.version)
@@ -538,6 +574,24 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         ) : (
           timeline.map((item) => {
             if (item.kind === 'message') {
+              const adj = parseAdjustmentMessage(item.message.content)
+              if (adj) {
+                const targetSnapshot = snapshots.find((s) => s.version === adj.version)
+                const adjTicket = buildAdjustmentTicket(item.message, adj, targetSnapshot)
+                const isLatest = Boolean(deal && adj.version === deal.version)
+                return (
+                  <MentoringAdjustmentTicketEmbed
+                    key={`adj-m-${item.message.id}`}
+                    ticket={adjTicket}
+                    isMe={item.message.senderId === currentUserId}
+                    isMentor={isMentor}
+                    canCreateDealTicket={Boolean(ctx.canCreateDealTicket)}
+                    isLatestSuperseded={isLatest}
+                    onReissue={() => setIsFormOpen(true)}
+                    onViewDetail={() => setTicketModal({ ticket: adjTicket, version: adj.version })}
+                  />
+                )
+              }
               return <MessageBubble key={`m-${item.message.id}`} message={item.message} isMe={item.message.senderId === currentUserId} />
             }
             const ticket = buildTicket(item.snapshot)
@@ -695,46 +749,91 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       )}
 
       {/* Dialog: Yêu cầu điều chỉnh */}
-      {adjustTarget !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/40 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
-            <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">Yêu cầu điều chỉnh phiên bản {adjustTarget}</h4>
-            <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
-              Phiên bản này sẽ không thể thanh toán. Mentor sẽ gửi phiên bản Deal Ticket mới sau khi hai bên trao đổi.
-            </p>
-            <textarea
-              rows={3}
-              value={adjustNote}
-              onChange={(e) => setAdjustNote(e.target.value)}
-              placeholder="Ví dụ: Mong muốn giảm giá xuống 400.000đ hoặc kéo dài deadline thêm 3 ngày..."
-              className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setAdjustTarget(null)} disabled={adjustMutation.isPending}>
-                Hủy
-              </Button>
-              <Button size="sm" onClick={handleRequestAdjustment} disabled={adjustMutation.isPending} className="rounded-xl font-black">
-                {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu điều chỉnh'}
-              </Button>
+      {adjustTarget !== null && (() => {
+        const targetSnap = snapshots.find((s) => s.version === adjustTarget)
+        const currentPrice = targetSnap ? targetSnap.agreedPrice : deal?.agreedPrice
+        const currentDeadline = targetSnap ? targetSnap.deadline : deal?.deadline
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/40 p-4 backdrop-blur-sm animate-fade-in">
+            <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
+                  <RefreshCw className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">
+                    Gửi Ticket Yêu cầu điều chỉnh Deal
+                  </h4>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 font-bold">
+                    Điều chỉnh Deal Ticket phiên bản {adjustTarget}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tóm tắt điều khoản phiên bản hiện tại */}
+              <div className="rounded-2xl border border-amber-200/80 bg-amber-50/60 p-3 text-xs text-plum-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-[#e4e6eb] space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-plum-500 dark:text-gray-400">Giá đề xuất hiện tại:</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-300">{formatVnd(Number(currentPrice || 0))}</span>
+                </div>
+                {currentDeadline && (
+                  <div className="flex justify-between">
+                    <span className="text-plum-500 dark:text-gray-400">Deadline hiện tại:</span>
+                    <span className="font-semibold">{format(new Date(currentDeadline), 'dd/MM/yyyy HH:mm')}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-plum-800 dark:text-gray-200">
+                  Nội dung điều chỉnh mong muốn (Ghi chú Ticket):
+                </label>
+                <textarea
+                  rows={3}
+                  value={adjustNote}
+                  onChange={(e) => setAdjustNote(e.target.value)}
+                  placeholder="Ví dụ: Mong muốn giảm giá xuống 200.000đ hoặc dời deadline thêm 3 ngày..."
+                  className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 focus:border-amber-500 focus:outline-none dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="ghost" size="sm" onClick={() => setAdjustTarget(null)} disabled={adjustMutation.isPending}>
+                  Hủy
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleRequestAdjustment}
+                  disabled={adjustMutation.isPending}
+                  className="rounded-xl font-black bg-amber-500 text-white hover:bg-amber-600"
+                  leftIcon={adjustMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                >
+                  {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi Ticket điều chỉnh'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Modal chi tiết một phiên bản Ticket */}
       {ticketModal && (() => {
         const actions = actionsFor(ticketModal.version)
+        const isAdj = ticketModal.ticket.ticketType === 'ADJUSTMENT'
+        const mentorCanReissue = isMentor && Boolean(ctx?.canCreateDealTicket)
         return (
           <MentoringTicketDetailModal
             isOpen
             onClose={() => setTicketModal(null)}
-            ticket={buildTicket(snapshots.find((s) => s.version === ticketModal.version) ?? snapshots[snapshots.length - 1])}
+            ticket={ticketModal.ticket}
             isRecipient={!isMentor}
-            canAct={actions.canAct}
-            onConfirm={actions.onConfirm ? async () => { setTicketModal(null); await actions.onConfirm?.() } : undefined}
-            onReject={actions.onReject ? () => { setTicketModal(null); actions.onReject?.() } : undefined}
-            onRevert={actions.onRevert ? () => { setTicketModal(null); actions.onRevert?.() } : undefined}
-            onPay={actions.onPay ? () => { setTicketModal(null); actions.onPay?.() } : undefined}
+            canAct={!isAdj && actions.canAct}
+            onConfirm={!isAdj && actions.onConfirm ? async () => { setTicketModal(null); await actions.onConfirm?.() } : undefined}
+            onReject={!isAdj && actions.onReject ? () => { setTicketModal(null); actions.onReject?.() } : undefined}
+            onRevert={isAdj
+              ? (mentorCanReissue ? () => { setTicketModal(null); setIsFormOpen(true) } : undefined)
+              : (actions.onRevert ? () => { setTicketModal(null); actions.onRevert?.() } : undefined)}
+            onPay={!isAdj && actions.onPay ? () => { setTicketModal(null); actions.onPay?.() } : undefined}
             isConfirming={confirmMutation.isPending}
             isRejecting={rejectMutation.isPending}
           />

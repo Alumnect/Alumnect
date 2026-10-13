@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Sparkles, Users, ArrowRight, AlertCircle, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +18,7 @@ interface RequestSuccessModalProps {
 /**
  * Modal hiển thị kết quả tạo yêu cầu Mentoring thành công (UC100).
  * Thể hiện số lượng Mentor được matching & phân phối, hoặc giải thích khi chưa có Mentor matching.
+ * Render qua createPortal để bảo đảm cách ly DOM và tránh lỗi chèn node khi hiển thị.
  */
 export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
   isOpen,
@@ -24,22 +26,46 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
   data,
   onExploreMentors,
 }) => {
-  if (!isOpen || !data) return null
+  useEffect(() => {
+    if (isOpen && data) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen, data])
 
-  const taskTypeOption = TASK_TYPE_OPTIONS.find((t) => t.value === data.taskType)
+  if (typeof document === 'undefined') return null
 
-  return (
+  const taskTypeOption = data ? TASK_TYPE_OPTIONS.find((t) => t.value === data.taskType) : undefined
+
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-plum-900/10 text-left dark:bg-[#242526] dark:border-[#393a3b]"
-          role="dialog"
-          aria-modal="true"
-        >
+      {isOpen && data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            key="success-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-plum-950/40 backdrop-blur-sm"
+          />
+
+          {/* Modal Card */}
+          <motion.div
+            key="success-modal-card"
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-plum-900/10 text-left dark:bg-[#242526] dark:border-[#393a3b]"
+            role="dialog"
+            aria-modal="true"
+          >
           {/* Header Icon */}
           <div className="flex items-center gap-3 pb-3 border-b border-plum-900/[0.08] dark:border-[#393a3b]">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint-100 text-mint-700 dark:bg-mint-950/60 dark:text-mint-300">
@@ -190,6 +216,8 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
-  )
+    )}
+  </AnimatePresence>,
+  document.body
+)
 }

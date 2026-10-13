@@ -3,7 +3,7 @@ import { Award } from 'lucide-react'
 import { Container } from '@/components/ui'
 import { Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
-import { MentoringTermsGate, MentorSubscriptionList, MentorPaymentCheckout, useMentoringTermsStatus } from '@/features/mentorship'
+import { MentoringTermsGate, MentorSubscriptionList, MentorPaymentCheckout } from '@/features/mentorship'
 
 /**
  * Màn hình Quản lý Gói Mentor & Thanh toán (UC92 & UC93).
@@ -16,7 +16,6 @@ export function MentorSubscriptionPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const step = searchParams.get('step')
   const isCheckout = step === 'checkout'
-  const { data: termsStatus } = useMentoringTermsStatus()
 
   if (!isAlumni) {
     return (
@@ -33,18 +32,6 @@ export function MentorSubscriptionPage() {
           </p>
         </Card>
       </Container>
-    )
-  }
-
-  if (termsStatus && !termsStatus.accepted) {
-    return (
-      <MentoringTermsGate source="BECOME_MENTOR">
-        {isCheckout ? (
-          <MentorPaymentCheckout onBack={() => setSearchParams({})} />
-        ) : (
-          <MentorSubscriptionList />
-        )}
-      </MentoringTermsGate>
     )
   }
 

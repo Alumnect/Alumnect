@@ -18,11 +18,11 @@ import {
   PROPOSAL_SOURCE_LABELS,
 } from '../model/mentoringFlowLabels'
 
-export type MentoringTicketType = 'DEAL' | 'EXTENSION'
+export type MentoringTicketType = 'DEAL' | 'EXTENSION' | 'ADJUSTMENT'
 
 export interface MentoringTicketData {
   ticketType: MentoringTicketType
-  ticketCode: string // Ví dụ: '#DL-024' hoặc '#EX-001'
+  ticketCode: string // Ví dụ: '#DL-024', '#EX-001', '#ADJ-001'
   version?: number
   dealId: number
 
@@ -52,6 +52,9 @@ export interface MentoringTicketData {
   currentDeadline?: string
   proposedDeadline?: string
   extensionReason?: string
+
+  // Thông tin Ticket Yêu cầu điều chỉnh
+  adjustmentNote?: string
 
   createdAt?: string
   isPaid?: boolean
@@ -114,7 +117,12 @@ export function MentoringTicketDetailModal({
 
   // Header icon & title
   const isExtension = ticket.ticketType === 'EXTENSION'
-  const title = isExtension ? 'Chi tiết Ticket Gia Hạn' : 'Chi tiết Deal Ticket'
+  const isAdjustment = ticket.ticketType === 'ADJUSTMENT'
+  const title = isAdjustment
+    ? 'Chi tiết Ticket Yêu Cầu Điều Chỉnh'
+    : isExtension
+      ? 'Chi tiết Ticket Gia Hạn'
+      : 'Chi tiết Deal Ticket'
 
   // Render status badge
   const renderStatusBadge = () => {
@@ -172,8 +180,8 @@ export function MentoringTicketDetailModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5 dark:border-gray-800">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-              {isExtension ? <CalendarClock className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm ${isAdjustment ? 'bg-amber-500' : isExtension ? 'bg-blue-600' : 'bg-orange-500'}`}>
+              {isAdjustment ? <RefreshCw className="h-5 w-5" /> : isExtension ? <CalendarClock className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
             </div>
             <div>
               <h3 className="font-heading text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
@@ -221,10 +229,28 @@ export function MentoringTicketDetailModal({
 
           <div className="h-px w-full bg-gray-100 dark:bg-gray-800" />
 
+          {/* Box ghi chú yêu cầu điều chỉnh từ học viên nếu có */}
+          {isAdjustment && ticket.adjustmentNote && (
+            <div className="rounded-2xl border border-amber-300/80 bg-amber-50/90 p-4 dark:border-amber-800/50 dark:bg-amber-950/30">
+              <div className="flex items-center gap-1.5 text-xs font-black text-amber-800 dark:text-amber-300 mb-1.5">
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>NỘI DUNG YÊU CẦU ĐIỀU CHỈNH TỪ HỌC VIÊN:</span>
+              </div>
+              <p className="text-sm sm:text-base font-black text-amber-950 dark:text-amber-100 whitespace-pre-wrap leading-relaxed">
+                "{ticket.adjustmentNote}"
+              </p>
+            </div>
+          )}
+
           {/* Các trường nội dung chi tiết theo loại Ticket */}
           {!isExtension ? (
-            /* Nội dung DEAL TICKET */
+            /* Nội dung DEAL TICKET hoặc Deal phiên bản cần điều chỉnh */
             <div className="space-y-4 text-sm">
+              {isAdjustment && (
+                <div className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Thông tin Deal phiên bản {ticket.version} cần điều chỉnh:
+                </div>
+              )}
               <div>
                 <span className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
                   Phạm vi công việc
@@ -451,13 +477,28 @@ export function MentoringTicketDetailModal({
                   ? 'Học viên đã yêu cầu điều chỉnh, chờ Mentor gửi phiên bản mới'
                   : 'Ticket đã được thay thế bởi phiên bản mới'}
               </span>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-2xl border border-gray-200 bg-white px-5 py-2 text-xs font-bold text-gray-700 shadow-2xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-              >
-                Đóng
-              </button>
+              <div className="flex items-center gap-2">
+                {ticket.status === 'ADJUSTMENT' && ticket.isMentor && onRevert && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose()
+                      onRevert()
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-amber-600 active:scale-95"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    <span>Tạo Deal Ticket mới</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-2xl border border-gray-200 bg-white px-5 py-2 text-xs font-bold text-gray-700 shadow-2xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Đóng
+                </button>
+              </div>
             </div>
           )}
         </div>

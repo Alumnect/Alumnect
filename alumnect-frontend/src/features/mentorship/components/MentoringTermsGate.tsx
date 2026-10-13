@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useMentoringTermsStatus } from '../hooks/useMentoringTerms'
 import { MentoringTerms } from './MentoringTerms'
 import type { MentoringEntrySource } from '../model/mentoringTermsTypes'
-import { Card, Skeleton, Container } from '@/components/ui/primitives'
+import { Card, Skeleton } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 
@@ -29,7 +29,7 @@ export function MentoringTermsGate({
   // 1. Trạng thái Loading: Hiển thị Shimmer Skeleton chuẩn Pastel
   if (isLoading) {
     return (
-      <Container className="py-10">
+      <div className="w-full py-4">
         <Card hover={false} className="mx-auto max-w-4xl space-y-6 border border-plum-900/[0.08] bg-white p-8 dark:bg-[#242526] dark:border-[#393a3b]">
           <div className="space-y-3">
             <Skeleton className="h-6 w-48 rounded-full" />
@@ -47,14 +47,14 @@ export function MentoringTermsGate({
             <Skeleton className="h-10 w-44 rounded-xl" />
           </div>
         </Card>
-      </Container>
+      </div>
     )
   }
 
   // 2. Trạng thái Lỗi kết nối / Server Error: Không tự ý mở gate
   if (isError) {
     return (
-      <Container className="py-12">
+      <div className="w-full py-8">
         <Card hover={false} className="mx-auto max-w-md border border-coral-200 bg-white p-8 text-center shadow-soft dark:bg-[#242526] dark:border-coral-900/50">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-950/50 dark:text-coral-400">
             <AlertTriangle className="h-7 w-7" />
@@ -77,13 +77,13 @@ export function MentoringTermsGate({
             </Button>
           </div>
         </Card>
-      </Container>
+      </div>
     )
   }
 
   // 3. Nếu người dùng ĐÃ chấp nhận phiên bản điều khoản hiện tại: Cho phép truy cập
   if (data?.accepted) {
-    return <>{children}</>
+    return <div className="w-full">{children}</div>
   }
 
   // 4. Nếu người dùng CHƯA chấp nhận phiên bản điều khoản hiện tại: Hiển thị UC90

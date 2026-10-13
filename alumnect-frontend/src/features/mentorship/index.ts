@@ -125,6 +125,8 @@ export * from './api/mentoringConversationApi'
 export * from './hooks/useMentoringConversation'
 export * from './components/MentoringTicketDetailModal'
 export * from './components/MentoringDiscordTicketEmbed'
+export * from './components/MentoringAdjustmentTicketEmbed'
+export * from './model/mentoringAdjustmentTypes'
 
 // UC105 exports (Thanh toán Mentoring Task)
 export * from './model/mentoringTaskTypes'

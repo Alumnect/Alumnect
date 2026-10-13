@@ -1,4 +1,4 @@
-import { MentoringTermsGate, MentorRegistrationForm, useMentoringTermsStatus } from '@/features/mentorship'
+import { MentoringTermsGate, MentorRegistrationForm } from '@/features/mentorship'
 import { Container, Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
 import { Award } from 'lucide-react'
@@ -32,16 +32,6 @@ function BecomeMentorContent() {
  * Nếu Alumni chưa chấp nhận điều khoản, hệ thống sẽ tự động hiển thị UC90 Terms Gate trước.
  */
 export function BecomeMentorPage() {
-  const { data: termsStatus } = useMentoringTermsStatus()
-
-  if (termsStatus && !termsStatus.accepted) {
-    return (
-      <MentoringTermsGate source="BECOME_MENTOR">
-        <BecomeMentorContent />
-      </MentoringTermsGate>
-    )
-  }
-
   return (
     <Container className="py-8">
       <MentoringTermsGate source="BECOME_MENTOR">

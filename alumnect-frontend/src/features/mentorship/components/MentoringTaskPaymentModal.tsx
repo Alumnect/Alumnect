@@ -16,15 +16,12 @@ import { Button } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { vnd } from '@/lib/utils'
 import {
-  useCreateTaskPaymentCheckout,
+  useTaskPaymentCheckoutSession,
   useTaskPaymentPolling,
   useCancelTaskPayment,
 } from '../hooks/useMentoringTasks'
 import type { MentoringDeal } from '../model/mentoringDealTypes'
-import type {
-  MentoringTaskPaymentCheckoutResponse,
-  MentoringTaskPaymentStatusResponse,
-} from '../model/mentoringTaskTypes'
+import type { MentoringTaskPaymentStatusResponse } from '../model/mentoringTaskTypes'
 
 interface MentoringTaskPaymentModalProps {
   isOpen: boolean
@@ -44,62 +41,39 @@ export function MentoringTaskPaymentModal({
   deal,
   onSuccess,
 }: MentoringTaskPaymentModalProps) {
-  const [checkoutData, setCheckoutData] =
-    useState<MentoringTaskPaymentCheckoutResponse | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState<number>(15 * 60) // 15 phút
   const [paidResult, setPaidResult] =
     useState<MentoringTaskPaymentStatusResponse | null>(null)
 
-  const createCheckoutMutation = useCreateTaskPaymentCheckout()
+  // Khởi tạo & nạp link thanh toán tự động qua useQuery - Reactive 100%, có cache tránh hiển thị spinner lâu
+  const {
+    data: checkoutData,
+    isLoading: isCheckoutLoading,
+    error: checkoutError,
+    refetch: retryCheckout,
+  } = useTaskPaymentCheckoutSession(deal?.id, isOpen && !paidResult)
+
   const cancelPaymentMutation = useCancelTaskPayment()
 
-  // Khởi tạo link thanh toán khi modal được mở
+  // Tính toán thời gian hết hạn chính xác từ paymentExpiresAt của backend
   useEffect(() => {
-    if (isOpen && deal && !checkoutData && !paidResult) {
-      createCheckoutMutation.mutate(
-        { dealId: deal.id },
-        {
-          onSuccess: (data) => {
-            setCheckoutData(data)
-            setTimeLeft(15 * 60)
-          },
-          onError: (err: any) => {
-            const msg =
-              err?.response?.data?.message ||
-              err?.message ||
-              'Không thể tạo phiên thanh toán. Vui lòng thử lại sau.'
-            toast.error(msg)
-          },
-        }
-      )
+    if (checkoutData?.paymentExpiresAt) {
+      const expiresAt = new Date(checkoutData.paymentExpiresAt).getTime()
+      const remainingSeconds = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
+      setTimeLeft(remainingSeconds > 0 ? remainingSeconds : 15 * 60)
+    } else {
+      setTimeLeft(15 * 60)
     }
-  }, [isOpen, deal])
+  }, [checkoutData?.paymentExpiresAt])
 
   const handleRetryCheckout = () => {
-    if (!deal) return
-    createCheckoutMutation.mutate(
-      { dealId: deal.id },
-      {
-        onSuccess: (data) => {
-          setCheckoutData(data)
-          setTimeLeft(15 * 60)
-        },
-        onError: (err: any) => {
-          const msg =
-            err?.response?.data?.message ||
-            err?.message ||
-            'Không thể tạo phiên thanh toán. Vui lòng thử lại sau.'
-          toast.error(msg)
-        },
-      }
-    )
+    retryCheckout()
   }
 
-  // Reset state khi đóng modal
+  // Reset state phụ khi đóng modal
   useEffect(() => {
     if (!isOpen) {
-      setCheckoutData(null)
       setPaidResult(null)
       setCopiedField(null)
     }
@@ -247,7 +221,7 @@ export function MentoringTaskPaymentModal({
               </Button>
             </div>
           </div>
-        ) : createCheckoutMutation.isPending ? (
+        ) : isCheckoutLoading ? (
           /* Màn hình tải liên kết PayOS */
           <div className="py-16 text-center space-y-4">
             <Loader2 className="w-10 h-10 animate-spin text-brand-600 mx-auto" />
@@ -409,11 +383,8 @@ export function MentoringTaskPaymentModal({
                 Chưa thể tạo liên kết thanh toán
               </h3>
               <p className="text-xs text-plum-500 dark:text-[#b0b3b8] max-w-sm mx-auto">
-                {createCheckoutMutation.error
-                  ? ((createCheckoutMutation.error as any)?.response?.data?.message ||
-                     createCheckoutMutation.error?.message ||
-                     'Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.')
-                  : 'Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.'}
+                {checkoutError?.message ||
+                  'Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.'}
               </p>
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
@@ -429,10 +400,10 @@ export function MentoringTaskPaymentModal({
                 variant="primary"
                 size="sm"
                 onClick={handleRetryCheckout}
-                disabled={createCheckoutMutation.isPending}
+                disabled={isCheckoutLoading}
                 className="rounded-xl px-4 text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white flex items-center gap-1.5"
               >
-                {createCheckoutMutation.isPending ? (
+                {isCheckoutLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <RefreshCw className="w-3.5 h-3.5" />
