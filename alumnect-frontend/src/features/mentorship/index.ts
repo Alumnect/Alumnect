@@ -107,3 +107,29 @@ export * from './hooks/useRespondIncomingRequest'
 export * from './components/IncomingRequestCard'
 export * from './components/IncomingRequestResponseModal'
 
+// UC104 exports (Thỏa thuận & xác nhận Mentoring Deal)
+export * from './model/mentoringDealTypes'
+export * from './api/mentoringDealApi'
+export * from './hooks/useMentoringDeals'
+export * from './components/MentoringDealBadge'
+export * from './components/MentoringDealSnapshotCard'
+export * from './components/MentoringDealHistoryTimeline'
+export * from './components/MentoringDealFormModal'
+export * from './components/MentoringDealActionModal'
+export * from './components/MentoringDealCard'
+export * from './components/MentoringDealChatHeaderAction'
+export * from './components/MentoringDealTicketCard'
+export * from './components/MentoringChatForTask'
+export * from './components/MentoringTicketDetailModal'
+export * from './components/MentoringDiscordTicketEmbed'
+
+// UC105 exports (Thanh toán Mentoring Task)
+export * from './model/mentoringTaskTypes'
+export * from './api/mentoringTaskApi'
+export * from './hooks/useMentoringTasks'
+export * from './components/MentoringTaskPaymentModal'
+export * from './components/MentoringTaskBadge'
+
+// Cả UC100 và UC104 đều khai báo type MentoringTaskType với tập giá trị khác nhau -> chỉ định rõ để tránh xung đột
+export type { MentoringTaskType } from './model/mentoringDealTypes'
+export type { MentoringTaskType as MentoringRequestTaskType } from './model/mentoringRequestTypes'

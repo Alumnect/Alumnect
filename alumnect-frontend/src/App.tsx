@@ -39,6 +39,7 @@ import { MyMentoringRequestsPage } from '@/pages/app/MyMentoringRequestsPage'
 import { MentoringRequestDetailPage } from '@/pages/app/MentoringRequestDetailPage'
 import IncomingMentoringRequestsPage from '@/pages/app/IncomingMentoringRequestsPage'
 import IncomingMentoringRequestDetailPage from '@/pages/app/IncomingMentoringRequestDetailPage'
+import { MentoringDealsPage } from '@/pages/app/MentoringDealsPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -86,6 +87,7 @@ function App() {
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
             <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
             <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />
+            <Route path="mentoring/deals" element={<ProtectedRoute><MentoringDealsPage /></ProtectedRoute>} />
             <Route path="mentoring/become-mentor" element={<ProtectedRoute><BecomeMentorPage /></ProtectedRoute>} />
             <Route path="mentoring/packages" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
             <Route path="mentoring/subscription" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />

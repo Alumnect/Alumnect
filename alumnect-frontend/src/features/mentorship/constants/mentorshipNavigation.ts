@@ -5,6 +5,7 @@ import {
   BriefcaseBusiness,
   FileText,
   GraduationCap,
+  Handshake,
   Inbox,
   LayoutDashboard,
   Search,
@@ -59,6 +60,12 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         label: 'Tạo yêu cầu Mentoring',
         to: '/app/mentoring/requests/create',
         icon: Send,
+        audience: 'common',
+      },
+      {
+        label: 'Thỏa thuận Mentoring Deal',
+        to: '/app/mentoring/deals',
+        icon: Handshake,
         audience: 'common',
       },
       {

@@ -9413,6 +9413,497 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "104. Thỏa thuận & xác nhận Mentoring Deal (UC104)",
+      "description": "Các API phục vụ Thỏa thuận & xác nhận Mentoring Deal giữa Student và Mentor (Flow 3 - UC104)",
+      "item": [
+        {
+          "name": "104.1 Đề xuất Mentoring Deal mới - Thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 2,\n    \"studentId\": 1,\n    \"conversationId\": 1,\n    \"taskScope\": \"Hướng dẫn xây dựng kiến trúc Microservices và Review đồ án tốt nghiệp Capstone Project về Spring Boot & React\",\n    \"agreedPrice\": 500000,\n    \"deadline\": \"2026-11-30T23:59:59Z\",\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"PROJECT_MENTORING\",\n    \"expectedResult\": \"Hoàn thiện tài liệu kiến trúc hệ thống và vượt qua buổi phản biện thử nghiệm đồ án\",\n    \"changeNote\": \"Đề xuất thỏa thuận ban đầu từ phía Học viên\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals"
+              ]
+            },
+            "description": "Khởi tạo đề xuất thỏa thuận mới giữa Student và Mentor. Trạng thái khởi tạo: STUDENT_CONFIRMED hoặc MENTOR_CONFIRMED (tùy theo bên đề xuất)."
+          },
+          "response": []
+        },
+        {
+          "name": "104.2 Đề xuất Deal thất bại - Thiếu thông tin bắt buộc (Validation Error 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"mentorId\": 2,\n    \"taskScope\": \"\",\n    \"agreedPrice\": -100,\n    \"deadline\": null,\n    \"workingMode\": null,\n    \"participationType\": null,\n    \"taskType\": null,\n    \"expectedResult\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals"
+              ]
+            },
+            "description": "Dữ liệu thiếu hoặc không hợp lệ. Kỳ vọng HTTP 400 Bad Request kèm chi tiết các trường lỗi Tiếng Việt."
+          },
+          "response": []
+        },
+        {
+          "name": "104.3 Lấy chi tiết Deal & Snapshot mới nhất - Thành công",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "1"
+              ]
+            },
+            "description": "Lấy chi tiết thỏa thuận Deal, snapshot mới nhất và lịch sử các phiên bản."
+          },
+          "response": []
+        },
+        {
+          "name": "104.4 Điều chỉnh điều khoản Deal - Thành công (Sinh Snapshot mới)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"taskScope\": \"Điều chỉnh bổ sung: Hướng dẫn tích hợp thêm CI/CD pipeline và bảo mật JWT Refresh Token\",\n    \"agreedPrice\": 650000,\n    \"deadline\": \"2026-12-15T23:59:59Z\",\n    \"workingMode\": \"BOTH\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"PROJECT_MENTORING\",\n    \"expectedResult\": \"Hoàn thiện code chạy được trên server staging và tài liệu bảo mật chi tiết\",\n    \"changeNote\": \"Cập nhật thêm nội dung CI/CD theo thỏa thuận qua chat\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "1"
+              ]
+            },
+            "description": "Một bên điều chỉnh điều khoản. Version tăng lên 1, snapshot mới được tạo, yêu cầu bên còn lại xác nhận lại."
+          },
+          "response": []
+        },
+        {
+          "name": "104.5 Xác nhận Mentoring Deal Snapshot - Thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/1/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "1",
+                "confirm"
+              ]
+            },
+            "description": "Xác nhận snapshot hiện tại. Nếu cả hai bên cùng xác nhận, Deal chuyển sang DEAL_CONFIRMED và bị khóa snapshot."
+          },
+          "response": []
+        },
+        {
+          "name": "104.6 Xác nhận lại khi đã xác nhận - Thất bại 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/1/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "1",
+                "confirm"
+              ]
+            },
+            "description": "Gửi yêu cầu xác nhận khi bên này đã xác nhận rồi. Kỳ vọng HTTP 400 Bad Request."
+          },
+          "response": []
+        },
+        {
+          "name": "104.7 Lấy danh sách Deal của tôi - Thành công",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lấy danh sách phân trang các thỏa thuận Deal của người dùng hiện tại."
+          },
+          "response": []
+        },
+        {
+          "name": "104.8 Lấy Deal theo cuộc hội thoại Direct Messaging - Thành công",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/by-conversation/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "by-conversation",
+                "1"
+              ]
+            },
+            "description": "Lấy thỏa thuận Deal mới nhất gắn với cuộc trò chuyện chat trực tiếp."
+          },
+          "response": []
+        },
+        {
+          "name": "104.9 Hủy bỏ Mentoring Deal - Thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/1/cancel?reason=Thay%20%C4%91%E1%BB%95i%20k%E1%BA%BF%20ho%E1%BA%A1ch%20h%E1%BB%8Dc%20t%E1%BA%ADp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "1",
+                "cancel"
+              ],
+              "query": [
+                {
+                  "key": "reason",
+                  "value": "Thay đổi kế hoạch học tập"
+                }
+              ]
+            },
+            "description": "Hủy bỏ thỏa thuận Deal khi chưa bị khóa chốt."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "105. Thanh toán Mentoring Task (UC105)",
+      "description": "Các API phục vụ Thanh toán Mentoring Task từ Deal đã xác nhận để chính thức kích hoạt Task (Flow 3 - UC105)",
+      "item": [
+        {
+          "name": "105.1 Tạo giao dịch thanh toán Task từ Deal - Thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"dealId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/task-payments/checkout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "task-payments",
+                "checkout"
+              ]
+            },
+            "description": "Student tạo phiên thanh toán PayOS từ Deal đã khóa chốt (DEAL_CONFIRMED). Trả về link checkoutUrl, qrCodeUrl, orderCode để thanh toán."
+          },
+          "response": []
+        },
+        {
+          "name": "105.2 Tạo giao dịch thanh toán Task - Lỗi Deal chưa chốt (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"dealId\": 999\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/task-payments/checkout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "task-payments",
+                "checkout"
+              ]
+            },
+            "description": "Deal chưa tồn tại hoặc chưa được cả hai bên xác nhận (chưa DEAL_CONFIRMED). Kỳ vọng HTTP 400 Bad Request."
+          },
+          "response": []
+        },
+        {
+          "name": "105.3 Tra cứu trạng thái thanh toán & kích hoạt Task (Polling Fallback)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/task-payments/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "task-payments",
+                "1",
+                "status"
+              ]
+            },
+            "description": "Frontend Student gọi định kỳ (polling) kiểm tra trạng thái thanh toán. Nếu PayOS báo PAID, hệ thống tự động kích hoạt Task và cập nhật trạng thái PREPARATION."
+          },
+          "response": []
+        },
+        {
+          "name": "105.4 Hủy giao dịch thanh toán Task đang chờ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/task-payments/1/cancel?reason=Ng%C6%B0%E1%BB%9Di%20d%C3%B9ng%20h%E1%BB%A7y%20giao%20d%E1%BB%8Bch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "task-payments",
+                "1",
+                "cancel"
+              ],
+              "query": [
+                {
+                  "key": "reason",
+                  "value": "Người dùng hủy giao dịch"
+                }
+              ]
+            },
+            "description": "Student chủ động hủy phiên thanh toán chưa thanh toán."
+          },
+          "response": []
+        },
+        {
+          "name": "105.5 Webhook PayOS xác nhận kết quả thanh toán",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"code\": \"00\",\n    \"desc\": \"success\",\n    \"data\": {\n        \"orderCode\": 12345678,\n        \"amount\": 500000,\n        \"description\": \"Mentoring Task Deal 1\",\n        \"accountNumber\": \"123456789\",\n        \"reference\": \"FT123456\",\n        \"transactionDateTime\": \"2026-10-12 17:00:00\",\n        \"currency\": \"VND\",\n        \"paymentLinkId\": \"pl_mock_123\"\n    },\n    \"signature\": \"mock_signature\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/task-payments/webhook",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "task-payments",
+                "webhook"
+              ]
+            },
+            "description": "Endpoint công khai nhận webhook từ PayOS khi thanh toán thành công để kích hoạt Task chuyển sang PREPARATION."
+          },
+          "response": []
+        },
+        {
+          "name": "105.6 Lấy chi tiết Mentoring Task đã kích hoạt",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1"
+              ]
+            },
+            "description": "Lấy chi tiết Task đã kích hoạt với trạng thái ban đầu là PREPARATION, các mốc thời gian và thông tin Student/Mentor."
+          },
+          "response": []
+        },
+        {
+          "name": "105.7 Lấy danh sách Mentoring Tasks của tôi (Student / Mentor)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/my-tasks?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "my-tasks"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lấy danh sách các Task của người dùng hiện tại (lọc theo vai trò Student hoặc Mentor, có thể lọc theo status)."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

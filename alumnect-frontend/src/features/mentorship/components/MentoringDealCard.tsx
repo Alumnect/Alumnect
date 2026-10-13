@@ -1,0 +1,149 @@
+import { format } from 'date-fns'
+import { vi } from 'date-fns/locale'
+import { Calendar, DollarSign, ArrowRight, CreditCard, MessagesSquare } from 'lucide-react'
+import { Card, Avatar, Button } from '@/components/ui'
+import { MentoringDealBadge } from './MentoringDealBadge'
+import type { MentoringDeal } from '../model/mentoringDealTypes'
+
+interface MentoringDealCardProps {
+  deal: MentoringDeal
+  onViewDetail: (deal: MentoringDeal) => void
+  onOpenChat?: (deal: MentoringDeal) => void
+  isActive?: boolean
+}
+
+/**
+ * Thẻ hiển thị tóm tắt một Deal trong danh sách các thỏa thuận (UC104).
+ */
+export function MentoringDealCard({
+  deal,
+  onViewDetail,
+  onOpenChat,
+  isActive = false,
+}: MentoringDealCardProps) {
+  const formattedPrice = new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(deal.agreedPrice)
+
+  const formattedDeadline = deal.deadline
+    ? format(new Date(deal.deadline), 'dd/MM/yyyy HH:mm', { locale: vi })
+    : 'Chưa có'
+
+  return (
+    <Card
+      hover={true}
+      className={`border bg-white p-5 shadow-xs transition-all hover:shadow-md dark:bg-[#242526] space-y-4 ${
+        isActive
+          ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-50/20 dark:bg-brand-950/20'
+          : 'border-plum-900/[0.08] dark:border-[#393a3b]'
+      }`}
+    >
+      {/* Header: ID, Version, Status */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-plum-900/[0.05] pb-3 dark:border-white/5">
+        <div className="flex items-center gap-2">
+          <span className="font-heading font-black text-sm text-plum-900 dark:text-[#f0f2f5]">
+            Deal #{deal.id}
+          </span>
+          <span className="rounded-full bg-plum-100 px-2 py-0.5 text-[10px] font-bold text-plum-700 dark:bg-white/10 dark:text-plum-300">
+            v{deal.version}
+          </span>
+        </div>
+        <MentoringDealBadge
+          status={deal.status}
+          isLocked={deal.isLocked}
+          isPaid={deal.isPaid}
+        />
+      </div>
+
+      {/* Thông tin 2 bên tham gia (Student & Mentor) */}
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar
+            src={deal.studentAvatar || undefined}
+            name={deal.studentName || 'Học viên'}
+            size={32}
+          />
+          <div className="min-w-0">
+            <p className="truncate font-bold text-plum-900 dark:text-[#f0f2f5]">
+              {deal.studentName || 'Học viên'}
+            </p>
+            <p className="text-[10px] text-plum-400">Sinh viên</p>
+          </div>
+        </div>
+
+        <span className="text-plum-300 font-bold dark:text-white/20">↔</span>
+
+        <div className="flex items-center gap-2 min-w-0 text-right justify-end">
+          <div className="min-w-0">
+            <p className="truncate font-bold text-plum-900 dark:text-[#f0f2f5]">
+              {deal.mentorName || 'Cố vấn'}
+            </p>
+            <p className="text-[10px] text-plum-400">Mentor</p>
+          </div>
+          <Avatar
+            src={deal.mentorAvatar || undefined}
+            name={deal.mentorName || 'Cố vấn'}
+            size={32}
+          />
+        </div>
+      </div>
+
+      {/* Nội dung tóm tắt phạm vi */}
+      <div className="space-y-1">
+        <p className="line-clamp-2 text-xs text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
+          {deal.taskScope}
+        </p>
+      </div>
+
+      {/* Giá, Deadline & Nút hành động */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-plum-900/[0.05] dark:border-white/5 text-xs">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-1 font-bold text-mint-700 dark:text-mint-400">
+            <DollarSign className="h-3.5 w-3.5" />
+            <span>{formattedPrice}</span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-plum-400">
+            <Calendar className="h-3 w-3" />
+            <span>{formattedDeadline}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {onOpenChat && (
+            <button
+              type="button"
+              onClick={() => onOpenChat(deal)}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200/60 dark:bg-brand-950/50 dark:text-brand-300 dark:border-brand-800/40 transition-all cursor-pointer"
+              title="Mở Chat for Task riêng"
+            >
+              <MessagesSquare className="h-3.5 w-3.5" />
+              <span>Chat for Task</span>
+            </button>
+          )}
+
+          {deal.status === 'DEAL_CONFIRMED' && !deal.isPaid ? (
+            <button
+              type="button"
+              onClick={() => onViewDetail(deal)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm shadow-emerald-500/25 transition-all cursor-pointer"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>Thanh toán</span>
+            </button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onViewDetail(deal)}
+              rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+              className="rounded-xl font-bold text-xs"
+            >
+              Chi tiết
+            </Button>
+          )}
+        </div>
+      </div>
+    </Card>
+  )
+}
