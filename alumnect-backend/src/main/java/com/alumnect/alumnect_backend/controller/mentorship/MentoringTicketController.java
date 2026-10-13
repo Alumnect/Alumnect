@@ -75,6 +75,29 @@ public class MentoringTicketController {
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách Tickets thành công", response));
     }
 
+    @PostMapping("/{taskId}/dispute-tickets")
+    @Operation(summary = "Tạo Dispute Ticket khiếu nại tranh chấp gửi Admin (UC112)",
+               description = "Cho phép Student hoặc Mentor mở khiếu nại yêu cầu Admin can thiệp khi hai bên không thể tự thống nhất")
+    public ResponseEntity<ApiResponse<MentoringDisputeTicketResponse>> createDisputeTicket(
+            @PathVariable Long taskId,
+            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.mentorship.CreateDisputeTicketRequest request) {
+        Long currentUserId = getCurrentUserId();
+        MentoringDisputeTicketResponse response = ticketService.createDisputeTicket(currentUserId, taskId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Tạo Dispute Ticket khiếu nại thành công", response));
+    }
+
+    @GetMapping("/tickets/{ticketId}/evidences")
+    @Operation(summary = "Lấy danh sách bằng chứng tranh chấp của Ticket (UC112 & UC113)",
+               description = "Trả về danh sách tài liệu, hình ảnh minh chứng phục vụ giải quyết Ticket")
+    public ResponseEntity<ApiResponse<List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse>>> getTicketEvidences(
+            @PathVariable Long ticketId) {
+        Long currentUserId = getCurrentUserId();
+        List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse> response =
+                ticketService.getTicketEvidences(currentUserId, ticketId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bằng chứng thành công", response));
+    }
+
     private Long getCurrentUserId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)

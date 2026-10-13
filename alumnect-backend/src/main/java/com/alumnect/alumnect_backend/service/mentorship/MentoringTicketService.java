@@ -49,4 +49,25 @@ public interface MentoringTicketService {
      * @return Danh sách Tickets
      */
     List<MentoringDisputeTicketResponse> getTicketsByTaskId(Long currentUserId, Long taskId);
+
+    /**
+     * Tạo Dispute Ticket khi hai bên không thể tự thống nhất phương án (UC112).
+     *
+     * @param currentUserId ID người gửi (Student hoặc Mentor)
+     * @param taskId ID nhiệm vụ Mentoring Task
+     * @param request Dữ liệu khiếu nại và bằng chứng
+     * @return Thông tin Dispute Ticket vừa tạo
+     */
+    MentoringDisputeTicketResponse createDisputeTicket(
+            Long currentUserId, Long taskId, com.alumnect.alumnect_backend.dto.request.mentorship.CreateDisputeTicketRequest request);
+
+    /**
+     * Lấy danh sách bằng chứng tranh chấp của Ticket (UC112 & UC113).
+     *
+     * @param currentUserId ID người xem
+     * @param ticketId ID vé khiếu nại
+     * @return Danh sách bằng chứng
+     */
+    List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse> getTicketEvidences(
+            Long currentUserId, Long ticketId);
 }

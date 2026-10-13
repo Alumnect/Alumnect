@@ -11,6 +11,7 @@ import {
   ArrowRight,
   FileCheck,
   CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
@@ -38,11 +39,13 @@ interface MentoringTaskResolutionBannerProps {
   taskStatus?: MentoringTaskStatus | string | null
   canConfirmCompletion?: boolean
   canSubmitSettlementTicket?: boolean
+  canCreateDisputeTicket?: boolean
   isStudent?: boolean
   isMentor?: boolean
   onOpenTopUpPayment?: () => void
   onOpenReviewCompletion?: () => void
   onOpenSubmitSettlementTicket?: () => void
+  onOpenCreateDispute?: () => void
   onRefresh?: () => void
 }
 
@@ -56,10 +59,12 @@ export function MentoringTaskResolutionBanner({
   taskStatus,
   canConfirmCompletion,
   canSubmitSettlementTicket,
+  canCreateDisputeTicket,
   isStudent,
   onOpenTopUpPayment,
   onOpenReviewCompletion,
   onOpenSubmitSettlementTicket,
+  onOpenCreateDispute,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
   const [rejectModal, setRejectModal] = useState<{
@@ -402,6 +407,17 @@ export function MentoringTaskResolutionBanner({
                 Đang chờ đối phương đồng thuận
               </span>
             )}
+            {canCreateDisputeTicket && onOpenCreateDispute && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onOpenCreateDispute}
+                className="h-8 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 mr-1 text-destructive" />
+                Khiếu nại
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -447,7 +463,51 @@ export function MentoringTaskResolutionBanner({
       )}
 
       {/* 3.2. ACTIVE TICKET IN PROGRESS BANNER (UC111 & UC112) */}
-      {activeTicket && (
+      {activeTicket && activeTicket.ticketType === 'DISPUTE' && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-destructive text-white shadow-sm shrink-0 mt-0.5">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-foreground">
+                  Khiếu nại tranh chấp #{activeTicket.ticketCode}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-destructive/20 text-destructive border border-destructive/30">
+                  {activeTicket.status === 'OPEN'
+                    ? 'Đang chờ Admin tiếp nhận'
+                    : activeTicket.status === 'IN_REVIEW'
+                    ? 'Admin đang thụ lý giải quyết'
+                    : activeTicket.status}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                {activeTicket.disputeReason && (
+                  <span>Lý do: <strong className="text-foreground">{activeTicket.disputeReason}</strong></span>
+                )}
+                {activeTicket.desiredSolution && (
+                  <>
+                    <span>•</span>
+                    <span>Phương án mong muốn: <strong className="text-destructive font-medium">{activeTicket.desiredSolution}</strong></span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-foreground/80 italic">
+                Nhiệm vụ đang ở trạng thái tranh chấp (DISPUTED). Mọi thao tác hoàn thành và quyết toán tạm thời đóng băng (ON_HOLD).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            <span className="text-xs px-3 py-1.5 rounded-lg bg-destructive/15 text-destructive font-bold border border-destructive/30">
+              Đang phân xử
+            </span>
+          </div>
+        </div>
+      )}
+
+      {activeTicket && activeTicket.ticketType === 'SETTLEMENT' && (
         <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="p-2.5 rounded-xl bg-blue-600 text-white shadow-sm shrink-0 mt-0.5">
@@ -456,7 +516,7 @@ export function MentoringTaskResolutionBanner({
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-sm text-foreground">
-                  Ticket #{activeTicket.ticketCode} ({activeTicket.ticketType === 'SETTLEMENT' ? 'Giải ngân thỏa thuận' : 'Khiếu nại'})
+                  Settlement Ticket #{activeTicket.ticketCode} (Giải ngân theo thỏa thuận)
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30">
                   {activeTicket.status === 'OPEN'

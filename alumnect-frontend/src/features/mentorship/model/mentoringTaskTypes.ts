@@ -264,6 +264,7 @@ export interface MentoringTaskActionPermissions {
   canSubmitCompletion?: boolean
   canConfirmCompletion?: boolean
   canSubmitSettlementTicket?: boolean
+  canCreateDisputeTicket?: boolean
 }
 
 /**
@@ -580,6 +581,9 @@ export interface MentoringDisputeTicket {
   mentorAvatar?: string | null
   title: string
   description?: string | null
+  disputeReason?: string | null
+  desiredSolution?: string | null
+  evidences?: TicketEvidence[]
   mentorAmount?: number | null
   studentRefund?: number | null
   totalAmount?: number | null
@@ -591,6 +595,45 @@ export interface MentoringDisputeTicket {
   resolutionNote?: string | null
   createdAt: string
   updatedAt: string
+}
+
+/**
+ * Bằng chứng tranh chấp gắn với Ticket (UC112 & UC113).
+ */
+export interface TicketEvidence {
+  id: number
+  ticketId: number
+  uploadedBy?: MentoringParticipant | null
+  title?: string | null
+  description?: string | null
+  fileUrl: string
+  fileName?: string | null
+  fileSize?: number | null
+  fileType?: string | null
+  createdAt: string
+}
+
+/**
+ * Payload đính kèm bằng chứng khi tạo hoặc nộp thêm Evidence (UC112 & UC113).
+ */
+export interface TicketEvidencePayload {
+  title?: string
+  description?: string
+  fileUrl: string
+  fileName?: string
+  fileSize?: number
+  fileType?: string
+}
+
+/**
+ * Payload tạo Dispute Ticket gửi Admin khi hai bên bất đồng (UC112).
+ */
+export interface CreateDisputeTicketPayload {
+  title: string
+  disputeReason: string
+  description: string
+  desiredSolution: string
+  initialEvidences?: TicketEvidencePayload[]
 }
 
 /**
@@ -619,8 +662,8 @@ export interface MentoringSettlementSnapshot {
  * Payload gửi Settlement Ticket đã thỏa thuận lên Admin (UC111).
  */
 export interface SubmitSettlementTicketPayload {
-  title?: string
-  description?: string
+  proposalId: number
+  note?: string
 }
 
 

@@ -45,6 +45,7 @@ import { MentoringDeadlineExtensionModal } from './MentoringDeadlineExtensionMod
 import { MentoringTaskAmendmentModal } from './MentoringTaskAmendmentModal'
 import { MentoringSettlementProposalModal } from './MentoringSettlementProposalModal'
 import { MentoringSubmitSettlementTicketModal } from './MentoringSubmitSettlementTicketModal'
+import { MentoringCreateDisputeModal } from './MentoringCreateDisputeModal'
 import { MentoringTaskCompletionModal } from './MentoringTaskCompletionModal'
 import { MentoringTaskReviewModal } from './MentoringTaskReviewModal'
 import { useTaskDetail } from '../hooks/useMentoringTasks'
@@ -130,6 +131,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   // UC111: Gửi Settlement Ticket đã thỏa thuận lên Admin
   const [isSubmitSettlementTicketOpen, setIsSubmitSettlementTicketOpen] = useState(false)
+
+  // UC112: Mở Dispute Ticket khiếu nại tranh chấp
+  const [isCreateDisputeOpen, setIsCreateDisputeOpen] = useState(false)
 
   const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
 
@@ -568,6 +572,21 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                       </div>
                     </button>
                   )}
+                  {taskDetail?.permissions?.canCreateDisputeTicket && (
+                    <button
+                      onClick={() => {
+                        setIsCreateDisputeOpen(true)
+                        setIsTaskActionMenuOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 rounded-xl transition text-left"
+                    >
+                      <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+                      <div>
+                        <div className="font-bold">Mở khiếu nại tranh chấp (UC112)</div>
+                        <div className="text-[10px] text-muted-foreground">Yêu cầu Admin can thiệp giải quyết</div>
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -715,11 +734,13 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           taskStatus={taskDetail?.overview?.status || ctx.taskStatus}
           canConfirmCompletion={taskDetail?.permissions?.canConfirmCompletion}
           canSubmitSettlementTicket={taskDetail?.permissions?.canSubmitSettlementTicket}
+          canCreateDisputeTicket={taskDetail?.permissions?.canCreateDisputeTicket}
           isStudent={!isMentor}
           isMentor={isMentor}
           onOpenTopUpPayment={openPayment}
           onOpenReviewCompletion={() => setIsReviewCompletionOpen(true)}
           onOpenSubmitSettlementTicket={() => setIsSubmitSettlementTicketOpen(true)}
+          onOpenCreateDispute={() => setIsCreateDisputeOpen(true)}
           onRefresh={() => {
             refetchTask()
             refetch()
@@ -1142,6 +1163,21 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           isOpen={isSubmitSettlementTicketOpen}
           onClose={() => setIsSubmitSettlementTicketOpen(false)}
           taskId={ctx.taskId}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
+
+      {/* UC112: Modal mở Dispute Ticket khiếu nại tranh chấp */}
+      {isCreateDisputeOpen && ctx.taskId && (
+        <MentoringCreateDisputeModal
+          isOpen={isCreateDisputeOpen}
+          onClose={() => setIsCreateDisputeOpen(false)}
+          taskId={ctx.taskId}
+          taskTitle={taskDetail?.overview?.taskTitle}
+          isStudent={!isMentor}
           onSuccess={() => {
             refetchTask()
             refetch()

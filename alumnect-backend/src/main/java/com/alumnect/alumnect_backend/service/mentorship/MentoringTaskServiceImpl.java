@@ -298,6 +298,10 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 && activeSettlementProposal.getStatus() == MentoringSettlementProposalStatus.ACCEPTED
                 && activeTicket == null;
 
+        boolean canCreateDisputeTicket = (isStudent || isMentor)
+                && task.getStatus() != MentoringTaskStatus.COMPLETED
+                && activeTicket == null;
+
         MentoringTaskActionPermissionsResponse permissions = MentoringTaskActionPermissionsResponse.builder()
                 .canAddWorkLog(canAddWorkLog)
                 .canEditWorkLog(canEditWorkLog)
@@ -312,6 +316,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .canSubmitCompletion(canSubmitCompletion)
                 .canConfirmCompletion(canConfirmCompletion)
                 .canSubmitSettlementTicket(canSubmitSettlementTicket)
+                .canCreateDisputeTicket(canCreateDisputeTicket)
                 .build();
 
         return MentoringTaskDetailResponse.builder()

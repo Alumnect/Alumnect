@@ -166,4 +166,7 @@ export * from './components/MentoringTaskReviewModal'
 export * from './hooks/useMentoringTickets'
 export * from './components/MentoringSubmitSettlementTicketModal'
 
+// UC112 exports (Mở Dispute Ticket khiếu nại tranh chấp)
+export * from './components/MentoringCreateDisputeModal'
+
 

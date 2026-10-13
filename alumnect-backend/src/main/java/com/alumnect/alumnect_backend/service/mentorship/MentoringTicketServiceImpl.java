@@ -7,14 +7,19 @@ import com.alumnect.alumnect_backend.common.enums.MentoringTicketType;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDisputeTicketRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTicketEvidenceRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.CreateDisputeTicketRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.SubmitSettlementTicketRequest;
+import com.alumnect.alumnect_backend.dto.request.mentorship.TicketEvidenceRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeTicketResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringParticipantResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringSettlementSnapshotResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementProposal;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTicketEvidence;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
@@ -45,6 +50,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     private final MentoringDisputeTicketRepository ticketRepository;
     private final MentoringTaskRepository taskRepository;
     private final MentoringTaskSettlementProposalRepository proposalRepository;
+    private final MentoringTicketEvidenceRepository evidenceRepository;
     private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
 
@@ -198,6 +204,119 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public MentoringDisputeTicketResponse createDisputeTicket(
+            Long currentUserId, Long taskId, CreateDisputeTicketRequest request) {
+
+        log.info("Người dùng id={} yêu cầu tạo Dispute Ticket cho Task id={}", currentUserId, taskId);
+
+        MentoringTask task = requireParticipantTask(taskId, currentUserId);
+        User currentUser = requireUser(currentUserId);
+
+        // 1. Kiểm tra trạng thái Task: Không được khiếu nại Task đã hoàn thành COMPLETED
+        if (task.getStatus() == MentoringTaskStatus.COMPLETED) {
+            throw new BadRequestException("Nhiệm vụ đã hoàn thành thành công, không thể tạo khiếu nại tranh chấp.");
+        }
+
+        // 2. Chống tạo vé trùng lặp khi đã có vé OPEN hoặc IN_REVIEW
+        boolean hasActiveTicket = ticketRepository.existsByTaskIdAndStatusIn(task.getId(), ACTIVE_TICKET_STATUSES);
+        if (hasActiveTicket) {
+            throw new ConflictException("Nhiệm vụ này đã có một Ticket đang chờ Ban Quản Trị tiếp nhận xử lý.");
+        }
+
+        // 3. Sinh mã vé duy nhất: DP-YYYYMMDD-XXXX
+        String datePart = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        int rand = 100000 + new Random().nextInt(900000);
+        String ticketCode = "DP-" + datePart + "-" + rand;
+
+        // 4. Tạo bản ghi MentoringDisputeTicket
+        MentoringDisputeTicket ticket = MentoringDisputeTicket.builder()
+                .ticketCode(ticketCode)
+                .ticketType(MentoringTicketType.DISPUTE)
+                .task(task)
+                .conversation(task.getDeal() != null ? task.getDeal().getConversation() : null)
+                .settlementProposal(null)
+                .createdBy(currentUser)
+                .student(task.getStudent())
+                .mentor(task.getMentor())
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .disputeReason(request.getDisputeReason())
+                .desiredSolution(request.getDesiredSolution())
+                .mentorAmount(BigDecimal.ZERO)
+                .studentRefund(BigDecimal.ZERO)
+                .totalAmount(task.getAgreedPrice() != null ? task.getAgreedPrice() : BigDecimal.ZERO)
+                .status(MentoringTicketStatus.OPEN)
+                .build();
+
+        MentoringDisputeTicket savedTicket = ticketRepository.save(ticket);
+
+        // 5. Lưu các bằng chứng ban đầu (initial evidences) nếu có
+        List<MentoringTicketEvidenceResponse> evidenceResponses = new ArrayList<>();
+        if (request.getInitialEvidences() != null && !request.getInitialEvidences().isEmpty()) {
+            for (TicketEvidenceRequest evReq : request.getInitialEvidences()) {
+                MentoringTicketEvidence ev = MentoringTicketEvidence.builder()
+                        .ticket(savedTicket)
+                        .uploadedBy(currentUser)
+                        .title(evReq.getTitle())
+                        .description(evReq.getDescription())
+                        .fileUrl(evReq.getFileUrl())
+                        .fileName(evReq.getFileName())
+                        .fileSize(evReq.getFileSize())
+                        .fileType(evReq.getFileType())
+                        .build();
+                MentoringTicketEvidence savedEv = evidenceRepository.save(ev);
+                evidenceResponses.add(toEvidenceResponse(savedEv));
+            }
+        }
+
+        // 6. Chuyển trạng thái Task sang DISPUTED (đóng băng hoạt động & payout ON_HOLD)
+        task.setStatus(MentoringTaskStatus.DISPUTED);
+        taskRepository.save(task);
+
+        // 7. Gửi thông báo hệ thống realtime vào Chat for Task
+        String senderRole = Objects.equals(currentUserId, task.getStudent().getId()) ? "Học viên" : "Mentor";
+        String systemMessage = String.format(
+                "⚠️ [HỆ THỐNG] Đã khởi tạo Khiếu nại / Tranh chấp [%s] gửi tới Ban Quản Trị do %s yêu cầu giải quyết.\n" +
+                "• Lý do: %s\n" +
+                "• Phương án mong muốn: %s\n" +
+                "Nhiệm vụ chính thức chuyển sang trạng thái DISPUTED. Mọi thao tác hoàn thành và quyết toán tạm thời đóng băng (ON_HOLD) để BQT tiếp nhận và phân xử.",
+                ticketCode, senderRole, request.getDisputeReason(), request.getDesiredSolution()
+        );
+
+        try {
+            if (task.getConversation() != null) {
+                mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, systemMessage);
+            }
+        } catch (Exception e) {
+            log.error("Không thể gửi tin nhắn hệ thống realtime cho Dispute Ticket: {}", e.getMessage());
+        }
+
+        MentoringDisputeTicketResponse response = toTicketResponse(savedTicket);
+        response.setEvidences(evidenceResponses);
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MentoringTicketEvidenceResponse> getTicketEvidences(Long currentUserId, Long ticketId) {
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket với ID: " + ticketId));
+
+        boolean isStudent = Objects.equals(ticket.getStudent().getId(), currentUserId);
+        boolean isMentor = Objects.equals(ticket.getMentor().getId(), currentUserId);
+        boolean isCreator = Objects.equals(ticket.getCreatedBy().getId(), currentUserId);
+
+        if (!isStudent && !isMentor && !isCreator) {
+            throw new ForbiddenException("Bạn không có quyền truy cập bằng chứng của Ticket này.");
+        }
+
+        return evidenceRepository.findByTicketIdOrderByCreatedAtAsc(ticket.getId()).stream()
+                .map(this::toEvidenceResponse)
+                .toList();
+    }
+
     // =========================================================================
     // HELPER METHODS
     // =========================================================================
@@ -229,6 +348,12 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     }
 
     private MentoringDisputeTicketResponse toTicketResponse(MentoringDisputeTicket t) {
+        List<MentoringTicketEvidenceResponse> evidences = evidenceRepository != null
+                ? evidenceRepository.findByTicketIdOrderByCreatedAtAsc(t.getId()).stream()
+                    .map(this::toEvidenceResponse)
+                    .toList()
+                : Collections.emptyList();
+
         return MentoringDisputeTicketResponse.builder()
                 .id(t.getId())
                 .ticketCode(t.getTicketCode())
@@ -242,6 +367,9 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .mentor(toParticipantResponse(t.getMentor(), "MENTOR"))
                 .title(t.getTitle())
                 .description(t.getDescription())
+                .disputeReason(t.getDisputeReason())
+                .desiredSolution(t.getDesiredSolution())
+                .evidences(evidences)
                 .mentorAmount(t.getMentorAmount())
                 .studentRefund(t.getStudentRefund())
                 .totalAmount(t.getTotalAmount())
@@ -252,6 +380,22 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .resolutionNote(t.getResolutionNote())
                 .createdAt(t.getCreatedAt())
                 .updatedAt(t.getUpdatedAt())
+                .build();
+    }
+
+    private MentoringTicketEvidenceResponse toEvidenceResponse(MentoringTicketEvidence ev) {
+        if (ev == null) return null;
+        return MentoringTicketEvidenceResponse.builder()
+                .id(ev.getId())
+                .ticketId(ev.getTicket() != null ? ev.getTicket().getId() : null)
+                .uploadedBy(toParticipantResponse(ev.getUploadedBy(), "UPLOADER"))
+                .title(ev.getTitle())
+                .description(ev.getDescription())
+                .fileUrl(ev.getFileUrl())
+                .fileName(ev.getFileName())
+                .fileSize(ev.getFileSize())
+                .fileType(ev.getFileType())
+                .createdAt(ev.getCreatedAt())
                 .build();
     }
 

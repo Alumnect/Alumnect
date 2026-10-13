@@ -53,6 +53,15 @@ public class MentoringDisputeTicketResponse {
     /** Mô tả lý do / chi tiết */
     private String description;
 
+    /** Lý do tranh chấp (UC112) */
+    private String disputeReason;
+
+    /** Phương án mong muốn của người gửi khiếu nại (UC112) */
+    private String desiredSolution;
+
+    /** Danh sách bằng chứng tranh chấp đính kèm (UC112 & UC113) */
+    private java.util.List<MentoringTicketEvidenceResponse> evidences;
+
     /** Số tiền cho Mentor (VND) */
     private BigDecimal mentorAmount;
 

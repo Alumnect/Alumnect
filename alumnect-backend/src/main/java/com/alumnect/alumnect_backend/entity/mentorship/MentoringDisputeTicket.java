@@ -75,6 +75,14 @@ public class MentoringDisputeTicket {
     @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     private String description;
 
+    /** Lý do tranh chấp (UC112) */
+    @Column(name = "dispute_reason", length = 255)
+    private String disputeReason;
+
+    /** Phương án mong muốn của người tạo khiếu nại (UC112) */
+    @Column(name = "desired_solution", length = 255)
+    private String desiredSolution;
+
     /** Số tiền thanh toán cho Cố vấn (VND) */
     @Column(name = "mentor_amount", precision = 12, scale = 2, nullable = false)
     @Builder.Default

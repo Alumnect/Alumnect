@@ -50,4 +50,7 @@ public class MentoringTaskActionPermissionsResponse {
 
     /** Cho phép gửi Settlement Ticket đã thỏa thuận lên Admin (UC111) */
     private Boolean canSubmitSettlementTicket;
+
+    /** Cho phép tạo Dispute Ticket yêu cầu Admin can thiệp giải quyết tranh chấp (UC112) */
+    private Boolean canCreateDisputeTicket;
 }

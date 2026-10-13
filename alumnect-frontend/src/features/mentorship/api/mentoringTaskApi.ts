@@ -30,6 +30,8 @@ import type {
   RespondTaskCompletionPayload,
   MentoringSettlementSnapshot,
   MentoringDisputeTicket,
+  CreateDisputeTicketPayload,
+  TicketEvidence,
 } from '../model/mentoringTaskTypes'
 
 export interface PresignedUrlData {
@@ -447,4 +449,29 @@ export const mentoringTaskApi = {
     )
     return res.data
   },
+
+  /**
+   * Tạo Dispute Ticket khiếu nại tranh chấp gửi Admin (UC112).
+   */
+  createDisputeTicket: async (
+    taskId: number,
+    payload: CreateDisputeTicketPayload
+  ): Promise<MentoringDisputeTicket> => {
+    const res = await http.post<any, ApiResponse<MentoringDisputeTicket>>(
+      `/mentoring/tasks/${taskId}/dispute-tickets`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy danh sách bằng chứng tranh chấp của Ticket (UC112 & UC113).
+   */
+  getTicketEvidences: async (ticketId: number): Promise<TicketEvidence[]> => {
+    const res = await http.get<any, ApiResponse<TicketEvidence[]>>(
+      `/mentoring/tasks/tickets/${ticketId}/evidences`
+    )
+    return res.data
+  },
 }
+
