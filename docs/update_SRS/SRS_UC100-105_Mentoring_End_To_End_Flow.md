@@ -1,6 +1,6 @@
 # ĐẶC TẢ YÊU CẦU & THIẾT KẾ CHI TIẾT: UC100 – UC105 - CHUỖI NGHIỆP VỤ MENTORING END-TO-END (REQUEST → RESPONSE → CHAT FOR TASK → DEAL → PAYMENT → TASK)
 
-> Tài liệu được viết theo **mã nguồn thực tế** sau migration `V21__link_mentoring_request_deal_payment_task_flow.sql`.
+> Tài liệu được viết theo **mã nguồn thực tế** sau migration `V24__adjust_mentoring_deal_confirmation_and_payment_flow.sql` (kế thừa `V21`).
 > Khi có khác biệt với SRS riêng lẻ của UC103 / UC104 / UC105, **tài liệu này là nguồn sự thật** cho phần liên kết giữa các UC.
 
 ## PHẦN 1: ĐẶC TẢ NGHIỆP VỤ (REPORT 3)
@@ -13,11 +13,12 @@ stateDiagram-v2
     REQUEST_OPEN --> REQUEST_OPEN : Mentor DECLINE (phản hồi DECLINED)
     REQUEST_OPEN --> NEGOTIATING : Mentor ACCEPT → tạo/lấy lại Chat for Task (task_id = null)
     NEGOTIATING --> NEGOTIATING : Mentor gửi Deal Ticket vN (Chấp nhận theo Request / Deal lại)
-    NEGOTIATING --> NEGOTIATING : Học viên Yêu cầu điều chỉnh (vN → SUPERSEDED) / Từ chối (REJECTED)
-    NEGOTIATING --> MATCHED : Học viên xác nhận đúng phiên bản mới nhất → Deal khóa, chọn Mentor
-    MATCHED --> MATCHED : Thanh toán FAILED / EXPIRED / CANCELLED → giữ Mentor & Deal, cho phép thanh toán lại
-    MATCHED --> CLOSED : Thanh toán PAID → tạo Task PREPARATION, gắn Task vào Chat for Task cũ
-    CLOSED --> [*]
+    NEGOTIATING --> NEGOTIATING : Học viên Yêu cầu điều chỉnh (#ADJ Ticket) / Từ chối (REJECTED)
+    NEGOTIATING --> DEAL_CONFIRMED : Học viên xác nhận Deal vN → Deal khóa (Có thể confirm nhiều Deal khác nhau)
+    DEAL_CONFIRMED --> PAYMENT_PENDING : Học viên chọn 1 Deal đã chốt để thanh toán (PayOS VietQR)
+    PAYMENT_PENDING --> DEAL_CONFIRMED : Thanh toán FAILED / EXPIRED / CANCELLED → cho phép thanh toán lại hoặc chọn Deal khác
+    PAYMENT_PENDING --> TASK_PREPARATION : Thanh toán PAID (Ghi Sổ quỹ Escrow) → Chốt Mentor, đóng Request (CLOSED), tạo Task PREPARATION, các Deal khác CANCELLED
+    TASK_PREPARATION --> [*]
 ```
 
 > `NEGOTIATING` là trạng thái suy ra (Request `OPEN` + ít nhất một phản hồi `ACCEPTED`), không lưu thành giá trị riêng.
@@ -31,15 +32,27 @@ stateDiagram-v2
   * *Chấp nhận Deal theo Request* (`REQUEST_ACCEPTANCE`): điều khoản lấy từ Request — giá = `budget_max` (nếu trống dùng `budget_min`), deadline = `expected_deadline`, cùng hình thức/loại nhiệm vụ.
   * *Deal lại / Tạo Deal Ticket* (`RENEGOTIATION`): Mentor nhập phạm vi, giá, deadline, hình thức, loại nhiệm vụ, kết quả kỳ vọng, ghi chú.
   * Mỗi lần gửi tạo phiên bản mới (`mentoring_deal_snapshots (deal_id, version)`), Mentor được tính là đã xác nhận; Học viên cần xác nhận lại.
-* **Bước 4 - Học viên phản hồi Deal**: *Xác nhận & thanh toán* (2 bước: xác nhận → mở thanh toán), *Yêu cầu điều chỉnh* (`SUPERSEDED`), *Từ chối* (`REJECTED`). Mọi hành động chỉ áp dụng cho phiên bản mới nhất (backend kiểm tra `version`).
-* **Bước 5 - Chốt Mentor**: khi hai bên cùng xác nhận một phiên bản, trong cùng transaction: Deal → `DEAL_CONFIRMED` + khóa; Request → `MATCHED`, `selected_mentor_id`, `confirmed_deal_id`; các Deal của Mentor khác → `CANCELLED`; các phản hồi còn `PENDING` → `EXPIRED`; các Chat for Task khác nhận tin *"Request đã chọn Mentor khác."* và chuyển chỉ đọc (lịch sử giữ nguyên).
-* **Bước 6 - Thanh toán (UC105)**: chỉ từ Deal đã chốt của Request; số tiền lấy server-side từ `agreed_price`. Thất bại/hết hạn/hủy không tạo Task, không mở lại Request, không bỏ Mentor đã chọn.
-* **Bước 7 - Kích hoạt Task**: thanh toán `PAID` (webhook `code = 00` hoặc polling) → tạo đúng 1 `MentoringTask` (`PREPARATION`) liên kết Request, Deal, Conversation, Student, Mentor; `payment.task_id` = Task; `conversation.mentoring_task_id` = Task; Request → `CLOSED`; tin nhắn *"Thanh toán thành công, Task đã được kích hoạt."*. Chat for Task cũ tiếp tục dùng cho Task.
+* **Bước 4 - Học viên phản hồi Deal**: 
+  * *Xác nhận*: chuyển Deal sang `DEAL_CONFIRMED`, khóa Deal (`isLocked = true`).
+  * *Yêu cầu điều chỉnh*: sinh Ticket nhúng `#ADJ-xxx` (`MentoringAdjustmentTicketEmbed`) vào dòng thời gian chat, chuyển snapshot cũ sang `SUPERSEDED`.
+  * *Từ chối* (`REJECTED`). Mọi hành động chỉ áp dụng cho phiên bản mới nhất (backend kiểm tra `version`).
+* **Bước 5 - Trạng thái sau xác nhận Deal (Sau V24)**: Cho phép **nhiều Deal cùng đạt `DEAL_CONFIRMED`** cho 1 Request (đã xóa unique index `uq_mentoring_deals_request_confirmed`). Học viên có quyền thỏa thuận và so sánh giải pháp với nhiều Mentor khác nhau. Tại bước này, Request **vẫn ở trạng thái `OPEN`, chưa chốt Mentor** (`selected_mentor_id = null`).
+* **Bước 6 - Thanh toán Ký quỹ Escrow (UC105)**: Học viên chọn 1 trong các Deal đã chốt để thanh toán.
+  * Hệ thống áp dụng khóa bi quan trên Request (`findByIdForUpdate`).
+  * Ràng buộc `uq_mentoring_task_payments_request_pending` đảm bảo tối đa 1 phiên checkout `PENDING` còn hiệu lực trên mỗi Request. Nếu phiên cũ của cùng Deal còn hạn (< 15 phút), hệ thống **tái sử dụng** thông tin VietQR ngay. Nếu phiên cũ đã hết hạn hoặc đổi Deal, hệ thống cập nhật sang `EXPIRED`/`CANCELLED` và gọi `saveAndFlush` trước khi tạo đơn mới trên PayOS.
+  * Thất bại / hết hạn / hủy thanh toán không tạo Task, không đóng Request, Học viên có thể thanh toán lại hoặc chọn Deal khác để thanh toán.
+* **Bước 7 - Kích hoạt Task, Ghi Sổ quỹ & Chốt Mentor**: Khi thanh toán `PAID` (webhook `code = 00` hoặc polling):
+  * **Ghi Sổ quỹ Mentoring (`mentoring_payment_ledgers`)**: Ghi nhận một bút toán loại `ESCROW_COLLECTION` với trạng thái `SUCCEEDED`. Kinh phí được tạm giữ an toàn trong Escrow trung gian của hệ thống.
+  * Tạo đúng 1 `MentoringTask` (`PREPARATION`) liên kết Request, Deal, Conversation, Student, Mentor (tuân thủ `uq_mentoring_tasks_request_id`).
+  * **Chính thức chốt Mentor**: Request cập nhật `selected_mentor_id = mentor.id`, `confirmed_deal_id = deal.id`, chuyển trạng thái sang `CLOSED`.
+  * Toàn bộ Deal của các Mentor khác cùng Request tự động bị hủy (`CANCELLED`).
+  * Toàn bộ phản hồi còn `PENDING` tự động chuyển sang `EXPIRED`.
+  * Các Chat for Task khác nhận tin *"Request đã chọn Mentor khác."* và chuyển sang chế độ chỉ đọc. Cuộc trò chuyện hiện tại gắn Task và nhận tin nhắn *"Thanh toán thành công, Task đã được kích hoạt."*.
 
 ### 3.2 Mentorship - Chuỗi Request → Deal → Payment → Task
 Module Mentorship kết nối Học viên với Mentor. Phần này mô tả phần liên kết xuyên suốt UC100–UC105 sao cho có thể truy vết hai chiều:
-`Task → Payment → Deal (phiên bản đã chốt) → Conversation → Request → Student + Mentor` và
-`Request → Mentor đã ACCEPT → Conversation → các phiên bản Deal → Mentor được chọn → Deal đã chốt → Payment → Task`.
+`Task → Sổ quỹ Escrow → Payment → Deal (phiên bản đã chốt) → Conversation → Request → Student + Mentor` và
+`Request → Mentor đã ACCEPT → Conversation → các phiên bản Deal → Học viên thanh toán Escrow → Mentor được chọn → Sổ quỹ Escrow → Task`.
 
 #### 3.2.1 Mentor phản hồi Request & mở Chat for Task (UC103)
 
@@ -74,18 +87,17 @@ Module Mentorship kết nối Học viên với Mentor. Phần này mô tả ph�
 *   **Actors/Roles**: Học viên chủ Request, Mentor của cuộc hội thoại.
 *   **Purpose**: Trao đổi và chốt Deal gắn trực tiếp Request + Conversation.
 *   **Interface**:
-    *   Header: đối phương, nhãn "Mentor được chọn", "Lịch sử phiên bản", "Xem Task" (khi đã có Task).
+    *   Header: đối phương, nhãn "Mentor được chọn" (sau khi thanh toán thành công), "Lịch sử phiên bản", "Xem Task" (khi đã có Task).
     *   Thanh ngữ cảnh Request (mở rộng được): trạng thái Request, ngân sách, thời hạn, loại nhiệm vụ, hình thức, phản hồi của Mentor, liên kết tới trang Request.
     *   Banner: chỉ đọc (`readOnlyReason`), Deal đã khóa chờ thanh toán (kèm trạng thái lần thanh toán gần nhất, nút "Thanh toán"/"Thanh toán lại"), Task đã kích hoạt.
-    *   Dòng thời gian: tin nhắn + thẻ Deal Ticket theo từng phiên bản (dựng từ `mentoring_deal_snapshots`, không phân tích nội dung tin nhắn). Thẻ hiển thị: mã, phiên bản, phạm vi, giá, deadline, hình thức làm việc / tham gia, loại nhiệm vụ, nguồn đề xuất, kết quả kỳ vọng, trạng thái.
-    *   Mentor: menu "Giao dịch" → "Chấp nhận Deal theo Request" (vô hiệu kèm lý do nếu Request thiếu ngân sách/deadline) và "Deal lại / Tạo Deal Ticket".
+    *   Dòng thời gian: tin nhắn + thẻ Deal Ticket theo từng phiên bản (dựng từ `mentoring_deal_snapshots`) và các thẻ yêu cầu điều chỉnh Ticket `#ADJ-xxx`.
+    *   Mentor: menu "Giao dịch" → "Chấp nhận Deal theo Request" và "Deal lại / Tạo Deal Ticket".
     *   Học viên trên phiên bản mới nhất: "Từ chối", "Yêu cầu điều chỉnh", "Xác nhận & thanh toán".
-    *   Loading: skeleton; lỗi 403: thông báo không phải thành viên.
 
 **Data processing**:
 *   `GET /api/v1/mentoring/conversations/{id}`: xác thực thành viên theo người đăng nhập → trả ngữ cảnh + quyền thao tác tính ở backend.
 *   `POST /api/v1/mentoring/deals` (`conversationId`, `proposalSource`, điều khoản khi deal lại): chỉ Mentor của cuộc hội thoại → khóa Request → kiểm tra chỉ đọc, Request `OPEN` chưa chốt, phản hồi `ACCEPTED` → lấy Deal của cuộc hội thoại (hoặc tạo mới) → nếu đã khóa: 409 → `version + 1`, cập nhật điều khoản, `mentor_confirmed = true`, `student_confirmed = false`, `MENTOR_CONFIRMED` → lưu snapshot → tin nhắn hệ thống.
-*   `POST /api/v1/mentoring/deals/{id}/confirm` (`{version}`): khóa Request → đọc Deal → kiểm tra thành viên, phiên bản mới nhất, chưa khóa, cuộc hội thoại không chỉ đọc, Request `OPEN` chưa chốt, trạng thái còn hiệu lực → ghi nhận xác nhận → nếu đủ hai bên: chốt Mentor (Bước 5).
+*   `POST /api/v1/mentoring/deals/{id}/confirm` (`{version}`): khóa Request → đọc Deal → kiểm tra thành viên, phiên bản mới nhất, chưa khóa, cuộc hội thoại không chỉ đọc, Request `OPEN`, trạng thái còn hiệu lực → ghi nhận xác nhận → Deal chuyển `DEAL_CONFIRMED` và khóa (`isLocked = true`). **Request vẫn giữ `OPEN`** để Học viên có thể chốt với nhiều Mentor hoặc chuyển sang thanh toán.
 *   `POST …/reject?reason&version`, `POST …/request-adjustment?note&version`: chỉ Học viên, chỉ phiên bản đang `MENTOR_CONFIRMED`.
 
 **Function details**:
@@ -93,29 +105,38 @@ Module Mentorship kết nối Học viên với Mentor. Phần này mô tả ph�
 *   **Validation**: `taskScope` 10–5000 ký tự; `agreedPrice` ≥ 0; `deadline` trong tương lai; `expectedResult` 10–3000; `changeNote` ≤ 255; `version` bắt buộc khi xác nhận.
 *   **Business rules**: BR-FLOW-06 → BR-FLOW-14.
 *   **Error Handling**: xem 5.3.
-*   **Normal case**: Mentor gửi v1 → Học viên xác nhận v1 → Deal khóa, Request `MATCHED`, Chat của Mentor khác chỉ đọc.
-*   **Abnormal case**: xác nhận v1 khi đã có v2 → 409; Mentor A đọc/thao tác Chat hoặc Deal của Mentor B → 403; gửi tin trong Chat chỉ đọc → 409.
+*   **Normal case**: Mentor gửi v1 → Học viên xác nhận v1 → Deal khóa (`DEAL_CONFIRMED`), Request vẫn `OPEN` sẵn sàng thanh toán.
+*   **Abnormal case**: xác nhận v1 khi đã có v2 → 409; gửi tin trong Chat chỉ đọc → 409.
 
 #### 3.2.3 Thanh toán & kích hoạt Task (UC105)
 
 **Function trigger**:
-*   **Navigation path**: Chat for Task → "Xác nhận & thanh toán" (tự mở modal thanh toán sau khi Deal khóa) hoặc banner "Thanh toán / Thanh toán lại".
+*   **Navigation path**: Chat for Task → "Xác nhận & thanh toán" (tự mở modal thanh toán sau khi Deal khóa) hoặc banner "Thanh toán / Thanh toán lại" trên Deal `DEAL_CONFIRMED`.
 *   **Timing Frequency**: On demand; polling trạng thái mỗi 3 giây trong modal; webhook PayOS bất đồng bộ.
 
 **Function description**:
-*   **Actors/Roles**: Học viên của Deal (thanh toán); Mentor (xem trạng thái); PayOS (webhook).
-*   **Purpose**: Thanh toán theo Deal đã chốt và kích hoạt Task.
-*   **Interface**: Modal VietQR/checkout, đếm ngược hết hạn; sau khi thành công: Chat hiển thị banner Task + nút "Xem Task" (modal Task kèm truy vết Request → Deal → Task → Chat).
+*   **Actors/Roles**: Học viên của Deal (thanh toán); Mentor (xem trạng thái); PayOS (cổng thanh toán).
+*   **Purpose**: Thanh toán Ký quỹ Escrow theo Deal đã chốt, chốt Mentor và kích hoạt Task.
+*   **Interface**: Modal VietQR/checkout hiển thị tức thì (cache 5 phút), đếm ngược 15 phút; sau khi thành công: Chat hiển thị banner Task + nút "Xem Task".
 
 **Data processing**:
-*   `POST /api/v1/mentoring/task-payments/checkout` (`{dealId}`): kiểm tra Học viên của Deal, Deal gắn Request + Conversation, `DEAL_CONFIRMED` + khóa + hai bên đã xác nhận, là `confirmed_deal` của Request và Mentor khớp `selected_mentor`, chưa thanh toán / chưa có Task → tái sử dụng giao dịch `PENDING` còn hạn hoặc tạo giao dịch mới với `amount = agreed_price`.
-*   Webhook / polling: khóa giao dịch (`FOR UPDATE`) → chỉ xử lý `PENDING` → lệch tiền hoặc `code != 00` → `FAILED` (được lưu) → thành công: khóa Request → `PAID` → Deal `is_paid` → tạo/lấy Task theo `deal_id` (unique) → `payment.task_id` → `conversation.mentoring_task_id` → Request `CLOSED` → tin nhắn hệ thống.
+*   `POST /api/v1/mentoring/task-payments/checkout` (`{dealId}`): 
+    - Khóa bi quan Request (`findByIdForUpdate`).
+    - Kiểm tra Học viên của Deal, Deal gắn Request + Conversation, `DEAL_CONFIRMED` + khóa, chưa thanh toán (`isPaid = false`).
+    - Ràng buộc checkout active: Nếu có giao dịch `PENDING` của cùng Deal còn hạn (< 15 phút), **tái sử dụng** và trả về thông tin VietQR ngay. Nếu giao dịch `PENDING` cũ đã quá hạn hoặc của Deal khác, cập nhật `EXPIRED`/`CANCELLED` và ép flush (`saveAndFlush`) trước khi gọi PayOS tạo đơn mới.
+*   Webhook / polling: khóa giao dịch (`FOR UPDATE`) → chỉ xử lý `PENDING` → lệch tiền hoặc `code != 00` → `FAILED` (lưu lại) → thành công:
+    - Cập nhật payment `PAID`, deal `is_paid = true`.
+    - Ghi nhận Sổ quỹ Mentoring `mentoring_payment_ledgers` (loại `ESCROW_COLLECTION`, `SUCCEEDED`).
+    - Tạo đúng 1 Task `PREPARATION` liên kết Request, Deal, Conversation, Student, Mentor.
+    - Cập nhật Request: `selected_mentor_id = mentor.id`, `confirmed_deal_id = deal.id`, chuyển sang `CLOSED`.
+    - Hủy các Deal của Mentor khác cùng Request (`CANCELLED`), chuyển các phản hồi `PENDING` sang `EXPIRED`.
+    - Gắn `task_id` vào Conversation, gửi tin nhắn hệ thống thành công và khóa chỉ đọc các Chat for Task khác.
 *   Hủy giao dịch: khóa giao dịch để không ghi đè kết quả `PAID`.
 
 **Function details**:
-*   **Business rules**: BR-FLOW-15 → BR-FLOW-20.
-*   **Normal case**: webhook `00` → 1 Task `PREPARATION`; webhook lặp → không tạo thêm Task, không gửi thêm tin nhắn.
-*   **Abnormal case**: `FAILED`/`EXPIRED`/`CANCELLED` → không Task, Request vẫn `MATCHED`, Học viên thanh toán lại tạo payment attempt mới cùng `deal_id`.
+*   **Business rules**: BR-FLOW-15 → BR-FLOW-21.
+*   **Normal case**: webhook `00` → Ghi Sổ quỹ Escrow → 1 Task `PREPARATION` → Chốt Mentor, đóng Request, các Deal khác bị hủy.
+*   **Abnormal case**: `FAILED`/`EXPIRED`/`CANCELLED` → không Task, Request vẫn `OPEN`, Deal vẫn `DEAL_CONFIRMED`, Học viên được thanh toán lại hoặc chọn Deal đã chốt khác để thanh toán.
 
 ---
 
@@ -135,16 +156,16 @@ Module Mentorship kết nối Học viên với Mentor. Phần này mô tả ph�
 | BR-FLOW-08 | Chỉ Mentor phát hành phiên bản Deal Ticket; Mentor được tính là đã xác nhận phiên bản vừa gửi. |
 | BR-FLOW-09 | "Chấp nhận Deal theo Request" lấy giá = `budget_max` (nếu trống: `budget_min`), deadline = `expected_deadline` (phải ở tương lai), hình thức/loại nhiệm vụ của Request; hình thức tham gia `BOTH` được quy về `INDIVIDUAL`. |
 | BR-FLOW-10 | Chỉ phiên bản mới nhất được xác nhận / từ chối / yêu cầu điều chỉnh / thanh toán; backend so sánh `version` client gửi với phiên bản hiện tại. |
-| BR-FLOW-11 | Yêu cầu điều chỉnh → `SUPERSEDED`; Từ chối → `REJECTED`; cả hai không tạo Task/Payment và không xóa Request; Mentor có thể gửi phiên bản tiếp theo. |
-| BR-FLOW-12 | Khi hai bên cùng xác nhận một phiên bản: Deal `DEAL_CONFIRMED` + khóa; không bên nào được sửa; Request `MATCHED` với `selected_mentor_id` + `confirmed_deal_id`. |
-| BR-FLOW-13 | Mỗi Request chỉ chốt một Mentor: khóa bi quan Request + unique index `uq_mentoring_deals_request_confirmed` (tối đa 1 Deal `DEAL_CONFIRMED` / Request) + `uq_mentoring_requests_confirmed_deal`. |
-| BR-FLOW-14 | Sau khi chốt: Deal của Mentor khác → `CANCELLED`, phản hồi `PENDING` → `EXPIRED`, Chat for Task khác chỉ đọc (không gửi tin, không tạo/xác nhận Deal, không thanh toán), lịch sử được giữ, không cho xóa Chat for Task. |
-| BR-FLOW-15 | Thanh toán chỉ từ Deal đã khóa là `confirmed_deal` của Request, Mentor khớp `selected_mentor`; số tiền lấy server-side từ `agreed_price`. |
-| BR-FLOW-16 | Mỗi lần thanh toán là một payment attempt truy ngược `deal_id`; giao dịch `PENDING` còn hạn được tái sử dụng. |
-| BR-FLOW-17 | `FAILED`/`EXPIRED`/`CANCELLED` không tạo Task, không mở lại Request, không đổi Mentor; Học viên được thanh toán lại. |
-| BR-FLOW-18 | Callback/polling `PAID` idempotent: khóa giao dịch, chỉ xử lý `PENDING`, mỗi Deal tối đa 1 Task (`mentoring_tasks.deal_id` unique). |
-| BR-FLOW-19 | Task truy ngược Request (`request_id`), Deal (`deal_id`), Conversation (`conversation_id`), Student, Mentor; Payment truy ngược Task (`task_id`). |
-| BR-FLOW-20 | Không tạo cuộc hội thoại mới sau thanh toán: `conversations.mentoring_task_id` được gán Task và Chat cũ tiếp tục dùng cho Task. |
+| BR-FLOW-11 | Yêu cầu điều chỉnh → sinh Ticket `#ADJ-xxx` nhúng vào Chat, đánh dấu snapshot cũ sang `SUPERSEDED`; Từ chối → `REJECTED`; cả hai không tạo Task/Payment và không xóa Request; Mentor có thể gửi phiên bản tiếp theo. |
+| BR-FLOW-12 | Khi hai bên cùng xác nhận một phiên bản: Deal chuyển `DEAL_CONFIRMED` + khóa (`isLocked = true`); không bên nào được sửa nội dung Deal. Tại thời điểm này Request **vẫn giữ `OPEN` và chưa chốt Mentor**. |
+| BR-FLOW-13 | **Nhiều Deal cùng xác nhận (Migration V24)**: Cho phép nhiều Deal cùng đạt `DEAL_CONFIRMED` cho 1 Request (đã xóa bỏ ràng buộc unique index `uq_mentoring_deals_request_confirmed`). Học viên có quyền thỏa thuận và so sánh phương án tốt nhất trước khi quyết định chi trả. |
+| BR-FLOW-14 | **Chốt Mentor chỉ diễn ra khi thanh toán Ký quỹ thành công (PAID)**: Chỉ sau khi tiền vào Escrow hệ thống, Request mới cập nhật `selected_mentor_id`, `confirmed_deal_id` và chuyển sang `CLOSED`. Đồng thời toàn bộ Deal của các Mentor khác cùng Request chuyển sang `CANCELLED`, các phản hồi `PENDING` chuyển sang `EXPIRED`, và các Chat for Task khác chuyển sang chế độ chỉ đọc. |
+| BR-FLOW-15 | Thanh toán chỉ được thực hiện từ Deal đã khóa (`DEAL_CONFIRMED`), thuộc sở hữu của Student; số tiền lấy server-side từ `agreed_price`. |
+| BR-FLOW-16 | **Duy nhất một phiên checkout đang chờ**: Mỗi Request chỉ được có tối đa 1 giao dịch thanh toán ở trạng thái `PENDING` còn hiệu lực (`uq_mentoring_task_payments_request_pending`). Giao dịch `PENDING` còn hạn (< 15 phút) của cùng Deal được tái sử dụng; nếu quá hạn hoặc đổi Deal thì hủy phiên cũ bằng `saveAndFlush` trước khi tạo mới. |
+| BR-FLOW-17 | `FAILED`/`EXPIRED`/`CANCELLED` không tạo Task, Request vẫn `OPEN`, Deal vẫn giữ `DEAL_CONFIRMED`; Học viên được thanh toán lại hoặc chọn Deal đã chốt khác để thanh toán. |
+| BR-FLOW-18 | **Ghi Sổ quỹ Mentoring (Escrow Inflow)**: Ngay khi giao dịch thành công (`PAID`), hệ thống ghi nhận bản ghi Sổ quỹ `mentoring_payment_ledgers` (loại `ESCROW_COLLECTION`, trạng thái `SUCCEEDED`). Đảm bảo mỗi giao dịch thanh toán chỉ sinh tối đa 1 bút toán sổ quỹ (`uq_mentoring_payment_ledgers_payment_type`). |
+| BR-FLOW-19 | **Duy nhất 1 Task trên mỗi Request**: Mỗi Request chỉ kích hoạt tối đa đúng 1 Mentoring Task (`uq_mentoring_tasks_request_id`). |
+| BR-FLOW-20 | Task truy ngược Request (`request_id`), Deal (`deal_id`), Conversation (`conversation_id`), Student, Mentor; Payment truy ngược Task (`task_id`). Không tạo cuộc hội thoại mới: Chat cũ tiếp tục được gắn Task (`conversations.mentoring_task_id`). |
 | BR-FLOW-21 | Tin nhắn hệ thống chỉ để thông báo; trạng thái nghiệp vụ nằm trong các bảng `mentoring_*` và được đẩy realtime sau khi transaction commit. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
@@ -202,11 +223,17 @@ erDiagram
     mentoring_deals ||--o{ mentoring_deal_snapshots : "deal_id + version"
     mentoring_requests |o--o| mentoring_deals : "confirmed_deal_id"
     users |o--o{ mentoring_requests : "selected_mentor_id"
+    mentoring_requests ||--o{ mentoring_task_payments : "request_id (uq active pending)"
     mentoring_deals ||--o{ mentoring_task_payments : "deal_id (payment attempts)"
     mentoring_deals ||--o| mentoring_tasks : "deal_id (unique)"
-    mentoring_requests ||--o{ mentoring_tasks : "request_id"
+    mentoring_requests ||--o| mentoring_tasks : "request_id (unique uq_mentoring_tasks_request_id)"
     conversations |o--o| mentoring_tasks : "mentoring_task_id / conversation_id"
     mentoring_tasks |o--o{ mentoring_task_payments : "task_id"
+    mentoring_requests ||--o{ mentoring_payment_ledgers : "request_id"
+    mentoring_task_payments ||--o{ mentoring_payment_ledgers : "payment_id"
+    mentoring_tasks ||--o{ mentoring_payment_ledgers : "task_id"
+    mentoring_deals ||--o{ mentoring_payment_ledgers : "deal_id"
+    users ||--o{ mentoring_payment_ledgers : "student_id / mentor_id"
 ```
 
 #### 3.2 Class Diagram (Sơ đồ Lớp)
@@ -229,9 +256,10 @@ classDiagram
         +requestAdjustment(id, note, version) ResponseEntity
     }
     class MentoringTaskPaymentController {
-        +createTaskPayment(CreateTaskPaymentRequest) ResponseEntity
-        +checkTaskPaymentStatus(orderCode) ResponseEntity
-        +handleWebhook(Webhook) ResponseEntity
+        +createPaymentCheckout(CreateTaskPaymentRequest) ResponseEntity
+        +checkPaymentStatus(paymentId) ResponseEntity
+        +cancelPayment(paymentId, reason) ResponseEntity
+        +handlePayOSWebhook(Webhook) ResponseEntity
     }
     class MentoringRequestServiceImpl {
         +acceptIncomingRequest(email, requestId, dto)
@@ -254,13 +282,13 @@ classDiagram
         +rejectDeal(userId, dealId, reason, version)
         +requestAdjustment(userId, dealId, note, version)
         -issueNewVersion(...)
-        -finalizeConfirmedDeal(...)
     }
     class MentoringTaskPaymentServiceImpl {
-        +createTaskPayment(userId, request)
-        +checkTaskPaymentStatus(userId, orderCode)
-        +handlePayOSWebhook(webhook)
-        -activateTaskUponPaymentSuccess(payment)
+        +createPaymentCheckout(request, currentUserId)
+        +checkPaymentStatus(paymentId, currentUserId)
+        +cancelPayment(paymentId, reason, currentUserId)
+        +handleWebhook(webhook)
+        -activateTaskFromPayment(payment)
     }
     class ChatServiceImpl {
         +sendMessage(email, SendMessageRequest)
@@ -271,7 +299,8 @@ classDiagram
     class Conversation { type=MENTORING; mentoringRequest; mentoringStudent; mentoringMentor; mentoringTask }
     class MentoringDeal { request; conversation; version; status; isLocked; isPaid }
     class MentoringDealSnapshot { deal; version; proposalSource }
-    class MentoringTaskPayment { deal; task; amount; paymentStatus }
+    class MentoringTaskPayment { deal; request; task; amount; paymentStatus; version }
+    class MentoringPaymentLedger { payment; request; task; deal; student; mentor; amount; transactionType; status }
     class MentoringTask { deal; request; conversation; status }
 
     MentoringRequestController ..> MentoringRequestServiceImpl
@@ -281,6 +310,7 @@ classDiagram
     MentoringRequestServiceImpl --> MentoringConversationServiceImpl
     MentoringDealServiceImpl --> MentoringConversationServiceImpl
     MentoringTaskPaymentServiceImpl --> MentoringConversationServiceImpl
+    MentoringTaskPaymentServiceImpl --> MentoringPaymentLedger : records escrow
     MentoringChatContextServiceImpl --> MentoringDealServiceImpl
     MentoringChatContextServiceImpl --> MentoringConversationServiceImpl
     ChatServiceImpl --> MentoringConversationServiceImpl
@@ -289,15 +319,24 @@ classDiagram
     Conversation "1" --> "0..1" MentoringDeal
     MentoringDeal "1" --> "*" MentoringDealSnapshot
     MentoringDeal "1" --> "*" MentoringTaskPayment
+    MentoringRequest "1" --> "*" MentoringTaskPayment
+    MentoringTaskPayment "1" --> "0..1" MentoringPaymentLedger
     MentoringDeal "1" --> "0..1" MentoringTask
+    MentoringRequest "1" --> "0..1" MentoringTask
 ```
 
 ###### Mô tả chi tiết cấu trúc các lớp (Class Design Description):
-* **Lớp Controller**: `MentoringRequestController` (ACCEPT/DECLINE), `MentoringConversationController` (ngữ cảnh Chat for Task, mới), `MentoringDealController` (phát hành phiên bản, xác nhận có `version`, từ chối/điều chỉnh), `MentoringTaskPaymentController` (checkout, polling, webhook).
-* **Lớp DTO**: `ProposeDealRequest` (`conversationId`, `proposalSource`, điều khoản tùy chọn — không nhận `mentorId/studentId/requestId` từ client), `ConfirmDealRequest` (`version` bắt buộc), `MentoringConversationResponse` (ngữ cảnh + quyền), `MentoringDealResponse` (thêm `requestTitle`, `requestStatus`, `canPay`, `canReject`, `canRequestAdjustment`, `readOnlyReason`), `MentorIncomingRequestDetailResponse` / `MentorResponseItemResponse` (thêm `conversationId`, cờ Mentor được chọn), `MentoringTaskResponse` (thêm `requestId`, `requestTitle`, `conversationId`).
-* **Lớp Service**: `MentoringConversationService` (hạ tầng Chat for Task: get-or-create idempotent, xác thực thành viên, chỉ đọc, tin nhắn hệ thống đẩy WebSocket sau commit), `MentoringChatContextService` (truy vấn ngữ cảnh), `MentoringDealService` (phiên bản & chốt Mentor), `MentoringTaskPaymentService` (thanh toán & kích hoạt Task idempotent), `ChatServiceImpl` (chặn gửi tin trong Chat chỉ đọc, chặn xóa Chat for Task).
-* **Lớp Mapper**: `MentoringDealMapper` (map `request.id/title/status`), `MentoringTaskMapper` (map `request`, `conversation`), `MessageMapper` (thêm `mentoringRequestId`, `mentoringTaskId` vào `ConversationResponse`).
-* **Lớp Repository & Entity**: `MentoringRequestRepository.findByIdForUpdate`, `MentoringRequestDistributionRepository.findForUpdate` / `findByRequestIdAndMentorUserId` / `findByRequestIdAndStatus`, `MentoringDealRepository.findByConversationId` / `findRequestIdByDealId` / `findByIdForUpdate`, `ConversationRepository.findByMentoringRequestIdAndMentoringMentorId` / `findByMentoringRequestIdOrderByCreatedAtAsc`; entity `Conversation` (thêm `mentoringRequest/Student/Mentor/Task`), `MentoringRequest` (thêm `selectedMentor`, `confirmedDeal`), `MentoringDeal` (`request` thành quan hệ), `MentoringTask` (thêm `request`).
+* **Lớp Controller**: `MentoringRequestController` (ACCEPT/DECLINE), `MentoringConversationController` (ngữ cảnh Chat for Task), `MentoringDealController` (phát hành Deal Ticket, xác nhận có `version`, yêu cầu điều chỉnh bằng Ticket `#ADJ-xxx`), `MentoringTaskPaymentController` (checkout với cache React Query, polling 3s, webhook PayOS).
+* **Lớp DTO**: `ProposeDealRequest`, `ConfirmDealRequest` (`version` bắt buộc), `MentoringConversationResponse` (ngữ cảnh + quyền), `MentoringDealResponse`, `MentoringTaskPaymentCheckoutResponse`, `MentoringTaskResponse`.
+* **Lớp Service**: 
+  - `MentoringConversationService`: Hạ tầng Chat for Task (get-or-create idempotent, xác thực thành viên, trạng thái chỉ đọc, gửi tin nhắn hệ thống realtime sau commit).
+  - `MentoringDealService`: Quản lý các phiên bản Deal Ticket. Khi xác nhận Deal, chỉ khóa Deal (`DEAL_CONFIRMED`) mà không khóa Request.
+  - `MentoringTaskPaymentService`: Quản lý phiên checkout active (tái sử dụng nếu còn hạn hoặc hủy phiên cũ bằng `saveAndFlush`), chống race condition bằng `findForUpdateByOrderCode`, kích hoạt Task `PREPARATION`, ghi Sổ quỹ Escrow vào `MentoringPaymentLedger`, chốt Mentor và đóng Request (`CLOSED`), hủy các Deal cạnh tranh và thông báo vào Chat for Task.
+* **Lớp Repository & Entity**:
+  - `MentoringPaymentLedger` & `MentoringPaymentLedgerRepository`: Quản lý Sổ quỹ dòng tiền Mentoring (Ký quỹ Escrow, Giải ngân Payout, Hoàn tiền Refund).
+  - `MentoringTaskPayment`: Bổ sung `request_id`, `version`, bảo đảm ràng buộc `uq_mentoring_task_payments_request_pending`.
+  - `MentoringTask`: Ràng buộc duy nhất 1 Task trên mỗi Request (`uq_mentoring_tasks_request_id`).
+  - Xóa bỏ index `uq_mentoring_deals_request_confirmed`: Cho phép nhiều Deal cùng đạt `DEAL_CONFIRMED`.
 
 #### 3.3 Sequence Diagram (Sơ đồ Tuần tự)
 
@@ -310,7 +349,7 @@ sequenceDiagram
     participant ConvSvc as MentoringConversationServiceImpl
     participant DealSvc as MentoringDealServiceImpl
     participant PaySvc as MentoringTaskPaymentServiceImpl
-    participant PayOS
+    participant PayOS as Cổng thanh toán PayOS
     participant DB as PostgreSQL
 
     Mentor->>ReqSvc: POST /mentoring/requests/{id}/accept
@@ -344,36 +383,52 @@ sequenceDiagram
     else Request đã chọn Mentor khác (thao tác đồng thời thua)
         DealSvc-->>Student: 409
     else Hợp lệ
-        DealSvc->>DB: deal DEAL_CONFIRMED + lock; request MATCHED, selected_mentor, confirmed_deal
-        DealSvc->>DB: Deal khác → CANCELLED; phản hồi PENDING → EXPIRED
-        DealSvc->>ConvSvc: "Request đã chọn Mentor khác." vào Chat khác
+        DealSvc->>DB: deal DEAL_CONFIRMED + lock (Request vẫn OPEN, chưa chốt Mentor)
+        DealSvc->>ConvSvc: "Hai bên đã xác nhận Deal Ticket vN. Deal đã khóa, Học viên vui lòng thanh toán."
         DealSvc-->>Student: 200 DEAL_CONFIRMED
     end
 
+    %% Giai đoạn 4: Học viên khởi tạo phiên thanh toán PayOS VietQR
     Student->>PaySvc: POST /mentoring/task-payments/checkout {dealId}
-    PaySvc->>DB: kiểm tra confirmed_deal, selected_mentor, chưa thanh toán
-    PaySvc->>PayOS: createPaymentLink(amount = agreed_price)
-    PaySvc-->>Student: 201 VietQR / checkoutUrl
+    PaySvc->>DB: SELECT request FOR UPDATE; kiểm tra deal DEAL_CONFIRMED & chưa thanh toán
+    alt Đã có giao dịch PENDING của cùng Deal còn hạn (< 15 phút)
+        PaySvc-->>Student: Tái sử dụng đơn cũ (Trả về VietQR ngay lập tức)
+    else Giao dịch PENDING cũ hết hạn hoặc thuộc Deal khác
+        PaySvc->>DB: Cập nhật EXPIRED/CANCELLED + saveAndFlush()
+        PaySvc->>PayOS: createPaymentLink(amount = agreed_price)
+        PayOS-->>PaySvc: Trả về checkoutUrl, qrCodeUrl
+        PaySvc->>DB: INSERT mentoring_task_payments (PENDING, request_id)
+        PaySvc-->>Student: 201 VietQR / checkoutUrl
+    end
 
-    PayOS->>PaySvc: Webhook (orderCode, amount, code)
-    PaySvc->>DB: SELECT payment FOR UPDATE
+    %% Giai đoạn 5: Xác nhận thanh toán & Kích hoạt Task + Chốt Mentor
+    PayOS->>PaySvc: Webhook (orderCode, amount, code=00)
+    PaySvc->>DB: SELECT payment FOR UPDATE [Pessimistic Lock]
     alt Không PENDING (đã xử lý)
         PaySvc-->>PayOS: 200 (bỏ qua, idempotent)
     else Lệch tiền hoặc code != 00
-        PaySvc->>DB: payment FAILED (Request vẫn MATCHED)
-    else Thành công
-        PaySvc->>DB: SELECT request FOR UPDATE; payment PAID; deal is_paid
-        PaySvc->>DB: INSERT task (request, deal, conversation) nếu chưa có
-        PaySvc->>DB: conversation.mentoring_task_id; request CLOSED
-        PaySvc->>ConvSvc: "Thanh toán thành công, Task đã được kích hoạt."
+        PaySvc->>DB: payment FAILED (Request vẫn OPEN, Deal vẫn DEAL_CONFIRMED)
+    else Thanh toán thành công (code == 00)
+        PaySvc->>DB: payment PAID; deal is_paid = true
+        PaySvc->>DB: INSERT mentoring_payment_ledgers (ESCROW_COLLECTION, SUCCEEDED)
+        PaySvc->>DB: INSERT mentoring_tasks (status = PREPARATION); conversation.mentoring_task_id = task.id
+        PaySvc->>DB: request.selected_mentor_id = mentor.id; request.confirmed_deal_id = deal.id; request.status = CLOSED
+        PaySvc->>DB: Deal khác của Request → CANCELLED; phân phối PENDING → EXPIRED
+        PaySvc->>ConvSvc: "Request đã chọn Mentor khác." vào Chat của các Mentor khác (chuyển chỉ đọc)
+        PaySvc->>ConvSvc: "Thanh toán thành công, Task đã được kích hoạt." vào Chat hiện tại
+        PaySvc-->>PayOS: 200 OK
     end
 ```
 
 ###### Mô tả chi tiết luồng xử lý bằng chữ (Sequence Flow Description):
-1.  **Luồng 1 - Thành công (Normal Case)**: Mentor ACCEPT → Chat for Task → Mentor gửi Deal Ticket → Học viên xác nhận đúng phiên bản → Deal khóa, chọn Mentor → thanh toán theo `agreed_price` → webhook `00` → Task `PREPARATION` gắn vào Chat cũ.
+1.  **Luồng 1 - Thành công (Normal Case)**: Mentor ACCEPT → Chat for Task → Mentor gửi Deal Ticket → Học viên xác nhận Deal vN (`DEAL_CONFIRMED`, Request vẫn `OPEN`) → Học viên mở thanh toán Escrow (VietQR hiển thị tức thì) → Webhook xác nhận `00` → Ghi Sổ quỹ Escrow → Kích hoạt Task `PREPARATION` → Chốt Mentor, đóng Request (`CLOSED`), hủy các Deal khác và chuyển các Chat khác sang chỉ đọc.
 2.  **Luồng 2 - Ngoại lệ Validation đầu vào**: DTO vi phạm ràng buộc (thiếu `conversationId`/`version`, giá âm, deadline quá khứ...) → 400 với danh sách lỗi.
-3.  **Luồng 3 - Ngoại lệ nghiệp vụ**: phiên bản cũ, Request đã chốt, Chat chỉ đọc, Deal đã khóa → 409; không phải thành viên / sai vai trò → 403; Request đóng khi ACCEPT → 400; thanh toán thất bại → `FAILED`, Request giữ `MATCHED` để thanh toán lại.
-4.  **Luồng 4 - Đồng thời**: hai lần ACCEPT đồng thời → tuần tự qua khóa, chỉ 1 Chat; hai lần xác nhận Deal của hai Mentor đồng thời → lần sau thấy Request đã chốt → 409; webhook + polling đồng thời → khóa giao dịch, chỉ 1 Task.
+3.  **Luồng 3 - Ngoại lệ nghiệp vụ**: Phiên bản cũ, Chat chỉ đọc, Deal đã khóa → 409; Không phải thành viên / sai vai trò → 403; Thanh toán thất bại/hết hạn → `FAILED`/`EXPIRED`, Request giữ `OPEN`, Deal giữ `DEAL_CONFIRMED` để Học viên có thể thanh toán lại hoặc chọn Deal khác.
+4.  **Luồng 4 - Quản lý phiên checkout đồng thời**: Áp dụng khóa bi quan trên `MentoringRequest`. Nếu đã có phiên `PENDING` của cùng Deal còn hạn 15 phút, hệ thống tái sử dụng đơn cũ. Nếu đổi sang Deal khác hoặc phiên cũ hết hạn, hệ thống cập nhật `CANCELLED`/`EXPIRED` và ép flush trước khi tạo đơn mới trên PayOS.
 
 #### 3.4 Kiểm thử tích hợp (Integration Test)
-`MentoringEndToEndFlowIntegrationTest` (PostgreSQL `alumnect_test`, PayOS giả lập) bao phủ các kịch bản A–J: luồng chung thành công, hai Mentor cạnh tranh, Request trực tiếp, ACCEPT idempotent (tuần tự & đồng thời), từ chối phiên bản cũ, xác nhận đồng thời một người thắng, webhook lặp, thanh toán thất bại giữ lựa chọn, chặn truy cập chéo Mentor (service & HTTP 403), bỏ qua số tiền client gửi.
+`MentoringEndToEndFlowIntegrationTest` (PostgreSQL `alumnect_test`, PayOS giả lập) bao phủ toàn diện các kịch bản:
+*   **Kịch bản A (Happy Path)**: General Request → Mentor A ACCEPT → Chat → Deal → Student confirm Deal (Deal khóa, Request vẫn OPEN, chưa chốt Mentor) → Thanh toán PayOS thành công → Ghi nhận Sổ quỹ Escrow (`ESCROW_COLLECTION`, `SUCCEEDED`) → Tạo đúng 1 Task `PREPARATION` → Chốt Mentor A và đóng Request (`CLOSED`).
+*   **Kịch bản B (Cạnh tranh nhiều Mentor)**: Mentor A và B cùng ACCEPT → 2 Chat riêng biệt → Cả hai cùng gửi Deal → Học viên xác nhận Deal B nhưng chưa thanh toán: Chat A vẫn hoạt động bình thường, Deal A chưa bị hủy. Sau khi thanh toán Deal B thành công: Chat A chuyển sang chỉ đọc, Deal A chuyển sang `CANCELLED`, lịch sử Deal của Mentor A vẫn được lưu trữ nguyên vẹn, Mentor C chưa phản hồi bị chuyển `EXPIRED`.
+*   **Kịch bản C (Direct Request)**: Tạo Request trực tiếp đích danh Mentor, kiểm tra hội tụ về cùng pipeline.
+*   **Kịch bản D–J (Edge cases & Concurrency)**: ACCEPT idempotent tuần tự & đồng thời; Chặn xác nhận phiên bản cũ; Webhook lặp lại (Idempotency trên Task và Sổ quỹ); Thanh toán thất bại không làm mất Deal hay đóng Request; Chặn truy cập chéo giữa các Mentor (HTTP 403); Bỏ qua số tiền client gửi, luôn lấy `agreedPrice` từ Deal trên server.

@@ -11,29 +11,35 @@ stateDiagram-v2
     CHƯA_CÓ_DEAL --> MENTOR_CONFIRMED: Mentor "Chấp nhận Deal theo Request" (proposal_source = REQUEST_ACCEPTANCE)
     CHƯA_CÓ_DEAL --> MENTOR_CONFIRMED: Mentor "Deal lại / Tạo Deal Ticket" (proposal_source = RENEGOTIATION)
     
-    MENTOR_CONFIRMED --> DEAL_CONFIRMED: Student chọn "Xác nhận & thanh toán" (Khóa Deal, chọn Mentor cho Request)
-    MENTOR_CONFIRMED --> SUPERSEDED: Student chọn "Yêu cầu điều chỉnh" (Phiên bản cũ SUPERSEDED, chờ Mentor gửi ticket mới)
-    MENTOR_CONFIRMED --> REJECTED: Student chọn "Từ chối" (Từ chối đề xuất, chưa tạo Task)
+    MENTOR_CONFIRMED --> DEAL_CONFIRMED: Student chọn "Xác nhận & thanh toán" (Khóa Snapshot Deal, sẵn sàng thanh toán UC105)
+    MENTOR_CONFIRMED --> SUPERSEDED: Student gửi "Yêu cầu điều chỉnh" (Tạo Ticket Yêu cầu điều chỉnh #ADJ, phiên bản Deal cũ SUPERSEDED)
+    MENTOR_CONFIRMED --> REJECTED: Student chọn "Từ chối" (Từ chối đề xuất Deal Ticket hiện tại)
     
     SUPERSEDED --> MENTOR_CONFIRMED: Mentor gửi Deal Ticket phiên bản mới (v+1)
     
-    DEAL_CONFIRMED --> SẴN_SÀNG_THANH_TOÁN: Mở thanh toán UC105, các chat khác của Request chuyển read-only
+    DEAL_CONFIRMED --> SẴN_SÀNG_THANH_TOÁN: Học viên có thể xác nhận nhiều Deal CONFIRMED song song; chỉ chốt Mentor khi thanh toán UC105
     
     DEAL_CONFIRMED --> [*]
     REJECTED --> [*]
 ```
 
 #### Mô tả chi tiết luồng xử lý bằng chữ (Business Step Description):
-* **Tiền điều kiện**: Mentor đã ACCEPT Request; có Chat for Task riêng gắn với Request; Request chưa chốt với Mentor khác.
+* **Tiền điều kiện**: Mentor đã ACCEPT Request; có Chat for Task riêng gắn với Request; Request chưa chốt Mentor (`selectedMentor == null`).
 * **Bước 1 - Khởi đầu (Trigger)**: Sinh viên (Student) và Cố vấn (Mentor) trao đổi trong Chat for Task. Mentor chọn:
   - **"Chấp nhận Deal theo Request"** (`proposal_source = REQUEST_ACCEPTANCE`): Hệ thống tạo Deal Ticket giữ nguyên điều kiện và Giá đề xuất cụ thể của Student; tự động xác nhận từ phía Mentor (`mentor_confirmed = true`).
   - **"Deal lại / Tạo Deal Ticket"** (`proposal_source = RENEGOTIATION`): Mentor điền Task Scope, Price, Deadline, Working Mode, Participation Type, Task Type, Expected Result và ghi chú; gửi Deal Ticket ngay trong chat; tự động xác nhận từ phía Mentor.
-* **Bước 2 - Hiển thị thẻ Deal Ticket trong Chat**: Hệ thống hiển thị thẻ Deal Ticket mới nhất ngay trong Chat for Task (`MentoringDealTicketCard`), gồm đầy đủ: nội dung, phiên bản, người gửi, thời điểm, trạng thái. Ticket loại `DEAL` gắn với `request_id` và `conversation_id`; chưa cần Task tồn tại.
+* **Bước 2 - Hiển thị thẻ Deal Ticket trong Chat**: Hệ thống hiển thị thẻ Deal Ticket mới nhất ngay trong Chat for Task (`MentoringDealTicketCard` / `MentoringDiscordTicketEmbed`), gồm đầy đủ: nội dung, phiên bản, người gửi, thời điểm, trạng thái. Ticket loại `DEAL` gắn với `request_id` và `conversation_id`; chưa cần Task tồn tại.
 * **Bước 3 - Phản hồi từ Student**: Student xem Deal Ticket trong chat và có 3 lựa chọn:
-  1. **"Xác nhận & thanh toán"**: Ghi nhận Student đồng ý cùng phiên bản Mentor đã xác nhận. Hệ thống khóa Deal Snapshot (`is_locked = true`, `DEAL_CONFIRMED`), chọn Mentor này cho Request và lập tức mở cổng thanh toán UC105. Mỗi Request chỉ chốt một Mentor; các cuộc chat khác gắn với Request này giữ nguyên lịch sử, chuyển sang chế độ read-only với thông báo *"Request đã chọn Mentor khác; không nhận/chốt Deal mới"*.
-  2. **"Yêu cầu điều chỉnh"**: Phiên bản Deal Ticket hiện tại chuyển sang trạng thái `SUPERSEDED` và không thể thanh toán; hai bên tiếp tục chat; Mentor gửi phiên bản Deal Ticket mới (v+1).
+  1. **"Xác nhận & thanh toán"**: Ghi nhận Student đồng ý cùng phiên bản Mentor đã xác nhận. Hệ thống khóa Deal Snapshot (`is_locked = true`, `status = DEAL_CONFIRMED`).
+     - **Theo Migration V24**: Một Request cho phép **nhiều Deal cùng đạt DEAL_CONFIRMED** (Học viên có thể xác nhận với nhiều Mentor để cân nhắc). Việc xác nhận Deal **chưa** chốt Mentor và **chưa** chuyển các cuộc trò chuyện khác sang read-only.
+     - Hệ thống lập tức mở Modal thanh toán UC105. Chỉ khi thanh toán Escrow thành công (PAID), Mentor mới chính thức được chọn và các luồng khác mới đóng lại.
+  2. **"Yêu cầu điều chỉnh"**: Học viên nhập ghi chú điều chỉnh. Hệ thống:
+     - Chuyển trạng thái Deal Ticket hiện tại sang `SUPERSEDED`.
+     - Tạo một **Ticket Yêu cầu điều chỉnh** (`MentoringAdjustmentTicketEmbed`, mã `#ADJ-xxx`) nhúng trực tiếp trên dòng thời gian chat, thể hiện rõ phiên bản yêu cầu điều chỉnh, ghi chú của học viên và trạng thái `ADJUSTMENT`.
+     - Cả hai bên có thể nhấn "Xem chi tiết Ticket" (`MentoringTicketDetailModal`) để kiểm tra toàn bộ điều khoản.
+     - Khi Mentor gửi lại phiên bản Deal Ticket mới (v+1), Ticket điều chỉnh chuyển sang trạng thái `SUPERSEDED`.
   3. **"Từ chối"**: Chuyển trạng thái Deal thành `REJECTED`, chỉ từ chối đề xuất này, chưa tạo Task.
-* **Hậu điều kiện**: Deal ở trạng thái `DEAL_CONFIRMED`, snapshot bị khóa và sẵn sàng cho thanh toán UC105.
+* **Hậu điều kiện**: Deal ở trạng thái `DEAL_CONFIRMED`, snapshot bị khóa và sẵn sàng mở cổng thanh toán UC105.
 
 ---
 
@@ -72,6 +78,7 @@ Module Mentorship là phân hệ cốt lõi kết nối sinh viên/người họ
 2. **Yêu cầu Điều chỉnh (Request Adjustment)**:
    - Chỉ Student được quyền thực hiện khi Deal chưa khóa.
    - Chuyển trạng thái Deal sang `SUPERSEDED`.
+   - Sinh Ticket Yêu cầu điều chỉnh nhúng (`MentoringAdjustmentTicketEmbed`, mã `#ADJ-xxx`) đính kèm `adjustmentNote` và `version` được yêu cầu điều chỉnh.
    - Gửi tin nhắn hệ thống thông báo Mentor gửi lại Deal Ticket mới.
 3. **Từ chối (Reject Deal)**:
    - Chuyển trạng thái Deal sang `REJECTED`.
@@ -79,8 +86,9 @@ Module Mentorship là phân hệ cốt lõi kết nối sinh viên/người họ
 4. **Xác nhận Deal & Khóa Snapshot (Confirm & Lock)**:
    - Khi Student chọn "Xác nhận & thanh toán" trên phiên bản Mentor đã xác nhận:
      - Gán `status = DEAL_CONFIRMED`, `is_locked = true`, `locked_at = now()`.
-     - Nếu có `request_id`: tìm các Deal của các Mentor khác cho cùng Request này và đánh dấu `SUPERSEDED`, gửi tin nhắn thông báo cuộc trao đổi chuyển sang chỉ đọc vì *"Request đã chọn Mentor khác"*.
-     - Mở giao diện thanh toán UC105.
+     - Theo Migration V24: Cho phép **nhiều Deal cùng đạt `DEAL_CONFIRMED` cho cùng một Request** để Học viên có thể thương lượng và xác nhận phương án với nhiều Mentor khác nhau.
+     - Việc chọn Mentor chính thức (`selectedMentor`), chuyển Request sang `MATCHED` và đóng các cuộc trò chuyện khác sang chế độ chỉ đọc KHÔNG thực hiện ở bước này, mà sẽ được kích hoạt sau khi thanh toán Escrow thành công (UC105 - PAID).
+     - Mở modal thanh toán UC105.
 5. **Hủy Deal (Cancel Deal)**:
    - Chỉ cho phép hủy khi Deal chưa bị khóa (`DEAL_CONFIRMED`).
    - Gán `status = CANCELLED`, ghi chú lý do hủy.
@@ -105,8 +113,9 @@ Module Mentorship là phân hệ cốt lõi kết nối sinh viên/người họ
 * **Business rules**:
   - BR-DEAL-01: Deal Ticket thuộc UC104; không thêm mã UC riêng. Thay đổi deadline trước khi Task bắt đầu nằm trong Deal Ticket; sau khi Task hoạt động dùng Deadline Extension Ticket tại UC109.
   - BR-DEAL-02: Chat for Task là mục riêng trong Mentoring, tái sử dụng hạ tầng nhắn tin nhưng bổ sung liên kết Request/Task, tin hệ thống và thẻ Ticket nghiệp vụ. Deal Ticket do Student/Mentor xử lý, không gửi Admin.
-  - BR-DEAL-03: Mỗi Request chốt đúng một Mentor; các chat khác giữ lịch sử, chuyển read-only với thông báo “Request đã chọn Mentor khác”; không nhận/chốt Deal mới.
+  - BR-DEAL-03: Mỗi Request cho phép nhiều Deal cùng đạt trạng thái DEAL_CONFIRMED để Học viên có nhiều lựa chọn; việc chốt duy nhất một Mentor (selectedMentor) và chuyển các Chat khác sang read-only chỉ thực hiện sau khi hoàn tất thanh toán Escrow thành công (UC105 - PAID).
   - BR-DEAL-04: Sau khi cả hai confirm, snapshot bị khóa bất biến, không bên nào được tự ý sửa Deal.
+  - BR-DEAL-05: Yêu cầu điều chỉnh được lưu vết và thể hiện trực quan dưới dạng Ticket nhúng (#ADJ-xxx) trên dòng thời gian chat, cho phép cả hai bên mở xem chi tiết điều khoản cần điều chỉnh.
 * **Error Handling**:
   - Vi phạm định dạng/bỏ trống dữ liệu -> Trả về HTTP 400 Bad Request kèm chi tiết lỗi từng trường.
   - Request đã chốt với Mentor khác -> Trả về HTTP 409 Conflict.
