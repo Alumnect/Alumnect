@@ -23,6 +23,9 @@ public interface MentoringTaskSettlementProposalRepository extends JpaRepository
     /** Tìm đề xuất đang PENDING của một Task */
     Optional<MentoringTaskSettlementProposal> findFirstByTaskIdAndStatusOrderByCreatedAtDesc(Long taskId, MentoringSettlementProposalStatus status);
 
+    /** Lấy đề xuất phân chia tiền mới nhất của một Task */
+    Optional<MentoringTaskSettlementProposal> findFirstByTaskIdOrderByCreatedAtDesc(Long taskId);
+
     /** Lấy đề xuất đã được ACCEPTED của một Task */
     Optional<MentoringTaskSettlementProposal> findFirstByTaskIdAndStatus(Long taskId, MentoringSettlementProposalStatus status);
 }

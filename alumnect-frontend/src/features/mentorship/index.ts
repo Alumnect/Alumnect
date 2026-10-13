@@ -162,4 +162,8 @@ export * from './hooks/useMentoringTaskCompletion'
 export * from './components/MentoringTaskCompletionModal'
 export * from './components/MentoringTaskReviewModal'
 
+// UC111 exports (Gửi Settlement Ticket đã thỏa thuận lên Admin)
+export * from './hooks/useMentoringTickets'
+export * from './components/MentoringSubmitSettlementTicketModal'
+
 

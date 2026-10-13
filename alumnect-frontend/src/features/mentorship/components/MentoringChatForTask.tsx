@@ -44,12 +44,13 @@ import { MentoringTaskResolutionBanner } from './MentoringTaskResolutionBanner'
 import { MentoringDeadlineExtensionModal } from './MentoringDeadlineExtensionModal'
 import { MentoringTaskAmendmentModal } from './MentoringTaskAmendmentModal'
 import { MentoringSettlementProposalModal } from './MentoringSettlementProposalModal'
+import { MentoringSubmitSettlementTicketModal } from './MentoringSubmitSettlementTicketModal'
 import { MentoringTaskCompletionModal } from './MentoringTaskCompletionModal'
 import { MentoringTaskReviewModal } from './MentoringTaskReviewModal'
 import { useTaskDetail } from '../hooks/useMentoringTasks'
 import { useMentoringConversation } from '../hooks/useMentoringConversation'
 import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
-import { CalendarClock, Scale } from 'lucide-react'
+import { CalendarClock, Scale, Send } from 'lucide-react'
 import type { MentoringDeal, MentoringDealSnapshot } from '../model/mentoringDealTypes'
 import {
   MENTORING_PARTICIPATION_LABELS,
@@ -126,6 +127,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   // UC110: Nộp & Nghiệm thu hoàn thành Task
   const [isSubmitCompletionOpen, setIsSubmitCompletionOpen] = useState(false)
   const [isReviewCompletionOpen, setIsReviewCompletionOpen] = useState(false)
+
+  // UC111: Gửi Settlement Ticket đã thỏa thuận lên Admin
+  const [isSubmitSettlementTicketOpen, setIsSubmitSettlementTicketOpen] = useState(false)
 
   const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
 
@@ -549,6 +553,21 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                       </div>
                     </button>
                   )}
+                  {taskDetail?.permissions?.canSubmitSettlementTicket && (
+                    <button
+                      onClick={() => {
+                        setIsSubmitSettlementTicketOpen(true)
+                        setIsTaskActionMenuOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30 rounded-xl transition text-left"
+                    >
+                      <Send className="w-4 h-4 text-purple-600 shrink-0" />
+                      <div>
+                        <div className="font-bold">Gửi Settlement Ticket (UC111)</div>
+                        <div className="text-[10px] text-muted-foreground">Gửi Admin giải ngân theo thỏa thuận</div>
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -571,6 +590,16 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               className="rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm"
             >
               Nghiệm thu Task
+            </Button>
+          )}
+          {taskDetail?.permissions?.canSubmitSettlementTicket && (
+            <Button
+              size="sm"
+              onClick={() => setIsSubmitSettlementTicketOpen(true)}
+              leftIcon={<Send className="h-3.5 w-3.5" />}
+              className="rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm"
+            >
+              Gửi Settlement Ticket
             </Button>
           )}
           {ctx.taskId && (
@@ -674,7 +703,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         </div>
       )}
 
-      {/* Banner các Ticket xử lý Task (UC109: Gia hạn, Điều chỉnh, Phân chia tiền & UC110: Nghiệm thu Task) */}
+      {/* Banner các Ticket xử lý Task (UC109: Gia hạn, Điều chỉnh, Phân chia tiền & UC110: Nghiệm thu Task & UC111: Settlement Ticket) */}
       {ctx.taskId && (
         <MentoringTaskResolutionBanner
           taskId={ctx.taskId}
@@ -682,12 +711,15 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           activeAmendment={taskDetail?.activeAmendment}
           activeSettlementProposal={taskDetail?.activeSettlementProposal}
           latestCompletion={taskDetail?.latestCompletion}
+          activeTicket={taskDetail?.activeTicket}
           taskStatus={taskDetail?.overview?.status || ctx.taskStatus}
           canConfirmCompletion={taskDetail?.permissions?.canConfirmCompletion}
+          canSubmitSettlementTicket={taskDetail?.permissions?.canSubmitSettlementTicket}
           isStudent={!isMentor}
           isMentor={isMentor}
           onOpenTopUpPayment={openPayment}
           onOpenReviewCompletion={() => setIsReviewCompletionOpen(true)}
+          onOpenSubmitSettlementTicket={() => setIsSubmitSettlementTicketOpen(true)}
           onRefresh={() => {
             refetchTask()
             refetch()
@@ -1097,6 +1129,19 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onClose={() => setIsReviewCompletionOpen(false)}
           taskId={ctx.taskId}
           completion={taskDetail.latestCompletion}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
+
+      {/* UC111: Modal gửi Settlement Ticket đã thỏa thuận lên Admin */}
+      {isSubmitSettlementTicketOpen && ctx.taskId && (
+        <MentoringSubmitSettlementTicketModal
+          isOpen={isSubmitSettlementTicketOpen}
+          onClose={() => setIsSubmitSettlementTicketOpen(false)}
+          taskId={ctx.taskId}
           onSuccess={() => {
             refetchTask()
             refetch()

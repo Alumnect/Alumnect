@@ -47,4 +47,7 @@ public class MentoringTaskActionPermissionsResponse {
 
     /** Cho phép Student xác nhận/từ chối nghiệm thu hoàn thành nhiệm vụ (UC110) */
     private Boolean canConfirmCompletion;
+
+    /** Cho phép gửi Settlement Ticket đã thỏa thuận lên Admin (UC111) */
+    private Boolean canSubmitSettlementTicket;
 }

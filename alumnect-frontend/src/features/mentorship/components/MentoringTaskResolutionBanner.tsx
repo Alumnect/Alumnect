@@ -20,6 +20,7 @@ import type {
   MentoringTaskSettlementProposal,
   MentoringTaskCompletion,
   MentoringTaskStatus,
+  MentoringDisputeTicket,
 } from '../model/mentoringTaskTypes'
 import {
   useRespondDeadlineExtension,
@@ -33,12 +34,15 @@ interface MentoringTaskResolutionBannerProps {
   activeAmendment?: MentoringTaskAmendment | null
   activeSettlementProposal?: MentoringTaskSettlementProposal | null
   latestCompletion?: MentoringTaskCompletion | null
+  activeTicket?: MentoringDisputeTicket | null
   taskStatus?: MentoringTaskStatus | string | null
   canConfirmCompletion?: boolean
+  canSubmitSettlementTicket?: boolean
   isStudent?: boolean
   isMentor?: boolean
   onOpenTopUpPayment?: () => void
   onOpenReviewCompletion?: () => void
+  onOpenSubmitSettlementTicket?: () => void
   onRefresh?: () => void
 }
 
@@ -48,11 +52,14 @@ export function MentoringTaskResolutionBanner({
   activeAmendment,
   activeSettlementProposal,
   latestCompletion,
+  activeTicket,
   taskStatus,
   canConfirmCompletion,
+  canSubmitSettlementTicket,
   isStudent,
   onOpenTopUpPayment,
   onOpenReviewCompletion,
+  onOpenSubmitSettlementTicket,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
   const [rejectModal, setRejectModal] = useState<{
@@ -395,6 +402,91 @@ export function MentoringTaskResolutionBanner({
                 Đang chờ đối phương đồng thuận
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 3.1. SETTLEMENT PROPOSAL ACCEPTED - READY TO SUBMIT TICKET BANNER (UC111) */}
+      {(canSubmitSettlementTicket || (activeSettlementProposal && activeSettlementProposal.status === 'ACCEPTED')) && !activeTicket && (
+        <div className="rounded-xl border border-purple-500/40 bg-purple-500/15 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-purple-600 text-white shadow-sm shrink-0 mt-0.5">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-foreground">
+                  Thỏa thuận dừng Task đã được hai bên đồng thuận!
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                  Đã chốt phân chia
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                <span>Mentor nhận: <strong className="text-purple-600 dark:text-purple-400 font-bold">{formatVnd(activeSettlementProposal?.mentorAmount)}</strong></span>
+                <span>•</span>
+                <span>Học viên hoàn lại: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeSettlementProposal?.studentRefund)}</strong></span>
+              </div>
+              <p className="text-xs text-foreground/80">
+                Bước tiếp theo: Gửi Settlement Ticket để Ban Quản Trị đối soát và giải ngân theo thỏa thuận (UC111).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            <Button
+              size="sm"
+              onClick={onOpenSubmitSettlementTicket}
+              className="h-9 bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-sm"
+            >
+              <ArrowRight className="w-4 h-4 mr-1.5" />
+              Gửi Settlement Ticket tới Admin
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 3.2. ACTIVE TICKET IN PROGRESS BANNER (UC111 & UC112) */}
+      {activeTicket && (
+        <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-blue-600 text-white shadow-sm shrink-0 mt-0.5">
+              <FileCheck className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-foreground">
+                  Ticket #{activeTicket.ticketCode} ({activeTicket.ticketType === 'SETTLEMENT' ? 'Giải ngân thỏa thuận' : 'Khiếu nại'})
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                  {activeTicket.status === 'OPEN'
+                    ? 'Đang chờ Admin tiếp nhận'
+                    : activeTicket.status === 'IN_REVIEW'
+                    ? 'Admin đang thụ lý xử lý'
+                    : activeTicket.status}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                {activeTicket.mentorAmount != null && (
+                  <span>Giải ngân Mentor: <strong className="text-purple-600 dark:text-purple-400 font-bold">{formatVnd(activeTicket.mentorAmount)}</strong></span>
+                )}
+                {activeTicket.studentRefund != null && (
+                  <>
+                    <span>•</span>
+                    <span>Hoàn tiền Học viên: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeTicket.studentRefund)}</strong></span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-foreground/80 italic">
+                Nhiệm vụ đã dừng. Ban Quản Trị đang tiến hành xử lý vé theo biên bản thỏa thuận.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            <span className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-300 font-semibold border border-blue-500/20">
+              Đang giải quyết
+            </span>
           </div>
         </div>
       )}

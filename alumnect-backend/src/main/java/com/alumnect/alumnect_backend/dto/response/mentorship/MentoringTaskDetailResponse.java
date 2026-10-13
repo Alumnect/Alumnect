@@ -61,4 +61,7 @@ public class MentoringTaskDetailResponse {
 
     /** 13. Lần nộp kết quả hoàn thành nhiệm vụ mới nhất (UC110) */
     private MentoringTaskCompletionResponse latestCompletion;
+
+    /** 14. Ticket giải quyết thỏa thuận hoặc tranh chấp đang mở gửi Admin (UC111 & UC112) */
+    private MentoringDisputeTicketResponse activeTicket;
 }

@@ -1,0 +1,278 @@
+package com.alumnect.alumnect_backend.service.mentorship;
+
+import com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringTicketType;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringDisputeTicketRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.SubmitSettlementTicketRequest;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeTicketResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringParticipantResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringSettlementSnapshotResponse;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementProposal;
+import com.alumnect.alumnect_backend.entity.user.User;
+import com.alumnect.alumnect_backend.entity.user.UserProfile;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
+import com.alumnect.alumnect_backend.exception.ConflictException;
+import com.alumnect.alumnect_backend.exception.ForbiddenException;
+import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+/**
+ * Triển khai dịch vụ quản lý các Ticket gửi Admin (UC111 & UC112).
+ * Xử lý tạo Settlement Ticket cho phương án thỏa thuận dừng Task đã đồng thuận,
+ * bảo đảm tính toàn vẹn số tiền và tích hợp tin nhắn hệ thống vào Chat for Task.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MentoringTicketServiceImpl implements MentoringTicketService {
+
+    private final MentoringDisputeTicketRepository ticketRepository;
+    private final MentoringTaskRepository taskRepository;
+    private final MentoringTaskSettlementProposalRepository proposalRepository;
+    private final UserRepository userRepository;
+    private final MentoringConversationService mentoringConversationService;
+
+    private static final List<MentoringTicketStatus> ACTIVE_TICKET_STATUSES =
+            List.of(MentoringTicketStatus.OPEN, MentoringTicketStatus.IN_REVIEW);
+
+    @Override
+    @Transactional(readOnly = true)
+    public MentoringSettlementSnapshotResponse getSettlementSnapshot(Long currentUserId, Long taskId) {
+        MentoringTask task = requireParticipantTask(taskId, currentUserId);
+
+        // Tìm đề xuất thỏa thuận dừng Task đã được đồng thuận mới nhất
+        Optional<MentoringTaskSettlementProposal> proposalOpt = proposalRepository
+                .findFirstByTaskIdAndStatusOrderByCreatedAtDesc(task.getId(), MentoringSettlementProposalStatus.ACCEPTED);
+
+        // Nếu chưa có đề xuất ACCEPTED, lấy đề xuất mới nhất để xem tiến trình
+        if (proposalOpt.isEmpty()) {
+            proposalOpt = proposalRepository.findFirstByTaskIdOrderByCreatedAtDesc(task.getId());
+        }
+
+        if (proposalOpt.isEmpty()) {
+            return null;
+        }
+
+        MentoringTaskSettlementProposal p = proposalOpt.get();
+        boolean hasOpenTicket = ticketRepository.existsByTaskIdAndStatusIn(task.getId(), ACTIVE_TICKET_STATUSES);
+        boolean isAgreed = p.getStatus() == MentoringSettlementProposalStatus.ACCEPTED;
+        boolean canSubmitTicket = isAgreed && !hasOpenTicket;
+
+        boolean isProposerStudent = Objects.equals(task.getStudent().getId(), p.getCreatedBy().getId());
+        String proposerRole = isProposerStudent ? "Học viên" : "Mentor";
+        String responderRole = isProposerStudent ? "Mentor" : "Học viên";
+
+        return MentoringSettlementSnapshotResponse.builder()
+                .taskId(task.getId())
+                .taskTitle(task.getTaskTitle())
+                .proposalId(p.getId())
+                .mentorAmount(p.getMentorAmount())
+                .studentRefund(p.getStudentRefund())
+                .totalAmount(p.getTotalAmount())
+                .reason(p.getReason())
+                .proposerName(mentoringConversationService.displayName(p.getCreatedBy()))
+                .proposerRole(proposerRole)
+                .responderName(p.getRespondedBy() != null ? mentoringConversationService.displayName(p.getRespondedBy()) : null)
+                .responderRole(p.getRespondedBy() != null ? responderRole : null)
+                .agreedAt(p.getRespondedAt())
+                .isAgreed(isAgreed)
+                .canSubmitTicket(canSubmitTicket)
+                .hasOpenTicket(hasOpenTicket)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public MentoringDisputeTicketResponse submitSettlementTicket(
+            Long currentUserId, Long taskId, SubmitSettlementTicketRequest request) {
+
+        log.info("Người dùng id={} yêu cầu gửi Settlement Ticket cho Task id={}, proposalId={}",
+                currentUserId, taskId, request.getProposalId());
+
+        MentoringTask task = requireParticipantTask(taskId, currentUserId);
+        User currentUser = requireUser(currentUserId);
+
+        // 1. Kiểm tra đề xuất thỏa thuận
+        MentoringTaskSettlementProposal proposal = proposalRepository.findById(request.getProposalId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận phân chia tiền với ID: " + request.getProposalId()));
+
+        if (!Objects.equals(proposal.getTask().getId(), taskId)) {
+            throw new BadRequestException("Thỏa thuận phân chia tiền không thuộc về nhiệm vụ Task được chỉ định.");
+        }
+
+        // 2. Kiểm tra điều kiện tiên quyết: Cả hai bên phải ĐỒNG THUẬN (ACCEPTED)
+        if (proposal.getStatus() != MentoringSettlementProposalStatus.ACCEPTED) {
+            throw new ConflictException("Thỏa thuận phân chia tiền chưa được cả hai bên xác nhận đồng thuận.");
+        }
+
+        // 3. Kiểm tra tính hợp lệ của số tiền
+        BigDecimal total = proposal.getMentorAmount().add(proposal.getStudentRefund());
+        if (total.compareTo(proposal.getTotalAmount()) != 0) {
+            throw new BadRequestException("Số tiền phân chia không hợp lệ: Tổng tiền chia (" + total + ") không khớp với ngân sách của Task (" + proposal.getTotalAmount() + ").");
+        }
+
+        // 4. Kiểm tra tránh gửi Ticket trùng lặp đang mở
+        if (ticketRepository.existsByTaskIdAndStatusIn(task.getId(), ACTIVE_TICKET_STATUSES)) {
+            throw new ConflictException("Nhiệm vụ này đã có một Ticket đang chờ Ban Quản Trị tiếp nhận xử lý.");
+        }
+
+        // 5. Tạo mã hiển thị ticketCode duy nhất: ST-YYYYMMDD-XXXX
+        String datePart = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now());
+        String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String ticketCode = "ST-" + datePart + "-" + randomSuffix;
+
+        // 6. Tạo Settlement Ticket
+        String description = proposal.getReason();
+        if (request.getNote() != null && !request.getNote().isBlank()) {
+            description += "\n\n[Ghi chú thêm gửi Admin]: " + request.getNote().trim();
+        }
+
+        MentoringDisputeTicket ticket = MentoringDisputeTicket.builder()
+                .ticketCode(ticketCode)
+                .ticketType(MentoringTicketType.SETTLEMENT)
+                .task(task)
+                .conversation(task.getConversation())
+                .settlementProposal(proposal)
+                .createdBy(currentUser)
+                .student(task.getStudent())
+                .mentor(task.getMentor())
+                .title("Thỏa thuận dừng Task #" + task.getId() + " - Yêu cầu giải ngân & hoàn tiền")
+                .description(description)
+                .mentorAmount(proposal.getMentorAmount())
+                .studentRefund(proposal.getStudentRefund())
+                .totalAmount(proposal.getTotalAmount())
+                .status(MentoringTicketStatus.OPEN)
+                .build();
+
+        MentoringDisputeTicket savedTicket = ticketRepository.save(ticket);
+
+        // 7. Cập nhật trạng thái Task sang CANCELLED (dừng thực hiện chờ Admin xử lý quyết toán/hoàn tiền)
+        task.setStatus(MentoringTaskStatus.CANCELLED);
+        taskRepository.save(task);
+
+        // 8. Gửi tin nhắn hệ thống realtime vào Chat for Task
+        if (task.getConversation() != null) {
+            String msg = String.format("🏛️ [Hệ thống] Settlement Ticket đã thỏa thuận (#%s) đã được gửi tới Ban Quản Trị để xử lý quyết toán thù lao cho Mentor (%s) và hoàn trả cho Học viên (%s).",
+                    ticketCode,
+                    formatVnd(proposal.getMentorAmount()),
+                    formatVnd(proposal.getStudentRefund()));
+            mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
+        }
+
+        log.info("Tạo Settlement Ticket id={}, code={} cho Task id={} thành công",
+                savedTicket.getId(), savedTicket.getTicketCode(), taskId);
+        return toTicketResponse(savedTicket);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MentoringDisputeTicketResponse getActiveTicket(Long currentUserId, Long taskId) {
+        MentoringTask task = requireParticipantTask(taskId, currentUserId);
+        return ticketRepository.findFirstByTaskIdAndStatusInOrderByCreatedAtDesc(task.getId(), ACTIVE_TICKET_STATUSES)
+                .map(this::toTicketResponse)
+                .orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MentoringDisputeTicketResponse> getTicketsByTaskId(Long currentUserId, Long taskId) {
+        MentoringTask task = requireParticipantTask(taskId, currentUserId);
+        return ticketRepository.findByTaskIdOrderByCreatedAtDesc(task.getId()).stream()
+                .map(this::toTicketResponse)
+                .toList();
+    }
+
+    // =========================================================================
+    // HELPER METHODS
+    // =========================================================================
+
+    private MentoringTask requireTask(Long taskId) {
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhiệm vụ Mentoring Task với ID: " + taskId));
+    }
+
+    private MentoringTask requireParticipantTask(Long taskId, Long currentUserId) {
+        MentoringTask task = requireTask(taskId);
+        boolean isStudent = Objects.equals(task.getStudent().getId(), currentUserId);
+        boolean isMentor = Objects.equals(task.getMentor().getId(), currentUserId);
+        if (!isStudent && !isMentor) {
+            throw new ForbiddenException("Bạn không có quyền truy cập thông tin của nhiệm vụ này.");
+        }
+        return task;
+    }
+
+    private User requireUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + userId));
+    }
+
+    private String formatVnd(BigDecimal amount) {
+        if (amount == null) return "0đ";
+        NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
+        return nf.format(amount) + "đ";
+    }
+
+    private MentoringDisputeTicketResponse toTicketResponse(MentoringDisputeTicket t) {
+        return MentoringDisputeTicketResponse.builder()
+                .id(t.getId())
+                .ticketCode(t.getTicketCode())
+                .ticketType(t.getTicketType())
+                .taskId(t.getTask().getId())
+                .taskTitle(t.getTask().getTaskTitle())
+                .conversationId(t.getConversation() != null ? t.getConversation().getId() : null)
+                .settlementProposalId(t.getSettlementProposal() != null ? t.getSettlementProposal().getId() : null)
+                .createdBy(toParticipantResponse(t.getCreatedBy(), "CREATOR"))
+                .student(toParticipantResponse(t.getStudent(), "STUDENT"))
+                .mentor(toParticipantResponse(t.getMentor(), "MENTOR"))
+                .title(t.getTitle())
+                .description(t.getDescription())
+                .mentorAmount(t.getMentorAmount())
+                .studentRefund(t.getStudentRefund())
+                .totalAmount(t.getTotalAmount())
+                .status(t.getStatus())
+                .handledBy(toParticipantResponse(t.getHandledBy(), "ADMIN"))
+                .acceptedAt(t.getAcceptedAt())
+                .resolvedAt(t.getResolvedAt())
+                .resolutionNote(t.getResolutionNote())
+                .createdAt(t.getCreatedAt())
+                .updatedAt(t.getUpdatedAt())
+                .build();
+    }
+
+    private MentoringParticipantResponse toParticipantResponse(User user, String fallbackRole) {
+        if (user == null) return null;
+        UserProfile p = user.getProfile();
+        String fullName = p != null && p.getFullName() != null ? p.getFullName() : user.getEmail();
+        String avatarUrl = p != null ? p.getAvatarUrl() : null;
+        String bio = p != null ? p.getBiography() : null;
+        String headline = p != null && p.getHeadline() != null && !p.getHeadline().isBlank()
+                ? p.getHeadline()
+                : (p != null && p.getMajor() != null ? p.getMajor().getName() : fallbackRole);
+
+        return MentoringParticipantResponse.builder()
+                .id(user.getId())
+                .fullName(fullName)
+                .avatarUrl(avatarUrl)
+                .email(user.getEmail())
+                .role(user.getRole() != null ? user.getRole().getName() : fallbackRole)
+                .headline(headline)
+                .bio(bio)
+                .build();
+    }
+}

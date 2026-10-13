@@ -263,6 +263,7 @@ export interface MentoringTaskActionPermissions {
   canProposeSettlement?: boolean
   canSubmitCompletion?: boolean
   canConfirmCompletion?: boolean
+  canSubmitSettlementTicket?: boolean
 }
 
 /**
@@ -284,6 +285,7 @@ export interface MentoringTaskDetail {
   activeAmendment?: MentoringTaskAmendment | null
   activeSettlementProposal?: MentoringTaskSettlementProposal | null
   latestCompletion?: MentoringTaskCompletion | null
+  activeTicket?: MentoringDisputeTicket | null
 }
 
 /**
@@ -544,6 +546,81 @@ export interface SubmitTaskCompletionPayload {
 export interface RespondTaskCompletionPayload {
   accept: boolean
   feedbackNote?: string
+}
+
+/**
+ * Loại Ticket Mentoring Dispute / Settlement (UC111 & UC112).
+ */
+export type MentoringDisputeTicketType = 'SETTLEMENT' | 'DISPUTE'
+
+/**
+ * Trạng thái xử lý Ticket Mentoring (UC111 & UC112).
+ */
+export type MentoringTicketStatus = 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED' | 'CANCELLED'
+
+/**
+ * Thông tin chi tiết Mentoring Dispute/Settlement Ticket (UC111 & UC112).
+ */
+export interface MentoringDisputeTicket {
+  id: number
+  ticketCode: string
+  ticketType: MentoringDisputeTicketType
+  taskId: number
+  conversationId?: number | null
+  settlementProposalId?: number | null
+  createdById: number
+  createdByName: string
+  createdByAvatar?: string | null
+  createdByRole: string
+  studentId: number
+  studentName: string
+  studentAvatar?: string | null
+  mentorId: number
+  mentorName: string
+  mentorAvatar?: string | null
+  title: string
+  description?: string | null
+  mentorAmount?: number | null
+  studentRefund?: number | null
+  totalAmount?: number | null
+  status: MentoringTicketStatus
+  handledById?: number | null
+  handledByName?: string | null
+  acceptedAt?: string | null
+  resolvedAt?: string | null
+  resolutionNote?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+/**
+ * Bản ghi snapshot thỏa thuận phân chia tiền chuẩn bị gửi Admin (UC111 Step 14).
+ */
+export interface MentoringSettlementSnapshot {
+  taskId: number
+  taskTitle: string
+  totalBudget: number
+  mentorId: number
+  mentorName: string
+  mentorAvatar?: string | null
+  studentId: number
+  studentName: string
+  studentAvatar?: string | null
+  settlementProposalId: number
+  mentorAmount: number
+  studentRefund: number
+  reason: string
+  agreedAt: string
+  hasOpenTicket: boolean
+  activeTicketCode?: string | null
+}
+
+/**
+ * Payload gửi Settlement Ticket đã thỏa thuận lên Admin (UC111).
+ */
+export interface SubmitSettlementTicketPayload {
+  title?: string
+  description?: string
 }
 
 

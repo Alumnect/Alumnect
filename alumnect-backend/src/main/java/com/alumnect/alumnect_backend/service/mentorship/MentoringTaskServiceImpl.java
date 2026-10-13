@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.service.mentorship;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
 import com.alumnect.alumnect_backend.common.enums.WorkLogStatus;
@@ -42,6 +43,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final MentoringWorkLogService workLogService;
     private final MentoringTaskResolutionService resolutionService;
     private final MentoringTaskCompletionService completionService;
+    private final MentoringTicketService ticketService;
 
     @Override
     @Transactional(readOnly = true)
@@ -285,6 +287,17 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         boolean canSubmitCompletion = isMentor && (task.getStatus() == MentoringTaskStatus.IN_PROGRESS || task.getStatus() == MentoringTaskStatus.PREPARATION);
         boolean canConfirmCompletion = isStudent && task.getStatus() == MentoringTaskStatus.SUBMITTED;
 
+        MentoringTaskDeadlineExtensionResponse activeExtension = resolutionService.getActiveExtension(currentUserId, task.getId());
+        MentoringTaskAmendmentResponse activeAmendment = resolutionService.getActiveAmendment(currentUserId, task.getId());
+        MentoringTaskSettlementProposalResponse activeSettlementProposal = resolutionService.getActiveSettlementProposal(currentUserId, task.getId());
+        MentoringTaskCompletionResponse latestCompletion = completionService.getLatestCompletion(currentUserId, task.getId());
+        MentoringDisputeTicketResponse activeTicket = ticketService.getActiveTicket(currentUserId, task.getId());
+
+        boolean canSubmitSettlementTicket = (isStudent || isMentor)
+                && activeSettlementProposal != null
+                && activeSettlementProposal.getStatus() == MentoringSettlementProposalStatus.ACCEPTED
+                && activeTicket == null;
+
         MentoringTaskActionPermissionsResponse permissions = MentoringTaskActionPermissionsResponse.builder()
                 .canAddWorkLog(canAddWorkLog)
                 .canEditWorkLog(canEditWorkLog)
@@ -298,12 +311,8 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .canProposeSettlement(canProposeSettlement)
                 .canSubmitCompletion(canSubmitCompletion)
                 .canConfirmCompletion(canConfirmCompletion)
+                .canSubmitSettlementTicket(canSubmitSettlementTicket)
                 .build();
-
-        MentoringTaskDeadlineExtensionResponse activeExtension = resolutionService.getActiveExtension(currentUserId, task.getId());
-        MentoringTaskAmendmentResponse activeAmendment = resolutionService.getActiveAmendment(currentUserId, task.getId());
-        MentoringTaskSettlementProposalResponse activeSettlementProposal = resolutionService.getActiveSettlementProposal(currentUserId, task.getId());
-        MentoringTaskCompletionResponse latestCompletion = completionService.getLatestCompletion(currentUserId, task.getId());
 
         return MentoringTaskDetailResponse.builder()
                 .overview(overview)
@@ -321,6 +330,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .activeAmendment(activeAmendment)
                 .activeSettlementProposal(activeSettlementProposal)
                 .latestCompletion(latestCompletion)
+                .activeTicket(activeTicket)
                 .build();
     }
 

@@ -28,6 +28,8 @@ import type {
   MentoringTaskCompletion,
   SubmitTaskCompletionPayload,
   RespondTaskCompletionPayload,
+  MentoringSettlementSnapshot,
+  MentoringDisputeTicket,
 } from '../model/mentoringTaskTypes'
 
 export interface PresignedUrlData {
@@ -398,6 +400,50 @@ export const mentoringTaskApi = {
   getTaskCompletionHistory: async (taskId: number): Promise<MentoringTaskCompletion[]> => {
     const res = await http.get<any, ApiResponse<MentoringTaskCompletion[]>>(
       `/mentoring/tasks/${taskId}/completions`
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy bản ghi snapshot thỏa thuận phân chia tiền chuẩn bị gửi Admin (UC111 Step 14).
+   */
+  getSettlementSnapshot: async (taskId: number): Promise<MentoringSettlementSnapshot> => {
+    const res = await http.get<any, ApiResponse<MentoringSettlementSnapshot>>(
+      `/mentoring/tasks/${taskId}/settlement-snapshot`
+    )
+    return res.data
+  },
+
+  /**
+   * Gửi Settlement Ticket đã thỏa thuận lên Ban Quản Trị (UC111).
+   */
+  submitSettlementTicket: async (
+    taskId: number,
+    payload: { proposalId: number; note?: string }
+  ): Promise<MentoringDisputeTicket> => {
+    const res = await http.post<any, ApiResponse<MentoringDisputeTicket>>(
+      `/mentoring/tasks/${taskId}/settlement-tickets`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy Ticket đang mở hoặc đang xử lý của Task (UC111 & UC112).
+   */
+  getActiveTicket: async (taskId: number): Promise<MentoringDisputeTicket | null> => {
+    const res = await http.get<any, ApiResponse<MentoringDisputeTicket | null>>(
+      `/mentoring/tasks/${taskId}/tickets/active`
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy danh sách toàn bộ Ticket của Task (UC111 & UC112).
+   */
+  getTaskTickets: async (taskId: number): Promise<MentoringDisputeTicket[]> => {
+    const res = await http.get<any, ApiResponse<MentoringDisputeTicket[]>>(
+      `/mentoring/tasks/${taskId}/tickets`
     )
     return res.data
   },
