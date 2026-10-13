@@ -36,16 +36,16 @@ export function MentoringTaskOverviewCard({ overview }: MentoringTaskOverviewCar
       </div>
 
       <div className="mt-5">
-        <h3 className="text-xl font-black text-plum-900 dark:text-white">
+        <h3 className="text-xl font-black text-plum-900 dark:text-white break-words">
           {overview.taskTitle}
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
+        <p className="mt-2 text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8] break-words">
           {overview.taskScope}
         </p>
       </div>
 
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-plum-900/[0.06] bg-plum-900/[0.02] p-3.5 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="flex items-center gap-1.5 text-xs font-bold text-plum-400 dark:text-[#8f9399]">
             <DollarSign className="h-3.5 w-3.5 text-brand-500" />
             Chi phí thỏa thuận
@@ -55,7 +55,7 @@ export function MentoringTaskOverviewCard({ overview }: MentoringTaskOverviewCar
           </p>
         </div>
 
-        <div className="rounded-2xl border border-plum-900/[0.06] bg-plum-900/[0.02] p-3.5 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="flex items-center gap-1.5 text-xs font-bold text-plum-400 dark:text-[#8f9399]">
             <Laptop className="h-3.5 w-3.5 text-violet-500" />
             Hình thức làm việc
@@ -65,7 +65,7 @@ export function MentoringTaskOverviewCard({ overview }: MentoringTaskOverviewCar
           </p>
         </div>
 
-        <div className="rounded-2xl border border-plum-900/[0.06] bg-plum-900/[0.02] p-3.5 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="flex items-center gap-1.5 text-xs font-bold text-plum-400 dark:text-[#8f9399]">
             <Briefcase className="h-3.5 w-3.5 text-mint-500" />
             Loại nhiệm vụ
@@ -75,7 +75,7 @@ export function MentoringTaskOverviewCard({ overview }: MentoringTaskOverviewCar
           </p>
         </div>
 
-        <div className="rounded-2xl border border-plum-900/[0.06] bg-plum-900/[0.02] p-3.5 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="flex items-center gap-1.5 text-xs font-bold text-plum-400 dark:text-[#8f9399]">
             <Clock className="h-3.5 w-3.5 text-amber-500" />
             Thời hạn hoàn thành

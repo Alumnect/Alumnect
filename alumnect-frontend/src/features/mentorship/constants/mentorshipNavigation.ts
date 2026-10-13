@@ -74,6 +74,7 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         activePaths: ['/app/mentoring/tasks'],
         icon: BriefcaseBusiness,
         audience: 'common',
+        visibility: 'without-profile',
       },
       {
         label: 'Yêu cầu Mentoring của tôi',

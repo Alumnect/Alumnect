@@ -69,30 +69,30 @@ export function MentoringTaskDealSection({
           <span className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
             Kết quả kỳ vọng đầu ra (Expected Result)
           </span>
-          <div className="mt-1 flex items-start gap-2 rounded-2xl bg-plum-900/[0.02] p-3 text-sm text-plum-700 dark:bg-white/[0.02] dark:text-[#b0b3b8]">
+          <div className="mt-1 flex items-start gap-2 rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 text-sm text-plum-700 dark:border-white/10 dark:bg-[#18191a] dark:text-[#b0b3b8]">
             <Target className="h-4 w-4 shrink-0 text-brand-500 mt-0.5" />
             <p className="leading-relaxed">{deal.expectedResult}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-          <div className="rounded-xl border border-plum-900/[0.05] p-3">
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
             <span className="text-[11px] font-bold text-plum-400 dark:text-[#8f9399]">Mức giá thỏa thuận</span>
-            <p className="mt-0.5 text-sm font-black text-brand-700 dark:text-brand-300">
+            <p className="mt-1 text-sm font-black text-brand-700 dark:text-brand-300">
               {formatPrice(deal.agreedPrice)}
             </p>
           </div>
-          <div className="rounded-xl border border-plum-900/[0.05] p-3">
+          <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
             <span className="text-[11px] font-bold text-plum-400 dark:text-[#8f9399]">Thời hạn Deal</span>
-            <p className="mt-0.5 text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">
+            <p className="mt-1 text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">
               {formatDeadline(deal.deadline)}
             </p>
           </div>
-          <div className="rounded-xl border border-plum-900/[0.05] p-3 col-span-2 sm:col-span-1">
+          <div className="col-span-2 rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
             <span className="text-[11px] font-bold text-plum-400 dark:text-[#8f9399]">Trạng thái thanh toán</span>
-            <p className="mt-0.5 flex items-center gap-1 text-sm font-black text-mint-600 dark:text-mint-400">
-              <CheckCircle2 className="h-4 w-4" />
-              Đã thanh toán (PAID)
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-black text-mint-600 dark:text-mint-400">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-mint-500" />
+              <span>Đã thanh toán (PAID)</span>
             </p>
           </div>
         </div>

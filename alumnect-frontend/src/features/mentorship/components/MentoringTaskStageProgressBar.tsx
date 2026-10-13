@@ -91,7 +91,7 @@ export function MentoringTaskStageProgressBar({
                   ? 'border-brand-500/30 bg-brand-50/70 shadow-xs dark:border-brand-500/40 dark:bg-brand-500/10'
                   : isPassed
                   ? 'border-mint-500/25 bg-mint-50/50 dark:border-mint-500/30 dark:bg-mint-500/10'
-                  : 'border-plum-900/[0.05] bg-plum-900/[0.02] opacity-75 dark:border-white/5 dark:bg-white/[0.02]'
+                  : 'border-plum-900/[0.06] bg-slate-50/70 opacity-80 dark:border-white/10 dark:bg-[#18191a]'
               )}
             >
               <div

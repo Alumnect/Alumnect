@@ -46,31 +46,31 @@ export function MentoringTaskPaymentCard({ payment, agreedPrice }: MentoringTask
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div className="rounded-xl bg-plum-900/[0.02] p-3 dark:bg-white/[0.02]">
+      <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="font-bold text-plum-400 dark:text-[#8f9399]">Số tiền đã thanh toán</span>
           <p className="mt-1 text-sm font-black text-brand-700 dark:text-brand-300">
             {formatPrice(payment.amount ?? agreedPrice ?? 0)}
           </p>
         </div>
 
-        <div className="rounded-xl bg-plum-900/[0.02] p-3 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="font-bold text-plum-400 dark:text-[#8f9399]">Cổng thanh toán</span>
           <p className="mt-1 text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">
             VietQR / PayOS
           </p>
         </div>
 
-        <div className="rounded-xl bg-plum-900/[0.02] p-3 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="font-bold text-plum-400 dark:text-[#8f9399]">Thời điểm thanh toán</span>
           <p className="mt-1 text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">
             {formatDate(payment.paidAt)}
           </p>
         </div>
 
-        <div className="rounded-xl bg-plum-900/[0.02] p-3 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <span className="font-bold text-plum-400 dark:text-[#8f9399]">Mã tham chiếu PayOS</span>
-          <p className="mt-1 font-mono text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">
+          <p className="mt-1 font-mono text-sm font-bold text-plum-800 dark:text-[#e4e6eb] truncate" title={String(payment.orderCode)}>
             #{payment.orderCode}
           </p>
         </div>

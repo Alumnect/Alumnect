@@ -32,46 +32,48 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
     [hasMentorProfile, isAlumni],
   )
 
-  const activeItemTo = useMemo(() => {
-    const allItems = sections.flatMap((section) => section.items)
+  const activeItemKey = useMemo(() => {
+    const allItems = sections.flatMap((section) =>
+      section.items.map((item) => ({
+        key: `${section.label}-${item.to}-${item.label}`,
+        item,
+      })),
+    )
 
     // 1. Kiểm tra khớp chính xác URL (Exact match)
-    const exactMatch = allItems.find((item) => {
+    const exactMatch = allItems.find(({ item }) => {
       const paths = item.activePaths ?? [item.to]
       return paths.includes(location.pathname)
     })
-    if (exactMatch) return exactMatch.to
+    if (exactMatch) return exactMatch.key
 
     // 2. Kiểm tra khớp tiền tố (Prefix match) cho các trang con chi tiết (ngoại trừ item có end: true)
-    const prefixMatches = allItems.filter((item) => {
+    const prefixMatches = allItems.filter(({ item }) => {
       if (item.end) return false
       const paths = item.activePaths ?? [item.to]
       return paths.some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
     })
 
     if (prefixMatches.length === 0) return null
-    if (prefixMatches.length === 1) return prefixMatches[0].to
+    if (prefixMatches.length === 1) return prefixMatches[0].key
 
     // 3. Nếu có nhiều mục cùng khớp tiền tố, ưu tiên mục có đường dẫn dài nhất (chi tiết nhất)
     prefixMatches.sort((a, b) => {
-      const maxA = Math.max(...(a.activePaths ?? [a.to]).map((p) => p.length))
-      const maxB = Math.max(...(b.activePaths ?? [b.to]).map((p) => p.length))
+      const maxA = Math.max(...(a.item.activePaths ?? [a.item.to]).map((p) => p.length))
+      const maxB = Math.max(...(b.item.activePaths ?? [b.item.to]).map((p) => p.length))
       return maxB - maxA
     })
-    return prefixMatches[0].to
+    return prefixMatches[0].key
   }, [sections, location.pathname])
 
-  const isItemActive = (item: MentorshipNavigationItem) => {
-    return item.to === activeItemTo
-  }
-
-  const renderItem = (item: MentorshipNavigationItem) => {
+  const renderItem = (sectionLabel: string, item: MentorshipNavigationItem) => {
     const Icon = item.icon
-    const isActive = isItemActive(item)
+    const itemKey = `${sectionLabel}-${item.to}-${item.label}`
+    const isActive = itemKey === activeItemKey
 
     return (
       <NavLink
-        key={item.to}
+        key={itemKey}
         to={item.to}
         end={item.end}
         onClick={onNavigate}
@@ -85,15 +87,15 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         {isActive && (
           <motion.span
             layoutId="mentorship-sidebar-active-indicator"
-            className="absolute inset-0 rounded-2xl bg-brand-100/85 shadow-[inset_3px_0_0_#f75512] dark:bg-brand-500/15"
-            transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+            className="absolute inset-0 rounded-2xl bg-brand-100/90 shadow-[inset_3px_0_0_#f27024] dark:bg-brand-500/15"
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
           />
         )}
         <span className="relative z-10 flex w-full items-center gap-3">
           <Icon
             className={cn(
-              'h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110',
-              isActive ? 'text-brand-600' : 'text-plum-400 dark:text-[#8f9399]',
+              'h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-105',
+              isActive ? 'text-brand-600 dark:text-brand-400' : 'text-plum-400 dark:text-[#8f9399]',
             )}
           />
           <span className="min-w-0 truncate">{item.label}</span>
@@ -114,7 +116,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
               {section.label}
             </h3>
             <div className="space-y-1">
-              {section.items.map(renderItem)}
+              {section.items.map((item) => renderItem(section.label, item))}
             </div>
           </section>
         ))}
@@ -148,7 +150,7 @@ export function MentorshipSidebar() {
         </button>
       </div>
 
-      <aside className="fixed bottom-4 top-20 z-20 hidden w-60 overflow-y-auto pb-4 pt-7 xl:left-8 xl:block 2xl:left-[max(2rem,calc((100vw-1560px)/2+2rem))] 2xl:w-[16.5rem]" aria-label="Mentorship sidebar">
+      <aside className="sticky top-20 hidden max-h-[calc(100vh-5.5rem)] w-full overflow-y-auto pb-6 pt-2 xl:block scrollbar-thin" aria-label="Mentorship sidebar">
         <MentorshipSidebarContent />
       </aside>
 

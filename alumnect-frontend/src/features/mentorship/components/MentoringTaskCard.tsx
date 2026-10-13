@@ -58,17 +58,17 @@ export function MentoringTaskCard({ task, onSelect }: MentoringTaskCardProps) {
         <div className="mt-4">
           <Link
             to={`/app/mentoring/tasks/${task.id}`}
-            className="block text-lg font-black text-plum-900 transition-colors hover:text-brand-600 dark:text-white dark:hover:text-brand-400"
+            className="block text-lg font-black text-plum-900 transition-colors hover:text-brand-600 dark:text-white dark:hover:text-brand-400 break-words line-clamp-2"
           >
             {task.taskTitle}
           </Link>
-          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8] break-words">
             {task.taskScope}
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mt-4 rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-white/[0.03]">
+        <div className="mt-4 rounded-2xl border border-plum-900/[0.06] bg-slate-50/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
           <div className="flex items-center justify-between text-xs font-bold mb-1.5">
             <span className="text-plum-400 dark:text-[#8f9399]">Tiến độ công việc</span>
             <span className="font-extrabold text-brand-600 dark:text-brand-400">{progress}%</span>
