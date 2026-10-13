@@ -15,6 +15,9 @@ import org.mapstruct.Mapping;
 public interface MentoringTaskMapper {
 
     @Mapping(target = "dealId", source = "deal.id")
+    @Mapping(target = "requestId", source = "request.id")
+    @Mapping(target = "requestTitle", source = "request.title")
+    @Mapping(target = "conversationId", source = "conversation.id")
     @Mapping(target = "studentId", source = "student.id")
     @Mapping(target = "studentName", source = "student.profile.fullName")
     @Mapping(target = "studentAvatar", source = "student.profile.avatarUrl")

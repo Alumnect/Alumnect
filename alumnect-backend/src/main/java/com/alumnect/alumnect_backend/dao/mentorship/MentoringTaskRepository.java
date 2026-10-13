@@ -30,4 +30,8 @@ public interface MentoringTaskRepository extends JpaRepository<MentoringTask, Lo
     /** Lấy danh sách Task của người dùng theo trạng thái */
     @Query("SELECT t FROM MentoringTask t WHERE (t.student.id = :userId OR t.mentor.id = :userId) AND t.status = :status ORDER BY t.createdAt DESC")
     Page<MentoringTask> findByParticipantAndStatus(@Param("userId") Long userId, @Param("status") MentoringTaskStatus status, Pageable pageable);
+
+    /** Lấy danh sách Task của người dùng theo danh sách trạng thái (hỗ trợ lọc theo UI Stage) */
+    @Query("SELECT t FROM MentoringTask t WHERE (t.student.id = :userId OR t.mentor.id = :userId) AND t.status IN :statuses ORDER BY t.createdAt DESC")
+    Page<MentoringTask> findByParticipantAndStatusIn(@Param("userId") Long userId, @Param("statuses") java.util.Collection<MentoringTaskStatus> statuses, Pageable pageable);
 }

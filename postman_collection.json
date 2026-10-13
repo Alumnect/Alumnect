@@ -9253,7 +9253,7 @@
                 "accept"
               ]
             },
-            "description": "Mentor chấp nhận yêu cầu cố vấn (ACCEPTED). Lưu ý: Không tự động tạo Deal theo Rule 4."
+            "description": "Mentor ACCEPT = đồng ý trao đổi Request (KHÔNG phải xác nhận Deal, KHÔNG tạo Task).\nHệ thống tạo/lấy lại Chat for Task duy nhất của (Request, Student, Mentor) và gửi tin nhắn hệ thống. Phản hồi trả về `conversationId`.\n\n- 200 OK\n- 400 Request đã đóng / đã chọn Mentor khác\n- 403 Request không được gửi tới Mentor"
           },
           "response": []
         },
@@ -9316,7 +9316,7 @@
           "response": []
         },
         {
-          "name": "103.7 Lỗi khi Mentor cố phản hồi lại yêu cầu đã xử lý (409 Conflict)",
+          "name": "103.7 Mentor ACCEPT lặp lại (retry) - Idempotent, trả về cùng conversationId (200)",
           "event": [
             {
               "listen": "test",
@@ -9364,7 +9364,7 @@
                 "accept"
               ]
             },
-            "description": "Kiểm tra chặn phản hồi trùng lặp (Rule 8 / Concurrency)"
+            "description": "Gọi lại ACCEPT khi đã ACCEPTED không tạo cuộc hội thoại thứ hai và không gửi thêm tin nhắn hệ thống; trả về đúng Chat for Task cũ. (DECLINE sau khi đã ACCEPT vẫn trả 409.)"
           },
           "response": []
         },
@@ -9419,7 +9419,120 @@
       "description": "Các API phục vụ Thỏa thuận & xác nhận Mentoring Deal giữa Student và Mentor (Flow 3 - UC104)",
       "item": [
         {
-          "name": "104.1 Đề xuất Mentoring Deal mới - Thành công",
+          "name": "104.0 Lấy ngữ cảnh Chat for Task (Request, Deal, Payment, Task) - Thành công",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/conversations/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "conversations",
+                "1"
+              ]
+            },
+            "description": "Token: Học viên chủ Request hoặc đúng Mentor của cuộc hội thoại.\nTrả về Request, thành viên, Deal (mọi phiên bản), lần thanh toán gần nhất, Task, `readOnly`/`readOnlyReason` và các quyền `canAcceptDealByRequest`, `canCreateDealTicket`, `canSendMessage`.\n\n- 200 OK\n- 403 Không phải thành viên"
+          },
+          "response": []
+        },
+        {
+          "name": "104.0b Lấy các Chat for Task của một Request - Thành công",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/conversations/by-request/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "conversations",
+                "by-request",
+                "1"
+              ]
+            },
+            "description": "Học viên thấy Chat for Task của mọi Mentor đã ACCEPT; Mentor chỉ thấy cuộc hội thoại của mình.\n\n- 200 OK\n- 403 Không liên quan Request"
+          },
+          "response": []
+        },
+        {
+          "name": "104.0c Mentor A đọc Chat for Task của Mentor B - Thất bại 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/conversations/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "conversations",
+                "2"
+              ]
+            },
+            "description": "Đăng nhập Mentor A rồi gọi conversationId thuộc Mentor B: backend kiểm tra thành viên theo người dùng đăng nhập.\n\n- 403 Forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "104.1a Mentor Chấp nhận Deal theo Request - Thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals"
+              ]
+            },
+            "description": "Token: Mentor của Chat for Task. Điều khoản lấy từ Request (giá = ngân sách tối đa, deadline = thời hạn mong muốn). Mentor được tính là đã xác nhận phiên bản này.\n\n- 201 Created\n- 400 Request không có ngân sách / deadline hợp lệ\n- 403 Không phải Mentor của Chat\n- 409 Request đã chốt Mentor / Deal đã khóa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversationId\": 1,\n    \"proposalSource\": \"REQUEST_ACCEPTANCE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "104.1 Mentor Deal lại / Tạo Deal Ticket trong Chat for Task - Thành công",
           "request": {
             "method": "POST",
             "header": [
@@ -9434,7 +9547,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"mentorId\": 2,\n    \"studentId\": 1,\n    \"conversationId\": 1,\n    \"taskScope\": \"Hướng dẫn xây dựng kiến trúc Microservices và Review đồ án tốt nghiệp Capstone Project về Spring Boot & React\",\n    \"agreedPrice\": 500000,\n    \"deadline\": \"2026-11-30T23:59:59Z\",\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"PROJECT_MENTORING\",\n    \"expectedResult\": \"Hoàn thiện tài liệu kiến trúc hệ thống và vượt qua buổi phản biện thử nghiệm đồ án\",\n    \"changeNote\": \"Đề xuất thỏa thuận ban đầu từ phía Học viên\"\n}"
+              "raw": "{\n    \"conversationId\": 1,\n    \"proposalSource\": \"RENEGOTIATION\",\n    \"taskScope\": \"Hướng dẫn xây dựng kiến trúc Microservices và review đồ án Capstone Project về Spring Boot & React\",\n    \"agreedPrice\": 500000,\n    \"deadline\": \"2026-12-30T16:59:59Z\",\n    \"workingMode\": \"ONLINE\",\n    \"participationType\": \"INDIVIDUAL\",\n    \"taskType\": \"PROJECT_MENTORING\",\n    \"expectedResult\": \"Hoàn thiện sơ đồ kiến trúc, source code mẫu và slide bảo vệ đồ án\",\n    \"changeNote\": \"Điều chỉnh theo trao đổi trong Chat for Task\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/mentoring/deals",
@@ -9446,7 +9559,7 @@
                 "deals"
               ]
             },
-            "description": "Khởi tạo đề xuất thỏa thuận mới giữa Student và Mentor. Trạng thái khởi tạo: STUDENT_CONFIRMED hoặc MENTOR_CONFIRMED (tùy theo bên đề xuất)."
+            "description": "Token: Mentor của Chat for Task. Client chỉ gửi `conversationId`; Request/Student/Mentor do backend suy ra. Mỗi lần gửi tạo phiên bản Deal Ticket mới (v1, v2...).\n\n- 201 Created\n- 403 Học viên hoặc Mentor khác gọi\n- 409 Request đã chốt Mentor / Deal đã khóa / Chat chỉ đọc"
           },
           "response": []
         },
@@ -9466,7 +9579,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"mentorId\": 2,\n    \"taskScope\": \"\",\n    \"agreedPrice\": -100,\n    \"deadline\": null,\n    \"workingMode\": null,\n    \"participationType\": null,\n    \"taskType\": null,\n    \"expectedResult\": \"\"\n}"
+              "raw": "{\n    \"proposalSource\": \"RENEGOTIATION\",\n    \"taskScope\": \"ngắn\",\n    \"agreedPrice\": -100\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/mentoring/deals",
@@ -9478,7 +9591,7 @@
                 "deals"
               ]
             },
-            "description": "Dữ liệu thiếu hoặc không hợp lệ. Kỳ vọng HTTP 400 Bad Request kèm chi tiết các trường lỗi Tiếng Việt."
+            "description": "Thiếu `conversationId`, `taskScope` < 10 ký tự, giá âm → 400 Bad Request kèm danh sách lỗi."
           },
           "response": []
         },
@@ -9508,7 +9621,7 @@
           "response": []
         },
         {
-          "name": "104.4 Điều chỉnh điều khoản Deal - Thành công (Sinh Snapshot mới)",
+          "name": "104.4 Mentor Deal lại trên Deal đã có (PUT) - Thành công (sinh phiên bản mới)",
           "request": {
             "method": "PUT",
             "header": [
@@ -9541,13 +9654,17 @@
           "response": []
         },
         {
-          "name": "104.5 Xác nhận Mentoring Deal Snapshot - Thành công",
+          "name": "104.5 Học viên Xác nhận Deal Ticket phiên bản mới nhất - Thành công (khóa Deal, chọn Mentor)",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "url": {
@@ -9562,18 +9679,31 @@
                 "confirm"
               ]
             },
-            "description": "Xác nhận snapshot hiện tại. Nếu cả hai bên cùng xác nhận, Deal chuyển sang DEAL_CONFIRMED và bị khóa snapshot."
+            "description": "Bắt buộc gửi `version` đang xem. Khi Mentor và Học viên cùng xác nhận đúng một phiên bản: Deal → DEAL_CONFIRMED (khóa), Request → MATCHED với `selected_mentor_id` & `confirmed_deal_id`, các Deal/Chat của Mentor khác chuyển chỉ đọc. Không tạo Task.\n\n- 200 OK\n- 409 Phiên bản đã bị thay thế / Request đã chọn Mentor khác",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"version\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
         {
-          "name": "104.6 Xác nhận lại khi đã xác nhận - Thất bại 400",
+          "name": "104.6 Xác nhận phiên bản cũ đã bị thay thế (tab cũ) - Thất bại 409",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "url": {
@@ -9588,7 +9718,16 @@
                 "confirm"
               ]
             },
-            "description": "Gửi yêu cầu xác nhận khi bên này đã xác nhận rồi. Kỳ vọng HTTP 400 Bad Request."
+            "description": "Deal đã có phiên bản 2 nhưng client gửi `version = 1` → 409 \"Deal Ticket phiên bản 1 đã bị thay thế bởi phiên bản 2...\".",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"version\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         },
@@ -9627,7 +9766,7 @@
           "response": []
         },
         {
-          "name": "104.8 Lấy Deal theo cuộc hội thoại Direct Messaging - Thành công",
+          "name": "104.8 Lấy Deal theo Chat for Task - Thành công",
           "request": {
             "method": "GET",
             "header": [
@@ -9648,7 +9787,7 @@
                 "1"
               ]
             },
-            "description": "Lấy thỏa thuận Deal mới nhất gắn với cuộc trò chuyện chat trực tiếp."
+            "description": "Chỉ thành viên Chat for Task được xem (403 nếu không). Trả về null nếu Mentor chưa gửi Deal Ticket."
           },
           "response": []
         },
@@ -9681,6 +9820,78 @@
               ]
             },
             "description": "Hủy bỏ thỏa thuận Deal khi chưa bị khóa chốt."
+          },
+          "response": []
+        },
+        {
+          "name": "104.10 Học viên Từ chối Deal Ticket hiện tại - Thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/1/reject?reason=M%E1%BB%A9c%20gi%C3%A1%20ch%C6%B0a%20ph%C3%B9%20h%E1%BB%A3p&version=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "1",
+                "reject"
+              ],
+              "query": [
+                {
+                  "key": "reason",
+                  "value": "M%E1%BB%A9c%20gi%C3%A1%20ch%C6%B0a%20ph%C3%B9%20h%E1%BB%A3p"
+                },
+                {
+                  "key": "version",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "Chỉ từ chối đề xuất hiện tại (không xóa Request, không tạo Task/Payment). `version` tùy chọn để chống thao tác trên tab cũ.\n\n- 200 OK\n- 403 Mentor gọi\n- 409 Phiên bản đã bị thay thế"
+          },
+          "response": []
+        },
+        {
+          "name": "104.11 Học viên Yêu cầu điều chỉnh Deal Ticket - Thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/deals/1/request-adjustment?note=Gi%E1%BA%A3m%20gi%C3%A1%20c%C3%B2n%20400.000%C4%91&version=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "deals",
+                "1",
+                "request-adjustment"
+              ],
+              "query": [
+                {
+                  "key": "note",
+                  "value": "Gi%E1%BA%A3m%20gi%C3%A1%20c%C3%B2n%20400.000%C4%91"
+                },
+                {
+                  "key": "version",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "Phiên bản hiện tại chuyển SUPERSEDED (không thể thanh toán); Mentor gửi phiên bản mới. Không tạo Task/Payment.\n\n- 200 OK\n- 409 Phiên bản đã bị thay thế"
           },
           "response": []
         }
@@ -9719,7 +9930,7 @@
                 "checkout"
               ]
             },
-            "description": "Student tạo phiên thanh toán PayOS từ Deal đã khóa chốt (DEAL_CONFIRMED). Trả về link checkoutUrl, qrCodeUrl, orderCode để thanh toán."
+            "description": "Chỉ Học viên của Deal. Deal phải DEAL_CONFIRMED, đã khóa, là `confirmed_deal` của Request và Mentor khớp `selected_mentor`. Số tiền luôn lấy từ `agreed_price` của Deal đã khóa — mọi trường amount do client gửi đều bị bỏ qua.\n\n- 201 Created\n- 403 Không phải Học viên của Deal\n- 409 Deal chưa chốt / không phải Deal đã chốt của Request / đã thanh toán"
           },
           "response": []
         },
@@ -9839,7 +10050,7 @@
                 "webhook"
               ]
             },
-            "description": "Endpoint công khai nhận webhook từ PayOS khi thanh toán thành công để kích hoạt Task chuyển sang PREPARATION."
+            "description": "Idempotent: callback SUCCESS gửi lặp không tạo Task thứ hai. `code != 00` hoặc lệch số tiền → giao dịch FAILED, không tạo Task, Request/Mentor đã chọn giữ nguyên để Học viên thanh toán lại. Thành công → tạo Task PREPARATION gắn Request + Deal + Chat for Task + Payment."
           },
           "response": []
         },
@@ -9900,6 +10111,263 @@
               ]
             },
             "description": "Lấy danh sách các Task của người dùng hiện tại (lọc theo vai trò Student hoặc Mentor, có thể lọc theo status)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "106. Xem & Quản lý Mentoring Task (UC106)",
+      "description": "Các API phục vụ UC106: Student và Mentor xem và quản lý Mentoring Task đã được kích hoạt sau khi thanh toán thành công",
+      "item": [
+        {
+          "name": "106.1 Lấy danh sách nhiệm vụ Mentoring của tôi (Tất cả)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lấy danh sách nhiệm vụ của user hiện tại (Student chỉ thấy task của mình, Mentor chỉ thấy task của mình)."
+          },
+          "response": []
+        },
+        {
+          "name": "106.2 Lấy danh sách nhiệm vụ lọc theo UI Stage (PREPARATION / IN_PROGRESS / ENDING)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks?stage=IN_PROGRESS&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "stage",
+                  "value": "IN_PROGRESS"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lọc danh sách nhiệm vụ theo stage cấp cao."
+          },
+          "response": []
+        },
+        {
+          "name": "106.3 Lấy chi tiết toàn diện Mentoring Task (10 sections nghiệp vụ)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1"
+              ]
+            },
+            "description": "Lấy chi tiết toàn bộ thông tin Task bao gồm Overview, Deal, Participants, Payment, Work Logs, History và Permissions."
+          },
+          "response": []
+        },
+        {
+          "name": "106.4 Lấy Mentoring Task theo Deal ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/by-deal/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "by-deal",
+                "1"
+              ]
+            },
+            "description": "Lấy Task tương ứng với Mentoring Deal đã thanh toán thành công."
+          },
+          "response": []
+        },
+        {
+          "name": "106.5 Lấy danh sách Work Logs của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/work-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "work-logs"
+              ]
+            },
+            "description": "Lấy danh sách nhật ký công việc của Task, sắp xếp theo logDate giảm dần."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "107. Cập nhật Work Log (UC107)",
+      "description": "Các API phục vụ UC107: Mentor ghi nhận và cập nhật Work Log cho Mentoring Task đang active",
+      "item": [
+        {
+          "name": "107.1 Mentor tạo Work Log mới (PENDING_CONFIRMATION)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logDate\": \"2026-10-14\",\n  \"description\": \"Buổi hướng dẫn 1-1 chuyên sâu về Kiến trúc Phần mềm và Database Migration\",\n  \"workCompleted\": \"Hướng dẫn sinh viên thiết kế database schema chuẩn 3NF, cấu hình Flyway migration script và triển khai PostgreSQL Docker container.\",\n  \"result\": \"Sinh viên đã hoàn thành script V1 migration và khởi chạy thành công container dữ liệu mẫu trên môi trường local.\",\n  \"nextAction\": \"Sinh viên thực hành viết unit test và chuẩn bị câu hỏi cho buổi review tiếp theo vào ngày 17/10/2026.\",\n  \"attachments\": [\n    {\n      \"fileUrl\": \"https://pub-77de501eb1a440df9c8ca37a5886ddf8.r2.dev/worklogs/session-notes.pdf\",\n      \"fileName\": \"session-notes.pdf\",\n      \"fileSize\": 1048576,\n      \"mediaType\": \"FILE\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/work-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "work-logs"
+              ]
+            },
+            "description": "Mentor của Task tạo Work Log mới. Status ban đầu luôn là PENDING_CONFIRMATION (chờ Student xác nhận ở UC108). Sinh viên sẽ nhận notification."
+          },
+          "response": []
+        },
+        {
+          "name": "107.2 Mentor cập nhật Work Log khi chưa xác nhận",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logDate\": \"2026-10-14\",\n  \"description\": \"Bổ sung tài liệu đính kèm cho buổi hướng dẫn 1-1 về Database Migration\",\n  \"workCompleted\": \"Hướng dẫn sinh viên thiết kế schema chuẩn 3NF, bổ sung slide demo và repository GitHub mẫu.\",\n  \"result\": \"Sinh viên đã khởi chạy thành công container và clone thành công repository mẫu.\",\n  \"nextAction\": \"Sinh viên nộp link GitHub commit trước 17/10/2026.\",\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/work-logs/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "work-logs",
+                "1"
+              ]
+            },
+            "description": "Mentor cập nhật nội dung Work Log khi status đang là PENDING_CONFIRMATION. Nếu đã CONFIRMED sẽ bị từ chối với lỗi 409."
+          },
+          "response": []
+        },
+        {
+          "name": "107.3 Xem chi tiết một Work Log theo ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/work-logs/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "work-logs",
+                "1"
+              ]
+            },
+            "description": "Lấy chi tiết một Work Log bao gồm nội dung, trạng thái, attachments và thông tin Mentor tạo log."
           },
           "response": []
         }

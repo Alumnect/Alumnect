@@ -2,6 +2,7 @@ package com.alumnect.alumnect_backend.dto.response.mentorship;
 
 import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
+import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
 import com.alumnect.alumnect_backend.common.enums.ProposalSource;
@@ -34,6 +35,12 @@ public class MentoringDealResponse {
 
     /** ID của Mentoring Request liên kết */
     private Long requestId;
+
+    /** Tiêu đề của Mentoring Request liên kết */
+    private String requestTitle;
+
+    /** Trạng thái hiện tại của Mentoring Request liên kết */
+    private MentoringRequestStatus requestStatus;
 
     /** ID của Học viên (Student) */
     private Long studentId;
@@ -139,4 +146,16 @@ public class MentoringDealResponse {
 
     /** Người dùng đang đăng nhập có quyền chỉnh sửa điều khoản không (false nếu đã locked) */
     private Boolean canEdit;
+
+    /** Học viên có thể thanh toán Deal này (Deal đã khóa, là confirmed deal của Request, chưa thanh toán) */
+    private Boolean canPay;
+
+    /** Học viên có thể từ chối phiên bản Deal Ticket hiện tại */
+    private Boolean canReject;
+
+    /** Học viên có thể yêu cầu Mentor điều chỉnh phiên bản Deal Ticket hiện tại */
+    private Boolean canRequestAdjustment;
+
+    /** Lý do Chat for Task ở chế độ chỉ đọc (null nếu vẫn hoạt động) */
+    private String readOnlyReason;
 }

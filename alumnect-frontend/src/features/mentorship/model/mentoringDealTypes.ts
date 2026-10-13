@@ -7,16 +7,23 @@ import type { MentoringWorkingMode } from './mentorRegistrationTypes'
 export type MentoringParticipationType = 'INDIVIDUAL' | 'GROUP'
 
 /**
- * Phân loại nhiệm vụ/công việc trong Deal.
+ * Phân loại nhiệm vụ/công việc trong Deal. Gồm cả loại nhiệm vụ của Request (UC100) vì Deal
+ * "Chấp nhận theo Request" kế thừa nguyên loại nhiệm vụ của Request.
  */
-export type MentoringTaskType =
-  | 'CONSULTATION'
-  | 'ASSIGNMENT_GUIDANCE'
-  | 'PROJECT_MENTORING'
-  | 'RESUME_REVIEW'
-  | 'MOCK_INTERVIEW'
-  | 'SKILL_TRAINING'
-  | 'OTHER'
+export const MENTORING_DEAL_TASK_TYPES = [
+  'CAREER_ORIENTATION',
+  'TECHNICAL_CONSULTING',
+  'CAPSTONE_ADVICE',
+  'CONSULTATION',
+  'ASSIGNMENT_GUIDANCE',
+  'PROJECT_MENTORING',
+  'RESUME_REVIEW',
+  'MOCK_INTERVIEW',
+  'SKILL_TRAINING',
+  'OTHER',
+] as const
+
+export type MentoringTaskType = (typeof MENTORING_DEAL_TASK_TYPES)[number]
 
 /**
  * Nguồn gốc đề xuất thỏa thuận Deal (UC104).
@@ -56,6 +63,8 @@ export interface MentoringDeal {
   ticketType?: string
   proposalSource?: ProposalSource
   requestId?: number | null
+  requestTitle?: string | null
+  requestStatus?: 'OPEN' | 'MATCHED' | 'CLOSED' | 'CANCELLED' | null
   studentId: number
   studentName?: string
   studentAvatar?: string | null
@@ -91,6 +100,14 @@ export interface MentoringDeal {
   updatedAt: string
   canConfirm?: boolean
   canEdit?: boolean
+  /** Học viên có thể thanh toán (Deal đã khóa và là Deal đã chốt của Request) */
+  canPay?: boolean
+  /** Học viên có thể từ chối phiên bản hiện tại */
+  canReject?: boolean
+  /** Học viên có thể yêu cầu Mentor điều chỉnh phiên bản hiện tại */
+  canRequestAdjustment?: boolean
+  /** Lý do Chat for Task chỉ đọc (null nếu vẫn hoạt động) */
+  readOnlyReason?: string | null
 }
 
 /**
@@ -126,21 +143,20 @@ export interface MentoringDealDetail {
 }
 
 /**
- * Payload gửi yêu cầu đề xuất Deal mới.
+ * Payload Mentor phát hành phiên bản Deal Ticket mới trong Chat for Task.
+ * Client chỉ gửi conversationId; Request / Student / Mentor do backend suy ra.
+ * Với REQUEST_ACCEPTANCE, các trường điều khoản bị bỏ qua (lấy từ Request).
  */
 export interface ProposeDealPayload {
-  mentorId: number
-  studentId?: number
-  requestId?: number | null
-  conversationId?: number | null
-  proposalSource?: ProposalSource
-  taskScope: string
-  agreedPrice: number
-  deadline: string
-  workingMode: MentoringWorkingMode
-  participationType: MentoringParticipationType
-  taskType: MentoringTaskType
-  expectedResult: string
+  conversationId: number
+  proposalSource: ProposalSource
+  taskScope?: string
+  agreedPrice?: number
+  deadline?: string
+  workingMode?: MentoringWorkingMode
+  participationType?: MentoringParticipationType
+  taskType?: MentoringTaskType
+  expectedResult?: string
   changeNote?: string
 }
 
@@ -162,9 +178,6 @@ export interface UpdateDealPayload {
  * Zod Schema kiểm tra hợp lệ form đề xuất Deal (khớp 100% Backend DTO validation messages).
  */
 export const proposeDealSchema = z.object({
-  mentorId: z.number({ message: 'ID của Cố vấn (Mentor) không được để trống.' }),
-  studentId: z.number().optional(),
-  conversationId: z.number().nullable().optional(),
   taskScope: z
     .string({ message: 'Phạm vi công việc (Task Scope) không được để trống.' })
     .trim()
@@ -184,15 +197,7 @@ export const proposeDealSchema = z.object({
   participationType: z.enum(['INDIVIDUAL', 'GROUP'], {
     message: 'Hình thức tham gia (Participation Type) không được để trống.',
   }),
-  taskType: z.enum([
-    'CONSULTATION',
-    'ASSIGNMENT_GUIDANCE',
-    'PROJECT_MENTORING',
-    'RESUME_REVIEW',
-    'MOCK_INTERVIEW',
-    'SKILL_TRAINING',
-    'OTHER',
-  ], {
+  taskType: z.enum(MENTORING_DEAL_TASK_TYPES, {
     message: 'Loại nhiệm vụ (Task Type) không được để trống.',
   }),
   expectedResult: z
@@ -231,15 +236,7 @@ export const updateDealSchema = z.object({
   participationType: z.enum(['INDIVIDUAL', 'GROUP'], {
     message: 'Hình thức tham gia (Participation Type) không được để trống.',
   }),
-  taskType: z.enum([
-    'CONSULTATION',
-    'ASSIGNMENT_GUIDANCE',
-    'PROJECT_MENTORING',
-    'RESUME_REVIEW',
-    'MOCK_INTERVIEW',
-    'SKILL_TRAINING',
-    'OTHER',
-  ], {
+  taskType: z.enum(MENTORING_DEAL_TASK_TYPES, {
     message: 'Loại nhiệm vụ (Task Type) không được để trống.',
   }),
   expectedResult: z

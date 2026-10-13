@@ -22,7 +22,7 @@ import java.util.List;
 @Table(name = "mentoring_deals")
 @Getter
 @Setter
-@ToString(exclude = {"student", "mentor", "conversation", "createdBy", "updatedBy", "snapshots"})
+@ToString(exclude = {"student", "mentor", "conversation", "request", "createdBy", "updatedBy", "snapshots"})
 @EqualsAndHashCode(of = "id")
 @Builder
 @NoArgsConstructor
@@ -49,9 +49,10 @@ public class MentoringDeal {
     @JoinColumn(name = "conversation_id")
     private Conversation conversation;
 
-    /** ID của Mentoring Request liên kết với thỏa thuận (UC104) */
-    @Column(name = "request_id")
-    private Long requestId;
+    /** Mentoring Request sở hữu Deal Ticket này (bắt buộc với Deal mới - UC104) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id")
+    private MentoringRequest request;
 
     /** Loại Ticket (Mặc định là DEAL) */
     @Column(name = "ticket_type", length = 20, nullable = false)

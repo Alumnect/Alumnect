@@ -36,9 +36,10 @@ export function MentorResponseCard({ response }: MentorResponseCardProps) {
   const isDeclined = response.responseStatus === 'DECLINED'
   const isWaiting = response.responseStatus === 'WAITING'
 
-  const handleStartDiscussion = () => {
-    if (response.mentorUserId) {
-      navigate(`/app/messages?userId=${response.mentorUserId}`)
+  // Mở đúng Chat for Task của Request + Mentor này (không mở DM chung mất ngữ cảnh Request)
+  const handleOpenChat = () => {
+    if (response.conversationId) {
+      navigate(`/app/mentoring/chats/${response.conversationId}`)
     }
   }
 
@@ -88,8 +89,13 @@ export function MentorResponseCard({ response }: MentorResponseCardProps) {
         </div>
 
         {/* Trạng thái phản hồi của Mentor */}
-        <div className="flex shrink-0 items-center sm:flex-col sm:items-end">
+        <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
           <MentorResponseStatusBadge status={response.responseStatus} />
+          {response.selected && (
+            <span className="rounded-full bg-mint-100 px-2.5 py-0.5 text-[11px] font-black text-mint-700 dark:bg-mint-950/50 dark:text-mint-300">
+              Mentor được chọn
+            </span>
+          )}
           {response.respondedAt ? (
             <span className="ml-3 text-[11px] text-plum-400 sm:ml-0 sm:mt-1.5 dark:text-[#8f9399]">
               Phản hồi: {formatTimestamp(response.respondedAt)}
@@ -120,8 +126,8 @@ export function MentorResponseCard({ response }: MentorResponseCardProps) {
         <div className="mt-3.5 flex items-start gap-2 rounded-2xl border border-emerald-200/60 bg-emerald-50/50 p-3 text-xs text-emerald-800 dark:border-emerald-800/30 dark:bg-emerald-950/20 dark:text-emerald-300">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
           <span>
-            Mentor đã đồng ý tiếp nhận trao đổi về yêu cầu này. Hai bên có thể bắt đầu nhắn tin để thảo luận nội dung
-            và thống nhất lịch hẹn. <strong>Lưu ý:</strong> Hệ thống chưa tự động tạo Deal hay trừ phí.
+            Mentor đã đồng ý trao đổi về yêu cầu này. Mở Chat for Task để thương lượng và xem Deal Ticket của Mentor.{' '}
+            <strong>Lưu ý:</strong> ACCEPT chưa phải Deal; Task chỉ được tạo sau khi bạn xác nhận Deal và thanh toán thành công.
           </span>
         </div>
       )}
@@ -151,14 +157,14 @@ export function MentorResponseCard({ response }: MentorResponseCardProps) {
           Xem hồ sơ Mentor
         </button>
 
-        {isAccepted && (
+        {isAccepted && response.conversationId && (
           <button
             type="button"
-            onClick={handleStartDiscussion}
+            onClick={handleOpenChat}
             className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-2 text-xs font-bold text-white shadow-xs transition-all hover:opacity-95 hover:shadow-md"
           >
             <MessageSquare className="h-3.5 w-3.5" />
-            Nhắn tin trao đổi
+            Mở Chat for Task
           </button>
         )}
       </div>

@@ -5,7 +5,9 @@ import com.alumnect.alumnect_backend.common.enums.MentoringRequestType;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequestDistribution;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -54,12 +56,54 @@ public interface MentoringRequestDistributionRepository extends JpaRepository<Me
     List<MentoringRequestDistribution> findByRequestIdIn(java.util.Collection<Long> requestIds);
 
     /**
+     * Lấy phản hồi/phân phối của Mentor hiện tại cho một trang Request.
+     * Request GENERAL chưa từng được Mentor phản hồi có thể không có bản ghi tương ứng.
+     */
+    @Query("SELECT d FROM MentoringRequestDistribution d " +
+            "WHERE d.request.id IN :requestIds AND d.mentorProfile.id = :mentorProfileId")
+    List<MentoringRequestDistribution> findByRequestIdsAndMentorProfileId(
+            @Param("requestIds") java.util.Collection<Long> requestIds,
+            @Param("mentorProfileId") Long mentorProfileId);
+
+    /**
      * Đếm số lượng Mentor đã nhận được phân phối cho một yêu cầu cụ thể.
      *
      * @param requestId ID yêu cầu
      * @return Số lượng Mentor đã phân phối
      */
     long countByRequestId(Long requestId);
+
+    /**
+     * Khóa bi quan bản ghi phản hồi (Request - Mentor) để Mentor ACCEPT/DECLINE idempotent khi bị gọi lặp.
+     *
+     * @param requestId ID của Request
+     * @param mentorProfileId ID hồ sơ Mentor
+     * @return Bản ghi phân phối đã khóa ghi
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM MentoringRequestDistribution d WHERE d.request.id = :requestId AND d.mentorProfile.id = :mentorProfileId")
+    Optional<MentoringRequestDistribution> findForUpdate(@Param("requestId") Long requestId,
+                                                         @Param("mentorProfileId") Long mentorProfileId);
+
+    /**
+     * Tìm phản hồi của một Mentor (theo users.id) đối với Request.
+     *
+     * @param requestId ID của Request
+     * @param mentorUserId ID tài khoản người dùng của Mentor
+     * @return Bản ghi phân phối nếu Request đã được gửi tới Mentor này
+     */
+    @Query("SELECT d FROM MentoringRequestDistribution d WHERE d.request.id = :requestId AND d.mentorProfile.user.id = :mentorUserId")
+    Optional<MentoringRequestDistribution> findByRequestIdAndMentorUserId(@Param("requestId") Long requestId,
+                                                                          @Param("mentorUserId") Long mentorUserId);
+
+    /**
+     * Lấy các phản hồi của Request theo trạng thái (dùng để chuyển các phản hồi đang chờ sang EXPIRED khi Request đã chọn Mentor).
+     *
+     * @param requestId ID của Request
+     * @param status Trạng thái phản hồi cần lọc
+     * @return Danh sách phản hồi
+     */
+    List<MentoringRequestDistribution> findByRequestIdAndStatus(Long requestId, MentoringDistributionStatus status);
 
     /**
      * Tìm kiếm và phân trang các yêu cầu Mentoring được phân phối hoặc gửi trực tiếp tới Mentor cụ thể (UC103).

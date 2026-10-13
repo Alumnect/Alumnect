@@ -35,6 +35,14 @@ public class MentorIncomingRequestResponse {
     @Schema(description = "ID của bản ghi phân phối tới Mentor", example = "501")
     private Long distributionId;
 
+    /** Request có cùng một trong các ngành Mentor đã đăng ký hỗ trợ hay không */
+    @Schema(description = "Request thuộc ngành Mentor đang hỗ trợ", example = "true")
+    private boolean sameIndustry;
+
+    /** Working mode và participation type có tương thích với lựa chọn của Mentor hay không */
+    @Schema(description = "Request phù hợp hình thức hướng dẫn Mentor đã chọn", example = "true")
+    private boolean sameFormat;
+
     /** Loại yêu cầu: GENERAL (chung UC100) hoặc DIRECT (trực tiếp UC101) */
     @Schema(description = "Loại yêu cầu Mentoring (GENERAL hoặc DIRECT)", example = "GENERAL")
     private MentoringRequestType requestType;

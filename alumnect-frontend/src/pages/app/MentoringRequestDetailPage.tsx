@@ -370,7 +370,7 @@ function MentoringRequestDetailContent() {
               <li className="flex items-start gap-2">
                 <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                 <span>
-                  Khi Mentor chấp nhận, bạn có thể bấm nút <strong>Nhắn tin trao đổi</strong> để thảo luận lịch hẹn chi tiết qua hệ thống tin nhắn.
+                  Khi Mentor chấp nhận, bấm <strong>Mở Chat for Task</strong> để thương lượng riêng với Mentor đó. Bạn xác nhận Deal Ticket của một Mentor để chốt Mentor, sau đó thanh toán để kích hoạt Task.
                 </span>
               </li>
             </ul>

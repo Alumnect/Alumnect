@@ -14,10 +14,10 @@ import type {
  */
 export const mentoringDealApi = {
   /**
-   * Khởi tạo đề xuất thỏa thuận Mentoring Deal mới (Student hoặc Mentor).
+   * POST /mentoring/deals — Mentor gửi Deal Ticket trong Chat for Task (Chấp nhận theo Request / Deal lại).
    */
   proposeDeal: async (payload: ProposeDealPayload): Promise<MentoringDeal> => {
-    const res = await http.post<any, ApiResponse<MentoringDeal>>(
+    const res = await http.post<unknown, ApiResponse<MentoringDeal>>(
       '/mentoring/deals',
       payload
     )
@@ -31,7 +31,7 @@ export const mentoringDealApi = {
     dealId: number,
     payload: UpdateDealPayload
   ): Promise<MentoringDeal> => {
-    const res = await http.put<any, ApiResponse<MentoringDeal>>(
+    const res = await http.put<unknown, ApiResponse<MentoringDeal>>(
       `/mentoring/deals/${dealId}`,
       payload
     )
@@ -39,11 +39,13 @@ export const mentoringDealApi = {
   },
 
   /**
-   * Xác nhận Snapshot hiện tại từ một bên tham gia.
+   * POST /mentoring/deals/{id}/confirm — xác nhận đúng phiên bản đang xem (khóa Deal & chọn Mentor khi hai bên cùng xác nhận).
    */
-  confirmDeal: async (dealId: number): Promise<MentoringDeal> => {
-    const res = await http.post<any, ApiResponse<MentoringDeal>>(
-      `/mentoring/deals/${dealId}/confirm`
+  confirmDeal: async (dealId: number, version: number): Promise<MentoringDeal> => {
+    // Gửi kèm phiên bản đang xem: backend từ chối nếu phiên bản đã bị thay thế
+    const res = await http.post<unknown, ApiResponse<MentoringDeal>>(
+      `/mentoring/deals/${dealId}/confirm`,
+      { version }
     )
     return res.data
   },
@@ -52,7 +54,7 @@ export const mentoringDealApi = {
    * Lấy thông tin chi tiết toàn diện của Deal kèm lịch sử các snapshot.
    */
   getDealDetail: async (dealId: number): Promise<MentoringDealDetail> => {
-    const res = await http.get<any, ApiResponse<MentoringDealDetail>>(
+    const res = await http.get<unknown, ApiResponse<MentoringDealDetail>>(
       `/mentoring/deals/${dealId}`
     )
     return res.data
@@ -66,9 +68,9 @@ export const mentoringDealApi = {
     page = 0,
     size = 10
   ): Promise<PageResponse<MentoringDeal>> => {
-    const params: Record<string, any> = { page, size }
+    const params: Record<string, string | number> = { page, size }
     if (status) params.status = status
-    const res = await http.get<any, ApiResponse<PageResponse<MentoringDeal>>>(
+    const res = await http.get<unknown, ApiResponse<PageResponse<MentoringDeal>>>(
       '/mentoring/deals',
       { params }
     )
@@ -76,12 +78,12 @@ export const mentoringDealApi = {
   },
 
   /**
-   * Lấy Deal mới nhất gắn với cuộc hội thoại Direct Messaging.
+   * Lấy luồng Deal của Chat for Task (null nếu Mentor chưa gửi Deal Ticket).
    */
   getDealByConversation: async (
     conversationId: number
   ): Promise<MentoringDealDetail | null> => {
-    const res = await http.get<any, ApiResponse<MentoringDealDetail | null>>(
+    const res = await http.get<unknown, ApiResponse<MentoringDealDetail | null>>(
       `/mentoring/deals/by-conversation/${conversationId}`
     )
     return res.data
@@ -91,7 +93,7 @@ export const mentoringDealApi = {
    * Hủy bỏ thỏa thuận Deal khi chưa bị khóa chốt.
    */
   cancelDeal: async (dealId: number, reason?: string): Promise<MentoringDeal> => {
-    const res = await http.post<any, ApiResponse<MentoringDeal>>(
+    const res = await http.post<unknown, ApiResponse<MentoringDeal>>(
       `/mentoring/deals/${dealId}/cancel`,
       null,
       { params: reason ? { reason } : undefined }
@@ -100,25 +102,25 @@ export const mentoringDealApi = {
   },
 
   /**
-   * Từ chối Deal Ticket (UC104).
+   * Học viên từ chối phiên bản Deal Ticket hiện tại (UC104).
    */
-  rejectDeal: async (dealId: number, reason?: string): Promise<MentoringDeal> => {
-    const res = await http.post<any, ApiResponse<MentoringDeal>>(
+  rejectDeal: async (dealId: number, reason?: string, version?: number): Promise<MentoringDeal> => {
+    const res = await http.post<unknown, ApiResponse<MentoringDeal>>(
       `/mentoring/deals/${dealId}/reject`,
       null,
-      { params: reason ? { reason } : undefined }
+      { params: { ...(reason ? { reason } : {}), ...(version ? { version } : {}) } }
     )
     return res.data
   },
 
   /**
-   * Yêu cầu điều chỉnh Deal Ticket (UC104).
+   * Học viên yêu cầu Mentor điều chỉnh phiên bản hiện tại (UC104).
    */
-  requestAdjustment: async (dealId: number, note?: string): Promise<MentoringDeal> => {
-    const res = await http.post<any, ApiResponse<MentoringDeal>>(
+  requestAdjustment: async (dealId: number, note?: string, version?: number): Promise<MentoringDeal> => {
+    const res = await http.post<unknown, ApiResponse<MentoringDeal>>(
       `/mentoring/deals/${dealId}/request-adjustment`,
       null,
-      { params: note ? { note } : undefined }
+      { params: { ...(note ? { note } : {}), ...(version ? { version } : {}) } }
     )
     return res.data
   },

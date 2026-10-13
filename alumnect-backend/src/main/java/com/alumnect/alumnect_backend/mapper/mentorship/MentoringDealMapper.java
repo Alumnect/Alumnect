@@ -31,6 +31,9 @@ public interface MentoringDealMapper {
     @Mapping(target = "mentorAvatar", source = "mentor.profile.avatarUrl")
     @Mapping(target = "mentorEmail", source = "mentor.email")
     @Mapping(target = "conversationId", source = "conversation.id")
+    @Mapping(target = "requestId", source = "request.id")
+    @Mapping(target = "requestTitle", source = "request.title")
+    @Mapping(target = "requestStatus", source = "request.status")
     @Mapping(target = "createdByUserId", source = "createdBy.id")
     @Mapping(target = "createdByName", source = "createdBy.profile.fullName")
     @Mapping(target = "updatedByUserId", source = "updatedBy.id")
@@ -38,6 +41,10 @@ public interface MentoringDealMapper {
     @Mapping(target = "canConfirm", ignore = true)
     @Mapping(target = "canEdit", ignore = true)
     @Mapping(target = "taskId", ignore = true)
+    @Mapping(target = "canPay", ignore = true)
+    @Mapping(target = "canReject", ignore = true)
+    @Mapping(target = "canRequestAdjustment", ignore = true)
+    @Mapping(target = "readOnlyReason", ignore = true)
     MentoringDealResponse toResponse(MentoringDeal deal);
 
     /**

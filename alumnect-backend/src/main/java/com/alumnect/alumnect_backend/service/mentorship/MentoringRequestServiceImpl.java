@@ -7,6 +7,8 @@ import com.alumnect.alumnect_backend.common.enums.MentorSubscriptionStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringDistributionStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringRequestType;
+import com.alumnect.alumnect_backend.common.enums.MentoringType;
+import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
 import com.alumnect.alumnect_backend.config.MentoringProperties;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorSubscriptionRepository;
@@ -14,6 +16,8 @@ import com.alumnect.alumnect_backend.dao.mentorship.MentorSupportedFieldReposito
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestAttachmentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
+import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.dao.mentorship.UserTermsAcceptanceRepository;
 import com.alumnect.alumnect_backend.dao.salary.IndustryRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
@@ -39,9 +43,11 @@ import com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingReque
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,8 +57,10 @@ import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringResponseSu
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -80,6 +88,8 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
     private final MentorSupportedFieldRepository mentorSupportedFieldRepository;
     private final MentorMatchingService mentorMatchingService;
     private final MentoringProperties mentoringProperties;
+    private final MentoringConversationService mentoringConversationService;
+    private final MentoringTaskRepository mentoringTaskRepository;
 
     /**
      * Tạo mới một yêu cầu Mentoring (Hỗ trợ cả UC100 General Request và UC101 Direct Request).
@@ -551,6 +561,11 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .updatedAt(mentoringRequest.getUpdatedAt())
                 .responseSummary(summary)
                 .mentorResponses(mentorResponses)
+                .selectedMentorUserId(mentoringRequest.getSelectedMentor() != null ? mentoringRequest.getSelectedMentor().getId() : null)
+                .confirmedDealId(mentoringRequest.getConfirmedDeal() != null ? mentoringRequest.getConfirmedDeal().getId() : null)
+                .taskId(mentoringRequest.getConfirmedDeal() != null
+                        ? mentoringTaskRepository.findByDealId(mentoringRequest.getConfirmedDeal().getId()).map(t -> t.getId()).orElse(null)
+                        : null)
                 .build();
     }
 
@@ -679,7 +694,13 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .toList();
 
         String businessStatus = mapDistributionStatusToBusiness(dist.getStatus());
-        boolean canMessage = dist.getStatus() == MentoringDistributionStatus.ACCEPTED;
+        MentoringRequest req = dist.getRequest();
+        Long conversationId = mentorUser != null
+                ? mentoringConversationService.findConversation(req.getId(), mentorUser.getId()).map(Conversation::getId).orElse(null)
+                : null;
+        boolean canMessage = dist.getStatus() == MentoringDistributionStatus.ACCEPTED && conversationId != null;
+        boolean selected = mentorUser != null && req.getSelectedMentor() != null
+                && req.getSelectedMentor().getId().equals(mentorUser.getId());
 
         return MentorResponseItemResponse.builder()
                 .mentorProfileId(profile.getId())
@@ -694,6 +715,8 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .distributedAt(dist.getDistributedAt())
                 .respondedAt(dist.getRespondedAt())
                 .canMessage(canMessage)
+                .conversationId(conversationId)
+                .selected(selected)
                 .build();
     }
 
@@ -790,9 +813,10 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
      */
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<MentorIncomingRequestResponse> getIncomingRequests(String mentorEmail, String status, String requestType, int page, int size) {
-        log.info("Lấy danh sách incoming requests cho mentor: {}, status={}, requestType={}, page={}, size={}",
-                mentorEmail, status, requestType, page, size);
+    public PageResponse<MentorIncomingRequestResponse> getIncomingRequests(
+            String mentorEmail, String status, String requestType, String scope, int page, int size) {
+        log.info("Lấy incoming requests cho mentor: {}, status={}, requestType={}, scope={}, page={}, size={}",
+                mentorEmail, status, requestType, scope, page, size);
 
         User mentorUser = userRepository.findByEmail(mentorEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin tài khoản người dùng: " + mentorEmail));
@@ -830,13 +854,30 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             }
         }
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<MentoringRequestDistribution> pageResult = mentoringRequestDistributionRepository.findIncomingRequests(
-                mentorProfile.getId(), distStatus, reqType, pageable);
+        String normalizedScope = normalizeIncomingScope(scope);
+        Set<Long> supportedIndustryIds = mentorSupportedFieldRepository.findByMentorProfileId(mentorProfile.getId()).stream()
+                .map(field -> field.getIndustry().getId())
+                .collect(Collectors.toSet());
+        boolean canBrowseOpenRequests = mentorProfile.getMentorStatus() == MentorStatus.ACTIVE
+                && hasActiveSubscription(mentorProfile.getId());
 
-        List<MentoringRequestDistribution> distributions = pageResult.getContent();
-        List<Long> studentUserIds = distributions.stream()
-                .map(d -> d.getRequest().getStudent().getId())
+        Specification<MentoringRequest> visibleRequests = buildIncomingRequestSpecification(
+                mentorProfile, mentorUser.getId(), distStatus, reqType, normalizedScope,
+                supportedIndustryIds, canBrowseOpenRequests);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MentoringRequest> pageResult = mentoringRequestRepository.findAll(visibleRequests, pageable);
+        List<MentoringRequest> requests = pageResult.getContent();
+        List<Long> requestIds = requests.stream().map(MentoringRequest::getId).toList();
+
+        Map<Long, MentoringRequestDistribution> distributionByRequestId = requestIds.isEmpty()
+                ? Collections.emptyMap()
+                : mentoringRequestDistributionRepository
+                        .findByRequestIdsAndMentorProfileId(requestIds, mentorProfile.getId()).stream()
+                        .collect(Collectors.toMap(d -> d.getRequest().getId(), d -> d));
+
+        List<Long> studentUserIds = requests.stream()
+                .map(r -> r.getStudent().getId())
                 .distinct()
                 .toList();
 
@@ -845,8 +886,13 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 : userProfileRepository.findAllById(studentUserIds).stream()
                         .collect(Collectors.toMap(UserProfile::getUserId, p -> p));
 
-        List<MentorIncomingRequestResponse> content = distributions.stream()
-                .map(d -> mapToIncomingResponse(d, userProfileMap.get(d.getRequest().getStudent().getId())))
+        List<MentorIncomingRequestResponse> content = requests.stream()
+                .map(r -> mapToIncomingResponse(
+                        r,
+                        distributionByRequestId.get(r.getId()),
+                        userProfileMap.get(r.getStudent().getId()),
+                        mentorProfile,
+                        supportedIndustryIds))
                 .toList();
 
         return PageResponse.<MentorIncomingRequestResponse>builder()
@@ -857,6 +903,110 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .totalPages(pageResult.getTotalPages())
                 .last(pageResult.isLast())
                 .build();
+    }
+
+    private String normalizeIncomingScope(String scope) {
+        if (scope == null || scope.isBlank()) {
+            return "ALL";
+        }
+        String normalized = scope.trim().toUpperCase();
+        return switch (normalized) {
+            case "SAME_INDUSTRY", "SAME_FORMAT" -> normalized;
+            default -> "ALL";
+        };
+    }
+
+    /**
+     * GENERAL request được truy vấn động thay vì bắt buộc phải có distribution từ lúc tạo.
+     * Nhờ đó Mentor hoàn tất đăng ký sau vẫn thấy các request OPEN cũ. Distribution chỉ còn
+     * là trạng thái phản hồi thực tế của Mentor và được tạo khi ACCEPT/DECLINE.
+     */
+    private Specification<MentoringRequest> buildIncomingRequestSpecification(
+            MentorProfile mentorProfile,
+            Long mentorUserId,
+            MentoringDistributionStatus distStatus,
+            MentoringRequestType requestType,
+            String scope,
+            Set<Long> supportedIndustryIds,
+            boolean canBrowseOpenRequests) {
+
+        return (root, query, cb) -> {
+            jakarta.persistence.criteria.Join<MentoringRequest, MentoringRequestDistribution> distribution =
+                    root.join("distributions", JoinType.LEFT);
+            distribution.on(cb.equal(distribution.get("mentorProfile").get("id"), mentorProfile.getId()));
+
+            var directRequest = cb.and(
+                    cb.equal(root.get("requestType"), MentoringRequestType.DIRECT),
+                    cb.equal(root.get("targetMentor").get("id"), mentorProfile.getId()));
+
+            var previouslyVisibleGeneral = cb.isNotNull(distribution.get("id"));
+            var openGeneral = canBrowseOpenRequests
+                    ? cb.equal(root.get("status"), MentoringRequestStatus.OPEN)
+                    : cb.disjunction();
+            var generalRequest = cb.and(
+                    cb.equal(root.get("requestType"), MentoringRequestType.GENERAL),
+                    cb.or(openGeneral, previouslyVisibleGeneral));
+
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.notEqual(root.get("student").get("id"), mentorUserId));
+            predicates.add(cb.or(directRequest, generalRequest));
+
+            if (requestType != null) {
+                predicates.add(cb.equal(root.get("requestType"), requestType));
+            }
+            if (distStatus == MentoringDistributionStatus.PENDING) {
+                predicates.add(cb.or(
+                        cb.isNull(distribution.get("id")),
+                        cb.equal(distribution.get("status"), MentoringDistributionStatus.PENDING)));
+            } else if (distStatus != null) {
+                predicates.add(cb.equal(distribution.get("status"), distStatus));
+            }
+
+            var sameIndustry = supportedIndustryIds.isEmpty()
+                    ? cb.disjunction()
+                    : root.get("industry").get("id").in(supportedIndustryIds);
+            var sameFormat = cb.and(
+                    workingModeCompatiblePredicate(cb, root, mentorProfile.getWorkingMode()),
+                    participationTypeCompatiblePredicate(cb, root, mentorProfile.getMentoringType()));
+
+            if ("SAME_INDUSTRY".equals(scope)) {
+                predicates.add(sameIndustry);
+            } else if ("SAME_FORMAT".equals(scope)) {
+                predicates.add(sameFormat);
+            }
+
+            if (!Long.class.equals(query.getResultType()) && !long.class.equals(query.getResultType())) {
+                query.orderBy(
+                        cb.asc(cb.<Integer>selectCase().when(sameIndustry, 0).otherwise(1)),
+                        cb.asc(cb.<Integer>selectCase().when(sameFormat, 0).otherwise(1)),
+                        cb.desc(root.get("createdAt")));
+            }
+            return cb.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+        };
+    }
+
+    private jakarta.persistence.criteria.Predicate workingModeCompatiblePredicate(
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            jakarta.persistence.criteria.Root<MentoringRequest> root,
+            MentoringWorkingMode mentorMode) {
+        if (mentorMode == null || mentorMode == MentoringWorkingMode.BOTH) {
+            return cb.conjunction();
+        }
+        return cb.or(
+                cb.equal(root.get("workingMode"), mentorMode),
+                cb.equal(root.get("workingMode"), MentoringWorkingMode.BOTH));
+    }
+
+    private jakarta.persistence.criteria.Predicate participationTypeCompatiblePredicate(
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            jakarta.persistence.criteria.Root<MentoringRequest> root,
+            MentoringType mentorType) {
+        if (mentorType == null || mentorType == MentoringType.BOTH) {
+            return cb.conjunction();
+        }
+        return cb.or(
+                cb.equal(root.get("participationType"), mentorType),
+                cb.equal(root.get("participationType"), MentoringType.BOTH));
     }
 
     /**
@@ -882,34 +1032,37 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         MentorProfile mentorProfile = mentorProfileRepository.findByUserId(mentorUser.getId())
                 .orElseThrow(() -> new ForbiddenException("Tài khoản của bạn chưa đăng ký hồ sơ Mentor"));
 
-        // Kiểm tra yêu cầu có tồn tại hay không
-        mentoringRequestRepository.findById(requestId)
+        MentoringRequest mentoringRequest = mentoringRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
 
-        // Kiểm tra phân phối: Mentor chỉ xem được yêu cầu thực sự được phân phối/gửi đến mình (Rule 1 & Rule 3)
-        MentoringRequestDistribution distribution = mentoringRequestDistributionRepository.findByRequestIdAndMentorProfileId(requestId, mentorProfile.getId())
-                .orElseThrow(() -> {
-                    log.warn("Truy cập trái phép: Mentor ID={} cố xem yêu cầu ID={} không được phân phối cho mình", mentorProfile.getId(), requestId);
-                    return new ForbiddenException("Bạn không có quyền truy cập hoặc yêu cầu này không được phân phối tới bạn");
-                });
+        MentoringRequestDistribution distribution = mentoringRequestDistributionRepository
+                .findByRequestIdAndMentorProfileId(requestId, mentorProfile.getId())
+                .orElse(null);
 
         boolean isMentorActive = mentorProfile.getMentorStatus() == MentorStatus.ACTIVE;
         boolean hasValidSub = hasActiveSubscription(mentorProfile.getId());
+        if (!canMentorViewRequest(mentoringRequest, distribution, mentorProfile, isMentorActive && hasValidSub)) {
+            log.warn("Truy cập trái phép: Mentor ID={} cố xem incoming request ID={}", mentorProfile.getId(), requestId);
+            throw new ForbiddenException("Bạn không có quyền truy cập yêu cầu này");
+        }
 
-        return mapToIncomingDetailResponse(distribution, mentorProfile, isMentorActive, hasValidSub);
+        return mapToIncomingDetailResponse(mentoringRequest, distribution, mentorProfile, isMentorActive, hasValidSub);
     }
 
     /**
      * Mentor chấp nhận (ACCEPT) yêu cầu Mentoring được phân phối hoặc gửi trực tiếp tới mình (UC103).
+     * ACCEPT chỉ mang nghĩa "đồng ý trao đổi / thương lượng Request": KHÔNG xác nhận Deal, KHÔNG chọn Mentor,
+     * KHÔNG tạo Task, KHÔNG bỏ qua thanh toán.
      * - Xác thực Mentor ACTIVE và Subscription còn hiệu lực.
-     * - Kiểm tra Request OPEN và bản ghi phân phối đang PENDING (WAITING).
-     * - Cập nhật trạng thái phân phối thành ACCEPTED và lưu thời điểm phản hồi (respondedAt).
-     * - Không tự động tạo Deal, không trừ phí, không đóng yêu cầu (Rule 4 & Rule 5).
+     * - Khóa Request và bản ghi phản hồi (FOR UPDATE) để thao tác idempotent khi bị gọi lặp / retry.
+     * - Request phải còn OPEN và chưa chốt Mentor khác; Mentor phải thuộc danh sách nhận Request.
+     * - WAITING → ACCEPTED, tạo hoặc lấy lại Chat for Task (Request + Student + Mentor, task_id = null)
+     *   và gửi tin nhắn hệ thống. Gọi lại khi đã ACCEPTED trả về đúng Chat for Task cũ, không tạo cuộc hội thoại thứ hai.
      *
      * @param mentorEmail Email của Mentor đang đăng nhập
      * @param requestId ID của yêu cầu Mentoring
      * @param requestDto DTO chứa lời nhắn phản hồi tùy chọn
-     * @return DTO chi tiết yêu cầu sau khi chấp nhận
+     * @return DTO chi tiết yêu cầu sau khi chấp nhận (kèm conversationId)
      */
     @Override
     @Transactional
@@ -938,22 +1091,28 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             throw new ForbiddenException("Gói hoạt động của Mentor đã hết hạn hoặc chưa được kích hoạt, bạn không thể phản hồi yêu cầu này");
         }
 
-        MentoringRequest mentoringRequest = mentoringRequestRepository.findById(requestId)
+        // Khóa Request trước (thứ tự khóa thống nhất với luồng xác nhận Deal) rồi khóa bản ghi phản hồi
+        MentoringRequest mentoringRequest = mentoringRequestRepository.findByIdForUpdate(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
 
-        MentoringRequestDistribution distribution = mentoringRequestDistributionRepository.findByRequestIdAndMentorProfileId(requestId, mentorProfile.getId())
-                .orElseThrow(() -> new ForbiddenException("Bạn không có quyền truy cập hoặc yêu cầu này không được phân phối tới bạn"));
+        MentoringRequestDistribution distribution = mentoringRequestDistributionRepository
+                .findForUpdate(requestId, mentorProfile.getId())
+                .orElseGet(() -> createPendingDistributionForOpenGeneralRequest(mentoringRequest, mentorProfile));
 
-        // Kiểm tra trạng thái yêu cầu: Chỉ cho phép phản hồi khi request OPEN (Rule 7)
-        if (mentoringRequest.getStatus() != MentoringRequestStatus.OPEN) {
-            log.warn("Yêu cầu ID={} không còn OPEN (hiện tại: {})", requestId, mentoringRequest.getStatus());
-            throw new BadRequestException("Yêu cầu cố vấn này đã đóng hoặc không còn tiếp nhận phản hồi mới");
-        }
-
-        // Kiểm tra trạng thái phân phối hiện tại: Không cho phản hồi trùng lặp (Rule 8 / Concurrency)
+        // Idempotent: ACCEPT lặp lại / retry trả về đúng Chat for Task đã có, không tạo thêm cuộc hội thoại hay tin nhắn
         if (distribution.getStatus() == MentoringDistributionStatus.ACCEPTED) {
-            throw new ConflictException("Bạn đã chấp nhận yêu cầu này trước đó, không thể phản hồi lại");
+            Conversation existing = mentoringConversationService.getOrCreateConversation(mentoringRequest, mentorUser);
+            log.info("Mentor ID={} gọi lại ACCEPT cho request ID={} — trả về Chat for Task id={}", mentorProfile.getId(), requestId, existing.getId());
+            return mapToIncomingDetailResponse(distribution, mentorProfile, true, true);
         }
+
+        // Kiểm tra trạng thái yêu cầu: chỉ cho phép phản hồi khi Request OPEN và chưa chọn Mentor nào (Rule 7)
+        if (mentoringRequest.getStatus() != MentoringRequestStatus.OPEN || mentoringRequest.getSelectedMentor() != null) {
+            log.warn("Yêu cầu ID={} không còn OPEN hoặc đã chọn Mentor (status={})", requestId, mentoringRequest.getStatus());
+            throw new BadRequestException("Yêu cầu cố vấn này đã đóng, đã chọn Mentor khác hoặc không còn tiếp nhận phản hồi mới");
+        }
+
+        // Kiểm tra trạng thái phân phối hiện tại (Rule 8)
         if (distribution.getStatus() == MentoringDistributionStatus.REJECTED) {
             throw new ConflictException("Bạn đã từ chối yêu cầu này trước đó, không thể phản hồi lại");
         }
@@ -964,16 +1123,21 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             throw new ConflictException("Yêu cầu này đã được xử lý phản hồi trước đó");
         }
 
-        // Cập nhật trạng thái phân phối thành ACCEPTED (Atomic update, Rule 9)
+        // WAITING → ACCEPTED (Rule 9)
         distribution.setStatus(MentoringDistributionStatus.ACCEPTED);
         distribution.setRespondedAt(Instant.now());
         if (requestDto != null && requestDto.getResponseNote() != null && !requestDto.getResponseNote().trim().isEmpty()) {
             distribution.setResponseNote(requestDto.getResponseNote().trim());
         }
-
         MentoringRequestDistribution savedDist = mentoringRequestDistributionRepository.save(distribution);
-        log.info("Mentor ID={} đã ACCEPT thành công yêu cầu ID={}. Lưu ý: KHÔNG tự động tạo Deal theo Rule 4", mentorProfile.getId(), requestId);
 
+        // Tạo / lấy lại Chat for Task của bộ (Request, Student, Mentor) và thông báo cho Học viên
+        Conversation conversation = mentoringConversationService.getOrCreateConversation(mentoringRequest, mentorUser);
+        mentoringConversationService.postSystemMessage(conversation, mentorUser,
+                mentoringConversationService.displayName(mentorUser) + " đã đồng ý trao đổi về Request của bạn.");
+
+        log.info("Mentor ID={} đã ACCEPT yêu cầu ID={} — Chat for Task id={} (chưa có Deal/Task)",
+                mentorProfile.getId(), requestId, conversation.getId());
         return mapToIncomingDetailResponse(savedDist, mentorProfile, true, true);
     }
 
@@ -1016,14 +1180,15 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             throw new ForbiddenException("Gói hoạt động của Mentor đã hết hạn hoặc chưa được kích hoạt, bạn không thể phản hồi yêu cầu này");
         }
 
-        MentoringRequest mentoringRequest = mentoringRequestRepository.findById(requestId)
+        MentoringRequest mentoringRequest = mentoringRequestRepository.findByIdForUpdate(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
 
-        MentoringRequestDistribution distribution = mentoringRequestDistributionRepository.findByRequestIdAndMentorProfileId(requestId, mentorProfile.getId())
-                .orElseThrow(() -> new ForbiddenException("Bạn không có quyền truy cập hoặc yêu cầu này không được phân phối tới bạn"));
+        MentoringRequestDistribution distribution = mentoringRequestDistributionRepository
+                .findForUpdate(requestId, mentorProfile.getId())
+                .orElseGet(() -> createPendingDistributionForOpenGeneralRequest(mentoringRequest, mentorProfile));
 
         // Kiểm tra trạng thái yêu cầu
-        if (mentoringRequest.getStatus() != MentoringRequestStatus.OPEN) {
+        if (mentoringRequest.getStatus() != MentoringRequestStatus.OPEN || mentoringRequest.getSelectedMentor() != null) {
             log.warn("Yêu cầu ID={} không còn OPEN (hiện tại: {})", requestId, mentoringRequest.getStatus());
             throw new BadRequestException("Yêu cầu cố vấn này đã đóng hoặc không còn tiếp nhận phản hồi mới");
         }
@@ -1055,6 +1220,46 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         return mapToIncomingDetailResponse(savedDist, mentorProfile, true, true);
     }
 
+    private boolean canMentorViewRequest(
+            MentoringRequest request,
+            MentoringRequestDistribution distribution,
+            MentorProfile mentorProfile,
+            boolean canBrowseOpenRequests) {
+        if (request.getStudent() != null && mentorProfile.getUser() != null
+                && request.getStudent().getId().equals(mentorProfile.getUser().getId())) {
+            return false;
+        }
+        if (request.getRequestType() == MentoringRequestType.DIRECT) {
+            return request.getTargetMentor() != null
+                    && request.getTargetMentor().getId().equals(mentorProfile.getId());
+        }
+        return distribution != null
+                || (canBrowseOpenRequests && request.getStatus() == MentoringRequestStatus.OPEN);
+    }
+
+    /**
+     * GENERAL request chưa từng được phân phối vẫn có thể được Mentor đủ điều kiện phản hồi.
+     * Request đã được khóa trước khi gọi hàm này nên việc tạo distribution là tuần tự và an toàn.
+     */
+    private MentoringRequestDistribution createPendingDistributionForOpenGeneralRequest(
+            MentoringRequest request, MentorProfile mentorProfile) {
+        if (request.getRequestType() != MentoringRequestType.GENERAL
+                || request.getStatus() != MentoringRequestStatus.OPEN
+                || request.getSelectedMentor() != null
+                || (request.getStudent() != null && mentorProfile.getUser() != null
+                    && request.getStudent().getId().equals(mentorProfile.getUser().getId()))) {
+            throw new ForbiddenException("Bạn không có quyền phản hồi yêu cầu này");
+        }
+
+        MentoringRequestDistribution distribution = MentoringRequestDistribution.builder()
+                .request(request)
+                .mentorProfile(mentorProfile)
+                .status(MentoringDistributionStatus.PENDING)
+                .distributedAt(Instant.now())
+                .build();
+        return mentoringRequestDistributionRepository.saveAndFlush(distribution);
+    }
+
     /**
      * Tiện ích kiểm tra tính hợp lệ của gói dịch vụ Mentor Subscription (ACTIVE hoặc PAID, còn hạn sử dụng).
      */
@@ -1070,8 +1275,12 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
     /**
      * Tiện ích chuyển đổi một bản ghi distribution sang MentorIncomingRequestResponse (dành cho danh sách).
      */
-    private MentorIncomingRequestResponse mapToIncomingResponse(MentoringRequestDistribution dist, UserProfile studentProfile) {
-        MentoringRequest req = dist.getRequest();
+    private MentorIncomingRequestResponse mapToIncomingResponse(
+            MentoringRequest req,
+            MentoringRequestDistribution dist,
+            UserProfile studentProfile,
+            MentorProfile mentorProfile,
+            Set<Long> supportedIndustryIds) {
         User studentUser = req.getStudent();
 
         String name = studentProfile != null ? studentProfile.getFullName() : (studentUser != null ? studentUser.getEmail() : "Sinh viên");
@@ -1082,7 +1291,9 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
 
         return MentorIncomingRequestResponse.builder()
                 .id(req.getId())
-                .distributionId(dist.getId())
+                .distributionId(dist != null ? dist.getId() : null)
+                .sameIndustry(supportedIndustryIds.contains(req.getIndustry().getId()))
+                .sameFormat(isSameFormat(mentorProfile, req))
                 .requestType(req.getRequestType())
                 .title(req.getTitle())
                 .description(req.getDescription())
@@ -1098,11 +1309,11 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .participationType(req.getParticipationType())
                 .taskType(req.getTaskType())
                 .expectedDeadline(req.getExpectedDeadline())
-                .distributionStatus(dist.getStatus())
-                .responseStatus(mapDistributionStatusToBusiness(dist.getStatus()))
-                .responseNote(dist.getResponseNote())
-                .distributedAt(dist.getDistributedAt())
-                .respondedAt(dist.getRespondedAt())
+                .distributionStatus(dist != null ? dist.getStatus() : MentoringDistributionStatus.PENDING)
+                .responseStatus(mapDistributionStatusToBusiness(dist != null ? dist.getStatus() : null))
+                .responseNote(dist != null ? dist.getResponseNote() : null)
+                .distributedAt(dist != null ? dist.getDistributedAt() : req.getCreatedAt())
+                .respondedAt(dist != null ? dist.getRespondedAt() : null)
                 .requestStatus(req.getStatus())
                 .attachmentCount(atts != null ? atts.size() : 0)
                 .createdAt(req.getCreatedAt())
@@ -1118,7 +1329,16 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             boolean isMentorActive,
             boolean hasActiveSub) {
 
-        MentoringRequest req = dist.getRequest();
+        return mapToIncomingDetailResponse(dist.getRequest(), dist, mentorProfile, isMentorActive, hasActiveSub);
+    }
+
+    private MentorIncomingRequestDetailResponse mapToIncomingDetailResponse(
+            MentoringRequest req,
+            MentoringRequestDistribution dist,
+            MentorProfile mentorProfile,
+            boolean isMentorActive,
+            boolean hasActiveSub) {
+
         User studentUser = req.getStudent();
         UserProfile studentProfile = studentUser != null
                 ? userProfileRepository.findById(studentUser.getId()).orElse(null)
@@ -1144,13 +1364,25 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         boolean canRespond = isMentorActive
                 && hasActiveSub
                 && req.getStatus() == MentoringRequestStatus.OPEN
-                && dist.getStatus() == MentoringDistributionStatus.PENDING;
+                && req.getSelectedMentor() == null
+                && (dist == null || dist.getStatus() == MentoringDistributionStatus.PENDING);
 
-        boolean canMessage = dist.getStatus() == MentoringDistributionStatus.ACCEPTED;
+        Long mentorUserId = mentorProfile.getUser() != null ? mentorProfile.getUser().getId() : null;
+        Long conversationId = mentorUserId != null
+                ? mentoringConversationService.findConversation(req.getId(), mentorUserId).map(Conversation::getId).orElse(null)
+                : null;
+        boolean canMessage = dist != null
+                && dist.getStatus() == MentoringDistributionStatus.ACCEPTED
+                && conversationId != null;
+        boolean isSelectedMentor = req.getSelectedMentor() != null && req.getSelectedMentor().getId().equals(mentorUserId);
+        boolean otherMentorSelected = req.getSelectedMentor() != null && !isSelectedMentor;
 
         return MentorIncomingRequestDetailResponse.builder()
                 .id(req.getId())
-                .distributionId(dist.getId())
+                .distributionId(dist != null ? dist.getId() : null)
+                .sameIndustry(mentorSupportedFieldRepository.existsByMentorProfileIdAndIndustryId(
+                        mentorProfile.getId(), req.getIndustry().getId()))
+                .sameFormat(isSameFormat(mentorProfile, req))
                 .requestType(req.getRequestType())
                 .title(req.getTitle())
                 .description(req.getDescription())
@@ -1169,15 +1401,37 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .expectedDeadline(req.getExpectedDeadline())
                 .requestStatus(req.getStatus())
                 .attachments(attResponses)
-                .distributionStatus(dist.getStatus())
-                .responseStatus(mapDistributionStatusToBusiness(dist.getStatus()))
-                .responseNote(dist.getResponseNote())
-                .distributedAt(dist.getDistributedAt())
-                .respondedAt(dist.getRespondedAt())
+                .distributionStatus(dist != null ? dist.getStatus() : MentoringDistributionStatus.PENDING)
+                .responseStatus(mapDistributionStatusToBusiness(dist != null ? dist.getStatus() : null))
+                .responseNote(dist != null ? dist.getResponseNote() : null)
+                .distributedAt(dist != null ? dist.getDistributedAt() : req.getCreatedAt())
+                .respondedAt(dist != null ? dist.getRespondedAt() : null)
                 .canRespond(canRespond)
                 .canMessage(canMessage)
+                .conversationId(conversationId)
+                .selectedMentor(isSelectedMentor)
+                .otherMentorSelected(otherMentorSelected)
                 .createdAt(req.getCreatedAt())
                 .updatedAt(req.getUpdatedAt())
                 .build();
+    }
+
+    private boolean isSameFormat(MentorProfile mentorProfile, MentoringRequest request) {
+        return isWorkingModeCompatible(mentorProfile.getWorkingMode(), request.getWorkingMode())
+                && isParticipationTypeCompatible(mentorProfile.getMentoringType(), request.getParticipationType());
+    }
+
+    private boolean isWorkingModeCompatible(MentoringWorkingMode mentorMode, MentoringWorkingMode requestMode) {
+        return mentorMode == null || requestMode == null
+                || mentorMode == MentoringWorkingMode.BOTH
+                || requestMode == MentoringWorkingMode.BOTH
+                || mentorMode == requestMode;
+    }
+
+    private boolean isParticipationTypeCompatible(MentoringType mentorType, MentoringType requestType) {
+        return mentorType == null || requestType == null
+                || mentorType == MentoringType.BOTH
+                || requestType == MentoringType.BOTH
+                || mentorType == requestType;
     }
 }

@@ -2,395 +2,244 @@ package com.alumnect.alumnect_backend.service.mentorship;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
-import com.alumnect.alumnect_backend.common.enums.MessageType;
+import com.alumnect.alumnect_backend.common.enums.MentoringDistributionStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringParticipationType;
+import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringTaskType;
+import com.alumnect.alumnect_backend.common.enums.MentoringType;
+import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
 import com.alumnect.alumnect_backend.common.enums.ProposalSource;
-import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealSnapshotRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
-import com.alumnect.alumnect_backend.dao.message.ConversationParticipantRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
-import com.alumnect.alumnect_backend.dao.message.MessageRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
-import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
-import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dto.request.mentorship.ProposeDealRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.UpdateDealRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealSnapshotResponse;
-import com.alumnect.alumnect_backend.dto.response.message.MessageResponse;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDealSnapshot;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequestDistribution;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
-import com.alumnect.alumnect_backend.entity.message.ConversationParticipant;
-import com.alumnect.alumnect_backend.entity.message.Message;
 import com.alumnect.alumnect_backend.entity.user.User;
-import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringDealMapper;
-import com.alumnect.alumnect_backend.mapper.message.MessageMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
- * Lớp cài đặt nghiệp vụ quản lý thỏa thuận và xác nhận Mentoring Deal (UC104).
+ * Cài đặt nghiệp vụ Mentoring Deal (UC104) như bước tiếp nối của Request trong Chat for Task.
+ * Thứ tự khóa thống nhất cho mọi thao tác thay đổi trạng thái: Request (FOR UPDATE) → Deal,
+ * giúp tuần tự hóa việc tạo phiên bản, xác nhận và chọn Mentor của cùng một Request.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class MentoringDealServiceImpl implements MentoringDealService {
 
+    /** Các trạng thái kết thúc của luồng Deal (không thể xác nhận / thanh toán) */
+    private static final Set<MentoringDealStatus> CLOSED_STATUSES =
+            EnumSet.of(MentoringDealStatus.CANCELLED, MentoringDealStatus.REJECTED, MentoringDealStatus.SUPERSEDED);
+
+    private static final String LEGACY_DEAL_MESSAGE =
+            "Deal này thuộc luồng cũ không gắn với Mentoring Request nên chỉ có thể xem.";
+
     private final MentoringDealRepository dealRepository;
     private final MentoringDealSnapshotRepository snapshotRepository;
-    private final UserRepository userRepository;
-    private final MentorProfileRepository mentorProfileRepository;
-    private final ConversationRepository conversationRepository;
-    private final ConversationParticipantRepository participantRepository;
-    private final MessageRepository messageRepository;
+    private final MentoringRequestRepository requestRepository;
+    private final MentoringRequestDistributionRepository distributionRepository;
     private final MentoringTaskRepository taskRepository;
+    private final ConversationRepository conversationRepository;
+    private final UserRepository userRepository;
+    private final MentoringConversationService conversationService;
     private final MentoringDealMapper dealMapper;
-    private final UserProfileRepository userProfileRepository;
-    private final MessageMapper messageMapper;
-    private final SimpMessagingTemplate messagingTemplate;
 
-    /**
-     * Khởi tạo đề xuất thỏa thuận Mentoring Deal mới giữa Student và Mentor.
-     *
-     * @param currentUserId ID người dùng thực hiện thao tác (Student hoặc Mentor)
-     * @param request DTO chứa các điều khoản đề xuất ban đầu
-     * @return DTO thông tin Deal vừa được khởi tạo
-     */
+    // =====================================================================
+    // PHÁT HÀNH PHIÊN BẢN DEAL TICKET (Mentor)
+    // =====================================================================
+
     @Override
     @Transactional
     public MentoringDealResponse proposeDeal(Long currentUserId, ProposeDealRequest request) {
-        log.info("Bắt đầu khởi tạo đề xuất Deal bởi userId={}: mentorId={}, studentId={}",
-                currentUserId, request.getMentorId(), request.getStudentId());
+        log.info("Mentor userId={} phát hành Deal Ticket trong conversationId={} (source={})",
+                currentUserId, request.getConversationId(), request.getProposalSource());
 
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin người dùng đang thao tác."));
-
-        Long targetStudentId = request.getStudentId();
-        Long targetMentorId = request.getMentorId();
-
-        // Xác định vai trò của người khởi tạo
-        boolean isCurrentMentor = currentUserId.equals(targetMentorId);
-        if (isCurrentMentor) {
-            if (targetStudentId == null) {
-                throw new BadRequestException("Cố vấn đề xuất thỏa thuận bắt buộc phải chỉ định ID của Học viên (Student).");
-            }
-        } else {
-            // Người khởi tạo là Học viên
-            targetStudentId = currentUserId;
+        User currentUser = loadUser(currentUserId);
+        Conversation conversation = conversationService.requireParticipantConversation(currentUserId, request.getConversationId());
+        if (!Objects.equals(conversation.getMentoringMentor().getId(), currentUserId)) {
+            throw new ForbiddenException("Chỉ Mentor của Chat for Task mới được gửi Deal Ticket. Học viên có thể Xác nhận, Yêu cầu điều chỉnh hoặc Từ chối.");
         }
 
-        if (Objects.equals(targetStudentId, targetMentorId)) {
-            throw new BadRequestException("Không thể tự đề xuất thỏa thuận cố vấn với chính bản thân mình.");
-        }
+        MentoringRequest mentoringRequest = lockRequest(conversation.getMentoringRequest().getId());
+        DealTerms terms = request.getProposalSource() == ProposalSource.REQUEST_ACCEPTANCE
+                ? termsFromRequest(mentoringRequest)
+                : termsFromBody(request.getTaskScope(), request.getAgreedPrice(), request.getDeadline(), request.getWorkingMode(),
+                        request.getParticipationType(), request.getTaskType(), request.getExpectedResult());
 
-        final Long finalStudentId = targetStudentId;
-        User student = userRepository.findById(finalStudentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin Học viên (ID: " + finalStudentId + ")."));
-
-        User mentor = userRepository.findById(targetMentorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin Cố vấn (ID: " + targetMentorId + ")."));
-
-        // Kiểm tra tư cách Cố vấn (Mentor)
-        boolean hasMentorProfile = mentorProfileRepository.findByUserId(targetMentorId).isPresent();
-        if (!hasMentorProfile) {
-            throw new BadRequestException("Người dùng (ID: " + targetMentorId + ") chưa đăng ký hồ sơ Cố vấn (Mentor) hợp lệ.");
-        }
-
-        // Kiểm tra và liên kết cuộc hội thoại Direct Messaging giữa hai bên
-        Conversation conversation = null;
-        if (request.getConversationId() != null) {
-            conversation = conversationRepository.findById(request.getConversationId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy cuộc trò chuyện chỉ định (ID: " + request.getConversationId() + ")."));
-
-            boolean isStudentInConv = participantRepository.existsByConversationIdAndUserId(conversation.getId(), targetStudentId);
-            boolean isMentorInConv = participantRepository.existsByConversationIdAndUserId(conversation.getId(), targetMentorId);
-            if (!isStudentInConv || !isMentorInConv) {
-                throw new BadRequestException("Cuộc trò chuyện chỉ định không thuộc về cả Học viên và Cố vấn này.");
-            }
-        } else {
-            // Tự động tìm cuộc trò chuyện 1-1 giữa Student và Mentor nếu có
-            conversation = conversationRepository.findDirectConversationBetween(targetStudentId, targetMentorId).orElse(null);
-        }
-
-        // Kiểm tra nếu Request đã hoàn tất thanh toán với Mentor khác
-        if (request.getRequestId() != null) {
-            List<MentoringDeal> existingDealsForRequest = dealRepository.findByRequestId(request.getRequestId());
-            boolean alreadyPaidWithOther = existingDealsForRequest.stream()
-                    .anyMatch(d -> Boolean.TRUE.equals(d.getIsPaid()) && !d.getMentor().getId().equals(targetMentorId));
-            if (alreadyPaidWithOther) {
-                throw new ConflictException("Yêu cầu này đã được thanh toán và giao cho Cố vấn khác rồi.");
-            }
-
-            // Quy tắc: 1 người 1 deal cho mỗi yêu cầu/task. Không tạo thêm deal mới nếu deal hiện tại chưa thanh toán
-            Optional<MentoringDeal> existingUnpaidDeal = existingDealsForRequest.stream()
-                    .filter(d -> d.getMentor().getId().equals(targetMentorId)
-                            && !Boolean.TRUE.equals(d.getIsPaid())
-                            && d.getStatus() != MentoringDealStatus.CANCELLED
-                            && d.getStatus() != MentoringDealStatus.REJECTED)
-                    .findFirst();
-            if (existingUnpaidDeal.isPresent()) {
-                throw new ConflictException(String.format(
-                        "Đã tồn tại Deal #%d cho yêu cầu này giữa bạn và đối tác đang chờ xử lý/thanh toán. Mỗi người chỉ có một Deal duy nhất cho yêu cầu này, vui lòng tiếp tục thương lượng hoặc điều chỉnh trên Deal hiện tại.",
-                        existingUnpaidDeal.get().getId()
-                ));
-            }
-        } else {
-            // Không qua Request (Deal trực tiếp trong cuộc hội thoại): kiểm tra giữa 2 người dùng
-            List<MentoringDealStatus> activeStatuses = List.of(
-                    MentoringDealStatus.PROPOSED,
-                    MentoringDealStatus.STUDENT_CONFIRMED,
-                    MentoringDealStatus.MENTOR_CONFIRMED,
-                    MentoringDealStatus.DEAL_CONFIRMED,
-                    MentoringDealStatus.SUPERSEDED
-            );
-            List<MentoringDeal> activeDeals = dealRepository.findActiveDealsBetweenUsers(targetStudentId, targetMentorId, activeStatuses);
-            boolean hasActiveUnpaid = activeDeals.stream()
-                    .anyMatch(d -> d.getRequestId() == null && !Boolean.TRUE.equals(d.getIsPaid()));
-            if (hasActiveUnpaid) {
-                throw new ConflictException("Đã tồn tại thỏa thuận Deal giữa hai bên chưa thanh toán. Vui lòng tiếp tục thương lượng hoặc điều chỉnh trên Deal hiện tại.");
-            }
-        }
-
-        // Xác định proposal source
-        ProposalSource proposalSource = request.getProposalSource() != null
-                ? request.getProposalSource()
-                : (isCurrentMentor ? ProposalSource.REQUEST_ACCEPTANCE : ProposalSource.RENEGOTIATION);
-
-        // Khởi tạo thực thể MentoringDeal
-        Instant now = Instant.now();
-        MentoringDeal deal = MentoringDeal.builder()
-                .student(student)
-                .mentor(mentor)
-                .conversation(conversation)
-                .requestId(request.getRequestId())
-                .ticketType("DEAL")
-                .proposalSource(proposalSource)
-                .taskScope(request.getTaskScope().trim())
-                .agreedPrice(request.getAgreedPrice())
-                .deadline(request.getDeadline())
-                .workingMode(request.getWorkingMode())
-                .participationType(request.getParticipationType())
-                .taskType(request.getTaskType())
-                .expectedResult(request.getExpectedResult().trim())
-                .version(1)
-                .isLocked(false)
-                .createdBy(currentUser)
-                .updatedBy(currentUser)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
-
-        // Ghi nhận xác nhận từ phía bên chủ động khởi tạo
-        if (isCurrentMentor) {
-            deal.setMentorConfirmed(true);
-            deal.setMentorConfirmedAt(now);
-            deal.setStudentConfirmed(false);
-            deal.setStatus(MentoringDealStatus.MENTOR_CONFIRMED);
-        } else {
-            deal.setStudentConfirmed(true);
-            deal.setStudentConfirmedAt(now);
-            deal.setMentorConfirmed(false);
-            deal.setStatus(MentoringDealStatus.STUDENT_CONFIRMED);
-        }
-
-        MentoringDeal savedDeal = dealRepository.save(deal);
-
-        // Tạo bản ghi Snapshot phiên bản 1 đầu tiên
-        String initialNote = request.getChangeNote() != null && !request.getChangeNote().isBlank()
-                ? request.getChangeNote().trim()
-                : (isCurrentMentor
-                ? (proposalSource == ProposalSource.REQUEST_ACCEPTANCE ? "Cố vấn chấp nhận Deal theo yêu cầu của Request" : "Cố vấn tạo Deal Ticket đề xuất")
-                : "Học viên khởi tạo đề xuất thỏa thuận");
-
-        MentoringDealSnapshot snapshot = MentoringDealSnapshot.builder()
-                .deal(savedDeal)
-                .ticketType("DEAL")
-                .proposalSource(proposalSource)
-                .version(1)
-                .taskScope(savedDeal.getTaskScope())
-                .agreedPrice(savedDeal.getAgreedPrice())
-                .deadline(savedDeal.getDeadline())
-                .workingMode(savedDeal.getWorkingMode())
-                .participationType(savedDeal.getParticipationType())
-                .taskType(savedDeal.getTaskType())
-                .expectedResult(savedDeal.getExpectedResult())
-                .modifiedBy(currentUser)
-                .changeNote(initialNote)
-                .createdAt(now)
-                .build();
-
-        snapshotRepository.save(snapshot);
-
-        // Gửi tin nhắn thông báo vào Direct Messaging nếu cuộc hội thoại tồn tại
-        String notifyMsg;
-        if (proposalSource == ProposalSource.REQUEST_ACCEPTANCE) {
-            notifyMsg = String.format("[HỆ THỐNG] Cố vấn %s đã CHẤP NHẬN Deal theo yêu cầu của Request (Deal Ticket #%d, Phiên bản 1). Vui lòng Học viên xem và Xác nhận & thanh toán.",
-                    getUserDisplayName(currentUser), savedDeal.getId());
-        } else {
-            notifyMsg = String.format("[HỆ THỐNG] %s đã gửi Deal Ticket đề xuất (Deal Ticket #%d, Phiên bản 1). Vui lòng xem và phản hồi.",
-                    getUserDisplayName(currentUser), savedDeal.getId());
-        }
-        sendDealSystemMessage(conversation, currentUser, notifyMsg);
-
-        log.info("Khởi tạo thành công Mentoring Deal id={} phiên bản 1 (source={})", savedDeal.getId(), proposalSource);
-        return enrichResponse(dealMapper.toResponse(savedDeal), savedDeal, currentUserId);
+        MentoringDeal deal = issueNewVersion(currentUser, conversation, mentoringRequest,
+                dealRepository.findByConversationId(conversation.getId()).orElse(null),
+                request.getProposalSource(), terms, request.getChangeNote());
+        return enrichResponse(dealMapper.toResponse(deal), deal, currentUserId);
     }
 
-    /**
-     * Điều chỉnh các điều khoản của Deal (Task Scope, Price, Deadline, Working Mode...).
-     * Tự động sinh ra phiên bản Snapshot mới và yêu cầu bên còn lại xác nhận lại.
-     *
-     * @param currentUserId ID người dùng thực hiện điều chỉnh
-     * @param dealId ID của thỏa thuận Deal cần điều chỉnh
-     * @param request DTO chứa các điều khoản mới cập nhật
-     * @return DTO thông tin Deal sau khi cập nhật
-     */
     @Override
     @Transactional
     public MentoringDealResponse updateDealTerms(Long currentUserId, Long dealId, UpdateDealRequest request) {
-        log.info("Cập nhật điều khoản Deal id={} bởi userId={}", dealId, currentUserId);
+        log.info("Mentor userId={} deal lại Deal id={}", currentUserId, dealId);
 
-        MentoringDeal deal = dealRepository.findDetailById(dealId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ")."));
-
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin người dùng đang thao tác."));
-
-        // Kiểm tra quyền hạn tham gia
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        boolean isMentor = deal.getMentor().getId().equals(currentUserId);
-        if (!isStudent && !isMentor) {
+        User currentUser = loadUser(currentUserId);
+        MentoringRequest mentoringRequest = lockRequest(resolveRequestId(dealId));
+        MentoringDeal deal = loadDeal(dealId);
+        if (!Objects.equals(deal.getMentor().getId(), currentUserId)) {
+            if (Objects.equals(deal.getStudent().getId(), currentUserId)) {
+                throw new ForbiddenException("Chỉ Mentor mới được tạo phiên bản Deal Ticket mới. Học viên vui lòng dùng \"Yêu cầu điều chỉnh\".");
+            }
             throw new ForbiddenException("Bạn không có quyền chỉnh sửa thỏa thuận này.");
         }
 
-        // Kiểm tra trạng thái thanh toán: nếu đã thanh toán thì task đã hình thành, không thể sửa điều khoản
-        if (Boolean.TRUE.equals(deal.getIsPaid())) {
-            throw new ConflictException("Thỏa thuận đã thanh toán thành công và chuyển sang Task, không thể chỉnh sửa điều khoản.");
-        }
-
-        if (deal.getStatus() == MentoringDealStatus.CANCELLED) {
-            throw new BadRequestException("Thỏa thuận đã bị hủy bỏ, không thể chỉnh sửa điều khoản.");
-        }
-
-        // Mở khóa nếu trước đó đang ở trạng thái khóa hoặc DEAL_CONFIRMED (do lỡ bấm nhầm hoặc deal lại)
-        deal.setIsLocked(false);
-        deal.setLockedAt(null);
-
-        // Tăng phiên bản thỏa thuận
-        int nextVersion = deal.getVersion() + 1;
-        Instant now = Instant.now();
-
-        deal.setTaskScope(request.getTaskScope().trim());
-        deal.setAgreedPrice(request.getAgreedPrice());
-        deal.setDeadline(request.getDeadline());
-        deal.setWorkingMode(request.getWorkingMode());
-        deal.setParticipationType(request.getParticipationType());
-        deal.setTaskType(request.getTaskType());
-        deal.setExpectedResult(request.getExpectedResult().trim());
-        deal.setVersion(nextVersion);
-        deal.setProposalSource(ProposalSource.RENEGOTIATION);
-        deal.setUpdatedBy(currentUser);
-        deal.setUpdatedAt(now);
-
-        // Quy tắc: Bên vừa chỉnh sửa được ghi nhận xác nhận phiên bản mới, bên còn lại bị reset xác nhận
-        if (isStudent) {
-            deal.setStudentConfirmed(true);
-            deal.setStudentConfirmedAt(now);
-            deal.setMentorConfirmed(false);
-            deal.setMentorConfirmedAt(null);
-            deal.setStatus(MentoringDealStatus.STUDENT_CONFIRMED);
-        } else {
-            deal.setMentorConfirmed(true);
-            deal.setMentorConfirmedAt(now);
-            deal.setStudentConfirmed(false);
-            deal.setStudentConfirmedAt(null);
-            deal.setStatus(MentoringDealStatus.MENTOR_CONFIRMED);
-        }
-
-        MentoringDeal updatedDeal = dealRepository.save(deal);
-
-        // Lưu Snapshot mới tương ứng với phiên bản
-        String changeNote = request.getChangeNote() != null && !request.getChangeNote().isBlank()
-                ? request.getChangeNote().trim()
-                : String.format("Điều chỉnh điều khoản sang Phiên bản %d", nextVersion);
-
-        MentoringDealSnapshot snapshot = MentoringDealSnapshot.builder()
-                .deal(updatedDeal)
-                .ticketType("DEAL")
-                .proposalSource(ProposalSource.RENEGOTIATION)
-                .version(nextVersion)
-                .taskScope(updatedDeal.getTaskScope())
-                .agreedPrice(updatedDeal.getAgreedPrice())
-                .deadline(updatedDeal.getDeadline())
-                .workingMode(updatedDeal.getWorkingMode())
-                .participationType(updatedDeal.getParticipationType())
-                .taskType(updatedDeal.getTaskType())
-                .expectedResult(updatedDeal.getExpectedResult())
-                .modifiedBy(currentUser)
-                .changeNote(changeNote)
-                .createdAt(now)
-                .build();
-
-        snapshotRepository.save(snapshot);
-
-        // Gửi thông báo trong tin nhắn trực tiếp
-        sendDealSystemMessage(updatedDeal.getConversation(), currentUser,
-                String.format("[HỆ THỐNG] %s đã điều chỉnh Deal Ticket (Deal Ticket #%d, Phiên bản %d). Vui lòng xem và phản hồi.",
-                        getUserDisplayName(currentUser), updatedDeal.getId(), nextVersion));
-
-        log.info("Cập nhật thành công Mentoring Deal id={} lên phiên bản {}", updatedDeal.getId(), nextVersion);
-        return enrichResponse(dealMapper.toResponse(updatedDeal), updatedDeal, currentUserId);
+        DealTerms terms = termsFromBody(request.getTaskScope(), request.getAgreedPrice(), request.getDeadline(), request.getWorkingMode(),
+                request.getParticipationType(), request.getTaskType(), request.getExpectedResult());
+        MentoringDeal saved = issueNewVersion(currentUser, deal.getConversation(), mentoringRequest, deal,
+                ProposalSource.RENEGOTIATION, terms, request.getChangeNote());
+        return enrichResponse(dealMapper.toResponse(saved), saved, currentUserId);
     }
 
     /**
-     * Xác nhận thỏa thuận Deal Snapshot hiện tại từ một bên (Student hoặc Mentor).
-     * Khi cả hai bên đều xác nhận, hệ thống tự động khóa Snapshot và chuyển Deal sang DEAL_CONFIRMED.
-     *
-     * @param currentUserId ID người dùng thực hiện xác nhận
-     * @param dealId ID của thỏa thuận Deal
-     * @return DTO thông tin Deal với trạng thái xác nhận mới nhất
+     * Phát hành phiên bản Deal Ticket mới (v1 nếu chưa có Deal, v+1 nếu đã có) và tự động ghi nhận Mentor xác nhận.
+     * Request phải đang được khóa ghi bởi tầng gọi.
      */
+    private MentoringDeal issueNewVersion(User mentor, Conversation conversation, MentoringRequest mentoringRequest,
+                                          MentoringDeal existingDeal, ProposalSource source, DealTerms terms, String changeNote) {
+        conversationService.assertWritable(conversation);
+        assertRequestOpenForNegotiation(mentoringRequest);
+        assertMentorAccepted(mentoringRequest, mentor.getId());
+
+        Instant now = Instant.now();
+        MentoringDeal deal;
+        if (existingDeal == null) {
+            deal = MentoringDeal.builder()
+                    .student(mentoringRequest.getStudent())
+                    .mentor(mentor)
+                    .conversation(conversation)
+                    .request(mentoringRequest)
+                    .ticketType("DEAL")
+                    .version(1)
+                    .createdBy(mentor)
+                    .createdAt(now)
+                    .build();
+        } else {
+            deal = existingDeal;
+            if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED
+                    || Boolean.TRUE.equals(deal.getIsPaid())) {
+                throw new ConflictException("Deal Ticket đã được hai bên xác nhận và khóa, không thể tạo phiên bản mới.");
+            }
+            deal.setVersion(deal.getVersion() + 1);
+        }
+
+        deal.setProposalSource(source);
+        deal.setTaskScope(terms.taskScope());
+        deal.setAgreedPrice(terms.agreedPrice());
+        deal.setDeadline(terms.deadline());
+        deal.setWorkingMode(terms.workingMode());
+        deal.setParticipationType(terms.participationType());
+        deal.setTaskType(terms.taskType());
+        deal.setExpectedResult(terms.expectedResult());
+        deal.setMentorConfirmed(true);
+        deal.setMentorConfirmedAt(now);
+        deal.setStudentConfirmed(false);
+        deal.setStudentConfirmedAt(null);
+        deal.setStatus(MentoringDealStatus.MENTOR_CONFIRMED);
+        deal.setIsLocked(false);
+        deal.setLockedAt(null);
+        deal.setUpdatedBy(mentor);
+        deal.setUpdatedAt(now);
+        MentoringDeal saved = dealRepository.save(deal);
+
+        String sourceLabel = source == ProposalSource.REQUEST_ACCEPTANCE ? "Chấp nhận Deal theo Request" : "Deal lại";
+        String note = changeNote != null && !changeNote.isBlank()
+                ? changeNote.trim()
+                : (source == ProposalSource.REQUEST_ACCEPTANCE
+                    ? "Mentor chấp nhận Deal theo điều kiện của Request"
+                    : String.format("Mentor tạo Deal Ticket phiên bản %d", saved.getVersion()));
+
+        snapshotRepository.save(MentoringDealSnapshot.builder()
+                .deal(saved)
+                .version(saved.getVersion())
+                .ticketType("DEAL")
+                .proposalSource(source)
+                .taskScope(saved.getTaskScope())
+                .agreedPrice(saved.getAgreedPrice())
+                .deadline(saved.getDeadline())
+                .workingMode(saved.getWorkingMode())
+                .participationType(saved.getParticipationType())
+                .taskType(saved.getTaskType())
+                .expectedResult(saved.getExpectedResult())
+                .modifiedBy(mentor)
+                .changeNote(note)
+                .createdAt(now)
+                .build());
+
+        conversationService.postSystemMessage(conversation, mentor, String.format(
+                "%s đã gửi Deal Ticket phiên bản %d (%s). Học viên vui lòng xem và phản hồi.",
+                conversationService.displayName(mentor), saved.getVersion(), sourceLabel));
+
+        log.info("Phát hành Deal id={} phiên bản {} (source={}) cho requestId={}",
+                saved.getId(), saved.getVersion(), source, mentoringRequest.getId());
+        return saved;
+    }
+
+    // =====================================================================
+    // XÁC NHẬN DEAL & CHỌN MENTOR CHO REQUEST
+    // =====================================================================
+
     @Override
     @Transactional
-    public MentoringDealResponse confirmDeal(Long currentUserId, Long dealId) {
-        log.info("Xác nhận Deal id={} bởi userId={}", dealId, currentUserId);
+    public MentoringDealResponse confirmDeal(Long currentUserId, Long dealId, Integer version) {
+        log.info("Xác nhận Deal id={} phiên bản {} bởi userId={}", dealId, version, currentUserId);
 
-        MentoringDeal deal = dealRepository.findDetailById(dealId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ")."));
+        if (version == null) {
+            throw new BadRequestException("Phiên bản Deal Ticket cần xác nhận (version) không được để trống.");
+        }
+        User currentUser = loadUser(currentUserId);
+        MentoringRequest mentoringRequest = lockRequest(resolveRequestId(dealId));
+        MentoringDeal deal = loadDeal(dealId);
 
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin người dùng đang thao tác."));
-
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        boolean isMentor = deal.getMentor().getId().equals(currentUserId);
+        boolean isStudent = Objects.equals(deal.getStudent().getId(), currentUserId);
+        boolean isMentor = Objects.equals(deal.getMentor().getId(), currentUserId);
         if (!isStudent && !isMentor) {
             throw new ForbiddenException("Bạn không phải là thành viên tham gia thỏa thuận này.");
         }
 
+        assertLatestVersion(deal, version);
         if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED) {
             throw new ConflictException("Thỏa thuận này đã được cả hai bên xác nhận và khóa trước đó.");
         }
-
-        if (deal.getStatus() == MentoringDealStatus.CANCELLED || deal.getStatus() == MentoringDealStatus.REJECTED || deal.getStatus() == MentoringDealStatus.SUPERSEDED) {
-            throw new BadRequestException("Deal Ticket này không còn hiệu lực để xác nhận (Trạng thái: " + deal.getStatus() + ").");
+        // Kiểm tra trạng thái Request trước trạng thái Deal để báo đúng nguyên nhân khi Request đã chọn Mentor khác
+        conversationService.assertWritable(deal.getConversation());
+        assertRequestOpenForNegotiation(mentoringRequest);
+        if (CLOSED_STATUSES.contains(deal.getStatus())) {
+            throw new BadRequestException(String.format(
+                    "Deal Ticket phiên bản %d không còn hiệu lực để xác nhận (Trạng thái: %s).", deal.getVersion(), deal.getStatus()));
         }
 
         Instant now = Instant.now();
@@ -407,97 +256,183 @@ public class MentoringDealServiceImpl implements MentoringDealService {
             deal.setMentorConfirmed(true);
             deal.setMentorConfirmedAt(now);
         }
-
         deal.setUpdatedBy(currentUser);
         deal.setUpdatedAt(now);
 
-        // Kiểm tra xem cả hai bên đã cùng xác nhận hay chưa
-        // Kiểm tra xem cả hai bên đã cùng xác nhận hay chưa
         if (Boolean.TRUE.equals(deal.getStudentConfirmed()) && Boolean.TRUE.equals(deal.getMentorConfirmed())) {
-            deal.setStatus(MentoringDealStatus.DEAL_CONFIRMED);
-            // Chưa thanh toán thì chưa khóa vĩnh viễn (khi thanh toán rồi mới khóa)
-            deal.setIsLocked(false);
-            deal.setLockedAt(now);
-
-            sendDealSystemMessage(deal.getConversation(), currentUser,
-                    String.format("[HỆ THỐNG] Deal Ticket #%d (Phiên bản %d) đã được CẢ HAI BÊN XÁC NHẬN! Sẵn sàng mở thanh toán (UC105).",
-                            deal.getId(), deal.getVersion()));
+            finalizeConfirmedDeal(mentoringRequest, deal, currentUser, now);
         } else {
-            if (isStudent) {
-                deal.setStatus(MentoringDealStatus.STUDENT_CONFIRMED);
-            } else {
-                deal.setStatus(MentoringDealStatus.MENTOR_CONFIRMED);
-            }
-
-            sendDealSystemMessage(deal.getConversation(), currentUser,
-                    String.format("[HỆ THỐNG] %s đã xác nhận Deal Ticket #%d (Phiên bản %d). Đang chờ bên còn lại xác nhận.",
-                            getUserDisplayName(currentUser), deal.getId(), deal.getVersion()));
+            deal.setStatus(isStudent ? MentoringDealStatus.STUDENT_CONFIRMED : MentoringDealStatus.MENTOR_CONFIRMED);
+            dealRepository.save(deal);
+            conversationService.postSystemMessage(deal.getConversation(), currentUser, String.format(
+                    "%s đã xác nhận Deal Ticket phiên bản %d. Đang chờ bên còn lại xác nhận.",
+                    conversationService.displayName(currentUser), deal.getVersion()));
         }
 
-        MentoringDeal savedDeal = dealRepository.save(deal);
-        log.info("Xác nhận Deal id={} thành công, trạng thái mới: {}", savedDeal.getId(), savedDeal.getStatus());
-        return enrichResponse(dealMapper.toResponse(savedDeal), savedDeal, currentUserId);
+        log.info("Xác nhận Deal id={} thành công, trạng thái mới: {}", deal.getId(), deal.getStatus());
+        return enrichResponse(dealMapper.toResponse(deal), deal, currentUserId);
     }
 
     /**
-     * Xem thông tin chi tiết của một Deal bao gồm điều khoản hiện tại,
-     * Snapshot mới nhất và toàn bộ lịch sử các phiên bản Snapshot.
-     *
-     * @param currentUserId ID người dùng đang truy cập
-     * @param dealId ID của thỏa thuận Deal
-     * @return DTO chi tiết toàn diện của Deal
+     * Hai bên cùng xác nhận một phiên bản: khóa Deal, chọn Mentor cho Request và đóng các luồng cạnh tranh (atomic).
+     * Unique index uq_mentoring_deals_request_confirmed là chốt chặn cuối cùng ở tầng cơ sở dữ liệu.
      */
+    private void finalizeConfirmedDeal(MentoringRequest mentoringRequest, MentoringDeal deal, User actor, Instant now) {
+        deal.setStatus(MentoringDealStatus.DEAL_CONFIRMED);
+        deal.setIsLocked(true);
+        deal.setLockedAt(now);
+        dealRepository.saveAndFlush(deal);
+
+        mentoringRequest.setSelectedMentor(deal.getMentor());
+        mentoringRequest.setConfirmedDeal(deal);
+        mentoringRequest.setStatus(MentoringRequestStatus.MATCHED);
+        requestRepository.saveAndFlush(mentoringRequest);
+
+        // 1. Đóng các luồng Deal của Mentor khác cùng Request (giữ nguyên lịch sử phiên bản)
+        for (MentoringDeal other : dealRepository.findByRequestIdAndIdNot(mentoringRequest.getId(), deal.getId())) {
+            if (other.getStatus() != MentoringDealStatus.CANCELLED) {
+                other.setStatus(MentoringDealStatus.CANCELLED);
+                other.setUpdatedBy(actor);
+                other.setUpdatedAt(now);
+                dealRepository.save(other);
+                log.info("Đóng Deal id={} của Mentor khác do Request id={} đã chốt Deal id={}",
+                        other.getId(), mentoringRequest.getId(), deal.getId());
+            }
+        }
+
+        // 2. Các phản hồi còn đang chờ không thể ACCEPT nữa
+        for (MentoringRequestDistribution pending : distributionRepository
+                .findByRequestIdAndStatus(mentoringRequest.getId(), MentoringDistributionStatus.PENDING)) {
+            pending.setStatus(MentoringDistributionStatus.EXPIRED);
+            distributionRepository.save(pending);
+        }
+
+        // 3. Thông báo vào các Chat for Task khác (chuyển chỉ đọc theo trạng thái Request, không xóa lịch sử)
+        for (Conversation other : conversationRepository.findByMentoringRequestIdOrderByCreatedAtAsc(mentoringRequest.getId())) {
+            if (!Objects.equals(other.getId(), deal.getConversation().getId())) {
+                conversationService.postSystemMessage(other, actor, MentoringConversationServiceImpl.READ_ONLY_OTHER_MENTOR);
+            }
+        }
+
+        conversationService.postSystemMessage(deal.getConversation(), actor, String.format(
+                "Hai bên đã xác nhận Deal Ticket phiên bản %d. Deal đã được khóa, Học viên vui lòng thanh toán để kích hoạt Task.",
+                deal.getVersion()));
+        log.info("Request id={} đã chốt Mentor userId={} với Deal id={} phiên bản {}",
+                mentoringRequest.getId(), deal.getMentor().getId(), deal.getId(), deal.getVersion());
+    }
+
+    // =====================================================================
+    // HÀNH ĐỘNG CỦA HỌC VIÊN: TỪ CHỐI / YÊU CẦU ĐIỀU CHỈNH; HỦY
+    // =====================================================================
+
+    @Override
+    @Transactional
+    public MentoringDealResponse rejectDeal(Long currentUserId, Long dealId, String reason, Integer version) {
+        log.info("Từ chối Deal id={} bởi userId={}", dealId, currentUserId);
+
+        User currentUser = loadUser(currentUserId);
+        MentoringRequest mentoringRequest = lockRequest(resolveRequestId(dealId));
+        MentoringDeal deal = loadDeal(dealId);
+        assertStudentActionOnPendingTicket(deal, currentUserId, version, mentoringRequest, "từ chối");
+
+        deal.setStatus(MentoringDealStatus.REJECTED);
+        deal.setUpdatedBy(currentUser);
+        deal.setUpdatedAt(Instant.now());
+        dealRepository.save(deal);
+
+        conversationService.postSystemMessage(deal.getConversation(), currentUser, String.format(
+                "%s đã từ chối Deal Ticket phiên bản %d%s.",
+                conversationService.displayName(currentUser), deal.getVersion(),
+                reason != null && !reason.isBlank() ? " vì lý do: " + reason.trim() : ""));
+        return enrichResponse(dealMapper.toResponse(deal), deal, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public MentoringDealResponse requestAdjustment(Long currentUserId, Long dealId, String note, Integer version) {
+        log.info("Yêu cầu điều chỉnh Deal id={} bởi userId={}", dealId, currentUserId);
+
+        User currentUser = loadUser(currentUserId);
+        MentoringRequest mentoringRequest = lockRequest(resolveRequestId(dealId));
+        MentoringDeal deal = loadDeal(dealId);
+        assertStudentActionOnPendingTicket(deal, currentUserId, version, mentoringRequest, "yêu cầu điều chỉnh");
+
+        deal.setStatus(MentoringDealStatus.SUPERSEDED);
+        deal.setStudentConfirmed(false);
+        deal.setStudentConfirmedAt(null);
+        deal.setUpdatedBy(currentUser);
+        deal.setUpdatedAt(Instant.now());
+        dealRepository.save(deal);
+
+        conversationService.postSystemMessage(deal.getConversation(), currentUser, String.format(
+                "%s đã yêu cầu điều chỉnh Deal Ticket phiên bản %d: \"%s\". Mentor vui lòng gửi phiên bản Deal Ticket mới.",
+                conversationService.displayName(currentUser), deal.getVersion(),
+                note != null && !note.isBlank() ? note.trim() : "Cần thỏa thuận lại các điều khoản"));
+        return enrichResponse(dealMapper.toResponse(deal), deal, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public MentoringDealResponse cancelDeal(Long currentUserId, Long dealId, String reason) {
+        log.info("Hủy bỏ Deal id={} bởi userId={}", dealId, currentUserId);
+
+        User currentUser = loadUser(currentUserId);
+        lockRequest(resolveRequestId(dealId));
+        MentoringDeal deal = loadDeal(dealId);
+
+        boolean isStudent = Objects.equals(deal.getStudent().getId(), currentUserId);
+        boolean isMentor = Objects.equals(deal.getMentor().getId(), currentUserId);
+        if (!isStudent && !isMentor) {
+            throw new ForbiddenException("Bạn không có quyền hủy bỏ thỏa thuận này.");
+        }
+        if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED) {
+            throw new ConflictException("Không thể hủy thỏa thuận đã được cả hai bên xác nhận và khóa snapshot.");
+        }
+        if (deal.getStatus() == MentoringDealStatus.CANCELLED) {
+            throw new BadRequestException("Thỏa thuận này đã bị hủy bỏ trước đó.");
+        }
+        conversationService.assertWritable(deal.getConversation());
+
+        deal.setStatus(MentoringDealStatus.CANCELLED);
+        deal.setUpdatedBy(currentUser);
+        deal.setUpdatedAt(Instant.now());
+        dealRepository.save(deal);
+
+        conversationService.postSystemMessage(deal.getConversation(), currentUser, String.format(
+                "%s đã hủy luồng Deal hiện tại%s. Mentor có thể gửi Deal Ticket mới nếu hai bên tiếp tục thương lượng.",
+                conversationService.displayName(currentUser),
+                reason != null && !reason.isBlank() ? " vì lý do: " + reason.trim() : ""));
+        return enrichResponse(dealMapper.toResponse(deal), deal, currentUserId);
+    }
+
+    // =====================================================================
+    // TRUY VẤN
+    // =====================================================================
+
     @Override
     @Transactional(readOnly = true)
     public MentoringDealDetailResponse getDealDetail(Long currentUserId, Long dealId) {
-        log.info("Lấy chi tiết Deal id={} bởi userId={}", dealId, currentUserId);
-
         MentoringDeal deal = dealRepository.findDetailById(dealId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ")."));
 
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        boolean isMentor = deal.getMentor().getId().equals(currentUserId);
+        boolean isStudent = Objects.equals(deal.getStudent().getId(), currentUserId);
+        boolean isMentor = Objects.equals(deal.getMentor().getId(), currentUserId);
         User currentUser = userRepository.findById(currentUserId).orElse(null);
         boolean isAdmin = currentUser != null && currentUser.getRole() != null && "ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
-
         if (!isStudent && !isMentor && !isAdmin) {
+            log.warn("Truy cập trái phép Deal id={} bởi userId={}", dealId, currentUserId);
             throw new ForbiddenException("Bạn không có quyền xem thỏa thuận Deal này.");
         }
-
-        List<MentoringDealSnapshot> snapshots = snapshotRepository.findByDealIdOrderByVersionAsc(dealId);
-        List<MentoringDealSnapshotResponse> snapshotResponses = dealMapper.toSnapshotResponseList(snapshots);
-
-        MentoringDealSnapshotResponse latestSnapshot = snapshotResponses.isEmpty() ? null
-                : snapshotResponses.get(snapshotResponses.size() - 1);
-
-        MentoringDealResponse dealResponse = enrichResponse(dealMapper.toResponse(deal), deal, currentUserId);
-
-        return MentoringDealDetailResponse.builder()
-                .deal(dealResponse)
-                .latestSnapshot(latestSnapshot)
-                .snapshots(snapshotResponses)
-                .build();
+        return buildDetail(deal, currentUserId);
     }
 
-    /**
-     * Lấy danh sách các thỏa thuận Deal của người dùng hiện tại (với tư cách Student hoặc Mentor).
-     *
-     * @param currentUserId ID người dùng đang truy cập
-     * @param status Bộ lọc trạng thái tùy chọn
-     * @param pageable Tham số phân trang
-     * @return Danh sách phân trang các Deal
-     */
     @Override
     @Transactional(readOnly = true)
     public PageResponse<MentoringDealResponse> getMyDeals(Long currentUserId, MentoringDealStatus status, Pageable pageable) {
-        log.info("Lấy danh sách Deals của userId={}, status={}", currentUserId, status);
-
         Page<MentoringDeal> page = dealRepository.findByParticipantAndStatus(currentUserId, status, pageable);
-
         List<MentoringDealResponse> items = page.getContent().stream()
                 .map(d -> enrichResponse(dealMapper.toResponse(d), d, currentUserId))
                 .toList();
-
         return PageResponse.<MentoringDealResponse>builder()
                 .content(items)
                 .pageNumber(page.getNumber())
@@ -508,274 +443,202 @@ public class MentoringDealServiceImpl implements MentoringDealService {
                 .build();
     }
 
-    /**
-     * Lấy thông tin Deal mới nhất gắn với một cuộc trò chuyện Direct Messaging (1-1).
-     *
-     * @param currentUserId ID người dùng đang truy cập
-     * @param conversationId ID cuộc trò chuyện
-     * @return DTO chi tiết Deal hoặc null nếu chưa có thỏa thuận nào
-     */
     @Override
     @Transactional(readOnly = true)
     public MentoringDealDetailResponse getDealByConversation(Long currentUserId, Long conversationId) {
-        log.info("Lấy Deal theo conversationId={} bởi userId={}", conversationId, currentUserId);
-
-        Optional<MentoringDeal> dealOpt = dealRepository.findFirstByConversationIdOrderByUpdatedAtDesc(conversationId);
-        if (dealOpt.isEmpty()) {
-            return null;
-        }
-
-        MentoringDeal deal = dealOpt.get();
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        boolean isMentor = deal.getMentor().getId().equals(currentUserId);
-        if (!isStudent && !isMentor) {
-            throw new ForbiddenException("Bạn không phải thành viên tham gia thỏa thuận của đoạn chat này.");
-        }
-
-        return getDealDetail(currentUserId, deal.getId());
+        // Xác thực thành viên trước để không lộ thông tin Deal của Chat for Task khác
+        conversationService.requireParticipantConversation(currentUserId, conversationId);
+        return dealRepository.findByConversationId(conversationId)
+                .map(deal -> buildDetail(deal, currentUserId))
+                .orElse(null);
     }
 
-    /**
-     * Hủy bỏ một thỏa thuận Deal trước khi bị khóa chốt.
-     *
-     * @param currentUserId ID người dùng thực hiện hủy
-     * @param dealId ID của thỏa thuận Deal
-     * @param reason Lý do hủy bỏ tùy chọn
-     * @return DTO thông tin Deal đã chuyển sang trạng thái CANCELLED
-     */
-    @Override
-    @Transactional
-    public MentoringDealResponse cancelDeal(Long currentUserId, Long dealId, String reason) {
-        log.info("Hủy bỏ Deal id={} bởi userId={}", dealId, currentUserId);
-
-        MentoringDeal deal = dealRepository.findDetailById(dealId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ")."));
-
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin người dùng đang thao tác."));
-
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        boolean isMentor = deal.getMentor().getId().equals(currentUserId);
-        if (!isStudent && !isMentor) {
-            throw new ForbiddenException("Bạn không có quyền hủy bỏ thỏa thuận này.");
-        }
-
-        if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED) {
-            throw new ConflictException("Không thể hủy thỏa thuận đã được cả hai bên xác nhận và khóa snapshot.");
-        }
-
-        if (deal.getStatus() == MentoringDealStatus.CANCELLED) {
-            throw new BadRequestException("Thỏa thuận này đã bị hủy bỏ trước đó.");
-        }
-
-        Instant now = Instant.now();
-        deal.setStatus(MentoringDealStatus.CANCELLED);
-        deal.setUpdatedBy(currentUser);
-        deal.setUpdatedAt(now);
-
-        MentoringDeal savedDeal = dealRepository.save(deal);
-
-        String cancelMessage = String.format("[HỆ THỐNG] %s đã hủy bỏ Thỏa thuận cố vấn (Deal #%d)%s.",
-                getUserDisplayName(currentUser),
-                deal.getId(),
-                reason != null && !reason.isBlank() ? " vì lý do: " + reason.trim() : "");
-
-        sendDealSystemMessage(deal.getConversation(), currentUser, cancelMessage);
-
-        log.info("Hủy bỏ thành công Mentoring Deal id={}", savedDeal.getId());
-        return enrichResponse(dealMapper.toResponse(savedDeal), savedDeal, currentUserId);
+    private MentoringDealDetailResponse buildDetail(MentoringDeal deal, Long currentUserId) {
+        List<MentoringDealSnapshotResponse> snapshots = dealMapper.toSnapshotResponseList(
+                snapshotRepository.findByDealIdOrderByVersionAsc(deal.getId()));
+        return MentoringDealDetailResponse.builder()
+                .deal(enrichResponse(dealMapper.toResponse(deal), deal, currentUserId))
+                .latestSnapshot(snapshots.isEmpty() ? null : snapshots.get(snapshots.size() - 1))
+                .snapshots(snapshots)
+                .build();
     }
 
-    /**
-     * Từ chối đề xuất thỏa thuận Deal Ticket (UC104).
-     *
-     * @param currentUserId ID người dùng thực hiện từ chối
-     * @param dealId ID của thỏa thuận Deal
-     * @param reason Lý do từ chối tùy chọn
-     * @return DTO thông tin Deal chuyển sang trạng thái REJECTED
-     */
-    @Override
-    @Transactional
-    public MentoringDealResponse rejectDeal(Long currentUserId, Long dealId, String reason) {
-        log.info("Từ chối Deal id={} bởi userId={}", dealId, currentUserId);
-
-        MentoringDeal deal = dealRepository.findDetailById(dealId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ")."));
-
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin người dùng đang thao tác."));
-
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        boolean isMentor = deal.getMentor().getId().equals(currentUserId);
-        if (!isStudent && !isMentor) {
-            throw new ForbiddenException("Bạn không có quyền từ chối thỏa thuận này.");
-        }
-
-        if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED) {
-            throw new ConflictException("Không thể từ chối thỏa thuận đã được cả hai bên xác nhận và khóa snapshot.");
-        }
-
-        if (deal.getStatus() == MentoringDealStatus.CANCELLED || deal.getStatus() == MentoringDealStatus.REJECTED) {
-            throw new BadRequestException("Thỏa thuận này đã kết thúc trước đó.");
-        }
-
-        Instant now = Instant.now();
-        deal.setStatus(MentoringDealStatus.REJECTED);
-        deal.setUpdatedBy(currentUser);
-        deal.setUpdatedAt(now);
-
-        MentoringDeal savedDeal = dealRepository.save(deal);
-
-        String rejectMessage = String.format("[HỆ THỐNG] %s đã từ chối Deal Ticket #%d%s.",
-                getUserDisplayName(currentUser),
-                deal.getId(),
-                reason != null && !reason.isBlank() ? " vì lý do: " + reason.trim() : "");
-
-        sendDealSystemMessage(deal.getConversation(), currentUser, rejectMessage);
-
-        log.info("Từ chối thành công Mentoring Deal id={}", savedDeal.getId());
-        return enrichResponse(dealMapper.toResponse(savedDeal), savedDeal, currentUserId);
-    }
+    // =====================================================================
+    // TIỆN ÍCH NGHIỆP VỤ
+    // =====================================================================
 
     /**
-     * Yêu cầu điều chỉnh thỏa thuận Deal (UC104).
-     * Phiên bản hiện tại sẽ chuyển sang trạng thái SUPERSEDED để Mentor gửi lại phiên bản mới.
-     *
-     * @param currentUserId ID người dùng thực hiện yêu cầu (Student)
-     * @param dealId ID của thỏa thuận Deal
-     * @param note Ghi chú nội dung yêu cầu điều chỉnh
-     * @return DTO thông tin Deal chuyển sang trạng thái SUPERSEDED
-     */
-    @Override
-    @Transactional
-    public MentoringDealResponse requestAdjustment(Long currentUserId, Long dealId, String note) {
-        log.info("Yêu cầu điều chỉnh Deal id={} bởi userId={}", dealId, currentUserId);
-
-        MentoringDeal deal = dealRepository.findDetailById(dealId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ")."));
-
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin người dùng đang thao tác."));
-
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        if (!isStudent) {
-            throw new ForbiddenException("Chỉ Học viên (Student) mới có quyền gửi yêu cầu điều chỉnh Deal Ticket.");
-        }
-
-        if (Boolean.TRUE.equals(deal.getIsPaid())) {
-            throw new ConflictException("Không thể yêu cầu điều chỉnh thỏa thuận đã thanh toán thành công.");
-        }
-
-        Instant now = Instant.now();
-        deal.setIsLocked(false);
-        deal.setLockedAt(null);
-        deal.setStatus(MentoringDealStatus.SUPERSEDED);
-        deal.setStudentConfirmed(false);
-        deal.setStudentConfirmedAt(null);
-        deal.setMentorConfirmed(false);
-        deal.setMentorConfirmedAt(null);
-        deal.setUpdatedBy(currentUser);
-        deal.setUpdatedAt(now);
-
-        MentoringDeal savedDeal = dealRepository.save(deal);
-
-        String adjustMessage = String.format("[HỆ THỐNG] Học viên %s đã yêu cầu điều chỉnh Deal Ticket #%d: \"%s\". Vui lòng Mentor gửi lại Deal Ticket mới phù hợp.",
-                getUserDisplayName(currentUser),
-                deal.getId(),
-                note != null && !note.isBlank() ? note.trim() : "Cần thỏa thuận lại các điều khoản");
-
-        sendDealSystemMessage(deal.getConversation(), currentUser, adjustMessage);
-
-        log.info("Yêu cầu điều chỉnh thành công Mentoring Deal id={}", savedDeal.getId());
-        return enrichResponse(dealMapper.toResponse(savedDeal), savedDeal, currentUserId);
-    }
-
-    /**
-     * Bổ sung các cờ quyền hạn canConfirm và canEdit dựa trên người dùng hiện tại và trạng thái của Deal.
+     * Bổ sung các cờ quyền thao tác của người dùng hiện tại dựa trên trạng thái Deal, Request và Chat for Task.
+     * Frontend chỉ dùng các cờ này để hiển thị; backend vẫn kiểm tra lại toàn bộ ở từng thao tác.
      */
     private MentoringDealResponse enrichResponse(MentoringDealResponse response, MentoringDeal deal, Long currentUserId) {
-        if (response == null || deal == null) return response;
-
-        boolean isStudent = deal.getStudent().getId().equals(currentUserId);
-        boolean isMentor = deal.getMentor().getId().equals(currentUserId);
-        boolean isPaid = Boolean.TRUE.equals(deal.getIsPaid());
-        boolean isClosed = isPaid
-                || deal.getStatus() == MentoringDealStatus.CANCELLED
-                || deal.getStatus() == MentoringDealStatus.REJECTED;
-
-        // Quyền xác nhận: nếu chưa thanh toán/hủy/chốt và người dùng hiện tại chưa xác nhận phiên bản này
-        boolean canConfirm = false;
-        if (!isClosed && deal.getStatus() != MentoringDealStatus.DEAL_CONFIRMED) {
-            if (isStudent && !Boolean.TRUE.equals(deal.getStudentConfirmed())) {
-                canConfirm = true;
-            } else if (isMentor && !Boolean.TRUE.equals(deal.getMentorConfirmed())) {
-                canConfirm = true;
-            }
+        if (response == null || deal == null) {
+            return response;
         }
+        boolean isStudent = Objects.equals(deal.getStudent().getId(), currentUserId);
+        boolean isMentor = Objects.equals(deal.getMentor().getId(), currentUserId);
+        MentoringRequest mentoringRequest = deal.getRequest();
 
-        // Quyền chỉnh sửa (trả giá / deal lại): người tham gia có thể chỉnh sửa/trả giá lại nếu chưa thanh toán và chưa hủy
-        boolean canEdit = (isStudent || isMentor) && !isPaid
-                && deal.getStatus() != MentoringDealStatus.CANCELLED;
+        String readOnlyReason;
+        if (mentoringRequest == null || deal.getConversation() == null) {
+            readOnlyReason = LEGACY_DEAL_MESSAGE;
+        } else {
+            readOnlyReason = conversationService.resolveReadOnlyReason(deal.getConversation());
+        }
+        boolean writable = readOnlyReason == null;
+        boolean requestOpen = mentoringRequest != null
+                && mentoringRequest.getStatus() == MentoringRequestStatus.OPEN
+                && mentoringRequest.getConfirmedDeal() == null;
+        boolean pendingStudent = deal.getStatus() == MentoringDealStatus.MENTOR_CONFIRMED
+                && Boolean.TRUE.equals(deal.getMentorConfirmed())
+                && !Boolean.TRUE.equals(deal.getStudentConfirmed());
+        boolean pendingMentor = deal.getStatus() == MentoringDealStatus.STUDENT_CONFIRMED
+                && !Boolean.TRUE.equals(deal.getMentorConfirmed());
+        boolean isPaid = Boolean.TRUE.equals(deal.getIsPaid());
+        boolean isConfirmedDealOfRequest = mentoringRequest != null && mentoringRequest.getConfirmedDeal() != null
+                && Objects.equals(mentoringRequest.getConfirmedDeal().getId(), deal.getId());
 
-        response.setCanConfirm(canConfirm);
-        response.setCanEdit(canEdit);
-
-        // Bổ sung taskId nếu Deal đã được kích hoạt Task sau khi thanh toán (UC105)
+        response.setReadOnlyReason(readOnlyReason);
+        response.setCanConfirm(writable && requestOpen && ((isStudent && pendingStudent) || (isMentor && pendingMentor)));
+        response.setCanReject(writable && requestOpen && isStudent && pendingStudent);
+        response.setCanRequestAdjustment(writable && requestOpen && isStudent && pendingStudent);
+        response.setCanEdit(writable && requestOpen && isMentor && !isPaid && !Boolean.TRUE.equals(deal.getIsLocked()));
+        response.setCanPay(isStudent && !isPaid && deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED
+                && Boolean.TRUE.equals(deal.getIsLocked()) && isConfirmedDealOfRequest);
         taskRepository.findByDealId(deal.getId()).ifPresent(task -> response.setTaskId(task.getId()));
-
         return response;
     }
 
-    /**
-     * Gửi tin nhắn SYSTEM tự động vào cuộc trò chuyện Direct Messaging nếu cuộc trò chuyện tồn tại.
-     */
-    private void sendDealSystemMessage(Conversation conversation, User sender, String content) {
-        if (conversation == null) return;
-        try {
-            Message message = Message.builder()
-                    .conversation(conversation)
-                    .sender(sender)
-                    .content(content)
-                    .type(MessageType.SYSTEM)
-                    .createdAt(Instant.now())
-                    .build();
-
-            Message savedMessage = messageRepository.save(message);
-            conversation.setLastMessageAt(Instant.now());
-            conversationRepository.save(conversation);
-
-            // Bắn WebSocket Realtime tới tất cả thành viên trong cuộc trò chuyện (Direct Messaging)
-            UserProfile senderProfile = userProfileRepository.findById(sender.getId()).orElse(null);
-            MessageResponse response = messageMapper.toMessageResponse(savedMessage, senderProfile);
-
-            List<ConversationParticipant> participants = participantRepository.findByConversationId(conversation.getId());
-            for (ConversationParticipant participant : participants) {
-                try {
-                    messagingTemplate.convertAndSendToUser(
-                            participant.getUser().getId().toString(),
-                            WebSocketDestinations.USER_QUEUE_MESSAGES,
-                            response
-                    );
-                    log.info("WebSocket deal system message push to User ID: {} for conversation {}",
-                            participant.getUser().getId(), conversation.getId());
-                } catch (Exception ex) {
-                    log.error("WebSocket push failed for User {}: {}", participant.getUser().getId(), ex.getMessage());
-                }
+    /** Học viên chỉ được từ chối / yêu cầu điều chỉnh phiên bản mới nhất đang chờ mình phản hồi */
+    private void assertStudentActionOnPendingTicket(MentoringDeal deal, Long currentUserId, Integer version,
+                                                    MentoringRequest mentoringRequest, String actionLabel) {
+        if (!Objects.equals(deal.getStudent().getId(), currentUserId)) {
+            if (Objects.equals(deal.getMentor().getId(), currentUserId)) {
+                throw new ForbiddenException("Chỉ Học viên mới có quyền " + actionLabel + " Deal Ticket. Mentor có thể gửi phiên bản mới.");
             }
-        } catch (Exception ex) {
-            log.warn("Không thể gửi tin nhắn hệ thống vào cuộc hội thoại conversationId={}: {}",
-                    conversation.getId(), ex.getMessage());
+            throw new ForbiddenException("Bạn không có quyền " + actionLabel + " thỏa thuận này.");
+        }
+        if (version != null) {
+            assertLatestVersion(deal, version);
+        }
+        if (Boolean.TRUE.equals(deal.getIsLocked()) || deal.getStatus() == MentoringDealStatus.DEAL_CONFIRMED) {
+            throw new ConflictException("Không thể " + actionLabel + " thỏa thuận đã được cả hai bên xác nhận và khóa snapshot.");
+        }
+        if (deal.getStatus() != MentoringDealStatus.MENTOR_CONFIRMED) {
+            throw new BadRequestException(String.format(
+                    "Deal Ticket phiên bản %d không ở trạng thái chờ Học viên phản hồi (Trạng thái: %s).", deal.getVersion(), deal.getStatus()));
+        }
+        conversationService.assertWritable(deal.getConversation());
+        assertRequestOpenForNegotiation(mentoringRequest);
+    }
+
+    private void assertLatestVersion(MentoringDeal deal, Integer version) {
+        if (!Objects.equals(deal.getVersion(), version)) {
+            throw new ConflictException(String.format(
+                    "Deal Ticket phiên bản %d đã bị thay thế bởi phiên bản %d. Vui lòng tải lại để xem điều khoản mới nhất.",
+                    version, deal.getVersion()));
         }
     }
 
-    /**
-     * Lấy tên hiển thị của người dùng từ hồ sơ cá nhân hoặc email dự phòng.
-     */
-    private String getUserDisplayName(User user) {
-        if (user == null) return "Người dùng";
-        if (user.getProfile() != null && user.getProfile().getFullName() != null && !user.getProfile().getFullName().isBlank()) {
-            return user.getProfile().getFullName();
+    /** Request phải còn mở và chưa chốt Mentor nào thì mới được tạo / xác nhận / phản hồi Deal */
+    private void assertRequestOpenForNegotiation(MentoringRequest mentoringRequest) {
+        if (mentoringRequest.getConfirmedDeal() != null || mentoringRequest.getSelectedMentor() != null) {
+            throw new ConflictException("Request đã chốt Deal với một Mentor, không thể tạo hoặc xác nhận Deal mới.");
         }
-        return user.getEmail();
+        if (mentoringRequest.getStatus() != MentoringRequestStatus.OPEN) {
+            throw new ConflictException("Request không còn mở để thương lượng Deal (Trạng thái: " + mentoringRequest.getStatus() + ").");
+        }
+    }
+
+    /** Mentor phải đã ACCEPT Request (phản hồi ACCEPTED) mới được gửi Deal Ticket */
+    private void assertMentorAccepted(MentoringRequest mentoringRequest, Long mentorUserId) {
+        MentoringRequestDistribution distribution = distributionRepository
+                .findByRequestIdAndMentorUserId(mentoringRequest.getId(), mentorUserId)
+                .orElseThrow(() -> new ForbiddenException("Request này không được gửi tới bạn."));
+        if (distribution.getStatus() != MentoringDistributionStatus.ACCEPTED) {
+            throw new ForbiddenException("Bạn cần chấp nhận (ACCEPT) Request trước khi gửi Deal Ticket.");
+        }
+    }
+
+    /** Điều khoản "Chấp nhận Deal theo Request": lấy từ dữ liệu hiện tại của Request */
+    private DealTerms termsFromRequest(MentoringRequest r) {
+        BigDecimal price = r.getBudgetMax() != null ? r.getBudgetMax() : r.getBudgetMin();
+        if (price == null) {
+            throw new BadRequestException("Request chưa có mức ngân sách đề xuất. Vui lòng dùng \"Deal lại / Tạo Deal Ticket\" để nhập giá.");
+        }
+        if (r.getExpectedDeadline() == null || !r.getExpectedDeadline().isAfter(Instant.now())) {
+            throw new BadRequestException("Request không có thời hạn mong muốn hợp lệ trong tương lai. Vui lòng dùng \"Deal lại / Tạo Deal Ticket\" để đề xuất deadline.");
+        }
+        String scope = (r.getTitle() + "\n\n" + r.getDescription()).trim();
+        if (scope.length() > 5000) {
+            scope = scope.substring(0, 5000);
+        }
+        MentoringParticipationType participation = r.getParticipationType() == MentoringType.GROUP
+                ? MentoringParticipationType.GROUP
+                : MentoringParticipationType.INDIVIDUAL;
+        return new DealTerms(scope, price, r.getExpectedDeadline(), r.getWorkingMode(), participation, r.getTaskType(),
+                "Hoàn thành yêu cầu \"" + r.getTitle() + "\" theo đúng mô tả của Request.");
+    }
+
+    /** Điều khoản "Deal lại": bắt buộc đầy đủ từ Mentor (thông điệp khớp với validation của DTO) */
+    private DealTerms termsFromBody(String taskScope, BigDecimal agreedPrice, Instant deadline, MentoringWorkingMode workingMode,
+                                    MentoringParticipationType participationType, MentoringTaskType taskType, String expectedResult) {
+        if (taskScope == null || taskScope.isBlank()) {
+            throw new BadRequestException("Phạm vi công việc (Task Scope) không được để trống.");
+        }
+        if (agreedPrice == null) {
+            throw new BadRequestException("Mức giá thỏa thuận không được để trống.");
+        }
+        if (deadline == null) {
+            throw new BadRequestException("Hạn chót hoàn thành (Deadline) không được để trống.");
+        }
+        if (!deadline.isAfter(Instant.now())) {
+            throw new BadRequestException("Hạn chót hoàn thành (Deadline) phải là một thời điểm trong tương lai.");
+        }
+        if (workingMode == null) {
+            throw new BadRequestException("Hình thức làm việc (Working Mode) không được để trống.");
+        }
+        if (participationType == null) {
+            throw new BadRequestException("Hình thức tham gia (Participation Type) không được để trống.");
+        }
+        if (taskType == null) {
+            throw new BadRequestException("Loại nhiệm vụ (Task Type) không được để trống.");
+        }
+        if (expectedResult == null || expectedResult.isBlank()) {
+            throw new BadRequestException("Kết quả kỳ vọng đầu ra (Expected Result) không được để trống.");
+        }
+        return new DealTerms(taskScope.trim(), agreedPrice, deadline, workingMode, participationType, taskType, expectedResult.trim());
+    }
+
+    /** Lấy request_id của Deal mà không nạp Deal vào persistence context (để Deal được đọc mới sau khi khóa Request) */
+    private Long resolveRequestId(Long dealId) {
+        Optional<Long> requestId = dealRepository.findRequestIdByDealId(dealId);
+        if (requestId.isPresent()) {
+            return requestId.get();
+        }
+        if (!dealRepository.existsById(dealId)) {
+            throw new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ").");
+        }
+        throw new BadRequestException(LEGACY_DEAL_MESSAGE);
+    }
+
+    private MentoringRequest lockRequest(Long requestId) {
+        return requestRepository.findByIdForUpdate(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
+    }
+
+    private MentoringDeal loadDeal(Long dealId) {
+        return dealRepository.findDetailById(dealId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thỏa thuận Deal (ID: " + dealId + ")."));
+    }
+
+    private User loadUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin người dùng đang thao tác."));
+    }
+
+    /** Bộ điều khoản của một phiên bản Deal Ticket */
+    private record DealTerms(String taskScope, BigDecimal agreedPrice, Instant deadline, MentoringWorkingMode workingMode,
+                             MentoringParticipationType participationType, MentoringTaskType taskType, String expectedResult) {
     }
 }

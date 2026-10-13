@@ -117,9 +117,12 @@ export * from './components/MentoringDealHistoryTimeline'
 export * from './components/MentoringDealFormModal'
 export * from './components/MentoringDealActionModal'
 export * from './components/MentoringDealCard'
-export * from './components/MentoringDealChatHeaderAction'
-export * from './components/MentoringDealTicketCard'
 export * from './components/MentoringChatForTask'
+export * from './components/MentoringTaskDetailModal'
+export * from './model/mentoringConversationTypes'
+export * from './model/mentoringFlowLabels'
+export * from './api/mentoringConversationApi'
+export * from './hooks/useMentoringConversation'
 export * from './components/MentoringTicketDetailModal'
 export * from './components/MentoringDiscordTicketEmbed'
 
@@ -130,6 +133,18 @@ export * from './hooks/useMentoringTasks'
 export * from './components/MentoringTaskPaymentModal'
 export * from './components/MentoringTaskBadge'
 
+// UC106 & UC107 exports (Xem, quản lý Mentoring Task & Work Log)
+export * from './components/MentoringTaskStageProgressBar'
+export * from './components/MentoringTaskCard'
+export * from './components/MentoringTaskOverviewCard'
+export * from './components/MentoringTaskParticipantsCard'
+export * from './components/MentoringTaskDealSection'
+export * from './components/MentoringTaskPaymentCard'
+export * from './components/MentoringWorkLogList'
+export * from './components/MentoringWorkLogModal'
+export * from './components/MentoringTaskHistoryTimeline'
+
 // Cả UC100 và UC104 đều khai báo type MentoringTaskType với tập giá trị khác nhau -> chỉ định rõ để tránh xung đột
 export type { MentoringTaskType } from './model/mentoringDealTypes'
 export type { MentoringTaskType as MentoringRequestTaskType } from './model/mentoringRequestTypes'
+

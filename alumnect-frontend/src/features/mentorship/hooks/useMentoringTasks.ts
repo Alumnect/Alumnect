@@ -2,49 +2,133 @@ import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { mentoringTaskApi } from '../api/mentoringTaskApi'
 import { DEAL_QUERY_KEYS } from './useMentoringDeals'
+import { MENTORING_CONVERSATION_QUERY_KEYS } from './useMentoringConversation'
 import type { PageResponse } from '../model/mentoringDealTypes'
 import type {
+  ConfirmWorkLogPayload,
   CreateTaskPaymentRequest,
+  CreateWorkLogPayload,
   MentoringTask,
+  MentoringTaskDetail,
   MentoringTaskPaymentCheckoutResponse,
   MentoringTaskPaymentStatusResponse,
   MentoringTaskStatus,
+  MentoringWorkLog,
+  RejectWorkLogPayload,
+  UpdateWorkLogPayload,
 } from '../model/mentoringTaskTypes'
 
 export const TASK_QUERY_KEYS = {
   all: ['mentoringTasks'] as const,
   lists: () => [...TASK_QUERY_KEYS.all, 'list'] as const,
-  list: (status?: MentoringTaskStatus, page = 0, size = 10) =>
-    [...TASK_QUERY_KEYS.lists(), { status, page, size }] as const,
+  list: (stage?: string, status?: MentoringTaskStatus, page = 0, size = 10) =>
+    [...TASK_QUERY_KEYS.lists(), { stage, status, page, size }] as const,
   details: () => [...TASK_QUERY_KEYS.all, 'detail'] as const,
   detail: (id?: number) => [...TASK_QUERY_KEYS.details(), id] as const,
+  workLogs: (taskId?: number) => [...TASK_QUERY_KEYS.all, 'workLogs', taskId] as const,
   payments: () => [...TASK_QUERY_KEYS.all, 'payment'] as const,
-  paymentStatus: (paymentId?: number) =>
-    [...TASK_QUERY_KEYS.payments(), paymentId] as const,
+  paymentStatus: (orderCode?: number) =>
+    [...TASK_QUERY_KEYS.payments(), orderCode] as const,
 }
 
 /**
- * Hook truy vấn danh sách Mentoring Tasks của người dùng hiện tại (UC105).
+ * Hook truy vấn danh sách Mentoring Tasks của người dùng hiện tại (UC105 & UC106).
  */
 export function useMyTasks(
+  stage?: string,
   status?: MentoringTaskStatus,
   page = 0,
   size = 10
 ) {
   return useQuery<PageResponse<MentoringTask>, Error>({
-    queryKey: TASK_QUERY_KEYS.list(status, page, size),
-    queryFn: () => mentoringTaskApi.getMyTasks({ status, page, size }),
+    queryKey: TASK_QUERY_KEYS.list(stage, status, page, size),
+    queryFn: () => mentoringTaskApi.getMyTasks({ stage, status, page, size }),
   })
 }
 
 /**
- * Hook truy vấn chi tiết một Mentoring Task theo ID (UC105).
+ * Hook truy vấn chi tiết toàn diện một Mentoring Task theo ID (UC106).
  */
 export function useTaskDetail(taskId?: number) {
-  return useQuery<MentoringTask, Error>({
+  return useQuery<MentoringTaskDetail, Error>({
     queryKey: TASK_QUERY_KEYS.detail(taskId),
     queryFn: () => mentoringTaskApi.getTaskDetail(taskId!),
     enabled: typeof taskId === 'number' && taskId > 0,
+  })
+}
+
+/**
+ * Hook truy vấn danh sách Work Logs của Task (UC106 & UC107).
+ */
+export function useTaskWorkLogs(taskId?: number) {
+  return useQuery<MentoringWorkLog[], Error>({
+    queryKey: TASK_QUERY_KEYS.workLogs(taskId),
+    queryFn: () => mentoringTaskApi.getWorkLogs(taskId!),
+    enabled: typeof taskId === 'number' && taskId > 0,
+  })
+}
+
+/**
+ * Hook tạo Work Log mới (UC107).
+ */
+export function useCreateWorkLog(taskId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation<MentoringWorkLog, Error, CreateWorkLogPayload>({
+    mutationFn: (payload) => mentoringTaskApi.createWorkLog(taskId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.detail(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.workLogs(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.lists() })
+    },
+  })
+}
+
+/**
+ * Hook cập nhật Work Log chưa xác nhận (UC107).
+ */
+export function useUpdateWorkLog(taskId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation<MentoringWorkLog, Error, { workLogId: number; payload: UpdateWorkLogPayload }>({
+    mutationFn: ({ workLogId, payload }) => mentoringTaskApi.updateWorkLog(taskId, workLogId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.detail(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.workLogs(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.lists() })
+    },
+  })
+}
+
+/**
+ * Hook Student xác nhận nghiệm thu Work Log (UC108).
+ */
+export function useConfirmWorkLog(taskId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation<MentoringWorkLog, Error, { workLogId: number; payload?: ConfirmWorkLogPayload }>({
+    mutationFn: ({ workLogId, payload }) => mentoringTaskApi.confirmWorkLog(taskId, workLogId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.detail(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.workLogs(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.lists() })
+    },
+  })
+}
+
+/**
+ * Hook Student yêu cầu điều chỉnh Work Log (UC108).
+ */
+export function useRejectWorkLog(taskId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation<MentoringWorkLog, Error, { workLogId: number; payload: RejectWorkLogPayload }>({
+    mutationFn: ({ workLogId, payload }) => mentoringTaskApi.rejectWorkLog(taskId, workLogId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.detail(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.workLogs(taskId) })
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.lists() })
+    },
   })
 }
 
@@ -104,13 +188,7 @@ export function useTaskPaymentPolling(
     refetchInterval: (queryResult) => {
       const data = queryResult.state.data
       if (!data) return 3000
-      if (
-        data.isSuccess ||
-        data.status === 'PAID' ||
-        data.status === 'CANCELLED' ||
-        data.status === 'EXPIRED' ||
-        data.status === 'FAILED'
-      ) {
+      if (data.paymentStatus !== 'PENDING') {
         return false
       }
       return 3000
@@ -119,9 +197,10 @@ export function useTaskPaymentPolling(
   })
 
   useEffect(() => {
-    if (query.data && (query.data.isSuccess || query.data.status === 'PAID')) {
+    if (query.data && query.data.paymentStatus === 'PAID') {
       queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.all })
       queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: MENTORING_CONVERSATION_QUERY_KEYS.all })
       if (onPaid) {
         onPaid(query.data)
       }

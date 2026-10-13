@@ -11,6 +11,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Thực thể Mentoring Task đại diện cho nhiệm vụ/công việc hướng dẫn chính thức (UC105 & Flow 3, 4).
@@ -33,6 +35,11 @@ public class MentoringTask {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deal_id", nullable = false, unique = true)
     private MentoringDeal deal;
+
+    /** Yêu cầu Mentoring gốc đã sinh ra Deal và Task này */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id")
+    private MentoringRequest request;
 
     /** Cuộc trò chuyện Chat for Task riêng gắn với Task */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -98,6 +105,11 @@ public class MentoringTask {
     /** Thời điểm Task hoàn thành nghiệm thu */
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    /** Danh sách các nhật ký công việc (Work Log) được Mentor ghi nhận */
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<MentoringWorkLog> workLogs = new ArrayList<>();
 
     /** Thời điểm tạo bản ghi */
     @Column(name = "created_at", nullable = false, updatable = false)

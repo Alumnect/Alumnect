@@ -40,6 +40,9 @@ import { MentoringRequestDetailPage } from '@/pages/app/MentoringRequestDetailPa
 import IncomingMentoringRequestsPage from '@/pages/app/IncomingMentoringRequestsPage'
 import IncomingMentoringRequestDetailPage from '@/pages/app/IncomingMentoringRequestDetailPage'
 import { MentoringDealsPage } from '@/pages/app/MentoringDealsPage'
+import { MentoringChatPage } from '@/pages/app/MentoringChatPage'
+import { MyMentoringTasksPage } from '@/pages/app/MyMentoringTasksPage'
+import { MentoringTaskDetailPage } from '@/pages/app/MentoringTaskDetailPage'
 import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
@@ -88,6 +91,9 @@ function App() {
             <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
             <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />
             <Route path="mentoring/deals" element={<ProtectedRoute><MentoringDealsPage /></ProtectedRoute>} />
+            <Route path="mentoring/tasks" element={<ProtectedRoute><MyMentoringTasksPage /></ProtectedRoute>} />
+            <Route path="mentoring/tasks/:id" element={<ProtectedRoute><MentoringTaskDetailPage /></ProtectedRoute>} />
+            <Route path="mentoring/chats/:conversationId" element={<ProtectedRoute><MentoringChatPage /></ProtectedRoute>} />
             <Route path="mentoring/become-mentor" element={<ProtectedRoute><BecomeMentorPage /></ProtectedRoute>} />
             <Route path="mentoring/packages" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
             <Route path="mentoring/subscription" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />

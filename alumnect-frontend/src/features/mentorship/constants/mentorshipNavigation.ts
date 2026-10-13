@@ -69,6 +69,13 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         audience: 'common',
       },
       {
+        label: 'Nhiệm vụ Mentoring',
+        to: '/app/mentoring/tasks',
+        activePaths: ['/app/mentoring/tasks'],
+        icon: BriefcaseBusiness,
+        audience: 'common',
+      },
+      {
         label: 'Yêu cầu Mentoring của tôi',
         to: '/app/mentoring/requests',
         activePaths: ['/app/mentoring/requests'],
@@ -111,11 +118,12 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         visibility: 'with-profile',
       },
       {
-        label: 'Quản lý công việc',
-        to: '/app/mentoring/workspace',
+        label: 'Quản lý nhiệm vụ & Work Log',
+        to: '/app/mentoring/tasks',
+        activePaths: ['/app/mentoring/tasks'],
         icon: BriefcaseBusiness,
         audience: 'alumni',
-        planned: true,
+        planned: false,
         visibility: 'with-profile',
       },
       {

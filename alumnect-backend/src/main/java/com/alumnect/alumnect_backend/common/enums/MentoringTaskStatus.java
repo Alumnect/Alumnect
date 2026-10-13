@@ -17,5 +17,8 @@ public enum MentoringTaskStatus {
     COMPLETED,
 
     /** Nhiệm vụ bị hủy bỏ */
-    CANCELLED
+    CANCELLED,
+
+    /** Đang trong trạng thái tranh chấp nghiệp vụ / khiếu nại */
+    DISPUTED
 }

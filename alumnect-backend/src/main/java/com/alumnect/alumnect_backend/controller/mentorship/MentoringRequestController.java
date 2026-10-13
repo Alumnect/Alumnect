@@ -166,15 +166,16 @@ public class MentoringRequestController {
     public ResponseEntity<ApiResponse<PageResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestResponse>>> getIncomingRequests(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String requestType,
+            @RequestParam(defaultValue = "ALL") String scope,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        log.info("Mentor {} truy vấn danh sách incoming requests: status={}, requestType={}, page={}, size={}",
-                email, status, requestType, page, size);
+        log.info("Mentor {} truy vấn incoming requests: status={}, requestType={}, scope={}, page={}, size={}",
+                email, status, requestType, scope, page, size);
 
         PageResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentorIncomingRequestResponse> response =
-                mentoringRequestService.getIncomingRequests(email, status, requestType, page, size);
+                mentoringRequestService.getIncomingRequests(email, status, requestType, scope, page, size);
 
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách yêu cầu nhận được thành công", response));
     }

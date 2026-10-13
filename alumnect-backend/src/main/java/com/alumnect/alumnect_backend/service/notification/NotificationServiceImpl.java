@@ -336,6 +336,141 @@ public class NotificationServiceImpl implements NotificationService {
         pushRealtimeNotification(user, notification);
     }
 
+    @Override
+    @Transactional
+    public void sendMentoringWorkLogNotification(
+            User mentor,
+            User student,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+    ) {
+        if (mentor == null || student == null || task == null || workLog == null) {
+            return;
+        }
+
+        String mentorName = resolveFullName(mentor);
+        String taskTitle = task.getTaskTitle() != null ? task.getTaskTitle().trim() : "Nhiệm vụ Mentoring";
+        String snippet = taskTitle.length() > 50 ? taskTitle.substring(0, 47) + "..." : taskTitle;
+
+        Notification notification = Notification.builder()
+                .recipient(student)
+                .sender(mentor)
+                .type(NotificationType.MENTORING_WORK_LOG)
+                .title("Cập nhật nhật ký công việc Mentoring")
+                .content(mentorName + " đã cập nhật nhật ký công việc cho nhiệm vụ \"" + snippet + "\" và đang chờ bạn xác nhận.")
+                .targetType("MENTORING_TASK")
+                .targetId(String.valueOf(task.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(student, notification);
+        log.info("Đã gửi thông báo Work Log id={} từ Mentor id={} tới Student id={}",
+                workLog.getId(), mentor.getId(), student.getId());
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringWorkLogConfirmedNotification(
+            User student,
+            User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+    ) {
+        if (mentor == null || student == null || task == null || workLog == null) {
+            return;
+        }
+
+        String studentName = resolveFullName(student);
+        String taskTitle = task.getTaskTitle() != null ? task.getTaskTitle().trim() : "Nhiệm vụ Mentoring";
+        String snippet = taskTitle.length() > 50 ? taskTitle.substring(0, 47) + "..." : taskTitle;
+
+        Notification notification = Notification.builder()
+                .recipient(mentor)
+                .sender(student)
+                .type(NotificationType.MENTORING_WORK_LOG)
+                .title("Học viên đã nghiệm thu Work Log")
+                .content(studentName + " đã xác nhận nghiệm thu nhật ký công việc ngày " + workLog.getLogDate() + " cho nhiệm vụ \"" + snippet + "\".")
+                .targetType("MENTORING_TASK")
+                .targetId(String.valueOf(task.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(mentor, notification);
+        log.info("Đã gửi thông báo Work Log id={} được nghiệm thu tới Mentor id={}", workLog.getId(), mentor.getId());
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringWorkLogRejectedNotification(
+            User student,
+            User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog,
+            String feedback
+    ) {
+        if (mentor == null || student == null || task == null || workLog == null) {
+            return;
+        }
+
+        String studentName = resolveFullName(student);
+        String taskTitle = task.getTaskTitle() != null ? task.getTaskTitle().trim() : "Nhiệm vụ Mentoring";
+        String snippet = taskTitle.length() > 50 ? taskTitle.substring(0, 47) + "..." : taskTitle;
+
+        Notification notification = Notification.builder()
+                .recipient(mentor)
+                .sender(student)
+                .type(NotificationType.MENTORING_WORK_LOG)
+                .title("Yêu cầu điều chỉnh Work Log")
+                .content(studentName + " yêu cầu điều chỉnh nhật ký công việc ngày " + workLog.getLogDate() + " cho nhiệm vụ \"" + snippet + "\": " + (feedback != null ? feedback : ""))
+                .targetType("MENTORING_TASK")
+                .targetId(String.valueOf(task.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(mentor, notification);
+        log.info("Đã gửi thông báo yêu cầu điều chỉnh Work Log id={} tới Mentor id={}", workLog.getId(), mentor.getId());
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringWorkLogResubmittedNotification(
+            User mentor,
+            User student,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+    ) {
+        if (mentor == null || student == null || task == null || workLog == null) {
+            return;
+        }
+
+        String mentorName = resolveFullName(mentor);
+        String taskTitle = task.getTaskTitle() != null ? task.getTaskTitle().trim() : "Nhiệm vụ Mentoring";
+        String snippet = taskTitle.length() > 50 ? taskTitle.substring(0, 47) + "..." : taskTitle;
+
+        Notification notification = Notification.builder()
+                .recipient(student)
+                .sender(mentor)
+                .type(NotificationType.MENTORING_WORK_LOG)
+                .title("Work Log đã được cập nhật")
+                .content(mentorName + " đã cập nhật Work Log theo yêu cầu làm rõ cho nhiệm vụ \"" + snippet + "\". Vui lòng xem lại.")
+                .targetType("MENTORING_TASK")
+                .targetId(String.valueOf(task.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(student, notification);
+        log.info("Đã gửi thông báo cập nhật lại Work Log id={} tới Student id={}", workLog.getId(), student.getId());
+    }
+
+
     /**
      * Đẩy thông báo thời gian thực đến người nhận qua WebSocket STOMP cá nhân.
      */

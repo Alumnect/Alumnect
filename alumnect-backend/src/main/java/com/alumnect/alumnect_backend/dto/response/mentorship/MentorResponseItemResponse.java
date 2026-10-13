@@ -63,4 +63,10 @@ public class MentorResponseItemResponse {
      * Chỉ bật true khi Mentor có phản hồi ACCEPTED (BR: ACCEPTED chỉ đồng ý trao đổi, không phải Deal).
      */
     private boolean canMessage;
+
+    /** ID Chat for Task riêng giữa Học viên và Mentor này (có sau khi Mentor ACCEPT) */
+    private Long conversationId;
+
+    /** Mentor này có phải là Mentor được Học viên chốt chọn cho Request hay không */
+    private boolean selected;
 }

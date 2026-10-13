@@ -14,6 +14,9 @@ import {
   Loader2,
   ShieldCheck,
   AlertTriangle,
+  Briefcase,
+  FileText,
+  Send,
 } from 'lucide-react'
 import { PageHeader, Avatar, Card, EmptyState, Skeleton, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -34,6 +37,9 @@ const ICONS: Record<NotificationType, any> = {
   REPORT_RESOLVED: ShieldAlert,
   WELCOME: PartyPopper,
   SYSTEM_BROADCAST: Megaphone,
+  MENTORING_REQUEST: Send,
+  MENTORING_TASK: Briefcase,
+  MENTORING_WORK_LOG: FileText,
 }
 
 const TONES: Record<NotificationType, string> = {
@@ -44,6 +50,9 @@ const TONES: Record<NotificationType, string> = {
   REPORT_RESOLVED: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
   WELCOME: 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30',
   SYSTEM_BROADCAST: 'bg-gradient-to-r from-amber-500 to-brand-600 text-white shadow-md shadow-brand-500/30',
+  MENTORING_REQUEST: 'bg-indigo-500 text-white shadow-md shadow-indigo-500/30',
+  MENTORING_TASK: 'bg-teal-600 text-white shadow-md shadow-teal-600/30',
+  MENTORING_WORK_LOG: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30',
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -82,6 +91,12 @@ export function NotificationsPage() {
       navigate('/app')
     } else if (item.type === 'REPORT_RESOLVED') {
       navigate('/app')
+    } else if (item.targetType === 'MENTORING_TASK' && item.targetId) {
+      navigate(`/app/mentoring/tasks/${item.targetId}`)
+    } else if (item.type === 'MENTORING_WORK_LOG' && item.targetId) {
+      navigate(`/app/mentoring/tasks/${item.targetId}`)
+    } else if (item.targetType === 'MENTORING_REQUEST' && item.targetId) {
+      navigate(`/app/mentoring/requests/${item.targetId}`)
     } else if (item.targetType === 'POST' && item.targetId) {
       navigate(`/app/posts/${item.targetId}`)
     } else if (item.targetType === 'USER' && item.targetId) {

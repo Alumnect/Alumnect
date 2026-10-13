@@ -16,6 +16,12 @@ import { Avatar } from '@/components/ui'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import type { MentoringTicketData } from './MentoringTicketDetailModal'
+import {
+  MENTORING_PARTICIPATION_LABELS,
+  MENTORING_TASK_TYPE_LABELS,
+  MENTORING_WORKING_MODE_LABELS,
+  PROPOSAL_SOURCE_LABELS,
+} from '../model/mentoringFlowLabels'
 
 interface MentoringDiscordTicketEmbedProps {
   ticket: MentoringTicketData
@@ -94,6 +100,13 @@ export function MentoringDiscordTicketEmbed({
           <span className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-50 px-2.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300">
             <X className="h-3 w-3" />
             Đã từ chối
+          </span>
+        )
+      case 'ADJUSTMENT':
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+            <RefreshCw className="h-3 w-3" />
+            Đã yêu cầu điều chỉnh
           </span>
         )
       case 'SUPERSEDED':
@@ -219,10 +232,38 @@ export function MentoringDiscordTicketEmbed({
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500 dark:text-gray-400">Hình thức:</span>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {ticket.workingMode === 'ONLINE' ? 'Online' : ticket.workingMode === 'OFFLINE' ? 'Offline' : 'Linh hoạt'}
+                    {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || 'Linh hoạt'}
+                    {' · '}
+                    {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || 'Cá nhân (1-1)'}
                   </span>
                 </div>
               </div>
+
+              {/* Loại nhiệm vụ & nguồn đề xuất */}
+              <div className="flex items-start gap-2.5">
+                <FileText className="h-4 w-4 shrink-0 text-orange-500 dark:text-orange-400 mt-0.5" />
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-700 ring-1 ring-gray-200 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10">
+                    {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || 'Nhiệm vụ'}
+                  </span>
+                  {ticket.proposalSource && (
+                    <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-semibold text-orange-700 ring-1 ring-orange-200 dark:bg-orange-950/30 dark:text-orange-300 dark:ring-orange-800/40">
+                      {PROPOSAL_SOURCE_LABELS[ticket.proposalSource] || ticket.proposalSource}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Kết quả kỳ vọng */}
+              {ticket.expectedResult && (
+                <div className="flex items-start gap-2.5">
+                  <Check className="h-4 w-4 shrink-0 text-orange-500 dark:text-orange-400 mt-0.5" />
+                  <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
+                    <span className="text-gray-500 dark:text-gray-400 shrink-0">Kết quả:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white line-clamp-2">{ticket.expectedResult}</span>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -294,17 +335,17 @@ export function MentoringDiscordTicketEmbed({
                     )}
                   </button>
 
-                  {/* Nút Deal lại */}
+                  {/* Nút Yêu cầu điều chỉnh (Học viên) */}
                   {onRevert && (
                     <button
                       type="button"
                       onClick={onRevert}
                       disabled={isRejecting || isConfirming}
-                      title="Yêu cầu điều chỉnh lại giá, hạn chót hoặc nội dung"
+                      title="Yêu cầu Mentor điều chỉnh lại giá, hạn chót hoặc nội dung"
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
                     >
                       <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                      <span>Deal lại</span>
+                      <span>Yêu cầu điều chỉnh</span>
                     </button>
                   )}
 
@@ -318,7 +359,7 @@ export function MentoringDiscordTicketEmbed({
                     {isConfirming ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      'Xác nhận'
+                      'Xác nhận & thanh toán'
                     )}
                   </button>
                 </>
@@ -333,19 +374,7 @@ export function MentoringDiscordTicketEmbed({
               <div className="flex items-center gap-2">
                 {!ticket.isPaid ? (
                   <>
-                    {/* Cả Sinh viên và Mentor đều có thể Deal lại trước khi thanh toán nếu muốn trả giá tiếp */}
-                    {onRevert && (
-                      <button
-                        type="button"
-                        onClick={onRevert}
-                        disabled={isRejecting || isConfirming}
-                        title="Hủy xác nhận và yêu cầu điều chỉnh lại (Deal lại)"
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                        <span>Deal lại</span>
-                      </button>
-                    )}
+                    {/* Deal đã khóa: không bên nào được sửa; chỉ còn bước thanh toán (UC105) */}
                     {!ticket.isMentor && onPay ? (
                       <button
                         type="button"
@@ -378,6 +407,23 @@ export function MentoringDiscordTicketEmbed({
                     onClick={onRevert}
                     title="Đề xuất lại các điều khoản mới (Deal lại)"
                     className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>Deal lại</span>
+                  </button>
+                )}
+              </div>
+            ) : ticket.status === 'ADJUSTMENT' ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                  Chờ Mentor gửi phiên bản mới
+                </span>
+                {onRevert && (
+                  <button
+                    type="button"
+                    onClick={onRevert}
+                    title="Gửi phiên bản Deal Ticket mới"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
                   >
                     <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                     <span>Deal lại</span>

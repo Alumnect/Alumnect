@@ -35,6 +35,7 @@ public interface MentoringRequestService {
      * Bao gồm tổng hợp số liệu phản hồi từ các Mentor cho từng yêu cầu.
      *
      * @param userEmail Email của sinh viên đăng nhập
+     * @param scope Phạm vi lọc: ALL, SAME_INDUSTRY hoặc SAME_FORMAT
      * @param page Số thứ tự trang (0-indexed)
      * @param size Số bản ghi mỗi trang
      * @return Danh sách phân trang các yêu cầu mentoring
@@ -81,7 +82,8 @@ public interface MentoringRequestService {
      * @param size Số bản ghi mỗi trang
      * @return Danh sách phân trang các yêu cầu gửi tới Mentor
      */
-    PageResponse<MentorIncomingRequestResponse> getIncomingRequests(String mentorEmail, String status, String requestType, int page, int size);
+    PageResponse<MentorIncomingRequestResponse> getIncomingRequests(
+            String mentorEmail, String status, String requestType, String scope, int page, int size);
 
     /**
      * Lấy thông tin chi tiết một yêu cầu Mentoring được phân phối hoặc gửi trực tiếp tới Mentor đang đăng nhập (UC103).

@@ -15,7 +15,7 @@ import java.util.List;
 @Table(name = "conversations")
 @Getter
 @Setter
-@ToString(exclude = {"participants", "createdBy"})
+@ToString(exclude = {"participants", "createdBy", "mentoringRequest", "mentoringStudent", "mentoringMentor", "mentoringTask"})
 @EqualsAndHashCode(of = "id")
 @Builder
 @NoArgsConstructor
@@ -63,6 +63,26 @@ public class Conversation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "community_group_id")
     private com.alumnect.alumnect_backend.entity.group.CommunityGroup communityGroup;
+
+    /** Yêu cầu Mentoring sở hữu Chat for Task (chỉ có giá trị khi type = MENTORING) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentoring_request_id")
+    private com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest mentoringRequest;
+
+    /** Học viên (chủ Request) tham gia Chat for Task */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentoring_student_id")
+    private User mentoringStudent;
+
+    /** Mentor đã ACCEPT Request và tham gia Chat for Task */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentoring_mentor_id")
+    private User mentoringMentor;
+
+    /** Mentoring Task được kích hoạt sau khi thanh toán thành công (null trước khi thanh toán) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentoring_task_id")
+    private com.alumnect.alumnect_backend.entity.mentorship.MentoringTask mentoringTask;
 
     /** Danh sách thành viên tham gia cuộc hội thoại */
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)

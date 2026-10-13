@@ -4,7 +4,9 @@ import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -94,4 +96,32 @@ public interface MentoringDealRepository extends JpaRepository<MentoringDeal, Lo
      * @return Danh sách các Deal khác cùng Request
      */
     List<MentoringDeal> findByRequestIdAndIdNot(Long requestId, Long id);
+
+    /**
+     * Tìm luồng Deal (duy nhất) thuộc một Chat for Task.
+     *
+     * @param conversationId ID cuộc hội thoại MENTORING
+     * @return Deal của cuộc hội thoại nếu đã có
+     */
+    Optional<MentoringDeal> findByConversationId(Long conversationId);
+
+    /**
+     * Lấy request_id của Deal dưới dạng giá trị vô hướng (không nạp entity Deal vào persistence context),
+     * để tầng service khóa Request trước rồi mới đọc Deal ở trạng thái mới nhất.
+     *
+     * @param id ID của Deal
+     * @return request_id (rỗng nếu Deal không tồn tại hoặc là Deal legacy không gắn Request)
+     */
+    @Query("SELECT d.request.id FROM MentoringDeal d WHERE d.id = :id")
+    Optional<Long> findRequestIdByDealId(@Param("id") Long id);
+
+    /**
+     * Khóa bi quan bản ghi Deal để chống xác nhận / tạo phiên bản / thanh toán đồng thời.
+     *
+     * @param id ID của Deal
+     * @return Deal đã được khóa ghi trong transaction hiện tại
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM MentoringDeal d WHERE d.id = :id")
+    Optional<MentoringDeal> findByIdForUpdate(@Param("id") Long id);
 }

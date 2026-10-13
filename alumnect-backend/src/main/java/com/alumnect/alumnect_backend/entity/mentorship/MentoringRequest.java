@@ -19,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -117,6 +118,16 @@ public class MentoringRequest {
     @Column(name = "matched_count", nullable = false)
     @Builder.Default
     private Integer matchedCount = 0;
+
+    /** Mentor (users.id) được Học viên chốt chọn khi xác nhận Deal (null khi chưa chốt) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "selected_mentor_id")
+    private User selectedMentor;
+
+    /** Deal Ticket đã được hai bên xác nhận và khóa cho Request này (null khi chưa chốt) */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "confirmed_deal_id")
+    private MentoringDeal confirmedDeal;
 
     /** Danh sách tài liệu / tệp đính kèm liên kết với yêu cầu này */
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

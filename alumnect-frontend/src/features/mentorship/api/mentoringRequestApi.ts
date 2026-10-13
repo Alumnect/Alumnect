@@ -104,6 +104,7 @@ export const mentoringRequestApi = {
   getIncomingRequests: async (params?: {
     status?: string
     requestType?: string
+    scope?: 'ALL' | 'SAME_INDUSTRY' | 'SAME_FORMAT'
     page?: number
     size?: number
   }): Promise<PageResponse<MentorIncomingRequestData>> => {

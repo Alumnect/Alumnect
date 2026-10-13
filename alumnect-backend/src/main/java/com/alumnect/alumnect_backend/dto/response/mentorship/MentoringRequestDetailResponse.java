@@ -95,6 +95,15 @@ public class MentoringRequestDetailResponse {
     /** Tổng hợp số liệu phản hồi từ các Mentor */
     private MentoringResponseSummaryResponse responseSummary;
 
+    /** ID tài khoản Mentor được chốt chọn (null khi chưa xác nhận Deal) */
+    private Long selectedMentorUserId;
+
+    /** ID Deal Ticket đã được hai bên xác nhận và khóa (null khi chưa chốt) */
+    private Long confirmedDealId;
+
+    /** ID Mentoring Task được kích hoạt sau khi thanh toán thành công (null khi chưa thanh toán) */
+    private Long taskId;
+
     /**
      * Danh sách chi tiết phản hồi của từng Mentor thực sự liên quan đến yêu cầu:
      * - Nếu GENERAL: Danh sách các Mentor đã thực sự được phân phối yêu cầu.

@@ -11,6 +11,12 @@ import {
 } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { format } from 'date-fns'
+import {
+  MENTORING_PARTICIPATION_LABELS,
+  MENTORING_TASK_TYPE_LABELS,
+  MENTORING_WORKING_MODE_LABELS,
+  PROPOSAL_SOURCE_LABELS,
+} from '../model/mentoringFlowLabels'
 
 export type MentoringTicketType = 'DEAL' | 'EXTENSION'
 
@@ -26,8 +32,8 @@ export interface MentoringTicketData {
   senderAvatar?: string | null
   senderRole?: string // 'Mentor' | 'Học viên'
 
-  // Trạng thái ticket
-  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED'
+  // Trạng thái ticket: ADJUSTMENT = Học viên đã yêu cầu điều chỉnh phiên bản này
+  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED' | 'ADJUSTMENT'
   handlerName?: string
   handledAt?: string
 
@@ -38,6 +44,9 @@ export interface MentoringTicketData {
   deadline?: string
   workingMode?: string
   participationType?: string
+  taskType?: string
+  proposalSource?: string
+  changeNote?: string | null
 
   // Thông tin Ticket Gia hạn
   currentDeadline?: string
@@ -98,8 +107,8 @@ export function MentoringTicketDetailModal({
 
   // Format hình thức làm việc & tham gia
   const getWorkingModeLabel = () => {
-    const mode = ticket.workingMode === 'ONLINE' ? 'Online' : ticket.workingMode === 'OFFLINE' ? 'Offline' : 'Linh hoạt'
-    const part = ticket.participationType === 'GROUP' ? 'Nhóm' : 'Individual'
+    const mode = MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || 'Linh hoạt'
+    const part = MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || 'Cá nhân (1-1)'
     return `${mode} · ${part}`
   }
 
@@ -122,6 +131,13 @@ export function MentoringTicketDetailModal({
           <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300">
             <X className="h-3.5 w-3.5" />
             Đã từ chối
+          </span>
+        )
+      case 'ADJUSTMENT':
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/90 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Đã yêu cầu điều chỉnh
           </span>
         )
       case 'SUPERSEDED':
@@ -256,6 +272,34 @@ export function MentoringTicketDetailModal({
                   {getWorkingModeLabel()}
                 </p>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    Loại nhiệm vụ
+                  </span>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">
+                    {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || '—'}
+                  </p>
+                </div>
+                <div>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    Nguồn đề xuất
+                  </span>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">
+                    {PROPOSAL_SOURCE_LABELS[ticket.proposalSource || ''] || '—'}
+                  </p>
+                </div>
+              </div>
+
+              {ticket.changeNote && (
+                <div>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                    Ghi chú phiên bản
+                  </span>
+                  <p className="font-medium text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{ticket.changeNote}</p>
+                </div>
+              )}
             </div>
           ) : (
             /* Nội dung TICKET GIA HẠN */
@@ -296,7 +340,7 @@ export function MentoringTicketDetailModal({
             <Info className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
             <p className="leading-relaxed">
               {!isExtension
-                ? 'Xác nhận Deal để chuyển sang thanh toán.'
+                ? 'Xác nhận đúng phiên bản này để khóa Deal, chọn Mentor cho Request và chuyển sang thanh toán. Task chỉ được tạo sau khi thanh toán thành công.'
                 : 'Xác nhận để cập nhật deadline theo đề xuất đã được chấp nhận.'}
             </p>
           </div>
@@ -334,7 +378,7 @@ export function MentoringTicketDetailModal({
                 )}
               </button>
 
-              {/* Nút Deal lại */}
+              {/* Nút Yêu cầu điều chỉnh (Học viên) */}
               {onRevert && (
                 <button
                   type="button"
@@ -343,7 +387,7 @@ export function MentoringTicketDetailModal({
                   className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-amber-500/80 bg-amber-50 px-5 py-2.5 text-sm font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/30 dark:border-amber-600 dark:text-amber-300"
                 >
                   <RefreshCw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <span>Deal lại</span>
+                  <span>Yêu cầu điều chỉnh</span>
                 </button>
               )}
 
@@ -362,7 +406,7 @@ export function MentoringTicketDetailModal({
                 ) : (
                   <>
                     <Check className="h-4 w-4 stroke-[2.5]" />
-                    Xác nhận
+                    Xác nhận & thanh toán
                   </>
                 )}
               </button>
@@ -373,20 +417,6 @@ export function MentoringTicketDetailModal({
                 {!ticket.isMentor ? 'Thanh toán để chuyển Task sang PREPARATION!' : 'Đã chốt thỏa thuận • Chờ Học viên thanh toán'}
               </span>
               <div className="flex items-center gap-2">
-                {/* Nút Deal lại nếu một trong hai bên muốn điều chỉnh lại trước khi thanh toán */}
-                {onRevert && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose()
-                      onRevert()
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-amber-500/80 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 dark:bg-amber-950/30 dark:border-amber-600 dark:text-amber-300"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>Deal lại</span>
-                  </button>
-                )}
                 <button
                   type="button"
                   onClick={onClose}
@@ -417,7 +447,9 @@ export function MentoringTicketDetailModal({
                     : 'Ticket đã được xác nhận'
                   : ticket.status === 'REJECTED'
                   ? 'Ticket đã bị từ chối'
-                  : 'Ticket đã được thay thế'}
+                  : ticket.status === 'ADJUSTMENT'
+                  ? 'Học viên đã yêu cầu điều chỉnh, chờ Mentor gửi phiên bản mới'
+                  : 'Ticket đã được thay thế bởi phiên bản mới'}
               </span>
               <button
                 type="button"

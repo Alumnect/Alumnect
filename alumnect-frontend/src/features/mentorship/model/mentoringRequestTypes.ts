@@ -89,6 +89,8 @@ export interface MentoringAttachmentItem {
  */
 export type MentoringRequestType = 'GENERAL' | 'DIRECT'
 
+export type IncomingRequestScope = 'ALL' | 'SAME_INDUSTRY' | 'SAME_FORMAT'
+
 /**
  * Payload gửi lên API tạo yêu cầu Mentoring (UC100 & UC101).
  */
@@ -139,6 +141,10 @@ export interface MentorResponseItem {
   distributedAt: string
   respondedAt?: string | null
   canMessage: boolean
+  /** ID Chat for Task riêng giữa Học viên và Mentor này (có sau khi Mentor ACCEPT) */
+  conversationId?: number | null
+  /** Mentor này là Mentor được Học viên chốt chọn cho Request */
+  selected?: boolean
 }
 
 /**
@@ -188,6 +194,12 @@ export interface CreateMentoringRequestData {
 export interface MentoringRequestDetailData extends CreateMentoringRequestData {
   responseSummary: MentoringResponseSummary
   mentorResponses: MentorResponseItem[]
+  /** Mentor (users.id) được chốt chọn sau khi xác nhận Deal */
+  selectedMentorUserId?: number | null
+  /** Deal Ticket đã khóa của Request */
+  confirmedDealId?: number | null
+  /** Mentoring Task đã kích hoạt sau khi thanh toán thành công */
+  taskId?: number | null
 }
 
 /**
@@ -214,7 +226,9 @@ export interface RespondMentoringRequestPayload {
  */
 export interface MentorIncomingRequestData {
   id: number
-  distributionId: number
+  distributionId?: number | null
+  sameIndustry: boolean
+  sameFormat: boolean
   requestType: MentoringRequestType
   title: string
   description: string
@@ -245,7 +259,9 @@ export interface MentorIncomingRequestData {
  */
 export interface MentorIncomingRequestDetailData {
   id: number
-  distributionId: number
+  distributionId?: number | null
+  sameIndustry: boolean
+  sameFormat: boolean
   requestType: MentoringRequestType
   title: string
   description: string
@@ -271,7 +287,12 @@ export interface MentorIncomingRequestDetailData {
   respondedAt?: string | null
   canRespond: boolean
   canMessage: boolean
+  /** ID Chat for Task của Request + Student + Mentor hiện tại (có sau khi ACCEPT) */
+  conversationId?: number | null
+  /** Mentor hiện tại là Mentor được chọn cho Request */
+  selectedMentor?: boolean
+  /** Request đã chọn Mentor khác (Chat for Task của Mentor hiện tại chỉ đọc) */
+  otherMentorSelected?: boolean
   createdAt: string
   updatedAt?: string | null
 }
-

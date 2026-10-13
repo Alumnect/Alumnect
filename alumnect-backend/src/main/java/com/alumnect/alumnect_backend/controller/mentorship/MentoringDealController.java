@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.ConfirmDealRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.ProposeDealRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.UpdateDealRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealDetailResponse;
@@ -38,13 +39,14 @@ public class MentoringDealController {
     private final UserRepository userRepository;
 
     /**
-     * API đề xuất thỏa thuận Mentoring Deal mới (Student hoặc Mentor).
+     * API Mentor phát hành phiên bản Deal Ticket mới trong Chat for Task (v1 hoặc v+1).
+     * REQUEST_ACCEPTANCE lấy điều khoản từ Request; RENEGOTIATION dùng điều khoản Mentor nhập.
      *
-     * @param request DTO chứa các điều khoản đề xuất ban đầu
+     * @param request DTO chứa conversationId, proposalSource và điều khoản (khi deal lại)
      * @return Phản hồi chuẩn chứa thông tin Deal vừa được khởi tạo
      */
     @PostMapping
-    @Operation(summary = "Khởi tạo đề xuất Mentoring Deal mới", description = "Cho phép Student hoặc Mentor khởi tạo thỏa thuận điều khoản Deal mới (UC104)")
+    @Operation(summary = "Mentor gửi Deal Ticket trong Chat for Task", description = "Chấp nhận Deal theo Request hoặc Deal lại; Deal luôn gắn Request + Conversation (UC104)")
     public ResponseEntity<ApiResponse<MentoringDealResponse>> proposeDeal(
             @Valid @RequestBody ProposeDealRequest request
     ) {
@@ -55,8 +57,8 @@ public class MentoringDealController {
     }
 
     /**
-     * API điều chỉnh các điều khoản của Deal (Task Scope, Price, Deadline, Working Mode...).
-     * Tự động sinh ra phiên bản Snapshot mới và yêu cầu bên còn lại xác nhận lại.
+     * API Mentor deal lại trên Deal đã có (Task Scope, Price, Deadline, Working Mode...).
+     * Sinh phiên bản Deal Ticket mới; phiên bản cũ không còn được xác nhận / thanh toán.
      *
      * @param id ID của thỏa thuận Deal
      * @param request DTO chứa các điều khoản mới cập nhật
@@ -74,19 +76,21 @@ public class MentoringDealController {
     }
 
     /**
-     * API xác nhận Deal Snapshot hiện tại từ một bên (Student hoặc Mentor).
-     * Khi cả hai bên đều xác nhận, hệ thống tự động khóa Snapshot và chuyển Deal sang DEAL_CONFIRMED.
+     * API xác nhận đúng phiên bản Deal Ticket đang xem. Khi hai bên cùng xác nhận một phiên bản, hệ thống khóa Deal
+     * (DEAL_CONFIRMED), chọn Mentor cho Request và chuyển các Chat for Task khác sang chỉ đọc. Không tạo Task.
      *
      * @param id ID của thỏa thuận Deal
+     * @param request DTO chứa phiên bản đang xác nhận (bị từ chối nếu không phải phiên bản mới nhất)
      * @return Phản hồi chuẩn chứa thông tin Deal với trạng thái xác nhận mới nhất
      */
     @PostMapping("/{id}/confirm")
-    @Operation(summary = "Xác nhận Mentoring Deal Snapshot", description = "Student hoặc Mentor xác nhận phiên bản snapshot hiện tại. Khi cả hai cùng xác nhận, hệ thống khóa deal.")
+    @Operation(summary = "Xác nhận Mentoring Deal Snapshot", description = "Xác nhận phiên bản Deal Ticket mới nhất; khi hai bên cùng xác nhận: khóa Deal và chọn Mentor cho Request")
     public ResponseEntity<ApiResponse<MentoringDealResponse>> confirmDeal(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @Valid @RequestBody ConfirmDealRequest request
     ) {
         Long currentUserId = getCurrentUserId();
-        MentoringDealResponse response = dealService.confirmDeal(currentUserId, id);
+        MentoringDealResponse response = dealService.confirmDeal(currentUserId, id, request.getVersion());
         return ResponseEntity.ok(ApiResponse.success("Xác nhận thỏa thuận Mentoring Deal thành công.", response));
     }
 
@@ -129,13 +133,13 @@ public class MentoringDealController {
     }
 
     /**
-     * API lấy thông tin Deal mới nhất gắn với một cuộc trò chuyện Direct Messaging (1-1).
+     * API lấy luồng Deal của một Chat for Task (chỉ thành viên cuộc hội thoại được xem).
      *
      * @param conversationId ID cuộc trò chuyện
      * @return Phản hồi chuẩn chứa chi tiết Deal hoặc dữ liệu rỗng nếu chưa có thỏa thuận
      */
     @GetMapping("/by-conversation/{conversationId}")
-    @Operation(summary = "Lấy Deal theo cuộc hội thoại Direct Messaging", description = "Trả về thỏa thuận Deal mới nhất gắn với cuộc trò chuyện chat trực tiếp")
+    @Operation(summary = "Lấy Deal theo Chat for Task", description = "Trả về luồng Deal gắn với Chat for Task (null nếu Mentor chưa gửi Deal Ticket)")
     public ResponseEntity<ApiResponse<MentoringDealDetailResponse>> getDealByConversation(
             @PathVariable Long conversationId
     ) {
@@ -163,20 +167,22 @@ public class MentoringDealController {
     }
 
     /**
-     * API từ chối thỏa thuận Deal Ticket (UC104).
+     * API Học viên từ chối phiên bản Deal Ticket hiện tại (UC104). Không xóa Request, không tạo Task/Payment.
      *
      * @param id ID của thỏa thuận Deal
      * @param reason Lý do từ chối tùy chọn
+     * @param version Phiên bản đang xem (tùy chọn, kiểm tra khớp phiên bản mới nhất)
      * @return Phản hồi chuẩn chứa thông tin Deal đã từ chối
      */
     @PostMapping("/{id}/reject")
-    @Operation(summary = "Từ chối Deal Ticket", description = "Student hoặc Mentor từ chối Deal Ticket đề xuất (UC104)")
+    @Operation(summary = "Từ chối Deal Ticket", description = "Học viên từ chối phiên bản Deal Ticket đang chờ phản hồi (UC104)")
     public ResponseEntity<ApiResponse<MentoringDealResponse>> rejectDeal(
             @PathVariable Long id,
-            @RequestParam(required = false) String reason
+            @RequestParam(required = false) String reason,
+            @RequestParam(required = false) Integer version
     ) {
         Long currentUserId = getCurrentUserId();
-        MentoringDealResponse response = dealService.rejectDeal(currentUserId, id, reason);
+        MentoringDealResponse response = dealService.rejectDeal(currentUserId, id, reason, version);
         return ResponseEntity.ok(ApiResponse.success("Từ chối thỏa thuận Deal Ticket thành công.", response));
     }
 
@@ -185,16 +191,18 @@ public class MentoringDealController {
      *
      * @param id ID của thỏa thuận Deal
      * @param note Ghi chú yêu cầu điều chỉnh tùy chọn
+     * @param version Phiên bản đang xem (tùy chọn, kiểm tra khớp phiên bản mới nhất)
      * @return Phản hồi chuẩn chứa thông tin Deal đã chuyển sang SUPERSEDED
      */
     @PostMapping("/{id}/request-adjustment")
     @Operation(summary = "Yêu cầu điều chỉnh Deal Ticket", description = "Student yêu cầu Mentor điều chỉnh lại điều khoản Deal Ticket (UC104)")
     public ResponseEntity<ApiResponse<MentoringDealResponse>> requestAdjustment(
             @PathVariable Long id,
-            @RequestParam(required = false) String note
+            @RequestParam(required = false) String note,
+            @RequestParam(required = false) Integer version
     ) {
         Long currentUserId = getCurrentUserId();
-        MentoringDealResponse response = dealService.requestAdjustment(currentUserId, id, note);
+        MentoringDealResponse response = dealService.requestAdjustment(currentUserId, id, note, version);
         return ResponseEntity.ok(ApiResponse.success("Gửi yêu cầu điều chỉnh thỏa thuận Deal thành công.", response));
     }
 

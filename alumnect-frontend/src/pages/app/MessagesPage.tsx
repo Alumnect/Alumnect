@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui'
 import {
@@ -10,11 +10,13 @@ import {
   useSendMessage,
   useMarkAsRead,
   chatApi,
+  isMentoringConversation,
   type Conversation,
   type SendMessagePayload,
 } from '@/features/message'
 
 export function MessagesPage() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const targetUserIdParam = searchParams.get('userId')
   const targetUserId = targetUserIdParam ? Number(targetUserIdParam) : null
@@ -166,6 +168,11 @@ export function MessagesPage() {
 
   // Đánh dấu đã đọc khi người dùng bấm chọn cuộc trò chuyện
   const handleSelectConversation = (conv: Conversation) => {
+    // Chat for Task của Mentoring Request mở ở màn hình riêng (hiển thị Request, Deal Ticket, thanh toán, Task)
+    if (isMentoringConversation(conv) && conv.id) {
+      navigate(`/app/mentoring/chats/${conv.id}`)
+      return
+    }
     setActiveConversation(conv)
     if (conv.id && conv.unreadCount > 0) {
       markAsReadMutation.mutate(conv.id)

@@ -1,320 +1,165 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
-  MessagesSquare,
-  AlertTriangle,
-  FileText,
-  Info,
-  Handshake,
-  ChevronUp,
-  Edit3,
   AlertCircle,
-  ArrowRight,
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCheck,
+  CreditCard,
+  Edit3,
+  FileText,
+  Handshake,
+  History,
+  Loader2,
+  MessagesSquare,
+  ThumbsUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { Avatar, Button, toast } from '@/components/ui'
-import { MentoringDealBadge } from './MentoringDealBadge'
-import { MentoringDealActionModal } from './MentoringDealActionModal'
-import { MentoringDealFormModal } from './MentoringDealFormModal'
-import { MentoringTaskPaymentModal } from './MentoringTaskPaymentModal'
-import { MentoringDiscordTicketEmbed } from './MentoringDiscordTicketEmbed'
-import { MentoringTicketDetailModal, type MentoringTicketData } from './MentoringTicketDetailModal'
+import { Avatar, Button, Skeleton, toast } from '@/components/ui'
 import {
   MessageBubble,
   MessageInput,
   useMessages,
   useSendMessage,
   useWebSocketChat,
-  chatApi,
+  type Message,
   type SendMessagePayload,
 } from '@/features/message'
-import {
-  useDealDetail,
-  useConfirmDeal,
-  useRejectDeal,
-  useRequestAdjustment,
-} from '../hooks/useMentoringDeals'
 import { useAuthStore } from '@/store/authStore'
+import { MentoringDealBadge } from './MentoringDealBadge'
+import { MentoringDealActionModal } from './MentoringDealActionModal'
+import { MentoringDealFormModal } from './MentoringDealFormModal'
+import { MentoringTaskPaymentModal } from './MentoringTaskPaymentModal'
+import { MentoringTaskDetailModal } from './MentoringTaskDetailModal'
+import { MentoringDiscordTicketEmbed } from './MentoringDiscordTicketEmbed'
+import { MentoringTicketDetailModal, type MentoringTicketData } from './MentoringTicketDetailModal'
+import { useMentoringConversation } from '../hooks/useMentoringConversation'
+import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
 import type { MentoringDeal, MentoringDealSnapshot } from '../model/mentoringDealTypes'
+import {
+  MENTORING_PARTICIPATION_LABELS,
+  MENTORING_REQUEST_FLOW_STATUS_LABELS,
+  MENTORING_TASK_STATUS_LABELS,
+  MENTORING_TASK_TYPE_LABELS,
+  MENTORING_WORKING_MODE_LABELS,
+  formatVnd,
+} from '../model/mentoringFlowLabels'
 
 interface MentoringChatForTaskProps {
-  deal: MentoringDeal
+  /** ID Chat for Task (Conversation MENTORING của Request + Student + Mentor) */
+  conversationId: number
   onBack?: () => void
-  onDealUpdated?: () => void
+}
+
+/** Một phần tử trên dòng thời gian Chat for Task: tin nhắn hoặc một phiên bản Deal Ticket */
+type TimelineItem =
+  | { kind: 'message'; at: number; message: Message }
+  | { kind: 'ticket'; at: number; snapshot: MentoringDealSnapshot }
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'đang chờ thanh toán',
+  FAILED: 'thất bại',
+  EXPIRED: 'đã hết hạn',
+  CANCELLED: 'đã hủy',
+  PAID: 'thành công',
 }
 
 /**
- * Khu vực Chat for Task riêng biệt thuộc Thỏa thuận Cố vấn (UC104 & UC105).
- * Tách biệt hoàn toàn với hệ thống Chat chung, tích hợp Deal Ticket Card ở đầu
- * và luồng tin nhắn trao đổi điều khoản, phạm vi công việc giữa Student và Mentor.
+ * Chat for Task của một Mentoring Request (UC103 → UC104 → UC105).
+ * - Mỗi cuộc hội thoại thuộc duy nhất bộ Request + Student + Mentor; ngữ cảnh lấy từ backend.
+ * - Deal Ticket được hiển thị inline theo từng phiên bản (dữ liệu snapshot trong DB, không phân tích nội dung tin nhắn).
+ * - Mentor: "Chấp nhận Deal theo Request" hoặc "Deal lại / Tạo Deal Ticket".
+ * - Học viên: "Xác nhận & thanh toán", "Yêu cầu điều chỉnh", "Từ chối" trên phiên bản mới nhất.
+ * - Sau thanh toán thành công, cuộc hội thoại tiếp tục được dùng cho Task ("Xem Task").
+ * Mọi quyền thao tác (canConfirm, canPay, canCreateDealTicket, readOnly...) do backend tính và kiểm tra lại.
  */
-export function MentoringChatForTask({
-  deal,
-  onBack,
-  onDealUpdated,
-}: MentoringChatForTaskProps) {
-  const currentUserId = useAuthStore((state) => state.user?.id)
-  const currentNumId = Number(currentUserId) || 0
+export function MentoringChatForTask({ conversationId, onBack }: MentoringChatForTaskProps) {
+  const navigate = useNavigate()
+  const currentUserId = Number(useAuthStore((state) => state.user?.id)) || 0
 
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [resolvedConversationId, setResolvedConversationId] = useState<number | null>(
-    deal.conversationId || null
-  )
+  const { data: ctx, isLoading, error, refetch } = useMentoringConversation(conversationId)
+  const deal: MentoringDeal | null = ctx?.deal?.deal ?? null
+  const snapshots = useMemo(() => ctx?.deal?.snapshots ?? [], [ctx?.deal?.snapshots])
+  const isMentor = ctx?.myRole === 'MENTOR'
+  const partnerId = isMentor ? ctx?.studentId : ctx?.mentorUserId
+  const partnerName = (isMentor ? ctx?.studentName : ctx?.mentorName) || (isMentor ? 'Học viên' : 'Mentor')
+  const partnerAvatar = isMentor ? ctx?.studentAvatar : ctx?.mentorAvatar
 
-  // Lấy dữ liệu Deal và Snapshot mới nhất
-  const { data: detailData, refetch: refetchDeal } = useDealDetail(deal.id)
-  const currentDeal = detailData?.deal || deal
-
-  const isMentor = currentNumId === currentDeal.mentorId
-  const partnerId = isMentor ? currentDeal.studentId : currentDeal.mentorId
-  const partnerName = isMentor
-    ? currentDeal.studentName || 'Học viên'
-    : currentDeal.mentorName || 'Cố vấn'
-  const partnerAvatar = isMentor ? currentDeal.studentAvatar : currentDeal.mentorAvatar
-  const partnerRole = isMentor ? 'Học viên' : 'Mentor'
-
-  // Quản lý menu tiện ích mở rộng Deal
+  // Trạng thái các modal / dialog
+  const [isRequestPanelOpen, setIsRequestPanelOpen] = useState(false)
   const [isDealMenuOpen, setIsDealMenuOpen] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isAcceptByRequestOpen, setIsAcceptByRequestOpen] = useState(false)
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+  const [paymentDeal, setPaymentDeal] = useState<MentoringDeal | null>(null)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isTaskOpen, setIsTaskOpen] = useState(false)
+  const [rejectTarget, setRejectTarget] = useState<number | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [adjustTarget, setAdjustTarget] = useState<number | null>(null)
+  const [adjustNote, setAdjustNote] = useState('')
+  const [ticketModal, setTicketModal] = useState<{ ticket: MentoringTicketData; version: number } | null>(null)
   const dealMenuRef = useRef<HTMLDivElement | null>(null)
 
-  // Modals cho tạo / sửa Deal
-  const [isCreateDealModalOpen, setIsCreateDealModalOpen] = useState(false)
-  const [createProposalSource, setCreateProposalSource] = useState<'REQUEST_ACCEPTANCE' | 'RENEGOTIATION'>('RENEGOTIATION')
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
-
-  // Dialog nhập lý do từ chối / điều chỉnh
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
-  const [rejectReason, setRejectReason] = useState('')
-  const [isAdjustDialogOpen, setIsAdjustDialogOpen] = useState(false)
-  const [adjustNote, setAdjustNote] = useState('')
-
-  // Quản lý Modal xem chi tiết Ticket
-  const [selectedTicketModal, setSelectedTicketModal] = useState<MentoringTicketData | null>(null)
-  const [isTicketDetailModalOpen, setIsTicketDetailModalOpen] = useState(false)
-
+  const proposeMutation = useProposeDeal()
   const confirmMutation = useConfirmDeal()
   const rejectMutation = useRejectDeal()
   const adjustMutation = useRequestAdjustment()
+  const sendMessageMutation = useSendMessage()
 
-  // Chuyển đổi snapshot/deal thành MentoringTicketData cho Embed & Detail Modal
-  const buildTicketData = (
-    snapshot: MentoringDealSnapshot | null,
-    versionNum: number,
-    createdAtMsg?: string
-  ): MentoringTicketData => {
-    const isLatestVersion = versionNum === currentDeal.version
-    const s = snapshot || {
-      id: currentDeal.id,
-      dealId: currentDeal.id,
-      version: currentDeal.version,
-      taskScope: currentDeal.taskScope,
-      agreedPrice: currentDeal.agreedPrice,
-      deadline: currentDeal.deadline,
-      workingMode: currentDeal.workingMode,
-      participationType: currentDeal.participationType,
-      taskType: currentDeal.taskType,
-      expectedResult: currentDeal.expectedResult,
-      modifiedByUserId: currentDeal.updatedByUserId || currentDeal.createdByUserId,
-      modifiedByName: currentDeal.updatedByName || currentDeal.createdByName,
-      createdAt: currentDeal.updatedAt || currentDeal.createdAt,
-    }
-
-    const modifiedUserId = s.modifiedByUserId || (isMentor ? currentDeal.mentorId : currentDeal.studentId)
-    const isSender = modifiedUserId === currentNumId
-
-    let status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED' = 'PENDING'
-    if (!isLatestVersion || currentDeal.status === 'SUPERSEDED') {
-      status = 'SUPERSEDED'
-    } else if (currentDeal.status === 'DEAL_CONFIRMED') {
-      status = 'CONFIRMED'
-    } else if (currentDeal.status === 'REJECTED' || currentDeal.status === 'CANCELLED') {
-      status = 'REJECTED'
-    } else {
-      status = 'PENDING'
-    }
-
-    const isModifierMentor = modifiedUserId === currentDeal.mentorId
-    const senderRole = isModifierMentor ? 'Mentor' : 'Học viên'
-    const senderName =
-      s.modifiedByName ||
-      (isModifierMentor
-        ? currentDeal.mentorName || 'Mentor'
-        : currentDeal.studentName || 'Học viên')
-    const senderAvatar = isModifierMentor
-      ? currentDeal.mentorAvatar
-      : currentDeal.studentAvatar
-
-    return {
-      ticketType: 'DEAL',
-      ticketCode: `#DL-${String(currentDeal.id).padStart(3, '0')}`,
-      version: versionNum,
-      dealId: currentDeal.id,
-      senderId: modifiedUserId,
-      senderName,
-      senderAvatar,
-      senderRole,
-      createdAt: createdAtMsg || s.createdAt || currentDeal.createdAt,
-      status,
-      handlerName:
-        currentDeal.status === 'DEAL_CONFIRMED'
-          ? isSender
-            ? partnerName
-            : 'Bạn'
-          : currentDeal.status === 'REJECTED' || currentDeal.status === 'CANCELLED'
-            ? currentDeal.updatedByUserId === currentNumId
-              ? 'Bạn'
-              : currentDeal.updatedByName || partnerName
-            : undefined,
-      handledAt: currentDeal.lockedAt || undefined,
-      taskScope: s.taskScope,
-      expectedResult: s.expectedResult,
-      agreedPrice: s.agreedPrice,
-      deadline: s.deadline,
-      workingMode: s.workingMode,
-      participationType: s.participationType,
-      isPaid: currentDeal.isPaid,
-      isMentor: isMentor,
-    }
-  }
-
-  // Đóng popover menu khi bấm ra ngoài
+  // Đóng menu giao dịch khi bấm ra ngoài
   useEffect(() => {
+    if (!isDealMenuOpen) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (dealMenuRef.current && !dealMenuRef.current.contains(e.target as Node)) {
-        setIsDealMenuOpen(false)
-      }
+      if (dealMenuRef.current && !dealMenuRef.current.contains(e.target as Node)) setIsDealMenuOpen(false)
     }
-    if (isDealMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isDealMenuOpen])
 
-  // Xử lý Student chọn: "Xác nhận & thanh toán"
-  const handleConfirmAndPay = async () => {
-    try {
-      const updated = await confirmMutation.mutateAsync(currentDeal.id)
-      refetchDeal()
-      onDealUpdated?.()
-      if (updated.status === 'DEAL_CONFIRMED') {
-        toast.success('Hai bên đã chốt thỏa thuận thành công!')
-      } else {
-        toast.success('Đã xác nhận thỏa thuận. Đang chờ đối phương xác nhận.')
-      }
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Không thể xác nhận Deal.'
-      toast.error(msg)
-    }
-  }
-
-  // Xử lý Student chọn: "Yêu cầu điều chỉnh"
-  const handleRequestAdjustment = async () => {
-    try {
-      await adjustMutation.mutateAsync({
-        dealId: currentDeal.id,
-        note: adjustNote.trim() || 'Học viên yêu cầu điều chỉnh các điều khoản',
-      })
-      toast.success('Đã gửi yêu cầu điều chỉnh. Deal Ticket cũ đã được đánh dấu SUPERSEDED.')
-      setIsAdjustDialogOpen(false)
-      setAdjustNote('')
-      refetchDeal()
-      onDealUpdated?.()
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Không thể gửi yêu cầu điều chỉnh.'
-      toast.error(msg)
-    }
-  }
-
-  // Xử lý Student / Mentor chọn: "Từ chối"
-  const handleRejectDeal = async () => {
-    try {
-      setIsRejectDialogOpen(false)
-      await rejectMutation.mutateAsync({
-        dealId: currentDeal.id,
-        reason: rejectReason.trim() || 'Từ chối đề xuất Deal',
-      })
-      toast.success('Đã từ chối Deal Ticket thành công.')
-      setRejectReason('')
-      refetchDeal()
-      onDealUpdated?.()
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Không thể từ chối Deal.'
-      toast.error(msg)
-    }
-  }
-
-  // Tự động tìm hoặc khởi tạo Conversation 1-1 cho deal nếu chưa có conversationId
-  useEffect(() => {
-    if (currentDeal.conversationId) {
-      setResolvedConversationId(currentDeal.conversationId)
-      return
-    }
-
-    if (partnerId && partnerId > 0) {
-      let isSubscribed = true
-      chatApi
-        .getOrCreateDirectConversation(partnerId)
-        .then((res) => {
-          if (isSubscribed && res.data?.id) {
-            setResolvedConversationId(res.data.id)
-          }
-        })
-        .catch((err) => {
-          console.error('Không thể tạo/mở cuộc hội thoại riêng cho Deal:', err)
-        })
-
-      return () => {
-        isSubscribed = false
-      }
-    }
-  }, [currentDeal.conversationId, partnerId])
-
-  // Lắng nghe WebSocket tin nhắn thời gian thực và đồng bộ Ticket tức thời
+  // Tin nhắn hệ thống realtime báo hiệu trạng thái nghiệp vụ thay đổi → tải lại ngữ cảnh từ backend
   useWebSocketChat((newMsg) => {
-    if (!resolvedConversationId || newMsg.conversationId === resolvedConversationId) {
-      refetchDeal()
-      onDealUpdated?.()
-    }
+    if (newMsg.conversationId === conversationId) refetch()
   })
 
-  // Lấy lịch sử tin nhắn của cuộc trò chuyện Chat for Task
+  // ---------------- Tin nhắn & dòng thời gian ----------------
   const {
     data: messagesData,
     isLoading: isLoadingMessages,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useMessages(resolvedConversationId)
+  } = useMessages(conversationId)
 
-  // Ghép các trang và đảo thứ tự: tin nhắn cũ ở trên, mới ở dưới
   const messages = useMemo(() => {
     if (!messagesData?.pages) return []
-    const allDesc = messagesData.pages.flatMap((page) => page.content || [])
-    return [...allDesc].reverse()
+    return [...messagesData.pages.flatMap((page) => page.content || [])].reverse()
   }, [messagesData])
 
-  // Điều khiển cuộn danh sách tin nhắn
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const timeline = useMemo<TimelineItem[]>(() => {
+    const oldestLoaded = messages.length > 0 ? new Date(messages[0].createdAt).getTime() : 0
+    const items: TimelineItem[] = messages.map((m) => ({ kind: 'message', at: new Date(m.createdAt).getTime(), message: m }))
+    snapshots.forEach((s) => {
+      const at = new Date(s.createdAt).getTime()
+      // Khi còn trang tin nhắn cũ chưa tải, chỉ hiển thị các phiên bản nằm trong khoảng thời gian đã tải
+      if (!hasNextPage || at >= oldestLoaded) items.push({ kind: 'ticket', at, snapshot: s })
+    })
+    return items.sort((a, b) => a.at - b.at || (a.kind === 'ticket' ? -1 : 1))
+  }, [messages, snapshots, hasNextPage])
+
+  // ---------------- Cuộn danh sách ----------------
+  const scrollRef = useRef<HTMLDivElement | null>(null)
   const isInitialLoadRef = useRef(true)
   const prevScrollHeightRef = useRef(0)
   const isFetchingOlderRef = useRef(false)
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior,
-      })
-    }
-  }
-
   const handleScroll = () => {
-    const el = scrollContainerRef.current
+    const el = scrollRef.current
     if (!el) return
-
-    if (el.scrollTop < 60 && hasNextPage && !isFetchingNextPage && fetchNextPage) {
+    if (el.scrollTop < 60 && hasNextPage && !isFetchingNextPage) {
       prevScrollHeightRef.current = el.scrollHeight
       isFetchingOlderRef.current = true
       fetchNextPage()
@@ -322,612 +167,616 @@ export function MentoringChatForTask({
   }
 
   useEffect(() => {
-    const el = scrollContainerRef.current
-    if (!el || messages.length === 0) return
-
+    const el = scrollRef.current
+    if (!el || timeline.length === 0) return
     if (isInitialLoadRef.current) {
       requestAnimationFrame(() => {
         el.scrollTop = el.scrollHeight
       })
       isInitialLoadRef.current = false
     } else if (isFetchingOlderRef.current) {
-      const newScrollHeight = el.scrollHeight
-      const addedHeight = newScrollHeight - prevScrollHeightRef.current
-      el.scrollTop = addedHeight
+      el.scrollTop = el.scrollHeight - prevScrollHeightRef.current
       isFetchingOlderRef.current = false
-    } else {
-      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 250
-      if (isNearBottom) {
-        scrollToBottom('smooth')
-      }
+    } else if (el.scrollHeight - el.scrollTop - el.clientHeight < 280) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
     }
-  }, [messages])
+  }, [timeline])
 
   useEffect(() => {
     isInitialLoadRef.current = true
-    isFetchingOlderRef.current = false
-    prevScrollHeightRef.current = 0
-  }, [resolvedConversationId])
+  }, [conversationId])
 
-  // Gửi tin nhắn mới trong Chat for Task
-  const sendMessageMutation = useSendMessage()
-  const handleSendMessage = async (
-    content: string,
-    attachments: NonNullable<SendMessagePayload['attachments']>
-  ) => {
-    if (!resolvedConversationId) {
-      toast.error('Đang chuẩn bị kênh chat riêng cho Task, vui lòng thử lại sau giây lát...')
-      return
-    }
-
+  // ---------------- Hành động ----------------
+  const handleSendMessage = async (content: string, attachments: NonNullable<SendMessagePayload['attachments']>) => {
     try {
-      await sendMessageMutation.mutateAsync({
-        conversationId: resolvedConversationId,
-        recipientId: partnerId,
-        content,
-        attachments,
-      })
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Không thể gửi tin nhắn.'
-      toast.error(msg)
+      await sendMessageMutation.mutateAsync({ conversationId, recipientId: partnerId, content, attachments })
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Không thể gửi tin nhắn.')
+      refetch()
     }
   }
 
-  // Trạng thái chỉ đọc nếu Deal bị SUPERSEDED (Request đã chọn Mentor khác) hoặc bị HỦY
-  const isSuperseded = currentDeal.status === 'SUPERSEDED'
-  const isCancelled = currentDeal.status === 'CANCELLED'
-  const isReadOnly = isSuperseded || isCancelled
+  const handleAcceptByRequest = async () => {
+    try {
+      const created = await proposeMutation.mutateAsync({ conversationId, proposalSource: 'REQUEST_ACCEPTANCE' })
+      toast.success(`Đã gửi Deal Ticket phiên bản ${created.version} theo điều kiện của Request.`)
+      setIsAcceptByRequestOpen(false)
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Không thể chấp nhận Deal theo Request.')
+    }
+  }
+
+  // Bước 1: xác nhận đúng phiên bản; Bước 2: mở thanh toán (Task chỉ tạo sau khi thanh toán thành công)
+  const handleConfirmAndPay = async (version: number) => {
+    if (!deal) return
+    try {
+      const updated = await confirmMutation.mutateAsync({ dealId: deal.id, version })
+      if (updated.status === 'DEAL_CONFIRMED') {
+        toast.success('Deal đã được khóa và Mentor đã được chọn. Tiếp tục thanh toán để kích hoạt Task.')
+        setPaymentDeal(updated)
+        setIsPaymentOpen(true)
+      } else {
+        toast.success('Đã xác nhận. Đang chờ bên còn lại xác nhận.')
+      }
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Không thể xác nhận Deal.')
+    }
+  }
+
+  const handleReject = async () => {
+    if (!deal || rejectTarget === null) return
+    try {
+      await rejectMutation.mutateAsync({
+        dealId: deal.id,
+        version: rejectTarget,
+        reason: rejectReason.trim() || undefined,
+      })
+      toast.success('Đã từ chối Deal Ticket. Hai bên có thể tiếp tục trao đổi.')
+      setRejectTarget(null)
+      setRejectReason('')
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Không thể từ chối Deal Ticket.')
+    }
+  }
+
+  const handleRequestAdjustment = async () => {
+    if (!deal || adjustTarget === null) return
+    try {
+      await adjustMutation.mutateAsync({
+        dealId: deal.id,
+        version: adjustTarget,
+        note: adjustNote.trim() || undefined,
+      })
+      toast.success('Đã gửi yêu cầu điều chỉnh. Mentor sẽ gửi phiên bản Deal Ticket mới.')
+      setAdjustTarget(null)
+      setAdjustNote('')
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Không thể gửi yêu cầu điều chỉnh.')
+    }
+  }
+
+  const openPayment = () => {
+    if (!deal) return
+    setPaymentDeal(deal)
+    setIsPaymentOpen(true)
+  }
+
+  // ---------------- Dựng dữ liệu Ticket cho từng phiên bản ----------------
+  const buildTicket = (s: MentoringDealSnapshot): MentoringTicketData => {
+    let status: MentoringTicketData['status'] = 'PENDING'
+    if (deal && s.version < deal.version) status = 'SUPERSEDED'
+    else if (deal?.status === 'DEAL_CONFIRMED') status = 'CONFIRMED'
+    else if (deal?.status === 'REJECTED' || deal?.status === 'CANCELLED') status = 'REJECTED'
+    else if (deal?.status === 'SUPERSEDED') status = 'ADJUSTMENT'
+
+    const handlerName =
+      status === 'CONFIRMED'
+        ? ctx?.studentName
+        : status === 'REJECTED'
+          ? deal?.status === 'CANCELLED'
+            ? 'Luồng Deal đã đóng'
+            : deal?.updatedByName || ctx?.studentName
+          : undefined
+
+    return {
+      ticketType: 'DEAL',
+      ticketCode: `#DL-${String(deal?.id ?? s.dealId).padStart(3, '0')}`,
+      version: s.version,
+      dealId: deal?.id ?? s.dealId,
+      senderId: s.modifiedByUserId,
+      senderName: s.modifiedByName || ctx?.mentorName || 'Mentor',
+      senderAvatar: s.modifiedByAvatar ?? ctx?.mentorAvatar,
+      senderRole: 'Mentor',
+      status,
+      handlerName,
+      handledAt: (status === 'CONFIRMED' ? deal?.lockedAt : deal?.updatedAt) || undefined,
+      taskScope: s.taskScope,
+      expectedResult: s.expectedResult,
+      agreedPrice: Number(s.agreedPrice),
+      deadline: s.deadline,
+      workingMode: s.workingMode,
+      participationType: s.participationType,
+      taskType: s.taskType,
+      proposalSource: s.proposalSource,
+      changeNote: s.changeNote,
+      createdAt: s.createdAt,
+      isPaid: deal?.isPaid,
+      isMentor,
+    }
+  }
+
+  /** Hành động hợp lệ trên một phiên bản (chỉ phiên bản mới nhất mới có hành động) */
+  const actionsFor = (version: number) => {
+    const isLatest = Boolean(deal && version === deal.version)
+    const studentPending = isLatest && !isMentor && Boolean(deal?.canConfirm)
+    const mentorCanReissue =
+      isLatest && isMentor && Boolean(ctx?.canCreateDealTicket) && (deal?.status === 'SUPERSEDED' || deal?.status === 'REJECTED')
+    return {
+      canAct: studentPending,
+      onConfirm: studentPending ? () => handleConfirmAndPay(version) : undefined,
+      onReject: isLatest && deal?.canReject ? () => setRejectTarget(version) : undefined,
+      onRevert: studentPending && deal?.canRequestAdjustment
+        ? () => setAdjustTarget(version)
+        : mentorCanReissue
+          ? () => setIsFormOpen(true)
+          : undefined,
+      onPay: isLatest && deal?.canPay ? openPayment : undefined,
+    }
+  }
+
+  // ---------------- Render ----------------
+  if (isLoading) {
+    return (
+      <div className="space-y-3 rounded-3xl border border-plum-900/[0.08] bg-white p-6 dark:border-white/10 dark:bg-[#1e1f20]">
+        <Skeleton className="h-10 w-1/2" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
+  }
+
+  if (error || !ctx) {
+    return (
+      <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-6 text-center space-y-3 dark:bg-rose-950/20 dark:border-rose-900/30">
+        <AlertCircle className="mx-auto h-8 w-8 text-rose-500" />
+        <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
+          {error?.message || 'Không thể tải Chat for Task.'}
+        </p>
+        {onBack && (
+          <Button variant="secondary" size="sm" onClick={onBack}>
+            Quay lại
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  const requestPrice = ctx.budgetMax ?? ctx.budgetMin
+  const isDealLockedUnpaid = deal?.status === 'DEAL_CONFIRMED' && !deal?.isPaid
+  const lastPaymentStatus = ctx.latestPayment?.paymentStatus
 
   return (
-    <div className="flex h-[calc(100vh-140px)] min-h-[580px] flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#1e1f20]">
-      {/* Header Chat for Task */}
+    <div className="flex h-[calc(100vh-140px)] min-h-[600px] flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#1e1f20]">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] bg-white/90 px-4 py-3.5 backdrop-blur-md dark:border-white/10 dark:bg-[#242526]/90 sm:px-6">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              title="Quay lại danh sách Deals"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-plum-900/10 bg-plum-50/50 text-plum-700 hover:bg-brand-50 hover:text-brand-600 transition-all dark:border-white/10 dark:bg-white/5 dark:text-[#f0f2f5] dark:hover:bg-brand-950/40"
+              title="Quay lại"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-plum-900/10 bg-plum-50/50 text-plum-700 transition-all hover:bg-brand-50 hover:text-brand-600 dark:border-white/10 dark:bg-white/5 dark:text-[#f0f2f5]"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
           )}
-
-          <Avatar
-            src={partnerAvatar || undefined}
-            name={partnerName}
-            size={40}
-            className="ring-2 ring-brand-500/20"
-          />
-
+          <Avatar src={partnerAvatar || undefined} name={partnerName} size={40} className="ring-2 ring-brand-500/20" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="truncate font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">
-                {partnerName}
-              </h2>
+              <h2 className="truncate font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">{partnerName}</h2>
               <span className="rounded-full bg-brand-100/70 px-2.5 py-0.5 text-[10px] font-black text-brand-700 dark:bg-brand-950/70 dark:text-brand-300">
-                {partnerRole}
+                {isMentor ? 'Học viên' : 'Mentor'}
               </span>
+              {ctx.selectedMentor && (
+                <span className="rounded-full bg-mint-100 px-2.5 py-0.5 text-[10px] font-black text-mint-700 dark:bg-mint-950/50 dark:text-mint-300">
+                  Mentor được chọn
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-              <span className="font-bold text-plum-700 dark:text-plum-300">
-                Deal #{currentDeal.id} (v{currentDeal.version})
-              </span>
-              <span>•</span>
-              <span className="truncate max-w-[220px] sm:max-w-xs">{currentDeal.taskScope}</span>
-            </div>
+            <p className="truncate text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+              Chat for Task · Request #{ctx.requestId}: <span className="font-semibold">{ctx.requestTitle}</span>
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <MentoringDealBadge
-            status={currentDeal.status}
-            isLocked={currentDeal.isLocked}
-            isPaid={currentDeal.isPaid}
-          />
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsDetailModalOpen(true)}
-            leftIcon={<FileText className="h-3.5 w-3.5 text-brand-600" />}
-            className="rounded-xl font-bold text-xs"
-          >
-            Lịch sử Snapshots
-          </Button>
-        </div>
-      </div>
-
-      {/* Cảnh báo trạng thái Read-only theo SRS UC104 */}
-      {isSuperseded && (
-        <div className="flex items-center gap-2.5 bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 text-xs font-bold text-amber-800 dark:text-amber-300 sm:px-6">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-          <span>
-            Request đã chọn Mentor khác. Cuộc trò chuyện này ở chế độ chỉ đọc, không nhận hoặc chốt Deal mới.
-          </span>
-        </div>
-      )}
-
-      {isCancelled && (
-        <div className="flex items-center gap-2.5 bg-rose-500/10 border-b border-rose-500/20 px-4 py-2.5 text-xs font-bold text-rose-800 dark:text-rose-300 sm:px-6">
-          <Info className="h-4 w-4 shrink-0 text-rose-600" />
-          <span>Thỏa thuận Deal này đã bị hủy bỏ.</span>
-        </div>
-      )}
-
-      {/* Top Banner: Thẻ tóm tắt nhanh Deal hiện tại */}
-      <div className="border-b border-plum-900/[0.06] bg-plum-50/50 px-4 py-2 dark:bg-black/20 dark:border-white/5 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2 text-plum-700 dark:text-plum-200 min-w-0">
-          <FileText className="h-4 w-4 shrink-0 text-brand-600" />
-          <span className="font-bold shrink-0">
-            Deal #DL-{String(currentDeal.id).padStart(3, '0')} (Phiên bản {currentDeal.version})
-          </span>
-          <span className="text-plum-400">•</span>
-          <span className="font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
-            {new Intl.NumberFormat('vi-VN').format(currentDeal.agreedPrice)}đ
-          </span>
-          {currentDeal.deadline && (
-            <>
-              <span className="hidden sm:inline text-plum-400">•</span>
-              <span className="hidden sm:inline truncate text-plum-500 dark:text-[#b0b3b8]">
-                Hạn chót: {format(new Date(currentDeal.deadline), 'dd/MM/yyyy')}
-              </span>
-            </>
+        <div className="flex flex-wrap items-center gap-2">
+          {deal && <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} isPaid={deal.isPaid} />}
+          {deal && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsHistoryOpen(true)}
+              leftIcon={<History className="h-3.5 w-3.5 text-brand-600" />}
+              className="rounded-xl text-xs font-bold"
+            >
+              Lịch sử phiên bản
+            </Button>
+          )}
+          {ctx.taskId && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsTaskOpen(true)}
+              leftIcon={<ClipboardCheck className="h-3.5 w-3.5" />}
+              className="rounded-xl text-xs font-black"
+            >
+              Xem Task
+            </Button>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            const ticket = buildTicketData(null, currentDeal.version)
-            setSelectedTicketModal(ticket)
-            setIsTicketDetailModalOpen(true)
-          }}
-          className="text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1 hover:underline shrink-0"
-        >
-          <span>Xem chi tiết popup</span>
-          <ArrowRight className="h-3 w-3" />
-        </button>
       </div>
 
-      {/* Khu vực tin nhắn trao đổi trong Chat for Task */}
+      {/* Ngữ cảnh Request */}
+      <div className="border-b border-plum-900/[0.06] bg-plum-50/50 px-4 py-2 text-xs dark:border-white/5 dark:bg-black/20 sm:px-6">
+        <button
+          type="button"
+          onClick={() => setIsRequestPanelOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 text-left"
+          aria-expanded={isRequestPanelOpen}
+        >
+          <span className="flex min-w-0 items-center gap-2 text-plum-700 dark:text-plum-200">
+            <FileText className="h-4 w-4 shrink-0 text-brand-600" />
+            <span className="shrink-0 font-bold">{MENTORING_REQUEST_FLOW_STATUS_LABELS[ctx.requestStatus] || ctx.requestStatus}</span>
+            <span className="text-plum-400">•</span>
+            <span className="truncate">
+              Ngân sách {formatVnd(ctx.budgetMin)} – {formatVnd(ctx.budgetMax)}
+              {ctx.expectedDeadline ? ` • Mong muốn trước ${format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy')}` : ''}
+            </span>
+          </span>
+          {isRequestPanelOpen ? <ChevronUp className="h-4 w-4 text-plum-400" /> : <ChevronDown className="h-4 w-4 text-plum-400" />}
+        </button>
+        {isRequestPanelOpen && (
+          <div className="mt-2 grid gap-2 pb-1 text-plum-600 dark:text-[#b0b3b8] sm:grid-cols-2">
+            <p className="sm:col-span-2 whitespace-pre-wrap text-plum-800 dark:text-[#e4e6eb]">{ctx.requestDescription}</p>
+            <p>
+              Loại Request: <b>{ctx.requestType === 'DIRECT' ? 'Gửi trực tiếp (UC101)' : 'Yêu cầu chung (UC100)'}</b>
+              {ctx.industryName ? ` · ${ctx.industryName}` : ''}
+            </p>
+            <p>
+              Nhiệm vụ: <b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b>
+            </p>
+            <p>
+              Hình thức: <b>{MENTORING_WORKING_MODE_LABELS[ctx.workingMode || ''] || ctx.workingMode}</b> ·{' '}
+              {MENTORING_PARTICIPATION_LABELS[ctx.participationType || ''] || ctx.participationType}
+            </p>
+            <p>
+              Phản hồi của Mentor: <b>{ctx.responseStatus}</b>
+              {ctx.respondedAt ? ` lúc ${format(new Date(ctx.respondedAt), 'dd/MM/yyyy HH:mm')}` : ''}
+            </p>
+            <button
+              type="button"
+              onClick={() =>
+                navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`)
+              }
+              className="justify-self-start font-bold text-brand-600 hover:underline dark:text-brand-400"
+            >
+              Mở trang chi tiết Request →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Banner trạng thái nghiệp vụ */}
+      {ctx.readOnly && (
+        <div className="flex items-center gap-2.5 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-800 dark:text-amber-300 sm:px-6">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+          <span>{ctx.readOnlyReason} Cuộc trò chuyện ở chế độ chỉ đọc, lịch sử được giữ nguyên.</span>
+        </div>
+      )}
+      {isDealLockedUnpaid && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 sm:px-6">
+          <span className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            Deal phiên bản {deal?.version} đã khóa · {formatVnd(Number(deal?.agreedPrice))}
+            {lastPaymentStatus && lastPaymentStatus !== 'PAID'
+              ? ` · Lần thanh toán gần nhất ${PAYMENT_STATUS_LABELS[lastPaymentStatus] || lastPaymentStatus}`
+              : ''}
+          </span>
+          {deal?.canPay ? (
+            <Button size="sm" onClick={openPayment} leftIcon={<CreditCard className="h-3.5 w-3.5" />} className="rounded-xl text-xs font-black">
+              {lastPaymentStatus && lastPaymentStatus !== 'PENDING' ? 'Thanh toán lại' : 'Thanh toán'}
+            </Button>
+          ) : (
+            <span>Đang chờ Học viên thanh toán</span>
+          )}
+        </div>
+      )}
+      {ctx.taskId && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-mint-500/20 bg-mint-500/10 px-4 py-2.5 text-xs font-bold text-mint-800 dark:text-mint-300 sm:px-6">
+          <span className="flex items-center gap-2">
+            <ClipboardCheck className="h-4 w-4 shrink-0" />
+            Thanh toán thành công · Task #{ctx.taskId} ({MENTORING_TASK_STATUS_LABELS[ctx.taskStatus || ''] || ctx.taskStatus}). Chat này tiếp tục được dùng cho Task.
+          </span>
+          <button type="button" onClick={() => setIsTaskOpen(true)} className="font-black underline-offset-2 hover:underline">
+            Xem Task
+          </button>
+        </div>
+      )}
+
+      {/* Dòng thời gian: tin nhắn + Deal Ticket */}
       <div
-        ref={scrollContainerRef}
+        ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 space-y-3 bg-[#f8f9fa]/50 dark:bg-[#18191a]"
+        className="flex-1 space-y-3 overflow-y-auto bg-[#f8f9fa]/50 px-4 py-4 dark:bg-[#18191a] sm:px-6"
       >
         {isFetchingNextPage && (
           <div className="flex justify-center py-2">
-            <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold text-plum-500 shadow-xs dark:bg-white/10 dark:text-[#b0b3b8]">
+            <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold text-plum-500 shadow-xs dark:bg-white/10">
               Đang tải tin nhắn cũ hơn...
             </span>
           </div>
         )}
 
         {isLoadingMessages ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="space-y-2 text-center">
-              <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-              <p className="text-xs font-bold text-plum-500 dark:text-[#b0b3b8]">
-                Đang tải hội thoại trao đổi...
-              </p>
+          <div className="space-y-3">
+            <Skeleton className="h-12 w-2/3" />
+            <Skeleton className="ml-auto h-12 w-1/2" />
+            <Skeleton className="h-40 w-3/4" />
+          </div>
+        ) : timeline.length === 0 ? (
+          <div className="flex h-full min-h-[160px] flex-col items-center justify-center space-y-2 p-6 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/50">
+              <MessagesSquare className="h-6 w-6" />
             </div>
+            <p className="font-heading text-sm font-black text-plum-800 dark:text-[#f0f2f5]">Bắt đầu trao đổi về Request</p>
+            <p className="max-w-sm text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+              {isMentor
+                ? 'Trao đổi với Học viên, sau đó dùng nút "Giao dịch" để Chấp nhận Deal theo Request hoặc tạo Deal Ticket mới.'
+                : 'Trao đổi với Mentor về phạm vi, giá và thời hạn. Deal Ticket của Mentor sẽ hiển thị tại đây.'}
+            </p>
           </div>
         ) : (
-          (() => {
-            const renderedVersions = new Set<number>()
-
-            const messageElements = messages.map((msg) => {
-              const isMe = msg.senderId === currentNumId
-              // Các tin nhắn hành động (Xác nhận, Từ chối, Hủy bỏ) là thông báo trạng thái, không phải đề xuất Ticket mới
-              const isActionNotice = /đã\s*(?:xác\s*nhận|từ\s*chối|hủy\s*bỏ)|cả\s*hai\s*bên\s*xác\s*nhận/i.test(msg.content || '')
-              const isDealMsg = !isActionNotice && /deal\s*ticket|deal\s*#|phiên\s*bản/i.test(msg.content || '')
-
-              if (isDealMsg) {
-                const verMatch = (msg.content || '').match(/(?:Phiên bản|v)\s*(\d+)/i)
-                const verNum = verMatch
-                  ? parseInt(verMatch[1], 10)
-                  : currentDeal.version
-
-                // Mỗi phiên bản (version) chỉ render đúng 1 thẻ Ticket Embed duy nhất trong luồng chat
-                if (!renderedVersions.has(verNum)) {
-                  renderedVersions.add(verNum)
-
-                  const matchedSnapshot =
-                    detailData?.snapshots?.find((s) => s.version === verNum) || null
-                  const ticket = buildTicketData(matchedSnapshot, verNum, msg.createdAt)
-                  const isRecipient = ticket.senderId
-                    ? ticket.senderId !== currentNumId
-                    : !isMentor
-                  const canAct =
-                    ticket.status === 'PENDING' &&
-                    isRecipient &&
-                    !isReadOnly &&
-                    Boolean(currentDeal.canConfirm)
-
-                  const isTicketFromMe = ticket.senderId
-                    ? ticket.senderId === currentNumId
-                    : isMe
-
-                  return (
-                    <MentoringDiscordTicketEmbed
-                      key={msg.id}
-                      ticket={ticket}
-                      isMe={isTicketFromMe}
-                      isRecipient={isRecipient}
-                      canAct={canAct}
-                      onConfirm={handleConfirmAndPay}
-                      onReject={() => setIsRejectDialogOpen(true)}
-                      onRevert={() => setIsCreateDealModalOpen(true)}
-                      onPay={() => setIsPaymentModalOpen(true)}
-                      onViewDetail={() => {
-                        setSelectedTicketModal(ticket)
-                        setIsTicketDetailModalOpen(true)
-                      }}
-                      isConfirming={confirmMutation.isPending}
-                      isRejecting={rejectMutation.isPending}
-                    />
-                  )
-                }
-              }
-
-              return (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  isMe={isMe}
-                />
-              )
-            })
-
-            // Nếu chưa có tin nhắn nào render phiên bản active hiện tại, hiển thị thẻ tương tác của Deal mới nhất
-            const shouldRenderActiveTicket = !renderedVersions.has(currentDeal.version)
-            const activeTicket = buildTicketData(null, currentDeal.version)
-            const isActiveFromMe = activeTicket.senderId === currentNumId
-            const isActiveRecipient = activeTicket.senderId
-              ? activeTicket.senderId !== currentNumId
-              : !isMentor
-            const canActActive =
-              activeTicket.status === 'PENDING' &&
-              isActiveRecipient &&
-              !isReadOnly &&
-              Boolean(currentDeal.canConfirm)
-
-            if (messages.length === 0 && !shouldRenderActiveTicket) {
-              return (
-                <div className="flex h-full min-h-[160px] flex-col items-center justify-center text-center p-6 space-y-2">
-                  <div className="h-12 w-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600 dark:bg-brand-950/50">
-                    <MessagesSquare className="h-6 w-6" />
-                  </div>
-                  <p className="font-heading font-black text-sm text-plum-800 dark:text-[#f0f2f5]">
-                    Kênh Chat for Task riêng biệt
-                  </p>
-                  <p className="text-xs text-plum-500 dark:text-[#b0b3b8] max-w-sm leading-relaxed">
-                    Hãy gửi tin nhắn để cùng nhau trao đổi chi tiết phạm vi công việc, giá và chốt điều khoản thỏa thuận với đối tác.
-                  </p>
-                </div>
-              )
+          timeline.map((item) => {
+            if (item.kind === 'message') {
+              return <MessageBubble key={`m-${item.message.id}`} message={item.message} isMe={item.message.senderId === currentUserId} />
             }
-
+            const ticket = buildTicket(item.snapshot)
+            const actions = actionsFor(item.snapshot.version)
             return (
-              <>
-                {messageElements}
-                {shouldRenderActiveTicket && (
-                  <MentoringDiscordTicketEmbed
-                    key={`deal-active-${currentDeal.id}-${currentDeal.version}`}
-                    ticket={activeTicket}
-                    isMe={isActiveFromMe}
-                    isRecipient={isActiveRecipient}
-                    canAct={canActActive}
-                    onConfirm={handleConfirmAndPay}
-                    onReject={() => setIsRejectDialogOpen(true)}
-                    onRevert={() => setIsCreateDealModalOpen(true)}
-                    onPay={() => setIsPaymentModalOpen(true)}
-                    onViewDetail={() => {
-                      setSelectedTicketModal(activeTicket)
-                      setIsTicketDetailModalOpen(true)
-                    }}
-                    isConfirming={confirmMutation.isPending}
-                    isRejecting={rejectMutation.isPending}
-                  />
-                )}
-              </>
+              <MentoringDiscordTicketEmbed
+                key={`t-${item.snapshot.id}`}
+                ticket={ticket}
+                isMe={ticket.senderId === currentUserId}
+                isRecipient={!isMentor}
+                canAct={actions.canAct}
+                onConfirm={actions.onConfirm}
+                onReject={actions.onReject}
+                onRevert={actions.onRevert}
+                onPay={actions.onPay}
+                onViewDetail={() => setTicketModal({ ticket, version: item.snapshot.version })}
+                isConfirming={confirmMutation.isPending}
+                isRejecting={rejectMutation.isPending}
+              />
             )
-          })()
+          })
         )}
       </div>
 
-      {/* Input gửi tin nhắn */}
+      {/* Ô nhập tin nhắn */}
       <div className="border-t border-plum-900/[0.08] bg-white p-3 dark:border-white/10 dark:bg-[#242526]">
-        {isReadOnly ? (
+        {!ctx.canSendMessage ? (
           <div className="rounded-2xl bg-plum-50 p-3 text-center text-xs font-bold text-plum-500 dark:bg-white/5 dark:text-[#b0b3b8]">
-            Cuộc hội thoại này đã kết thúc hoặc ở chế độ chỉ đọc.
+            {ctx.readOnlyReason || 'Cuộc hội thoại này ở chế độ chỉ đọc.'}
           </div>
         ) : (
           <MessageInput
             onSendMessage={handleSendMessage}
-            disabled={!resolvedConversationId}
             leftActions={
-              <div className="relative" ref={dealMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsDealMenuOpen(!isDealMenuOpen)}
-                  title="Chức năng mở rộng Thỏa thuận Deal"
-                  className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-orange-50/60 px-3 text-xs font-bold text-brand-700 shadow-2xs transition-all hover:bg-brand-100 hover:border-brand-300 active:scale-95 dark:border-brand-800/40 dark:bg-brand-950/40 dark:text-brand-300"
-                >
-                  <Handshake className="h-4 w-4 shrink-0 text-brand-600 dark:text-brand-400" />
-                  <span className="font-heading font-black">Giao dịch</span>
-                  <ChevronUp
-                    className={`h-3.5 w-3.5 text-brand-500 transition-transform duration-200 ${
-                      isDealMenuOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-
-                {/* Popover Menu mở rộng ngay cạnh nút đính kèm */}
-                {isDealMenuOpen && (
-                  <div className="absolute bottom-13 left-0 z-40 w-72 sm:w-80 rounded-2xl border border-plum-900/10 bg-white p-3 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-[#242526] space-y-2 animate-scale-in">
-                    <div className="flex items-center justify-between border-b border-plum-900/[0.06] pb-2 dark:border-white/10">
-                      <div className="flex items-center gap-1.5">
-                        <Handshake className="h-4 w-4 text-brand-600" />
-                        <span className="font-heading text-xs font-black text-plum-900 dark:text-[#f0f2f5]">
-                          Giao dịch thỏa thuận
+              isMentor ? (
+                <div className="relative" ref={dealMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsDealMenuOpen((v) => !v)}
+                    title="Giao dịch Deal Ticket"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-orange-50/60 px-3 text-xs font-bold text-brand-700 transition-all hover:bg-brand-100 active:scale-95 dark:border-brand-800/40 dark:bg-brand-950/40 dark:text-brand-300"
+                  >
+                    <Handshake className="h-4 w-4 shrink-0" />
+                    <span className="font-heading font-black">Giao dịch</span>
+                    <ChevronUp className={`h-3.5 w-3.5 transition-transform ${isDealMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isDealMenuOpen && (
+                    <div className="absolute bottom-13 left-0 z-40 w-72 space-y-1 rounded-2xl border border-plum-900/10 bg-white p-2 text-xs shadow-2xl dark:border-white/10 dark:bg-[#242526] sm:w-80">
+                      <button
+                        type="button"
+                        disabled={!ctx.canAcceptDealByRequest}
+                        onClick={() => {
+                          setIsDealMenuOpen(false)
+                          setIsAcceptByRequestOpen(true)
+                        }}
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/5"
+                      >
+                        <span className="rounded-lg bg-mint-100/70 p-1.5 text-mint-700 dark:bg-mint-950/60 dark:text-mint-300">
+                          <ThumbsUp className="h-4 w-4" />
                         </span>
-                      </div>
-                      <span className="rounded-full bg-plum-100 px-2 py-0.5 text-[10px] font-bold text-plum-600 dark:bg-white/10 dark:text-plum-300">
-                        Deal #{currentDeal.id} (v{currentDeal.version})
-                      </span>
+                        <span className="min-w-0">
+                          <span className="block font-bold text-plum-900 dark:text-[#f0f2f5]">Chấp nhận Deal theo Request</span>
+                          <span className="block text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+                            {ctx.canAcceptDealByRequest
+                              ? `Giá ${formatVnd(requestPrice)} · deadline theo Request`
+                              : ctx.acceptByRequestUnavailableReason || 'Không khả dụng ở trạng thái hiện tại'}
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!ctx.canCreateDealTicket}
+                        onClick={() => {
+                          setIsDealMenuOpen(false)
+                          setIsFormOpen(true)
+                        }}
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/5"
+                      >
+                        <span className="rounded-lg bg-brand-100/70 p-1.5 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
+                          <Edit3 className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block font-bold text-plum-900 dark:text-[#f0f2f5]">Deal lại / Tạo Deal Ticket</span>
+                          <span className="block text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+                            {ctx.canCreateDealTicket ? 'Nhập phạm vi, giá, deadline và kết quả mới' : 'Deal đã khóa hoặc Request không còn mở'}
+                          </span>
+                        </span>
+                      </button>
                     </div>
-
-                    <div className="space-y-1 text-xs">
-                      {isMentor ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsDealMenuOpen(false)
-                              setCreateProposalSource('RENEGOTIATION')
-                              setIsCreateDealModalOpen(true)
-                            }}
-                            className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 dark:hover:bg-white/5"
-                          >
-                            <div className="rounded-lg bg-brand-100/70 p-1.5 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
-                              <Edit3 className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-plum-900 dark:text-[#f0f2f5]">
-                                Deal lại / Tạo Deal Ticket
-                              </p>
-                              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                Điều chỉnh giá, hạn chót, phạm vi hoặc hình thức học
-                              </p>
-                            </div>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsDealMenuOpen(false)
-                              setIsCreateDealModalOpen(true)
-                            }}
-                            className="w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 dark:hover:bg-white/5"
-                          >
-                            <div className="rounded-lg bg-brand-100/70 p-1.5 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
-                              <Edit3 className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-plum-900 dark:text-[#f0f2f5]">
-                                Mở bảng Đề xuất / Điều chỉnh Deal
-                              </p>
-                              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-                                Xem và điền lại phạm vi, giá, deadline hoặc kết quả kỳ vọng
-                              </p>
-                            </div>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : undefined
             }
           />
         )}
       </div>
 
-      {/* Modal tạo mới hoặc chỉnh sửa Deal Ticket */}
-      {isCreateDealModalOpen && (
-        <MentoringDealFormModal
-          isOpen={isCreateDealModalOpen}
-          onClose={() => setIsCreateDealModalOpen(false)}
-          mode={currentDeal?.id ? 'edit' : 'create'}
-          deal={currentDeal}
-          conversationId={resolvedConversationId}
-          mentorId={isMentor ? currentNumId : partnerId}
-          studentId={isMentor ? partnerId : currentNumId}
-          requestId={currentDeal.requestId}
-          proposalSource={createProposalSource}
-          onSuccess={() => {
-            refetchDeal()
-            onDealUpdated?.()
-          }}
-        />
-      )}
-
-      {/* Modal thanh toán Mentoring Task (UC105) */}
-      {isPaymentModalOpen && currentDeal && (
-        <MentoringTaskPaymentModal
-          isOpen={isPaymentModalOpen}
-          onClose={() => setIsPaymentModalOpen(false)}
-          deal={currentDeal}
-          onSuccess={() => {
-            refetchDeal()
-            onDealUpdated?.()
-          }}
-        />
-      )}
-
-      {/* Dialog nhập lý do từ chối Deal Ticket */}
-      {isRejectDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="relative w-full max-w-md bg-white rounded-3xl border border-gray-200 shadow-2xl p-6 text-left space-y-4 dark:bg-[#202124] dark:border-gray-800">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="font-heading text-base font-black text-gray-900 dark:text-white">
-                  Từ chối Deal Ticket đề xuất
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Deal #{currentDeal.id} · Phiên bản {currentDeal.version}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-              Bạn có chắc chắn muốn từ chối Deal Ticket này? Vui lòng nhập lý do để gửi phản hồi cho đối phương.
+      {/* Dialog: Chấp nhận Deal theo Request */}
+      {isAcceptByRequestOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/40 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
+            <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">Chấp nhận Deal theo Request</h4>
+            <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+              Hệ thống tạo Deal Ticket từ điều kiện hiện tại của Request. Bạn được tính là đã xác nhận phiên bản này; Học viên cần xác nhận để khóa Deal.
             </p>
-
-            <textarea
-              rows={3}
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Nhập lý do từ chối (ví dụ: Mức giá chưa phù hợp, hoặc thời gian deadline quá gấp...)"
-              className="w-full rounded-2xl border border-gray-200 bg-white p-3 text-xs text-gray-900 shadow-2xs focus:border-red-500 focus:outline-none dark:bg-[#2d2e30] dark:border-gray-700 dark:text-gray-100"
-            />
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsRejectDialogOpen(false)}
-                disabled={rejectMutation.isPending}
-              >
+            <ul className="space-y-1.5 rounded-2xl bg-plum-50/70 p-3 text-xs text-plum-700 dark:bg-white/5 dark:text-[#e4e6eb]">
+              <li>Giá: <b>{formatVnd(requestPrice)}</b> (ngân sách tối đa Học viên đề xuất)</li>
+              <li>Deadline: <b>{ctx.expectedDeadline ? format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy HH:mm') : '—'}</b></li>
+              <li>Nhiệm vụ: <b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b></li>
+              <li>Hình thức: <b>{MENTORING_WORKING_MODE_LABELS[ctx.workingMode || ''] || ctx.workingMode}</b></li>
+            </ul>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setIsAcceptByRequestOpen(false)} disabled={proposeMutation.isPending}>
                 Hủy
               </Button>
               <Button
-                variant="primary"
                 size="sm"
-                onClick={handleRejectDeal}
-                disabled={rejectMutation.isPending}
-                className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                onClick={handleAcceptByRequest}
+                disabled={proposeMutation.isPending}
+                leftIcon={proposeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
+                className="rounded-xl font-black"
               >
-                {rejectMutation.isPending ? 'Đang gửi phản hồi...' : 'Gửi phản hồi từ chối'}
+                Gửi Deal Ticket
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dialog nhập nội dung yêu cầu điều chỉnh */}
-      {isAdjustDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-6 text-left space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-            <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">
-              Yêu cầu điều chỉnh Deal Ticket (Deal lại)
-            </h4>
+      {/* Dialog: Từ chối */}
+      {rejectTarget !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-md space-y-4 rounded-3xl border border-gray-200 bg-white p-6 text-left shadow-2xl dark:border-gray-800 dark:bg-[#202124]">
+            <h4 className="font-heading text-base font-black text-gray-900 dark:text-white">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
+            <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+              Chỉ từ chối đề xuất hiện tại; Request vẫn giữ nguyên và hai bên có thể tiếp tục trao đổi.
+            </p>
+            <textarea
+              rows={3}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Lý do (ví dụ: mức giá chưa phù hợp, deadline quá gấp...)"
+              className="w-full rounded-2xl border border-gray-200 bg-white p-3 text-xs text-gray-900 focus:border-red-500 focus:outline-none dark:border-gray-700 dark:bg-[#2d2e30] dark:text-gray-100"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setRejectTarget(null)} disabled={rejectMutation.isPending}>
+                Hủy
+              </Button>
+              <Button size="sm" onClick={handleReject} disabled={rejectMutation.isPending} className="rounded-xl bg-red-600 text-white hover:bg-red-700">
+                {rejectMutation.isPending ? 'Đang gửi...' : 'Từ chối'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dialog: Yêu cầu điều chỉnh */}
+      {adjustTarget !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/40 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
+            <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">Yêu cầu điều chỉnh phiên bản {adjustTarget}</h4>
             <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
-              Phiên bản hiện tại sẽ trở thành SUPERSEDED. Vui lòng ghi rõ nội dung bạn muốn Mentor điều chỉnh (giá, deadline, số buổi...).
+              Phiên bản này sẽ không thể thanh toán. Mentor sẽ gửi phiên bản Deal Ticket mới sau khi hai bên trao đổi.
             </p>
             <textarea
               rows={3}
               value={adjustNote}
               onChange={(e) => setAdjustNote(e.target.value)}
               placeholder="Ví dụ: Mong muốn giảm giá xuống 400.000đ hoặc kéo dài deadline thêm 3 ngày..."
-              className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 shadow-xs focus:border-brand-500 focus:outline-none dark:bg-[#3a3b3c] dark:border-white/10 dark:text-[#f0f2f5]"
+              className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
             />
-            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIsAdjustDialogOpen(false)
-                  setIsCreateDealModalOpen(true)
-                }}
-                className="text-[11px] border-plum-900/15"
-              >
-                <Edit3 className="h-3.5 w-3.5 mr-1" />
-                Mở bảng tự điều chỉnh
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setAdjustTarget(null)} disabled={adjustMutation.isPending}>
+                Hủy
               </Button>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsAdjustDialogOpen(false)}
-                  disabled={adjustMutation.isPending}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleRequestAdjustment}
-                  disabled={adjustMutation.isPending}
-                  className="bg-brand-600 hover:bg-brand-700 text-white"
-                >
-                  {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu Revert'}
-                </Button>
-              </div>
+              <Button size="sm" onClick={handleRequestAdjustment} disabled={adjustMutation.isPending} className="rounded-xl font-black">
+                {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu điều chỉnh'}
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal xem chi tiết Ticket nền trắng theo thiết kế mockups */}
-      {isTicketDetailModalOpen && selectedTicketModal && (
-        <MentoringTicketDetailModal
-          isOpen={isTicketDetailModalOpen}
-          onClose={() => setIsTicketDetailModalOpen(false)}
-          ticket={selectedTicketModal}
-          isRecipient={
-            selectedTicketModal.senderId
-              ? selectedTicketModal.senderId !== currentNumId
-              : !isMentor
-          }
-          canAct={
-            selectedTicketModal.status === 'PENDING' &&
-            !isReadOnly &&
-            Boolean(currentDeal.canConfirm) &&
-            (selectedTicketModal.senderId
-              ? selectedTicketModal.senderId !== currentNumId
-              : !isMentor)
-          }
-          onConfirm={async () => {
-            setIsTicketDetailModalOpen(false)
-            await handleConfirmAndPay()
+      {/* Modal chi tiết một phiên bản Ticket */}
+      {ticketModal && (() => {
+        const actions = actionsFor(ticketModal.version)
+        return (
+          <MentoringTicketDetailModal
+            isOpen
+            onClose={() => setTicketModal(null)}
+            ticket={buildTicket(snapshots.find((s) => s.version === ticketModal.version) ?? snapshots[snapshots.length - 1])}
+            isRecipient={!isMentor}
+            canAct={actions.canAct}
+            onConfirm={actions.onConfirm ? async () => { setTicketModal(null); await actions.onConfirm?.() } : undefined}
+            onReject={actions.onReject ? () => { setTicketModal(null); actions.onReject?.() } : undefined}
+            onRevert={actions.onRevert ? () => { setTicketModal(null); actions.onRevert?.() } : undefined}
+            onPay={actions.onPay ? () => { setTicketModal(null); actions.onPay?.() } : undefined}
+            isConfirming={confirmMutation.isPending}
+            isRejecting={rejectMutation.isPending}
+          />
+        )
+      })()}
+
+      {isFormOpen && (
+        <MentoringDealFormModal
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          conversationId={conversationId}
+          deal={deal}
+          requestDefaults={{
+            title: ctx.requestTitle,
+            description: ctx.requestDescription,
+            budgetMin: ctx.budgetMin,
+            budgetMax: ctx.budgetMax,
+            expectedDeadline: ctx.expectedDeadline,
+            workingMode: ctx.workingMode,
+            participationType: ctx.participationType,
+            taskType: ctx.taskType,
           }}
-          onReject={() => {
-            setIsTicketDetailModalOpen(false)
-            setIsRejectDialogOpen(true)
-          }}
-          onRevert={() => {
-            setIsTicketDetailModalOpen(false)
-            setIsCreateDealModalOpen(true)
-          }}
-          onPay={() => {
-            setIsTicketDetailModalOpen(false)
-            setIsPaymentModalOpen(true)
-          }}
-          isConfirming={confirmMutation.isPending}
-          isRejecting={rejectMutation.isPending}
         />
       )}
 
-      {/* Modal xem lịch sử Snapshot chi tiết */}
-      {isDetailModalOpen && (
-        <MentoringDealActionModal
-          isOpen={isDetailModalOpen}
+      {isPaymentOpen && paymentDeal && (
+        <MentoringTaskPaymentModal
+          isOpen={isPaymentOpen}
           onClose={() => {
-            setIsDetailModalOpen(false)
-            refetchDeal()
-            onDealUpdated?.()
+            setIsPaymentOpen(false)
+            refetch()
           }}
-          dealId={currentDeal.id}
+          deal={paymentDeal}
+          onSuccess={() => refetch()}
         />
       )}
+
+      {isHistoryOpen && deal && (
+        <MentoringDealActionModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} dealId={deal.id} hideOpenChat />
+      )}
+
+      <MentoringTaskDetailModal isOpen={isTaskOpen} onClose={() => setIsTaskOpen(false)} taskId={ctx.taskId} />
     </div>
   )
 }

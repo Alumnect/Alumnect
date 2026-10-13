@@ -110,7 +110,7 @@ export function MentoringDealCard({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {onOpenChat && (
+          {onOpenChat && deal.conversationId && (
             <button
               type="button"
               onClick={() => onOpenChat(deal)}

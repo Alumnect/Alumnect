@@ -15,7 +15,7 @@ import {
   IncomingRequestCard,
   useIncomingMentoringRequests,
   type MentoringResponseStatus,
-  type MentoringRequestType,
+  type IncomingRequestScope,
 } from '@/features/mentorship'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils'
  */
 function IncomingMentoringRequestsContent() {
   const [responseStatusFilter, setResponseStatusFilter] = useState<'ALL' | MentoringResponseStatus>('ALL')
-  const [requestTypeFilter, setRequestTypeFilter] = useState<'ALL' | MentoringRequestType>('ALL')
+  const [scopeFilter, setScopeFilter] = useState<IncomingRequestScope>('ALL')
   const [page, setPage] = useState(0)
   const pageSize = 10
 
@@ -42,7 +42,7 @@ function IncomingMentoringRequestsContent() {
   // Gọi API lấy danh sách yêu cầu gửi đến
   const { data, isLoading, isError, error, refetch, isFetching } = useIncomingMentoringRequests({
     status: backendStatus,
-    requestType: requestTypeFilter === 'ALL' ? undefined : requestTypeFilter,
+    scope: scopeFilter,
     page,
     size: pageSize,
   })
@@ -56,8 +56,8 @@ function IncomingMentoringRequestsContent() {
     setPage(0)
   }
 
-  const handleTypeChange = (type: 'ALL' | MentoringRequestType) => {
-    setRequestTypeFilter(type)
+  const handleScopeChange = (scope: IncomingRequestScope) => {
+    setScopeFilter(scope)
     setPage(0)
   }
 
@@ -170,15 +170,15 @@ function IncomingMentoringRequestsContent() {
           </button>
         </div>
 
-        {/* Bộ lọc loại yêu cầu */}
+        {/* Bộ lọc mức độ phù hợp */}
         <div className="flex items-center gap-1 border-t border-plum-900/[0.06] pt-2 sm:border-t-0 sm:pt-0 dark:border-[#393a3b]">
-          <span className="text-xs text-plum-400 dark:text-[#8f9399]">Loại:</span>
+          <span className="text-xs text-plum-400 dark:text-[#8f9399]">Lọc:</span>
           <button
             type="button"
-            onClick={() => handleTypeChange('ALL')}
+            onClick={() => handleScopeChange('ALL')}
             className={cn(
               'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
-              requestTypeFilter === 'ALL'
+              scopeFilter === 'ALL'
                 ? 'bg-brand-50 font-bold text-brand-600 dark:bg-brand-950/40 dark:text-brand-300'
                 : 'text-plum-600 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
             )}
@@ -187,27 +187,27 @@ function IncomingMentoringRequestsContent() {
           </button>
           <button
             type="button"
-            onClick={() => handleTypeChange('GENERAL')}
+            onClick={() => handleScopeChange('SAME_INDUSTRY')}
             className={cn(
               'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
-              requestTypeFilter === 'GENERAL'
+              scopeFilter === 'SAME_INDUSTRY'
                 ? 'bg-brand-50 font-bold text-brand-600 dark:bg-brand-950/40 dark:text-brand-300'
                 : 'text-plum-600 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
             )}
           >
-            Chung (UC100)
+            Cùng ngành
           </button>
           <button
             type="button"
-            onClick={() => handleTypeChange('DIRECT')}
+            onClick={() => handleScopeChange('SAME_FORMAT')}
             className={cn(
               'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
-              requestTypeFilter === 'DIRECT'
+              scopeFilter === 'SAME_FORMAT'
                 ? 'bg-brand-50 font-bold text-brand-600 dark:bg-brand-950/40 dark:text-brand-300'
                 : 'text-plum-600 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
             )}
           >
-            Trực tiếp (UC101)
+            Cùng hình thức
           </button>
         </div>
       </div>
@@ -261,8 +261,8 @@ function IncomingMentoringRequestsContent() {
           icon={<Inbox className="h-6 w-6" />}
           title="Chưa có yêu cầu hướng dẫn nào"
           description={
-            responseStatusFilter === 'ALL' && requestTypeFilter === 'ALL'
-              ? 'Hiện tại chưa có sinh viên nào gửi yêu cầu trực tiếp hoặc hệ thống chưa phân phối yêu cầu mới nào đến bạn. Hãy đảm bảo hồ sơ Mentor của bạn luôn ở trạng thái ACTIVE và gói Subscription còn hiệu lực.'
+            responseStatusFilter === 'ALL' && scopeFilter === 'ALL'
+              ? 'Hiện tại chưa có yêu cầu mở hoặc yêu cầu trực tiếp nào dành cho bạn. Hãy đảm bảo hồ sơ Mentor đang ACTIVE và gói Subscription còn hiệu lực.'
               : 'Không tìm thấy yêu cầu hướng dẫn nào phù hợp với bộ lọc hiện tại. Hãy thử thay đổi tiêu chí lọc.'
           }
         />
@@ -272,7 +272,7 @@ function IncomingMentoringRequestsContent() {
       {!isLoading && !isError && requests.length > 0 && (
         <div className="space-y-4">
           {requests.map((item) => (
-            <IncomingRequestCard key={item.distributionId} request={item} />
+            <IncomingRequestCard key={item.distributionId ?? `request-${item.id}`} request={item} />
           ))}
 
           {/* Phân trang */}

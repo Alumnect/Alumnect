@@ -102,4 +102,51 @@ public interface NotificationService {
      * @param user Tài khoản vừa kích hoạt ACTIVE
      */
     void sendWelcomeNotification(User user);
+
+    /**
+     * Gửi thông báo cho học viên khi Mentor tạo/nộp Work Log mới chờ xác nhận (UC107).
+     *
+     * @param mentor Mentor đã gửi Work Log
+     * @param student Học viên nhận thông báo
+     * @param task Nhiệm vụ Mentoring tương ứng
+     * @param workLog Bản ghi Work Log mới tạo
+     */
+    void sendMentoringWorkLogNotification(
+            com.alumnect.alumnect_backend.entity.user.User mentor,
+            com.alumnect.alumnect_backend.entity.user.User student,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+    );
+
+    /**
+     * Gửi thông báo cho Mentor khi Học viên xác nhận nghiệm thu Work Log (UC108).
+     */
+    void sendMentoringWorkLogConfirmedNotification(
+            com.alumnect.alumnect_backend.entity.user.User student,
+            com.alumnect.alumnect_backend.entity.user.User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+    );
+
+    /**
+     * Gửi thông báo cho Mentor khi Học viên yêu cầu điều chỉnh Work Log (UC108).
+     */
+    void sendMentoringWorkLogRejectedNotification(
+            com.alumnect.alumnect_backend.entity.user.User student,
+            com.alumnect.alumnect_backend.entity.user.User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog,
+            String feedback
+    );
+
+    /**
+     * Gửi thông báo cho Học viên khi Mentor cập nhật lại Work Log theo yêu cầu làm rõ (UC108).
+     */
+    void sendMentoringWorkLogResubmittedNotification(
+            com.alumnect.alumnect_backend.entity.user.User mentor,
+            com.alumnect.alumnect_backend.entity.user.User student,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+    );
 }
+

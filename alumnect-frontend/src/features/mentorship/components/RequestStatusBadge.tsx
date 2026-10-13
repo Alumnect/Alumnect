@@ -54,11 +54,11 @@ export function RequestStatusBadge({ status = 'OPEN', className }: RequestStatus
       style: 'border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-800/40 dark:bg-brand-950/40 dark:text-brand-300',
     },
     MATCHED: {
-      label: 'Đã khớp Mentor',
+      label: 'Đã chốt Mentor · chờ thanh toán',
       style: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-300',
     },
     CLOSED: {
-      label: 'Đã hoàn thành',
+      label: 'Đã chuyển thành Task',
       style: 'border-plum-200 bg-plum-50 text-plum-700 dark:border-[#393a3b] dark:bg-white/[0.05] dark:text-[#b0b3b8]',
     },
     CANCELLED: {

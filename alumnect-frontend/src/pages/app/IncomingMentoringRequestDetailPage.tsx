@@ -152,10 +152,16 @@ function IncomingMentoringRequestDetailContent() {
     if (!requestId || !modalType) return
 
     if (modalType === 'ACCEPT') {
-      await acceptMutation.mutateAsync({
+      const accepted = await acceptMutation.mutateAsync({
         requestId,
         payload: { responseNote },
       })
+      setModalType(null)
+      // ACCEPT tạo / lấy lại Chat for Task của Request + Student + Mentor → đưa Mentor vào trao đổi ngay
+      if (accepted?.conversationId) {
+        navigate(`/app/mentoring/chats/${accepted.conversationId}`)
+      }
+      return
     } else {
       await declineMutation.mutateAsync({
         requestId,
@@ -417,16 +423,22 @@ function IncomingMentoringRequestDetailContent() {
                   </div>
                 </div>
 
-                {/* Entry point nhắn tin UC104 */}
-                {canMessage && data.studentId && (
+                {data.otherMentorSelected && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3 text-xs font-semibold text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
+                    Request đã chọn Mentor khác. Chat for Task của bạn được giữ lại ở chế độ chỉ đọc.
+                  </div>
+                )}
+
+                {/* Entry point Chat for Task (UC104): đúng cuộc hội thoại của Request + Student + Mentor */}
+                {canMessage && data.conversationId && (
                   <div className="pt-2">
                     <button
                       type="button"
-                      onClick={() => navigate(`/app/messages?userId=${data.studentId}`)}
+                      onClick={() => navigate(`/app/mentoring/chats/${data.conversationId}`)}
                       className="inline-flex items-center gap-2 rounded-2xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-opacity hover:opacity-95"
                     >
                       <MessageSquare className="h-4 w-4" />
-                      <span>Nhắn tin trao đổi với sinh viên</span>
+                      <span>Mở Chat for Task với sinh viên</span>
                     </button>
                   </div>
                 )}

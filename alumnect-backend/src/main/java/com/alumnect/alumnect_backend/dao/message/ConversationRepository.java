@@ -24,7 +24,8 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
      * Đảm bảo cuộc trò chuyện có đúng 2 thành viên và gồm user1Id lẫn user2Id.
      */
     @Query("SELECT c FROM Conversation c " +
-           "WHERE (SELECT COUNT(cp) FROM ConversationParticipant cp WHERE cp.conversation = c) = 2 " +
+           "WHERE c.type = com.alumnect.alumnect_backend.common.enums.ConversationType.DIRECT " +
+           "AND (SELECT COUNT(cp) FROM ConversationParticipant cp WHERE cp.conversation = c) = 2 " +
            "AND EXISTS (SELECT 1 FROM ConversationParticipant cp1 WHERE cp1.conversation = c AND cp1.user.id = :user1Id) " +
            "AND EXISTS (SELECT 1 FROM ConversationParticipant cp2 WHERE cp2.conversation = c AND cp2.user.id = :user2Id)")
     Optional<Conversation> findDirectConversationBetween(@Param("user1Id") Long user1Id, @Param("user2Id") Long user2Id);
@@ -44,4 +45,21 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
      * Tìm cuộc hội thoại gắn với Hội nhóm cộng đồng.
      */
     Optional<Conversation> findByCommunityGroupId(Long communityGroupId);
+
+    /**
+     * Tìm Chat for Task duy nhất của bộ (Request, Mentor). Học viên được suy ra từ Request.
+     *
+     * @param requestId ID của Mentoring Request
+     * @param mentorUserId ID tài khoản người dùng của Mentor
+     * @return Cuộc hội thoại MENTORING nếu đã tồn tại
+     */
+    Optional<Conversation> findByMentoringRequestIdAndMentoringMentorId(Long requestId, Long mentorUserId);
+
+    /**
+     * Lấy toàn bộ Chat for Task thuộc một Request (mỗi Mentor đã ACCEPT có một cuộc hội thoại riêng).
+     *
+     * @param requestId ID của Mentoring Request
+     * @return Danh sách cuộc hội thoại MENTORING
+     */
+    List<Conversation> findByMentoringRequestIdOrderByCreatedAtAsc(Long requestId);
 }

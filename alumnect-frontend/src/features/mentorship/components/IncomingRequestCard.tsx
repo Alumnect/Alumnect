@@ -67,6 +67,16 @@ export function IncomingRequestCard({ request }: IncomingRequestCardProps) {
               <span className="inline-flex items-center rounded-full bg-cream-100 px-2.5 py-0.5 text-[11px] font-semibold text-plum-700 dark:bg-white/[0.06] dark:text-[#e4e6eb]">
                 {request.industryName}
               </span>
+              {request.sameIndustry && (
+                <span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">
+                  Cùng ngành
+                </span>
+              )}
+              {request.sameFormat && (
+                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  Cùng hình thức
+                </span>
+              )}
             </div>
 
             {request.studentHeadline && (

@@ -127,6 +127,8 @@ public class MessageMapper {
                 .memberCount(conversation.getParticipants() != null ? conversation.getParticipants().size() : 2)
                 .isAccepted(isAccepted)
                 .adminId(conversation.getCreatedBy() != null ? conversation.getCreatedBy().getId() : null)
+                .mentoringRequestId(conversation.getMentoringRequest() != null ? conversation.getMentoringRequest().getId() : null)
+                .mentoringTaskId(conversation.getMentoringTask() != null ? conversation.getMentoringTask().getId() : null)
                 .lastMessage(lastMessageSnippet)
                 .unreadCount(unreadCount)
                 .communityGroupId(communityGroupId)

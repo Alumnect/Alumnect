@@ -38,6 +38,14 @@ public class MentorIncomingRequestDetailResponse {
     @Schema(description = "ID của bản ghi phân phối tới Mentor", example = "501")
     private Long distributionId;
 
+    /** Request có cùng một trong các ngành Mentor đã đăng ký hỗ trợ hay không */
+    @Schema(description = "Request thuộc ngành Mentor đang hỗ trợ", example = "true")
+    private boolean sameIndustry;
+
+    /** Working mode và participation type có tương thích với lựa chọn của Mentor hay không */
+    @Schema(description = "Request phù hợp hình thức hướng dẫn Mentor đã chọn", example = "true")
+    private boolean sameFormat;
+
     /** Loại yêu cầu: GENERAL hoặc DIRECT */
     @Schema(description = "Loại yêu cầu (GENERAL hoặc DIRECT)", example = "GENERAL")
     private MentoringRequestType requestType;
@@ -143,6 +151,18 @@ public class MentorIncomingRequestDetailResponse {
     /** Cờ đánh dấu Mentor có thể bắt đầu nhắn tin trao đổi hay không (khi đã ACCEPTED) */
     @Schema(description = "Mentor có quyền nhắn tin trao đổi với sinh viên hay không", example = "false")
     private boolean canMessage;
+
+    /** ID Chat for Task giữa Mentor và Học viên của Request này (có sau khi Mentor ACCEPT) */
+    @Schema(description = "ID Chat for Task (Conversation MENTORING) của Request + Student + Mentor", example = "15")
+    private Long conversationId;
+
+    /** Mentor hiện tại có phải là Mentor được Học viên chốt chọn cho Request hay không */
+    @Schema(description = "Mentor hiện tại có phải Mentor được chọn cho Request", example = "false")
+    private boolean selectedMentor;
+
+    /** Request đã chốt Mentor khác (Chat for Task của Mentor hiện tại chỉ đọc) */
+    @Schema(description = "Request đã chọn Mentor khác", example = "false")
+    private boolean otherMentorSelected;
 
     /** Thời điểm tạo yêu cầu */
     @Schema(description = "Thời điểm sinh viên tạo yêu cầu")
