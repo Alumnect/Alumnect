@@ -41,4 +41,10 @@ public class MentoringTaskActionPermissionsResponse {
 
     /** Cho phép đề xuất dừng Task và phân chia tiền (UC109) */
     private Boolean canProposeSettlement;
+
+    /** Cho phép Mentor nộp kết quả hoàn thành nhiệm vụ (UC110) */
+    private Boolean canSubmitCompletion;
+
+    /** Cho phép Student xác nhận/từ chối nghiệm thu hoàn thành nhiệm vụ (UC110) */
+    private Boolean canConfirmCompletion;
 }

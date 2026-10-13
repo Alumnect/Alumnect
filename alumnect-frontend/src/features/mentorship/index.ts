@@ -157,4 +157,9 @@ export * from './components/MentoringTaskAmendmentModal'
 export * from './components/MentoringSettlementProposalModal'
 export * from './components/MentoringTaskResolutionBanner'
 
+// UC110 exports (Gửi & xác nhận hoàn thành Task)
+export * from './hooks/useMentoringTaskCompletion'
+export * from './components/MentoringTaskCompletionModal'
+export * from './components/MentoringTaskReviewModal'
+
 

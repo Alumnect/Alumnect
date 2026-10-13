@@ -41,6 +41,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final MentoringTaskMapper taskMapper;
     private final MentoringWorkLogService workLogService;
     private final MentoringTaskResolutionService resolutionService;
+    private final MentoringTaskCompletionService completionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -281,6 +282,8 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         boolean canRequestExtension = (isStudent || isMentor) && !isReadOnly;
         boolean canRequestAmendment = (isStudent || isMentor) && !isReadOnly;
         boolean canProposeSettlement = (isStudent || isMentor) && !isReadOnly;
+        boolean canSubmitCompletion = isMentor && (task.getStatus() == MentoringTaskStatus.IN_PROGRESS || task.getStatus() == MentoringTaskStatus.PREPARATION);
+        boolean canConfirmCompletion = isStudent && task.getStatus() == MentoringTaskStatus.SUBMITTED;
 
         MentoringTaskActionPermissionsResponse permissions = MentoringTaskActionPermissionsResponse.builder()
                 .canAddWorkLog(canAddWorkLog)
@@ -293,11 +296,14 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .canRequestExtension(canRequestExtension)
                 .canRequestAmendment(canRequestAmendment)
                 .canProposeSettlement(canProposeSettlement)
+                .canSubmitCompletion(canSubmitCompletion)
+                .canConfirmCompletion(canConfirmCompletion)
                 .build();
 
         MentoringTaskDeadlineExtensionResponse activeExtension = resolutionService.getActiveExtension(currentUserId, task.getId());
         MentoringTaskAmendmentResponse activeAmendment = resolutionService.getActiveAmendment(currentUserId, task.getId());
         MentoringTaskSettlementProposalResponse activeSettlementProposal = resolutionService.getActiveSettlementProposal(currentUserId, task.getId());
+        MentoringTaskCompletionResponse latestCompletion = completionService.getLatestCompletion(currentUserId, task.getId());
 
         return MentoringTaskDetailResponse.builder()
                 .overview(overview)
@@ -314,6 +320,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .activeExtension(activeExtension)
                 .activeAmendment(activeAmendment)
                 .activeSettlementProposal(activeSettlementProposal)
+                .latestCompletion(latestCompletion)
                 .build();
     }
 

@@ -25,6 +25,9 @@ import type {
   RespondTaskAmendmentPayload,
   CreateSettlementProposalPayload,
   RespondSettlementProposalPayload,
+  MentoringTaskCompletion,
+  SubmitTaskCompletionPayload,
+  RespondTaskCompletionPayload,
 } from '../model/mentoringTaskTypes'
 
 export interface PresignedUrlData {
@@ -346,6 +349,55 @@ export const mentoringTaskApi = {
   getSettlementProposals: async (taskId: number): Promise<MentoringTaskSettlementProposal[]> => {
     const res = await http.get<any, ApiResponse<MentoringTaskSettlementProposal[]>>(
       `/mentoring/tasks/${taskId}/settlement-proposals`
+    )
+    return res.data
+  },
+
+  /**
+   * Mentor nộp kết quả nghiệm thu hoàn thành Task (UC110).
+   */
+  submitTaskCompletion: async (
+    taskId: number,
+    payload: SubmitTaskCompletionPayload
+  ): Promise<MentoringTaskCompletion> => {
+    const res = await http.post<any, ApiResponse<MentoringTaskCompletion>>(
+      `/mentoring/tasks/${taskId}/completions`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Student xác nhận hoặc từ chối nghiệm thu hoàn thành Task (UC110).
+   */
+  respondTaskCompletion: async (
+    taskId: number,
+    completionId: number,
+    payload: RespondTaskCompletionPayload
+  ): Promise<MentoringTaskCompletion> => {
+    const res = await http.put<any, ApiResponse<MentoringTaskCompletion>>(
+      `/mentoring/tasks/${taskId}/completions/${completionId}/respond`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy lần nộp kết quả nghiệm thu mới nhất của Task (UC110).
+   */
+  getLatestTaskCompletion: async (taskId: number): Promise<MentoringTaskCompletion | null> => {
+    const res = await http.get<any, ApiResponse<MentoringTaskCompletion | null>>(
+      `/mentoring/tasks/${taskId}/completions/latest`
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy lịch sử các lần nộp kết quả nghiệm thu của Task (UC110).
+   */
+  getTaskCompletionHistory: async (taskId: number): Promise<MentoringTaskCompletion[]> => {
+    const res = await http.get<any, ApiResponse<MentoringTaskCompletion[]>>(
+      `/mentoring/tasks/${taskId}/completions`
     )
     return res.data
   },

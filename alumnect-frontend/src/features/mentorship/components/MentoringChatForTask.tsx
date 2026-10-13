@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   CreditCard,
   Edit3,
+  FileCheck,
   FileText,
   Handshake,
   History,
@@ -43,6 +44,8 @@ import { MentoringTaskResolutionBanner } from './MentoringTaskResolutionBanner'
 import { MentoringDeadlineExtensionModal } from './MentoringDeadlineExtensionModal'
 import { MentoringTaskAmendmentModal } from './MentoringTaskAmendmentModal'
 import { MentoringSettlementProposalModal } from './MentoringSettlementProposalModal'
+import { MentoringTaskCompletionModal } from './MentoringTaskCompletionModal'
+import { MentoringTaskReviewModal } from './MentoringTaskReviewModal'
 import { useTaskDetail } from '../hooks/useMentoringTasks'
 import { useMentoringConversation } from '../hooks/useMentoringConversation'
 import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
@@ -119,6 +122,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false)
   const [isTaskActionMenuOpen, setIsTaskActionMenuOpen] = useState(false)
   const taskActionMenuRef = useRef<HTMLDivElement | null>(null)
+
+  // UC110: Nộp & Nghiệm thu hoàn thành Task
+  const [isSubmitCompletionOpen, setIsSubmitCompletionOpen] = useState(false)
+  const [isReviewCompletionOpen, setIsReviewCompletionOpen] = useState(false)
 
   const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
 
@@ -512,9 +519,59 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                       <div className="text-[10px] text-muted-foreground">Thương lượng chia quỹ (mục 5.6)</div>
                     </div>
                   </button>
+                  {taskDetail?.permissions?.canSubmitCompletion && (
+                    <button
+                      onClick={() => {
+                        setIsSubmitCompletionOpen(true)
+                        setIsTaskActionMenuOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-xl transition text-left"
+                    >
+                      <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <div className="font-bold">Nộp hoàn thành Task (UC110)</div>
+                        <div className="text-[10px] text-muted-foreground">Gửi kết quả nghiệm thu cuối cùng</div>
+                      </div>
+                    </button>
+                  )}
+                  {taskDetail?.permissions?.canConfirmCompletion && (
+                    <button
+                      onClick={() => {
+                        setIsReviewCompletionOpen(true)
+                        setIsTaskActionMenuOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30 rounded-xl transition text-left"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                      <div>
+                        <div className="font-bold">Nghiệm thu Task (UC110)</div>
+                        <div className="text-[10px] text-muted-foreground">Xác nhận hoàn thành & quyết toán</div>
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
+          )}
+          {taskDetail?.permissions?.canSubmitCompletion && (
+            <Button
+              size="sm"
+              onClick={() => setIsSubmitCompletionOpen(true)}
+              leftIcon={<FileCheck className="h-3.5 w-3.5" />}
+              className="rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm"
+            >
+              Nộp hoàn thành
+            </Button>
+          )}
+          {taskDetail?.permissions?.canConfirmCompletion && (
+            <Button
+              size="sm"
+              onClick={() => setIsReviewCompletionOpen(true)}
+              leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
+              className="rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm"
+            >
+              Nghiệm thu Task
+            </Button>
           )}
           {ctx.taskId && (
             <Button
@@ -617,16 +674,20 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         </div>
       )}
 
-      {/* Banner các Ticket xử lý Task (UC109: Gia hạn, Điều chỉnh, Phân chia tiền dừng Task) */}
+      {/* Banner các Ticket xử lý Task (UC109: Gia hạn, Điều chỉnh, Phân chia tiền & UC110: Nghiệm thu Task) */}
       {ctx.taskId && (
         <MentoringTaskResolutionBanner
           taskId={ctx.taskId}
           activeExtension={taskDetail?.activeExtension}
           activeAmendment={taskDetail?.activeAmendment}
           activeSettlementProposal={taskDetail?.activeSettlementProposal}
+          latestCompletion={taskDetail?.latestCompletion}
+          taskStatus={taskDetail?.overview?.status || ctx.taskStatus}
+          canConfirmCompletion={taskDetail?.permissions?.canConfirmCompletion}
           isStudent={!isMentor}
           isMentor={isMentor}
           onOpenTopUpPayment={openPayment}
+          onOpenReviewCompletion={() => setIsReviewCompletionOpen(true)}
           onRefresh={() => {
             refetchTask()
             refetch()
@@ -1008,6 +1069,34 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onClose={() => setIsSettlementModalOpen(false)}
           taskId={ctx.taskId}
           totalBudget={taskDetail?.overview?.agreedPrice || Number(deal?.agreedPrice) || 0}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
+
+      {/* UC110: Modal nộp kết quả hoàn thành Task (Mentor) */}
+      {isSubmitCompletionOpen && ctx.taskId && (
+        <MentoringTaskCompletionModal
+          isOpen={isSubmitCompletionOpen}
+          onClose={() => setIsSubmitCompletionOpen(false)}
+          taskId={ctx.taskId}
+          taskTitle={taskDetail?.overview?.taskTitle}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
+
+      {/* UC110: Modal xem xét & nghiệm thu hoàn thành Task (Student) */}
+      {isReviewCompletionOpen && ctx.taskId && taskDetail?.latestCompletion && (
+        <MentoringTaskReviewModal
+          isOpen={isReviewCompletionOpen}
+          onClose={() => setIsReviewCompletionOpen(false)}
+          taskId={ctx.taskId}
+          completion={taskDetail.latestCompletion}
           onSuccess={() => {
             refetchTask()
             refetch()

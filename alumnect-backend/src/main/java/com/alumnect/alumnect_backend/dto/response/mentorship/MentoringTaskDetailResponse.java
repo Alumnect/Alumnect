@@ -58,4 +58,7 @@ public class MentoringTaskDetailResponse {
 
     /** 12. Thẻ đề xuất dừng Task và phân chia tiền đang hoạt động (UC109) */
     private MentoringTaskSettlementProposalResponse activeSettlementProposal;
+
+    /** 13. Lần nộp kết quả hoàn thành nhiệm vụ mới nhất (UC110) */
+    private MentoringTaskCompletionResponse latestCompletion;
 }

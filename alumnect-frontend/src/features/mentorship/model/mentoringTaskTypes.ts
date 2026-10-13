@@ -261,6 +261,8 @@ export interface MentoringTaskActionPermissions {
   canRequestExtension?: boolean
   canRequestAmendment?: boolean
   canProposeSettlement?: boolean
+  canSubmitCompletion?: boolean
+  canConfirmCompletion?: boolean
 }
 
 /**
@@ -281,6 +283,7 @@ export interface MentoringTaskDetail {
   activeExtension?: MentoringTaskDeadlineExtension | null
   activeAmendment?: MentoringTaskAmendment | null
   activeSettlementProposal?: MentoringTaskSettlementProposal | null
+  latestCompletion?: MentoringTaskCompletion | null
 }
 
 /**
@@ -500,4 +503,47 @@ export interface RespondSettlementProposalPayload {
   accept: boolean
   responseNote?: string
 }
+
+/**
+ * Trạng thái của lần nộp kết quả nghiệm thu hoàn thành Task (UC110).
+ */
+export type MentoringCompletionStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED'
+
+/**
+ * Biên bản nộp nghiệm thu hoàn thành Task (UC110).
+ */
+export interface MentoringTaskCompletion {
+  id: number
+  taskId: number
+  conversationId?: number | null
+  submittedBy: MentoringParticipant
+  finalSummary: string
+  deliverables?: string | null
+  attachmentUrls?: string[]
+  status: MentoringCompletionStatus
+  respondedBy?: MentoringParticipant | null
+  respondedAt?: string | null
+  feedbackNote?: string | null
+  createdAt: string
+  updatedAt: string
+  canConfirm?: boolean
+}
+
+/**
+ * Payload Mentor nộp kết quả nghiệm thu Task (UC110).
+ */
+export interface SubmitTaskCompletionPayload {
+  finalSummary: string
+  deliverables?: string
+  attachmentUrls?: string[]
+}
+
+/**
+ * Payload Student phản hồi nghiệm thu kết quả Task (UC110).
+ */
+export interface RespondTaskCompletionPayload {
+  accept: boolean
+  feedbackNote?: string
+}
+
 
