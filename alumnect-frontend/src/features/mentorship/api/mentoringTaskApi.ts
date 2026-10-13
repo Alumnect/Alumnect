@@ -16,6 +16,15 @@ import type {
   UpdateWorkLogPayload,
   WorkLogAttachmentPayload,
   AttachmentMediaType,
+  MentoringTaskDeadlineExtension,
+  MentoringTaskAmendment,
+  MentoringTaskSettlementProposal,
+  CreateDeadlineExtensionPayload,
+  RespondDeadlineExtensionPayload,
+  CreateTaskAmendmentPayload,
+  RespondTaskAmendmentPayload,
+  CreateSettlementProposalPayload,
+  RespondSettlementProposalPayload,
 } from '../model/mentoringTaskTypes'
 
 export interface PresignedUrlData {
@@ -215,5 +224,129 @@ export const mentoringTaskApi = {
       fileSize: file.size,
       mediaType,
     }
+  },
+
+  /**
+   * Tạo đề xuất gia hạn Deadline Task (UC109).
+   */
+  createDeadlineExtension: async (
+    taskId: number,
+    payload: CreateDeadlineExtensionPayload
+  ): Promise<MentoringTaskDeadlineExtension> => {
+    const res = await http.post<any, ApiResponse<MentoringTaskDeadlineExtension>>(
+      `/mentoring/tasks/${taskId}/deadline-extensions`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Phản hồi (chấp nhận hoặc từ chối) gia hạn Deadline (UC109).
+   */
+  respondDeadlineExtension: async (
+    extensionId: number,
+    payload: RespondDeadlineExtensionPayload
+  ): Promise<MentoringTaskDeadlineExtension> => {
+    const res = await http.put<any, ApiResponse<MentoringTaskDeadlineExtension>>(
+      `/mentoring/tasks/deadline-extensions/${extensionId}/respond`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy lịch sử các đề xuất gia hạn của Task (UC109).
+   */
+  getDeadlineExtensions: async (taskId: number): Promise<MentoringTaskDeadlineExtension[]> => {
+    const res = await http.get<any, ApiResponse<MentoringTaskDeadlineExtension[]>>(
+      `/mentoring/tasks/${taskId}/deadline-extensions`
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy đề xuất gia hạn đang hoạt động (UC109).
+   */
+  getActiveExtension: async (taskId: number): Promise<MentoringTaskDeadlineExtension | null> => {
+    const res = await http.get<any, ApiResponse<MentoringTaskDeadlineExtension | null>>(
+      `/mentoring/tasks/${taskId}/deadline-extensions/active`
+    )
+    return res.data
+  },
+
+  /**
+   * Tạo Ticket điều chỉnh Task và bổ sung tiền (UC109, mục 5.8).
+   */
+  createTaskAmendment: async (
+    taskId: number,
+    payload: CreateTaskAmendmentPayload
+  ): Promise<MentoringTaskAmendment> => {
+    const res = await http.post<any, ApiResponse<MentoringTaskAmendment>>(
+      `/mentoring/tasks/${taskId}/amendments`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Phản hồi Ticket điều chỉnh Task (UC109).
+   */
+  respondTaskAmendment: async (
+    amendmentId: number,
+    payload: RespondTaskAmendmentPayload
+  ): Promise<MentoringTaskAmendment> => {
+    const res = await http.put<any, ApiResponse<MentoringTaskAmendment>>(
+      `/mentoring/tasks/amendments/${amendmentId}/respond`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy danh sách các phiên bản điều chỉnh của Task (UC109).
+   */
+  getTaskAmendments: async (taskId: number): Promise<MentoringTaskAmendment[]> => {
+    const res = await http.get<any, ApiResponse<MentoringTaskAmendment[]>>(
+      `/mentoring/tasks/${taskId}/amendments`
+    )
+    return res.data
+  },
+
+  /**
+   * Tạo đề xuất dừng Task và phân chia tiền (UC109, mục 5.6).
+   */
+  createSettlementProposal: async (
+    taskId: number,
+    payload: CreateSettlementProposalPayload
+  ): Promise<MentoringTaskSettlementProposal> => {
+    const res = await http.post<any, ApiResponse<MentoringTaskSettlementProposal>>(
+      `/mentoring/tasks/${taskId}/settlement-proposals`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Phản hồi đề xuất dừng Task và phân chia tiền (UC109).
+   */
+  respondSettlementProposal: async (
+    proposalId: number,
+    payload: RespondSettlementProposalPayload
+  ): Promise<MentoringTaskSettlementProposal> => {
+    const res = await http.put<any, ApiResponse<MentoringTaskSettlementProposal>>(
+      `/mentoring/tasks/settlement-proposals/${proposalId}/respond`,
+      payload
+    )
+    return res.data
+  },
+
+  /**
+   * Lấy lịch sử đề xuất phân chia tiền dừng Task (UC109).
+   */
+  getSettlementProposals: async (taskId: number): Promise<MentoringTaskSettlementProposal[]> => {
+    const res = await http.get<any, ApiResponse<MentoringTaskSettlementProposal[]>>(
+      `/mentoring/tasks/${taskId}/settlement-proposals`
+    )
+    return res.data
   },
 }

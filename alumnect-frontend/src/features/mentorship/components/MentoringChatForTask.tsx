@@ -39,8 +39,14 @@ import { MentoringDiscordTicketEmbed } from './MentoringDiscordTicketEmbed'
 import { MentoringAdjustmentTicketEmbed } from './MentoringAdjustmentTicketEmbed'
 import { parseAdjustmentMessage } from '../model/mentoringAdjustmentTypes'
 import { MentoringTicketDetailModal, type MentoringTicketData } from './MentoringTicketDetailModal'
+import { MentoringTaskResolutionBanner } from './MentoringTaskResolutionBanner'
+import { MentoringDeadlineExtensionModal } from './MentoringDeadlineExtensionModal'
+import { MentoringTaskAmendmentModal } from './MentoringTaskAmendmentModal'
+import { MentoringSettlementProposalModal } from './MentoringSettlementProposalModal'
+import { useTaskDetail } from '../hooks/useMentoringTasks'
 import { useMentoringConversation } from '../hooks/useMentoringConversation'
 import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
+import { CalendarClock, Scale } from 'lucide-react'
 import type { MentoringDeal, MentoringDealSnapshot } from '../model/mentoringDealTypes'
 import {
   MENTORING_PARTICIPATION_LABELS,
@@ -107,6 +113,15 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const [ticketModal, setTicketModal] = useState<{ ticket: MentoringTicketData; version: number } | null>(null)
   const dealMenuRef = useRef<HTMLDivElement | null>(null)
 
+  // UC109: Xử lý gia hạn deadline, điều chỉnh task, thỏa thuận dừng task
+  const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false)
+  const [isAmendmentModalOpen, setIsAmendmentModalOpen] = useState(false)
+  const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false)
+  const [isTaskActionMenuOpen, setIsTaskActionMenuOpen] = useState(false)
+  const taskActionMenuRef = useRef<HTMLDivElement | null>(null)
+
+  const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
+
   const proposeMutation = useProposeDeal()
   const confirmMutation = useConfirmDeal()
   const rejectMutation = useRejectDeal()
@@ -123,9 +138,22 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isDealMenuOpen])
 
+  // Đóng menu thao tác Task khi bấm ra ngoài
+  useEffect(() => {
+    if (!isTaskActionMenuOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (taskActionMenuRef.current && !taskActionMenuRef.current.contains(e.target as Node)) setIsTaskActionMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isTaskActionMenuOpen])
+
   // Tin nhắn hệ thống realtime báo hiệu trạng thái nghiệp vụ thay đổi → tải lại ngữ cảnh từ backend
   useWebSocketChat((newMsg) => {
-    if (newMsg.conversationId === conversationId) refetch()
+    if (newMsg.conversationId === conversationId) {
+      refetch()
+      refetchTask()
+    }
   })
 
   // ---------------- Tin nhắn & dòng thời gian ----------------
@@ -439,6 +467,56 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             </Button>
           )}
           {ctx.taskId && (
+            <div className="relative" ref={taskActionMenuRef}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsTaskActionMenuOpen((v) => !v)}
+                leftIcon={<CalendarClock className="h-3.5 w-3.5 text-blue-600" />}
+                className="rounded-xl text-xs font-bold border-blue-200 dark:border-blue-900/40 hover:bg-blue-50/50"
+              >
+                Xử lý Task (UC109)
+              </Button>
+              {isTaskActionMenuOpen && (
+                <div
+                  className="absolute right-0 top-full mt-1.5 z-40 w-56 rounded-2xl bg-card border border-border shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                  onClick={() => setIsTaskActionMenuOpen(false)}
+                >
+                  <button
+                    onClick={() => setIsExtensionModalOpen(true)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-xl transition text-left"
+                  >
+                    <CalendarClock className="w-4 h-4 text-blue-500 shrink-0" />
+                    <div>
+                      <div className="font-bold">Gia hạn Deadline</div>
+                      <div className="text-[10px] text-muted-foreground">Tạo Ticket đề xuất hạn chót mới</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setIsAmendmentModalOpen(true)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-xl transition text-left"
+                  >
+                    <Edit3 className="w-4 h-4 text-amber-500 shrink-0" />
+                    <div>
+                      <div className="font-bold">Điều chỉnh & Tăng tiền</div>
+                      <div className="text-[10px] text-muted-foreground">Bổ sung phạm vi và tiền (mục 5.8)</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setIsSettlementModalOpen(true)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-xl transition text-left"
+                  >
+                    <Scale className="w-4 h-4 text-purple-500 shrink-0" />
+                    <div>
+                      <div className="font-bold">Thỏa thuận dừng Task</div>
+                      <div className="text-[10px] text-muted-foreground">Thương lượng chia quỹ (mục 5.6)</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {ctx.taskId && (
             <Button
               variant="primary"
               size="sm"
@@ -537,6 +615,23 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             Xem Task
           </button>
         </div>
+      )}
+
+      {/* Banner các Ticket xử lý Task (UC109: Gia hạn, Điều chỉnh, Phân chia tiền dừng Task) */}
+      {ctx.taskId && (
+        <MentoringTaskResolutionBanner
+          taskId={ctx.taskId}
+          activeExtension={taskDetail?.activeExtension}
+          activeAmendment={taskDetail?.activeAmendment}
+          activeSettlementProposal={taskDetail?.activeSettlementProposal}
+          isStudent={!isMentor}
+          isMentor={isMentor}
+          onOpenTopUpPayment={openPayment}
+          onRefresh={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
       )}
 
       {/* Dòng thời gian: tin nhắn + Deal Ticket */}
@@ -876,6 +971,49 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       )}
 
       <MentoringTaskDetailModal isOpen={isTaskOpen} onClose={() => setIsTaskOpen(false)} taskId={ctx.taskId} />
+
+      {/* Modals nghiệp vụ UC109: Gia hạn, Điều chỉnh, Thỏa thuận dừng Task */}
+      {isExtensionModalOpen && ctx.taskId && (
+        <MentoringDeadlineExtensionModal
+          isOpen={isExtensionModalOpen}
+          onClose={() => setIsExtensionModalOpen(false)}
+          taskId={ctx.taskId}
+          currentDeadline={taskDetail?.overview?.deadline || ctx.expectedDeadline || new Date().toISOString()}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
+
+      {isAmendmentModalOpen && ctx.taskId && (
+        <MentoringTaskAmendmentModal
+          isOpen={isAmendmentModalOpen}
+          onClose={() => setIsAmendmentModalOpen(false)}
+          taskId={ctx.taskId}
+          currentScope={taskDetail?.overview?.taskScope || ctx.requestDescription || ''}
+          currentExpectedResult={taskDetail?.deal?.expectedResult || ''}
+          currentPrice={taskDetail?.overview?.agreedPrice || Number(deal?.agreedPrice) || 0}
+          currentDeadline={taskDetail?.overview?.deadline || ctx.expectedDeadline || undefined}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
+
+      {isSettlementModalOpen && ctx.taskId && (
+        <MentoringSettlementProposalModal
+          isOpen={isSettlementModalOpen}
+          onClose={() => setIsSettlementModalOpen(false)}
+          taskId={ctx.taskId}
+          totalBudget={taskDetail?.overview?.agreedPrice || Number(deal?.agreedPrice) || 0}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -258,6 +258,9 @@ export interface MentoringTaskActionPermissions {
   isStudent: boolean
   isMentor: boolean
   isDisputed: boolean
+  canRequestExtension?: boolean
+  canRequestAmendment?: boolean
+  canProposeSettlement?: boolean
 }
 
 /**
@@ -275,6 +278,9 @@ export interface MentoringTaskDetail {
   workLogs: MentoringWorkLog[]
   history: MentoringTaskHistoryEvent[]
   permissions: MentoringTaskActionPermissions
+  activeExtension?: MentoringTaskDeadlineExtension | null
+  activeAmendment?: MentoringTaskAmendment | null
+  activeSettlementProposal?: MentoringTaskSettlementProposal | null
 }
 
 /**
@@ -355,3 +361,143 @@ export interface MentoringTaskPaymentStatusResponse {
   amount?: number
   message?: string
 }
+
+/**
+ * Trạng thái của Deadline Extension Ticket (UC109).
+ */
+export type MentoringExtensionStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED'
+
+/**
+ * Trạng thái của Task Amendment Ticket (UC109, mục 5.8).
+ */
+export type MentoringAmendmentStatus = 'PENDING' | 'AWAITING_TOPUP' | 'APPLIED' | 'REJECTED' | 'SUPERSEDED' | 'CANCELLED'
+
+/**
+ * Trạng thái của đề xuất dừng Task và phân chia tiền (UC109, mục 5.6).
+ */
+export type MentoringSettlementProposalStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'SUPERSEDED'
+
+/**
+ * Dữ liệu Deadline Extension Ticket (UC109).
+ */
+export interface MentoringTaskDeadlineExtension {
+  id: number
+  taskId: number
+  conversationId?: number | null
+  createdById: number
+  createdByName: string
+  createdByAvatar?: string | null
+  createdByRole: string
+  recipientId: number
+  recipientName: string
+  recipientAvatar?: string | null
+  currentDeadline: string
+  proposedDeadline: string
+  reason: string
+  status: MentoringExtensionStatus
+  respondedById?: number | null
+  respondedByName?: string | null
+  respondedAt?: string | null
+  responseNote?: string | null
+  createdAt: string
+  updatedAt: string
+  canConfirm?: boolean
+  canReject?: boolean
+}
+
+/**
+ * Dữ liệu Task Amendment Ticket (UC109, mục 5.8).
+ */
+export interface MentoringTaskAmendment {
+  id: number
+  taskId: number
+  conversationId?: number | null
+  version: number
+  createdById: number
+  createdByName: string
+  createdByAvatar?: string | null
+  createdByRole: string
+  recipientId: number
+  recipientName: string
+  recipientAvatar?: string | null
+  previousScope?: string | null
+  newScope?: string | null
+  previousExpectedResult?: string | null
+  newExpectedResult?: string | null
+  additionalAmount: number
+  previousDeadline?: string | null
+  newDeadline?: string | null
+  reason: string
+  status: MentoringAmendmentStatus
+  respondedById?: number | null
+  respondedByName?: string | null
+  respondedAt?: string | null
+  createdAt: string
+  updatedAt: string
+  canConfirm?: boolean
+  canReject?: boolean
+  canTopUp?: boolean
+}
+
+/**
+ * Dữ liệu đề xuất dừng Task và phân chia tiền (UC109).
+ */
+export interface MentoringTaskSettlementProposal {
+  id: number
+  taskId: number
+  conversationId?: number | null
+  createdById: number
+  createdByName: string
+  createdByAvatar?: string | null
+  createdByRole: string
+  recipientId: number
+  recipientName: string
+  recipientAvatar?: string | null
+  mentorAmount: number
+  studentRefund: number
+  totalAmount: number
+  reason: string
+  status: MentoringSettlementProposalStatus
+  respondedById?: number | null
+  respondedByName?: string | null
+  respondedAt?: string | null
+  createdAt: string
+  updatedAt: string
+  canAccept?: boolean
+  canReject?: boolean
+}
+
+export interface CreateDeadlineExtensionPayload {
+  proposedDeadline: string
+  reason: string
+}
+
+export interface RespondDeadlineExtensionPayload {
+  accept: boolean
+  responseNote?: string
+}
+
+export interface CreateTaskAmendmentPayload {
+  newScope?: string
+  newExpectedResult?: string
+  additionalAmount?: number
+  newDeadline?: string
+  reason: string
+}
+
+export interface RespondTaskAmendmentPayload {
+  accept: boolean
+  responseNote?: string
+}
+
+export interface CreateSettlementProposalPayload {
+  mentorAmount: number
+  studentRefund: number
+  reason: string
+}
+
+export interface RespondSettlementProposalPayload {
+  accept: boolean
+  responseNote?: string
+}
+

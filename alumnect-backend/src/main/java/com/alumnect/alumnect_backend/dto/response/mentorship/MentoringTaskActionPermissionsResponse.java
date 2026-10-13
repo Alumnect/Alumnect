@@ -32,4 +32,13 @@ public class MentoringTaskActionPermissionsResponse {
 
     /** Task có đang bị khiếu nại/tranh chấp (DISPUTED) hay không */
     private Boolean isDisputed;
+
+    /** Cho phép đề xuất gia hạn deadline (UC109) */
+    private Boolean canRequestExtension;
+
+    /** Cho phép đề xuất điều chỉnh Task / bổ sung tiền (UC109) */
+    private Boolean canRequestAmendment;
+
+    /** Cho phép đề xuất dừng Task và phân chia tiền (UC109) */
+    private Boolean canProposeSettlement;
 }

@@ -150,3 +150,11 @@ export * from './components/MentoringTaskHistoryTimeline'
 export type { MentoringTaskType } from './model/mentoringDealTypes'
 export type { MentoringTaskType as MentoringRequestTaskType } from './model/mentoringRequestTypes'
 
+// UC109 exports (Thỏa thuận gia hạn hoặc xử lý Task chưa hoàn thành)
+export * from './hooks/useMentoringTaskResolutions'
+export * from './components/MentoringDeadlineExtensionModal'
+export * from './components/MentoringTaskAmendmentModal'
+export * from './components/MentoringSettlementProposalModal'
+export * from './components/MentoringTaskResolutionBanner'
+
+

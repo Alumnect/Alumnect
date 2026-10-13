@@ -49,4 +49,13 @@ public class MentoringTaskDetailResponse {
 
     /** 9. Quyền hạn và hành động khả dụng (Available Actions) */
     private MentoringTaskActionPermissionsResponse permissions;
+
+    /** 10. Thẻ Ticket gia hạn deadline đang hoạt động (UC109) */
+    private MentoringTaskDeadlineExtensionResponse activeExtension;
+
+    /** 11. Thẻ Ticket điều chỉnh Task đang hoạt động (UC109) */
+    private MentoringTaskAmendmentResponse activeAmendment;
+
+    /** 12. Thẻ đề xuất dừng Task và phân chia tiền đang hoạt động (UC109) */
+    private MentoringTaskSettlementProposalResponse activeSettlementProposal;
 }
