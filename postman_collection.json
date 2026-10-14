@@ -10372,6 +10372,1385 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "108. Chat for Task & Ngữ cảnh hội thoại (UC108)",
+      "description": "Các API phục vụ UC108: Lấy ngữ cảnh hội thoại Chat for Task gắn liền với Request, Deal, Task và quyền thao tác",
+      "item": [
+        {
+          "name": "108.1 Lấy ngữ cảnh chi tiết Chat for Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/conversations/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "conversations",
+                "1"
+              ]
+            },
+            "description": "Lấy chi tiết ngữ cảnh Chat for Task: Thông tin Request, thành viên, Deal (mọi phiên bản), Task, trạng thái chỉ đọc và quyền thao tác."
+          },
+          "response": []
+        },
+        {
+          "name": "108.2 Lấy danh sách Chat for Task theo Request ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/conversations/by-request/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "conversations",
+                "by-request",
+                "1"
+              ]
+            },
+            "description": "Truy vết Request → Mentor đã ACCEPT → Conversation → Deal → Payment → Task."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "109. Gia hạn deadline, Điều chỉnh Task & Thỏa thuận dừng Task (UC109)",
+      "description": "Các API phục vụ UC109: Đề xuất gia hạn Deadline, Ticket điều chỉnh Task và đề xuất dừng Task chia quỹ",
+      "item": [
+        {
+          "name": "109.1 Tạo đề xuất gia hạn Deadline Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proposedDeadline\": \"2026-11-01T23:59:59Z\",\n  \"reason\": \"Cần thêm thời gian để tối ưu hóa hiệu năng và viết đầy đủ tài liệu API\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/deadline-extensions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "deadline-extensions"
+              ]
+            },
+            "description": "Cho phép Student hoặc Mentor đề xuất hạn chót mới kèm lý do trong Chat for Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.2 Phản hồi đề xuất gia hạn Deadline (ACCEPT / REJECT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true,\n  \"responseNote\": \"Đồng ý gia hạn thêm theo đề xuất\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/deadline-extensions/1/respond",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "deadline-extensions",
+                "1",
+                "respond"
+              ]
+            },
+            "description": "Bên nhận có quyền chấp nhận (cập nhật Deadline mới cho Task) hoặc từ chối giữ nguyên hạn chót cũ."
+          },
+          "response": []
+        },
+        {
+          "name": "109.3 Lấy lịch sử đề xuất gia hạn Deadline của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/deadline-extensions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "deadline-extensions"
+              ]
+            },
+            "description": "Lấy danh sách toàn bộ các đề xuất gia hạn Deadline của Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.4 Lấy đề xuất gia hạn Deadline đang chờ xử lý (Active)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/deadline-extensions/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "deadline-extensions",
+                "active"
+              ]
+            },
+            "description": "Lấy đề xuất gia hạn đang ở trạng thái PENDING của Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.5 Tạo Ticket điều chỉnh Task & bổ sung tiền (Mục 5.8)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newScope\": \"Bổ sung thêm module xuất báo cáo Excel và tích hợp thông báo Push\",\n  \"newExpectedResult\": \"Mã nguồn hoàn chỉnh kèm unit test trên 80%\",\n  \"additionalAmount\": 500000,\n  \"newDeadline\": \"2026-11-15T23:59:59Z\",\n  \"reason\": \"Phát sinh thêm yêu cầu nghiệp vụ từ phía doanh nghiệp đối tác\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/amendments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "amendments"
+              ]
+            },
+            "description": "Tạo Ticket điều chỉnh phạm vi, kết quả đầu ra, hạn chót và chi phí bổ sung."
+          },
+          "response": []
+        },
+        {
+          "name": "109.6 Phản hồi Ticket điều chỉnh Task (ACCEPT / REJECT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true,\n  \"responseNote\": \"Đồng thuận với phạm vi và chi phí bổ sung\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/amendments/1/respond",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "amendments",
+                "1",
+                "respond"
+              ]
+            },
+            "description": "Xác nhận hoặc từ chối đề xuất điều chỉnh Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.7 Lấy danh sách các phiên bản điều chỉnh của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/amendments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "amendments"
+              ]
+            },
+            "description": "Lấy lịch sử toàn bộ các Task Amendment Tickets của Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.8 Lấy Ticket điều chỉnh đang chờ xử lý của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/amendments/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "amendments",
+                "active"
+              ]
+            },
+            "description": "Lấy Task Amendment Ticket đang ở trạng thái PENDING của Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.9 Tạo đề xuất dừng Task và phân chia tiền (Mục 5.6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mentorAmount\": 600000,\n  \"studentRefund\": 400000,\n  \"reason\": \"Task hoàn thành được 60% khối lượng, hai bên thống nhất dừng do thay đổi kế hoạch\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/settlement-proposals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "settlement-proposals"
+              ]
+            },
+            "description": "Đề xuất phân chia Mentor Amount và Student Refund cho Task dừng trước hạn."
+          },
+          "response": []
+        },
+        {
+          "name": "109.10 Phản hồi đề xuất dừng Task và phân chia tiền",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true,\n  \"responseNote\": \"Đồng ý với tỷ lệ phân chia 60% Mentor - 40% Student\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/settlement-proposals/1/respond",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "settlement-proposals",
+                "1",
+                "respond"
+              ]
+            },
+            "description": "Xác nhận hoặc từ chối phương án phân chia tiền khi dừng Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.11 Lấy lịch sử đề xuất phân chia tiền dừng Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/settlement-proposals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "settlement-proposals"
+              ]
+            },
+            "description": "Lấy danh sách các đề xuất thương lượng phân chia tiền của Task."
+          },
+          "response": []
+        },
+        {
+          "name": "109.12 Lấy đề xuất dừng Task đang chờ xử lý",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/settlement-proposals/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "settlement-proposals",
+                "active"
+              ]
+            },
+            "description": "Lấy đề xuất phân chia tiền đang PENDING của Task."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "110. Nộp kết quả hoàn thành Task & Nghiệm thu (UC110)",
+      "description": "Các API phục vụ UC110: Mentor nộp sản phẩm bàn giao, Student nghiệm thu hoàn thành và kích hoạt tự động quyết toán",
+      "item": [
+        {
+          "name": "110.1 Mentor nộp kết quả hoàn thành nhiệm vụ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"finalSummary\": \"Đã hướng dẫn hoàn thành toàn bộ 5 module backend và triển khai Docker thành công.\",\n  \"deliverables\": \"GitHub Repo: https://github.com/org/repo-demo, Slide báo cáo, Video demo\",\n  \"attachmentUrls\": [\n    \"https://pub-77de501eb1a440df9c8ca37a5886ddf8.r2.dev/deliverable-report.pdf\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/completions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "completions"
+              ]
+            },
+            "description": "Mentor gửi sản phẩm hoàn thiện, Task chuyển sang COMPLETION_PENDING chờ Student nghiệm thu."
+          },
+          "response": []
+        },
+        {
+          "name": "110.2 Student xác nhận Task hoàn thành (Tự động chi tiền thù lao)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true,\n  \"feedbackNote\": \"Rất hài lòng với sự tận tâm và kiến thức sâu rộng của Cố vấn!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/completions/1/respond",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "completions",
+                "1",
+                "respond"
+              ]
+            },
+            "description": "Student nghiệm thu thành công: Task sang COMPLETED, hệ thống tự động tạo lệnh chi tiền thù lao cho Mentor từ tổng quỹ."
+          },
+          "response": []
+        },
+        {
+          "name": "110.3 Student yêu cầu chỉnh sửa / bổ sung kết quả hoàn thành",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": false,\n  \"feedbackNote\": \"Vui lòng bổ sung thêm tài liệu Swagger API và fix lỗi cấu hình CORS.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/completions/1/respond",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "completions",
+                "1",
+                "respond"
+              ]
+            },
+            "description": "Student từ chối nghiệm thu: Yêu cầu Mentor chỉnh sửa và nộp lại."
+          },
+          "response": []
+        },
+        {
+          "name": "110.4 Lấy lần nộp nghiệm thu mới nhất của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/completions/latest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "completions",
+                "latest"
+              ]
+            },
+            "description": "Lấy thông tin và deliverables mới nhất đang chờ duyệt của Task."
+          },
+          "response": []
+        },
+        {
+          "name": "110.5 Lấy lịch sử các lần nộp nghiệm thu của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/completions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "completions"
+              ]
+            },
+            "description": "Lấy danh sách toàn bộ các lần nộp hoàn thành của Task."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "111. Gửi Settlement Ticket đã thỏa thuận lên Admin (UC111)",
+      "description": "Các API phục vụ UC111: Gửi thỏa thuận phân chia tiền dừng Task lên Ban Quản Trị để giải ngân và hoàn tiền",
+      "item": [
+        {
+          "name": "111.1 Xem biên bản chốt thỏa thuận (Settlement Snapshot)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/settlement-snapshot",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "settlement-snapshot"
+              ]
+            },
+            "description": "Hiển thị thông tin phân chia tiền đã đồng thuận giữa hai bên trước khi gửi Ticket."
+          },
+          "response": []
+        },
+        {
+          "name": "111.2 Gửi Settlement Ticket đã thỏa thuận lên Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Hai bên đã thống nhất tỷ lệ 60-40, kính chuyển Ban Quản Trị xem xét giải ngân theo biên bản.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/settlement-tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "settlement-tickets"
+              ]
+            },
+            "description": "Gửi Ticket lên Admin; Task chuyển sang CANCELLED và chờ Admin tiếp nhận xử lý."
+          },
+          "response": []
+        },
+        {
+          "name": "111.3 Lấy Ticket đang hoạt động của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/tickets/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "tickets",
+                "active"
+              ]
+            },
+            "description": "Trả về Settlement hoặc Dispute Ticket đang OPEN hoặc IN_REVIEW của Task."
+          },
+          "response": []
+        },
+        {
+          "name": "111.4 Lấy danh sách toàn bộ Tickets của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "tickets"
+              ]
+            },
+            "description": "Lấy lịch sử toàn bộ các Ticket gắn với Task."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "112. Mở khiếu nại tranh chấp - Dispute Ticket (UC112)",
+      "description": "Các API phục vụ UC112: Tạo Dispute Ticket khi hai bên không thể tự thống nhất thỏa thuận, đóng băng tiền thù lao",
+      "item": [
+        {
+          "name": "112.1 Tạo Dispute Ticket khiếu nại tranh chấp gửi Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Khiếu nại Mentor không bàn giao sản phẩm đúng cam kết\",\n  \"disputeReason\": \"UNMET_REQUIREMENTS\",\n  \"description\": \"Mentor đã trễ hạn 10 ngày và không phản hồi tin nhắn trong 5 ngày qua.\",\n  \"desiredSolution\": \"Yêu cầu hoàn trả 80% học phí hoặc đổi Cố vấn phụ trách khác.\",\n  \"initialEvidences\": [\n    {\n      \"title\": \"Ảnh chụp tin nhắn không phản hồi\",\n      \"fileUrl\": \"https://pub-77de501eb1a440df9c8ca37a5886ddf8.r2.dev/evidence-chat.png\",\n      \"fileName\": \"evidence-chat.png\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/dispute-tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "dispute-tickets"
+              ]
+            },
+            "description": "Tạo khiếu nại tranh chấp: Task chuyển DISPUTED, tiền thù lao chuyển ON_HOLD chờ Admin phân xử."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "113. Gửi bằng chứng tranh chấp (UC113)",
+      "description": "Các API phục vụ UC113: Xem và bổ sung bằng chứng tài liệu, hình ảnh vào Ticket tranh chấp",
+      "item": [
+        {
+          "name": "113.1 Lấy danh sách bằng chứng tranh chấp của Ticket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/tickets/1/evidences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "tickets",
+                "1",
+                "evidences"
+              ]
+            },
+            "description": "Lấy toàn bộ các chứng từ, hình ảnh đính kèm của Ticket."
+          },
+          "response": []
+        },
+        {
+          "name": "113.2 Bổ sung bằng chứng tranh chấp cho Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Biên bản ghi nhớ cam kết giữa hai bên\",\n  \"description\": \"Ảnh chụp màn hình cam kết deadline ban đầu\",\n  \"fileUrl\": \"https://pub-77de501eb1a440df9c8ca37a5886ddf8.r2.dev/evidence-agreement.png\",\n  \"fileName\": \"evidence-agreement.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/tickets/1/evidences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "tickets",
+                "1",
+                "evidences"
+              ]
+            },
+            "description": "Cho phép Student hoặc Mentor bổ sung thêm chứng cứ vào Ticket."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "114. Xem báo cáo kết quả Task & Tài chính (UC114)",
+      "description": "Các API phục vụ UC114: Tổng hợp tiến độ, kết quả bàn giao và đối soát tình trạng tài chính sau giải quyết",
+      "item": [
+        {
+          "name": "114.1 Xem báo cáo kết quả Task & Đối soát tài chính",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/1/report",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "1",
+                "report"
+              ]
+            },
+            "description": "Báo cáo tổng hợp: Deal gốc, deadline, Work Logs, Deliverables, số tiền payout/refund và tình trạng giao dịch."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "116. Admin Xem danh sách & Chi tiết Ticket (UC116)",
+      "description": "Các API phục vụ UC116: Quản trị viên xem, tìm kiếm và lọc danh sách Settlement & Dispute Ticket",
+      "item": [
+        {
+          "name": "116.1 Admin lấy danh sách Ticket phân trang kèm bộ lọc",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets?page=0&size=10&status=OPEN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                }
+              ]
+            },
+            "description": "Tra cứu danh sách Ticket cần xử lý kèm phân trang."
+          },
+          "response": []
+        },
+        {
+          "name": "116.2 Admin lọc Ticket theo loại (DISPUTE / SETTLEMENT)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets?type=DISPUTE&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "DISPUTE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lọc Ticket tranh chấp khiếu nại hoặc thỏa thuận dừng Task."
+          },
+          "response": []
+        },
+        {
+          "name": "116.3 Admin xem chi tiết Ticket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1"
+              ]
+            },
+            "description": "Xem hồ sơ đầy đủ của Ticket kèm thông tin người tạo, đối phương và Task liên quan."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "117. Admin Tiếp nhận xử lý Ticket (UC117)",
+      "description": "Các API phục vụ UC117: Quản trị viên nhận quyền phụ trách xử lý Ticket (gán handled_by và chuyển IN_REVIEW)",
+      "item": [
+        {
+          "name": "117.1 Admin tiếp nhận quyền xử lý Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1",
+                "accept"
+              ]
+            },
+            "description": "Gán Admin hiện tại phụ trách giải quyết Ticket, chuyển status sang IN_REVIEW."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "118. Admin Xem bằng chứng & Bối cảnh tranh chấp (UC118)",
+      "description": "Các API phục vụ UC118: Quản trị viên đối soát bối cảnh Task toàn diện (Deal, Timeline, Work Logs, Deliverables, Escrow)",
+      "item": [
+        {
+          "name": "118.1 Admin xem bằng chứng và ngữ cảnh Task toàn diện",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1/context",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1",
+                "context"
+              ]
+            },
+            "description": "Lấy toàn bộ chứng từ đính kèm kèm dữ liệu đối chứng của Task: Deal gốc, Timeline & Gia hạn, Confirmed Work Logs, Deliverables và Quỹ ký quỹ."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "119. Trao đổi & Hòa giải tranh chấp 3 bên (UC119)",
+      "description": "Các API phục vụ UC119: Kênh trao đổi trực tiếp có lưu vết giữa Student, Mentor và Admin trong phạm vi Ticket",
+      "item": [
+        {
+          "name": "119.1 User xem danh sách tin nhắn trao đổi trong Ticket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "description": "Student hoặc Mentor xem toàn bộ lịch sử trao đổi và đề xuất hòa giải trong Ticket."
+          },
+          "response": []
+        },
+        {
+          "name": "119.2 User gửi tin nhắn trao đổi trong Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Tôi đã bổ sung thêm tệp bằng chứng cam kết deadline lên hệ thống, nhờ Admin xem xét.\",\n  \"attachmentUrl\": \"https://pub-77de501eb1a440df9c8ca37a5886ddf8.r2.dev/proof.png\",\n  \"attachmentName\": \"proof.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mentoring/tasks/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mentoring",
+                "tasks",
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "description": "Student hoặc Mentor gửi tin nhắn giải trình hoặc đề xuất hòa giải."
+          },
+          "response": []
+        },
+        {
+          "name": "119.3 Admin xem danh sách tin nhắn trao đổi trong Ticket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "description": "Quản trị viên xem lịch sử đối thoại 3 bên trong Ticket."
+          },
+          "response": []
+        },
+        {
+          "name": "119.4 Admin gửi chỉ dẫn / Đề xuất hòa giải trong Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Ban Quản Trị đề xuất phương án: Mentor nhận 70% thù lao, hoàn trả Student 30% ngân sách do khối lượng đã bàn giao đạt 70%. Hai bên phản hồi trước ngày 16/10/2026.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1",
+                "messages"
+              ]
+            },
+            "description": "Admin gửi định hướng hòa giải hoặc yêu cầu hai bên cung cấp thêm tài liệu trước thời hạn."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "120. Admin Quyết định phương án giải quyết Ticket (UC120)",
+      "description": "Các API phục vụ UC120: Quản trị viên ra phán quyết giải quyết Ticket, phân bổ thù lao Mentor, hoàn trả Student và xử lý giải ngân",
+      "item": [
+        {
+          "name": "120.1 Admin phán quyết giải quyết Ticket (Phân chia thù lao & Hoàn tiền)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"PARTIAL_SETTLEMENT\",\n  \"decisionReason\": \"Căn cứ vào Work Log đã xác nhận và bằng chứng bàn giao, Mentor đã hoàn thành 70% khối lượng. Ban Quản Trị quyết định chi trả 70% thù lao cho Mentor và hoàn trả 30% cho Student.\",\n  \"mentorAmount\": 700000,\n  \"studentRefund\": 300000,\n  \"disputeFee\": 0,\n  \"markTaskResolved\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1",
+                "resolve"
+              ]
+            },
+            "description": "Phán quyết chuyển Ticket sang RESOLVED, tự động kích hoạt lệnh Payout và Refund qua hệ thống thanh toán."
+          },
+          "response": []
+        },
+        {
+          "name": "120.2 Admin phán quyết hoàn tiền 100% cho Học viên",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"FULL_STUDENT_REFUND\",\n  \"decisionReason\": \"Mentor vi phạm nghiêm trọng cam kết thời hạn và không bàn giao sản phẩm, Ban Quản Trị phán quyết hoàn trả 100% học phí cho Student.\",\n  \"mentorAmount\": 0,\n  \"studentRefund\": 1000000,\n  \"disputeFee\": 0,\n  \"markTaskResolved\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1",
+                "resolve"
+              ]
+            },
+            "description": "Phán quyết hoàn trả toàn bộ quỹ cho Học viên."
+          },
+          "response": []
+        },
+        {
+          "name": "120.3 Admin phán quyết thanh toán 100% cho Cố vấn",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"FULL_MENTOR_PAYOUT\",\n  \"decisionReason\": \"Mentor đã bàn giao đầy đủ mã nguồn và video hướng dẫn theo cam kết Deal ban đầu, giải ngân 100% thù lao cho Mentor.\",\n  \"mentorAmount\": 1000000,\n  \"studentRefund\": 0,\n  \"disputeFee\": 0,\n  \"markTaskResolved\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/tickets/1/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "tickets",
+                "1",
+                "resolve"
+              ]
+            },
+            "description": "Phán quyết giải ngân 100% thù lao cho Cố vấn."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "121. Admin Quản lý Quỹ Task & Sổ giao dịch tài chính (UC121)",
+      "description": "Các API phục vụ UC121: Quản trị viên đối soát Sổ quỹ dòng tiền Escrow, thù lao Mentor, hoàn trả Student và lịch sử giao dịch theo Task",
+      "item": [
+        {
+          "name": "121.1 Admin xem danh sách Quỹ và dòng tiền theo Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/finances/tasks?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "finances",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Tra cứu số liệu Escrow, thù lao chi Cố vấn, hoàn trả Học viên, phí và trạng thái quyết toán theo từng Task."
+          },
+          "response": []
+        },
+        {
+          "name": "121.2 Admin lọc Quỹ Task theo trạng thái quyết toán",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/finances/tasks?settlementStatus=SETTLED&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "finances",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "settlementStatus",
+                  "value": "SETTLED"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lọc các Task đã hoàn tất quyết toán (SETTLED) hoặc đang chờ (PENDING, PARTIALLY_PAID)."
+          },
+          "response": []
+        },
+        {
+          "name": "121.3 Admin xem chi tiết toàn diện Sổ quỹ giao dịch của Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/mentoring/finances/tasks/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "mentoring",
+                "finances",
+                "tasks",
+                "1"
+              ]
+            },
+            "description": "Đối soát toàn bộ các giao dịch ký quỹ, chi trả, hoàn tiền, snapshot hạn chót và lịch sử điều chỉnh của Task."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
