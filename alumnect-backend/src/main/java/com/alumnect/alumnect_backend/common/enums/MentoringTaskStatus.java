@@ -20,5 +20,8 @@ public enum MentoringTaskStatus {
     CANCELLED,
 
     /** Đang trong trạng thái tranh chấp nghiệp vụ / khiếu nại */
-    DISPUTED
+    DISPUTED,
+
+    /** Đã giải quyết và khép lại theo phán quyết trọng tài / hòa giải của Admin (UC120) */
+    RESOLVED
 }

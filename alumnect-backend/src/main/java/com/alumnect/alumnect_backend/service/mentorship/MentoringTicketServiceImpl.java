@@ -1,11 +1,8 @@
 package com.alumnect.alumnect_backend.service.mentorship;
 
-import com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus;
-import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
-import com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus;
-import com.alumnect.alumnect_backend.common.enums.MentoringTicketType;
-import com.alumnect.alumnect_backend.common.enums.WorkLogStatus;
+import com.alumnect.alumnect_backend.common.enums.*;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDisputeTicketRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskCompletionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskDeadlineExtensionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
@@ -13,6 +10,7 @@ import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementPropo
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTicketEvidenceRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringWorkLogRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.AdminResolveTicketRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.CreateDisputeTicketRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.SubmitSettlementTicketRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.TicketEvidenceRequest;
@@ -64,6 +62,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     private final MentoringTaskSettlementProposalRepository proposalRepository;
     private final MentoringTicketEvidenceRepository evidenceRepository;
     private final MentoringTicketMessageRepository messageRepository;
+    private final MentoringPaymentLedgerRepository ledgerRepository;
     private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
     private final NotificationService notificationService;
@@ -460,6 +459,11 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .acceptedAt(t.getAcceptedAt())
                 .resolvedAt(t.getResolvedAt())
                 .resolutionNote(t.getResolutionNote())
+                .decision(t.getDecision())
+                .disputeFee(t.getDisputeFee())
+                .settlementStatus(t.getSettlementStatus())
+                .mentorPayoutLedgerId(t.getMentorPayoutLedger() != null ? t.getMentorPayoutLedger().getId() : null)
+                .studentRefundLedgerId(t.getStudentRefundLedger() != null ? t.getStudentRefundLedger().getId() : null)
                 .createdAt(t.getCreatedAt())
                 .updatedAt(t.getUpdatedAt())
                 .build();
@@ -965,5 +969,204 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .deadline(msg.getDeadline())
                 .createdAt(msg.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public MentoringDisputeTicketResponse resolveTicket(
+            Long adminUserId, Long ticketId, AdminResolveTicketRequest request) {
+        log.info("Admin {} yêu cầu ra phán quyết giải quyết Ticket ID: {}, phương án: {}",
+                adminUserId, ticketId, request.getDecision());
+
+        User admin = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Quản trị viên"));
+        if (!isAdmin(admin)) {
+            throw new ForbiddenException("Chỉ Quản trị viên mới có quyền ra phán quyết giải quyết Ticket");
+        }
+
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket với ID: " + ticketId));
+
+        if (ticket.getStatus() == MentoringTicketStatus.RESOLVED) {
+            throw new ConflictException("Ticket này đã được giải quyết phán quyết trước đó rồi.");
+        }
+        if (ticket.getStatus() == MentoringTicketStatus.REJECTED || ticket.getStatus() == MentoringTicketStatus.CANCELLED) {
+            throw new BadRequestException("Ticket này đã ở trạng thái kết thúc (" + ticket.getStatus() + "), không thể giải quyết.");
+        }
+
+        MentoringTask task = ticket.getTask();
+        if (task == null) {
+            throw new BadRequestException("Ticket không gắn với Mentoring Task hợp lệ.");
+        }
+
+        // 1. Thẩm tra quỹ Escrow khả dụng (Rule 5.9 & Luồng 59 - 60)
+        BigDecimal totalEscrow = ledgerRepository.findByTaskId(task.getId()).stream()
+                .filter(l -> l.getTransactionType() == MentoringLedgerTransactionType.ESCROW_COLLECTION
+                        && l.getStatus() == MentoringLedgerStatus.SUCCEEDED)
+                .map(MentoringPaymentLedger::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalEscrow.compareTo(BigDecimal.ZERO) == 0) {
+            totalEscrow = ticket.getTotalAmount() != null && ticket.getTotalAmount().compareTo(BigDecimal.ZERO) > 0
+                    ? ticket.getTotalAmount()
+                    : task.getAgreedPrice();
+        }
+
+        BigDecimal disputeFee = request.getDisputeFee() != null ? request.getDisputeFee() : BigDecimal.ZERO;
+        if (disputeFee.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Phí xử lý tranh chấp không được âm.");
+        }
+        if (disputeFee.compareTo(totalEscrow) > 0) {
+            throw new BadRequestException("Phí xử lý tranh chấp không thể vượt quá tổng quỹ Escrow của nhiệm vụ ("
+                    + formatVnd(totalEscrow) + " VNĐ).");
+        }
+
+        BigDecimal netFund = totalEscrow.subtract(disputeFee);
+        BigDecimal mentorAmount;
+        BigDecimal studentRefund;
+
+        switch (request.getDecision()) {
+            case FULL_MENTOR_PAYMENT:
+                mentorAmount = netFund;
+                studentRefund = BigDecimal.ZERO;
+                break;
+            case FULL_STUDENT_REFUND:
+                mentorAmount = BigDecimal.ZERO;
+                studentRefund = netFund;
+                break;
+            case PARTIAL_SPLIT:
+                if ("PERCENTAGE".equalsIgnoreCase(request.getSplitMode()) && request.getMentorPercentage() != null) {
+                    double mentorPct = request.getMentorPercentage();
+                    if (mentorPct < 0 || mentorPct > 100) {
+                        throw new BadRequestException("Tỷ lệ phân chia Cố vấn phải nằm trong khoảng từ 0% đến 100%.");
+                    }
+                    mentorAmount = netFund.multiply(BigDecimal.valueOf(mentorPct / 100.0)).setScale(0, java.math.RoundingMode.HALF_UP);
+                    studentRefund = netFund.subtract(mentorAmount);
+                } else {
+                    if (request.getMentorAmount() == null || request.getStudentRefund() == null) {
+                        throw new BadRequestException("Vui lòng cung cấp đầy đủ số tiền phân bổ cho Cố vấn và Học viên.");
+                    }
+                    mentorAmount = request.getMentorAmount();
+                    studentRefund = request.getStudentRefund();
+
+                    // Kiểm tra tổng: mentorAmount + studentRefund + disputeFee == totalEscrow
+                    BigDecimal totalAllocated = mentorAmount.add(studentRefund).add(disputeFee);
+                    if (totalAllocated.compareTo(totalEscrow) != 0) {
+                        throw new BadRequestException("Tổng số tiền phân bổ (Mentor: " + formatVnd(mentorAmount)
+                                + " + Student: " + formatVnd(studentRefund)
+                                + " + Phí: " + formatVnd(disputeFee)
+                                + " = " + formatVnd(totalAllocated) + " VNĐ) phải bằng đúng tổng quỹ Escrow ("
+                                + formatVnd(totalEscrow) + " VNĐ).");
+                    }
+                }
+                break;
+            default:
+                throw new BadRequestException("Phương án giải quyết không hợp lệ.");
+        }
+
+        // 2. Cập nhật Ticket
+        ticket.setDecision(request.getDecision());
+        ticket.setResolutionNote(request.getDecisionReason());
+        ticket.setMentorAmount(mentorAmount);
+        ticket.setStudentRefund(studentRefund);
+        ticket.setDisputeFee(disputeFee);
+        ticket.setStatus(MentoringTicketStatus.RESOLVED);
+        ticket.setHandledBy(admin);
+        ticket.setResolvedAt(Instant.now());
+        ticket.setSettlementStatus(MentoringSettlementStatus.SETTLED);
+
+        // 3. Cập nhật Mentoring Task
+        if (mentorAmount.compareTo(BigDecimal.ZERO) > 0 && studentRefund.compareTo(BigDecimal.ZERO) == 0) {
+            task.setStatus(MentoringTaskStatus.COMPLETED);
+        } else if (studentRefund.compareTo(BigDecimal.ZERO) > 0 && mentorAmount.compareTo(BigDecimal.ZERO) == 0) {
+            task.setStatus(MentoringTaskStatus.CANCELLED);
+        } else {
+            task.setStatus(MentoringTaskStatus.RESOLVED);
+        }
+        taskRepository.save(task);
+
+        // 4. Ghi Sổ quỹ giao dịch Mentoring (Payout & Refund độc lập - Bước 63 UC120)
+        if (mentorAmount.compareTo(BigDecimal.ZERO) > 0) {
+            MentoringPaymentLedger payoutLedger = MentoringPaymentLedger.builder()
+                    .request(task.getRequest() != null ? task.getRequest() : task.getDeal().getRequest())
+                    .task(task)
+                    .deal(task.getDeal())
+                    .student(task.getStudent())
+                    .mentor(task.getMentor())
+                    .amount(mentorAmount)
+                    .transactionType(MentoringLedgerTransactionType.PAYOUT)
+                    .status(MentoringLedgerStatus.SUCCEEDED)
+                    .providerReference("PAYOUT_TICKET_" + ticket.getTicketCode())
+                    .deadlineSnapshot(task.getDeadline())
+                    .note("Thù lao theo phán quyết Ticket " + ticket.getTicketCode() + ": " + request.getDecisionReason())
+                    .build();
+            MentoringPaymentLedger savedPayout = ledgerRepository.save(payoutLedger);
+            ticket.setMentorPayoutLedger(savedPayout);
+        }
+
+        if (studentRefund.compareTo(BigDecimal.ZERO) > 0) {
+            MentoringPaymentLedger refundLedger = MentoringPaymentLedger.builder()
+                    .request(task.getRequest() != null ? task.getRequest() : task.getDeal().getRequest())
+                    .task(task)
+                    .deal(task.getDeal())
+                    .student(task.getStudent())
+                    .mentor(task.getMentor())
+                    .amount(studentRefund)
+                    .transactionType(MentoringLedgerTransactionType.REFUND)
+                    .status(MentoringLedgerStatus.SUCCEEDED)
+                    .providerReference("REFUND_TICKET_" + ticket.getTicketCode())
+                    .deadlineSnapshot(task.getDeadline())
+                    .note("Hoàn phí theo phán quyết Ticket " + ticket.getTicketCode() + ": " + request.getDecisionReason())
+                    .build();
+            MentoringPaymentLedger savedRefund = ledgerRepository.save(refundLedger);
+            ticket.setStudentRefundLedger(savedRefund);
+        }
+
+        MentoringDisputeTicket savedTicket = ticketRepository.save(ticket);
+        log.info("Ticket {} đã được Admin {} giải quyết thành công (RESOLVED)", savedTicket.getId(), adminUserId);
+
+        // 5. Tự động ghi 1 tin nhắn hệ thống thông báo phán quyết vào thread trao đổi Ticket UC119
+        try {
+            String decisionLabel = switch (request.getDecision()) {
+                case FULL_MENTOR_PAYMENT -> "Chi trả toàn bộ thù lao cho Cố vấn";
+                case FULL_STUDENT_REFUND -> "Hoàn trả toàn bộ học phí cho Học viên";
+                case PARTIAL_SPLIT -> "Hòa giải phân chia tài chính";
+            };
+
+            String systemMsgContent = "PHÁN QUYẾT CHÍNH THỨC TỪ BAN QUẢN TRỊ:\n"
+                    + "• Phương án: " + decisionLabel + "\n"
+                    + "• Thù lao Cố vấn (Mentor): " + formatVnd(mentorAmount) + " VNĐ\n"
+                    + "• Hoàn trả Học viên (Student): " + formatVnd(studentRefund) + " VNĐ\n"
+                    + (disputeFee.compareTo(BigDecimal.ZERO) > 0 ? "• Phí xử lý tranh chấp: " + formatVnd(disputeFee) + " VNĐ\n" : "")
+                    + "• Căn cứ & Lý do phán quyết: " + request.getDecisionReason();
+
+            MentoringTicketMessage resolutionMsg = MentoringTicketMessage.builder()
+                    .ticket(savedTicket)
+                    .sender(admin)
+                    .senderRole("ADMIN")
+                    .messageType("RESOLUTION_DECISION")
+                    .content(systemMsgContent)
+                    .proposedMentorAmount(mentorAmount)
+                    .proposedStudentRefund(studentRefund)
+                    .build();
+            MentoringTicketMessage savedMsg = messageRepository.save(resolutionMsg);
+
+            // Broadcast qua WebSocket topic của Ticket
+            messagingTemplate.convertAndSend(
+                    "/topic/mentoring/tickets/" + savedTicket.getId() + "/messages",
+                    toTicketMessageResponse(savedMsg)
+            );
+        } catch (Exception ex) {
+            log.error("Lỗi khi ghi tin nhắn phán quyết vào thread UC119: {}", ex.getMessage());
+        }
+
+        // 6. Gửi thông báo tới Học viên và Cố vấn
+        try {
+            notificationService.sendMentoringTicketResolvedNotification(admin, savedTicket.getStudent(), savedTicket.getMentor(), savedTicket);
+        } catch (Exception ex) {
+            log.error("Lỗi khi gửi thông báo kết quả giải quyết Ticket id={}: {}", savedTicket.getId(), ex.getMessage());
+        }
+
+        return toTicketResponse(savedTicket);
     }
 }

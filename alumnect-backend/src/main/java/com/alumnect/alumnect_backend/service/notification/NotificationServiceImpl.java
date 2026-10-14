@@ -584,6 +584,60 @@ public class NotificationServiceImpl implements NotificationService {
         log.info("Đã gửi thông báo Ticket message tới User id={}", recipient.getId());
     }
 
+    @Override
+    @Transactional
+    public void sendMentoringTicketResolvedNotification(
+            User admin,
+            User student,
+            User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket
+    ) {
+        if (ticket == null || admin == null) {
+            return;
+        }
+
+        String adminName = resolveFullName(admin);
+        String ticketCode = ticket.getTicketCode() != null ? ticket.getTicketCode() : ("#" + ticket.getId());
+        String taskTitle = ticket.getTask() != null ? ticket.getTask().getTaskTitle() : "";
+        String decisionText = ticket.getDecision() != null ? ticket.getDecision().name() : "RESOLVED";
+
+        String title = "Phán quyết giải quyết vé " + ticketCode;
+        String content = "Quản trị viên " + adminName + " đã ban hành phán quyết chính thức cho nhiệm vụ \""
+                + taskTitle + "\" (" + decisionText + "). Vui lòng kiểm tra chi tiết kết quả phân bổ tài chính.";
+
+        if (student != null) {
+            Notification notifStudent = Notification.builder()
+                    .recipient(student)
+                    .sender(admin)
+                    .type(NotificationType.MENTORING_TASK)
+                    .title(title)
+                    .content(content)
+                    .targetType("MENTORING_TICKET")
+                    .targetId(String.valueOf(ticket.getId()))
+                    .senderCount(1)
+                    .isRead(false)
+                    .build();
+            notifStudent = notificationRepository.save(notifStudent);
+            pushRealtimeNotification(student, notifStudent);
+        }
+
+        if (mentor != null) {
+            Notification notifMentor = Notification.builder()
+                    .recipient(mentor)
+                    .sender(admin)
+                    .type(NotificationType.MENTORING_TASK)
+                    .title(title)
+                    .content(content)
+                    .targetType("MENTORING_TICKET")
+                    .targetId(String.valueOf(ticket.getId()))
+                    .senderCount(1)
+                    .isRead(false)
+                    .build();
+            notifMentor = notificationRepository.save(notifMentor);
+            pushRealtimeNotification(mentor, notifMentor);
+        }
+    }
+
 
     /**
      * Đẩy thông báo thời gian thực đến người nhận qua WebSocket STOMP cá nhân.

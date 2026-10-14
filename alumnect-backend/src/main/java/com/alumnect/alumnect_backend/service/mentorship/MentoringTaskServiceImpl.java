@@ -140,14 +140,14 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         return switch (status) {
             case PREPARATION -> "PREPARATION";
             case IN_PROGRESS -> "IN_PROGRESS";
-            case SUBMITTED, COMPLETED, CANCELLED, DISPUTED -> "ENDING";
+            case SUBMITTED, COMPLETED, CANCELLED, DISPUTED, RESOLVED -> "ENDING";
         };
     }
 
     private Integer calculateProgress(MentoringTaskStatus status, long totalLogs, long confirmedLogs, long pendingLogs) {
         if (status == null) return 0;
         return switch (status) {
-            case COMPLETED -> 100;
+            case COMPLETED, RESOLVED -> 100;
             case CANCELLED -> 0;
             case DISPUTED -> 50;
             case SUBMITTED -> 85;

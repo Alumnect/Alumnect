@@ -30,6 +30,7 @@ import {
   type MentoringDisputeEvidence,
   MentoringTicketDiscussionThread,
 } from '@/features/mentorship'
+import { AdminResolveTicketModal } from './AdminResolveTicketModal'
 
 /**
  * Trang Quản lý Tranh chấp & Hòa giải Task dành cho Admin (UC116 - UC120).
@@ -55,6 +56,10 @@ export function AdminMentoringTicketsPage() {
   const [activeModalTab, setActiveModalTab] = useState<'evidence' | 'context' | 'ticket' | 'discussion'>('evidence')
   const [evidencePartyFilter, setEvidencePartyFilter] = useState<'ALL' | 'STUDENT' | 'MENTOR'>('ALL')
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+  // State quản lý Modal ra phán quyết giải quyết Ticket (UC120)
+  const [isResolveModalOpen, setIsResolveModalOpen] = useState<boolean>(false)
+  const [ticketToResolve, setTicketToResolve] = useState<MentoringDisputeTicket | null>(null)
 
   // Hook tra cứu toàn bộ bằng chứng và bối cảnh Task (UC118)
   const { data: disputeContext, isLoading: isLoadingContext } = useAdminDisputeContext(selectedTicket?.id ?? null)
@@ -401,6 +406,20 @@ export function AdminMentoringTicketsPage() {
                                   <UserCheck size={13} />
                                 )}
                                 <span>Tiếp nhận</span>
+                              </button>
+                            )}
+                            {t.status !== 'RESOLVED' && t.status !== 'REJECTED' && t.status !== 'CANCELLED' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTicketToResolve(t)
+                                  setIsResolveModalOpen(true)
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors cursor-pointer shadow-2xs"
+                                title="Ban hành phán quyết giải quyết Ticket (UC120)"
+                              >
+                                <Scale size={13} />
+                                <span>Giải quyết</span>
                               </button>
                             )}
                             <button
@@ -1087,6 +1106,19 @@ export function AdminMentoringTicketsPage() {
                     <span>Tiếp nhận xử lý (UC117)</span>
                   </button>
                 )}
+                {selectedTicket.status !== 'RESOLVED' && selectedTicket.status !== 'REJECTED' && selectedTicket.status !== 'CANCELLED' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTicketToResolve(selectedTicket)
+                      setIsResolveModalOpen(true)
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <Scale size={15} />
+                    <span>Ra phán quyết (UC120)</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedTicket(null)}
@@ -1124,6 +1156,18 @@ export function AdminMentoringTicketsPage() {
           </div>
         </div>
       )}
+
+      {/* 8. Modal Ra Phán Quyết Giải Quyết Ticket (UC120) */}
+      <AdminResolveTicketModal
+        isOpen={isResolveModalOpen}
+        onClose={() => {
+          setIsResolveModalOpen(false)
+          setTicketToResolve(null)
+          refetch()
+        }}
+        ticket={ticketToResolve}
+        totalEscrowAmount={disputeContext?.totalEscrowAmount}
+      />
     </div>
   )
 }

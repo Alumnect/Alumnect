@@ -149,4 +149,16 @@ public interface MentoringTicketService {
      */
     com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse sendTicketMessage(
             Long currentUserId, Long ticketId, com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringTicketMessageRequest request);
+
+    /**
+     * Quản trị viên ra phán quyết quyết định phương án giải quyết Ticket (UC120).
+     * Phân bổ số tiền tạm giữ Escrow cho Mentor, hoàn trả cho Student, ghi sổ quỹ và cập nhật trạng thái Task.
+     *
+     * @param adminUserId ID Quản trị viên ra phán quyết
+     * @param ticketId ID vé khiếu nại
+     * @param request Dữ liệu phán quyết và phương án tài chính
+     * @return Dữ liệu Ticket sau khi được giải quyết (RESOLVED)
+     */
+    MentoringDisputeTicketResponse resolveTicket(
+            Long adminUserId, Long ticketId, com.alumnect.alumnect_backend.dto.request.mentorship.AdminResolveTicketRequest request);
 }

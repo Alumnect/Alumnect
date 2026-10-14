@@ -121,6 +121,33 @@ public class MentoringDisputeTicket {
     @Column(name = "resolution_note", columnDefinition = "TEXT")
     private String resolutionNote;
 
+    /** Phương án giải quyết chính thức của Admin: FULL_MENTOR_PAYMENT, PARTIAL_SPLIT, FULL_STUDENT_REFUND (UC120) */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "decision", length = 50)
+    private com.alumnect.alumnect_backend.common.enums.MentoringTicketDecision decision;
+
+    /** Phí xử lý tranh chấp theo chính sách nền tảng (nếu áp dụng, VND) */
+    @Column(name = "dispute_fee", precision = 12, scale = 2, nullable = false)
+    @Builder.Default
+    private BigDecimal disputeFee = BigDecimal.ZERO;
+
+    /** Trạng thái quyết toán tiền qua Payment/Ledger: PENDING, PROCESSING, PARTIALLY_PAID, SETTLED, FAILED (UC120) */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "settlement_status", length = 50, nullable = false)
+    @Builder.Default
+    private com.alumnect.alumnect_backend.common.enums.MentoringSettlementStatus settlementStatus =
+            com.alumnect.alumnect_backend.common.enums.MentoringSettlementStatus.PENDING;
+
+    /** Giao dịch chi trả cho Cố vấn trong Sổ quỹ Mentoring (nếu có) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentor_payout_ledger_id")
+    private MentoringPaymentLedger mentorPayoutLedger;
+
+    /** Giao dịch hoàn trả cho Học viên trong Sổ quỹ Mentoring (nếu có) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_refund_ledger_id")
+    private MentoringPaymentLedger studentRefundLedger;
+
     /** Thời điểm tạo Ticket */
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default

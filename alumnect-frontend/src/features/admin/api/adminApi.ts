@@ -4,6 +4,7 @@ import type {
   MentoringDisputeContext,
   MentoringTicketMessage,
   CreateTicketMessagePayload,
+  AdminResolveTicketPayload,
 } from '@/features/mentorship'
 
 export interface DayRegistrationStatDto {
@@ -335,6 +336,12 @@ export const adminApi = {
    */
   sendAdminTicketMessage: (ticketId: number, payload: CreateTicketMessagePayload) =>
     http.post<any, ApiResponse<MentoringTicketMessage>>(`/admin/mentoring/tickets/${ticketId}/messages`, payload),
+
+  /**
+   * Quản trị viên ra phán quyết quyết định phương án giải quyết Ticket (UC120)
+   */
+  resolveAdminTicket: (ticketId: number, payload: AdminResolveTicketPayload) =>
+    http.post<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}/resolve`, payload),
 }
 
 

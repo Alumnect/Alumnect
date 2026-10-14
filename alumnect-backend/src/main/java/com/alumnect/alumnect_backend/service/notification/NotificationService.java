@@ -180,5 +180,20 @@ public interface NotificationService {
             String messageType,
             String content
     );
+
+    /**
+     * Gửi thông báo cho Học viên và Cố vấn khi Quản trị viên ra phán quyết giải quyết Ticket (UC120).
+     *
+     * @param admin Quản trị viên ra phán quyết
+     * @param student Học viên liên quan
+     * @param mentor Cố vấn liên quan
+     * @param ticket Vé tranh chấp / hòa giải đã giải quyết
+     */
+    void sendMentoringTicketResolvedNotification(
+            com.alumnect.alumnect_backend.entity.user.User admin,
+            com.alumnect.alumnect_backend.entity.user.User student,
+            com.alumnect.alumnect_backend.entity.user.User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket
+    );
 }
 

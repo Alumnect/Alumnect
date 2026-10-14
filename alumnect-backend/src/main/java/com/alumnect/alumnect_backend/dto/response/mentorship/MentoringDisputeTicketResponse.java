@@ -86,6 +86,21 @@ public class MentoringDisputeTicketResponse {
     /** Ghi chú giải quyết của Admin */
     private String resolutionNote;
 
+    /** Phương án giải quyết chính thức của Admin (UC120) */
+    private com.alumnect.alumnect_backend.common.enums.MentoringTicketDecision decision;
+
+    /** Phí xử lý tranh chấp (VND) */
+    private BigDecimal disputeFee;
+
+    /** Trạng thái quyết toán tiền (UC120 - PENDING, PROCESSING, PARTIALLY_PAID, SETTLED, FAILED) */
+    private com.alumnect.alumnect_backend.common.enums.MentoringSettlementStatus settlementStatus;
+
+    /** ID giao dịch Payout cho Mentor trong sổ quỹ (nếu có) */
+    private Long mentorPayoutLedgerId;
+
+    /** ID giao dịch Refund cho Student trong sổ quỹ (nếu có) */
+    private Long studentRefundLedgerId;
+
     /** Thời điểm tạo */
     private Instant createdAt;
 

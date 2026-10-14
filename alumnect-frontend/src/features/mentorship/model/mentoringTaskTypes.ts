@@ -561,6 +561,24 @@ export type MentoringDisputeTicketType = 'SETTLEMENT' | 'DISPUTE'
 export type MentoringTicketStatus = 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED' | 'CANCELLED'
 
 /**
+ * Phương án giải quyết Ticket của Admin (UC120).
+ */
+export type MentoringTicketDecision =
+  | 'FULL_MENTOR_PAYMENT'
+  | 'PARTIAL_SPLIT'
+  | 'FULL_STUDENT_REFUND'
+
+/**
+ * Trạng thái quyết toán tiền qua Sổ quỹ Mentoring (UC120).
+ */
+export type MentoringSettlementStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'PARTIALLY_PAID'
+  | 'SETTLED'
+  | 'FAILED'
+
+/**
  * Thông tin chi tiết Mentoring Dispute/Settlement Ticket (UC111 & UC112).
  */
 export interface MentoringDisputeTicket {
@@ -599,8 +617,27 @@ export interface MentoringDisputeTicket {
   acceptedAt?: string | null
   resolvedAt?: string | null
   resolutionNote?: string | null
+  decision?: MentoringTicketDecision | null
+  disputeFee?: number | null
+  settlementStatus?: MentoringSettlementStatus | null
+  mentorPayoutLedgerId?: number | null
+  studentRefundLedgerId?: number | null
   createdAt: string
   updatedAt: string
+}
+
+/**
+ * Payload Admin ban hành phán quyết giải quyết Ticket (UC120).
+ */
+export interface AdminResolveTicketPayload {
+  decision: MentoringTicketDecision
+  decisionReason: string
+  mentorAmount?: number
+  studentRefund?: number
+  disputeFee?: number
+  splitMode?: 'AMOUNT' | 'PERCENTAGE'
+  mentorPercentage?: number
+  studentPercentage?: number
 }
 
 /**

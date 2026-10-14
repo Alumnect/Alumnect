@@ -464,6 +464,25 @@ export function useSendAdminTicketMessage(ticketId: number | null) {
   })
 }
 
+/**
+ * Hook Quản trị viên ra phán quyết quyết định phương án giải quyết Ticket (UC120)
+ */
+export function useResolveAdminTicket() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ticketId, payload }: { ticketId: number; payload: Parameters<typeof adminApi.resolveAdminTicket>[1] }) => {
+      const response = await adminApi.resolveAdminTicket(ticketId, payload)
+      return response.data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-tickets'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-detail', variables.ticketId] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-context', variables.ticketId] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-messages', variables.ticketId] })
+    },
+  })
+}
+
 
 
 

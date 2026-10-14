@@ -155,6 +155,21 @@ public class AdminMentoringTicketController {
                 .body(ApiResponse.success("Admin gửi tin nhắn trao đổi thành công", response));
     }
 
+    /**
+     * API Quản trị viên ra phán quyết quyết định phương án giải quyết Ticket (UC120).
+     */
+    @PostMapping("/{ticketId}/resolve")
+    @Operation(summary = "Admin ra phán quyết quyết định phương án giải quyết Ticket (UC120)",
+               description = "Ban hành quyết định kết thúc Ticket, phân bổ thù lao Mentor, hoàn trả Student và cập nhật kết quả công việc Task")
+    public ResponseEntity<ApiResponse<MentoringDisputeTicketResponse>> resolveTicket(
+            @PathVariable Long ticketId,
+            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.mentorship.AdminResolveTicketRequest request) {
+        Long currentUserId = getCurrentUserId();
+        log.info("Admin {} gửi phán quyết giải quyết Ticket ID: {}", currentUserId, ticketId);
+        MentoringDisputeTicketResponse response = mentoringTicketService.resolveTicket(currentUserId, ticketId, request);
+        return ResponseEntity.ok(ApiResponse.success("Ban hành phán quyết giải quyết Ticket thành công", response));
+    }
+
     private Long getCurrentUserId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)

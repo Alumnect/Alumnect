@@ -485,11 +485,19 @@ export function MentoringTaskResolutionBanner({
                 <span className="font-bold text-sm text-foreground">
                   Khiếu nại tranh chấp #{activeTicket.ticketCode}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-destructive/20 text-destructive border border-destructive/30">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                    activeTicket.status === 'RESOLVED'
+                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                      : 'bg-destructive/20 text-destructive border border-destructive/30'
+                  }`}
+                >
                   {activeTicket.status === 'OPEN'
                     ? 'Đang chờ Admin tiếp nhận'
                     : activeTicket.status === 'IN_REVIEW'
                     ? 'Admin đang thụ lý giải quyết'
+                    : activeTicket.status === 'RESOLVED'
+                    ? 'Admin đã có phán quyết (RESOLVED)'
                     : activeTicket.status}
                 </span>
               </div>
@@ -504,9 +512,24 @@ export function MentoringTaskResolutionBanner({
                   </>
                 )}
               </div>
-              <p className="text-xs text-foreground/80 italic">
-                Nhiệm vụ đang ở trạng thái tranh chấp (DISPUTED). Mọi thao tác hoàn thành và quyết toán tạm thời đóng băng (ON_HOLD).
-              </p>
+              {activeTicket.status === 'RESOLVED' ? (
+                <div className="text-xs text-foreground/90 space-y-0.5">
+                  <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+                    Phán quyết: {activeTicket.decision === 'FULL_MENTOR_PAYMENT' ? 'Chi trả toàn bộ Cố vấn' : activeTicket.decision === 'FULL_STUDENT_REFUND' ? 'Hoàn trả toàn bộ Học viên' : 'Hòa giải chia tỷ lệ'}
+                    {activeTicket.mentorAmount != null && ` • Thù lao Mentor: ${formatVnd(activeTicket.mentorAmount)}`}
+                    {activeTicket.studentRefund != null && ` • Hoàn trả Student: ${formatVnd(activeTicket.studentRefund)}`}
+                  </p>
+                  {activeTicket.resolutionNote && (
+                    <p className="text-muted-foreground italic line-clamp-2">
+                      Lý do: {activeTicket.resolutionNote}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-foreground/80 italic">
+                  Nhiệm vụ đang ở trạng thái tranh chấp (DISPUTED). Mọi thao tác hoàn thành và quyết toán tạm thời đóng băng (ON_HOLD).
+                </p>
+              )}
             </div>
           </div>
 
@@ -544,8 +567,14 @@ export function MentoringTaskResolutionBanner({
                 Trao đổi (UC119)
               </Button>
             )}
-            <span className="text-xs px-3 py-1.5 rounded-lg bg-destructive/15 text-destructive font-bold border border-destructive/30">
-              Đang phân xử
+            <span
+              className={`text-xs px-3 py-1.5 rounded-lg font-bold border ${
+                activeTicket.status === 'RESOLVED'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                  : 'bg-destructive/15 text-destructive border border-destructive/30'
+              }`}
+            >
+              {activeTicket.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đang phân xử'}
             </span>
           </div>
         </div>
