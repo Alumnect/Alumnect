@@ -486,19 +486,18 @@ export function MentoringTaskResolutionBanner({
                   Khiếu nại tranh chấp #{activeTicket.ticketCode}
                 </span>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                    activeTicket.status === 'RESOLVED'
-                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                      : 'bg-destructive/20 text-destructive border border-destructive/30'
-                  }`}
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${activeTicket.status === 'RESOLVED'
+                    ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                    : 'bg-destructive/20 text-destructive border border-destructive/30'
+                    }`}
                 >
                   {activeTicket.status === 'OPEN'
                     ? 'Đang chờ Admin tiếp nhận'
                     : activeTicket.status === 'IN_REVIEW'
-                    ? 'Admin đang thụ lý giải quyết'
-                    : activeTicket.status === 'RESOLVED'
-                    ? 'Admin đã có phán quyết (RESOLVED)'
-                    : activeTicket.status}
+                      ? 'Admin đang thụ lý giải quyết'
+                      : activeTicket.status === 'RESOLVED'
+                        ? 'Admin đã có phán quyết (RESOLVED)'
+                        : activeTicket.status}
                 </span>
               </div>
               <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
@@ -568,11 +567,10 @@ export function MentoringTaskResolutionBanner({
               </Button>
             )}
             <span
-              className={`text-xs px-3 py-1.5 rounded-lg font-bold border ${
-                activeTicket.status === 'RESOLVED'
-                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                  : 'bg-destructive/15 text-destructive border border-destructive/30'
-              }`}
+              className={`text-xs px-3 py-1.5 rounded-lg font-bold border ${activeTicket.status === 'RESOLVED'
+                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                : 'bg-destructive/15 text-destructive border border-destructive/30'
+                }`}
             >
               {activeTicket.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đang phân xử'}
             </span>
@@ -595,8 +593,8 @@ export function MentoringTaskResolutionBanner({
                   {activeTicket.status === 'OPEN'
                     ? 'Đang chờ Admin tiếp nhận'
                     : activeTicket.status === 'IN_REVIEW'
-                    ? 'Admin đang thụ lý xử lý'
-                    : activeTicket.status}
+                      ? 'Admin đang thụ lý xử lý'
+                      : activeTicket.status}
                 </span>
               </div>
               <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
@@ -681,7 +679,7 @@ export function MentoringTaskResolutionBanner({
                 className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm"
               >
                 <FileText className="w-3.5 h-3.5 mr-1.5" />
-                Xem Báo cáo Task & Thanh toán (UC114)
+                Xem Báo cáo Task & Thanh toán
               </Button>
             )}
           </div>
@@ -690,13 +688,16 @@ export function MentoringTaskResolutionBanner({
 
       {/* Reject Modal */}
       {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
-            <h4 className="font-bold text-base text-foreground flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500" />
               Xác nhận từ chối đề xuất
             </h4>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Vui lòng nhập lý do từ chối để đối phương nắm thông tin và tiếp tục trao đổi.
             </p>
             <textarea
@@ -704,9 +705,9 @@ export function MentoringTaskResolutionBanner({
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
               placeholder="Nhập lý do từ chối..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-destructive/30 focus:border-destructive resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 resize-none"
             />
-            <div className="flex justify-end gap-2.5">
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
               <Button
                 variant="outline"
                 size="sm"

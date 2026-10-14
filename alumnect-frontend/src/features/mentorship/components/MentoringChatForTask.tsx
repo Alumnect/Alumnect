@@ -502,41 +502,41 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 leftIcon={<CalendarClock className="h-3.5 w-3.5 text-blue-600" />}
                 className="rounded-xl text-xs font-bold border-blue-200 dark:border-blue-900/40 hover:bg-blue-50/50"
               >
-                Xử lý Task (UC109)
+                Xử lý Task
               </Button>
               {isTaskActionMenuOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1.5 z-40 w-56 rounded-2xl bg-card border border-border shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150"
                   onClick={() => setIsTaskActionMenuOpen(false)}
                 >
                   <button
                     onClick={() => setIsExtensionModalOpen(true)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-xl transition text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
                   >
                     <CalendarClock className="w-4 h-4 text-blue-500 shrink-0" />
                     <div>
                       <div className="font-bold">Gia hạn Deadline</div>
-                      <div className="text-[10px] text-muted-foreground">Tạo Ticket đề xuất hạn chót mới</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Tạo Ticket đề xuất hạn chót mới</div>
                     </div>
                   </button>
                   <button
                     onClick={() => setIsAmendmentModalOpen(true)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-xl transition text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
                   >
                     <Edit3 className="w-4 h-4 text-amber-500 shrink-0" />
                     <div>
                       <div className="font-bold">Điều chỉnh & Tăng tiền</div>
-                      <div className="text-[10px] text-muted-foreground">Bổ sung phạm vi và tiền (mục 5.8)</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Bổ sung phạm vi và tiền</div>
                     </div>
                   </button>
                   <button
                     onClick={() => setIsSettlementModalOpen(true)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-xl transition text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
                   >
                     <Scale className="w-4 h-4 text-purple-500 shrink-0" />
                     <div>
                       <div className="font-bold">Thỏa thuận dừng Task</div>
-                      <div className="text-[10px] text-muted-foreground">Thương lượng chia quỹ (mục 5.6)</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Thương lượng chia quỹ</div>
                     </div>
                   </button>
                   {taskDetail?.permissions?.canSubmitCompletion && (
@@ -545,12 +545,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                         setIsSubmitCompletionOpen(true)
                         setIsTaskActionMenuOpen(false)
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-xl transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition text-left"
                     >
-                      <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <div>
-                        <div className="font-bold">Nộp hoàn thành Task (UC110)</div>
-                        <div className="text-[10px] text-muted-foreground">Gửi kết quả nghiệm thu cuối cùng</div>
+                        <div className="font-bold">Nộp hoàn thành Task</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Gửi kết quả nghiệm thu cuối cùng</div>
                       </div>
                     </button>
                   )}
@@ -560,12 +560,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                         setIsReviewCompletionOpen(true)
                         setIsTaskActionMenuOpen(false)
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30 rounded-xl transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-xl transition text-left"
                     >
-                      <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                       <div>
-                        <div className="font-bold">Nghiệm thu Task (UC110)</div>
-                        <div className="text-[10px] text-muted-foreground">Xác nhận hoàn thành & quyết toán</div>
+                        <div className="font-bold">Nghiệm thu Task</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Xác nhận hoàn thành & quyết toán</div>
                       </div>
                     </button>
                   )}
@@ -575,12 +575,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                         setIsSubmitSettlementTicketOpen(true)
                         setIsTaskActionMenuOpen(false)
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30 rounded-xl transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-xl transition text-left"
                     >
-                      <Send className="w-4 h-4 text-purple-600 shrink-0" />
+                      <Send className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                       <div>
-                        <div className="font-bold">Gửi Settlement Ticket (UC111)</div>
-                        <div className="text-[10px] text-muted-foreground">Gửi Admin giải ngân theo thỏa thuận</div>
+                        <div className="font-bold">Gửi Settlement Ticket</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Gửi Admin giải ngân theo thỏa thuận</div>
                       </div>
                     </button>
                   )}
@@ -590,12 +590,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                         setIsCreateDisputeOpen(true)
                         setIsTaskActionMenuOpen(false)
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 rounded-xl transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition text-left"
                     >
-                      <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+                      <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                       <div>
-                        <div className="font-bold">Mở khiếu nại tranh chấp (UC112)</div>
-                        <div className="text-[10px] text-muted-foreground">Yêu cầu Admin can thiệp giải quyết</div>
+                        <div className="font-bold">Mở khiếu nại tranh chấp</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Yêu cầu Admin can thiệp giải quyết</div>
                       </div>
                     </button>
                   )}
@@ -605,12 +605,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                         setIsAddEvidenceOpen(true)
                         setIsTaskActionMenuOpen(false)
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-xl transition text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition text-left"
                     >
-                      <Paperclip className="w-4 h-4 text-amber-600 shrink-0" />
+                      <Paperclip className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                       <div>
-                        <div className="font-bold">Bằng chứng tranh chấp (UC113)</div>
-                        <div className="text-[10px] text-muted-foreground">Xem & nộp thêm tài liệu chứng từ</div>
+                        <div className="font-bold">Bằng chứng tranh chấp</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Xem & nộp thêm tài liệu chứng từ</div>
                       </div>
                     </button>
                   )}
@@ -619,12 +619,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                       setIsTaskReportOpen(true)
                       setIsTaskActionMenuOpen(false)
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-xl transition text-left"
                   >
-                    <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                    <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                     <div>
-                      <div className="font-bold">Báo cáo Task & Tài chính (UC114)</div>
-                      <div className="text-[10px] text-muted-foreground">Tổng kết kết quả & quyết toán tiền</div>
+                      <div className="font-bold">Báo cáo Task & Tài chính</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Tổng kết kết quả & quyết toán tiền</div>
                     </div>
                   </button>
                 </div>

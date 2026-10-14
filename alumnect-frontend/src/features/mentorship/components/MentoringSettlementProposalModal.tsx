@@ -87,40 +87,44 @@ export function MentoringSettlementProposalModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div
+        className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="px-6 py-4 bg-muted/30 border-b border-border flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-slate-900 dark:to-purple-950/20">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
+            <div className="p-2.5 rounded-xl bg-purple-600 text-white shadow-sm">
               <Scale className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-foreground">Thỏa thuận dừng Task & Phân chia tiền</h3>
-              <p className="text-xs text-muted-foreground">Đề xuất phân chia quỹ Task chưa hoàn thành (UC109, mục 5.6)</p>
+              <h3 className="font-bold text-lg text-slate-900 dark:text-white">Thỏa thuận dừng Task & Phân chia tiền</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Đề xuất phân chia quỹ Task chưa hoàn thành (UC109, mục 5.6)</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2.5">
+            <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-sm flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* Total budget display */}
-          <div className="p-4 rounded-xl bg-muted/40 border border-border flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between">
             <div>
-              <span className="text-xs text-muted-foreground block">Tổng quỹ thanh toán của Task</span>
-              <span className="text-xl font-extrabold text-foreground">{formatVnd(totalBudget)}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">Tổng quỹ thanh toán của Task</span>
+              <span className="text-xl font-extrabold text-slate-900 dark:text-white">{formatVnd(totalBudget)}</span>
             </div>
             <div className="flex items-center gap-1.5">
               {[0, 30, 50, 70, 100].map((p) => (
@@ -130,8 +134,8 @@ export function MentoringSettlementProposalModal({
                   onClick={() => handlePreset(p)}
                   className={`px-2 py-1 text-xs rounded-lg font-semibold transition ${
                     mentorPercent === p
-                      ? 'bg-purple-500 text-white shadow-sm'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                   }`}
                 >
                   {p}%
@@ -146,9 +150,9 @@ export function MentoringSettlementProposalModal({
               <span className="text-purple-600 dark:text-purple-400">Mentor nhận ({mentorPercent}%)</span>
               <span className="text-blue-600 dark:text-blue-400">Hoàn lại Học viên ({studentPercent}%)</span>
             </div>
-            <div className="h-3 w-full bg-blue-500/20 rounded-full overflow-hidden flex">
+            <div className="h-3 w-full bg-blue-100 dark:bg-blue-950/60 rounded-full overflow-hidden flex">
               <div
-                className="h-full bg-purple-500 transition-all duration-200"
+                className="h-full bg-purple-600 transition-all duration-200"
                 style={{ width: `${mentorPercent}%` }}
               />
               <div
@@ -171,9 +175,9 @@ export function MentoringSettlementProposalModal({
                 step="5000"
                 value={mentorAmount}
                 onChange={(e) => handleMentorChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition"
               />
-              <span className="text-[11px] text-muted-foreground block">{formatVnd(mentorAmount)}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{formatVnd(mentorAmount)}</span>
             </div>
 
             <div className="space-y-1.5">
@@ -187,42 +191,42 @@ export function MentoringSettlementProposalModal({
                 step="5000"
                 value={studentRefund}
                 onChange={(e) => handleStudentChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
               />
-              <span className="text-[11px] text-muted-foreground block">{formatVnd(studentRefund)}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">{formatVnd(studentRefund)}</span>
             </div>
           </div>
 
           {/* Reason */}
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground">
-              Lý do đề xuất dừng Task & tỷ lệ chia tiền <span className="text-destructive">*</span>
+            <label className="text-sm font-semibold text-slate-900 dark:text-white">
+              Lý do đề xuất dừng Task & tỷ lệ chia tiền <span className="text-red-500">*</span>
             </label>
             <textarea
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Giải trình khối lượng công việc đã hoàn thành hoặc lý do không thể tiếp tục thực hiện..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition resize-none"
               required
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
               <span>Tối thiểu 10 ký tự</span>
               <span>{reason.length}/1000</span>
             </div>
           </div>
 
           {/* Info notice */}
-          <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 text-xs space-y-1">
+          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 text-purple-900 dark:text-purple-300 text-xs space-y-1">
             <p className="font-semibold">Quy trình xử lý sau khi hai bên đồng thuận:</p>
-            <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+            <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
               <li>Nếu cả hai bên đồng thuận với phương án này: Task sẽ dừng lại và chuyển tiếp sang UC111 (Settlement Ticket) gửi Admin để thực hiện giải ngân cho Mentor và hoàn tiền cho Học viên.</li>
               <li>Nếu một bên từ chối: Hai bên có thể tiếp tục thương lượng tỷ lệ khác hoặc gửi Dispute Ticket (UC112) để Admin can thiệp.</li>
             </ul>
           </div>
 
           {/* Action buttons */}
-          <div className="pt-2 flex justify-end gap-2.5">
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -234,7 +238,7 @@ export function MentoringSettlementProposalModal({
             <Button
               type="submit"
               disabled={createMutation.isPending}
-              className="bg-purple-600 text-white hover:bg-purple-700 font-semibold"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
             >
               {createMutation.isPending ? (
                 <>
