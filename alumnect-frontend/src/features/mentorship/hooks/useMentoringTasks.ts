@@ -16,6 +16,7 @@ import type {
   MentoringWorkLog,
   RejectWorkLogPayload,
   UpdateWorkLogPayload,
+  MentoringTaskReport,
 } from '../model/mentoringTaskTypes'
 
 export const TASK_QUERY_KEYS = {
@@ -31,6 +32,7 @@ export const TASK_QUERY_KEYS = {
     [...TASK_QUERY_KEYS.payments(), orderCode] as const,
   checkoutSession: (dealId?: number) =>
     [...TASK_QUERY_KEYS.payments(), 'checkout', dealId] as const,
+  report: (id?: number) => [...TASK_QUERY_KEYS.all, 'report', id] as const,
 }
 
 /**
@@ -227,4 +229,16 @@ export function useTaskPaymentPolling(
   }, [query.data, queryClient, onPaid])
 
   return query
+}
+
+/**
+ * Hook truy vấn báo cáo kết quả Task & trạng thái thanh toán toàn diện (UC114).
+ */
+export function useTaskReport(taskId?: number, enabled = true) {
+  return useQuery<MentoringTaskReport, Error>({
+    queryKey: TASK_QUERY_KEYS.report(taskId),
+    queryFn: () => mentoringTaskApi.getTaskReport(taskId!),
+    enabled: typeof taskId === 'number' && taskId > 0 && enabled,
+    staleTime: 30000,
+  })
 }

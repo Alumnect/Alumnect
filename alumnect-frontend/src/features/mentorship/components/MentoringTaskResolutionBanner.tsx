@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Paperclip,
+  FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
@@ -49,6 +50,7 @@ interface MentoringTaskResolutionBannerProps {
   onOpenSubmitSettlementTicket?: () => void
   onOpenCreateDispute?: () => void
   onOpenAddEvidence?: () => void
+  onOpenTaskReport?: () => void
   onRefresh?: () => void
 }
 
@@ -70,6 +72,7 @@ export function MentoringTaskResolutionBanner({
   onOpenSubmitSettlementTicket,
   onOpenCreateDispute,
   onOpenAddEvidence,
+  onOpenTaskReport,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
   const [rejectModal, setRejectModal] = useState<{
@@ -505,6 +508,17 @@ export function MentoringTaskResolutionBanner({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            {onOpenTaskReport && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onOpenTaskReport}
+                className="h-8 border-slate-300 dark:border-slate-700 text-xs font-semibold shadow-xs"
+              >
+                <FileText className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                Báo cáo Task
+              </Button>
+            )}
             {onOpenAddEvidence && (
               <Button
                 size="sm"
@@ -560,6 +574,17 @@ export function MentoringTaskResolutionBanner({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            {onOpenTaskReport && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onOpenTaskReport}
+                className="h-8 border-slate-300 dark:border-slate-700 text-xs font-semibold shadow-xs"
+              >
+                <FileText className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                Báo cáo Task
+              </Button>
+            )}
             {onOpenAddEvidence && (
               <Button
                 size="sm"
@@ -574,6 +599,37 @@ export function MentoringTaskResolutionBanner({
             <span className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-300 font-semibold border border-blue-500/20">
               Đang giải quyết
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* COMPLETED BANNER (UC114) */}
+      {taskStatus === 'COMPLETED' && (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-emerald-600 text-white shadow-sm shrink-0 mt-0.5">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <span className="font-bold text-sm text-foreground">
+                Nhiệm vụ đã hoàn thành thành công
+              </span>
+              <p className="text-xs text-muted-foreground">
+                Kết quả công việc đã được nghiệm thu và tiền đã được giải ngân theo thỏa thuận.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            {onOpenTaskReport && (
+              <Button
+                size="sm"
+                onClick={onOpenTaskReport}
+                className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm"
+              >
+                <FileText className="w-3.5 h-3.5 mr-1.5" />
+                Xem Báo cáo Task & Thanh toán (UC114)
+              </Button>
+            )}
           </div>
         </div>
       )}

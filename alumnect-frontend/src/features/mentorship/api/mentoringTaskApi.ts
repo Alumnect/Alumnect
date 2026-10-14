@@ -33,6 +33,7 @@ import type {
   CreateDisputeTicketPayload,
   TicketEvidence,
   TicketEvidencePayload,
+  MentoringTaskReport,
 } from '../model/mentoringTaskTypes'
 
 export interface PresignedUrlData {
@@ -485,6 +486,16 @@ export const mentoringTaskApi = {
     const res = await http.post<any, ApiResponse<TicketEvidence>>(
       `/mentoring/tasks/tickets/${ticketId}/evidences`,
       payload
+    )
+    return res.data
+  },
+
+  /**
+   * Xem báo cáo kết quả Task & trạng thái thanh toán (UC114).
+   */
+  getTaskReport: async (taskId: number): Promise<MentoringTaskReport> => {
+    const res = await http.get<any, ApiResponse<MentoringTaskReport>>(
+      `/mentoring/tasks/${taskId}/report`
     )
     return res.data
   },

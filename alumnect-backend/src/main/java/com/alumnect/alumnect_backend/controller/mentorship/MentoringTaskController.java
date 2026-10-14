@@ -65,6 +65,17 @@ public class MentoringTaskController {
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin chi tiết Mentoring Task thành công", response));
     }
 
+    @GetMapping("/{id}/report")
+    @Operation(summary = "Xem báo cáo kết quả Task & trạng thái thanh toán (UC114)",
+               description = "Cho phép Student hoặc Mentor xem tổng kết chi tiết Task, deadline, logs nghiệm thu, deliverables và phân chia dòng tiền thực nhận/hoàn tiền")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskReportResponse>> getTaskReport(
+            @PathVariable Long id) {
+        Long currentUserId = getCurrentUserId();
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskReportResponse response =
+                taskService.getTaskReport(currentUserId, id);
+        return ResponseEntity.ok(ApiResponse.success("Lấy báo cáo kết quả Task và tài chính thành công", response));
+    }
+
     @GetMapping("/by-deal/{dealId}")
     @Operation(summary = "Lấy thông tin chi tiết Mentoring Task theo Deal ID (UC106)",
                description = "Tra cứu Task đã được kích hoạt từ thỏa thuận Deal tương ứng")

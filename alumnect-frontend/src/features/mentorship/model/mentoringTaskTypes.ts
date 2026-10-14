@@ -667,4 +667,55 @@ export interface SubmitSettlementTicketPayload {
   note?: string
 }
 
+/**
+ * DTO Báo cáo kết quả Task & Trạng thái thanh toán toàn diện (UC114).
+ */
+export interface MentoringTaskReport {
+  taskId: number
+  taskTitle: string
+  description?: string | null
+  taskStatus: MentoringTaskStatus
+  createdAt: string
+  completedAt?: string | null
+  durationDays?: number | null
+
+  dealId?: number | null
+  workingMode?: string | null
+  participationType?: string | null
+  taskType?: string | null
+  expectedResult?: string | null
+
+  originalDeadline?: string | null
+  finalDeadline?: string | null
+  extensionCount: number
+  totalExtensionDays: number
+
+  totalWorkLogs: number
+  confirmedWorkLogs: number
+  progressPercentage: number
+  completionSummary?: MentoringTaskCompletion | null
+
+  amendmentCount: number
+  totalAdditionalAmount: number
+
+  activeTicket?: MentoringDisputeTicket | null
+  isDisputed: boolean
+
+  originalPrice: number
+  totalAgreedPrice: number
+  studentTotalPaid: number
+  studentRefundAmount: number
+  studentRefundStatus: 'NO_REFUND' | 'PROCESSING' | 'REFUNDED' | 'ON_HOLD' | string
+
+  mentorEarnedAmount: number
+  platformFee: number
+  mentorNetPayout: number
+  mentorPayoutStatus: 'PENDING_ESCROW' | 'PROCESSING' | 'PAID' | 'ON_HOLD' | 'CANCELLED' | string
+
+  platformFeeNote?: string | null
+
+  student: MentoringParticipant
+  mentor: MentoringParticipant
+}
+
 

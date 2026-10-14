@@ -48,4 +48,13 @@ public interface MentoringTaskService {
      * @return Trang kết quả chứa danh sách Task phong phú
      */
     PageResponse<MentoringTaskResponse> getMyTasks(Long currentUserId, String stage, MentoringTaskStatus status, Pageable pageable);
+
+    /**
+     * Lấy báo cáo kết quả Task & trạng thái thanh toán (UC114).
+     *
+     * @param currentUserId ID người xem (Student hoặc Mentor)
+     * @param taskId ID nhiệm vụ
+     * @return Báo cáo kết quả Task và phân bổ tài chính
+     */
+    com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskReportResponse getTaskReport(Long currentUserId, Long taskId);
 }

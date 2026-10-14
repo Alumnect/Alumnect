@@ -47,6 +47,7 @@ import { MentoringSettlementProposalModal } from './MentoringSettlementProposalM
 import { MentoringSubmitSettlementTicketModal } from './MentoringSubmitSettlementTicketModal'
 import { MentoringCreateDisputeModal } from './MentoringCreateDisputeModal'
 import { MentoringAddEvidenceModal } from './MentoringAddEvidenceModal'
+import { MentoringTaskReportModal } from './MentoringTaskReportModal'
 import { MentoringTaskCompletionModal } from './MentoringTaskCompletionModal'
 import { MentoringTaskReviewModal } from './MentoringTaskReviewModal'
 import { useTaskDetail } from '../hooks/useMentoringTasks'
@@ -138,6 +139,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   // UC113: Bổ sung bằng chứng tranh chấp
   const [isAddEvidenceOpen, setIsAddEvidenceOpen] = useState(false)
+
+  // UC114: Báo cáo kết quả Task & Tài chính
+  const [isTaskReportOpen, setIsTaskReportOpen] = useState(false)
 
   const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
 
@@ -606,6 +610,19 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                       </div>
                     </button>
                   )}
+                  <button
+                    onClick={() => {
+                      setIsTaskReportOpen(true)
+                      setIsTaskActionMenuOpen(false)
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition text-left"
+                  >
+                    <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                    <div>
+                      <div className="font-bold">Báo cáo Task & Tài chính (UC114)</div>
+                      <div className="text-[10px] text-muted-foreground">Tổng kết kết quả & quyết toán tiền</div>
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
@@ -762,6 +779,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onOpenSubmitSettlementTicket={() => setIsSubmitSettlementTicketOpen(true)}
           onOpenCreateDispute={() => setIsCreateDisputeOpen(true)}
           onOpenAddEvidence={() => setIsAddEvidenceOpen(true)}
+          onOpenTaskReport={() => setIsTaskReportOpen(true)}
           onRefresh={() => {
             refetchTask()
             refetch()
@@ -1218,6 +1236,17 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             refetchTask()
             refetch()
           }}
+        />
+      )}
+
+      {/* UC114: Modal xem báo cáo kết quả Task & Tài chính */}
+      {isTaskReportOpen && ctx.taskId && (
+        <MentoringTaskReportModal
+          isOpen={isTaskReportOpen}
+          onClose={() => setIsTaskReportOpen(false)}
+          taskId={ctx.taskId}
+          isStudent={!isMentor}
+          isMentor={isMentor}
         />
       )}
     </div>

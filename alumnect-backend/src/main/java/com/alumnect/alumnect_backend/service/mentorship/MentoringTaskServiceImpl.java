@@ -1,18 +1,10 @@
 package com.alumnect.alumnect_backend.service.mentorship;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
-import com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus;
-import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
-import com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus;
-import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
-import com.alumnect.alumnect_backend.common.enums.WorkLogStatus;
-import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
-import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
-import com.alumnect.alumnect_backend.dao.mentorship.MentoringWorkLogRepository;
+import com.alumnect.alumnect_backend.common.enums.*;
+import com.alumnect.alumnect_backend.dao.mentorship.*;
 import com.alumnect.alumnect_backend.dto.response.mentorship.*;
-import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
-import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
-import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskPayment;
+import com.alumnect.alumnect_backend.entity.mentorship.*;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
@@ -25,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -40,6 +33,8 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final MentoringTaskRepository taskRepository;
     private final MentoringTaskPaymentRepository paymentRepository;
     private final MentoringWorkLogRepository workLogRepository;
+    private final MentoringTaskDeadlineExtensionRepository extensionRepository;
+    private final MentoringTaskAmendmentRepository amendmentRepository;
     private final MentoringTaskMapper taskMapper;
     private final MentoringWorkLogService workLogService;
     private final MentoringTaskResolutionService resolutionService;
@@ -480,5 +475,161 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         // Sắp xếp sự kiện mới nhất lên đầu (thứ tự thời gian giảm dần)
         events.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
         return events;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MentoringTaskReportResponse getTaskReport(Long currentUserId, Long taskId) {
+        log.info("Người dùng id={} yêu cầu xem báo cáo kết quả và tài chính của Task id={}", currentUserId, taskId);
+
+        MentoringTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Mentoring Task với ID: " + taskId));
+
+        verifyParticipant(task, currentUserId);
+
+        MentoringDeal deal = task.getDeal();
+
+        // 1. Task Duration
+        Instant startAt = task.getCreatedAt();
+        Instant endAt = task.getCompletedAt() != null ? task.getCompletedAt() : Instant.now();
+        long durationDays = Duration.between(startAt, endAt).toDays();
+
+        // 2. Deal Info
+        Long dealId = deal != null ? deal.getId() : null;
+        String workingMode = deal != null && deal.getWorkingMode() != null ? deal.getWorkingMode().name() : null;
+        String participationType = deal != null && deal.getParticipationType() != null ? deal.getParticipationType().name() : null;
+        String taskType = deal != null && deal.getTaskType() != null ? deal.getTaskType().name() : null;
+        String expectedResult = deal != null ? deal.getExpectedResult() : null;
+
+        // 3. Deadline & Extensions
+        Instant originalDeadline = deal != null ? deal.getDeadline() : task.getDeadline();
+        Instant finalDeadline = task.getDeadline();
+        List<MentoringTaskDeadlineExtension> acceptedExts = extensionRepository.findByTaskIdAndStatus(task.getId(), MentoringExtensionStatus.CONFIRMED);
+        int extensionCount = acceptedExts.size();
+        long totalExtensionDays = 0;
+        if (originalDeadline != null && finalDeadline != null && finalDeadline.isAfter(originalDeadline)) {
+            totalExtensionDays = Duration.between(originalDeadline, finalDeadline).toDays();
+        }
+
+        // 4. Amendments & Adjustments
+        List<MentoringTaskAmendment> acceptedAmendments = amendmentRepository.findByTaskIdAndStatus(task.getId(), MentoringAmendmentStatus.APPLIED);
+        int amendmentCount = acceptedAmendments.size();
+        BigDecimal totalAdditionalAmount = acceptedAmendments.stream()
+                .map(a -> a.getAdditionalAmount() != null ? a.getAdditionalAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal originalPrice = deal != null && deal.getAgreedPrice() != null ? deal.getAgreedPrice() : (task.getAgreedPrice() != null ? task.getAgreedPrice() : BigDecimal.ZERO);
+        BigDecimal totalAgreedPrice = originalPrice.add(totalAdditionalAmount);
+
+        // 5. Work Logs & Progress
+        List<MentoringWorkLog> workLogs = workLogRepository.findByTaskIdOrderByLogDateDesc(task.getId());
+        int totalWorkLogs = workLogs.size();
+        int confirmedWorkLogs = (int) workLogs.stream().filter(w -> w.getStatus() == WorkLogStatus.CONFIRMED).count();
+        double progressPercentage = totalWorkLogs > 0 ? ((double) confirmedWorkLogs / totalWorkLogs) * 100.0 : 0.0;
+
+        // 6. Latest Completion (UC110)
+        MentoringTaskCompletionResponse completionSummary = completionService.getLatestCompletion(currentUserId, task.getId());
+
+        // 7. Active Ticket (UC111 / UC112)
+        MentoringDisputeTicketResponse activeTicket = ticketService.getActiveTicket(currentUserId, task.getId());
+        boolean isDisputed = task.getStatus() == MentoringTaskStatus.DISPUTED
+                || (activeTicket != null && activeTicket.getTicketType() == MentoringTicketType.DISPUTE);
+
+        // 8. Financial Analysis
+        BigDecimal studentTotalPaid = totalAgreedPrice;
+        if (deal != null) {
+            List<MentoringTaskPayment> payments = paymentRepository.findByDealIdOrderByCreatedAtDesc(deal.getId());
+            BigDecimal paidSum = payments.stream()
+                    .filter(p -> p.getPaymentStatus() == PaymentStatus.PAID)
+                    .map(MentoringTaskPayment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (paidSum.compareTo(BigDecimal.ZERO) > 0) {
+                studentTotalPaid = paidSum;
+            }
+        }
+
+        BigDecimal mentorEarnedAmount;
+        BigDecimal platformFee = BigDecimal.ZERO;
+        BigDecimal mentorNetPayout;
+        String mentorPayoutStatus;
+
+        BigDecimal studentRefundAmount = BigDecimal.ZERO;
+        String studentRefundStatus = "NO_REFUND";
+
+        if (isDisputed) {
+            mentorEarnedAmount = BigDecimal.ZERO;
+            mentorNetPayout = BigDecimal.ZERO;
+            mentorPayoutStatus = "ON_HOLD";
+            studentRefundStatus = "ON_HOLD";
+        } else if (activeTicket != null && activeTicket.getTicketType() == MentoringTicketType.SETTLEMENT) {
+            mentorEarnedAmount = activeTicket.getMentorAmount() != null ? activeTicket.getMentorAmount() : BigDecimal.ZERO;
+            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
+            mentorPayoutStatus = "PROCESSING";
+            studentRefundAmount = activeTicket.getStudentRefund() != null ? activeTicket.getStudentRefund() : BigDecimal.ZERO;
+            studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0 ? "PROCESSING" : "NO_REFUND";
+        } else if (task.getStatus() == MentoringTaskStatus.COMPLETED) {
+            mentorEarnedAmount = totalAgreedPrice;
+            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
+            mentorPayoutStatus = "PAID";
+            studentRefundAmount = BigDecimal.ZERO;
+            studentRefundStatus = "NO_REFUND";
+        } else if (task.getStatus() == MentoringTaskStatus.CANCELLED) {
+            mentorEarnedAmount = BigDecimal.ZERO;
+            mentorNetPayout = BigDecimal.ZERO;
+            mentorPayoutStatus = "CANCELLED";
+            studentRefundAmount = studentTotalPaid;
+            studentRefundStatus = "REFUNDED";
+        } else {
+            mentorEarnedAmount = BigDecimal.ZERO;
+            mentorNetPayout = BigDecimal.ZERO;
+            mentorPayoutStatus = "PENDING_ESCROW";
+            studentRefundAmount = BigDecimal.ZERO;
+            studentRefundStatus = "NO_REFUND";
+        }
+
+        String platformFeeNote = "Hệ thống AlumNect áp dụng cơ chế ký quỹ Escrow bảo đảm 100% dòng tiền giao dịch. Toàn bộ tiền được bảo vệ an toàn cho tới khi hoàn thành hoặc có phán quyết trọng tài từ Ban Quản Trị.";
+
+        // 9. Participants
+        MentoringParticipantResponse student = toParticipantResponse(task.getStudent(), "STUDENT");
+        MentoringParticipantResponse mentor = toParticipantResponse(task.getMentor(), "MENTOR");
+
+        return MentoringTaskReportResponse.builder()
+                .taskId(task.getId())
+                .taskTitle(task.getTaskTitle())
+                .description(task.getTaskScope())
+                .taskStatus(task.getStatus())
+                .createdAt(task.getCreatedAt())
+                .completedAt(task.getCompletedAt())
+                .durationDays(durationDays)
+                .dealId(dealId)
+                .workingMode(workingMode)
+                .participationType(participationType)
+                .taskType(taskType)
+                .expectedResult(expectedResult)
+                .originalDeadline(originalDeadline)
+                .finalDeadline(finalDeadline)
+                .extensionCount(extensionCount)
+                .totalExtensionDays(totalExtensionDays)
+                .totalWorkLogs(totalWorkLogs)
+                .confirmedWorkLogs(confirmedWorkLogs)
+                .progressPercentage(progressPercentage)
+                .completionSummary(completionSummary)
+                .amendmentCount(amendmentCount)
+                .totalAdditionalAmount(totalAdditionalAmount)
+                .activeTicket(activeTicket)
+                .isDisputed(isDisputed)
+                .originalPrice(originalPrice)
+                .totalAgreedPrice(totalAgreedPrice)
+                .studentTotalPaid(studentTotalPaid)
+                .studentRefundAmount(studentRefundAmount)
+                .studentRefundStatus(studentRefundStatus)
+                .mentorEarnedAmount(mentorEarnedAmount)
+                .platformFee(platformFee)
+                .mentorNetPayout(mentorNetPayout)
+                .mentorPayoutStatus(mentorPayoutStatus)
+                .platformFeeNote(platformFeeNote)
+                .student(student)
+                .mentor(mentor)
+                .build();
     }
 }
