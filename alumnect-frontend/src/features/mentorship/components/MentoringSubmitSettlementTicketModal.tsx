@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   FileText,
   X,
@@ -79,8 +80,10 @@ export function MentoringSubmitSettlementTicketModal({
   const mentorPercent = total > 0 && snapshot ? Math.round((snapshot.mentorAmount / total) * 100) : 0
   const studentPercent = 100 - mentorPercent
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
@@ -152,7 +155,7 @@ export function MentoringSubmitSettlementTicketModal({
                       Mentor ({mentorPercent}%): {formatVnd(snapshot.mentorAmount)}
                     </span>
                     <span className="text-blue-600 dark:text-blue-400">
-                      Học viên ({studentPercent}%): {formatVnd(snapshot.studentRefund)}
+                      Bên tạo yêu cầu ({studentPercent}%): {formatVnd(snapshot.studentRefund)}
                     </span>
                   </div>
                   <div className="h-2.5 w-full bg-blue-100 dark:bg-blue-950/60 rounded-full overflow-hidden flex">
@@ -238,6 +241,7 @@ export function MentoringSubmitSettlementTicketModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

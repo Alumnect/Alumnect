@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import {
   FileText,
   Clock,
@@ -165,11 +166,13 @@ export function MentoringTicketDetailModal({
     }
   }
 
-  return (
+  if (!isOpen || typeof document === 'undefined') return null
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
     >
       {/* Background click to close */}
       <div className="absolute inset-0" onClick={onClose} />
@@ -504,6 +507,7 @@ export function MentoringTicketDetailModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

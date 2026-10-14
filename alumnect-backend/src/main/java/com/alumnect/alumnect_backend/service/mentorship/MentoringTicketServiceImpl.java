@@ -101,8 +101,8 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
         boolean canSubmitTicket = isAgreed && !hasOpenTicket;
 
         boolean isProposerStudent = Objects.equals(task.getStudent().getId(), p.getCreatedBy().getId());
-        String proposerRole = isProposerStudent ? "Học viên" : "Mentor";
-        String responderRole = isProposerStudent ? "Mentor" : "Học viên";
+        String proposerRole = isProposerStudent ? "Bên tạo yêu cầu" : "Bên thực hiện (Mentor)";
+        String responderRole = isProposerStudent ? "Bên thực hiện (Mentor)" : "Bên tạo yêu cầu";
 
         return MentoringSettlementSnapshotResponse.builder()
                 .taskId(task.getId())
@@ -296,7 +296,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
         taskRepository.save(task);
 
         // 7. Gửi thông báo hệ thống realtime vào Chat for Task
-        String senderRole = Objects.equals(currentUserId, task.getStudent().getId()) ? "Học viên" : "Mentor";
+        String senderRole = Objects.equals(currentUserId, task.getStudent().getId()) ? "Bên tạo yêu cầu" : "Bên thực hiện (Mentor)";
         String systemMessage = String.format(
                 "⚠️ [HỆ THỐNG] Đã khởi tạo Khiếu nại / Tranh chấp [%s] gửi tới Ban Quản Trị do %s yêu cầu giải quyết.\n" +
                 "• Lý do: %s\n" +

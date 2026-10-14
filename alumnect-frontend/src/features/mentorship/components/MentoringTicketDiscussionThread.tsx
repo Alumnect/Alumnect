@@ -236,7 +236,7 @@ export function MentoringTicketDiscussionThread({
                             : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
                         }`}
                       >
-                        {isAdminMsg ? 'Ban Quản Trị' : isStudentMsg ? 'Học viên' : 'Cố vấn'}
+                        {isAdminMsg ? 'Ban Quản Trị' : isStudentMsg ? 'Bên tạo yêu cầu' : 'Bên thực hiện (Mentor)'}
                       </span>
                     </div>
                   </div>
@@ -263,7 +263,7 @@ export function MentoringTicketDiscussionThread({
                         </strong>
                       </div>
                       <div className="bg-white/80 dark:bg-slate-900/80 p-2 rounded border border-purple-200 dark:border-purple-800">
-                        <span className="text-[11px] text-slate-500 block">Học viên được hoàn:</span>
+                        <span className="text-[11px] text-slate-500 block">Bên tạo yêu cầu được hoàn:</span>
                         <strong className="text-sm text-blue-600 dark:text-blue-400 font-bold">
                           {formatVnd(msg.proposedStudentRefund)}
                         </strong>
@@ -434,7 +434,7 @@ export function MentoringTicketDiscussionThread({
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-0.5">
-                    Hoàn tiền cho Học viên (VND):
+                    Hoàn tiền cho Bên tạo yêu cầu (VND):
                   </label>
                   <input
                     type="number"

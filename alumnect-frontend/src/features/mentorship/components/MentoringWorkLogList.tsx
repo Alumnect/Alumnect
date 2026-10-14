@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Calendar,
   FileText,
@@ -510,8 +511,8 @@ export function MentoringWorkLogList({
       )}
 
       {/* Confirmation Modal */}
-      {confirmingLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+      {confirmingLog && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div
             className="w-full max-w-md rounded-3xl border border-plum-900/[0.08] bg-white p-6 shadow-2xl space-y-4 dark:border-white/10 dark:bg-[#1f2022]"
             role="dialog"
@@ -594,12 +595,13 @@ export function MentoringWorkLogList({
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Rejection / Adjustment Request Modal */}
-      {rejectingLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+      {rejectingLog && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div
             className="w-full max-w-md rounded-3xl border border-plum-900/[0.08] bg-white p-6 shadow-2xl space-y-4 dark:border-white/10 dark:bg-[#1f2022]"
             role="dialog"
@@ -679,7 +681,8 @@ export function MentoringWorkLogList({
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

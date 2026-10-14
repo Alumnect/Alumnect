@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { X, ShieldCheck, CheckCircle2, History, Loader2, MessagesSquare, Info } from 'lucide-react'
 import { Button } from '@/components/ui'
@@ -29,8 +30,10 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
   const deal = detailData?.deal
   const snapshots = detailData?.snapshots || []
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-plum-950/45 backdrop-blur-sm animate-fade-in">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-3xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[92vh] overflow-y-auto chat-scrollbar dark:bg-[#242526] dark:border-[#393a3b]">
         <button
           type="button"
@@ -130,6 +133,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

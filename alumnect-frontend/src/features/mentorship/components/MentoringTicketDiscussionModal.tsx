@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import {
   MessageSquare,
   X,
@@ -18,15 +19,15 @@ export function MentoringTicketDiscussionModal({
   ticket,
   currentRole,
 }: MentoringTicketDiscussionModalProps) {
-  if (!isOpen || !ticket) return null
+  if (!isOpen || !ticket || typeof document === 'undefined') return null
 
   const isDispute = ticket.ticketType === 'DISPUTE'
   const studentName = ticket.student?.fullName || ticket.studentName || 'Học viên'
   const mentorName = ticket.mentor?.fullName || ticket.mentorName || 'Cố vấn'
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -81,6 +82,7 @@ export function MentoringTicketDiscussionModal({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

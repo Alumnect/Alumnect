@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   AlertTriangle,
   X,
@@ -19,15 +20,33 @@ interface MentoringCreateDisputeModalProps {
   onClose: () => void
   taskId: number
   taskTitle?: string
+  /**
+   * True nếu người mở khiếu nại là Bên tạo yêu cầu (Requester - có thể là Học viên hoặc Mentor khác thuê hướng dẫn)
+   * False nếu là Bên thực hiện (Performer / Mentor được thuê)
+   */
+  isRequester?: boolean
+  /** Alias cho isRequester để đảm bảo tương thích ngược */
   isStudent?: boolean
   onSuccess?: () => void
 }
 
-const DISPUTE_REASONS = [
-  { value: 'SUBSTANDARD_DELIVERABLE', label: 'Sản phẩm không đạt chất lượng / Không đúng cam kết' },
-  { value: 'MISSED_DEADLINE', label: 'Trễ hạn bàn giao nghiêm trọng không có lý do chính đáng' },
-  { value: 'UNRESPONSIVE', label: 'Đối phương không phản hồi liên lạc kéo dài' },
-  { value: 'DISAGREE_SETTLEMENT', label: 'Bất đồng về tỷ lệ phân chia tiền dừng Task' },
+/** Danh mục lý do dành cho Bên tạo yêu cầu (Requester - Học viên hoặc Mentor thuê hướng dẫn) */
+const REQUESTER_DISPUTE_REASONS = [
+  { value: 'SUBSTANDARD_DELIVERABLE', label: 'Sản phẩm bàn giao không đạt chất lượng / Không đúng cam kết ban đầu' },
+  { value: 'MISSED_DEADLINE', label: 'Bên thực hiện trễ hạn bàn giao nghiêm trọng không có lý do chính đáng' },
+  { value: 'UNRESPONSIVE', label: 'Bên thực hiện không phản hồi liên lạc kéo dài (ngừng hỗ trợ / bỏ bê Task)' },
+  { value: 'UNREASONABLE_DEMAND', label: 'Bên thực hiện đòi hỏi chi phí phát sinh ngoài thỏa thuận' },
+  { value: 'DISAGREE_SETTLEMENT', label: 'Bất đồng về tỷ lệ phân chia tiền khi dừng Task' },
+  { value: 'OTHER', label: 'Lý do khác' },
+]
+
+/** Danh mục lý do dành cho Bên thực hiện (Performer - Mentor nhận hướng dẫn / thực hiện Task) */
+const PERFORMER_DISPUTE_REASONS = [
+  { value: 'STUDENT_UNRESPONSIVE', label: 'Bên tạo yêu cầu không phản hồi, chậm trễ nghiệm thu / xác nhận kết quả' },
+  { value: 'OUT_OF_SCOPE_DEMAND', label: 'Bên tạo yêu cầu từ chối nghiệm thu vô cớ hoặc đòi hỏi ngoài thỏa thuận' },
+  { value: 'UNPAID_ADDITIONAL_FEE', label: 'Bên tạo yêu cầu không thanh toán khoản tiền bổ sung đã thỏa thuận' },
+  { value: 'DISAGREE_SETTLEMENT', label: 'Bất đồng về tỷ lệ phân chia tiền khi dừng Task' },
+  { value: 'STUDENT_MISCONDUCT', label: 'Bên tạo yêu cầu có hành vi thiếu chuẩn mực / vi phạm quy tắc hợp tác' },
   { value: 'OTHER', label: 'Lý do khác' },
 ]
 
@@ -36,11 +55,15 @@ export function MentoringCreateDisputeModal({
   onClose,
   taskId,
   taskTitle,
-  isStudent,
+  isRequester,
+  isStudent = false,
   onSuccess,
 }: MentoringCreateDisputeModalProps) {
+  // Xác định vai trò: ưu tiên isRequester, fallback sang isStudent
+  const isRequesterRole = isRequester !== undefined ? isRequester : isStudent
+  const disputeReasons = isRequesterRole ? REQUESTER_DISPUTE_REASONS : PERFORMER_DISPUTE_REASONS
   const [title, setTitle] = useState('')
-  const [disputeReason, setDisputeReason] = useState(DISPUTE_REASONS[0].value)
+  const [disputeReason, setDisputeReason] = useState(disputeReasons[0].value)
   const [customReason, setCustomReason] = useState('')
   const [description, setDescription] = useState('')
   const [desiredSolution, setDesiredSolution] = useState('')
@@ -48,6 +71,18 @@ export function MentoringCreateDisputeModal({
   const [newEvidenceTitle, setNewEvidenceTitle] = useState('')
   const [newEvidenceUrl, setNewEvidenceUrl] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setDisputeReason(isRequesterRole ? REQUESTER_DISPUTE_REASONS[0].value : PERFORMER_DISPUTE_REASONS[0].value)
+      setTitle('')
+      setCustomReason('')
+      setDescription('')
+      setDesiredSolution('')
+      setEvidences([])
+      setErrorMsg(null)
+    }
+  }, [isOpen, isRequesterRole])
 
   const createDisputeMutation = useCreateDisputeTicket(taskId)
 
@@ -113,8 +148,10 @@ export function MentoringCreateDisputeModal({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
@@ -149,6 +186,19 @@ export function MentoringCreateDisputeModal({
               </div>
             )}
 
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs">
+              <span className="text-slate-500 dark:text-slate-400">
+                Vai trò của bạn khi mở khiếu nại:
+              </span>
+              <span className={`font-bold px-2.5 py-0.5 rounded-full text-xs ${
+                isRequesterRole 
+                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' 
+                  : 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300'
+              }`}>
+                {isRequesterRole ? 'Bên tạo yêu cầu (Requester)' : 'Bên thực hiện (Mentor)'}
+              </span>
+            </div>
+
             {taskTitle && (
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs">
                 <span className="text-slate-500 dark:text-slate-400">Nhiệm vụ khiếu nại: </span>
@@ -166,7 +216,11 @@ export function MentoringCreateDisputeModal({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={255}
-                placeholder="Ví dụ: Khiếu nại Mentor không bàn giao sản phẩm đúng cam kết"
+                placeholder={
+                  isRequesterRole
+                    ? 'Ví dụ: Khiếu nại Bên thực hiện không bàn giao kết quả đúng cam kết'
+                    : 'Ví dụ: Khiếu nại Bên tạo yêu cầu chậm trễ nghiệm thu và đòi hỏi ngoài thỏa thuận'
+                }
                 className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
               />
             </div>
@@ -174,14 +228,14 @@ export function MentoringCreateDisputeModal({
             {/* Lý do tranh chấp */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-900 dark:text-white">
-                Lý do khiếu nại chính <span className="text-red-500">*</span>
+                Lý do khiếu nại chính ({isRequesterRole ? 'Dành cho Bên tạo yêu cầu' : 'Dành cho Bên thực hiện'}) <span className="text-red-500">*</span>
               </label>
               <select
                 value={disputeReason}
                 onChange={(e) => setDisputeReason(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
               >
-                {DISPUTE_REASONS.map((r) => (
+                {disputeReasons.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
                   </option>
@@ -227,9 +281,9 @@ export function MentoringCreateDisputeModal({
                 onChange={(e) => setDesiredSolution(e.target.value)}
                 maxLength={255}
                 placeholder={
-                  isStudent
-                    ? 'Ví dụ: Yêu cầu hoàn lại 80% học phí hoặc giao đủ source code'
-                    : 'Ví dụ: Yêu cầu thanh toán 100% thù lao do đã bàn giao đầy đủ'
+                  isRequesterRole
+                    ? 'Ví dụ: Yêu cầu hoàn lại 80% tiền ký quỹ hoặc bàn giao đúng kết quả cam kết'
+                    : 'Ví dụ: Yêu cầu giải ngân 100% thù lao do đã bàn giao đầy đủ sản phẩm cam kết'
                 }
                 className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
               />
@@ -335,6 +389,7 @@ export function MentoringCreateDisputeModal({
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

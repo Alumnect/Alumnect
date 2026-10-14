@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { X, ClipboardCheck, CalendarDays, Wallet, Link2, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { Skeleton, Button } from '@/components/ui'
@@ -32,8 +33,10 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
   const overview = detail?.overview
   const deal = detail?.deal
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-6 text-left space-y-5 max-h-[90vh] overflow-y-auto chat-scrollbar dark:bg-[#242526] dark:border-[#393a3b]">
         <button
           type="button"
@@ -127,6 +130,7 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

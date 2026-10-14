@@ -497,7 +497,8 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         boolean isRecipient = Objects.equals(e.getRecipient().getId(), currentUserId);
         boolean isPending = e.getStatus() == MentoringExtensionStatus.PENDING;
         boolean isTaskActive = e.getTask().getStatus() == MentoringTaskStatus.PREPARATION
-                || e.getTask().getStatus() == MentoringTaskStatus.IN_PROGRESS;
+                || e.getTask().getStatus() == MentoringTaskStatus.IN_PROGRESS
+                || e.getTask().getStatus() == MentoringTaskStatus.SUBMITTED;
 
         return MentoringTaskDeadlineExtensionResponse.builder()
                 .id(e.getId())
@@ -531,7 +532,8 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         boolean isRecipient = Objects.equals(a.getRecipient().getId(), currentUserId);
         boolean isPending = a.getStatus() == MentoringAmendmentStatus.PENDING;
         boolean isTaskActive = a.getTask().getStatus() == MentoringTaskStatus.PREPARATION
-                || a.getTask().getStatus() == MentoringTaskStatus.IN_PROGRESS;
+                || a.getTask().getStatus() == MentoringTaskStatus.IN_PROGRESS
+                || a.getTask().getStatus() == MentoringTaskStatus.SUBMITTED;
         boolean isStudent = isStudent(a.getTask(), currentUserId);
 
         return MentoringTaskAmendmentResponse.builder()
@@ -572,7 +574,8 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         boolean isRecipient = Objects.equals(p.getRecipient().getId(), currentUserId);
         boolean isPending = p.getStatus() == MentoringSettlementProposalStatus.PENDING;
         boolean isTaskActive = p.getTask().getStatus() == MentoringTaskStatus.PREPARATION
-                || p.getTask().getStatus() == MentoringTaskStatus.IN_PROGRESS;
+                || p.getTask().getStatus() == MentoringTaskStatus.IN_PROGRESS
+                || p.getTask().getStatus() == MentoringTaskStatus.SUBMITTED;
 
         return MentoringTaskSettlementProposalResponse.builder()
                 .id(p.getId())

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Send, Edit3, Loader2, DollarSign, Calendar } from 'lucide-react'
@@ -130,8 +131,10 @@ export function MentoringDealFormModal({
   const inputClass =
     'w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs font-semibold text-plum-900 shadow-xs focus:border-brand-500 focus:outline-none dark:bg-[#3a3b3c] dark:border-white/10 dark:text-[#f0f2f5]'
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[90vh] overflow-y-auto chat-scrollbar dark:bg-[#242526] dark:border-[#393a3b]">
         <button
           type="button"
@@ -283,6 +286,7 @@ export function MentoringDealFormModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

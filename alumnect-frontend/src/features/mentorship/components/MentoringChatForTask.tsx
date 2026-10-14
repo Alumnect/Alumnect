@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
@@ -449,7 +450,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   return (
     <div className="flex h-[calc(100vh-140px)] min-h-[600px] flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#1e1f20]">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] bg-white/90 px-4 py-3.5 backdrop-blur-md dark:border-white/10 dark:bg-[#242526]/90 sm:px-6">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] bg-white/90 px-4 py-3.5 backdrop-blur-md dark:border-white/10 dark:bg-[#242526]/90 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           {onBack && (
             <button
@@ -506,11 +507,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               </Button>
               {isTaskActionMenuOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute right-0 top-full mt-1.5 z-50 w-72 max-h-[min(480px,calc(100vh-220px))] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150"
                   onClick={() => setIsTaskActionMenuOpen(false)}
                 >
                   <button
-                    onClick={() => setIsExtensionModalOpen(true)}
+                    onClick={() => {
+                      setIsExtensionModalOpen(true)
+                      setIsTaskActionMenuOpen(false)
+                    }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
                   >
                     <CalendarClock className="w-4 h-4 text-blue-500 shrink-0" />
@@ -520,7 +524,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                     </div>
                   </button>
                   <button
-                    onClick={() => setIsAmendmentModalOpen(true)}
+                    onClick={() => {
+                      setIsAmendmentModalOpen(true)
+                      setIsTaskActionMenuOpen(false)
+                    }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
                   >
                     <Edit3 className="w-4 h-4 text-amber-500 shrink-0" />
@@ -530,7 +537,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                     </div>
                   </button>
                   <button
-                    onClick={() => setIsSettlementModalOpen(true)}
+                    onClick={() => {
+                      setIsSettlementModalOpen(true)
+                      setIsTaskActionMenuOpen(false)
+                    }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
                   >
                     <Scale className="w-4 h-4 text-purple-500 shrink-0" />
@@ -943,8 +953,8 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       </div>
 
       {/* Dialog: Chấp nhận Deal theo Request */}
-      {isAcceptByRequestOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/40 p-4 backdrop-blur-sm animate-fade-in">
+      {isAcceptByRequestOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-950/60 p-4 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
             <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">Chấp nhận Deal theo Request</h4>
             <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
@@ -971,12 +981,13 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Dialog: Từ chối */}
-      {rejectTarget !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs animate-fade-in">
+      {rejectTarget !== null && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-md space-y-4 rounded-3xl border border-gray-200 bg-white p-6 text-left shadow-2xl dark:border-gray-800 dark:bg-[#202124]">
             <h4 className="font-heading text-base font-black text-gray-900 dark:text-white">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
             <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
@@ -998,7 +1009,8 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Dialog: Yêu cầu điều chỉnh */}
@@ -1006,8 +1018,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         const targetSnap = snapshots.find((s) => s.version === adjustTarget)
         const currentPrice = targetSnap ? targetSnap.agreedPrice : deal?.agreedPrice
         const currentDeadline = targetSnap ? targetSnap.deadline : deal?.deadline
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/40 p-4 backdrop-blur-sm animate-fade-in">
+        if (typeof document === 'undefined') return null
+        return createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-950/60 p-4 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
@@ -1065,7 +1078,8 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 </Button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )
       })()}
 
@@ -1221,7 +1235,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onClose={() => setIsCreateDisputeOpen(false)}
           taskId={ctx.taskId}
           taskTitle={taskDetail?.overview?.taskTitle}
-          isStudent={!isMentor}
+          isRequester={!isMentor}
           onSuccess={() => {
             refetchTask()
             refetch()

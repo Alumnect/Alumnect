@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   X,
   CreditCard,
@@ -149,8 +150,10 @@ export function MentoringTaskPaymentModal({
         checkoutData?.checkoutUrl || ''
       )}`
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-plum-950/50 backdrop-blur-sm animate-fade-in">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[92vh] overflow-y-auto chat-scrollbar dark:bg-[#242526] dark:border-[#393a3b]">
         {/* Nút đóng */}
         <button
@@ -414,6 +417,7 @@ export function MentoringTaskPaymentModal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

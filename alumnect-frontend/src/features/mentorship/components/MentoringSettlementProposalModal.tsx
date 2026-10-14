@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Scale,
   X,
@@ -85,8 +86,10 @@ export function MentoringSettlementProposalModal({
   const mentorPercent = totalBudget > 0 ? Math.round((mentorAmount / totalBudget) * 100) : 0
   const studentPercent = 100 - mentorPercent
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
@@ -148,7 +151,7 @@ export function MentoringSettlementProposalModal({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs font-semibold">
               <span className="text-purple-600 dark:text-purple-400">Mentor nhận ({mentorPercent}%)</span>
-              <span className="text-blue-600 dark:text-blue-400">Hoàn lại Học viên ({studentPercent}%)</span>
+              <span className="text-blue-600 dark:text-blue-400">Hoàn lại Bên tạo yêu cầu ({studentPercent}%)</span>
             </div>
             <div className="h-3 w-full bg-blue-100 dark:bg-blue-950/60 rounded-full overflow-hidden flex">
               <div
@@ -220,7 +223,7 @@ export function MentoringSettlementProposalModal({
           <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 text-purple-900 dark:text-purple-300 text-xs space-y-1">
             <p className="font-semibold">Quy trình xử lý sau khi hai bên đồng thuận:</p>
             <ul className="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
-              <li>Nếu cả hai bên đồng thuận với phương án này: Task sẽ dừng lại và chuyển tiếp sang UC111 (Settlement Ticket) gửi Admin để thực hiện giải ngân cho Mentor và hoàn tiền cho Học viên.</li>
+              <li>Nếu cả hai bên đồng thuận với phương án này: Task sẽ dừng lại và chuyển tiếp sang UC111 (Settlement Ticket) gửi Admin để thực hiện giải ngân cho Mentor và hoàn tiền cho Bên tạo yêu cầu.</li>
               <li>Nếu một bên từ chối: Hai bên có thể tiếp tục thương lượng tỷ lệ khác hoặc gửi Dispute Ticket (UC112) để Admin can thiệp.</li>
             </ul>
           </div>
@@ -255,6 +258,7 @@ export function MentoringSettlementProposalModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

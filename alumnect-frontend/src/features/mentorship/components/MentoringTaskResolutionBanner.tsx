@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   CalendarClock,
   FileEdit,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
+import { useAuthStore } from '@/store/authStore'
 import type {
   MentoringTaskDeadlineExtension,
   MentoringTaskAmendment,
@@ -69,6 +71,7 @@ export function MentoringTaskResolutionBanner({
   canCreateDisputeTicket,
   canSubmitDisputeEvidence: _canSubmitDisputeEvidence,
   isStudent,
+  isMentor,
   onOpenTopUpPayment,
   onOpenReviewCompletion,
   onOpenSubmitSettlementTicket,
@@ -148,6 +151,33 @@ export function MentoringTaskResolutionBanner({
     setRejectNote('')
     onRefresh?.()
   }
+
+  const currentUserId = Number(useAuthStore((state) => state.user?.id)) || 0
+
+  // Phân định vai trò Bên gửi (Creator) và Bên nhận (Recipient)
+  const isExtensionCreator = Boolean(
+    activeExtension &&
+      (activeExtension.createdById === currentUserId ||
+        (isMentor && activeExtension.createdByRole === 'Mentor') ||
+        (isStudent && activeExtension.createdByRole !== 'Mentor'))
+  )
+  const isExtensionRecipient = Boolean(activeExtension && !isExtensionCreator)
+
+  const isAmendmentCreator = Boolean(
+    activeAmendment &&
+      (activeAmendment.createdById === currentUserId ||
+        (isMentor && activeAmendment.createdByRole === 'Mentor') ||
+        (isStudent && activeAmendment.createdByRole !== 'Mentor'))
+  )
+  const isAmendmentRecipient = Boolean(activeAmendment && !isAmendmentCreator)
+
+  const isSettlementCreator = Boolean(
+    activeSettlementProposal &&
+      (activeSettlementProposal.createdById === currentUserId ||
+        (isMentor && activeSettlementProposal.createdByRole === 'Mentor') ||
+        (isStudent && activeSettlementProposal.createdByRole !== 'Mentor'))
+  )
+  const isSettlementRecipient = Boolean(activeSettlementProposal && !isSettlementCreator)
 
   const isCompletionPending = taskStatus === 'SUBMITTED' || Boolean(latestCompletion && latestCompletion.status === 'PENDING')
   const isTaskCompleted = taskStatus === 'COMPLETED'
@@ -243,7 +273,7 @@ export function MentoringTaskResolutionBanner({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {activeExtension.canConfirm && (
+            {isExtensionRecipient && (
               <>
                 <Button
                   size="sm"
@@ -270,7 +300,7 @@ export function MentoringTaskResolutionBanner({
                 </Button>
               </>
             )}
-            {!activeExtension.canConfirm && (
+            {!isExtensionRecipient && (
               <span className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground font-medium">
                 Đang chờ đối phương phản hồi
               </span>
@@ -310,7 +340,7 @@ export function MentoringTaskResolutionBanner({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {activeAmendment.status === 'PENDING' && activeAmendment.canConfirm && (
+            {activeAmendment.status === 'PENDING' && isAmendmentRecipient && (
               <>
                 <Button
                   size="sm"
@@ -349,7 +379,7 @@ export function MentoringTaskResolutionBanner({
               </Button>
             )}
 
-            {activeAmendment.status === 'PENDING' && !activeAmendment.canConfirm && (
+            {activeAmendment.status === 'PENDING' && !isAmendmentRecipient && (
               <span className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground font-medium">
                 Đang chờ đối phương xác nhận
               </span>
@@ -377,7 +407,7 @@ export function MentoringTaskResolutionBanner({
               <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                 <span>Mentor nhận: <strong className="text-purple-600 dark:text-purple-400 font-bold">{formatVnd(activeSettlementProposal.mentorAmount)}</strong></span>
                 <span>•</span>
-                <span>Học viên hoàn lại: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeSettlementProposal.studentRefund)}</strong></span>
+                <span>Hoàn lại Bên tạo yêu cầu: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeSettlementProposal.studentRefund)}</strong></span>
               </div>
               <p className="text-xs text-foreground/80 italic">
                 &ldquo;{activeSettlementProposal.reason}&rdquo;
@@ -386,7 +416,7 @@ export function MentoringTaskResolutionBanner({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {activeSettlementProposal.canAccept && (
+            {isSettlementRecipient && (
               <>
                 <Button
                   size="sm"
@@ -413,7 +443,7 @@ export function MentoringTaskResolutionBanner({
                 </Button>
               </>
             )}
-            {!activeSettlementProposal.canAccept && (
+            {!isSettlementRecipient && (
               <span className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground font-medium">
                 Đang chờ đối phương đồng thuận
               </span>
@@ -452,7 +482,7 @@ export function MentoringTaskResolutionBanner({
               <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                 <span>Mentor nhận: <strong className="text-purple-600 dark:text-purple-400 font-bold">{formatVnd(activeSettlementProposal?.mentorAmount)}</strong></span>
                 <span>•</span>
-                <span>Học viên hoàn lại: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeSettlementProposal?.studentRefund)}</strong></span>
+                <span>Hoàn lại Bên tạo yêu cầu: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeSettlementProposal?.studentRefund)}</strong></span>
               </div>
               <p className="text-xs text-foreground/80">
                 Bước tiếp theo: Gửi Settlement Ticket để Ban Quản Trị đối soát và giải ngân theo thỏa thuận (UC111).
@@ -514,9 +544,9 @@ export function MentoringTaskResolutionBanner({
               {activeTicket.status === 'RESOLVED' ? (
                 <div className="text-xs text-foreground/90 space-y-0.5">
                   <p className="font-semibold text-emerald-700 dark:text-emerald-300">
-                    Phán quyết: {activeTicket.decision === 'FULL_MENTOR_PAYMENT' ? 'Chi trả toàn bộ Cố vấn' : activeTicket.decision === 'FULL_STUDENT_REFUND' ? 'Hoàn trả toàn bộ Học viên' : 'Hòa giải chia tỷ lệ'}
+                    Phán quyết: {activeTicket.decision === 'FULL_MENTOR_PAYMENT' ? 'Chi trả toàn bộ Cố vấn' : activeTicket.decision === 'FULL_STUDENT_REFUND' ? 'Hoàn trả toàn bộ Bên tạo yêu cầu' : 'Hòa giải chia tỷ lệ'}
                     {activeTicket.mentorAmount != null && ` • Thù lao Mentor: ${formatVnd(activeTicket.mentorAmount)}`}
-                    {activeTicket.studentRefund != null && ` • Hoàn trả Student: ${formatVnd(activeTicket.studentRefund)}`}
+                    {activeTicket.studentRefund != null && ` • Hoàn trả Bên tạo yêu cầu: ${formatVnd(activeTicket.studentRefund)}`}
                   </p>
                   {activeTicket.resolutionNote && (
                     <p className="text-muted-foreground italic line-clamp-2">
@@ -604,7 +634,7 @@ export function MentoringTaskResolutionBanner({
                 {activeTicket.studentRefund != null && (
                   <>
                     <span>•</span>
-                    <span>Hoàn tiền Học viên: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeTicket.studentRefund)}</strong></span>
+                    <span>Hoàn tiền Bên tạo yêu cầu: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeTicket.studentRefund)}</strong></span>
                   </>
                 )}
               </div>
@@ -687,8 +717,8 @@ export function MentoringTaskResolutionBanner({
       )}
 
       {/* Reject Modal */}
-      {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      {rejectModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div
             className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white"
             onClick={(e) => e.stopPropagation()}
@@ -725,7 +755,8 @@ export function MentoringTaskResolutionBanner({
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
