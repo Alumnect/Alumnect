@@ -148,5 +148,20 @@ public interface NotificationService {
             com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
             com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
     );
+
+    /**
+     * Gửi thông báo cho Học viên và Cố vấn khi Quản trị viên tiếp nhận xử lý vé khiếu nại/hòa giải (UC117).
+     *
+     * @param admin Quản trị viên tiếp nhận
+     * @param student Học viên liên quan
+     * @param mentor Cố vấn liên quan
+     * @param ticket Vé tranh chấp / hòa giải
+     */
+    void sendMentoringTicketAcceptedNotification(
+            com.alumnect.alumnect_backend.entity.user.User admin,
+            com.alumnect.alumnect_backend.entity.user.User student,
+            com.alumnect.alumnect_backend.entity.user.User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket
+    );
 }
 

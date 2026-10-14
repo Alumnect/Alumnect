@@ -83,6 +83,25 @@ public class AdminMentoringTicketController {
         return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết Ticket thành công", response));
     }
 
+    /**
+     * API Tiếp nhận Ticket để xử lý cho Quản trị viên (UC117).
+     * Gán Quản trị viên hiện tại làm người phụ trách (handled_by), ghi nhận accepted_at và đổi trạng thái sang IN_REVIEW.
+     *
+     * @param ticketId ID vé khiếu nại
+     * @return Thông tin Ticket sau khi tiếp nhận
+     */
+    @PostMapping("/{ticketId}/accept")
+    @Operation(summary = "Tiếp nhận Ticket để xử lý cho Admin (UC117)",
+               description = "Cho phép Quản trị viên chính thức nhận quyền phụ trách xử lý Ticket tranh chấp/hòa giải")
+    public ResponseEntity<ApiResponse<MentoringDisputeTicketResponse>> acceptTicket(
+            @PathVariable Long ticketId) {
+        Long currentUserId = getCurrentUserId();
+        log.info("Admin {} yêu cầu tiếp nhận xử lý Ticket ID: {}", currentUserId, ticketId);
+
+        MentoringDisputeTicketResponse response = mentoringTicketService.acceptTicket(currentUserId, ticketId);
+        return ResponseEntity.ok(ApiResponse.success("Tiếp nhận xử lý Ticket thành công", response));
+    }
+
     private Long getCurrentUserId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)

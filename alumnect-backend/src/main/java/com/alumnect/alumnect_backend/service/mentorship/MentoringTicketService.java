@@ -109,4 +109,13 @@ public interface MentoringTicketService {
      * @return Chi tiết Ticket kèm danh sách bằng chứng và ngữ cảnh
      */
     MentoringDisputeTicketResponse getAdminTicketDetail(Long currentUserId, Long ticketId);
+
+    /**
+     * Quản trị viên tiếp nhận xử lý một Ticket tranh chấp hoặc hòa giải (UC117).
+     *
+     * @param adminUserId ID Quản trị viên tiếp nhận
+     * @param ticketId ID vé khiếu nại
+     * @return Dữ liệu Ticket sau khi được gán Admin và chuyển sang IN_REVIEW
+     */
+    MentoringDisputeTicketResponse acceptTicket(Long adminUserId, Long ticketId);
 }

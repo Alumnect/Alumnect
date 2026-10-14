@@ -26,6 +26,7 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -58,6 +60,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     private final MentoringTicketEvidenceRepository evidenceRepository;
     private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
+    private final NotificationService notificationService;
 
     private static final List<MentoringTicketStatus> ACTIVE_TICKET_STATUSES =
             List.of(MentoringTicketStatus.OPEN, MentoringTicketStatus.IN_REVIEW);
@@ -564,5 +567,51 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket với ID: " + ticketId));
 
         return toTicketResponse(ticket);
+    }
+
+    @Override
+    @Transactional
+    public MentoringDisputeTicketResponse acceptTicket(Long adminUserId, Long ticketId) {
+        log.info("Admin {} yêu cầu tiếp nhận xử lý Ticket ID: {}", adminUserId, ticketId);
+
+        User admin = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Quản trị viên"));
+
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket với ID: " + ticketId));
+
+        // Kiểm tra xem vé đã được giải quyết hoặc hủy chưa
+        if (ticket.getStatus() == MentoringTicketStatus.RESOLVED ||
+                ticket.getStatus() == MentoringTicketStatus.REJECTED ||
+                ticket.getStatus() == MentoringTicketStatus.CANCELLED) {
+            throw new BadRequestException("Không thể tiếp nhận vé đã kết thúc (trạng thái: " + ticket.getStatus() + ")");
+        }
+
+        // Kiểm tra xem đã có Admin khác nhận chưa (Bước 42 UC117)
+        if (ticket.getHandledBy() != null && !ticket.getHandledBy().getId().equals(adminUserId)) {
+            String handlerName = ticket.getHandledBy().getProfile() != null &&
+                    ticket.getHandledBy().getProfile().getFullName() != null &&
+                    !ticket.getHandledBy().getProfile().getFullName().isBlank()
+                    ? ticket.getHandledBy().getProfile().getFullName().trim()
+                    : ticket.getHandledBy().getEmail();
+            throw new BadRequestException("Vé này đã được tiếp nhận bởi Quản trị viên: " + handlerName);
+        }
+
+        // Gán handled_by và thời điểm tiếp nhận (Bước 43 & 44 UC117)
+        ticket.setHandledBy(admin);
+        ticket.setAcceptedAt(Instant.now());
+        ticket.setStatus(MentoringTicketStatus.IN_REVIEW);
+
+        MentoringDisputeTicket saved = ticketRepository.save(ticket);
+        log.info("Admin {} đã tiếp nhận thành công Ticket ID: {}, mã: {}", adminUserId, saved.getId(), saved.getTicketCode());
+
+        // Gửi thông báo cho Student và Mentor (Bước 45 UC117)
+        try {
+            notificationService.sendMentoringTicketAcceptedNotification(admin, saved.getStudent(), saved.getMentor(), saved);
+        } catch (Exception ex) {
+            log.error("Lỗi khi gửi thông báo tiếp nhận Ticket id={}: {}", saved.getId(), ex.getMessage());
+        }
+
+        return toTicketResponse(saved);
     }
 }

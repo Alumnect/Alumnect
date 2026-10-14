@@ -470,6 +470,65 @@ public class NotificationServiceImpl implements NotificationService {
         log.info("Đã gửi thông báo cập nhật lại Work Log id={} tới Student id={}", workLog.getId(), student.getId());
     }
 
+    @Override
+    @Transactional
+    public void sendMentoringTicketAcceptedNotification(
+            User admin,
+            User student,
+            User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket
+    ) {
+        if (ticket == null) {
+            return;
+        }
+
+        String adminName = resolveFullName(admin);
+        String taskTitle = (ticket.getTask() != null && ticket.getTask().getTaskTitle() != null)
+                ? ticket.getTask().getTaskTitle().trim()
+                : "Nhiệm vụ Mentoring";
+        String snippet = taskTitle.length() > 50 ? taskTitle.substring(0, 47) + "..." : taskTitle;
+        String ticketCode = ticket.getTicketCode() != null ? ticket.getTicketCode() : ("#" + ticket.getId());
+
+        String messageContent = String.format("Quản trị viên %s đã tiếp nhận xử lý vé %s cho nhiệm vụ \"%s\".",
+                adminName, ticketCode, snippet);
+
+        // Gửi thông báo cho Student
+        if (student != null) {
+            Notification notifStudent = Notification.builder()
+                    .recipient(student)
+                    .sender(admin)
+                    .type(NotificationType.MENTORING_TASK)
+                    .title("Vé " + ticketCode + " đã được tiếp nhận xử lý")
+                    .content(messageContent)
+                    .targetType("MENTORING_TICKET")
+                    .targetId(String.valueOf(ticket.getId()))
+                    .senderCount(1)
+                    .isRead(false)
+                    .build();
+            notifStudent = notificationRepository.save(notifStudent);
+            pushRealtimeNotification(student, notifStudent);
+            log.info("Đã gửi thông báo tiếp nhận vé id={} tới Student id={}", ticket.getId(), student.getId());
+        }
+
+        // Gửi thông báo cho Mentor
+        if (mentor != null) {
+            Notification notifMentor = Notification.builder()
+                    .recipient(mentor)
+                    .sender(admin)
+                    .type(NotificationType.MENTORING_TASK)
+                    .title("Vé " + ticketCode + " đã được tiếp nhận xử lý")
+                    .content(messageContent)
+                    .targetType("MENTORING_TICKET")
+                    .targetId(String.valueOf(ticket.getId()))
+                    .senderCount(1)
+                    .isRead(false)
+                    .build();
+            notifMentor = notificationRepository.save(notifMentor);
+            pushRealtimeNotification(mentor, notifMentor);
+            log.info("Đã gửi thông báo tiếp nhận vé id={} tới Mentor id={}", ticket.getId(), mentor.getId());
+        }
+    }
+
 
     /**
      * Đẩy thông báo thời gian thực đến người nhận qua WebSocket STOMP cá nhân.

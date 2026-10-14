@@ -398,6 +398,24 @@ export function useAdminTicketDetail(ticketId: number | null) {
   })
 }
 
+/**
+ * Hook Quản trị viên tiếp nhận xử lý Ticket tranh chấp / hòa giải (UC117)
+ */
+export function useAcceptAdminTicket() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (ticketId: number) => {
+      const response = await adminApi.acceptAdminTicket(ticketId)
+      return response.data
+    },
+    onSuccess: (_, ticketId) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-tickets'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-detail', ticketId] })
+    },
+  })
+}
+
+
 
 
 

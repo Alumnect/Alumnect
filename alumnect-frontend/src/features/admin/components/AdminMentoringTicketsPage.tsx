@@ -12,10 +12,12 @@ import {
   DollarSign,
   ExternalLink,
   ShieldAlert,
+  UserCheck,
+  Loader2,
 } from 'lucide-react'
-import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { useAdminTickets } from '../hooks/useAdmin'
+import { useAdminTickets, useAcceptAdminTicket } from '../hooks/useAdmin'
 import type { MentoringDisputeTicket } from '@/features/mentorship'
 
 /**
@@ -39,6 +41,23 @@ export function AdminMentoringTicketsPage() {
 
   // State quản lý Modal xem chi tiết Ticket
   const [selectedTicket, setSelectedTicket] = useState<MentoringDisputeTicket | null>(null)
+
+  // Mutation tiếp nhận xử lý Ticket (UC117)
+  const acceptTicketMutation = useAcceptAdminTicket()
+
+  const handleAcceptTicket = async (ticket: MentoringDisputeTicket) => {
+    try {
+      const updated = await acceptTicketMutation.mutateAsync(ticket.id)
+      toast.success(`Đã tiếp nhận xử lý vé ${ticket.ticketCode} thành công!`)
+      if (selectedTicket && selectedTicket.id === ticket.id) {
+        setSelectedTicket(updated)
+      }
+      refetch()
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Có lỗi xảy ra khi tiếp nhận vé'
+      toast.error(msg)
+    }
+  }
 
   const tickets = data?.content || []
   const totalPages = data?.totalPages || 0
@@ -350,15 +369,33 @@ export function AdminMentoringTicketsPage() {
 
                         {/* Action buttons */}
                         <td className="px-4 py-3.5 whitespace-nowrap text-right">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTicket(t)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
-                            title="Xem chi tiết vé khiếu nại"
-                          >
-                            <Eye size={13} className="text-slate-500" />
-                            <span>Chi tiết</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {(!t.handledBy || t.status === 'OPEN') && (
+                              <button
+                                type="button"
+                                onClick={() => handleAcceptTicket(t)}
+                                disabled={acceptTicketMutation.isPending}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
+                                title="Tiếp nhận xử lý vé này (UC117)"
+                              >
+                                {acceptTicketMutation.isPending ? (
+                                  <Loader2 size={13} className="animate-spin" />
+                                ) : (
+                                  <UserCheck size={13} />
+                                )}
+                                <span>Tiếp nhận</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedTicket(t)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
+                              title="Xem chi tiết vé khiếu nại"
+                            >
+                              <Eye size={13} className="text-slate-500" />
+                              <span>Chi tiết</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -543,14 +580,43 @@ export function AdminMentoringTicketsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-200 bg-white shrink-0">
-              <button
-                type="button"
-                onClick={() => setSelectedTicket(null)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
-              >
-                Đóng
-              </button>
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 bg-white shrink-0">
+              <div>
+                {(!selectedTicket.handledBy || selectedTicket.status === 'OPEN') ? (
+                  <span className="text-xs text-amber-600 font-medium inline-flex items-center gap-1.5">
+                    <AlertTriangle size={14} />
+                    Vé đang chờ tiếp nhận xử lý
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-500">
+                    Phụ trách: <strong className="text-slate-800">{selectedTicket.handledBy.fullName}</strong>
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {(!selectedTicket.handledBy || selectedTicket.status === 'OPEN') && (
+                  <button
+                    type="button"
+                    onClick={() => handleAcceptTicket(selectedTicket)}
+                    disabled={acceptTicketMutation.isPending}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-medium text-sm transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
+                  >
+                    {acceptTicketMutation.isPending ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <UserCheck size={15} />
+                    )}
+                    <span>Tiếp nhận xử lý (UC117)</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedTicket(null)}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                >
+                  Đóng
+                </button>
+              </div>
             </div>
           </div>
         </div>

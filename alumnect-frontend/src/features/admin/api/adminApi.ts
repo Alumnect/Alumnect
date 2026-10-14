@@ -306,6 +306,12 @@ export const adminApi = {
    */
   getAdminTicketDetail: (ticketId: number) =>
     http.get<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}`),
+
+  /**
+   * Quản trị viên tiếp nhận xử lý Ticket tranh chấp / hòa giải (UC117)
+   */
+  acceptAdminTicket: (ticketId: number) =>
+    http.post<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}/accept`),
 }
 
 
