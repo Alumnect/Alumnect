@@ -175,4 +175,8 @@ export * from './components/MentoringAddEvidenceModal'
 // UC114 exports (Xem báo cáo kết quả Task & trạng thái thanh toán)
 export * from './components/MentoringTaskReportModal'
 
+// UC119 exports (Trao đổi & Hòa giải trong Ticket tranh chấp)
+export * from './components/MentoringTicketDiscussionThread'
+export * from './components/MentoringTicketDiscussionModal'
+
 

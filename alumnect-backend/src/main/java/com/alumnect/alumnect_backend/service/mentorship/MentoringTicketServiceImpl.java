@@ -26,6 +26,12 @@ import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringWorkLogMapper;
 import com.alumnect.alumnect_backend.service.notification.NotificationService;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTicketMessageRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringTicketMessageRequest;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
@@ -57,6 +63,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     private final MentoringTaskRepository taskRepository;
     private final MentoringTaskSettlementProposalRepository proposalRepository;
     private final MentoringTicketEvidenceRepository evidenceRepository;
+    private final MentoringTicketMessageRepository messageRepository;
     private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
     private final NotificationService notificationService;
@@ -64,6 +71,9 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     private final MentoringWorkLogRepository workLogRepository;
     private final MentoringTaskCompletionRepository completionRepository;
     private final MentoringWorkLogMapper workLogMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static final List<MentoringTicketStatus> ACTIVE_TICKET_STATUSES =
             List.of(MentoringTicketStatus.OPEN, MentoringTicketStatus.IN_REVIEW);
@@ -783,5 +793,177 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
 
     private String resolveAvatar(User user) {
         return user != null && user.getProfile() != null ? user.getProfile().getAvatarUrl() : null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MentoringTicketMessageResponse> getTicketMessages(Long currentUserId, Long ticketId) {
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vé tranh chấp với ID: " + ticketId));
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + currentUserId));
+
+        checkUserTicketAccess(ticket, currentUser);
+
+        List<MentoringTicketMessage> messages = messageRepository.findByTicketIdWithSenderOrderByCreatedAtAsc(ticketId);
+        return messages.stream()
+                .map(this::toTicketMessageResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public MentoringTicketMessageResponse sendTicketMessage(
+            Long currentUserId, Long ticketId, CreateMentoringTicketMessageRequest request) {
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vé tranh chấp với ID: " + ticketId));
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + currentUserId));
+
+        checkUserTicketAccess(ticket, currentUser);
+
+        // Chặn gửi tin nhắn nếu Ticket đã ở trạng thái kết thúc (UC119 - Rule 226)
+        if (ticket.getStatus() == MentoringTicketStatus.RESOLVED ||
+                ticket.getStatus() == MentoringTicketStatus.REJECTED ||
+                ticket.getStatus() == MentoringTicketStatus.CANCELLED) {
+            throw new BadRequestException("Vé đã kết thúc (" + ticket.getStatus() + "), không thể gửi thêm tin nhắn trao đổi.");
+        }
+
+        // Xác định vai trò của người gửi
+        String senderRole = determineSenderRole(ticket, currentUser);
+
+        // Serialize attachments sang JSON nếu có
+        String attachmentsJson = null;
+        if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
+            try {
+                attachmentsJson = objectMapper.writeValueAsString(request.getAttachments());
+            } catch (Exception e) {
+                log.error("Lỗi khi chuyển đổi attachments sang JSON: {}", e.getMessage());
+            }
+        }
+
+        String msgType = (request.getMessageType() != null && !request.getMessageType().isBlank())
+                ? request.getMessageType().toUpperCase()
+                : "TEXT";
+
+        MentoringTicketMessage message = MentoringTicketMessage.builder()
+                .ticket(ticket)
+                .sender(currentUser)
+                .senderRole(senderRole)
+                .messageType(msgType)
+                .content(request.getContent().trim())
+                .attachments(attachmentsJson)
+                .proposedMentorAmount(request.getProposedMentorAmount())
+                .proposedStudentRefund(request.getProposedStudentRefund())
+                .deadline(request.getDeadline())
+                .build();
+
+        message = messageRepository.save(message);
+
+        MentoringTicketMessageResponse response = toTicketMessageResponse(message);
+
+        // 1. Phát sóng WebSocket STOMP tới topic trao đổi trực tiếp của Ticket
+        try {
+            messagingTemplate.convertAndSend("/topic/mentoring/tickets/" + ticketId + "/messages", response);
+            log.info("Đã phát sóng WebSocket STOMP message mới cho Ticket ID: {}", ticketId);
+        } catch (Exception e) {
+            log.error("Lỗi khi phát sóng WebSocket cho Ticket ID {}: {}", ticketId, e.getMessage());
+        }
+
+        // 2. Gửi Notification cá nhân cho các bên liên quan còn lại
+        notifyTicketParties(ticket, currentUser, msgType, request.getContent());
+
+        return response;
+    }
+
+    private void checkUserTicketAccess(MentoringDisputeTicket ticket, User currentUser) {
+        boolean isAdmin = isAdmin(currentUser);
+        boolean isStudent = ticket.getStudent() != null && ticket.getStudent().getId().equals(currentUser.getId());
+        boolean isMentor = ticket.getMentor() != null && ticket.getMentor().getId().equals(currentUser.getId());
+
+        if (!isAdmin && !isStudent && !isMentor) {
+            throw new ForbiddenException("Bạn không có quyền tham gia thảo luận trên vé này.");
+        }
+    }
+
+    private String determineSenderRole(MentoringDisputeTicket ticket, User currentUser) {
+        if (isAdmin(currentUser)) {
+            return "ADMIN";
+        }
+        if (ticket.getStudent() != null && ticket.getStudent().getId().equals(currentUser.getId())) {
+            return "STUDENT";
+        }
+        if (ticket.getMentor() != null && ticket.getMentor().getId().equals(currentUser.getId())) {
+            return "MENTOR";
+        }
+        return "ADMIN";
+    }
+
+    private boolean isAdmin(User user) {
+        return user != null && user.getRole() != null &&
+                ("ADMIN".equalsIgnoreCase(user.getRole().getName()) || "ROLE_ADMIN".equalsIgnoreCase(user.getRole().getName()));
+    }
+
+    private void notifyTicketParties(MentoringDisputeTicket ticket, User sender, String messageType, String content) {
+        boolean isSenderAdmin = isAdmin(sender);
+        boolean isSenderStudent = ticket.getStudent() != null && ticket.getStudent().getId().equals(sender.getId());
+        boolean isSenderMentor = ticket.getMentor() != null && ticket.getMentor().getId().equals(sender.getId());
+
+        if (isSenderAdmin) {
+            // Admin nhắn -> báo cả Student và Mentor
+            if (ticket.getStudent() != null) {
+                notificationService.sendMentoringTicketMessageNotification(sender, ticket.getStudent(), ticket, messageType, content);
+            }
+            if (ticket.getMentor() != null) {
+                notificationService.sendMentoringTicketMessageNotification(sender, ticket.getMentor(), ticket, messageType, content);
+            }
+        } else if (isSenderStudent) {
+            // Student nhắn -> báo Mentor và Admin phụ trách (nếu có)
+            if (ticket.getMentor() != null) {
+                notificationService.sendMentoringTicketMessageNotification(sender, ticket.getMentor(), ticket, messageType, content);
+            }
+            if (ticket.getHandledBy() != null) {
+                notificationService.sendMentoringTicketMessageNotification(sender, ticket.getHandledBy(), ticket, messageType, content);
+            }
+        } else if (isSenderMentor) {
+            // Mentor nhắn -> báo Student và Admin phụ trách (nếu có)
+            if (ticket.getStudent() != null) {
+                notificationService.sendMentoringTicketMessageNotification(sender, ticket.getStudent(), ticket, messageType, content);
+            }
+            if (ticket.getHandledBy() != null) {
+                notificationService.sendMentoringTicketMessageNotification(sender, ticket.getHandledBy(), ticket, messageType, content);
+            }
+        }
+    }
+
+    private MentoringTicketMessageResponse toTicketMessageResponse(MentoringTicketMessage msg) {
+        if (msg == null) return null;
+
+        List<TicketEvidenceRequest> attachments = Collections.emptyList();
+        if (msg.getAttachments() != null && !msg.getAttachments().isBlank()) {
+            try {
+                attachments = objectMapper.readValue(msg.getAttachments(), new TypeReference<List<TicketEvidenceRequest>>() {});
+            } catch (Exception e) {
+                log.error("Lỗi khi parse attachments JSON: {}", e.getMessage());
+            }
+        }
+
+        return MentoringTicketMessageResponse.builder()
+                .id(msg.getId())
+                .ticketId(msg.getTicket() != null ? msg.getTicket().getId() : null)
+                .senderId(msg.getSender() != null ? msg.getSender().getId() : null)
+                .senderName(resolveName(msg.getSender()))
+                .senderAvatar(resolveAvatar(msg.getSender()))
+                .senderRole(msg.getSenderRole())
+                .messageType(msg.getMessageType())
+                .content(msg.getContent())
+                .attachments(attachments)
+                .proposedMentorAmount(msg.getProposedMentorAmount())
+                .proposedStudentRefund(msg.getProposedStudentRefund())
+                .deadline(msg.getDeadline())
+                .createdAt(msg.getCreatedAt())
+                .build();
     }
 }

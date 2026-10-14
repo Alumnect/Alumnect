@@ -783,5 +783,33 @@ export interface MentoringDisputeContext {
   totalEscrowAmount: number
 }
 
+/**
+ * Tin nhắn và nội dung trao đổi trong Ticket tranh chấp (UC119).
+ */
+export interface MentoringTicketMessage {
+  id: number
+  ticketId: number
+  senderId: number
+  senderName: string
+  senderAvatar?: string | null
+  senderRole: 'ADMIN' | 'STUDENT' | 'MENTOR' | string
+  messageType: 'TEXT' | 'MEDIATION_OFFER' | 'DEADLINE_REQUEST' | string
+  content: string
+  attachments?: TicketEvidencePayload[] | null
+  proposedMentorAmount?: number | null
+  proposedStudentRefund?: number | null
+  deadline?: string | null
+  createdAt: string
+}
 
-
+/**
+ * Payload gửi tin nhắn hoặc đề xuất hòa giải trong Ticket (UC119).
+ */
+export interface CreateTicketMessagePayload {
+  content: string
+  messageType?: string
+  attachments?: TicketEvidencePayload[]
+  proposedMentorAmount?: number | null
+  proposedStudentRefund?: number | null
+  deadline?: string | null
+}

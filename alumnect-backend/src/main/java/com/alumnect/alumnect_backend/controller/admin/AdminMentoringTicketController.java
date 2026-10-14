@@ -13,13 +13,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Controller xử lý các yêu cầu Quản trị viên theo dõi và tiếp nhận Settlement/Dispute Ticket trong Mentorship (UC116 - UC120).
@@ -119,6 +123,36 @@ public class AdminMentoringTicketController {
         com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeContextResponse response =
                 mentoringTicketService.getAdminDisputeContext(currentUserId, ticketId);
         return ResponseEntity.ok(ApiResponse.success("Lấy bằng chứng và bối cảnh Ticket thành công", response));
+    }
+
+    /**
+     * API Lấy danh sách tin nhắn trao đổi trong Ticket cho Admin (UC119).
+     */
+    @GetMapping("/{ticketId}/messages")
+    @Operation(summary = "Lấy danh sách tin nhắn trao đổi trong Ticket cho Admin (UC119)",
+               description = "Lấy toàn bộ lịch sử trao đổi giữa Student, Mentor và Admin phục vụ thương lượng hòa giải")
+    public ResponseEntity<ApiResponse<List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse>>> getTicketMessages(
+            @PathVariable Long ticketId) {
+        Long currentUserId = getCurrentUserId();
+        List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse> response =
+                mentoringTicketService.getTicketMessages(currentUserId, ticketId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tin nhắn Ticket thành công", response));
+    }
+
+    /**
+     * API Gửi tin nhắn, hướng dẫn hòa giải hoặc yêu cầu bổ sung thông tin cho Admin (UC119).
+     */
+    @PostMapping("/{ticketId}/messages")
+    @Operation(summary = "Admin gửi tin nhắn / hướng dẫn hòa giải trong Ticket (UC119)",
+               description = "Cho phép Admin gửi chỉ dẫn, đề xuất phân chia tiền hoặc yêu cầu hai bên phản hồi trước thời hạn")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse>> sendTicketMessage(
+            @PathVariable Long ticketId,
+            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringTicketMessageRequest request) {
+        Long currentUserId = getCurrentUserId();
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse response =
+                mentoringTicketService.sendTicketMessage(currentUserId, ticketId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Admin gửi tin nhắn trao đổi thành công", response));
     }
 
     private Long getCurrentUserId() {

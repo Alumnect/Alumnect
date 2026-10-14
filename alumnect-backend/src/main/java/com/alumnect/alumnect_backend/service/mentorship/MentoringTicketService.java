@@ -128,4 +128,25 @@ public interface MentoringTicketService {
      */
     com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeContextResponse getAdminDisputeContext(
             Long currentUserId, Long ticketId);
+
+    /**
+     * Lấy danh sách tin nhắn trao đổi trong Ticket tranh chấp (UC119).
+     *
+     * @param currentUserId ID người dùng hiện tại (Admin, Student, hoặc Mentor)
+     * @param ticketId ID vé khiếu nại
+     * @return Danh sách tin nhắn theo thứ tự thời gian tăng dần
+     */
+    List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse> getTicketMessages(
+            Long currentUserId, Long ticketId);
+
+    /**
+     * Gửi tin nhắn, tài liệu làm rõ hoặc đề xuất giải pháp hòa giải trong Ticket tranh chấp (UC119).
+     *
+     * @param currentUserId ID người gửi (Admin, Student, hoặc Mentor)
+     * @param ticketId ID vé khiếu nại
+     * @param request Dữ liệu tin nhắn
+     * @return Tin nhắn vừa được ghi nhận
+     */
+    com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse sendTicketMessage(
+            Long currentUserId, Long ticketId, com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringTicketMessageRequest request);
 }

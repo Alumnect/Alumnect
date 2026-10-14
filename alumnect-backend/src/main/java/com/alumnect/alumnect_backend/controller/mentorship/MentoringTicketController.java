@@ -111,6 +111,30 @@ public class MentoringTicketController {
                 .body(ApiResponse.success("Bổ sung bằng chứng tranh chấp thành công", response));
     }
 
+    @GetMapping("/tickets/{ticketId}/messages")
+    @Operation(summary = "Lấy danh sách tin nhắn trao đổi trong Ticket tranh chấp (UC119)",
+               description = "Trả về toàn bộ tin nhắn thảo luận và đề xuất hòa giải của Student, Mentor và Admin")
+    public ResponseEntity<ApiResponse<List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse>>> getTicketMessages(
+            @PathVariable Long ticketId) {
+        Long currentUserId = getCurrentUserId();
+        List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse> response =
+                ticketService.getTicketMessages(currentUserId, ticketId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tin nhắn trao đổi thành công", response));
+    }
+
+    @PostMapping("/tickets/{ticketId}/messages")
+    @Operation(summary = "Gửi tin nhắn hoặc đề xuất hòa giải trong Ticket tranh chấp (UC119)",
+               description = "Cho phép Student, Mentor hoặc Admin gửi tin nhắn làm rõ, đính kèm tài liệu hoặc đề xuất phân bổ tiền hòa giải")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse>> sendTicketMessage(
+            @PathVariable Long ticketId,
+            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringTicketMessageRequest request) {
+        Long currentUserId = getCurrentUserId();
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketMessageResponse response =
+                ticketService.sendTicketMessage(currentUserId, ticketId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Gửi tin nhắn trao đổi thành công", response));
+    }
+
     private Long getCurrentUserId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)

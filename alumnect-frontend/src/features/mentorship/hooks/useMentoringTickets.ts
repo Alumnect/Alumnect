@@ -6,6 +6,8 @@ import type {
   CreateDisputeTicketPayload,
   TicketEvidence,
   TicketEvidencePayload,
+  MentoringTicketMessage,
+  CreateTicketMessagePayload,
 } from '../model/mentoringTaskTypes'
 
 /**
@@ -120,3 +122,37 @@ export function useAddTicketEvidence(taskId: number, ticketId: number) {
     },
   })
 }
+
+/**
+ * Hook lấy danh sách tin nhắn trao đổi trong Ticket tranh chấp (UC119).
+ */
+export function useTicketMessages(ticketId?: number, enabled = true) {
+  return useQuery<MentoringTicketMessage[]>({
+    queryKey: ['mentoring-ticket', ticketId, 'messages'],
+    queryFn: () => (ticketId ? mentoringTaskApi.getTicketMessages(ticketId) : Promise.resolve([])),
+    enabled: !!ticketId && enabled,
+    refetchInterval: 4000,
+  })
+}
+
+/**
+ * Hook gửi tin nhắn hoặc đề xuất giải pháp hòa giải trong Ticket tranh chấp (UC119).
+ */
+export function useSendTicketMessage(ticketId?: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    MentoringTicketMessage,
+    Error,
+    CreateTicketMessagePayload
+  >({
+    mutationFn: (payload) => {
+      if (!ticketId) throw new Error('Ticket ID không hợp lệ')
+      return mentoringTaskApi.sendTicketMessage(ticketId, payload)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentoring-ticket', ticketId, 'messages'] })
+    },
+  })
+}
+

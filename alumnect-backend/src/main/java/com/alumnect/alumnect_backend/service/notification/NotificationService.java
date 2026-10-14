@@ -163,5 +163,22 @@ public interface NotificationService {
             com.alumnect.alumnect_backend.entity.user.User mentor,
             com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket
     );
+
+    /**
+     * Gửi thông báo cho các bên khi có tin nhắn hoặc đề xuất hòa giải mới trong Ticket (UC119).
+     *
+     * @param sender Người gửi tin nhắn (Admin, Student, hoặc Mentor)
+     * @param recipient Người nhận thông báo
+     * @param ticket Vé tranh chấp / hòa giải
+     * @param messageType Loại tin nhắn
+     * @param content Nội dung tóm tắt
+     */
+    void sendMentoringTicketMessageNotification(
+            com.alumnect.alumnect_backend.entity.user.User sender,
+            com.alumnect.alumnect_backend.entity.user.User recipient,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket,
+            String messageType,
+            String content
+    );
 }
 

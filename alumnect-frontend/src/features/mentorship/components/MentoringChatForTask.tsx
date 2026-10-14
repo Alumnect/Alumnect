@@ -50,6 +50,7 @@ import { MentoringAddEvidenceModal } from './MentoringAddEvidenceModal'
 import { MentoringTaskReportModal } from './MentoringTaskReportModal'
 import { MentoringTaskCompletionModal } from './MentoringTaskCompletionModal'
 import { MentoringTaskReviewModal } from './MentoringTaskReviewModal'
+import { MentoringTicketDiscussionModal } from './MentoringTicketDiscussionModal'
 import { useTaskDetail } from '../hooks/useMentoringTasks'
 import { useMentoringConversation } from '../hooks/useMentoringConversation'
 import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
@@ -142,6 +143,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   // UC114: Báo cáo kết quả Task & Tài chính
   const [isTaskReportOpen, setIsTaskReportOpen] = useState(false)
+
+  // UC119: Trao đổi & Hòa giải trong Ticket tranh chấp
+  const [isTicketDiscussionOpen, setIsTicketDiscussionOpen] = useState(false)
 
   const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
 
@@ -780,6 +784,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onOpenCreateDispute={() => setIsCreateDisputeOpen(true)}
           onOpenAddEvidence={() => setIsAddEvidenceOpen(true)}
           onOpenTaskReport={() => setIsTaskReportOpen(true)}
+          onOpenTicketDiscussion={() => setIsTicketDiscussionOpen(true)}
           onRefresh={() => {
             refetchTask()
             refetch()
@@ -1247,6 +1252,16 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           taskId={ctx.taskId}
           isStudent={!isMentor}
           isMentor={isMentor}
+        />
+      )}
+
+      {/* UC119: Modal trao đổi & hòa giải 3 bên trong Ticket tranh chấp */}
+      {isTicketDiscussionOpen && taskDetail?.activeTicket && (
+        <MentoringTicketDiscussionModal
+          isOpen={isTicketDiscussionOpen}
+          onClose={() => setIsTicketDiscussionOpen(false)}
+          ticket={taskDetail.activeTicket}
+          currentRole={isMentor ? 'MENTOR' : 'STUDENT'}
         />
       )}
     </div>

@@ -431,6 +431,40 @@ export function useAdminDisputeContext(ticketId: number | null) {
   })
 }
 
+/**
+ * Hook lấy danh sách tin nhắn trao đổi trong Ticket cho Admin (UC119)
+ */
+export function useAdminTicketMessages(ticketId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-ticket-messages', ticketId],
+    queryFn: async () => {
+      if (!ticketId) return []
+      const response = await adminApi.getAdminTicketMessages(ticketId)
+      return response.data
+    },
+    enabled: !!ticketId,
+    refetchInterval: 4000, // Polling định kỳ 4s làm mới tin nhắn mới
+  })
+}
+
+/**
+ * Hook Admin gửi tin nhắn / hướng dẫn hòa giải / yêu cầu bổ sung thông tin (UC119)
+ */
+export function useSendAdminTicketMessage(ticketId: number | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: Parameters<typeof adminApi.sendAdminTicketMessage>[1]) => {
+      if (!ticketId) throw new Error('Ticket ID không hợp lệ')
+      const response = await adminApi.sendAdminTicketMessage(ticketId, payload)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-messages', ticketId] })
+    },
+  })
+}
+
+
 
 
 

@@ -20,11 +20,16 @@ import {
   Image as ImageIcon,
   Layers,
   ArrowRight,
+  MessageSquare,
 } from 'lucide-react'
 import { Badge, Card, EmptyState, Pagination, Skeleton, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTickets, useAcceptAdminTicket, useAdminDisputeContext } from '../hooks/useAdmin'
-import type { MentoringDisputeTicket, MentoringDisputeEvidence } from '@/features/mentorship'
+import {
+  type MentoringDisputeTicket,
+  type MentoringDisputeEvidence,
+  MentoringTicketDiscussionThread,
+} from '@/features/mentorship'
 
 /**
  * Trang Quản lý Tranh chấp & Hòa giải Task dành cho Admin (UC116 - UC120).
@@ -47,7 +52,7 @@ export function AdminMentoringTicketsPage() {
 
   // State quản lý Modal xem chi tiết Ticket
   const [selectedTicket, setSelectedTicket] = useState<MentoringDisputeTicket | null>(null)
-  const [activeModalTab, setActiveModalTab] = useState<'evidence' | 'context' | 'ticket'>('evidence')
+  const [activeModalTab, setActiveModalTab] = useState<'evidence' | 'context' | 'ticket' | 'discussion'>('evidence')
   const [evidencePartyFilter, setEvidencePartyFilter] = useState<'ALL' | 'STUDENT' | 'MENTOR'>('ALL')
   const [previewImage, setPreviewImage] = useState<string | null>(null)
 
@@ -518,6 +523,19 @@ export function AdminMentoringTicketsPage() {
                 >
                   <DollarSign size={14} />
                   <span>Yêu cầu & Tài chính</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab('discussion')}
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                    activeModalTab === 'discussion'
+                      ? 'border-purple-600 text-purple-600 font-bold'
+                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <MessageSquare size={14} />
+                  <span>Trao đổi & Hòa giải (UC119)</span>
                 </button>
               </div>
             </div>
@@ -1022,6 +1040,18 @@ export function AdminMentoringTicketsPage() {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* TAB 4: KÊNH TRAO ĐỔI & HÒA GIẢI 3 BÊN (UC119) */}
+                  {activeModalTab === 'discussion' && (
+                    <MentoringTicketDiscussionThread
+                      ticketId={selectedTicket.id}
+                      ticketStatus={selectedTicket.status}
+                      currentRole="ADMIN"
+                      studentName={selectedTicket.student?.fullName || selectedTicket.studentName}
+                      mentorName={selectedTicket.mentor?.fullName || selectedTicket.mentorName}
+                      totalAmount={selectedTicket.totalAmount}
+                    />
                   )}
                 </>
               )}

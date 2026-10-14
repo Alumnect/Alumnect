@@ -1,5 +1,10 @@
 import http from '@/lib/http'
-import type { MentoringDisputeTicket, MentoringDisputeContext } from '@/features/mentorship'
+import type {
+  MentoringDisputeTicket,
+  MentoringDisputeContext,
+  MentoringTicketMessage,
+  CreateTicketMessagePayload,
+} from '@/features/mentorship'
 
 export interface DayRegistrationStatDto {
   date: string
@@ -318,6 +323,18 @@ export const adminApi = {
    */
   getAdminDisputeContext: (ticketId: number) =>
     http.get<any, ApiResponse<MentoringDisputeContext>>(`/admin/mentoring/tickets/${ticketId}/context`),
+
+  /**
+   * Lấy danh sách tin nhắn trao đổi trong Ticket cho Admin (UC119)
+   */
+  getAdminTicketMessages: (ticketId: number) =>
+    http.get<any, ApiResponse<MentoringTicketMessage[]>>(`/admin/mentoring/tickets/${ticketId}/messages`),
+
+  /**
+   * Admin gửi tin nhắn / hướng dẫn hòa giải / yêu cầu bổ sung thông tin trong Ticket (UC119)
+   */
+  sendAdminTicketMessage: (ticketId: number, payload: CreateTicketMessagePayload) =>
+    http.post<any, ApiResponse<MentoringTicketMessage>>(`/admin/mentoring/tickets/${ticketId}/messages`, payload),
 }
 
 

@@ -525,8 +525,63 @@ public class NotificationServiceImpl implements NotificationService {
                     .build();
             notifMentor = notificationRepository.save(notifMentor);
             pushRealtimeNotification(mentor, notifMentor);
-            log.info("Đã gửi thông báo tiếp nhận vé id={} tới Mentor id={}", ticket.getId(), mentor.getId());
         }
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringTicketMessageNotification(
+            User sender,
+            User recipient,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket,
+            String messageType,
+            String content
+    ) {
+        if (recipient == null || sender == null || ticket == null) {
+            return;
+        }
+
+        // Không gửi thông báo cho chính người gửi
+        if (recipient.getId().equals(sender.getId())) {
+            return;
+        }
+
+        String senderName = resolveFullName(sender);
+        String ticketCode = ticket.getTicketCode() != null ? ticket.getTicketCode() : ("#" + ticket.getId());
+        String title;
+        String notifContent;
+
+        if ("MEDIATION_OFFER".equalsIgnoreCase(messageType)) {
+            title = "Đề xuất hòa giải mới trên vé " + ticketCode;
+            notifContent = senderName + " vừa đưa ra đề xuất phân bổ tiền hòa giải cho nhiệm vụ \""
+                    + (ticket.getTask() != null ? ticket.getTask().getTaskTitle() : "") + "\".";
+        } else if ("DEADLINE_REQUEST".equalsIgnoreCase(messageType)) {
+            title = "Yêu cầu phản hồi trước hạn trên vé " + ticketCode;
+            notifContent = senderName + " yêu cầu bổ sung thông tin/bằng chứng cho nhiệm vụ \""
+                    + (ticket.getTask() != null ? ticket.getTask().getTaskTitle() : "") + "\".";
+        } else {
+            title = "Tin nhắn mới trên vé " + ticketCode;
+            String preview = (content != null && content.length() > 60)
+                    ? content.substring(0, 57) + "..."
+                    : (content != null ? content : "");
+            notifContent = senderName + ": \"" + preview + "\"";
+        }
+
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .sender(sender)
+                .type(NotificationType.MENTORING_TASK)
+                .title(title)
+                .content(notifContent)
+                .targetType("MENTORING_TICKET")
+                .targetId(String.valueOf(ticket.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(recipient, notification);
+        log.info("Đã gửi thông báo Ticket message tới User id={}", recipient.getId());
     }
 
 

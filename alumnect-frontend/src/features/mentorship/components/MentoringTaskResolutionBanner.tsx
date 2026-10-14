@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Paperclip,
   FileText,
+  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
@@ -51,6 +52,7 @@ interface MentoringTaskResolutionBannerProps {
   onOpenCreateDispute?: () => void
   onOpenAddEvidence?: () => void
   onOpenTaskReport?: () => void
+  onOpenTicketDiscussion?: () => void
   onRefresh?: () => void
 }
 
@@ -73,6 +75,7 @@ export function MentoringTaskResolutionBanner({
   onOpenCreateDispute,
   onOpenAddEvidence,
   onOpenTaskReport,
+  onOpenTicketDiscussion,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
   const [rejectModal, setRejectModal] = useState<{
@@ -530,6 +533,17 @@ export function MentoringTaskResolutionBanner({
                 Bằng chứng tranh chấp
               </Button>
             )}
+            {onOpenTicketDiscussion && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onOpenTicketDiscussion}
+                className="h-8 border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 text-xs font-semibold shadow-xs"
+              >
+                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                Trao đổi (UC119)
+              </Button>
+            )}
             <span className="text-xs px-3 py-1.5 rounded-lg bg-destructive/15 text-destructive font-bold border border-destructive/30">
               Đang phân xử
             </span>
@@ -594,6 +608,17 @@ export function MentoringTaskResolutionBanner({
               >
                 <Paperclip className="w-3.5 h-3.5 mr-1.5" />
                 Chứng từ & Bằng chứng
+              </Button>
+            )}
+            {onOpenTicketDiscussion && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onOpenTicketDiscussion}
+                className="h-8 border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 text-xs font-semibold shadow-xs"
+              >
+                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                Trao đổi (UC119)
               </Button>
             )}
             <span className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-300 font-semibold border border-blue-500/20">
