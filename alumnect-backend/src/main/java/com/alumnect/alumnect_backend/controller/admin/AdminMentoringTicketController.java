@@ -102,6 +102,25 @@ public class AdminMentoringTicketController {
         return ResponseEntity.ok(ApiResponse.success("Tiếp nhận xử lý Ticket thành công", response));
     }
 
+    /**
+     * API Tra cứu bằng chứng và bối cảnh toàn diện của Task cho Quản trị viên (UC118).
+     *
+     * @param ticketId ID vé khiếu nại
+     * @return Bằng chứng tranh chấp do hai bên nộp kèm ngữ cảnh Task toàn diện (Deal, Timeline, Confirmed Logs, Deliverables, Escrow)
+     */
+    @GetMapping("/{ticketId}/context")
+    @Operation(summary = "Xem bằng chứng và bối cảnh tranh chấp cho Admin (UC118)",
+               description = "Lấy toàn bộ bằng chứng do hai bên tải lên kèm ngữ cảnh Task: Deal gốc, Timeline & Lịch sử gia hạn, Confirmed Work Logs, Deliverables và Quỹ tạm giữ")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeContextResponse>> getAdminDisputeContext(
+            @PathVariable Long ticketId) {
+        Long currentUserId = getCurrentUserId();
+        log.info("Admin {} yêu cầu xem bằng chứng và ngữ cảnh Ticket ID: {}", currentUserId, ticketId);
+
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeContextResponse response =
+                mentoringTicketService.getAdminDisputeContext(currentUserId, ticketId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy bằng chứng và bối cảnh Ticket thành công", response));
+    }
+
     private Long getCurrentUserId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)

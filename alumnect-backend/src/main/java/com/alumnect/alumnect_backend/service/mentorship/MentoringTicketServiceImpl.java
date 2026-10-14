@@ -4,28 +4,27 @@ import com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalSta
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTicketType;
+import com.alumnect.alumnect_backend.common.enums.WorkLogStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDisputeTicketRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskCompletionRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskDeadlineExtensionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTicketEvidenceRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringWorkLogRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.mentorship.CreateDisputeTicketRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.SubmitSettlementTicketRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.TicketEvidenceRequest;
-import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeTicketResponse;
-import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringParticipantResponse;
-import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringSettlementSnapshotResponse;
-import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse;
-import com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket;
-import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
-import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementProposal;
-import com.alumnect.alumnect_backend.entity.mentorship.MentoringTicketEvidence;
+import com.alumnect.alumnect_backend.dto.response.mentorship.*;
+import com.alumnect.alumnect_backend.entity.mentorship.*;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.mapper.mentorship.MentoringWorkLogMapper;
 import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +60,10 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
     private final NotificationService notificationService;
+    private final MentoringTaskDeadlineExtensionRepository extensionRepository;
+    private final MentoringWorkLogRepository workLogRepository;
+    private final MentoringTaskCompletionRepository completionRepository;
+    private final MentoringWorkLogMapper workLogMapper;
 
     private static final List<MentoringTicketStatus> ACTIVE_TICKET_STATUSES =
             List.of(MentoringTicketStatus.OPEN, MentoringTicketStatus.IN_REVIEW);
@@ -613,5 +616,172 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
         }
 
         return toTicketResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MentoringDisputeContextResponse getAdminDisputeContext(Long currentUserId, Long ticketId) {
+        log.info("Admin {} yêu cầu xem bằng chứng và bối cảnh Task của Ticket ID: {}", currentUserId, ticketId);
+
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket với ID: " + ticketId));
+
+        MentoringTask task = ticket.getTask();
+        if (task == null) {
+            throw new ResourceNotFoundException("Ticket không liên kết với nhiệm vụ Mentoring Task nào.");
+        }
+
+        // 1. Toàn bộ bằng chứng tranh chấp do 2 bên nộp (UC112, UC113, UC118)
+        List<MentoringTicketEvidenceResponse> evidences = evidenceRepository != null
+                ? evidenceRepository.findByTicketIdOrderByCreatedAtAsc(ticket.getId()).stream()
+                    .map(this::toEvidenceResponse)
+                    .toList()
+                : Collections.emptyList();
+
+        int studentEvidenceCount = 0;
+        int mentorEvidenceCount = 0;
+        Long studentId = ticket.getStudent() != null ? ticket.getStudent().getId() : null;
+        Long mentorId = ticket.getMentor() != null ? ticket.getMentor().getId() : null;
+
+        for (MentoringTicketEvidenceResponse ev : evidences) {
+            if (ev.getUploadedBy() != null) {
+                if (Objects.equals(ev.getUploadedBy().getId(), studentId)) {
+                    studentEvidenceCount++;
+                } else if (Objects.equals(ev.getUploadedBy().getId(), mentorId)) {
+                    mentorEvidenceCount++;
+                }
+            }
+        }
+
+        // 2. Ngữ cảnh Deal ban đầu
+        MentoringDeal deal = task.getDeal();
+        BigDecimal dealPrice = task.getAgreedPrice() != null ? task.getAgreedPrice() : (deal != null ? deal.getAgreedPrice() : BigDecimal.ZERO);
+        Instant dealConfirmedAt = deal != null && deal.getStudentConfirmedAt() != null
+                ? deal.getStudentConfirmedAt()
+                : (deal != null && deal.getMentorConfirmedAt() != null ? deal.getMentorConfirmedAt() : task.getStartedAt());
+
+        // 3. Timeline & Deadline
+        Instant startedAt = task.getStartedAt();
+        Instant originalDeadline = deal != null && deal.getDeadline() != null ? deal.getDeadline() : task.getDeadline();
+        Instant currentDeadline = task.getDeadline();
+        boolean isOverdue = currentDeadline != null && Instant.now().isAfter(currentDeadline) && task.getCompletedAt() == null;
+
+        // 4. Lịch sử gia hạn Deadline (Extension History)
+        List<MentoringTaskDeadlineExtensionResponse> extensionHistory = extensionRepository != null
+                ? extensionRepository.findByTaskIdOrderByCreatedAtDesc(task.getId()).stream()
+                    .map(this::toExtensionResponse)
+                    .toList()
+                : Collections.emptyList();
+
+        // 5. Nhật ký công việc đã được nghiệm thu (Confirmed Work Logs)
+        List<MentoringWorkLog> allLogs = workLogRepository != null
+                ? workLogRepository.findByTaskIdOrderByLogDateDesc(task.getId())
+                : Collections.emptyList();
+
+        List<MentoringWorkLogResponse> confirmedLogs = allLogs.stream()
+                .filter(w -> w.getStatus() == WorkLogStatus.CONFIRMED)
+                .map(workLogMapper::toWorkLogResponse)
+                .toList();
+
+        int totalConfirmedLogs = confirmedLogs.size();
+
+        // 6. Lần nộp nghiệm thu gần nhất (nếu có submit completion)
+        MentoringTaskCompletionResponse latestCompletion = completionRepository != null
+                ? completionRepository.findFirstByTaskIdOrderByCreatedAtDesc(task.getId())
+                    .map(this::toCompletionResponse)
+                    .orElse(null)
+                : null;
+
+        // 7. Quỹ Escrow đang tạm giữ
+        BigDecimal totalEscrowAmount = ticket.getTotalAmount() != null && ticket.getTotalAmount().compareTo(BigDecimal.ZERO) > 0
+                ? ticket.getTotalAmount()
+                : dealPrice;
+
+        return MentoringDisputeContextResponse.builder()
+                .ticket(toTicketResponse(ticket))
+                .evidences(evidences)
+                .studentEvidenceCount(studentEvidenceCount)
+                .mentorEvidenceCount(mentorEvidenceCount)
+                .dealId(deal != null ? deal.getId() : null)
+                .dealPrice(dealPrice)
+                .dealConfirmedAt(dealConfirmedAt)
+                .taskTitle(task.getTaskTitle())
+                .taskScope(task.getTaskScope())
+                .expectedResult(task.getExpectedResult())
+                .startedAt(startedAt)
+                .originalDeadline(originalDeadline)
+                .currentDeadline(currentDeadline)
+                .isOverdue(isOverdue)
+                .extensionHistory(extensionHistory)
+                .confirmedWorkLogs(confirmedLogs)
+                .totalConfirmedLogs(totalConfirmedLogs)
+                .latestCompletionSubmission(latestCompletion)
+                .totalEscrowAmount(totalEscrowAmount)
+                .build();
+    }
+
+    private MentoringTaskDeadlineExtensionResponse toExtensionResponse(MentoringTaskDeadlineExtension ext) {
+        if (ext == null) return null;
+        String createdByRole = ext.getTask() != null && ext.getCreatedBy() != null && ext.getTask().getMentor() != null &&
+                Objects.equals(ext.getCreatedBy().getId(), ext.getTask().getMentor().getId())
+                ? "Mentor"
+                : "Student";
+
+        return MentoringTaskDeadlineExtensionResponse.builder()
+                .id(ext.getId())
+                .taskId(ext.getTask() != null ? ext.getTask().getId() : null)
+                .conversationId(ext.getConversation() != null ? ext.getConversation().getId() : null)
+                .createdById(ext.getCreatedBy() != null ? ext.getCreatedBy().getId() : null)
+                .createdByName(resolveName(ext.getCreatedBy()))
+                .createdByAvatar(resolveAvatar(ext.getCreatedBy()))
+                .createdByRole(createdByRole)
+                .recipientId(ext.getRecipient() != null ? ext.getRecipient().getId() : null)
+                .recipientName(resolveName(ext.getRecipient()))
+                .recipientAvatar(resolveAvatar(ext.getRecipient()))
+                .currentDeadline(ext.getCurrentDeadline())
+                .proposedDeadline(ext.getProposedDeadline())
+                .reason(ext.getReason())
+                .status(ext.getStatus())
+                .respondedById(ext.getRespondedBy() != null ? ext.getRespondedBy().getId() : null)
+                .respondedByName(resolveName(ext.getRespondedBy()))
+                .respondedAt(ext.getRespondedAt())
+                .responseNote(ext.getResponseNote())
+                .createdAt(ext.getCreatedAt())
+                .updatedAt(ext.getUpdatedAt())
+                .build();
+    }
+
+    private MentoringTaskCompletionResponse toCompletionResponse(MentoringTaskCompletion c) {
+        if (c == null) return null;
+        List<String> attachmentUrls = (c.getAttachmentUrls() != null && !c.getAttachmentUrls().isBlank())
+                ? Arrays.asList(c.getAttachmentUrls().split(","))
+                : Collections.emptyList();
+
+        return MentoringTaskCompletionResponse.builder()
+                .id(c.getId())
+                .taskId(c.getTask() != null ? c.getTask().getId() : null)
+                .conversationId(c.getConversation() != null ? c.getConversation().getId() : null)
+                .submittedBy(toParticipantResponse(c.getSubmittedBy(), "MENTOR"))
+                .finalSummary(c.getFinalSummary())
+                .deliverables(c.getDeliverables())
+                .attachmentUrls(attachmentUrls)
+                .status(c.getStatus())
+                .respondedBy(toParticipantResponse(c.getRespondedBy(), "STUDENT"))
+                .respondedAt(c.getRespondedAt())
+                .feedbackNote(c.getFeedbackNote())
+                .createdAt(c.getCreatedAt())
+                .updatedAt(c.getUpdatedAt())
+                .build();
+    }
+
+    private String resolveName(User user) {
+        if (user != null && user.getProfile() != null && user.getProfile().getFullName() != null && !user.getProfile().getFullName().isBlank()) {
+            return user.getProfile().getFullName().trim();
+        }
+        return user != null ? user.getEmail() : "Người dùng";
+    }
+
+    private String resolveAvatar(User user) {
+        return user != null && user.getProfile() != null ? user.getProfile().getAvatarUrl() : null;
     }
 }

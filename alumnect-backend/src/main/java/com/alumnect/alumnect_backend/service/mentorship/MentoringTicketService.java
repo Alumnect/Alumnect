@@ -118,4 +118,14 @@ public interface MentoringTicketService {
      * @return Dữ liệu Ticket sau khi được gán Admin và chuyển sang IN_REVIEW
      */
     MentoringDisputeTicketResponse acceptTicket(Long adminUserId, Long ticketId);
+
+    /**
+     * Tra cứu bằng chứng và bối cảnh toàn diện của Task phục vụ giải quyết tranh chấp cho Admin (UC118).
+     *
+     * @param currentUserId ID Quản trị viên
+     * @param ticketId ID vé khiếu nại
+     * @return Toàn bộ bằng chứng và bối cảnh Task (Deal, Timeline, Extension, Confirmed Logs, Deliverables)
+     */
+    com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDisputeContextResponse getAdminDisputeContext(
+            Long currentUserId, Long ticketId);
 }

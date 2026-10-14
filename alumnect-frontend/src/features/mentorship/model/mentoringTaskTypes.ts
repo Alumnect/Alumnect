@@ -723,4 +723,65 @@ export interface MentoringTaskReport {
   mentor: MentoringParticipant
 }
 
+/**
+ * Tóm tắt yêu cầu gia hạn hạn chót Mentoring Task (UC109).
+ */
+export interface MentoringTaskExtensionSummary {
+  id: number
+  taskId?: number | null
+  createdByName?: string | null
+  createdByRole?: string | null
+  recipientName?: string | null
+  currentDeadline?: string | null
+  proposedDeadline?: string | null
+  reason?: string | null
+  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED'
+  respondedByName?: string | null
+  respondedAt?: string | null
+  responseNote?: string | null
+  createdAt: string
+}
+
+export interface MentoringDisputeEvidence {
+  id: number
+  ticketId?: number | null
+  uploaderId?: number | null
+  uploaderName?: string | null
+  uploaderRole?: string | null
+  uploadedBy?: MentoringParticipant | null
+  fileUrl: string
+  fileName?: string | null
+  fileSize?: number | null
+  fileType?: string | null
+  title?: string | null
+  description?: string | null
+  createdAt?: string | null
+}
+
+/**
+ * Toàn bộ bằng chứng và bối cảnh (Task context) của tranh chấp / hòa giải dành cho Admin (UC118).
+ */
+export interface MentoringDisputeContext {
+  ticket: MentoringDisputeTicket
+  evidences: MentoringDisputeEvidence[]
+  studentEvidenceCount: number
+  mentorEvidenceCount: number
+  dealId?: number | null
+  dealPrice: number
+  dealConfirmedAt?: string | null
+  taskTitle: string
+  taskScope: string
+  expectedResult: string
+  startedAt: string
+  originalDeadline: string
+  currentDeadline: string
+  isOverdue: boolean
+  extensionHistory: MentoringTaskExtensionSummary[]
+  confirmedWorkLogs: MentoringWorkLog[]
+  totalConfirmedLogs: number
+  latestCompletionSubmission?: MentoringTaskCompletion | null
+  totalEscrowAmount: number
+}
+
+
 

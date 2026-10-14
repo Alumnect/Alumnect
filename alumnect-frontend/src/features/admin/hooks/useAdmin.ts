@@ -411,9 +411,26 @@ export function useAcceptAdminTicket() {
     onSuccess: (_, ticketId) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-tickets'] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-detail', ticketId] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-context', ticketId] })
     },
   })
 }
+
+/**
+ * Hook lấy toàn bộ bằng chứng tranh chấp và bối cảnh toàn diện Task cho Admin (UC118)
+ */
+export function useAdminDisputeContext(ticketId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-ticket-context', ticketId],
+    queryFn: async () => {
+      if (!ticketId) return null
+      const response = await adminApi.getAdminDisputeContext(ticketId)
+      return response.data
+    },
+    enabled: !!ticketId,
+  })
+}
+
 
 
 
