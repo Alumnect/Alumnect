@@ -81,4 +81,32 @@ public interface MentoringTicketService {
      */
     com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse addTicketEvidence(
             Long currentUserId, Long ticketId, com.alumnect.alumnect_backend.dto.request.mentorship.TicketEvidenceRequest request);
+
+    /**
+     * Tra cứu danh sách Settlement / Dispute Ticket cho Quản trị viên (UC116).
+     *
+     * @param currentUserId ID Admin đang đăng nhập
+     * @param keyword Từ khóa tìm kiếm theo mã vé, tiêu đề, task title hoặc email người tham gia
+     * @param ticketType Loại vé (SETTLEMENT hoặc DISPUTE)
+     * @param status Trạng thái vé (OPEN, IN_REVIEW, RESOLVED, REJECTED, CANCELLED)
+     * @param handledById ID Admin đang phụ trách
+     * @param pageable Phân trang
+     * @return Danh sách phân trang các Ticket
+     */
+    com.alumnect.alumnect_backend.common.api.PageResponse<MentoringDisputeTicketResponse> getAdminTickets(
+            Long currentUserId,
+            String keyword,
+            com.alumnect.alumnect_backend.common.enums.MentoringTicketType ticketType,
+            com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus status,
+            Long handledById,
+            org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Xem thông tin chi tiết một Ticket cho Quản trị viên (UC116 / UC117 / UC118).
+     *
+     * @param currentUserId ID Admin đang đăng nhập
+     * @param ticketId ID vé khiếu nại
+     * @return Chi tiết Ticket kèm danh sách bằng chứng và ngữ cảnh
+     */
+    MentoringDisputeTicketResponse getAdminTicketDetail(Long currentUserId, Long ticketId);
 }

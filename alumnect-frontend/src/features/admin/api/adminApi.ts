@@ -1,4 +1,5 @@
 import http from '@/lib/http'
+import type { MentoringDisputeTicket } from '@/features/mentorship'
 
 export interface DayRegistrationStatDto {
   date: string
@@ -286,6 +287,25 @@ export const adminApi = {
    */
   getMentorCv: (mentorId: number) =>
     http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}/cv`),
+
+  /**
+   * Lấy danh sách Ticket tranh chấp & hòa giải cho Admin (UC116)
+   */
+  getAdminTickets: (params: {
+    keyword?: string
+    type?: string
+    status?: string
+    handledById?: number
+    page?: number
+    size?: number
+  }) =>
+    http.get<any, ApiResponse<PageResponse<MentoringDisputeTicket>>>('/admin/mentoring/tickets', { params }),
+
+  /**
+   * Xem chi tiết một Ticket cho Admin (UC116, UC118)
+   */
+  getAdminTicketDetail: (ticketId: number) =>
+    http.get<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}`),
 }
 
 

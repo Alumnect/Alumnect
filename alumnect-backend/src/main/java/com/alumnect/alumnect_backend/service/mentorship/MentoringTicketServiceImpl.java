@@ -28,6 +28,11 @@ import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.alumnect.alumnect_backend.common.api.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -479,5 +484,85 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .headline(headline)
                 .bio(bio)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<MentoringDisputeTicketResponse> getAdminTickets(
+            Long currentUserId,
+            String keyword,
+            MentoringTicketType ticketType,
+            MentoringTicketStatus status,
+            Long handledById,
+            Pageable pageable) {
+        log.info("Admin {} tra cứu danh sách Ticket: keyword='{}', type={}, status={}, handledBy={}",
+                currentUserId, keyword, ticketType, status, handledById);
+
+        Specification<MentoringDisputeTicket> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (ticketType != null) {
+                predicates.add(cb.equal(root.get("ticketType"), ticketType));
+            }
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (handledById != null) {
+                predicates.add(cb.equal(root.get("handledBy").get("id"), handledById));
+            }
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String kw = "%" + keyword.trim().toLowerCase() + "%";
+                Expression<String> ticketCodeExpr = cb.lower(root.get("ticketCode"));
+                Expression<String> titleExpr = cb.lower(root.get("title"));
+                Expression<String> descExpr = cb.lower(root.get("description"));
+
+                Join<MentoringDisputeTicket, MentoringTask> taskJoin = root.join("task", JoinType.LEFT);
+                Expression<String> taskTitleExpr = cb.lower(taskJoin.get("taskTitle"));
+
+                Join<MentoringDisputeTicket, User> studentJoin = root.join("student", JoinType.LEFT);
+                Expression<String> studentEmailExpr = cb.lower(studentJoin.get("email"));
+
+                Join<MentoringDisputeTicket, User> mentorJoin = root.join("mentor", JoinType.LEFT);
+                Expression<String> mentorEmailExpr = cb.lower(mentorJoin.get("email"));
+
+                predicates.add(cb.or(
+                        cb.like(ticketCodeExpr, kw),
+                        cb.like(titleExpr, kw),
+                        cb.like(descExpr, kw),
+                        cb.like(taskTitleExpr, kw),
+                        cb.like(studentEmailExpr, kw),
+                        cb.like(mentorEmailExpr, kw)
+                ));
+            }
+
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<MentoringDisputeTicket> page = ticketRepository.findAll(spec, pageable);
+        List<MentoringDisputeTicketResponse> content = page.getContent().stream()
+                .map(this::toTicketResponse)
+                .toList();
+
+        return PageResponse.<MentoringDisputeTicketResponse>builder()
+                .content(content)
+                .pageNumber(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MentoringDisputeTicketResponse getAdminTicketDetail(Long currentUserId, Long ticketId) {
+        log.info("Admin {} xem chi tiết Ticket ID: {}", currentUserId, ticketId);
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket với ID: " + ticketId));
+
+        return toTicketResponse(ticket);
     }
 }

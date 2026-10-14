@@ -6,6 +6,7 @@ import com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -18,7 +19,7 @@ import java.util.Optional;
  * Repository truy xuất dữ liệu Settlement & Dispute Tickets (UC111 & UC112).
  */
 @Repository
-public interface MentoringDisputeTicketRepository extends JpaRepository<MentoringDisputeTicket, Long> {
+public interface MentoringDisputeTicketRepository extends JpaRepository<MentoringDisputeTicket, Long>, JpaSpecificationExecutor<MentoringDisputeTicket> {
 
     /** Tìm Ticket theo mã hiển thị duy nhất (ticketCode) */
     Optional<MentoringDisputeTicket> findByTicketCode(String ticketCode);

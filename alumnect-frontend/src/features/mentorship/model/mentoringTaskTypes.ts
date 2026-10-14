@@ -568,18 +568,22 @@ export interface MentoringDisputeTicket {
   ticketCode: string
   ticketType: MentoringDisputeTicketType
   taskId: number
+  taskTitle?: string
   conversationId?: number | null
   settlementProposalId?: number | null
-  createdById: number
-  createdByName: string
+  createdById?: number
+  createdByName?: string
   createdByAvatar?: string | null
-  createdByRole: string
-  studentId: number
-  studentName: string
+  createdByRole?: string
+  createdBy?: MentoringParticipant | null
+  studentId?: number
+  studentName?: string
   studentAvatar?: string | null
-  mentorId: number
-  mentorName: string
+  student?: MentoringParticipant | null
+  mentorId?: number
+  mentorName?: string
   mentorAvatar?: string | null
+  mentor?: MentoringParticipant | null
   title: string
   description?: string | null
   disputeReason?: string | null
@@ -591,6 +595,7 @@ export interface MentoringDisputeTicket {
   status: MentoringTicketStatus
   handledById?: number | null
   handledByName?: string | null
+  handledBy?: MentoringParticipant | null
   acceptedAt?: string | null
   resolvedAt?: string | null
   resolutionNote?: string | null

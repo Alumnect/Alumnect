@@ -363,6 +363,41 @@ export function useAdminMentorCv(mentorId: number | null) {
   })
 }
 
+/**
+ * Hook lấy danh sách Ticket tranh chấp & hòa giải cho Quản trị viên (UC116)
+ */
+export function useAdminTickets(params: {
+  keyword?: string
+  type?: string
+  status?: string
+  handledById?: number
+  page?: number
+  size?: number
+}) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-tickets', params],
+    queryFn: async () => {
+      const response = await adminApi.getAdminTickets(params)
+      return response.data
+    },
+  })
+}
+
+/**
+ * Hook xem chi tiết Ticket cho Quản trị viên (UC116, UC118)
+ */
+export function useAdminTicketDetail(ticketId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-ticket-detail', ticketId],
+    queryFn: async () => {
+      if (!ticketId) return null
+      const response = await adminApi.getAdminTicketDetail(ticketId)
+      return response.data
+    },
+    enabled: !!ticketId,
+  })
+}
+
 
 
 
