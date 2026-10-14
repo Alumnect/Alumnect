@@ -11,6 +11,9 @@ import {
   CreditCard,
   Crown,
   RotateCcw,
+  Star,
+  Award,
+  CheckCircle2,
 } from 'lucide-react'
 import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -24,14 +27,27 @@ import type { AdminMentorCvDto } from '../api/adminApi'
  */
 export function AdminMentorListSection() {
   const [keyword, setKeyword] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const [subStatusFilter, setSubStatusFilter] = useState<string>('ALL')
   const [page, setPage] = useState(0)
 
-  // UC96 Custom hook lấy danh sách Mentor phân trang
+  // UC115 Custom hook lấy danh sách Mentor phân trang & bộ lọc
   const { data, isLoading, isError, error, refetch } = useAdminMentors({
     keyword: keyword || undefined,
+    status: statusFilter !== 'ALL' ? statusFilter : undefined,
+    subscriptionStatus: subStatusFilter !== 'ALL' ? subStatusFilter : undefined,
     page,
     size: 10,
   })
+
+  const isFiltered = !!keyword || statusFilter !== 'ALL' || subStatusFilter !== 'ALL'
+
+  const handleResetFilters = () => {
+    setKeyword('')
+    setStatusFilter('ALL')
+    setSubStatusFilter('ALL')
+    setPage(0)
+  }
 
   // State quản lý Modal Xem CV & Modal xem Chi tiết
   const [selectedCvMentorId, setSelectedCvMentorId] = useState<number | null>(null)
@@ -120,37 +136,91 @@ export function AdminMentorListSection() {
 
   return (
     <div className="space-y-4">
-      {/* Control Bar: Search Input & Metrics */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            value={keyword}
-            onChange={(e) => {
-              setKeyword(e.target.value)
-              setPage(0)
-            }}
-            placeholder="Tìm theo tên cố vấn, email, vị trí..."
-            className="w-full h-9 rounded-lg border border-slate-300 bg-white pl-9 pr-8 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
-          />
-          {keyword && (
-            <button
-              type="button"
-              onClick={() => {
-                setKeyword('')
-                setPage(0)
-              }}
-              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5"
-              title="Xóa tìm kiếm"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
+      {/* Control Bar: Search Input & Multi-Criteria Filter (UC115) */}
+      <div className="flex flex-col gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value)
+                  setPage(0)
+                }}
+                placeholder="Tìm theo tên, email, vị trí, công ty..."
+                className="w-full h-9 rounded-lg border border-slate-300 bg-white pl-9 pr-8 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+              />
+              {keyword && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKeyword('')
+                    setPage(0)
+                  }}
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  title="Xóa tìm kiếm"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
 
-        <div className="text-xs text-slate-500 self-end sm:self-center">
-          Tổng cộng: <strong className="text-slate-900 font-semibold">{totalElements}</strong> Cố vấn
+            {/* Filter by Mentor Status */}
+            <div className="flex items-center gap-1.5">
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value)
+                  setPage(0)
+                }}
+                className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-700 focus:border-[#F27024] focus:outline-none cursor-pointer"
+              >
+                <option value="ALL">Tất cả trạng thái Mentor</option>
+                <option value="ACTIVE">Đang hoạt động (ACTIVE)</option>
+                <option value="PAYMENT_PENDING">Chờ thanh toán (PAYMENT_PENDING)</option>
+                <option value="INCOMPLETE">Chưa hoàn thiện (INCOMPLETE)</option>
+                <option value="EXPIRED">Hết hạn (EXPIRED)</option>
+              </select>
+            </div>
+
+            {/* Filter by Subscription Status */}
+            <div className="flex items-center gap-1.5">
+              <select
+                value={subStatusFilter}
+                onChange={(e) => {
+                  setSubStatusFilter(e.target.value)
+                  setPage(0)
+                }}
+                className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-700 focus:border-[#F27024] focus:outline-none cursor-pointer"
+              >
+                <option value="ALL">Tất cả gói dịch vụ</option>
+                <option value="ACTIVE">Đang hiệu lực (ACTIVE)</option>
+                <option value="PAID">Đã thanh toán (PAID)</option>
+                <option value="EXPIRED">Đã hết hạn (EXPIRED)</option>
+                <option value="PENDING_PAYMENT">Chờ thanh toán (PENDING)</option>
+                <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+              </select>
+            </div>
+
+            {/* Reset Filters Button */}
+            {isFiltered && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleResetFilters}
+                className="gap-1.5 text-xs text-slate-600 hover:text-slate-900 border-slate-300 h-9 shrink-0"
+              >
+                <RotateCcw size={12} /> Đặt lại
+              </Button>
+            )}
+          </div>
+
+          <div className="text-xs text-slate-500 self-end lg:self-center shrink-0">
+            Tổng cộng: <strong className="text-slate-900 font-semibold">{totalElements}</strong> Cố vấn
+          </div>
         </div>
       </div>
 
@@ -211,11 +281,12 @@ export function AdminMentorListSection() {
               <table className="w-full text-sm text-left">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50">
-                    <th className="px-4 py-3.5 w-[25%]">Cố vấn</th>
-                    <th className="px-4 py-3.5 w-[22%]">Vị trí & Tổ chức</th>
+                    <th className="px-4 py-3.5 w-[22%]">Cố vấn</th>
+                    <th className="px-4 py-3.5 w-[20%]">Vị trí & Tổ chức</th>
                     <th className="px-3 py-3.5 text-center w-[12%]">Trạng thái</th>
-                    <th className="px-4 py-3.5 w-[23%]">Gói dịch vụ & Hiệu lực</th>
-                    <th className="px-4 py-3.5 text-right w-[18%]">Thao tác</th>
+                    <th className="px-4 py-3.5 w-[20%]">Gói dịch vụ & Hiệu lực</th>
+                    <th className="px-3 py-3.5 text-center w-[12%]">Hiệu suất</th>
+                    <th className="px-4 py-3.5 text-right w-[14%]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -293,6 +364,20 @@ export function AdminMentorListSection() {
                           ) : (
                             <span className="text-slate-400 italic text-xs">Chưa đăng ký gói</span>
                           )}
+                        </td>
+
+                        {/* Performance Metrics */}
+                        <td className="px-3 py-3.5 text-center whitespace-nowrap text-xs">
+                          <div className="inline-flex flex-col items-center gap-1">
+                            <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px]">
+                              <Award size={11} className="text-amber-600" />
+                              {m.reputationScore ?? 0} đ
+                            </span>
+                            <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                              <CheckCircle2 size={11} className="text-emerald-600" />
+                              {m.completedTasks ?? 0} task
+                            </span>
+                          </div>
                         </td>
 
                         {/* Action buttons */}
@@ -403,6 +488,21 @@ export function AdminMentorListSection() {
                     </Badge>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">{selectedMentorDetail.mentorEmail}</p>
+
+                  {/* Badges metrics */}
+                  <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-medium text-[11px]">
+                      <Award size={12} className="text-amber-600" /> Uy tín: {selectedMentorDetail.reputationScore ?? 0} điểm
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium text-[11px]">
+                      <CheckCircle2 size={12} className="text-emerald-600" /> Đã hoàn thành: {selectedMentorDetail.completedTasks ?? 0} task
+                    </span>
+                    {selectedMentorDetail.rating !== undefined && Number(selectedMentorDetail.rating) > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 font-medium text-[11px]">
+                        <Star size={12} className="text-amber-500 fill-amber-500" /> {selectedMentorDetail.rating} ({selectedMentorDetail.reviewCount ?? 0} đánh giá)
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

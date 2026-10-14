@@ -264,10 +264,22 @@ export const adminApi = {
     http.put<any, ApiResponse<void>>(`/admin/notifications/${id}/archive`),
 
   /**
-   * Lấy danh sách Mentor kèm thông tin CV và gói đăng ký (UC96)
+   * Lấy danh sách Mentor kèm thông tin CV và gói đăng ký (UC96, UC115)
    */
-  getAdminMentors: (params: { keyword?: string; page?: number; size?: number }) =>
+  getAdminMentors: (params: {
+    keyword?: string
+    status?: string
+    subscriptionStatus?: string
+    page?: number
+    size?: number
+  }) =>
     http.get<any, ApiResponse<PageResponse<AdminMentorCvDto>>>('/admin/mentors', { params }),
+
+  /**
+   * Lấy thông tin chi tiết hồ sơ quản lý của Mentor theo ID (UC115 Bước 35)
+   */
+  getAdminMentorDetail: (mentorId: number) =>
+    http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}`),
 
   /**
    * Lấy thông tin chi tiết CV và gói của Mentor theo ID (UC96)
@@ -374,6 +386,10 @@ export interface AdminMentorCvDto {
   subscriptionStartDate?: string
   subscriptionEndDate?: string
   updatedAt: string
+  reputationScore?: number
+  completedTasks?: number
+  rating?: number
+  reviewCount?: number
 }
 
 

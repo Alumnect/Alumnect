@@ -315,15 +315,36 @@ export function useUpdateMentorPackage() {
 }
 
 /**
- * Hook lấy danh sách phân trang các Mentor cho Quản trị viên (UC96)
+ * Hook lấy danh sách phân trang các Mentor cho Quản trị viên hỗ trợ lọc đa tiêu chí (UC96, UC115)
  */
-export function useAdminMentors(params: { keyword?: string; page?: number; size?: number }) {
+export function useAdminMentors(params: {
+  keyword?: string
+  status?: string
+  subscriptionStatus?: string
+  page?: number
+  size?: number
+}) {
   return useQuery({
     queryKey: ['admin', 'mentors', params],
     queryFn: async () => {
       const response = await adminApi.getAdminMentors(params)
       return response.data
     },
+  })
+}
+
+/**
+ * Hook lấy thông tin chi tiết hồ sơ quản lý của Mentor (UC115 Bước 35)
+ */
+export function useAdminMentorDetail(mentorId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentor-detail', mentorId],
+    queryFn: async () => {
+      if (!mentorId) return null
+      const response = await adminApi.getAdminMentorDetail(mentorId)
+      return response.data
+    },
+    enabled: !!mentorId,
   })
 }
 
