@@ -169,4 +169,7 @@ export * from './components/MentoringSubmitSettlementTicketModal'
 // UC112 exports (Mở Dispute Ticket khiếu nại tranh chấp)
 export * from './components/MentoringCreateDisputeModal'
 
+// UC113 exports (Gửi bằng chứng tranh chấp)
+export * from './components/MentoringAddEvidenceModal'
+
 

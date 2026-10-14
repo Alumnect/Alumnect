@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.service.mentorship;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus;
 import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
 import com.alumnect.alumnect_backend.common.enums.WorkLogStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
@@ -302,6 +303,11 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 && task.getStatus() != MentoringTaskStatus.COMPLETED
                 && activeTicket == null;
 
+        boolean canSubmitDisputeEvidence = (isStudent || isMentor)
+                && activeTicket != null
+                && (activeTicket.getStatus() == MentoringTicketStatus.OPEN
+                    || activeTicket.getStatus() == MentoringTicketStatus.IN_REVIEW);
+
         MentoringTaskActionPermissionsResponse permissions = MentoringTaskActionPermissionsResponse.builder()
                 .canAddWorkLog(canAddWorkLog)
                 .canEditWorkLog(canEditWorkLog)
@@ -317,6 +323,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .canConfirmCompletion(canConfirmCompletion)
                 .canSubmitSettlementTicket(canSubmitSettlementTicket)
                 .canCreateDisputeTicket(canCreateDisputeTicket)
+                .canSubmitDisputeEvidence(canSubmitDisputeEvidence)
                 .build();
 
         return MentoringTaskDetailResponse.builder()

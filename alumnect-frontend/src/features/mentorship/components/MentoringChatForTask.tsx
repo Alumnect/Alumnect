@@ -46,12 +46,13 @@ import { MentoringTaskAmendmentModal } from './MentoringTaskAmendmentModal'
 import { MentoringSettlementProposalModal } from './MentoringSettlementProposalModal'
 import { MentoringSubmitSettlementTicketModal } from './MentoringSubmitSettlementTicketModal'
 import { MentoringCreateDisputeModal } from './MentoringCreateDisputeModal'
+import { MentoringAddEvidenceModal } from './MentoringAddEvidenceModal'
 import { MentoringTaskCompletionModal } from './MentoringTaskCompletionModal'
 import { MentoringTaskReviewModal } from './MentoringTaskReviewModal'
 import { useTaskDetail } from '../hooks/useMentoringTasks'
 import { useMentoringConversation } from '../hooks/useMentoringConversation'
 import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
-import { CalendarClock, Scale, Send } from 'lucide-react'
+import { CalendarClock, Scale, Send, Paperclip } from 'lucide-react'
 import type { MentoringDeal, MentoringDealSnapshot } from '../model/mentoringDealTypes'
 import {
   MENTORING_PARTICIPATION_LABELS,
@@ -134,6 +135,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   // UC112: Mở Dispute Ticket khiếu nại tranh chấp
   const [isCreateDisputeOpen, setIsCreateDisputeOpen] = useState(false)
+
+  // UC113: Bổ sung bằng chứng tranh chấp
+  const [isAddEvidenceOpen, setIsAddEvidenceOpen] = useState(false)
 
   const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
 
@@ -587,6 +591,21 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                       </div>
                     </button>
                   )}
+                  {(taskDetail?.permissions?.canSubmitDisputeEvidence || taskDetail?.activeTicket) && (
+                    <button
+                      onClick={() => {
+                        setIsAddEvidenceOpen(true)
+                        setIsTaskActionMenuOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-xl transition text-left"
+                    >
+                      <Paperclip className="w-4 h-4 text-amber-600 shrink-0" />
+                      <div>
+                        <div className="font-bold">Bằng chứng tranh chấp (UC113)</div>
+                        <div className="text-[10px] text-muted-foreground">Xem & nộp thêm tài liệu chứng từ</div>
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -735,12 +754,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           canConfirmCompletion={taskDetail?.permissions?.canConfirmCompletion}
           canSubmitSettlementTicket={taskDetail?.permissions?.canSubmitSettlementTicket}
           canCreateDisputeTicket={taskDetail?.permissions?.canCreateDisputeTicket}
+          canSubmitDisputeEvidence={taskDetail?.permissions?.canSubmitDisputeEvidence}
           isStudent={!isMentor}
           isMentor={isMentor}
           onOpenTopUpPayment={openPayment}
           onOpenReviewCompletion={() => setIsReviewCompletionOpen(true)}
           onOpenSubmitSettlementTicket={() => setIsSubmitSettlementTicketOpen(true)}
           onOpenCreateDispute={() => setIsCreateDisputeOpen(true)}
+          onOpenAddEvidence={() => setIsAddEvidenceOpen(true)}
           onRefresh={() => {
             refetchTask()
             refetch()
@@ -1177,6 +1198,21 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onClose={() => setIsCreateDisputeOpen(false)}
           taskId={ctx.taskId}
           taskTitle={taskDetail?.overview?.taskTitle}
+          isStudent={!isMentor}
+          onSuccess={() => {
+            refetchTask()
+            refetch()
+          }}
+        />
+      )}
+
+      {/* UC113: Modal xem & bổ sung bằng chứng tranh chấp */}
+      {isAddEvidenceOpen && ctx.taskId && taskDetail?.activeTicket && (
+        <MentoringAddEvidenceModal
+          isOpen={isAddEvidenceOpen}
+          onClose={() => setIsAddEvidenceOpen(false)}
+          taskId={ctx.taskId}
+          ticket={taskDetail.activeTicket}
           isStudent={!isMentor}
           onSuccess={() => {
             refetchTask()

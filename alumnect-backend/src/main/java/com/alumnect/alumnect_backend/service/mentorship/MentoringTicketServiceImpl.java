@@ -317,6 +317,67 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public MentoringTicketEvidenceResponse addTicketEvidence(
+            Long currentUserId, Long ticketId, TicketEvidenceRequest request) {
+
+        log.info("Người dùng id={} yêu cầu bổ sung bằng chứng cho Ticket id={}", currentUserId, ticketId);
+
+        MentoringDisputeTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket với ID: " + ticketId));
+
+        User currentUser = requireUser(currentUserId);
+
+        boolean isStudent = Objects.equals(ticket.getStudent().getId(), currentUserId);
+        boolean isMentor = Objects.equals(ticket.getMentor().getId(), currentUserId);
+        boolean isCreator = Objects.equals(ticket.getCreatedBy().getId(), currentUserId);
+
+        if (!isStudent && !isMentor && !isCreator) {
+            throw new ForbiddenException("Bạn không có quyền nộp bằng chứng cho Ticket này.");
+        }
+
+        // Kiểm tra trạng thái Ticket: Chỉ cho phép bổ sung khi OPEN hoặc IN_REVIEW
+        if (ticket.getStatus() != MentoringTicketStatus.OPEN && ticket.getStatus() != MentoringTicketStatus.IN_REVIEW) {
+            throw new BadRequestException("Ticket này đã ở trạng thái " + ticket.getStatus() + ", không thể bổ sung thêm bằng chứng.");
+        }
+
+        MentoringTicketEvidence evidence = MentoringTicketEvidence.builder()
+                .ticket(ticket)
+                .uploadedBy(currentUser)
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .fileUrl(request.getFileUrl())
+                .fileName(request.getFileName())
+                .fileSize(request.getFileSize())
+                .fileType(request.getFileType())
+                .build();
+
+        MentoringTicketEvidence savedEvidence = evidenceRepository.save(evidence);
+
+        // Gửi tin nhắn hệ thống realtime vào Chat for Task nếu có Conversation
+        MentoringTask task = ticket.getTask();
+        if (task != null && task.getConversation() != null) {
+            String senderRole = isStudent ? "Học viên" : "Mentor";
+            String fileDisplay = request.getFileName() != null && !request.getFileName().isBlank()
+                    ? request.getFileName()
+                    : request.getFileUrl();
+            String systemMessage = String.format(
+                    "📎 [BẰNG CHỨNG MỚI] %s vừa bổ sung bằng chứng tranh chấp cho vé [%s]: \"%s\".\n" +
+                    "• Tệp đính kèm: %s\n" +
+                    "Ban Quản Trị và các bên liên quan đã có thể xem tài liệu đối chứng này.",
+                    senderRole, ticket.getTicketCode(), request.getTitle(), fileDisplay
+            );
+            try {
+                mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, systemMessage);
+            } catch (Exception e) {
+                log.error("Không thể gửi tin nhắn hệ thống khi nộp bằng chứng: {}", e.getMessage());
+            }
+        }
+
+        return toEvidenceResponse(savedEvidence);
+    }
+
     // =========================================================================
     // HELPER METHODS
     // =========================================================================

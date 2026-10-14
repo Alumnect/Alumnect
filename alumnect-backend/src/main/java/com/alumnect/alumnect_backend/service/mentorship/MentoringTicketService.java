@@ -70,4 +70,15 @@ public interface MentoringTicketService {
      */
     List<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse> getTicketEvidences(
             Long currentUserId, Long ticketId);
+
+    /**
+     * Bổ sung bằng chứng tranh chấp cho Ticket đang hoạt động (UC113).
+     *
+     * @param currentUserId ID người gửi (Student hoặc Mentor)
+     * @param ticketId ID vé khiếu nại
+     * @param request Dữ liệu bằng chứng
+     * @return Dữ liệu bằng chứng vừa thêm
+     */
+    com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse addTicketEvidence(
+            Long currentUserId, Long ticketId, com.alumnect.alumnect_backend.dto.request.mentorship.TicketEvidenceRequest request);
 }

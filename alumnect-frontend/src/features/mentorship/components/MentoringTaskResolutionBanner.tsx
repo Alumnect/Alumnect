@@ -12,6 +12,7 @@ import {
   FileCheck,
   CheckCircle2,
   AlertTriangle,
+  Paperclip,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
@@ -40,12 +41,14 @@ interface MentoringTaskResolutionBannerProps {
   canConfirmCompletion?: boolean
   canSubmitSettlementTicket?: boolean
   canCreateDisputeTicket?: boolean
+  canSubmitDisputeEvidence?: boolean
   isStudent?: boolean
   isMentor?: boolean
   onOpenTopUpPayment?: () => void
   onOpenReviewCompletion?: () => void
   onOpenSubmitSettlementTicket?: () => void
   onOpenCreateDispute?: () => void
+  onOpenAddEvidence?: () => void
   onRefresh?: () => void
 }
 
@@ -60,11 +63,13 @@ export function MentoringTaskResolutionBanner({
   canConfirmCompletion,
   canSubmitSettlementTicket,
   canCreateDisputeTicket,
+  canSubmitDisputeEvidence: _canSubmitDisputeEvidence,
   isStudent,
   onOpenTopUpPayment,
   onOpenReviewCompletion,
   onOpenSubmitSettlementTicket,
   onOpenCreateDispute,
+  onOpenAddEvidence,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
   const [rejectModal, setRejectModal] = useState<{
@@ -500,6 +505,17 @@ export function MentoringTaskResolutionBanner({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            {onOpenAddEvidence && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onOpenAddEvidence}
+                className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10 text-xs font-semibold shadow-xs"
+              >
+                <Paperclip className="w-3.5 h-3.5 mr-1.5" />
+                Bằng chứng tranh chấp
+              </Button>
+            )}
             <span className="text-xs px-3 py-1.5 rounded-lg bg-destructive/15 text-destructive font-bold border border-destructive/30">
               Đang phân xử
             </span>
@@ -544,6 +560,17 @@ export function MentoringTaskResolutionBanner({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            {onOpenAddEvidence && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onOpenAddEvidence}
+                className="h-8 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 text-xs font-semibold shadow-xs"
+              >
+                <Paperclip className="w-3.5 h-3.5 mr-1.5" />
+                Chứng từ & Bằng chứng
+              </Button>
+            )}
             <span className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-300 font-semibold border border-blue-500/20">
               Đang giải quyết
             </span>

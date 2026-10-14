@@ -98,6 +98,19 @@ public class MentoringTicketController {
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bằng chứng thành công", response));
     }
 
+    @PostMapping("/tickets/{ticketId}/evidences")
+    @Operation(summary = "Bổ sung bằng chứng tranh chấp cho Ticket (UC113)",
+               description = "Cho phép Student hoặc Mentor bổ sung tài liệu, hình ảnh minh chứng vào Ticket đang mở")
+    public ResponseEntity<ApiResponse<com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse>> addTicketEvidence(
+            @PathVariable Long ticketId,
+            @Valid @RequestBody com.alumnect.alumnect_backend.dto.request.mentorship.TicketEvidenceRequest request) {
+        Long currentUserId = getCurrentUserId();
+        com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse response =
+                ticketService.addTicketEvidence(currentUserId, ticketId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Bổ sung bằng chứng tranh chấp thành công", response));
+    }
+
     private Long getCurrentUserId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)

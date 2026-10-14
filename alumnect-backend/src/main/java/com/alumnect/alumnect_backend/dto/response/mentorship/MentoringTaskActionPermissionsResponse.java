@@ -53,4 +53,7 @@ public class MentoringTaskActionPermissionsResponse {
 
     /** Cho phép tạo Dispute Ticket yêu cầu Admin can thiệp giải quyết tranh chấp (UC112) */
     private Boolean canCreateDisputeTicket;
+
+    /** Cho phép nộp thêm bằng chứng tranh chấp vào Ticket đang mở (UC113) */
+    private Boolean canSubmitDisputeEvidence;
 }

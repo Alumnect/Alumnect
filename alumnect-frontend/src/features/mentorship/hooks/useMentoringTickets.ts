@@ -5,6 +5,7 @@ import type {
   MentoringDisputeTicket,
   CreateDisputeTicketPayload,
   TicketEvidence,
+  TicketEvidencePayload,
 } from '../model/mentoringTaskTypes'
 
 /**
@@ -95,5 +96,27 @@ export function useTicketEvidences(ticketId?: number, enabled = true) {
     queryFn: () => (ticketId ? mentoringTaskApi.getTicketEvidences(ticketId) : Promise.resolve([])),
     enabled: !!ticketId && enabled,
     staleTime: 30000,
+  })
+}
+
+/**
+ * Hook bổ sung bằng chứng tranh chấp cho Ticket đang mở (UC113).
+ */
+export function useAddTicketEvidence(taskId: number, ticketId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    TicketEvidence,
+    Error,
+    TicketEvidencePayload
+  >({
+    mutationFn: (payload) => mentoringTaskApi.addTicketEvidence(ticketId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentoring-task', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-ticket', ticketId, 'evidences'] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-task', taskId, 'tickets'] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-task', taskId, 'tickets', 'active'] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-tasks'] })
+    },
   })
 }

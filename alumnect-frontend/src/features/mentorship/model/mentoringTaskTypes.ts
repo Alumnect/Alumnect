@@ -265,6 +265,7 @@ export interface MentoringTaskActionPermissions {
   canConfirmCompletion?: boolean
   canSubmitSettlementTicket?: boolean
   canCreateDisputeTicket?: boolean
+  canSubmitDisputeEvidence?: boolean
 }
 
 /**
