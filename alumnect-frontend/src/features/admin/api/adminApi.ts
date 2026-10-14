@@ -342,6 +342,82 @@ export const adminApi = {
    */
   resolveAdminTicket: (ticketId: number, payload: AdminResolveTicketPayload) =>
     http.post<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}/resolve`, payload),
+
+  /**
+   * Xem danh sách Quỹ và dòng tiền theo Task cho Quản trị viên (UC121)
+   */
+  getAdminTaskFunds: (params: {
+    keyword?: string
+    status?: string
+    settlementStatus?: string
+    page?: number
+    size?: number
+  }) =>
+    http.get<any, ApiResponse<PageResponse<AdminTaskFundSummaryDto>>>('/admin/mentoring/finances/tasks', { params }),
+
+  /**
+   * Xem chi tiết Sổ quỹ và lịch sử tài chính của Task (UC121)
+   */
+  getAdminTaskFundDetail: (taskId: number) =>
+    http.get<any, ApiResponse<AdminTaskFundDetailDto>>(`/admin/mentoring/finances/tasks/${taskId}`),
+}
+
+export interface AdminTaskParticipantDto {
+  id: number
+  fullName: string
+  email: string
+  avatarUrl?: string
+  role?: string
+}
+
+export interface AdminTaskFundSummaryDto {
+  taskId: number
+  taskTitle: string
+  taskStatus: string
+  requestId?: number
+  student: AdminTaskParticipantDto
+  mentor: AdminTaskParticipantDto
+  initialPrice: number
+  totalTopUpAmount: number
+  totalCollected: number
+  escrowHoldingAmount: number
+  lockedAmount: number
+  platformFee: number
+  totalPayout: number
+  totalRefund: number
+  currentDeadline?: string
+  settlementStatus: 'HOLDING_ESCROW' | 'SETTLED' | 'PARTIALLY_SETTLED' | 'UNSETTLED' | string
+  activeTicketId?: number
+  activeTicketCode?: string
+  activeTicketStatus?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MentoringPaymentLedgerDto {
+  id: number
+  paymentId?: number
+  taskId?: number
+  requestId?: number
+  dealId?: number
+  student?: AdminTaskParticipantDto
+  mentor?: AdminTaskParticipantDto
+  amount: number
+  transactionType: 'ESCROW_COLLECTION' | 'PAYOUT' | 'REFUND' | 'TOP_UP' | string
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | string
+  providerReference?: string
+  deadlineSnapshot?: string
+  note?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AdminTaskFundDetailDto {
+  summary: AdminTaskFundSummaryDto
+  ledgers: MentoringPaymentLedgerDto[]
+  extensionHistory: any[]
+  amendmentHistory: any[]
+  disputeTickets: any[]
 }
 
 

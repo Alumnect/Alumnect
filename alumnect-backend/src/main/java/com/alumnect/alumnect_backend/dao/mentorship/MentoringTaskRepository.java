@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -15,7 +16,7 @@ import java.util.Optional;
  * Repository truy vấn dữ liệu Mentoring Task (UC105).
  */
 @Repository
-public interface MentoringTaskRepository extends JpaRepository<MentoringTask, Long> {
+public interface MentoringTaskRepository extends JpaRepository<MentoringTask, Long>, JpaSpecificationExecutor<MentoringTask> {
 
     /** Tìm Task theo dealId */
     Optional<MentoringTask> findByDealId(Long dealId);

@@ -43,7 +43,7 @@ import { MentoringDealsPage } from '@/pages/app/MentoringDealsPage'
 import { MentoringChatPage } from '@/pages/app/MentoringChatPage'
 import { MyMentoringTasksPage } from '@/pages/app/MyMentoringTasksPage'
 import { MentoringTaskDetailPage } from '@/pages/app/MentoringTaskDetailPage'
-import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage, AdminMentoringTicketsPage } from '@/features/admin'
+import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage, AdminMentoringTicketsPage, AdminMentoringFinancesPage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
 function App() {
@@ -133,6 +133,7 @@ function App() {
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="mentor-packages" element={<AdminMentorPackagesPage />} />
             <Route path="mentoring-tickets" element={<AdminMentoringTicketsPage />} />
+            <Route path="mentoring-finances" element={<AdminMentoringFinancesPage />} />
             <Route path="posts" element={<AdminPostsPage />} />
             <Route path="posts/:id" element={<AdminPostDetailPage />} />
             <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />

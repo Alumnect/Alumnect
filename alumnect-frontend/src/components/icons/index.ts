@@ -45,6 +45,7 @@ export {
   Bell as NotificationIcon,
   CreditCard,
   CreditCard as SubscriptionIcon,
+  Coins,
   User,
   User as ProfileIcon,
   SquaresFour,

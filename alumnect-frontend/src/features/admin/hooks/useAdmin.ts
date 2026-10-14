@@ -483,6 +483,42 @@ export function useResolveAdminTicket() {
   })
 }
 
+/**
+ * Hook Admin xem danh sách Quỹ và dòng tiền theo Task (UC121)
+ */
+export function useAdminTaskFunds(filters: {
+  keyword?: string
+  status?: string
+  settlementStatus?: string
+  page: number
+  size: number
+}) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-finances-tasks', filters],
+    queryFn: async () => {
+      const response = await adminApi.getAdminTaskFunds(filters)
+      return response.data
+    },
+    refetchInterval: 10000, // Tự động cập nhật số liệu quỹ định kỳ 10s
+  })
+}
+
+/**
+ * Hook Admin xem chi tiết Sổ quỹ và toàn bộ lịch sử tài chính của Task (UC121)
+ */
+export function useAdminTaskFundDetail(taskId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-task-fund-detail', taskId],
+    queryFn: async () => {
+      if (!taskId) return null
+      const response = await adminApi.getAdminTaskFundDetail(taskId)
+      return response.data
+    },
+    enabled: !!taskId,
+  })
+}
+
+
 
 
 

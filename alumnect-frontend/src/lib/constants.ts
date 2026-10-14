@@ -23,6 +23,7 @@ import {
   UserGear,
   Megaphone,
   GraduationCap,
+  Coins,
 } from '@/components/icons'
 
 export const BRAND = {
@@ -81,6 +82,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Tổng quan', to: '/admin', icon: SquaresFour },
   { label: 'Quản lý Cố vấn', to: '/admin/mentor-packages', icon: Compass },
   { label: 'Tranh chấp & Ticket', to: '/admin/mentoring-tickets', icon: ShieldCheck },
+  { label: 'Sổ quỹ Mentoring', to: '/admin/mentoring-finances', icon: Coins },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
