@@ -32,11 +32,14 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
     const isFirst = rank === 1
 
     return (
-      <div className={cn('relative pt-4', isFirst ? 'z-10 md:-translate-y-2' : 'z-0')}>
+      <div className={cn(
+        'relative pt-4',
+        isFirst ? 'z-10 md:order-2 md:-translate-y-2' : rank === 2 ? 'z-0 md:order-1' : 'z-0 md:order-3',
+      )}>
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider shadow-md',
+              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider shadow-md',
               rankStyle.badge,
             )}
           >
@@ -72,7 +75,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
             <div>
               <Link
                 to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
-                className="line-clamp-1 text-base font-extrabold text-plum-900 transition-colors hover:text-brand-600 dark:text-[#e4e6eb] dark:hover:text-brand-400"
+                className="line-clamp-1 text-base font-bold text-plum-900 transition-colors hover:text-brand-600 dark:text-[#e4e6eb] dark:hover:text-brand-400"
               >
                 {mentor.fullName}
               </Link>
@@ -84,22 +87,22 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-plum-900/10 pt-3 dark:border-[#393a3b]">
-              <div className="rounded-xl bg-gold-50 p-2 text-center dark:bg-gold-950/40">
+              <div className="rounded-xl bg-amber-50 p-2 text-center dark:bg-amber-950/40">
                 <span className="flex items-center justify-center gap-1 text-[11px] font-bold text-gold-700 dark:text-gold-300">
                   <Flame className="h-3.5 w-3.5 text-gold-500" />
                   Uy tín
                 </span>
-                <p className="mt-0.5 text-sm font-extrabold text-gold-900 dark:text-gold-200">
+                <p className="mt-0.5 text-sm font-bold text-amber-900 dark:text-amber-200">
                   {mentor.reputationScore}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-brand-50 p-2 text-center dark:bg-brand-950/40">
+              <div className="rounded-xl bg-brand-50 p-2 text-center dark:bg-brand-700/40">
                 <span className="flex items-center justify-center gap-1 text-[11px] font-bold text-brand-700 dark:text-brand-300">
                   <CheckCircle2 className="h-3.5 w-3.5 text-brand-500" />
                   Nhiệm vụ
                 </span>
-                <p className="mt-0.5 text-sm font-extrabold text-brand-900 dark:text-brand-200">
+                <p className="mt-0.5 text-sm font-bold text-brand-700 dark:text-brand-200">
                   {mentor.completedTasks}
                 </p>
               </div>
@@ -134,26 +137,26 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Trophy className="h-4 w-4 text-gold-500" />
-        <h2 className="font-heading text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
-          Top 3 Cố Vấn Dẫn Đầu
+        <h2 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+          Top 3 cố vấn dẫn đầu
         </h2>
       </div>
 
       <div className="grid grid-cols-1 items-end gap-5 pt-1 md:grid-cols-3">
-        {second && renderPodiumCard(second, 2, {
-          badge: 'border border-slate-300 bg-slate-200 text-slate-800',
-          border: 'border-slate-300/80',
-          shadow: 'hover:shadow-slate-400/20',
-          icon: <Medal className="h-3.5 w-3.5 text-slate-600" />,
-          rankTitle: 'Hạng 2',
-        })}
-
         {first && renderPodiumCard(first, 1, {
-          badge: 'bg-gradient-to-r from-amber-400 to-gold-500 text-white shadow-gold-500/30',
+          badge: 'bg-gradient-to-r from-amber-400 to-gold-500 text-plum-900 shadow-gold-500/30',
           border: 'border-gold-400 ring-2 ring-gold-400/30',
           shadow: 'shadow-lg shadow-gold-500/15 hover:shadow-xl hover:shadow-gold-500/25',
-          icon: <Trophy className="h-3.5 w-3.5 text-white" />,
+          icon: <Trophy className="h-3.5 w-3.5 text-plum-900" />,
           rankTitle: 'Quán quân #1',
+        })}
+
+        {second && renderPodiumCard(second, 2, {
+          badge: 'border border-plum-300 bg-cream-300 text-plum-800',
+          border: 'border-plum-300/80',
+          shadow: 'hover:shadow-plum-400/20',
+          icon: <Medal className="h-3.5 w-3.5 text-plum-600" />,
+          rankTitle: 'Hạng 2',
         })}
 
         {third && renderPodiumCard(third, 3, {

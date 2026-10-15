@@ -28,7 +28,7 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-heading font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="text-xl font-display font-bold text-plum-900 dark:text-[#e4e6eb]">
             {isNotFound ? 'Không tìm thấy Mentor' : 'Đã xảy ra lỗi kết nối'}
           </h2>
           <p className="text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">

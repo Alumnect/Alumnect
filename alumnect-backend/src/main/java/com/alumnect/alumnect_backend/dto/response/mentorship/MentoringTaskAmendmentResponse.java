@@ -57,4 +57,8 @@ public class MentoringTaskAmendmentResponse {
     private Boolean canConfirm;
     private Boolean canReject;
     private Boolean canTopUp; // Student có thể thanh toán top-up nếu status == AWAITING_TOPUP
+    /** Người tạo (Mentor) được hủy đề xuất đang chờ phản hồi hoặc chờ thanh toán */
+    private Boolean canCancel;
+    /** Học viên được từ chối thanh toán bổ sung (đề xuất chuyển REJECTED) */
+    private Boolean canDeclineTopUp;
 }

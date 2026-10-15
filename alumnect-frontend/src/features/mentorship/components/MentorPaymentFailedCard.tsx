@@ -43,7 +43,7 @@ export function MentorPaymentFailedCard({
             {status === 'EXPIRED' ? 'Đã Hết Hạn' : status === 'CANCELLED' ? 'Đã Hủy' : 'Thanh Toán Thất Bại'}
           </Badge>
         </div>
-        <h2 className="font-heading text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
           Không Thể Hoàn Tất Thanh Toán
         </h2>
         <p className="text-sm text-plum-600 dark:text-[#b0b3b8] max-w-md mx-auto">

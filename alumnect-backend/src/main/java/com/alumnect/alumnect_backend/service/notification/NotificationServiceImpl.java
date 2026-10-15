@@ -338,11 +338,114 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void sendMentoringTaskActivatedNotification(
+            User student,
+            User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task
+    ) {
+        if (student == null || mentor == null || task == null) {
+            return;
+        }
+
+        String taskTitle = task.getTaskTitle() != null && !task.getTaskTitle().isBlank()
+                ? task.getTaskTitle().trim()
+                : "Nhiệm vụ Mentoring";
+        String snippet = taskTitle.length() > 50 ? taskTitle.substring(0, 47) + "..." : taskTitle;
+
+        Notification studentNotification = Notification.builder()
+                .recipient(student)
+                .sender(null)
+                .type(NotificationType.MENTORING_TASK)
+                .title("Thanh toán thành công")
+                .content("Task \"" + snippet + "\" đã được kích hoạt và sẵn sàng bắt đầu.")
+                .targetType("MENTORING_TASK")
+                .targetId(String.valueOf(task.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+        studentNotification = notificationRepository.save(studentNotification);
+        pushRealtimeNotification(student, studentNotification);
+
+        Notification mentorNotification = Notification.builder()
+                .recipient(mentor)
+                .sender(null)
+                .type(NotificationType.MENTORING_TASK)
+                .title("Task đã sẵn sàng")
+                .content("Học viên đã thanh toán. Task \"" + snippet + "\" đã được kích hoạt.")
+                .targetType("MENTORING_TASK")
+                .targetId(String.valueOf(task.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+        mentorNotification = notificationRepository.save(mentorNotification);
+        pushRealtimeNotification(mentor, mentorNotification);
+
+        log.info("Đã gửi thông báo kích hoạt Task id={} tới Student id={} và Mentor id={}",
+                task.getId(), student.getId(), mentor.getId());
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringTaskEventNotification(
+            User sender,
+            User recipient,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            String eventType,
+            String eventId,
+            String title,
+            String content
+    ) {
+        if (recipient == null || task == null || eventType == null || eventId == null) {
+            return;
+        }
+
+        String targetType = "MENTORING_TASK_" + eventType;
+        String targetId = task.getId() + ":" + eventId;
+        if (notificationRepository.existsByRecipientIdAndTypeAndTargetTypeAndTargetId(
+                recipient.getId(), NotificationType.MENTORING_TASK, targetType, targetId)) {
+            return;
+        }
+
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .sender(sender)
+                .type(NotificationType.MENTORING_TASK)
+                .title(title)
+                .content(content)
+                .targetType(targetType)
+                .targetId(targetId)
+                .senderCount(1)
+                .isRead(false)
+                .build();
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(recipient, notification);
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringGroupNotification(User sender, User recipient,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringGroup group,
+            String eventType, String eventId, String title, String content) {
+        if (recipient == null || group == null || eventType == null || eventId == null) return;
+        String targetType = "MENTORING_GROUP_" + eventType;
+        String targetId = group.getId() + ":" + eventId;
+        if (notificationRepository.existsByRecipientIdAndTypeAndTargetTypeAndTargetId(
+                recipient.getId(), NotificationType.MENTORING_GROUP, targetType, targetId)) return;
+        Notification notification = notificationRepository.save(Notification.builder()
+                .recipient(recipient).sender(sender).type(NotificationType.MENTORING_GROUP)
+                .title(title).content(content).targetType(targetType).targetId(targetId)
+                .senderCount(1).isRead(false).build());
+        pushRealtimeNotification(recipient, notification);
+    }
+
+    @Override
+    @Transactional
     public void sendMentoringWorkLogNotification(
             User mentor,
             User student,
             com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
-            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog,
+            boolean taskJustStarted
     ) {
         if (mentor == null || student == null || task == null || workLog == null) {
             return;
@@ -356,8 +459,10 @@ public class NotificationServiceImpl implements NotificationService {
                 .recipient(student)
                 .sender(mentor)
                 .type(NotificationType.MENTORING_WORK_LOG)
-                .title("Cập nhật nhật ký công việc Mentoring")
-                .content(mentorName + " đã cập nhật nhật ký công việc cho nhiệm vụ \"" + snippet + "\" và đang chờ bạn xác nhận.")
+                .title(taskJustStarted ? "Task đã bắt đầu thực hiện" : "Cập nhật nhật ký công việc Mentoring")
+                .content(taskJustStarted
+                        ? mentorName + " đã bắt đầu Task \"" + snippet + "\" và gửi Work Log đầu tiên chờ bạn xác nhận."
+                        : mentorName + " đã cập nhật nhật ký công việc cho nhiệm vụ \"" + snippet + "\" và đang chờ bạn xác nhận.")
                 .targetType("MENTORING_TASK")
                 .targetId(String.valueOf(task.getId()))
                 .senderCount(1)
@@ -642,6 +747,20 @@ public class NotificationServiceImpl implements NotificationService {
     /**
      * Đẩy thông báo thời gian thực đến người nhận qua WebSocket STOMP cá nhân.
      */
+    @Override
+    @Transactional
+    public void sendMentoringAccountNotification(User sender, User recipient, String targetType, String targetId,
+                                                 String title, String content) {
+        if (recipient == null || targetType == null || targetId == null) return;
+        if (notificationRepository.existsByRecipientIdAndTypeAndTargetTypeAndTargetId(
+                recipient.getId(), NotificationType.MENTORING_ACCOUNT, targetType, targetId)) return;
+        Notification notification = notificationRepository.save(Notification.builder()
+                .recipient(recipient).sender(sender).type(NotificationType.MENTORING_ACCOUNT)
+                .title(title).content(content).targetType(targetType).targetId(targetId)
+                .senderCount(1).isRead(false).build());
+        pushRealtimeNotification(recipient, notification);
+    }
+
     private void pushRealtimeNotification(User recipient, Notification notification) {
         if (recipient == null || notification == null) {
             return;

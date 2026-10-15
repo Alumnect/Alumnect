@@ -11,7 +11,6 @@ import { Container, Button, EmptyState } from '@/components/ui'
 import {
   MentoringTermsGate,
   MentoringTaskBadge,
-  MentoringTaskStageBadge,
   MentoringTaskStageProgressBar,
   MentoringTaskOverviewCard,
   MentoringTaskParticipantsCard,
@@ -56,7 +55,7 @@ function MentoringTaskDetailContent() {
     )
   }
 
-  if (isError || !taskDetail) {
+  if (isError || !taskDetail || !taskDetail.overview) {
     return (
       <EmptyState
         title="Không tìm thấy nhiệm vụ"
@@ -73,7 +72,7 @@ function MentoringTaskDetailContent() {
             >
               Quay lại danh sách
             </Button>
-            <Button onClick={() => refetch()} className="rounded-2xl bg-teal-600 text-white">
+            <Button onClick={() => refetch()} className="rounded-2xl">
               Thử lại
             </Button>
           </div>
@@ -82,35 +81,16 @@ function MentoringTaskDetailContent() {
     )
   }
 
-  const detail = ((taskDetail as any)?.data ?? taskDetail) as Partial<typeof taskDetail> & Record<string, any>
-  const overview = detail?.overview ?? {
-    id: detail?.id ?? taskId ?? 0,
-    taskTitle: detail?.taskTitle || 'Nhiệm vụ Mentoring',
-    taskScope: detail?.taskScope || '',
-    agreedPrice: detail?.agreedPrice || 0,
-    status: detail?.status || 'PREPARATION',
-    uiStage: detail?.uiStage || 'PREPARATION',
-    progressPercentage: detail?.progressPercentage || 15,
-    workingMode: detail?.workingMode || 'ONLINE',
-    participationType: detail?.participationType || 'INDIVIDUAL',
-    taskType: detail?.taskType || 'OTHER',
-    startedAt: detail?.startedAt,
-    deadline: detail?.deadline,
-    completedAt: detail?.completedAt,
-    daysRemaining: detail?.daysRemaining || 0,
-    isOverdue: detail?.isOverdue || false,
-    totalWorkLogs: detail?.totalWorkLogs || 0,
-    confirmedWorkLogs: detail?.confirmedWorkLogs || 0,
-    pendingWorkLogs: detail?.pendingWorkLogs || 0,
-  }
-  const deal = detail?.deal ?? null
-  const student = detail?.student ?? null
-  const mentor = detail?.mentor ?? null
-  const conversationId = detail?.conversationId ?? null
-  const payment = detail?.payment ?? null
-  const workLogs = detail?.workLogs ?? []
-  const history = detail?.history ?? []
-  const permissions = detail?.permissions ?? {
+  const detail = taskDetail
+  const overview = detail.overview
+  const deal = detail.deal ?? null
+  const student = detail.student ?? null
+  const mentor = detail.mentor ?? null
+  const conversationId = detail.conversationId ?? null
+  const payment = detail.payment ?? null
+  const workLogs = detail.workLogs ?? []
+  const history = detail.history ?? []
+  const permissions = detail.permissions ?? {
     canAddWorkLog: false,
     canEditWorkLog: false,
     canConfirmWorkLog: false,
@@ -135,94 +115,82 @@ function MentoringTaskDetailContent() {
     setSelectedEditingLog(null)
   }
 
-  return (
-    <div className="space-y-8 pb-12">
-      {/* Top Navigation & Status Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <button
-          onClick={() => navigate('/app/mentoring/tasks')}
-          className="group inline-flex items-center gap-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-card border border-border/80 shadow-2xs group-hover:bg-muted">
-            <ArrowLeft className="h-4 w-4" />
-          </div>
-          <span>Danh sách nhiệm vụ Mentoring</span>
-        </button>
+  const overdue = Boolean(overview.overdue ?? overview.isOverdue)
 
-        <div className="flex items-center gap-3">
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Điều hướng & thao tác chính */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => navigate('/app/mentoring/tasks')}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-plum-600 transition hover:text-brand-600 dark:text-[#b0b3b8]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Nhiệm vụ của tôi
+        </button>
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="rounded-2xl border-border bg-card/60 backdrop-blur-xs text-xs font-semibold gap-2 shadow-2xs"
+            leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />}
+            className="h-9 rounded-xl text-xs"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>Cập nhật</span>
+            Cập nhật
           </Button>
-
           {conversationId && (
             <Button
               size="sm"
               onClick={() => navigate(`/app/mentoring/chats/${conversationId}`)}
-              className="rounded-2xl bg-teal-600 text-white hover:bg-teal-700 text-xs font-semibold gap-1.5 shadow-sm shadow-teal-600/20"
+              leftIcon={<MessageSquare className="h-3.5 w-3.5" />}
+              className="h-9 rounded-xl text-xs"
             >
-              <MessageSquare className="h-3.5 w-3.5" />
-              <span>Mở Chat for Task</span>
+              Mở trao đổi
             </Button>
           )}
         </div>
       </div>
 
-      {/* Task Header Card */}
-      <div className="rounded-3xl border border-teal-200/50 bg-gradient-to-r from-teal-50/70 via-card to-sky-50/50 p-6 sm:p-8 shadow-xs dark:border-white/10 dark:from-teal-950/20 dark:via-[#242526] dark:to-sky-950/20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400 bg-teal-100/70 dark:bg-teal-950/70 px-2.5 py-0.5 rounded-lg">
-                Task #{overview.id}
-              </span>
-              <MentoringTaskStageBadge stage={overview.uiStage} />
-              <MentoringTaskBadge status={overview.status} />
-            </div>
-            <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-black text-plum-900 dark:text-[#f0f2f5] tracking-tight">
-              {overview.taskTitle}
-            </h1>
-          </div>
+      {/* Tiêu đề Task & tiến độ */}
+      <header className="rounded-3xl border border-plum-900/[0.08] bg-white p-5 shadow-xs dark:border-white/10 dark:bg-[#242526] sm:p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-lg bg-cream-200 px-2 py-0.5 font-mono text-xs font-semibold text-plum-600 dark:bg-white/10 dark:text-[#b0b3b8]">
+            Task #{overview.id}
+          </span>
+          <MentoringTaskBadge status={overview.status} />
+          {overdue && (
+            <span className="rounded-full bg-coral-100 px-2.5 py-0.5 text-xs font-semibold text-coral-700 dark:bg-coral-900/40 dark:text-coral-300">
+              Quá hạn
+            </span>
+          )}
         </div>
-
-        {/* Stage Progress Bar Component */}
-        <div className="pt-2">
-          <MentoringTaskStageProgressBar
-            currentStage={overview.uiStage}
-            progressPercentage={overview.progressPercentage}
-          />
+        <h1 className="mt-2 break-words font-display text-xl font-bold tracking-tight text-plum-900 dark:text-[#f0f2f5] sm:text-2xl">
+          {overview.taskTitle}
+        </h1>
+        <div className="mt-5">
+          <MentoringTaskStageProgressBar currentStage={overview.uiStage} progressPercentage={overview.progressPercentage} />
         </div>
-      </div>
+      </header>
 
-      {/* Alert Notices (Read-Only / Disputed) */}
       {permissions.isReadOnly && overview.status === 'COMPLETED' && (
-        <div className="flex items-center gap-3 rounded-2xl border border-teal-300 bg-teal-50/80 p-4 text-xs font-medium text-teal-900 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-200">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-teal-600" />
-          <div className="leading-relaxed">
-            Nhiệm vụ này đã được <strong>hoàn thành thành công</strong>. Toàn bộ hồ sơ công việc, thỏa thuận và Work Log được bảo lưu ở chế độ chỉ đọc (Read-only).
-          </div>
+        <div className="flex items-center gap-2.5 rounded-2xl border border-mint-200 bg-mint-50 px-4 py-3 text-sm text-mint-800 dark:border-mint-700/30 dark:bg-mint-900/20 dark:text-mint-300">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          Task đã hoàn thành. Toàn bộ thông tin và Work Log được lưu ở chế độ chỉ xem.
         </div>
       )}
-
       {permissions.isDisputed && (
-        <div className="flex items-center gap-3 rounded-2xl border border-rose-300 bg-rose-50/80 p-4 text-xs font-medium text-rose-900 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-rose-600" />
-          <div className="leading-relaxed">
-            Nhiệm vụ đang ở trạng thái <strong>Khiếu nại / Tranh chấp (Disputed)</strong>. Các thao tác ghi nhận Work Log mới tạm thời bị khóa nhằm phục vụ đối soát và giải quyết tranh chấp.
-          </div>
+        <div className="flex items-center gap-2.5 rounded-2xl border border-coral-200 bg-coral-50 px-4 py-3 text-sm text-coral-700 dark:border-coral-700/40 dark:bg-coral-900/20 dark:text-coral-300">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Task đang được Ban Quản Trị phân xử khiếu nại. Work Log mới tạm thời bị khóa.
         </div>
       )}
 
       {/* Main 2-Column Content Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column (2/3): Task Overview, Work Logs, Task History */}
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Cột trái: thông tin công việc, Work Log, lịch sử */}
+        <div className="space-y-6 lg:col-span-2">
           {/* Section 1: Task Overview */}
           <MentoringTaskOverviewCard overview={overview} />
 
@@ -241,8 +209,8 @@ function MentoringTaskDetailContent() {
           <MentoringTaskHistoryTimeline history={history} />
         </div>
 
-        {/* Right Column (1/3): Participants, Deal Summary, Payment */}
-        <div className="space-y-8">
+        {/* Cột phải: người tham gia, thỏa thuận, thanh toán */}
+        <div className="space-y-6">
           {/* Participants */}
           {(student || mentor) && (
             <MentoringTaskParticipantsCard student={student} mentor={mentor} />
@@ -252,12 +220,7 @@ function MentoringTaskDetailContent() {
           {deal && <MentoringTaskDealSection deal={deal} conversationId={conversationId} />}
 
           {/* Payment Summary */}
-          {payment && (
-            <MentoringTaskPaymentCard
-              payment={payment}
-              agreedPrice={deal?.agreedPrice ?? overview?.agreedPrice}
-            />
-          )}
+          {payment && <MentoringTaskPaymentCard payment={payment} />}
         </div>
       </div>
 

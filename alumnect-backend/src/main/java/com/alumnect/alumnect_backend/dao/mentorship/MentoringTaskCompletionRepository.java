@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskCompletion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,4 +24,7 @@ public interface MentoringTaskCompletionRepository extends JpaRepository<Mentori
     /** Lấy lần nộp nghiệm thu đang ở trạng thái chỉ định (thường là PENDING) */
     Optional<MentoringTaskCompletion> findFirstByTaskIdAndStatusOrderByCreatedAtDesc(
             Long taskId, MentoringCompletionStatus status);
+
+    List<MentoringTaskCompletion> findByStatusAndCreatedAtBefore(
+            MentoringCompletionStatus status, Instant createdAt);
 }

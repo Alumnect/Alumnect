@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementPr
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,8 @@ public interface MentoringTaskSettlementProposalRepository extends JpaRepository
     /** Lấy toàn bộ lịch sử đề xuất phân chia tiền theo Task ID theo thứ tự mới nhất */
     List<MentoringTaskSettlementProposal> findByTaskIdOrderByCreatedAtDesc(Long taskId);
 
+    List<MentoringTaskSettlementProposal> findByTaskIdAndStatus(Long taskId, MentoringSettlementProposalStatus status);
+
     /** Lấy toàn bộ lịch sử đề xuất phân chia tiền theo Conversation ID */
     List<MentoringTaskSettlementProposal> findByConversationIdOrderByCreatedAtDesc(Long conversationId);
 
@@ -28,4 +31,7 @@ public interface MentoringTaskSettlementProposalRepository extends JpaRepository
 
     /** Lấy đề xuất đã được ACCEPTED của một Task */
     Optional<MentoringTaskSettlementProposal> findFirstByTaskIdAndStatus(Long taskId, MentoringSettlementProposalStatus status);
+
+    List<MentoringTaskSettlementProposal> findByStatusAndCreatedAtBefore(
+            MentoringSettlementProposalStatus status, Instant createdAt);
 }

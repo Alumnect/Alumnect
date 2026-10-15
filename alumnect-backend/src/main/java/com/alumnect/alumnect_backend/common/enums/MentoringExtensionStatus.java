@@ -14,5 +14,7 @@ public enum MentoringExtensionStatus {
     REJECTED,
 
     /** Đã bị thay thế bởi một đề xuất gia hạn mới hơn */
-    SUPERSEDED
+    SUPERSEDED,
+    /** Người tạo đã hủy đề xuất, hoặc hệ thống đóng khi Task không còn hoạt động */
+    CANCELLED
 }

@@ -54,7 +54,12 @@ export interface Conversation {
 
 /** Kiểm tra cuộc hội thoại có phải Chat for Task của Mentoring Request hay không */
 export function isMentoringConversation(conv?: Partial<Conversation> | null): boolean {
-  return Boolean(conv && conv.type === 'MENTORING')
+  return Boolean(
+    conv &&
+      (conv.type === 'MENTORING' ||
+        conv.mentoringRequestId != null ||
+        conv.mentoringTaskId != null)
+  )
 }
 
 /** Kiểm tra cuộc hội thoại có phải là nhóm hay không */
@@ -107,4 +112,3 @@ export interface ChatCandidateUser {
   major?: string | null
   isFollowing: boolean
 }
-

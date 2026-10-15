@@ -24,6 +24,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
   const [isUploading, setIsUploading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const messageInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -36,8 +37,8 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
         const uploaded = await chatApi.uploadAttachment(file)
         setAttachments((prev) => [...prev, uploaded])
       }
-    } catch (err: any) {
-      toast.error(err?.message || 'Tải tệp lên thất bại. Vui lòng thử lại.')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Tải tệp lên thất bại. Vui lòng thử lại.')
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
@@ -60,10 +61,11 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
       await onSendMessage(trimmed, attachments)
       setContent('')
       setAttachments([])
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể gửi tin nhắn. Vui lòng thử lại.')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Không thể gửi tin nhắn. Vui lòng thử lại.')
     } finally {
       setIsSending(false)
+      window.setTimeout(() => messageInputRef.current?.focus(), 0)
     }
   }
 
@@ -133,6 +135,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
 
         {/* Khung nhập văn bản */}
         <input
+          ref={messageInputRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}

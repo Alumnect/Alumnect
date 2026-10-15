@@ -27,7 +27,7 @@ import java.time.Instant;
 public class ProposeDealRequest {
 
     /** ID Chat for Task (Conversation MENTORING) mà Deal Ticket thuộc về */
-    @NotNull(message = "ID Chat for Task (conversationId) không được để trống.")
+    @NotNull(message = "ID cuộc trò chuyện (conversationId) không được để trống.")
     private Long conversationId;
 
     /** Cách tạo Deal Ticket: REQUEST_ACCEPTANCE (chấp nhận theo Request) hoặc RENEGOTIATION (deal lại) */

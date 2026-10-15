@@ -21,14 +21,14 @@ export function MentorSubscriptionPage() {
     return (
       <Container className="py-12">
         <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b]">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gold-100 text-gold-600 dark:bg-gold-950/50 dark:text-gold-300">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-gold-600 dark:bg-amber-950/50 dark:text-gold-300">
             <Award className="h-7 w-7" />
           </div>
-          <h2 className="font-heading text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Dành riêng cho Cựu sinh viên (ALUMNI)
+          <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+            Tính năng dành cho cựu sinh viên
           </h2>
           <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
-            Các gói dịch vụ Mentor (kích hoạt hồ sơ và duy trì tư cách Mentor) chỉ áp dụng cho tài khoản Cựu sinh viên (Alumni). Sinh viên tham gia mạng lưới để tìm kiếm Mentor và tạo các Thỏa thuận hỗ trợ (Deal).
+            Bạn cần là cựu sinh viên đã xác thực để đăng ký gói và duy trì hồ sơ Mentor.
           </p>
         </Card>
       </Container>
@@ -36,7 +36,7 @@ export function MentorSubscriptionPage() {
   }
 
   return (
-    <Container className="py-2 sm:py-3">
+    <Container className="py-2 sm:py-4">
       <MentoringTermsGate source="BECOME_MENTOR">
         {isCheckout ? (
           <MentorPaymentCheckout onBack={() => setSearchParams({})} />

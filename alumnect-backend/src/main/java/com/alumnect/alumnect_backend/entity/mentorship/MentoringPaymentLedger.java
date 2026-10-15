@@ -74,6 +74,22 @@ public class MentoringPaymentLedger {
     @Column(name = "provider_reference", length = 150)
     private String providerReference;
 
+    /** Khóa chống gửi trùng sang PayOS, ổn định theo nghiệp vụ. */
+    @Column(name = "idempotency_key", length = 120)
+    private String idempotencyKey;
+
+    @Column(name = "provider_transaction_id", length = 150)
+    private String providerTransactionId;
+
+    @Column(name = "provider_status", length = 50)
+    private String providerStatus;
+
+    @Column(name = "failure_code", length = 100)
+    private String failureCode;
+
+    @Column(name = "transacted_at")
+    private Instant transactedAt;
+
     /** Snapshot hạn chót nhiệm vụ tại thời điểm ghi sổ quỹ */
     @Column(name = "deadline_snapshot")
     private Instant deadlineSnapshot;

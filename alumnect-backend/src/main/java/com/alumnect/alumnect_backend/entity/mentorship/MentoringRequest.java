@@ -129,6 +129,20 @@ public class MentoringRequest {
     @JoinColumn(name = "confirmed_deal_id")
     private MentoringDeal confirmedDeal;
 
+    /** Nhóm tham gia nếu participationType = GROUP. Một nhóm có thể được tái sử dụng cho nhiều Request. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private MentoringGroup group;
+
+    /** Danh sách snapshot thành viên thực tế tham gia yêu cầu (chỉ gồm leader và thành viên JOINED) */
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<MentoringRequestMember> participatingMembers = new ArrayList<>();
+
+    /** Khóa chống tạo trùng khi người dùng bấm gửi nhiều lần. */
+    @Column(name = "client_request_key", length = 64)
+    private String clientRequestKey;
+
     /** Danh sách tài liệu / tệp đính kèm liên kết với yêu cầu này */
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default

@@ -6,6 +6,7 @@ import com.alumnect.alumnect_backend.common.enums.MentorSubscriptionStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringDistributionStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringType;
 import com.alumnect.alumnect_backend.common.enums.MentoringWorkingMode;
+import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorSubscriptionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorSupportedFieldRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +37,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MentorMatchingServiceImpl implements MentorMatchingService {
 
+    private final MentorProfileRepository mentorProfileRepository;
     private final MentorSupportedFieldRepository mentorSupportedFieldRepository;
     private final MentorSubscriptionRepository mentorSubscriptionRepository;
     private final MentoringRequestDistributionRepository mentoringRequestDistributionRepository;
@@ -56,22 +59,36 @@ public class MentorMatchingServiceImpl implements MentorMatchingService {
     @Override
     @Transactional(readOnly = true)
     public List<MentorProfile> findMatchingMentors(Long industryId, MentoringWorkingMode workingMode, MentoringType participationType) {
-        log.info("Bắt đầu matching Mentor cho industryId={}, workingMode={}, participationType={}",
-                industryId, workingMode, participationType);
+        return findMatchingMentors(industryId, workingMode, participationType, Collections.emptySet());
+    }
 
-        List<MentorSupportedField> supportedFieldRecords = mentorSupportedFieldRepository.findByIndustryId(industryId);
-        if (supportedFieldRecords == null || supportedFieldRecords.isEmpty()) {
-            log.info("Không tìm thấy bản ghi hỗ trợ ngành nghề nào cho industryId={}", industryId);
-            return List.of();
+    @Override
+    @Transactional(readOnly = true)
+    public List<MentorProfile> findMatchingMentors(Long industryId, MentoringWorkingMode workingMode, MentoringType participationType, Set<Long> excludedUserIds) {
+        log.info("Bắt đầu matching Mentor cho industryId={}, workingMode={}, participationType={}, excludedUsers={}",
+                industryId, workingMode, participationType, excludedUserIds != null ? excludedUserIds.size() : 0);
+
+        // Request chung được gửi tới TOÀN BỘ Mentor đủ điều kiện trong hệ thống;
+        // Mentor cùng ngành chỉ được xếp lên đầu danh sách ưu tiên (không còn là điều kiện loại trừ)
+        Set<Long> sameIndustryProfileIds = new HashSet<>();
+        for (MentorSupportedField msf : mentorSupportedFieldRepository.findByIndustryId(industryId)) {
+            if (msf.getMentorProfile() != null) {
+                sameIndustryProfileIds.add(msf.getMentorProfile().getId());
+            }
         }
 
         Instant now = Instant.now();
         Set<Long> processedProfileIds = new HashSet<>();
         List<MentorProfile> matchedMentors = new ArrayList<>();
 
-        for (MentorSupportedField msf : supportedFieldRecords) {
-            MentorProfile profile = msf.getMentorProfile();
+        for (MentorProfile profile : mentorProfileRepository.findByMentorStatus(MentorStatus.ACTIVE)) {
             if (profile == null || processedProfileIds.contains(profile.getId())) {
+                continue;
+            }
+
+            // 0. Kiểm tra Conflict of Interest: Loại bỏ Mentor nếu là thành viên tham gia trong yêu cầu này
+            if (profile.getUser() != null && excludedUserIds != null && excludedUserIds.contains(profile.getUser().getId())) {
+                log.debug("Loại Mentor profileId={} vì là thành viên tham gia Request (Conflict of interest)", profile.getId());
                 continue;
             }
 
@@ -95,7 +112,7 @@ public class MentorMatchingServiceImpl implements MentorMatchingService {
                             && (sub.getEndDate() == null || sub.getEndDate().isAfter(now)));
 
             // Nếu hệ thống quản lý gói subscription, Mentor phải có gói còn hiệu lực
-            if (!subscriptions.isEmpty() && !hasValidSubscription) {
+            if (!hasValidSubscription) {
                 log.debug("Loại Mentor profileId={} vì gói đăng ký đã hết hạn", profile.getId());
                 continue;
             }
@@ -118,7 +135,11 @@ public class MentorMatchingServiceImpl implements MentorMatchingService {
             matchedMentors.add(profile);
         }
 
-        log.info("Matching hoàn tất: Tìm thấy {} Mentor phù hợp cho industryId={}", matchedMentors.size(), industryId);
+        // Mentor cùng ngành lên trước (sort ổn định giữ nguyên thứ tự còn lại)
+        matchedMentors.sort(java.util.Comparator.comparing((MentorProfile m) -> !sameIndustryProfileIds.contains(m.getId())));
+
+        log.info("Matching hoàn tất: {} Mentor đủ điều kiện cho industryId={} (trong đó {} cùng ngành)",
+                matchedMentors.size(), industryId, matchedMentors.stream().filter(m -> sameIndustryProfileIds.contains(m.getId())).count());
         return matchedMentors;
     }
 

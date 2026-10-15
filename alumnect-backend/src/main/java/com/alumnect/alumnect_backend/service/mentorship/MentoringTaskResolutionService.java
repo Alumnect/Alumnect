@@ -27,4 +27,16 @@ public interface MentoringTaskResolutionService {
     MentoringTaskSettlementProposalResponse respondSettlementProposal(Long currentUserId, Long proposalId, RespondSettlementProposalRequest request);
     List<MentoringTaskSettlementProposalResponse> getSettlementProposals(Long currentUserId, Long taskId);
     MentoringTaskSettlementProposalResponse getActiveSettlementProposal(Long currentUserId, Long taskId);
+
+    /** Mentor rút lại đề xuất gia hạn đang chờ phản hồi. */
+    MentoringTaskDeadlineExtensionResponse cancelDeadlineExtension(Long currentUserId, Long extensionId);
+
+    /**
+     * Mentor rút lại đề xuất điều chỉnh (đang chờ phản hồi hoặc chờ thanh toán),
+     * hoặc Học viên từ chối thanh toán bổ sung cho đề xuất đã chấp nhận.
+     */
+    MentoringTaskAmendmentResponse cancelTaskAmendment(Long currentUserId, Long amendmentId, String reason);
+
+    /** Người tạo rút lại đề xuất dừng Task đang chờ phản hồi. */
+    MentoringTaskSettlementProposalResponse cancelSettlementProposal(Long currentUserId, Long proposalId);
 }

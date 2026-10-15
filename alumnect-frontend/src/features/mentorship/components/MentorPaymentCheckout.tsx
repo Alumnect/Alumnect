@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Clock, Check, AlertCircle } from 'lucide-react'
+import { Clock, Check, AlertCircle } from 'lucide-react'
 import { Card, Button, Skeleton } from '@/components/ui'
 import { vnd } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
@@ -134,14 +134,14 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
   // 3. Trạng thái Lỗi khi tạo đơn PayOS
   if (isCheckoutError) {
     return (
-      <Card hover={false} className="mx-auto max-w-lg p-8 rounded-3xl border border-rose-200 bg-rose-50/50 text-center space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+      <Card hover={false} className="mx-auto max-w-lg p-8 rounded-3xl border border-coral-200 bg-coral-50/50 text-center space-y-4">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600">
           <AlertCircle className="h-7 w-7" />
         </div>
-        <h3 className="font-heading text-lg font-bold text-rose-900">
+        <h3 className="font-display text-lg font-bold text-coral-900">
           Không thể tạo phiên thanh toán PayOS
         </h3>
-        <p className="text-xs text-rose-700">
+        <p className="text-xs text-coral-700">
           {checkoutError?.message || 'Đã xảy ra lỗi khi kết nối với cổng thanh toán PayOS.'}
         </p>
         <div className="pt-2 flex justify-center gap-3">
@@ -177,14 +177,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
       {/* Cột trái: Tóm tắt thông tin gói và quyền lợi */}
       <div className="lg:col-span-5 space-y-5">
         <div>
-          <button
-            onClick={() => (onBack ? onBack() : navigate('/app/mentoring/subscription'))}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-plum-500 hover:text-plum-900 transition-colors mb-3"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Quay lại danh sách gói</span>
-          </button>
-          <h2 className="font-heading text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
             Chi Tiết Thanh Toán
           </h2>
           <p className="text-xs text-plum-500 mt-1">
@@ -199,19 +192,19 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
               <span className="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 Gói đã chọn
               </span>
-              <h3 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb] mt-0.5">
+              <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb] mt-0.5">
                 {checkoutData?.packageName}
               </h3>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 dark:bg-orange-950/40 px-3 py-1 text-xs font-bold text-[#f27024] border border-orange-200/60 dark:border-orange-900/40 shadow-2xs">
-              <Clock className="h-3.5 w-3.5 text-[#f27024]" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 dark:bg-brand-700/40 px-3 py-1 text-xs font-bold text-brand-600 border border-brand-200/60 dark:border-brand-700/40 shadow-2xs">
+              <Clock className="h-3.5 w-3.5 text-brand-600" />
               {checkoutData?.durationMonths || mySubscription?.durationMonths || 1} Tháng
             </span>
           </div>
 
           <div className="pt-2 border-t border-plum-900/5">
             <span className="text-xs text-plum-400">Tổng thanh toán:</span>
-            <div className="text-2xl font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+            <div className="text-2xl font-bold text-plum-900 dark:text-[#e4e6eb]">
               {vnd(checkoutData?.amount || 0)}
             </div>
           </div>

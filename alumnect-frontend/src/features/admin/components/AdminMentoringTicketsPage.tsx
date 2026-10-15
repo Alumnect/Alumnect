@@ -153,7 +153,7 @@ export function AdminMentoringTicketsPage() {
             Quản lý Tranh chấp & Hòa giải Task
           </h1>
           <p className="text-sm text-slate-500 mt-1.5">
-            Theo dõi, tiếp nhận và phân xử các yêu cầu khiếu nại và thỏa thuận dừng Task trong Mentorship (UC116 - UC120).
+            Theo dõi, tiếp nhận và phân xử các yêu cầu khiếu nại và thỏa thuận dừng Task trong Mentorship.
           </p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-center">
@@ -398,7 +398,7 @@ export function AdminMentoringTicketsPage() {
                                 onClick={() => handleAcceptTicket(t)}
                                 disabled={acceptTicketMutation.isPending}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
-                                title="Tiếp nhận xử lý vé này (UC117)"
+                                title="Tiếp nhận xử lý vé này"
                               >
                                 {acceptTicketMutation.isPending ? (
                                   <Loader2 size={13} className="animate-spin" />
@@ -416,7 +416,7 @@ export function AdminMentoringTicketsPage() {
                                   setIsResolveModalOpen(true)
                                 }}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors cursor-pointer shadow-2xs"
-                                title="Ban hành phán quyết giải quyết Ticket (UC120)"
+                                title="Ban hành phán quyết giải quyết Ticket"
                               >
                                 <Scale size={13} />
                                 <span>Giải quyết</span>
@@ -554,7 +554,7 @@ export function AdminMentoringTicketsPage() {
                   }`}
                 >
                   <MessageSquare size={14} />
-                  <span>Trao đổi & Hòa giải (UC119)</span>
+                  <span>Trao đổi & Hòa giải</span>
                 </button>
               </div>
             </div>
@@ -1103,7 +1103,7 @@ export function AdminMentoringTicketsPage() {
                     ) : (
                       <UserCheck size={15} />
                     )}
-                    <span>Tiếp nhận xử lý (UC117)</span>
+                    <span>Tiếp nhận xử lý</span>
                   </button>
                 )}
                 {selectedTicket.status !== 'RESOLVED' && selectedTicket.status !== 'REJECTED' && selectedTicket.status !== 'CANCELLED' && (
@@ -1116,7 +1116,7 @@ export function AdminMentoringTicketsPage() {
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm transition-colors cursor-pointer shadow-2xs"
                   >
                     <Scale size={15} />
-                    <span>Ra phán quyết (UC120)</span>
+                    <span>Ra phán quyết</span>
                   </button>
                 )}
                 <button

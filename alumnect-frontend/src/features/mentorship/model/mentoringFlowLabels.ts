@@ -41,16 +41,73 @@ export const MENTORING_REQUEST_FLOW_STATUS_LABELS: Record<string, string> = {
   OPEN: 'Đang mở · thương lượng',
   MATCHED: 'Đã chốt Mentor · chờ thanh toán',
   CLOSED: 'Đã chuyển thành Task',
+  EXPIRED: 'Đã hết hạn',
   CANCELLED: 'Đã hủy',
 }
 
 /** Nhãn trạng thái Mentoring Task */
 export const MENTORING_TASK_STATUS_LABELS: Record<string, string> = {
-  PREPARATION: 'Chuẩn bị (PREPARATION)',
+  PREPARATION: 'Chuẩn bị',
   IN_PROGRESS: 'Đang thực hiện',
   SUBMITTED: 'Đã nộp kết quả',
   COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy',
+  DISPUTED: 'Đang tranh chấp',
+  RESOLVED: 'Đã phân xử',
+}
+
+/** Nhãn trạng thái phản hồi của Mentor */
+export const MENTORING_RESPONSE_STATUS_LABELS: Record<string, string> = {
+  WAITING: 'Chờ phản hồi',
+  ACCEPTED: 'Đã chấp nhận',
+  DECLINED: 'Đã từ chối',
+  REJECTED: 'Đã từ chối',
+  EXPIRED: 'Đã hết hạn',
+  CANCELLED: 'Đã hủy',
+}
+
+/** Nhãn trạng thái phân phối của Request */
+export const MENTORING_DISTRIBUTION_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Đang chờ',
+  WAITING: 'Đang chờ',
+  ACCEPTED: 'Đã chấp nhận',
+  DECLINED: 'Đã từ chối',
+  REJECTED: 'Đã từ chối',
+  EXPIRED: 'Đã hết hạn',
+  CANCELLED: 'Đã hủy',
+}
+
+/** Nhãn trạng thái Deal */
+export const MENTORING_DEAL_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Chờ phản hồi',
+  ACCEPTED: 'Đã chấp nhận',
+  REJECTED: 'Đã từ chối',
+  DECLINED: 'Đã từ chối',
+  DEAL_CONFIRMED: 'Đã chốt thỏa thuận',
+  CONFIRMED: 'Đã chốt thỏa thuận',
+  CANCELLED: 'Đã hủy',
+  EXPIRED: 'Đã hết hạn',
+  SUPERSEDED: 'Đã thay thế',
+}
+
+/** Nhãn trạng thái Ticket hòa giải / khiếu nại / tất toán */
+export const MENTORING_TICKET_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Chờ xử lý',
+  IN_PROGRESS: 'Đang xử lý',
+  RESOLVED: 'Đã giải quyết',
+  REJECTED: 'Đã từ chối',
+  CLOSED: 'Đã đóng',
+  CANCELLED: 'Đã hủy',
+}
+
+/** Nhãn trạng thái tài chính / giải ngân */
+export const MENTORING_FINANCE_STATUS_LABELS: Record<string, string> = {
+  ESCROW_HELD: 'Đang giữ Escrow',
+  DISBURSED: 'Đã giải ngân',
+  REFUNDED: 'Đã hoàn tiền',
+  COMPLETED: 'Hoàn tất',
+  SETTLED: 'Đã quyết toán',
+  PARTIALLY_SETTLED: 'Quyết toán một phần',
 }
 
 /** Định dạng tiền VND */

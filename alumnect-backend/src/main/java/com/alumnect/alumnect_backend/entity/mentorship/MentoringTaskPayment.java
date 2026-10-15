@@ -35,6 +35,11 @@ public class MentoringTaskPayment {
     @JoinColumn(name = "request_id")
     private MentoringRequest request;
 
+    /** Ticket điều chỉnh được thanh toán bổ sung (top-up); null nếu là thanh toán Deal ban đầu */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "amendment_id")
+    private MentoringTaskAmendment amendment;
+
     /** Người thực hiện thanh toán (Student) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)

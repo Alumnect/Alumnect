@@ -24,6 +24,11 @@ public interface MentorMatchingService {
     List<MentorProfile> findMatchingMentors(Long industryId, MentoringWorkingMode workingMode, MentoringType participationType);
 
     /**
+     * Tìm danh sách các Mentor ACTIVE phù hợp, loại trừ các user là thành viên tham gia yêu cầu (Conflict of Interest).
+     */
+    List<MentorProfile> findMatchingMentors(Long industryId, MentoringWorkingMode workingMode, MentoringType participationType, java.util.Set<Long> excludedUserIds);
+
+    /**
      * Thực hiện phân phối yêu cầu tới các Mentor đã được matching và lưu vết vào cơ sở dữ liệu.
      * Đảm bảo tính nhất quán và không gửi trùng lặp (BR-10).
      *

@@ -18,6 +18,9 @@ import java.time.Instant;
 public class DisbursementResult {
 
     private String providerReference;
+    private String providerTransactionId;
+    private String providerStatus;
+    private String failureCode;
     private MentoringLedgerStatus status;
     private String message;
     private Instant transactedAt;

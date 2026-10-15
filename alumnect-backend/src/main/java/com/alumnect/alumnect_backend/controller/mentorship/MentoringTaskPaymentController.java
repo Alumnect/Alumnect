@@ -32,6 +32,7 @@ import java.util.Map;
 public class MentoringTaskPaymentController {
 
     private final MentoringTaskPaymentService taskPaymentService;
+    private final com.alumnect.alumnect_backend.service.payment.PayOSWebhookRouter webhookRouter;
     private final UserRepository userRepository;
 
     @PostMapping(value = {"", "/checkout"})
@@ -70,7 +71,7 @@ public class MentoringTaskPaymentController {
                description = "Endpoint công khai nhận thông báo thanh toán thành công tự động từ PayOS server")
     public ResponseEntity<Map<String, Object>> handleWebhook(@RequestBody Webhook webhook) {
         log.info("Tiếp nhận callback Webhook từ PayOS cho Task Payment: {}", webhook);
-        taskPaymentService.handlePayOSWebhook(webhook);
+        webhookRouter.route(webhook);
         return ResponseEntity.ok(Map.of("error", 0, "message", "Webhook processed successfully"));
     }
 

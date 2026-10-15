@@ -7,7 +7,7 @@ type MentorshipLoadingSkeletonProps = {
 
 function HeroSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 shadow-xs dark:bg-[#242526] dark:border-[#393a3b] dark:from-brand-950/20">
+    <div className="relative overflow-hidden rounded-3xl border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 shadow-xs dark:bg-[#242526] dark:border-[#393a3b] dark:from-brand-700/20">
       {/* Hiệu ứng hào quang nền mờ */}
       <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-500/5" />
       <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />

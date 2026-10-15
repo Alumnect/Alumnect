@@ -518,12 +518,47 @@ export function useAdminTaskFundDetail(taskId: number | null) {
   })
 }
 
+/**
+ * Hook chi lại thù lao Mentor cho lệnh chi PayOS đã thất bại
+ */
+export function useRetryAdminPayout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ledgerId, note }: { ledgerId: number; note?: string }) => {
+      const response = await adminApi.retryAdminPayout(ledgerId, note)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-task-fund-detail'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-finances-tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'payout-balance'] })
+    },
+  })
+}
 
+/**
+ * Hook lấy số dư tài khoản Kênh chi PayOS
+ */
+export function useAdminPayoutBalance() {
+  return useQuery({
+    queryKey: ['admin', 'payout-balance'],
+    queryFn: async () => {
+      const response = await adminApi.getAdminPayoutBalance()
+      return response.data
+    },
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000,
+  })
+}
 
-
-
-
-
-
-
-
+export function useAdminRevenueOverview(filters?: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ['admin', 'revenue', filters],
+    queryFn: async () => {
+      const response = await adminApi.getRevenueOverview(filters)
+      return response.data
+    },
+    staleTime: 30 * 1000,
+  })
+}

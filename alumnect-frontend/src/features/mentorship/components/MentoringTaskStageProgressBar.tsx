@@ -57,7 +57,7 @@ export function MentoringTaskStageProgressBar({
           <span className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
             Tiến trình Mentoring Task
           </span>
-          <h4 className="text-base font-black text-plum-900 dark:text-white">
+          <h4 className="text-base font-bold text-plum-900 dark:text-white">
             {STAGES[currentIndex].title}
           </h4>
         </div>
@@ -70,7 +70,7 @@ export function MentoringTaskStageProgressBar({
               transition={{ duration: 0.6, ease: 'easeOut' }}
             />
           </div>
-          <span className="text-xs font-black text-plum-700 dark:text-[#e4e6eb] min-w-[36px] text-right">
+          <span className="text-xs font-bold text-plum-700 dark:text-[#e4e6eb] min-w-[36px] text-right">
             {progressPercentage}%
           </span>
         </div>
@@ -91,7 +91,7 @@ export function MentoringTaskStageProgressBar({
                   ? 'border-brand-500/30 bg-brand-50/70 shadow-xs dark:border-brand-500/40 dark:bg-brand-500/10'
                   : isPassed
                   ? 'border-mint-500/25 bg-mint-50/50 dark:border-mint-500/30 dark:bg-mint-500/10'
-                  : 'border-plum-900/[0.06] bg-slate-50/70 opacity-80 dark:border-white/10 dark:bg-[#18191a]'
+                  : 'border-plum-900/[0.06] bg-cream-100/70 opacity-80 dark:border-white/10 dark:bg-[#18191a]'
               )}
             >
               <div
@@ -109,7 +109,7 @@ export function MentoringTaskStageProgressBar({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
                     Giai đoạn {idx + 1}
                   </span>
                   {isCurrent && (
@@ -120,7 +120,7 @@ export function MentoringTaskStageProgressBar({
                   className={cn(
                     'truncate text-sm font-bold',
                     isCurrent
-                      ? 'text-brand-900 dark:text-brand-200 font-extrabold'
+                      ? 'text-brand-700 dark:text-brand-200 font-bold'
                       : isPassed
                       ? 'text-mint-900 dark:text-mint-200'
                       : 'text-plum-600 dark:text-[#b0b3b8]'

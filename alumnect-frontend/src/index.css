@@ -25,6 +25,15 @@
   --color-ink-700: #e2e8f0;
   --color-ink-600: #cbd5e1;
 
+  /* ---- Semantic UI surface & text tokens ---- */
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-border: #e2e8f0;
+
   --color-cream-50: #ffffff;
   --color-cream-100: #f8fafc;
   --color-cream-200: #f1f5f9;
@@ -282,6 +291,14 @@
     --color-ink-700: #393a3b;
     --color-ink-600: #3a3b3c;
 
+    --color-background: #18191a;
+    --color-foreground: #f0f2f5;
+    --color-card: #242526;
+    --color-card-foreground: #f0f2f5;
+    --color-muted: #3a3b3c;
+    --color-muted-foreground: #b0b3b8;
+    --color-border: #393a3b;
+
     --color-cream-50: #242526;
     --color-cream-100: #18191a;
     --color-cream-200: #242526;
@@ -410,6 +427,86 @@
   background: linear-gradient(180deg, #ffffff, #fffaf4);
   border: 1px solid rgb(50 44 63 / 0.06);
   box-shadow: var(--shadow-card);
+}
+
+/* Mentoring visual system: restrained surfaces, consistent radii and readable text. */
+.mentoring-shell {
+  --mentor-border: rgb(50 44 63 / 0.09);
+  --mentor-surface: #ffffff;
+  --mentor-muted: #6f6878;
+}
+
+.mentoring-shell .rounded-3xl {
+  border-radius: 1.25rem;
+}
+
+.mentoring-shell .mentor-page-header {
+  background-image: linear-gradient(135deg, rgb(242 112 36 / 0.055), transparent 42%);
+}
+
+.mentoring-shell button,
+.mentoring-shell a {
+  text-underline-offset: 3px;
+}
+
+.mentoring-shell .bg-brand-600,
+.mentoring-shell .bg-brand-500 {
+  color: #27180e;
+}
+
+.mentoring-shell .bg-brand-600 .text-white,
+.mentoring-shell .bg-brand-500 .text-white {
+  color: #27180e !important;
+}
+
+/* Outgoing Mentoring messages keep accessible contrast on the orange bubble. */
+.mentoring-shell .mentoring-chat-outgoing,
+.mentoring-shell .mentoring-chat-outgoing * {
+  color: #ffffff !important;
+}
+
+html.dark .mentoring-shell {
+  --mentor-border: rgb(255 255 255 / 0.1);
+  --mentor-surface: #242526;
+  --mentor-muted: #c7c9cc;
+}
+
+html.dark .mentoring-shell .mentor-page-header {
+  background: #242526 !important;
+  border-color: rgb(255 255 255 / 0.1) !important;
+}
+
+html.dark .mentoring-shell .bg-brand-50,
+html.dark .mentoring-shell [class*="bg-brand-50/"] {
+  background-color: rgb(251 146 60 / 0.14) !important;
+}
+
+html.dark .mentoring-shell .text-brand-600,
+html.dark .mentoring-shell .text-brand-700 {
+  color: #fdba74 !important;
+}
+
+html.dark .mentoring-shell .bg-brand-600,
+html.dark .mentoring-shell .bg-brand-500 {
+  background-color: #fb923c !important;
+  background-image: none !important;
+  color: #27180e !important;
+}
+
+html.dark .mentoring-shell .bg-brand-600 .text-white,
+html.dark .mentoring-shell .bg-brand-500 .text-white {
+  color: #27180e !important;
+}
+
+html.dark .mentoring-shell .mentoring-chat-outgoing,
+html.dark .mentoring-shell .mentoring-chat-outgoing * {
+  color: #ffffff !important;
+}
+
+@media (max-width: 639px) {
+  .mentoring-shell .mentor-page-header {
+    padding: 1rem;
+  }
 }
 
 /* Decorative backgrounds */

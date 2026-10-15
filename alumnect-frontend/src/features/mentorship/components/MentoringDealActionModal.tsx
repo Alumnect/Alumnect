@@ -39,7 +39,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="absolute right-5 top-5 p-2 text-plum-400 hover:text-plum-700 rounded-full hover:bg-plum-50 transition-colors dark:hover:bg-white/5"
+          className="absolute right-5 top-5 p-2 text-plum-400 hover:text-plum-700 rounded-full hover:bg-cream-100 transition-colors dark:hover:bg-white/5"
         >
           <X className="h-5 w-5" />
         </button>
@@ -49,7 +49,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
           <div>
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-              <h3 className="font-heading text-lg font-black text-plum-900 dark:text-[#f0f2f5]">
+              <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#f0f2f5]">
                 Mentoring Deal #{dealId}
               </h3>
             </div>
@@ -65,7 +65,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
               className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 activeTab === 'snapshot'
                   ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-plum-50 text-plum-600 hover:bg-plum-100 dark:bg-white/5 dark:text-[#b0b3b8] dark:hover:bg-white/10'
+                  : 'bg-cream-100 text-plum-600 hover:bg-cream-200 dark:bg-white/5 dark:text-[#b0b3b8] dark:hover:bg-white/10'
               }`}
             >
               Phiên bản mới nhất
@@ -76,7 +76,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
               className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 activeTab === 'history'
                   ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-plum-50 text-plum-600 hover:bg-plum-100 dark:bg-white/5 dark:text-[#b0b3b8] dark:hover:bg-white/10'
+                  : 'bg-cream-100 text-plum-600 hover:bg-cream-200 dark:bg-white/5 dark:text-[#b0b3b8] dark:hover:bg-white/10'
               }`}
             >
               <History className="h-3.5 w-3.5" />
@@ -115,7 +115,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
                 </div>
               ) : (
                 <span className="text-xs text-plum-500 dark:text-[#b0b3b8]">
-                  Xác nhận, điều chỉnh và thanh toán được thực hiện trong Chat for Task.
+                  Xác nhận, điều chỉnh và thanh toán được thực hiện trong phần Nhắn tin.
                 </span>
               )}
 
@@ -124,9 +124,9 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
                   variant="primary"
                   onClick={() => navigate(`/app/mentoring/chats/${deal.conversationId}`)}
                   leftIcon={<MessagesSquare className="h-4 w-4" />}
-                  className="rounded-xl font-black text-xs"
+                  className="rounded-xl font-bold text-xs"
                 >
-                  Mở Chat for Task
+                  Nhắn tin
                 </Button>
               )}
             </div>

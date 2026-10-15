@@ -21,6 +21,14 @@ interface PageResponse<T> {
 
 export const mentoringRequestApi = {
   /**
+   * Học viên hủy yêu cầu đang mở (chưa kích hoạt Task).
+   * Endpoint: POST /api/v1/mentoring/requests/{id}/cancel
+   */
+  cancelRequest: async (requestId: number, reason?: string): Promise<void> => {
+    await http.post<unknown, ApiResponse<null>>(`/mentoring/requests/${requestId}/cancel`, { reason })
+  },
+
+  /**
    * Tạo yêu cầu Mentoring (UC100 nếu payload không có mentorId, UC101 nếu có mentorId).
    * Endpoint: POST /api/v1/mentoring/requests
    */

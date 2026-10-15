@@ -44,4 +44,15 @@ public interface MentoringTaskPaymentService {
      * @param webhook Đối tượng Webhook chứa payload và chữ ký HMAC-SHA256
      */
     void handlePayOSWebhook(Webhook webhook);
+
+    /** Xử lý dữ liệu Webhook PayOS đã được xác thực chữ ký (định tuyến từ PayOSWebhookRouter). */
+    void handleVerifiedWebhook(vn.payos.model.webhooks.WebhookData data);
+
+    /** Đối soát một giao dịch PENDING với PayOS (job định kỳ, không phụ thuộc người dùng mở trang thanh toán). */
+    void reconcilePendingPayment(Long orderCode);
+
+    /**
+     * Hủy các giao dịch top-up đang chờ của một Ticket điều chỉnh (khi Ticket bị thay thế hoặc hủy).
+     */
+    void cancelPendingTopUpPayments(Long amendmentId, String reason);
 }

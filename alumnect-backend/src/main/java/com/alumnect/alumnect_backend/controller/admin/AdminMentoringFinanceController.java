@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.response.mentorship.AdminTaskFundDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.AdminTaskFundSummaryResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringPaymentLedgerResponse;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringFinanceService;
@@ -19,6 +20,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.Map;
 
 /**
  * Controller Quản lý Quỹ Task, Sổ quỹ giao dịch và lịch sử tài chính cho Quản trị viên (UC121 & Mục 5.7, 5.10).
@@ -72,6 +76,31 @@ public class AdminMentoringFinanceController {
 
         AdminTaskFundDetailResponse response = financeService.getTaskFundDetail(currentUserId, taskId);
         return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết Sổ quỹ Task thành công", response));
+    }
+
+    /**
+     * API Chi lại thù lao Mentor cho lệnh chi đã thất bại (sau khi Mentor sửa tài khoản / nạp số dư Kênh chi).
+     */
+    @PostMapping("/ledgers/{ledgerId}/retry-payout")
+    @Operation(summary = "Chi lại thù lao Mentor cho lệnh chi FAILED",
+               description = "Mở lại lệnh chi với idempotency key mới và gửi lại sang PayOS Kênh chi")
+    public ResponseEntity<ApiResponse<MentoringPaymentLedgerResponse>> retryPayout(
+            @PathVariable Long ledgerId,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        Long currentUserId = getCurrentUserId();
+        String note = body != null ? body.get("note") : null;
+        MentoringPaymentLedgerResponse response = financeService.retryFailedPayout(currentUserId, ledgerId, note);
+        return ResponseEntity.ok(ApiResponse.success("Đã gửi lại lệnh chi thù lao", response));
+    }
+
+    /**
+     * API Xem số dư tài khoản Kênh chi PayOS để bảo đảm đủ tiền chi trả thù lao.
+     */
+    @GetMapping("/payout-balance")
+    @Operation(summary = "Xem số dư Kênh chi PayOS")
+    public ResponseEntity<ApiResponse<BigDecimal>> getPayoutBalance() {
+        return ResponseEntity.ok(ApiResponse.success("Lấy số dư Kênh chi thành công", financeService.getPayoutBalance()));
     }
 
     private Long getCurrentUserId() {

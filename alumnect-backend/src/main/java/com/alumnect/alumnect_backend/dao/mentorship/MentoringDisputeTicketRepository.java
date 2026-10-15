@@ -46,4 +46,11 @@ public interface MentoringDisputeTicketRepository extends JpaRepository<Mentorin
             @Param("ticketType") MentoringTicketType ticketType,
             @Param("status") MentoringTicketStatus status,
             Pageable pageable);
+
+    /** Phí tranh chấp chỉ trở thành doanh thu sau khi Admin đã ra phán quyết. */
+    @Query("SELECT t FROM MentoringDisputeTicket t " +
+           "JOIN FETCH t.student s LEFT JOIN FETCH s.profile " +
+           "WHERE t.status = com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus.RESOLVED " +
+           "AND t.disputeFee > 0 AND t.resolvedAt IS NOT NULL ORDER BY t.resolvedAt DESC")
+    List<MentoringDisputeTicket> findAllResolvedFeeRevenue();
 }

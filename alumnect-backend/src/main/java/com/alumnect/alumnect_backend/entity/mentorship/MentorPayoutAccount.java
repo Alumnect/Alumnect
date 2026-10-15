@@ -50,6 +50,10 @@ public class MentorPayoutAccount implements Persistable<Long> {
     @Column(name = "bank_name", length = 100)
     private String bankName;
 
+    /** Mã BIN/NAPAS 6 chữ số mà PayOS yêu cầu khi tạo lệnh chi. */
+    @Column(name = "bank_bin", length = 6)
+    private String bankBin;
+
     /** Số tài khoản ngân hàng */
     @Column(name = "bank_account_number", length = 50)
     private String bankAccountNumber;

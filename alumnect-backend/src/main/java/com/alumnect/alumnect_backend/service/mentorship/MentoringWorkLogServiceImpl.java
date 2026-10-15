@@ -39,6 +39,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MentoringWorkLogServiceImpl implements MentoringWorkLogService {
+    private final MentoringGroupService mentoringGroupService;
 
     private final MentoringTaskRepository taskRepository;
     private final MentoringWorkLogRepository workLogRepository;
@@ -134,7 +135,8 @@ public class MentoringWorkLogServiceImpl implements MentoringWorkLogService {
         }
 
         // 3. Nếu Task đang ở PREPARATION, tự động kích hoạt chuyển sang IN_PROGRESS khi bắt đầu có Work Log
-        if (task.getStatus() == MentoringTaskStatus.PREPARATION) {
+        boolean taskJustStarted = task.getStatus() == MentoringTaskStatus.PREPARATION;
+        if (taskJustStarted) {
             log.info("Task id={} chuyển từ PREPARATION sang IN_PROGRESS khi có Work Log đầu tiên", task.getId());
             task.setStatus(MentoringTaskStatus.IN_PROGRESS);
             taskRepository.save(task);
@@ -175,7 +177,8 @@ public class MentoringWorkLogServiceImpl implements MentoringWorkLogService {
 
         // 6. Gửi thông báo cho Student của Task
         try {
-            notificationService.sendMentoringWorkLogNotification(task.getMentor(), task.getStudent(), task, savedLog);
+            notificationService.sendMentoringWorkLogNotification(
+                    task.getMentor(), task.getStudent(), task, savedLog, taskJustStarted);
         } catch (Exception e) {
             log.error("Lỗi khi gửi thông báo Work Log tới Student id={}: {}", task.getStudent().getId(), e.getMessage());
         }
@@ -445,7 +448,8 @@ public class MentoringWorkLogServiceImpl implements MentoringWorkLogService {
         MentoringTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Mentoring Task với ID: " + taskId));
 
-        if (!task.getStudent().getId().equals(currentUserId) && !task.getMentor().getId().equals(currentUserId)) {
+        if (!task.getStudent().getId().equals(currentUserId) && !task.getMentor().getId().equals(currentUserId)
+                && !mentoringGroupService.isActiveMember(task.getRequest(), currentUserId)) {
             throw new ForbiddenException("Bạn không có quyền truy cập thông tin của Mentoring Task này.");
         }
         return task;

@@ -23,11 +23,12 @@ interface MentorProfileHeaderProps {
 export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHeaderProps) {
   const isMentorActive = mentor.mentorStatus === 'ACTIVE'
   const primaryField = mentor.supportedFields && mentor.supportedFields.length > 0 ? mentor.supportedFields[0].name : null
+  const showCity = mentor.city && mentor.city.trim().toLowerCase() !== mentor.academicInfo?.campus?.trim().toLowerCase()
 
   return (
     <Card
       hover={false}
-      className="relative overflow-hidden border border-plum-900/[0.08] bg-white p-6 sm:p-8 shadow-sm dark:bg-[#242526] dark:border-[#393a3b] w-full"
+      className="relative w-full overflow-hidden rounded-2xl border border-plum-900/[0.08] bg-white p-5 shadow-xs sm:p-6 dark:border-white/10 dark:bg-[#242526]"
     >
       {/* Background Gradient Accent nhỏ */}
       <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-brand-300/15 via-violet-300/10 to-transparent blur-2xl" />
@@ -55,14 +56,14 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
           {/* Chi tiết Họ tên, Chức danh, Học vấn */}
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-plum-900 tracking-tight dark:text-[#e4e6eb]">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-plum-900 tracking-tight dark:text-[#e4e6eb]">
                 {mentor.fullName}
               </h1>
 
               {/* Verified Alumni Badge */}
               {mentor.isVerifiedAlumni && (
                 <span
-                  className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 border border-brand-200/60 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-800/40"
+                  className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 border border-brand-200/60 dark:bg-brand-700/40 dark:text-brand-300 dark:border-brand-700/40"
                   title="Cựu sinh viên FPT University đã được hệ thống xác thực"
                 >
                   <ShieldCheck className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
@@ -99,7 +100,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
                 </span>
               )}
 
-              {mentor.city && (
+              {showCity && (
                 <span className="inline-flex items-center gap-1.5 font-medium text-plum-500 dark:text-[#8f9399]">
                   <MapPin className="h-3.5 w-3.5 text-coral-500" />
                   <span>{mentor.city}</span>
@@ -117,10 +118,10 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
             leftIcon={<Send className="h-4 w-4" />}
             onClick={onRequestMentor}
             disabled={!mentor.canReceiveRequest}
-            className={`font-black px-6 py-2.5 rounded-xl shadow-md transition-all ${
+            className={`min-h-11 rounded-xl px-6 py-2.5 font-semibold shadow-sm transition-all ${
               mentor.canReceiveRequest
-                ? 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/25 active:scale-95'
-                : 'bg-plum-200 text-plum-400 cursor-not-allowed dark:bg-white/10 dark:text-plum-500'
+                ? 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20 active:scale-95 dark:text-[#18191a]'
+                : 'bg-cream-300 text-plum-400 cursor-not-allowed dark:bg-white/10 dark:text-plum-500'
             }`}
           >
             {mentor.canReceiveRequest ? 'Gửi yêu cầu cố vấn' : 'Tạm ngưng nhận yêu cầu'}

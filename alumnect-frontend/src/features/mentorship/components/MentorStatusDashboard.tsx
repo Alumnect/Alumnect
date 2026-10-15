@@ -43,8 +43,8 @@ export function MentorStatusDashboard() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-950/60 dark:text-coral-300">
             <AlertCircle className="h-7 w-7" />
           </div>
-          <h2 className="font-heading text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Không Thể Tải Trạng Thái Mentor
+          <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+            Không thể tải trạng thái Mentor
           </h2>
           <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
             {error?.message || 'Đã có lỗi xảy ra khi kết nối tới máy chủ. Vui lòng thử lại sau.'}

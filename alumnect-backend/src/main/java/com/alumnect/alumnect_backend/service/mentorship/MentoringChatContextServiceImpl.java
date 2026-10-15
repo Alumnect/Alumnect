@@ -5,15 +5,18 @@ import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
+import com.alumnect.alumnect_backend.dao.message.ConversationParticipantRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringConversationResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringDealDetailResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringParticipantResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskPaymentStatusResponse;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequestDistribution;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
+import com.alumnect.alumnect_backend.entity.message.ConversationParticipant;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
@@ -46,6 +49,7 @@ public class MentoringChatContextServiceImpl implements MentoringChatContextServ
     private final ConversationRepository conversationRepository;
     private final UserProfileRepository userProfileRepository;
     private final MentoringTaskMapper taskMapper;
+    private final ConversationParticipantRepository participantRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,11 +65,14 @@ public class MentoringChatContextServiceImpl implements MentoringChatContextServ
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
         boolean isOwner = Objects.equals(request.getStudent().getId(), currentUserId);
 
+        // Chủ Request thấy tất cả; Mentor thấy hội thoại của mình; thành viên nhóm thấy hội thoại mình được tham gia
         List<Conversation> conversations = conversationRepository.findByMentoringRequestIdOrderByCreatedAtAsc(requestId).stream()
-                .filter(c -> isOwner || Objects.equals(c.getMentoringMentor().getId(), currentUserId))
+                .filter(c -> isOwner
+                        || Objects.equals(c.getMentoringMentor().getId(), currentUserId)
+                        || participantRepository.existsByConversationIdAndUserId(c.getId(), currentUserId))
                 .toList();
         if (!isOwner && conversations.isEmpty()) {
-            throw new ForbiddenException("Bạn không có quyền xem các Chat for Task của Request này.");
+            throw new ForbiddenException("Bạn không có quyền xem các cuộc trò chuyện của yêu cầu này.");
         }
         return conversations.stream().map(c -> buildContext(c, currentUserId)).toList();
     }
@@ -75,6 +82,7 @@ public class MentoringChatContextServiceImpl implements MentoringChatContextServ
         User student = conversation.getMentoringStudent();
         User mentor = conversation.getMentoringMentor();
         boolean isMentor = Objects.equals(mentor.getId(), currentUserId);
+        boolean isStudent = Objects.equals(student.getId(), currentUserId);
 
         UserProfile studentProfile = userProfileRepository.findById(student.getId()).orElse(null);
         UserProfile mentorProfile = userProfileRepository.findById(mentor.getId()).orElse(null);
@@ -86,6 +94,7 @@ public class MentoringChatContextServiceImpl implements MentoringChatContextServ
         boolean requestOpen = request.getStatus() == MentoringRequestStatus.OPEN && request.getSelectedMentor() == null;
         boolean mentorAccepted = distribution != null && distribution.getStatus() == MentoringDistributionStatus.ACCEPTED;
 
+        // Thành viên nhóm xem được Deal (chỉ đọc); quyền thao tác do DealService tính theo vai trò
         MentoringDealDetailResponse deal = dealService.getDealByConversation(currentUserId, conversation.getId());
         boolean dealLocked = deal != null && Boolean.TRUE.equals(deal.getDeal().getIsLocked());
         boolean canCreateDealTicket = isMentor && writable && requestOpen && mentorAccepted && !dealLocked;
@@ -109,7 +118,7 @@ public class MentoringChatContextServiceImpl implements MentoringChatContextServ
 
         return MentoringConversationResponse.builder()
                 .conversationId(conversation.getId())
-                .myRole(isMentor ? "MENTOR" : "STUDENT")
+                .myRole(isMentor ? "MENTOR" : (isStudent ? "STUDENT" : "GROUP_MEMBER"))
                 .requestId(request.getId())
                 .requestTitle(request.getTitle())
                 .requestDescription(request.getDescription())
@@ -141,10 +150,30 @@ public class MentoringChatContextServiceImpl implements MentoringChatContextServ
                 .taskId(task != null ? task.getId() : null)
                 .taskStatus(task != null ? task.getStatus() : null)
                 .canSendMessage(writable)
+                .groupId(request.getGroup() != null ? request.getGroup().getId() : null)
+                .groupName(request.getGroup() != null ? request.getGroup().getName() : null)
+                .participants(toParticipants(conversation, student, mentor))
                 .canCreateDealTicket(canCreateDealTicket)
                 .canAcceptDealByRequest(canCreateDealTicket && acceptByRequestUnavailableReason == null)
                 .acceptByRequestUnavailableReason(acceptByRequestUnavailableReason)
                 .build();
+    }
+
+    private List<MentoringParticipantResponse> toParticipants(Conversation conversation, User student, User mentor) {
+        return participantRepository.findByConversationIdWithUser(conversation.getId()).stream()
+                .map(ConversationParticipant::getUser)
+                .map(user -> {
+                    UserProfile profile = userProfileRepository.findById(user.getId()).orElse(null);
+                    String role = Objects.equals(user.getId(), mentor.getId()) ? "MENTOR"
+                            : Objects.equals(user.getId(), student.getId()) ? "STUDENT" : "GROUP_MEMBER";
+                    return MentoringParticipantResponse.builder()
+                            .id(user.getId())
+                            .fullName(profile != null && profile.getFullName() != null ? profile.getFullName() : user.getEmail())
+                            .avatarUrl(profile != null ? profile.getAvatarUrl() : null)
+                            .role(role)
+                            .build();
+                })
+                .toList();
     }
 
     /** Ánh xạ trạng thái phân phối sang thuật ngữ nghiệp vụ: PENDING→WAITING, REJECTED→DECLINED */

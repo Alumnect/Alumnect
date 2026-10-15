@@ -2,13 +2,11 @@ import { useEffect, useRef } from 'react'
 import { Client } from '@stomp/stompjs'
 import { useAuthStore } from '@/store/authStore'
 import { useQueryClient } from '@tanstack/react-query'
-import { toast } from '@/components/ui/Toast'
-import type { NotificationItem } from '../model/types'
 import { NOTIFICATION_KEYS } from './useNotifications'
 
 /**
  * Hook lắng nghe WebSocket STOMP kênh `/user/queue/notifications` để nhận thông báo thời gian thực.
- * Tự động kích hoạt thông báo Toast nổi và làm mới cache số lượng chưa đọc / danh sách thông báo.
+ * Cập nhật badge và danh sách trong Notification Center mà không tạo popup nổi.
  */
 export function useWebSocketNotifications() {
   const queryClient = useQueryClient()
@@ -33,15 +31,12 @@ export function useWebSocketNotifications() {
         // Lắng nghe kênh thông báo cá nhân
         client.subscribe('/user/queue/notifications', (stompMessage) => {
           try {
-            const notif: NotificationItem = JSON.parse(stompMessage.body)
+            JSON.parse(stompMessage.body)
 
-            // 1. Hiển thị Toast nổi thông báo ngay trên màn hình (màu xanh lá tươi sáng với icon Bell)
-            toast.notification(notif.content)
-
-            // 2. Cập nhật tăng số đếm chưa đọc trong cache
+            // Cập nhật số chưa đọc trên chuông.
             queryClient.setQueryData<number>(NOTIFICATION_KEYS.unreadCount, (old) => (old ? old + 1 : 1))
 
-            // 3. Làm mới toàn bộ cache thông báo để cập nhật trang Notifications
+            // Nội dung mới chỉ hiển thị trong Notification Center.
             queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all })
           } catch (err) {
             console.error('Lỗi phân tích cú pháp thông báo WebSocket:', err)

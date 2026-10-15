@@ -14,6 +14,7 @@ import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealSnapshotReposit
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
+import com.alumnect.alumnect_backend.dao.message.ConversationParticipantRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.mentorship.ProposeDealRequest;
@@ -70,9 +71,11 @@ public class MentoringDealServiceImpl implements MentoringDealService {
     private final MentoringRequestDistributionRepository distributionRepository;
     private final MentoringTaskRepository taskRepository;
     private final ConversationRepository conversationRepository;
+    private final ConversationParticipantRepository participantRepository;
     private final UserRepository userRepository;
     private final MentoringConversationService conversationService;
     private final MentoringDealMapper dealMapper;
+    private final MentoringRules mentoringRules;
 
     // =====================================================================
     // PHÁT HÀNH PHIÊN BẢN DEAL TICKET (Mentor)
@@ -87,7 +90,7 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         User currentUser = loadUser(currentUserId);
         Conversation conversation = conversationService.requireParticipantConversation(currentUserId, request.getConversationId());
         if (!Objects.equals(conversation.getMentoringMentor().getId(), currentUserId)) {
-            throw new ForbiddenException("Chỉ Mentor của Chat for Task mới được gửi Deal Ticket. Học viên có thể Xác nhận, Yêu cầu điều chỉnh hoặc Từ chối.");
+            throw new ForbiddenException("Chỉ Mentor trong cuộc trò chuyện mới được gửi thỏa thuận. Học viên có thể xác nhận, yêu cầu điều chỉnh hoặc từ chối.");
         }
 
         MentoringRequest mentoringRequest = lockRequest(conversation.getMentoringRequest().getId());
@@ -390,7 +393,10 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         boolean isMentor = Objects.equals(deal.getMentor().getId(), currentUserId);
         User currentUser = userRepository.findById(currentUserId).orElse(null);
         boolean isAdmin = currentUser != null && currentUser.getRole() != null && "ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
-        if (!isStudent && !isMentor && !isAdmin) {
+        // Thành viên nhóm cùng tham gia Chat for Task được xem Deal (không có quyền thao tác)
+        boolean isGroupParticipant = deal.getConversation() != null
+                && participantRepository.existsByConversationIdAndUserId(deal.getConversation().getId(), currentUserId);
+        if (!isStudent && !isMentor && !isAdmin && !isGroupParticipant) {
             log.warn("Truy cập trái phép Deal id={} bởi userId={}", dealId, currentUserId);
             throw new ForbiddenException("Bạn không có quyền xem thỏa thuận Deal này.");
         }
@@ -538,6 +544,7 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         if (price == null) {
             throw new BadRequestException("Request chưa có mức ngân sách đề xuất. Vui lòng dùng \"Deal lại / Tạo Deal Ticket\" để nhập giá.");
         }
+        mentoringRules.requirePayableAmount(price, "Ngân sách của Request");
         if (r.getExpectedDeadline() == null || !r.getExpectedDeadline().isAfter(Instant.now())) {
             throw new BadRequestException("Request không có thời hạn mong muốn hợp lệ trong tương lai. Vui lòng dùng \"Deal lại / Tạo Deal Ticket\" để đề xuất deadline.");
         }
@@ -561,6 +568,7 @@ public class MentoringDealServiceImpl implements MentoringDealService {
         if (agreedPrice == null) {
             throw new BadRequestException("Mức giá thỏa thuận không được để trống.");
         }
+        mentoringRules.requirePayableAmount(agreedPrice, "Mức giá thỏa thuận");
         if (deadline == null) {
             throw new BadRequestException("Hạn chót hoàn thành (Deadline) không được để trống.");
         }

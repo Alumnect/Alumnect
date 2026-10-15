@@ -56,4 +56,6 @@ public class MentoringTaskActionPermissionsResponse {
 
     /** Cho phép nộp thêm bằng chứng tranh chấp vào Ticket đang mở (UC113) */
     private Boolean canSubmitDisputeEvidence;
+    /** Học viên đã khai báo tài khoản nhận hoàn tiền (bắt buộc trước khi gửi/đồng ý thỏa thuận dừng Task có hoàn tiền) */
+    private Boolean hasRefundAccount;
 }

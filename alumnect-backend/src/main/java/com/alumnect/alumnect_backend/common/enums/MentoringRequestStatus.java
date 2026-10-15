@@ -17,5 +17,7 @@ public enum MentoringRequestStatus {
     CLOSED,
 
     /** Yêu cầu đã bị hủy bởi người tạo */
-    CANCELLED
+    CANCELLED,
+    /** Quá thời hạn mong muốn mà chưa chốt và thanh toán Mentor nào: hệ thống tự đóng */
+    EXPIRED
 }

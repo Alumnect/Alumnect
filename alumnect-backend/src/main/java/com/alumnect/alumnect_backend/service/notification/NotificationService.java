@@ -104,6 +104,53 @@ public interface NotificationService {
     void sendWelcomeNotification(User user);
 
     /**
+     * Gửi một thông báo cần thiết cho mỗi bên khi thanh toán hoàn tất và Task
+     * được kích hoạt lần đầu.
+     */
+    void sendMentoringTaskActivatedNotification(
+            com.alumnect.alumnect_backend.entity.user.User student,
+            com.alumnect.alumnect_backend.entity.user.User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task
+    );
+
+    /**
+     * Gửi một sự kiện Task có định danh duy nhất vào Notification Center.
+     * Dùng cho các yêu cầu cần đối phương xác nhận và các mốc hoàn thành Task.
+     */
+    void sendMentoringTaskEventNotification(
+            com.alumnect.alumnect_backend.entity.user.User sender,
+            com.alumnect.alumnect_backend.entity.user.User recipient,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
+            String eventType,
+            String eventId,
+            String title,
+            String content
+    );
+
+    /**
+     * Thông báo tài khoản Mentoring (request đóng, gói Mentor, chi trả, hoàn tiền).
+     * Chống gửi trùng theo (người nhận, targetType, targetId).
+     */
+    void sendMentoringAccountNotification(
+            com.alumnect.alumnect_backend.entity.user.User sender,
+            com.alumnect.alumnect_backend.entity.user.User recipient,
+            String targetType,
+            String targetId,
+            String title,
+            String content
+    );
+
+    void sendMentoringGroupNotification(
+            com.alumnect.alumnect_backend.entity.user.User sender,
+            com.alumnect.alumnect_backend.entity.user.User recipient,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringGroup group,
+            String eventType,
+            String eventId,
+            String title,
+            String content
+    );
+
+    /**
      * Gửi thông báo cho học viên khi Mentor tạo/nộp Work Log mới chờ xác nhận (UC107).
      *
      * @param mentor Mentor đã gửi Work Log
@@ -115,7 +162,8 @@ public interface NotificationService {
             com.alumnect.alumnect_backend.entity.user.User mentor,
             com.alumnect.alumnect_backend.entity.user.User student,
             com.alumnect.alumnect_backend.entity.mentorship.MentoringTask task,
-            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringWorkLog workLog,
+            boolean taskJustStarted
     );
 
     /**
@@ -196,4 +244,3 @@ public interface NotificationService {
             com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket
     );
 }
-

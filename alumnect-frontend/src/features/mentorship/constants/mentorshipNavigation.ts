@@ -7,8 +7,11 @@ import {
   GraduationCap,
   Handshake,
   Inbox,
+  Landmark,
   LayoutDashboard,
+  MessageCircle,
   Search,
+  RotateCcw,
   Send,
   UserCheck,
   Users,
@@ -38,38 +41,51 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
     label: 'Khám phá',
     items: [
       {
-        label: 'Tổng quan Mentorship',
+        label: 'Tổng quan',
         to: '/app/mentoring',
         icon: LayoutDashboard,
         end: true,
         audience: 'common',
       },
       {
-        label: 'Khám phá Mentor',
+        label: 'Khám phá',
         to: '/app/mentoring/discover',
         icon: Search,
         audience: 'common',
       },
       {
-        label: 'Bảng xếp hạng Mentor',
+        label: 'Tin nhắn Mentoring',
+        to: '/app/mentoring/messages',
+        activePaths: ['/app/mentoring/messages', '/app/mentoring/chats'],
+        icon: MessageCircle,
+        audience: 'common',
+      },
+      {
+        label: 'Nhóm Mentoring',
+        to: '/app/mentoring/groups',
+        icon: Users,
+        audience: 'common',
+      },
+      {
+        label: 'Bảng xếp hạng',
         to: '/app/mentoring/ranking',
         icon: Users,
         audience: 'common',
       },
       {
-        label: 'Tạo yêu cầu Mentoring',
+        label: 'Tạo yêu cầu',
         to: '/app/mentoring/requests/create',
         icon: Send,
         audience: 'common',
       },
       {
-        label: 'Thỏa thuận Mentoring Deal',
+        label: 'Thỏa thuận',
         to: '/app/mentoring/deals',
         icon: Handshake,
         audience: 'common',
       },
       {
-        label: 'Nhiệm vụ Mentoring',
+        label: 'Nhiệm vụ của tôi',
         to: '/app/mentoring/tasks',
         activePaths: ['/app/mentoring/tasks'],
         icon: BriefcaseBusiness,
@@ -77,10 +93,16 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         visibility: 'without-profile',
       },
       {
-        label: 'Yêu cầu Mentoring của tôi',
+        label: 'Yêu cầu của tôi',
         to: '/app/mentoring/requests',
         activePaths: ['/app/mentoring/requests'],
         icon: BookOpen,
+        audience: 'common',
+      },
+      {
+        label: 'Hoàn tiền',
+        to: '/app/mentoring/refunds',
+        icon: RotateCcw,
         audience: 'common',
       },
       {
@@ -96,7 +118,7 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
     label: 'Dành cho Mentor',
     items: [
       {
-        label: 'Đăng ký trở thành Mentor',
+        label: 'Đăng ký Mentor',
         to: '/app/mentoring/become-mentor',
         icon: UserCheck,
         audience: 'alumni',
@@ -119,7 +141,7 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         visibility: 'with-profile',
       },
       {
-        label: 'Quản lý nhiệm vụ & Work Log',
+        label: 'Nhiệm vụ & Work Log',
         to: '/app/mentoring/tasks',
         activePaths: ['/app/mentoring/tasks'],
         icon: BriefcaseBusiness,
@@ -128,14 +150,21 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         visibility: 'with-profile',
       },
       {
-        label: 'Trạng thái Mentor',
+        label: 'Thu nhập',
+        to: '/app/mentoring/earnings',
+        icon: Landmark,
+        audience: 'alumni',
+        visibility: 'with-profile',
+      },
+      {
+        label: 'Trạng thái',
         to: '/app/mentoring/status',
         icon: Activity,
         audience: 'alumni',
         visibility: 'with-profile',
       },
       {
-        label: 'Gói Mentor / Subscription',
+        label: 'Gói thành viên',
         to: '/app/mentoring/packages',
         activePaths: ['/app/mentoring/packages', '/app/mentoring/subscription'],
         icon: WalletCards,
@@ -148,7 +177,7 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
     label: 'Thông tin',
     items: [
       {
-        label: 'Điều khoản Mentoring',
+        label: 'Điều khoản dịch vụ',
         to: '/app/mentoring/terms',
         icon: FileText,
         audience: 'common',

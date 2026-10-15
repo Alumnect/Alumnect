@@ -18,7 +18,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MentorReviewRequest {
 
-    @NotNull(message = "Mentor Profile ID không được để trống")
+    /** Task đã hoàn thành được đánh giá (mỗi Task chỉ được đánh giá một lần) */
+    @NotNull(message = "Task được đánh giá không được để trống")
+    private Long taskId;
+
+    /** Không bắt buộc: Mentor được suy ra từ Task */
     private Long mentorProfileId;
 
     @NotNull(message = "Số sao đánh giá không được để trống")

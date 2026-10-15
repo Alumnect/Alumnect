@@ -127,6 +127,14 @@ public class MentoringConversationResponse {
     /** Người dùng hiện tại có thể gửi tin nhắn */
     private boolean canSendMessage;
 
+    /** Nhóm mentoring gửi Request (null nếu Request cá nhân) */
+    private Long groupId;
+
+    private String groupName;
+
+    /** Những người đang tham gia Chat for Task (Học viên, Mentor, thành viên nhóm) */
+    private java.util.List<MentoringParticipantResponse> participants;
+
     /** Mentor có thể "Deal lại / Tạo Deal Ticket" */
     private boolean canCreateDealTicket;
 

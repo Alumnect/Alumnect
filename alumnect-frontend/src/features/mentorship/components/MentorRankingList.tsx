@@ -75,7 +75,7 @@ export function MentorRankingList({
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-coral-600 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <h3 className="font-heading text-sm font-bold">Không thể tải bảng xếp hạng Mentor</h3>
+            <h3 className="font-display text-sm font-bold">Không thể tải bảng xếp hạng Mentor</h3>
             <p className="text-xs leading-relaxed opacity-90">
               {error?.message || 'Hệ thống tạm thời không phản hồi. Vui lòng thử lại sau.'}
             </p>
@@ -111,8 +111,8 @@ export function MentorRankingList({
       {/* Danh sách toàn bộ Mentor theo thứ hạng */}
       <div className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-          <h2 className="font-heading text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Danh Sách Chi Tiết Thứ Hạng ({totalElements})
+          <h2 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            Danh sách thứ hạng ({totalElements})
           </h2>
           <span className="text-xs text-plum-500 dark:text-[#8a8d91]">
             Trang {page + 1} / {totalPages || 1}

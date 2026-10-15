@@ -28,6 +28,9 @@ public class MentoringPaymentLedgerResponse {
     private MentoringLedgerTransactionType transactionType;
     private MentoringLedgerStatus status;
     private String providerReference;
+    private String providerStatus;
+    private String failureCode;
+    private Instant transactedAt;
     private Instant deadlineSnapshot;
     private String note;
     private Instant createdAt;

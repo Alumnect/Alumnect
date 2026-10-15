@@ -90,6 +90,10 @@ public class CreateMentoringRequestResponse {
     /** Trạng thái phản hồi của Mentor đích nếu là yêu cầu DIRECT (UC102): WAITING, ACCEPTED, DECLINED */
     private String directMentorResponseStatus;
 
+    private MentoringGroupResponse group;
+
+    private List<MentoringGroupMemberResponse> participatingMembers;
+
     /** Thời điểm tạo yêu cầu */
     private Instant createdAt;
 }

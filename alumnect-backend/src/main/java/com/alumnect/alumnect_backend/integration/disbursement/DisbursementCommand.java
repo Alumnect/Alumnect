@@ -22,8 +22,12 @@ public class DisbursementCommand {
     private Long beneficiaryUserId;
     private BigDecimal amount;
     private String bankName;
+    private String bankBin;
     private String bankAccountNumber;
     private String bankAccountHolder;
     private String description;
     private String originalPaymentReference;
+    private String idempotencyKey;
+    /** Nhóm lệnh chi trên PayOS: commission (thù lao Mentor) hoặc refund (hoàn tiền Học viên) */
+    private String category;
 }

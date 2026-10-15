@@ -78,6 +78,10 @@ export function AdminMentorListSection() {
       case 'PAYMENT_PENDING':
       case 'PENDING_PAYMENT':
         return { text: 'Chờ thanh toán', tone: 'gold' as const }
+      case 'INCOMPLETE':
+        return { text: 'Chưa hoàn thiện', tone: 'neutral' as const }
+      case 'EXPIRED':
+        return { text: 'Đã hết hạn', tone: 'danger' as const }
       case 'PENDING':
         return { text: 'Chờ duyệt', tone: 'gold' as const }
       case 'INACTIVE':
@@ -179,10 +183,10 @@ export function AdminMentorListSection() {
                 className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-700 focus:border-[#F27024] focus:outline-none cursor-pointer"
               >
                 <option value="ALL">Tất cả trạng thái Mentor</option>
-                <option value="ACTIVE">Đang hoạt động (ACTIVE)</option>
-                <option value="PAYMENT_PENDING">Chờ thanh toán (PAYMENT_PENDING)</option>
-                <option value="INCOMPLETE">Chưa hoàn thiện (INCOMPLETE)</option>
-                <option value="EXPIRED">Hết hạn (EXPIRED)</option>
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="PAYMENT_PENDING">Chờ thanh toán</option>
+                <option value="INCOMPLETE">Chưa hoàn thiện</option>
+                <option value="EXPIRED">Đã hết hạn</option>
               </select>
             </div>
 
@@ -197,11 +201,11 @@ export function AdminMentorListSection() {
                 className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-700 focus:border-[#F27024] focus:outline-none cursor-pointer"
               >
                 <option value="ALL">Tất cả gói dịch vụ</option>
-                <option value="ACTIVE">Đang hiệu lực (ACTIVE)</option>
-                <option value="PAID">Đã thanh toán (PAID)</option>
-                <option value="EXPIRED">Đã hết hạn (EXPIRED)</option>
-                <option value="PENDING_PAYMENT">Chờ thanh toán (PENDING)</option>
-                <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                <option value="ACTIVE">Đang hiệu lực</option>
+                <option value="PAID">Đã thanh toán</option>
+                <option value="EXPIRED">Đã hết hạn</option>
+                <option value="PENDING_PAYMENT">Chờ thanh toán</option>
+                <option value="CANCELLED">Đã hủy</option>
               </select>
             </div>
 

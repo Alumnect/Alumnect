@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.service.mentorship;
 
+import com.alumnect.alumnect_backend.common.enums.MentoringAmendmentStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.common.enums.ConversationType;
@@ -8,6 +9,7 @@ import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskAmendmentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
 import com.alumnect.alumnect_backend.dto.request.mentorship.CreateTaskPaymentRequest;
@@ -17,6 +19,7 @@ import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskAmendment;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskPayment;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
@@ -31,6 +34,7 @@ import com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerReposi
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringPaymentLedger;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequestDistribution;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,6 +76,10 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
     private final MentoringRequestDistributionRepository distributionRepository;
     private final PayOSGateway payOSGateway;
     private final MentoringTaskMapper taskMapper;
+    private final NotificationService notificationService;
+    private final MentoringGroupService mentoringGroupService;
+    private final MentoringTaskAmendmentRepository amendmentRepository;
+    private final MentoringRules mentoringRules;
 
     @Value("${app.payos.payment-expiration-minutes:15}")
     private int expirationMinutes;
@@ -102,6 +110,11 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
         // 2. Chỉ có Học viên (Student) của Deal mới được quyền thanh toán
         if (!deal.getStudent().getId().equals(currentUserId)) {
             throw new ForbiddenException("Chỉ có Học viên (Student) tham gia Deal mới có quyền thực hiện thanh toán nhiệm vụ này.");
+        }
+
+        // Thanh toán bổ sung (top-up) cho Ticket điều chỉnh đã được chấp nhận
+        if (request.getAmendmentId() != null) {
+            return createTopUpPayment(currentUserId, deal, request.getAmendmentId());
         }
 
         // 3. Deal phải thuộc một Request (không thanh toán Deal mồ côi / legacy)
@@ -136,6 +149,13 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
         }
 
         Instant now = Instant.now();
+
+        // 6.1 Deadline của Deal phải còn trong tương lai, nếu không Task sẽ quá hạn ngay khi kích hoạt
+        if (deal.getDeadline() == null || !deal.getDeadline().isAfter(now)) {
+            throw new ConflictException("Deadline của thỏa thuận đã qua. Vui lòng đề nghị Mentor gửi phiên bản Deal mới với deadline hợp lệ.");
+        }
+        // 6.2 Mentor còn năng lực nhận thêm Task
+        mentoringRules.requireMentorCapacity(deal.getMentor().getId());
 
         // 7. Bảo vệ ràng buộc chỉ 1 checkout PENDING hoạt động cho Request:
         //    - Nếu có đơn PENDING của cùng Deal còn hạn -> Tái sử dụng
@@ -243,7 +263,9 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
         // Nếu đã PAID, trả về kết quả thành công ngay
         if (payment.getPaymentStatus() == PaymentStatus.PAID) {
             MentoringTaskPaymentStatusResponse response = taskMapper.toStatusResponse(payment);
-            response.setMessage("Thanh toán thành công. Task đang ở giai đoạn chuẩn bị (PREPARATION).");
+            response.setMessage(payment.getAmendment() != null
+                    ? "Thanh toán bổ sung thành công. Điều chỉnh đã được áp dụng vào Task."
+                    : "Thanh toán thành công. Task đang ở giai đoạn chuẩn bị (PREPARATION).");
             return response;
         }
 
@@ -255,9 +277,11 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
 
                 if ("PAID".equalsIgnoreCase(payOsStatus)) {
                     log.info("Phát hiện orderCode={} đã PAID từ PayOS qua Polling! Tiến hành kích hoạt Task...", orderCode);
-                    activateTaskUponPaymentSuccess(payment);
+                    settlePaymentSuccess(payment);
                     MentoringTaskPaymentStatusResponse response = taskMapper.toStatusResponse(payment);
-                    response.setMessage("Thanh toán thành công. Mentoring Task đã chính thức được kích hoạt!");
+                    response.setMessage(payment.getAmendment() != null
+                            ? "Thanh toán bổ sung thành công. Điều chỉnh đã được áp dụng vào Task."
+                            : "Thanh toán thành công. Mentoring Task đã chính thức được kích hoạt!");
                     return response;
                 } else if ("CANCELLED".equalsIgnoreCase(payOsStatus)) {
                     payment.setPaymentStatus(PaymentStatus.CANCELLED);
@@ -332,7 +356,12 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
         if (data == null || data.getOrderCode() == null) {
             throw new BadRequestException("Dữ liệu Webhook PayOS không hợp lệ.");
         }
+        handleVerifiedWebhook(data);
+    }
 
+    @Override
+    @Transactional
+    public void handleVerifiedWebhook(WebhookData data) {
         Long orderCode = data.getOrderCode();
         log.info("Webhook PayOS hợp lệ cho Task Payment orderCode={}, code={}, amount={}", orderCode, data.getCode(), data.getAmount());
 
@@ -373,7 +402,217 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
         }
 
         // Kích hoạt Task
-        activateTaskUponPaymentSuccess(payment);
+        settlePaymentSuccess(payment);
+    }
+
+    @Override
+    @Transactional
+    public void reconcilePendingPayment(Long orderCode) {
+        MentoringTaskPayment payment = paymentRepository.findForUpdateByOrderCode(orderCode).orElse(null);
+        if (payment == null || payment.getPaymentStatus() != PaymentStatus.PENDING) {
+            return;
+        }
+        PaymentLink paymentLink = payOSGateway.getPaymentLinkInformation(orderCode);
+        String payOsStatus = paymentLink != null && paymentLink.getStatus() != null ? paymentLink.getStatus().toString() : "";
+        switch (payOsStatus) {
+            case "PAID" -> {
+                log.info("Đối soát: orderCode={} đã PAID trên PayOS, tiến hành ghi nhận.", orderCode);
+                settlePaymentSuccess(payment);
+            }
+            case "CANCELLED" -> {
+                payment.setPaymentStatus(PaymentStatus.CANCELLED);
+                paymentRepository.save(payment);
+            }
+            case "EXPIRED" -> {
+                payment.setPaymentStatus(PaymentStatus.EXPIRED);
+                paymentRepository.save(payment);
+            }
+            default -> {
+                // PENDING / PROCESSING / UNDERPAID: giữ nguyên, lần đối soát sau kiểm tra tiếp
+            }
+        }
+    }
+
+    private void settlePaymentSuccess(MentoringTaskPayment payment) {
+        if (payment.getAmendment() != null) {
+            applyTopUpPayment(payment);
+        } else {
+            activateTaskUponPaymentSuccess(payment);
+        }
+    }
+
+    /**
+     * Khởi tạo thanh toán bổ sung (top-up) cho Ticket điều chỉnh đã được chấp nhận.
+     * Số tiền lấy từ Ticket phía server; Task chỉ được cộng tiền sau khi PayOS xác nhận đã thanh toán.
+     */
+    private MentoringTaskPaymentCheckoutResponse createTopUpPayment(Long currentUserId, MentoringDeal deal, Long amendmentId) {
+        MentoringTaskAmendment amendment = amendmentRepository.findByIdForUpdate(amendmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket điều chỉnh với ID: " + amendmentId));
+        MentoringTask task = amendment.getTask();
+
+        if (task.getDeal() == null || !task.getDeal().getId().equals(deal.getId())) {
+            throw new BadRequestException("Ticket điều chỉnh không thuộc thỏa thuận này.");
+        }
+        if (!task.getStudent().getId().equals(currentUserId)) {
+            throw new ForbiddenException("Chỉ Học viên của Task mới có quyền thanh toán bổ sung.");
+        }
+        if (amendment.getStatus() != MentoringAmendmentStatus.AWAITING_TOPUP) {
+            throw new ConflictException("Ticket điều chỉnh không còn ở trạng thái chờ thanh toán bổ sung (hiện là "
+                    + amendment.getStatus() + ").");
+        }
+        if (task.getStatus() == MentoringTaskStatus.COMPLETED || task.getStatus() == MentoringTaskStatus.CANCELLED
+                || task.getStatus() == MentoringTaskStatus.RESOLVED || task.getStatus() == MentoringTaskStatus.DISPUTED) {
+            throw new ConflictException("Task không còn ở trạng thái cho phép thanh toán bổ sung.");
+        }
+        BigDecimal amount = amendment.getAdditionalAmount();
+        if (amount == null || amount.signum() <= 0) {
+            throw new BadRequestException("Ticket điều chỉnh này không có khoản tiền cần thanh toán bổ sung.");
+        }
+
+        Instant now = Instant.now();
+        Optional<MentoringTaskPayment> pending = paymentRepository
+                .findFirstByAmendmentIdAndPaymentStatusOrderByCreatedAtDesc(amendmentId, PaymentStatus.PENDING);
+        if (pending.isPresent()) {
+            MentoringTaskPayment existing = pending.get();
+            if (existing.getPaymentExpiresAt().isBefore(now)) {
+                existing.setPaymentStatus(PaymentStatus.EXPIRED);
+                paymentRepository.saveAndFlush(existing);
+            } else {
+                log.info("Tái sử dụng giao dịch top-up PENDING orderCode={} cho amendmentId={}", existing.getOrderCode(), amendmentId);
+                return taskMapper.toCheckoutResponse(existing);
+            }
+        }
+
+        long orderCode = (System.currentTimeMillis() % 100000000000L) + (long) (Math.random() * 900 + 100);
+        Instant paymentExpiresAt = now.plus(Duration.ofMinutes(expirationMinutes));
+        String description = "TOPUP " + (orderCode % 1000000);
+
+        CreatePaymentLinkRequest payOSRequest = CreatePaymentLinkRequest.builder()
+                .orderCode(orderCode)
+                .amount(amount.longValue())
+                .description(description)
+                .returnUrl(taskReturnUrl)
+                .cancelUrl(taskCancelUrl)
+                .expiredAt(paymentExpiresAt.getEpochSecond())
+                .items(List.of(PaymentLinkItem.builder()
+                        .name("Bổ sung Task #" + task.getId())
+                        .quantity(1)
+                        .price(amount.longValue())
+                        .build()))
+                .build();
+
+        CreatePaymentLinkResponse payOSResponse;
+        try {
+            payOSResponse = payOSGateway.createPaymentLink(payOSRequest);
+        } catch (Exception ex) {
+            log.error("Lỗi khi tạo payment link top-up orderCode={}: {}", orderCode, ex.getMessage());
+            throw new BadRequestException("Không thể khởi tạo liên kết thanh toán PayOS. Vui lòng thử lại sau.");
+        }
+
+        MentoringTaskPayment saved = paymentRepository.save(MentoringTaskPayment.builder()
+                .deal(task.getDeal())
+                .task(task)
+                .amendment(amendment)
+                .student(task.getStudent())
+                .orderCode(orderCode)
+                .amount(amount)
+                .paymentStatus(PaymentStatus.PENDING)
+                .paymentMethod("PAYOS")
+                .paymentReference(payOSResponse.getPaymentLinkId())
+                .description(payOSResponse.getDescription() != null && !payOSResponse.getDescription().isBlank()
+                        ? payOSResponse.getDescription() : description)
+                .qrCodeUrl(payOSResponse.getQrCode())
+                .checkoutUrl(payOSResponse.getCheckoutUrl())
+                .accountNumber(payOSResponse.getAccountNumber())
+                .accountName(payOSResponse.getAccountName())
+                .bin(payOSResponse.getBin())
+                .paymentExpiresAt(paymentExpiresAt)
+                .build());
+        log.info("Khởi tạo thanh toán bổ sung id={}, orderCode={} cho amendmentId={}, taskId={}",
+                saved.getId(), orderCode, amendmentId, task.getId());
+        return taskMapper.toCheckoutResponse(saved);
+    }
+
+    /**
+     * Áp dụng thanh toán bổ sung khi PayOS xác nhận đã thanh toán — idempotent:
+     * ghi Sổ quỹ ký quỹ, cộng tiền vào Task và áp dụng nội dung điều chỉnh của Ticket.
+     */
+    private void applyTopUpPayment(MentoringTaskPayment payment) {
+        if (payment.getPaymentStatus() == PaymentStatus.PAID && payment.getPaidAt() != null) {
+            return;
+        }
+        Instant now = Instant.now();
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaidAt(now);
+
+        MentoringTaskAmendment amendment = amendmentRepository.findByIdForUpdate(payment.getAmendment().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket điều chỉnh của giao dịch top-up."));
+        MentoringTask task = amendment.getTask();
+        MentoringRequest request = task.getRequest() != null ? task.getRequest() : task.getDeal().getRequest();
+
+        // Tiền đã thu thật nên luôn vào quỹ ký quỹ của Task, kể cả khi Ticket đã bị thay thế trong lúc chờ thanh toán
+        task.setAgreedPrice(task.getAgreedPrice().add(payment.getAmount()));
+        boolean applyContent = amendment.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP;
+        if (applyContent) {
+            if (amendment.getNewScope() != null) task.setTaskScope(amendment.getNewScope());
+            if (amendment.getNewExpectedResult() != null) task.setExpectedResult(amendment.getNewExpectedResult());
+            if (amendment.getNewDeadline() != null) task.setDeadline(amendment.getNewDeadline());
+            amendment.setStatus(MentoringAmendmentStatus.APPLIED);
+            amendmentRepository.save(amendment);
+        } else {
+            log.warn("Top-up orderCode={} đã thanh toán nhưng Ticket id={} đang ở trạng thái {}: chỉ cộng tiền vào quỹ Task.",
+                    payment.getOrderCode(), amendment.getId(), amendment.getStatus());
+        }
+        taskRepository.save(task);
+        paymentRepository.save(payment);
+
+        if (!ledgerRepository.existsByPaymentIdAndTransactionType(payment.getId(), MentoringLedgerTransactionType.ESCROW_COLLECTION)) {
+            ledgerRepository.save(MentoringPaymentLedger.builder()
+                    .payment(payment)
+                    .request(request)
+                    .task(task)
+                    .deal(task.getDeal())
+                    .student(task.getStudent())
+                    .mentor(task.getMentor())
+                    .amount(payment.getAmount())
+                    .transactionType(MentoringLedgerTransactionType.ESCROW_COLLECTION)
+                    .status(MentoringLedgerStatus.SUCCEEDED)
+                    .providerReference(payment.getPaymentReference() != null ? payment.getPaymentReference() : String.valueOf(payment.getOrderCode()))
+                    .deadlineSnapshot(task.getDeadline())
+                    .note(String.format("Ký quỹ bổ sung orderCode=%d cho Task #%d (Ticket điều chỉnh v%d)",
+                            payment.getOrderCode(), task.getId(), amendment.getVersion()))
+                    .build());
+        }
+
+        NumberFormat vnd = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("vi-VN"));
+        String formatted = vnd.format(payment.getAmount());
+        String formattedTotal = vnd.format(task.getAgreedPrice());
+        if (task.getConversation() != null) {
+            conversationService.postSystemMessage(task.getConversation(), task.getStudent(), String.format(
+                    "✅ Học viên đã thanh toán bổ sung %s. Điều chỉnh Task (v%d) đã có hiệu lực, tổng quỹ Task hiện là %s.",
+                    formatted, amendment.getVersion(), formattedTotal));
+        }
+        notificationService.sendMentoringTaskEventNotification(
+                task.getStudent(), task.getMentor(), task,
+                "AMENDMENT_APPLIED", String.valueOf(amendment.getId()),
+                "Điều chỉnh Task đã có hiệu lực",
+                "Học viên đã thanh toán bổ sung " + formatted + ". Tổng quỹ Task hiện là " + formattedTotal + ".");
+        log.info("Đã áp dụng top-up orderCode={} cho taskId={}: +{} → agreedPrice={}",
+                payment.getOrderCode(), task.getId(), payment.getAmount(), task.getAgreedPrice());
+    }
+
+    @Override
+    @Transactional
+    public void cancelPendingTopUpPayments(Long amendmentId, String reason) {
+        for (MentoringTaskPayment pending : paymentRepository.findByAmendmentIdAndPaymentStatus(amendmentId, PaymentStatus.PENDING)) {
+            try {
+                payOSGateway.cancelPaymentLink(pending.getOrderCode(), reason);
+            } catch (Exception ex) {
+                log.warn("Không thể hủy link top-up trên PayOS cho orderCode={}: {}", pending.getOrderCode(), ex.getMessage());
+            }
+            pending.setPaymentStatus(PaymentStatus.CANCELLED);
+            paymentRepository.save(pending);
+        }
     }
 
     /**
@@ -503,11 +742,16 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
             if (conversation.getType() == ConversationType.MENTORING) {
                 conversation.setMentoringTask(task);
                 conversationRepository.save(conversation);
+                mentoringGroupService.synchronizeConversationParticipants(mentoringRequest, conversation);
             }
             String formattedPrice = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("vi-VN")).format(deal.getAgreedPrice());
             conversationService.postSystemMessage(conversation, deal.getStudent(), String.format(
                     "Thanh toán thành công, Task đã được kích hoạt. (Task #%d · %s · giai đoạn PREPARATION)",
                     task.getId(), formattedPrice));
         }
+
+        // Chỉ một thông báo thiết yếu được lưu ở Notification Center cho mỗi bên.
+        notificationService.sendMentoringTaskActivatedNotification(
+                deal.getStudent(), deal.getMentor(), task);
     }
 }

@@ -12,13 +12,15 @@ export function MentoringChatPage() {
   const id = Number(conversationId)
 
   return (
-    <Container className="py-2 sm:py-4">
+    <Container className="h-full min-h-0 px-0 py-0 sm:px-0">
       <MentoringTermsGate source="MENTORING_HOME">
         {Number.isFinite(id) && id > 0 ? (
-          <MentoringChatForTask conversationId={id} onBack={() => navigate(-1)} />
+          <div className="h-full min-h-0">
+            <MentoringChatForTask conversationId={id} onBack={() => navigate(-1)} />
+          </div>
         ) : (
           <EmptyState
-            title="Không tìm thấy Chat for Task"
+            title="Không tìm thấy cuộc trò chuyện"
             description="Đường dẫn cuộc trò chuyện không hợp lệ."
             action={<Button onClick={() => navigate('/app/mentoring/requests')}>Về danh sách Request</Button>}
           />

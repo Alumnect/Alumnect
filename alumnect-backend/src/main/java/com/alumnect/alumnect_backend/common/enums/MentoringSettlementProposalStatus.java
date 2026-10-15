@@ -14,5 +14,7 @@ public enum MentoringSettlementProposalStatus {
     REJECTED,
 
     /** Đã bị thay thế bởi đề xuất phân chia khác */
-    SUPERSEDED
+    SUPERSEDED,
+    /** Người tạo đã hủy đề xuất, hoặc hệ thống đóng khi Task không còn hoạt động */
+    CANCELLED
 }

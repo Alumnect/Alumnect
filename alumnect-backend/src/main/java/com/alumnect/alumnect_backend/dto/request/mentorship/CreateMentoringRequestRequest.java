@@ -32,6 +32,15 @@ public class CreateMentoringRequestRequest {
     /** Định danh của Mentor nhận yêu cầu (chỉ dùng cho yêu cầu trực tiếp UC101, null nếu UC100) */
     private Long mentorId;
 
+    /** ID của nhóm Mentoring đã tạo trước (mô hình GROUP-FIRST, dùng khi participationType = GROUP) */
+    private Long groupId;
+
+    @Size(max = 9, message = "Số thành viên được mời vượt quá giới hạn")
+    private List<Long> memberIds;
+
+    @Size(max = 64, message = "Khóa yêu cầu không hợp lệ")
+    private String clientRequestKey;
+
     /** Tiêu đề ngắn gọn mô tả nhu cầu cố vấn */
     @NotBlank(message = "Tiêu đề yêu cầu không được để trống")
     @Size(min = 5, max = 200, message = "Tiêu đề yêu cầu phải từ 5 đến 200 ký tự")

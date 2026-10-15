@@ -18,39 +18,6 @@ import { useAdminMentorPackages, useUpdateMentorPackage } from '../hooks/useAdmi
 import type { AdminMentorPackageDto } from '../api/adminApi'
 import { AdminMentorListSection } from './AdminMentorListSection'
 
-const DEFAULT_FALLBACK_PACKAGES: AdminMentorPackageDto[] = [
-  {
-    id: 1,
-    code: '1 Tháng',
-    name: 'Gói Tiêu Chuẩn 1 Tháng',
-    description: 'Gói trải nghiệm kết nối cố vấn trong vòng 1 tháng dành cho cựu sinh viên mới gia nhập.',
-    durationMonths: 1,
-    price: 100000,
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    code: '3 Tháng',
-    name: 'Gói Phổ Biến 3 Tháng',
-    description: 'Gói cố vấn 3 tháng tối ưu chi phí, được khuyên dùng nhất cho các Cố vấn chính thức.',
-    durationMonths: 3,
-    price: 250000,
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 3,
-    code: '6 Tháng',
-    name: 'Gói Cao Cấp 6 Tháng',
-    description: 'Gói đồng hành cố vấn dài hạn 6 tháng với mức tiết kiệm cao nhất.',
-    durationMonths: 6,
-    price: 500000,
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString(),
-  },
-]
-
 /**
  * Trang quản lý giá và trạng thái các gói dịch vụ cố vấn dành cho Quản trị viên.
  */
@@ -59,8 +26,7 @@ export function AdminMentorPackagesPage() {
   const { data: rawPackages, isLoading, isError, error, refetch } = useAdminMentorPackages()
   const updateMutation = useUpdateMentorPackage()
 
-  // Sử dụng dữ liệu thực tế từ hệ thống hoặc danh sách mặc định khi mất kết nối
-  const displayPackages = rawPackages && rawPackages.length > 0 ? rawPackages : DEFAULT_FALLBACK_PACKAGES
+  const displayPackages = rawPackages ?? []
 
   // State quản lý Modal chỉnh sửa gói dịch vụ
   const [selectedPkg, setSelectedPkg] = useState<AdminMentorPackageDto | null>(null)
@@ -241,7 +207,13 @@ export function AdminMentorPackagesPage() {
           )}
 
           {/* Bảng Quản trị Danh sách Gói dịch vụ */}
-          {!isLoading && displayPackages && (
+          {!isLoading && !isError && displayPackages.length === 0 && (
+            <Card hover={false} className="p-6 text-center text-sm text-slate-500">
+              Chưa có gói dịch vụ cố vấn nào trong hệ thống.
+            </Card>
+          )}
+
+          {!isLoading && displayPackages.length > 0 && (
             <Card hover={false} className="p-0 border border-slate-200 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">

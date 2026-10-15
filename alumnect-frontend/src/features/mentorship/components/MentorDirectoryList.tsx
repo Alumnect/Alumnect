@@ -66,7 +66,7 @@ export function MentorDirectoryList({
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-900/50 dark:text-coral-300">
           <AlertCircle className="h-6 w-6" />
         </div>
-        <h3 className="mt-3 font-heading text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="mt-3 font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
           Không thể tải danh sách Mentor
         </h3>
         <p className="mt-1 text-xs text-plum-600 dark:text-[#b0b3b8]">

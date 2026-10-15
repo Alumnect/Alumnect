@@ -17,6 +17,9 @@ import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestAttachmentRe
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringGroupRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringGroupMemberRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestMemberRepository;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.dao.mentorship.UserTermsAcceptanceRepository;
 import com.alumnect.alumnect_backend.dao.salary.IndustryRepository;
@@ -31,6 +34,7 @@ import com.alumnect.alumnect_backend.entity.mentorship.MentorSubscription;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequestAttachment;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequestDistribution;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringGroup;
 import com.alumnect.alumnect_backend.entity.salary.Industry;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
@@ -54,10 +58,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentorResponseItemResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringRequestDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringResponseSummaryResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringGroupMemberResponse;
+import com.alumnect.alumnect_backend.common.enums.MentoringGroupStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringGroupMemberStatus;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringGroupMember;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequestMember;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -90,6 +100,14 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
     private final MentoringProperties mentoringProperties;
     private final MentoringConversationService mentoringConversationService;
     private final MentoringTaskRepository mentoringTaskRepository;
+    private final MentoringGroupService mentoringGroupService;
+    private final MentoringGroupRepository mentoringGroupRepository;
+    private final MentoringGroupMemberRepository mentoringGroupMemberRepository;
+    private final MentoringRequestMemberRepository mentoringRequestMemberRepository;
+    private final MentoringRules mentoringRules;
+    private final MentoringRequestLifecycleService requestLifecycleService;
+    private final MentorReputationService mentorReputationService;
+    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
 
     /**
      * Tạo mới một yêu cầu Mentoring (Hỗ trợ cả UC100 General Request và UC101 Direct Request).
@@ -133,6 +151,20 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         User student = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin tài khoản người dùng: " + userEmail));
 
+        if (request.getClientRequestKey() != null && !request.getClientRequestKey().isBlank()) {
+            var existing = mentoringRequestRepository.findByStudentIdAndClientRequestKey(
+                    student.getId(), request.getClientRequestKey().trim());
+            if (existing.isPresent()) return mapToResponseWithSummary(existing.get(),
+                    mentoringRequestDistributionRepository.findByRequestIdOrderByDistributedAtAsc(existing.get().getId()));
+        }
+        List<Long> groupMemberIds = request.getMemberIds() == null ? List.of() : request.getMemberIds();
+        if (request.getParticipationType() == MentoringType.GROUP && request.getGroupId() == null && groupMemberIds.isEmpty()) {
+            throw new BadRequestException("Vui lòng chọn nhóm Mentoring để tạo yêu cầu nhóm");
+        }
+        if (request.getParticipationType() != MentoringType.GROUP && (request.getGroupId() != null || !groupMemberIds.isEmpty())) {
+            throw new BadRequestException("Thông tin nhóm chỉ áp dụng khi chọn hình thức Nhóm");
+        }
+
         // 2. Kiểm tra vai trò: Sinh viên (STUDENT), Cựu sinh viên / Mentor (ALUMNI) đều có quyền tạo yêu cầu Mentoring
         String roleName = student.getRole() != null ? student.getRole().getName() : "";
         if (!"STUDENT".equalsIgnoreCase(roleName) && !"ALUMNI".equalsIgnoreCase(roleName) && !"ADMIN".equalsIgnoreCase(roleName)) {
@@ -168,6 +200,9 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 throw new BadRequestException("Ngân sách tối đa không được nhỏ hơn ngân sách tối thiểu");
             }
         }
+
+        if (request.getBudgetMin() != null) mentoringRules.requireWholeVnd(request.getBudgetMin(), "Ngân sách tối thiểu");
+        if (request.getBudgetMax() != null) mentoringRules.requireWholeVnd(request.getBudgetMax(), "Ngân sách tối đa");
 
         // 7. Kiểm tra thời hạn mong muốn (Expected Deadline)
         if (request.getExpectedDeadline() != null && request.getExpectedDeadline().isBefore(Instant.now())) {
@@ -244,6 +279,49 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 log.warn("Mentor profileId={} không hỗ trợ industryId={}", targetMentor.getId(), industry.getId());
                 throw new BadRequestException("Lĩnh vực chuyên môn được chọn không nằm trong danh mục hỗ trợ của Mentor này. Vui lòng chọn lĩnh vực khác hoặc chọn Mentor phù hợp.");
             }
+            if (request.getParticipationType() == MentoringType.GROUP
+                    && targetMentor.getMentoringType() != MentoringType.GROUP
+                    && targetMentor.getMentoringType() != MentoringType.BOTH) {
+                throw new BadRequestException("Mentor này hiện không nhận mentoring theo nhóm");
+            }
+        }
+
+        // 9. Xử lý nhóm Mentoring theo mô hình Group-First (hoặc legacy fallback)
+        MentoringGroup mentoringGroup = null;
+        Set<Long> participantUserIds = new LinkedHashSet<>();
+        participantUserIds.add(student.getId());
+
+        if (request.getParticipationType() == MentoringType.GROUP) {
+            if (request.getGroupId() != null) {
+                mentoringGroup = mentoringGroupRepository.findById(request.getGroupId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhóm Mentoring đã chọn"));
+                if (mentoringGroup.getStatus() != MentoringGroupStatus.ACTIVE) {
+                    throw new BadRequestException("Nhóm Mentoring được chọn đã đóng hoặc không còn hoạt động");
+                }
+                if (!mentoringGroup.getLeader().getId().equals(student.getId())) {
+                    throw new ForbiddenException("Chỉ trưởng nhóm mới có quyền tạo yêu cầu Mentoring cho nhóm");
+                }
+                List<MentoringGroupMember> joinedMembers = mentoringGroupMemberRepository.findByGroupIdAndStatusIn(
+                        mentoringGroup.getId(), List.of(MentoringGroupMemberStatus.JOINED, MentoringGroupMemberStatus.ACTIVE));
+                for (MentoringGroupMember jm : joinedMembers) {
+                    participantUserIds.add(jm.getUser().getId());
+                }
+            } else if (!groupMemberIds.isEmpty()) {
+                mentoringGroup = mentoringGroupService.createForRequest(student, request.getTitle(), groupMemberIds);
+                List<MentoringGroupMember> joinedMembers = mentoringGroupMemberRepository.findByGroupIdAndStatusIn(
+                        mentoringGroup.getId(), List.of(MentoringGroupMemberStatus.JOINED, MentoringGroupMemberStatus.ACTIVE));
+                for (MentoringGroupMember jm : joinedMembers) {
+                    participantUserIds.add(jm.getUser().getId());
+                }
+            }
+        }
+
+        // Kiểm tra xung đột lợi ích đối với yêu cầu DIRECT: Mentor được chọn không được là thành viên tham gia Request
+        if (isDirectRequest && targetMentor != null && targetMentor.getUser() != null) {
+            if (participantUserIds.contains(targetMentor.getUser().getId())) {
+                log.warn("Mentor ID={} là thành viên tham gia trong yêu cầu cố vấn (Conflict of interest)", targetMentor.getId());
+                throw new BadRequestException("Mentor không thể là thành viên trong yêu cầu Mentoring của chính mình");
+            }
         }
 
         // 10. Lưu yêu cầu Mentoring vào cơ sở dữ liệu
@@ -262,10 +340,45 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .expectedDeadline(request.getExpectedDeadline())
                 .status(MentoringRequestStatus.OPEN)
                 .matchedCount(isDirectRequest ? 1 : 0)
+                .group(mentoringGroup)
+                .clientRequestKey(request.getClientRequestKey() == null ? null : request.getClientRequestKey().trim())
                 .build();
 
         MentoringRequest savedRequest = mentoringRequestRepository.save(mentoringRequest);
         log.info("Lưu thành công MentoringRequest với ID={}, requestType={}", savedRequest.getId(), savedRequest.getRequestType());
+
+        // Lưu snapshot thành viên tham gia vào mentoring_request_members
+        List<MentoringGroupMemberResponse> participatingMemberResponses = new ArrayList<>();
+        if (mentoringGroup != null) {
+            for (Long pUserId : participantUserIds) {
+                User pUser = userRepository.findById(pUserId).orElse(null);
+                if (pUser != null) {
+                    mentoringRequestMemberRepository.save(MentoringRequestMember.builder()
+                            .request(savedRequest)
+                            .user(pUser)
+                            .joinedAt(Instant.now())
+                            .build());
+                    UserProfile pProfile = userProfileRepository.findById(pUserId).orElse(null);
+                    participatingMemberResponses.add(MentoringGroupMemberResponse.builder()
+                            .userId(pUserId)
+                            .fullName(pProfile != null ? pProfile.getFullName() : pUser.getEmail())
+                            .email(pUser.getEmail())
+                            .avatarUrl(pProfile != null ? pProfile.getAvatarUrl() : null)
+                            .major(pProfile != null && pProfile.getMajor() != null ? pProfile.getMajor().getName() : null)
+                            .role(pUser.getRole() != null ? pUser.getRole().getName() : null)
+                            .leader(pUserId.equals(mentoringGroup.getLeader().getId()))
+                            .status(MentoringGroupMemberStatus.JOINED)
+                            .joinedAt(Instant.now())
+                            .build());
+                    if (!pUserId.equals(student.getId())) {
+                        notificationService.sendMentoringGroupNotification(student, pUser, mentoringGroup,
+                                "REQUEST_CREATED", savedRequest.getId().toString(),
+                                "Yêu cầu Mentoring mới của nhóm",
+                                resolveFullName(student) + " đã tạo yêu cầu Mentoring \"" + savedRequest.getTitle() + "\" cho nhóm \"" + mentoringGroup.getName() + "\".");
+                    }
+                }
+            }
+        }
 
         // 11. Lưu các tệp đính kèm (nếu có)
         List<MentoringAttachmentResponse> attachmentResponses = new ArrayList<>();
@@ -318,11 +431,12 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             distributionNote = "Yêu cầu cố vấn của bạn đã được gửi trực tiếp tới Mentor " + targetMentorName + ". Vui lòng chờ Mentor phản hồi.";
             log.info("Đã gửi trực tiếp yêu cầu Mentoring ID={} tới Mentor ID={}", savedRequest.getId(), targetMentor.getId());
         } else {
-            // UC100: Kích hoạt Internal Matching và phân phối tự động tới các Mentor phù hợp
+            // UC100: Kích hoạt Internal Matching và phân phối tự động tới các Mentor phù hợp (loại trừ các thành viên trong nhóm)
             List<MentorProfile> matchingMentors = mentorMatchingService.findMatchingMentors(
                     industry.getId(),
                     request.getWorkingMode(),
-                    request.getParticipationType()
+                    request.getParticipationType(),
+                    participantUserIds
             );
 
             matchedCount = mentorMatchingService.distributeRequestToMentors(savedRequest, matchingMentors);
@@ -330,7 +444,7 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             mentoringRequestRepository.save(savedRequest);
 
             if (matchedCount > 0) {
-                distributionNote = "Đã tự động tìm kiếm và phân phối yêu cầu của bạn tới " + matchedCount + " Mentor phù hợp trong mạng lưới.";
+                distributionNote = "Đã gửi yêu cầu của bạn tới " + matchedCount + " Mentor trong hệ thống. Các Mentor cùng ngành được ưu tiên hiển thị trước.";
             } else {
                 distributionNote = "Hiện tại chưa tìm thấy Mentor phù hợp. Yêu cầu của bạn đã được ghi nhận vào hệ thống và sẽ sẵn sàng phân phối khi có Mentor mới tham gia.";
             }
@@ -360,6 +474,8 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .matchedCount(matchedCount)
                 .distributionNote(distributionNote)
                 .attachments(attachmentResponses)
+                .participatingMembers(participatingMemberResponses)
+                .group(mentoringGroup != null ? mentoringGroupService.getGroup(userEmail, mentoringGroup.getId()) : null)
                 .createdAt(savedRequest.getCreatedAt())
                 .build();
     }
@@ -421,7 +537,9 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         MentoringRequest mentoringRequest = mentoringRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
 
-        if (!mentoringRequest.getStudent().getId().equals(student.getId())) {
+        // Thành viên nhóm của Request nhóm được xem (chỉ đọc); thao tác vẫn chỉ dành cho người tạo
+        if (!mentoringRequest.getStudent().getId().equals(student.getId())
+                && !mentoringGroupService.isActiveMember(mentoringRequest, student.getId())) {
             log.warn("User ID={} cố tình xem yêu cầu ID={} của User ID={}", student.getId(), requestId, mentoringRequest.getStudent().getId());
             throw new ForbiddenException("Bạn không có quyền xem yêu cầu cố vấn này");
         }
@@ -450,7 +568,8 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         MentoringRequest mentoringRequest = mentoringRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu cố vấn với ID: " + requestId));
 
-        if (!mentoringRequest.getStudent().getId().equals(student.getId())) {
+        if (!mentoringRequest.getStudent().getId().equals(student.getId())
+                && !mentoringGroupService.isActiveMember(mentoringRequest, student.getId())) {
             log.warn("Truy cập trái phép: User ID={} cố truy xuất phản hồi của yêu cầu ID={} thuộc về User ID={}",
                     student.getId(), requestId, mentoringRequest.getStudent().getId());
             throw new ForbiddenException("Bạn không có quyền xem yêu cầu cố vấn này");
@@ -508,6 +627,12 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             for (MentoringRequestDistribution dist : distributions) {
                 mentorResponses.add(mapDistributionToResponseItem(dist));
             }
+            // Thứ tự hiển thị: Mentor được chọn → cùng ngành → đã chấp nhận → đang chờ → còn lại
+            mentorResponses.sort(java.util.Comparator
+                    .comparing((MentorResponseItemResponse r) -> !r.isSelected())
+                    .thenComparing(r -> !r.isSameIndustry())
+                    .thenComparingInt(r -> responseRank(r.getResponseStatus()))
+                    .thenComparing(r -> r.getMentorName() == null ? "" : r.getMentorName(), String.CASE_INSENSITIVE_ORDER));
             summary = buildResponseSummary(distributions);
         }
 
@@ -531,12 +656,13 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         if (reqType == MentoringRequestType.DIRECT) {
             distributionNote = "Yêu cầu cố vấn của bạn đã được gửi trực tiếp tới Mentor " + (targetMentorName != null ? targetMentorName : "") + ". Vui lòng chờ Mentor phản hồi.";
         } else if (summary.getTotalDistributed() > 0) {
-            distributionNote = "Đã tự động phân phối yêu cầu tới " + summary.getTotalDistributed() + " Mentor phù hợp trong mạng lưới.";
+            distributionNote = "Đã gửi yêu cầu tới " + summary.getTotalDistributed() + " Mentor trong hệ thống. Các Mentor cùng ngành được ưu tiên hiển thị trước.";
         } else {
             distributionNote = "Hiện tại chưa tìm thấy Mentor phù hợp. Yêu cầu của bạn đã được ghi nhận vào hệ thống và sẽ sẵn sàng phân phối khi có Mentor mới.";
         }
 
         return MentoringRequestDetailResponse.builder()
+                .canCancel(requestLifecycleService.canCancel(mentoringRequest, student.getId()))
                 .id(mentoringRequest.getId())
                 .requestType(reqType)
                 .targetMentorId(targetMentorId)
@@ -566,6 +692,9 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .taskId(mentoringRequest.getConfirmedDeal() != null
                         ? mentoringTaskRepository.findByDealId(mentoringRequest.getConfirmedDeal().getId()).map(t -> t.getId()).orElse(null)
                         : null)
+                .group(mentoringRequest.getGroup() != null
+                        ? mentoringGroupService.getGroup(userEmail, mentoringRequest.getGroup().getId()) : null)
+                .participatingMembers(mapParticipatingMembers(mentoringRequest))
                 .build();
     }
 
@@ -580,6 +709,37 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
     @Transactional(readOnly = true)
     public List<MentorResponseItemResponse> getRequestResponses(String userEmail, Long requestId) {
         return getRequestDetailWithResponses(userEmail, requestId).getMentorResponses();
+    }
+
+    private String resolveFullName(User user) {
+        if (user == null) return "Người dùng AlumNect";
+        UserProfile p = user.getProfile() != null ? user.getProfile() : userProfileRepository.findById(user.getId()).orElse(null);
+        return p != null && p.getFullName() != null && !p.getFullName().isBlank() ? p.getFullName() : user.getEmail();
+    }
+
+    private List<MentoringGroupMemberResponse> mapParticipatingMembers(MentoringRequest request) {
+        if (request == null) return Collections.emptyList();
+        List<MentoringRequestMember> snapshotMembers = mentoringRequestMemberRepository.findByRequestId(request.getId());
+        if (!snapshotMembers.isEmpty()) {
+            Long leaderId = request.getGroup() != null ? request.getGroup().getLeader().getId() : request.getStudent().getId();
+            return snapshotMembers.stream().<MentoringGroupMemberResponse>map(rm -> {
+                User u = rm.getUser();
+                UserProfile p = userProfileRepository.findById(u.getId()).orElse(null);
+                return MentoringGroupMemberResponse.builder()
+                        .id(rm.getId())
+                        .userId(u.getId())
+                        .fullName(p != null ? p.getFullName() : u.getEmail())
+                        .email(u.getEmail())
+                        .avatarUrl(p != null ? p.getAvatarUrl() : null)
+                        .major(p != null && p.getMajor() != null ? p.getMajor().getName() : null)
+                        .role(u.getRole() != null ? u.getRole().getName() : null)
+                        .leader(u.getId().equals(leaderId))
+                        .status(MentoringGroupMemberStatus.JOINED)
+                        .joinedAt(rm.getJoinedAt())
+                        .build();
+            }).toList();
+        }
+        return Collections.emptyList();
     }
 
     /**
@@ -673,6 +833,9 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .attachments(attResponses)
                 .responseSummary(summary)
                 .directMentorResponseStatus(directMentorResponseStatus)
+                .participatingMembers(mapParticipatingMembers(entity))
+                .group(entity.getGroup() != null
+                        ? mentoringGroupService.getGroup(entity.getStudent().getEmail(), entity.getGroup().getId()) : null)
                 .createdAt(entity.getCreatedAt())
                 .build();
     }
@@ -680,6 +843,15 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
     /**
      * Tiện ích chuyển đổi một bản ghi distribution sang MentorResponseItemResponse.
      */
+    private int responseRank(String responseStatus) {
+        if (responseStatus == null) return 3;
+        return switch (responseStatus) {
+            case "ACCEPTED" -> 0;
+            case "WAITING" -> 1;
+            default -> 2;
+        };
+    }
+
     private MentorResponseItemResponse mapDistributionToResponseItem(MentoringRequestDistribution dist) {
         MentorProfile profile = dist.getMentorProfile();
         User mentorUser = profile.getUser();
@@ -701,6 +873,10 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         boolean canMessage = dist.getStatus() == MentoringDistributionStatus.ACCEPTED && conversationId != null;
         boolean selected = mentorUser != null && req.getSelectedMentor() != null
                 && req.getSelectedMentor().getId().equals(mentorUser.getId());
+        Long requestIndustryId = req.getIndustry() != null ? req.getIndustry().getId() : null;
+        boolean sameIndustry = requestIndustryId != null && mentorSupportedFieldRepository
+                .findByMentorProfileId(profile.getId()).stream()
+                .anyMatch(sf -> sf.getIndustry() != null && requestIndustryId.equals(sf.getIndustry().getId()));
 
         return MentorResponseItemResponse.builder()
                 .mentorProfileId(profile.getId())
@@ -717,6 +893,7 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .canMessage(canMessage)
                 .conversationId(conversationId)
                 .selected(selected)
+                .sameIndustry(sameIndustry)
                 .build();
     }
 
@@ -1111,6 +1288,15 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             log.warn("Yêu cầu ID={} không còn OPEN hoặc đã chọn Mentor (status={})", requestId, mentoringRequest.getStatus());
             throw new BadRequestException("Yêu cầu cố vấn này đã đóng, đã chọn Mentor khác hoặc không còn tiếp nhận phản hồi mới");
         }
+        if (mentoringRequest.getExpectedDeadline() != null && mentoringRequest.getExpectedDeadline().isBefore(Instant.now())) {
+            throw new BadRequestException("Yêu cầu đã quá thời hạn mong muốn của Học viên, không thể nhận thêm phản hồi.");
+        }
+        // Xung đột lợi ích: Mentor là thành viên của chính nhóm gửi Request
+        if (mentoringGroupService.isActiveMember(mentoringRequest, mentorUser.getId())) {
+            throw new ForbiddenException("Bạn là thành viên của nhóm gửi yêu cầu này nên không thể nhận làm Mentor.");
+        }
+        // Năng lực nhận việc của Mentor
+        mentoringRules.requireMentorCapacity(mentorUser.getId());
 
         // Kiểm tra trạng thái phân phối hiện tại (Rule 8)
         if (distribution.getStatus() == MentoringDistributionStatus.REJECTED) {
@@ -1126,6 +1312,11 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         // WAITING → ACCEPTED (Rule 9)
         distribution.setStatus(MentoringDistributionStatus.ACCEPTED);
         distribution.setRespondedAt(Instant.now());
+        // Phản hồi trong vòng 24 giờ kể từ khi nhận yêu cầu: thưởng điểm uy tín
+        if (distribution.getDistributedAt() != null
+                && distribution.getDistributedAt().plus(java.time.Duration.ofHours(24)).isAfter(Instant.now())) {
+            mentorReputationService.recordQuickResponse(mentorProfile.getId());
+        }
         if (requestDto != null && requestDto.getResponseNote() != null && !requestDto.getResponseNote().trim().isEmpty()) {
             distribution.setResponseNote(requestDto.getResponseNote().trim());
         }

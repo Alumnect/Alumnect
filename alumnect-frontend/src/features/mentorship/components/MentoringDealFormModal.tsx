@@ -140,17 +140,17 @@ export function MentoringDealFormModal({
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="absolute right-5 top-5 p-2 text-plum-400 hover:text-plum-700 rounded-full hover:bg-plum-50 transition-colors dark:hover:bg-white/5"
+          className="absolute right-5 top-5 p-2 text-plum-400 hover:text-plum-700 rounded-full hover:bg-cream-100 transition-colors dark:hover:bg-white/5"
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-700/40 dark:text-brand-400">
             <Edit3 className="h-6 w-6" />
           </span>
           <div>
-            <h3 className="font-heading text-lg font-black text-plum-900 dark:text-[#f0f2f5]">
+            <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#f0f2f5]">
               {deal ? `Deal lại — tạo phiên bản ${deal.version + 1}` : 'Tạo Deal Ticket'}
             </h3>
             <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
@@ -163,7 +163,7 @@ export function MentoringDealFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="font-bold text-plum-800 dark:text-[#e4e6eb]">
-                Loại nhiệm vụ <span className="text-rose-500">*</span>
+                Loại nhiệm vụ <span className="text-coral-500">*</span>
               </label>
               <select {...register('taskType')} className={inputClass}>
                 {MENTORING_DEAL_TASK_TYPES.map((type) => (
@@ -172,19 +172,19 @@ export function MentoringDealFormModal({
                   </option>
                 ))}
               </select>
-              {errors.taskType && <p className="text-rose-500 text-[11px] font-medium">{errors.taskType.message}</p>}
+              {errors.taskType && <p className="text-coral-500 text-[11px] font-medium">{errors.taskType.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <label className="font-bold text-plum-800 dark:text-[#e4e6eb]">
-                Hình thức tham gia <span className="text-rose-500">*</span>
+                Hình thức tham gia <span className="text-coral-500">*</span>
               </label>
               <select {...register('participationType')} className={inputClass}>
                 <option value="INDIVIDUAL">Kèm cặp cá nhân 1-1</option>
                 <option value="GROUP">Hướng dẫn theo nhóm học viên</option>
               </select>
               {errors.participationType && (
-                <p className="text-rose-500 text-[11px] font-medium">{errors.participationType.message}</p>
+                <p className="text-coral-500 text-[11px] font-medium">{errors.participationType.message}</p>
               )}
             </div>
           </div>
@@ -192,48 +192,49 @@ export function MentoringDealFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="font-bold text-plum-800 dark:text-[#e4e6eb]">
-                Hình thức làm việc <span className="text-rose-500">*</span>
+                Hình thức làm việc <span className="text-coral-500">*</span>
               </label>
               <select {...register('workingMode')} className={inputClass}>
                 <option value="ONLINE">Trực tuyến (Online)</option>
                 <option value="OFFLINE">Trực tiếp (Offline)</option>
                 <option value="BOTH">Linh hoạt (Online & Offline)</option>
               </select>
-              {errors.workingMode && <p className="text-rose-500 text-[11px] font-medium">{errors.workingMode.message}</p>}
+              {errors.workingMode && <p className="text-coral-500 text-[11px] font-medium">{errors.workingMode.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <label className="font-bold text-plum-800 dark:text-[#e4e6eb]">
-                Mức giá thỏa thuận (VND) <span className="text-rose-500">*</span>
+                Mức giá thỏa thuận (VND) <span className="text-coral-500">*</span>
               </label>
               <div className="relative">
                 <input
                   type="number"
-                  step="1000"
+                  min="0"
+                  step="any"
                   {...register('agreedPrice', { valueAsNumber: true })}
-                  placeholder="Ví dụ: 500000"
+                  placeholder="Ví dụ: 500000 (từ 0 VNĐ trở lên)"
                   className={`${inputClass} pl-9`}
                 />
                 <DollarSign className="absolute left-3 top-3.5 h-4 w-4 text-plum-400" />
               </div>
-              {errors.agreedPrice && <p className="text-rose-500 text-[11px] font-medium">{errors.agreedPrice.message}</p>}
+              {errors.agreedPrice && <p className="text-coral-500 text-[11px] font-medium">{errors.agreedPrice.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="font-bold text-plum-800 dark:text-[#e4e6eb]">
-              Hạn chót hoàn thành (Deadline) <span className="text-rose-500">*</span>
+              Hạn chót hoàn thành (Deadline) <span className="text-coral-500">*</span>
             </label>
             <div className="relative">
               <input type="datetime-local" {...register('deadline')} className={`${inputClass} pl-9`} />
               <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-plum-400" />
             </div>
-            {errors.deadline && <p className="text-rose-500 text-[11px] font-medium">{errors.deadline.message}</p>}
+            {errors.deadline && <p className="text-coral-500 text-[11px] font-medium">{errors.deadline.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <label className="font-bold text-plum-800 dark:text-[#e4e6eb]">
-              Phạm vi công việc (Task Scope) <span className="text-rose-500">*</span>
+              Phạm vi công việc (Task Scope) <span className="text-coral-500">*</span>
             </label>
             <textarea
               rows={4}
@@ -241,12 +242,12 @@ export function MentoringDealFormModal({
               placeholder="Mô tả chi tiết những gì Mentor sẽ hướng dẫn và Học viên cần hoàn thành..."
               className={`${inputClass} font-normal leading-relaxed`}
             />
-            {errors.taskScope && <p className="text-rose-500 text-[11px] font-medium">{errors.taskScope.message}</p>}
+            {errors.taskScope && <p className="text-coral-500 text-[11px] font-medium">{errors.taskScope.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <label className="font-bold text-plum-800 dark:text-[#e4e6eb]">
-              Kết quả kỳ vọng đầu ra (Expected Result) <span className="text-rose-500">*</span>
+              Kết quả kỳ vọng đầu ra (Expected Result) <span className="text-coral-500">*</span>
             </label>
             <textarea
               rows={3}
@@ -255,7 +256,7 @@ export function MentoringDealFormModal({
               className={`${inputClass} font-normal leading-relaxed`}
             />
             {errors.expectedResult && (
-              <p className="text-rose-500 text-[11px] font-medium">{errors.expectedResult.message}</p>
+              <p className="text-coral-500 text-[11px] font-medium">{errors.expectedResult.message}</p>
             )}
           </div>
 
@@ -267,7 +268,7 @@ export function MentoringDealFormModal({
               placeholder="Ví dụ: Điều chỉnh giá theo số buổi đã trao đổi..."
               className={`${inputClass} font-normal`}
             />
-            {errors.changeNote && <p className="text-rose-500 text-[11px] font-medium">{errors.changeNote.message}</p>}
+            {errors.changeNote && <p className="text-coral-500 text-[11px] font-medium">{errors.changeNote.message}</p>}
           </div>
 
           <div className="flex justify-end gap-3 pt-3 border-t border-plum-900/[0.06] dark:border-white/10">
@@ -279,7 +280,7 @@ export function MentoringDealFormModal({
               variant="primary"
               disabled={isPending}
               leftIcon={isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              className="rounded-xl font-black bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20"
+              className="rounded-xl font-bold bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20"
             >
               {isPending ? 'Đang gửi...' : 'Gửi Deal Ticket cho Học viên'}
             </Button>

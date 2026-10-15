@@ -32,11 +32,16 @@ export interface PresignedUrlData {
   publicUrl: string
 }
 
+export type ConversationScope = 'GENERAL' | 'MENTORING'
+
 export const chatApi = {
   /** Lấy danh sách các cuộc trò chuyện theo tab: 'primary' (Hộp thư chính) hoặc 'requests' (Tin nhắn chờ) */
-  getConversations: (tab: 'primary' | 'requests' = 'primary'): Promise<ApiResponse<Conversation[]>> => {
+  getConversations: (
+    tab: 'primary' | 'requests' = 'primary',
+    scope: ConversationScope = 'GENERAL'
+  ): Promise<ApiResponse<Conversation[]>> => {
     return http.get<any, ApiResponse<Conversation[]>>('/conversations', {
-      params: { tab },
+      params: { tab, scope },
     })
   },
 

@@ -38,7 +38,7 @@ export function MentorExperienceTimeline({ experiences }: MentorExperienceTimeli
         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
           <Briefcase className="h-4 w-4" />
         </span>
-        <h2 className="font-heading text-lg font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
           Hành trình nghề nghiệp & Kinh nghiệm
         </h2>
       </div>
@@ -54,15 +54,15 @@ export function MentorExperienceTimeline({ experiences }: MentorExperienceTimeli
                     ? 'bg-amber-400 ring-amber-300'
                     : exp.isCurrent
                     ? 'bg-brand-500 ring-brand-200'
-                    : 'bg-plum-300 ring-plum-100 dark:bg-plum-600'
+                    : 'bg-plum-300 ring-cream-200 dark:bg-white/15'
                 }`}
               />
 
-              <div className="rounded-2xl p-4 transition-all duration-200 bg-plum-50/40 hover:bg-plum-50/80 border border-plum-900/[0.04] dark:bg-white/[0.02] dark:hover:bg-white/[0.05] dark:border-white/[0.04]">
+              <div className="rounded-2xl p-4 transition-all duration-200 bg-cream-100/40 hover:bg-cream-100/80 border border-plum-900/[0.04] dark:bg-white/[0.02] dark:hover:bg-white/[0.05] dark:border-white/[0.04]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+                      <h3 className="text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
                         {exp.title}
                       </h3>
                       {exp.isPrimary && (

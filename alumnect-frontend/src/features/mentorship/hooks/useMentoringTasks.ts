@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { mentoringTaskApi } from '../api/mentoringTaskApi'
 import { DEAL_QUERY_KEYS } from './useMentoringDeals'
@@ -30,8 +30,8 @@ export const TASK_QUERY_KEYS = {
   payments: () => [...TASK_QUERY_KEYS.all, 'payment'] as const,
   paymentStatus: (orderCode?: number) =>
     [...TASK_QUERY_KEYS.payments(), orderCode] as const,
-  checkoutSession: (dealId?: number) =>
-    [...TASK_QUERY_KEYS.payments(), 'checkout', dealId] as const,
+  checkoutSession: (dealId?: number, amendmentId?: number) =>
+    [...TASK_QUERY_KEYS.payments(), 'checkout', dealId, amendmentId ?? null] as const,
   report: (id?: number) => [...TASK_QUERY_KEYS.all, 'report', id] as const,
 }
 
@@ -54,10 +54,12 @@ export function useMyTasks(
  * Hook truy vấn chi tiết toàn diện một Mentoring Task theo ID (UC106).
  */
 export function useTaskDetail(taskId?: number) {
-  return useQuery<MentoringTaskDetail, Error>({
+  const hasTask = typeof taskId === 'number' && taskId > 0
+  return useQuery<MentoringTaskDetail | null, Error>({
     queryKey: TASK_QUERY_KEYS.detail(taskId),
-    queryFn: () => mentoringTaskApi.getTaskDetail(taskId!),
-    enabled: typeof taskId === 'number' && taskId > 0,
+    // refetch() bỏ qua `enabled`, nên chặn tại queryFn: chưa có task thì không gọi API
+    queryFn: () => (hasTask ? mentoringTaskApi.getTaskDetail(taskId) : Promise.resolve(null)),
+    enabled: hasTask,
   })
 }
 
@@ -158,10 +160,10 @@ export function useCreateTaskPaymentCheckout() {
  * Hook lấy phiên thanh toán VietQR PayOS cho Mentoring Task (UC105).
  * Dùng useQuery reactive, cache 5 phút để hiển thị tức thì không bị treo loading spinner.
  */
-export function useTaskPaymentCheckoutSession(dealId?: number, isEnabled = true) {
+export function useTaskPaymentCheckoutSession(dealId?: number, isEnabled = true, amendmentId?: number) {
   return useQuery<MentoringTaskPaymentCheckoutResponse, Error>({
-    queryKey: TASK_QUERY_KEYS.checkoutSession(dealId),
-    queryFn: () => mentoringTaskApi.createPaymentCheckout({ dealId: dealId! }),
+    queryKey: TASK_QUERY_KEYS.checkoutSession(dealId, amendmentId),
+    queryFn: () => mentoringTaskApi.createPaymentCheckout({ dealId: dealId!, amendmentId }),
     enabled: Boolean(dealId && dealId > 0) && isEnabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -201,6 +203,7 @@ export function useTaskPaymentPolling(
   onPaid?: (res: MentoringTaskPaymentStatusResponse) => void
 ) {
   const queryClient = useQueryClient()
+  const handledPaidOrderRef = useRef<number | null>(null)
 
   const query = useQuery<MentoringTaskPaymentStatusResponse, Error>({
     queryKey: TASK_QUERY_KEYS.paymentStatus(orderCode),
@@ -218,15 +221,24 @@ export function useTaskPaymentPolling(
   })
 
   useEffect(() => {
-    if (query.data && query.data.paymentStatus === 'PAID') {
-      queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.all })
-      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.all })
-      queryClient.invalidateQueries({ queryKey: MENTORING_CONVERSATION_QUERY_KEYS.all })
-      if (onPaid) {
-        onPaid(query.data)
-      }
+    if (
+      !query.data ||
+      query.data.paymentStatus !== 'PAID' ||
+      typeof orderCode !== 'number' ||
+      handledPaidOrderRef.current === orderCode
+    ) {
+      return
     }
-  }, [query.data, queryClient, onPaid])
+
+    // Handle a paid order exactly once even when the modal recreates onPaid.
+    handledPaidOrderRef.current = orderCode
+    queryClient.invalidateQueries({ queryKey: DEAL_QUERY_KEYS.all })
+    queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.all })
+    queryClient.invalidateQueries({ queryKey: MENTORING_CONVERSATION_QUERY_KEYS.all })
+    if (onPaid) {
+      onPaid(query.data)
+    }
+  }, [query.data, queryClient, onPaid, orderCode])
 
   return query
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 /**
  * Repository thao tác với bảng messages.
@@ -22,6 +23,9 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
      */
     Page<Message> findByConversationIdOrderByCreatedAtDesc(Long conversationId, Pageable pageable);
 
+    Page<Message> findByConversationIdAndCreatedAtGreaterThanEqualOrderByCreatedAtDesc(
+            Long conversationId, Instant joinedAt, Pageable pageable);
+
     /**
      * Tìm tin nhắn mới nhất trong một cuộc hội thoại.
      */
@@ -30,9 +34,13 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     /**
      * Lấy ID tin nhắn mới nhất của từng cuộc hội thoại (dùng PostgreSQL DISTINCT ON).
      */
-    @Query(value = "SELECT DISTINCT ON (conversation_id) id FROM messages WHERE conversation_id IN :conversationIds ORDER BY conversation_id, created_at DESC",
+    @Query(value = "SELECT DISTINCT ON (m.conversation_id) m.id FROM messages m " +
+            "JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id AND cp.user_id = :currentUserId " +
+            "WHERE m.conversation_id IN :conversationIds AND m.created_at >= cp.joined_at " +
+            "ORDER BY m.conversation_id, m.created_at DESC",
            nativeQuery = true)
-    List<Long> findLatestMessageIdsByConversationIds(@Param("conversationIds") List<Long> conversationIds);
+    List<Long> findLatestMessageIdsByConversationIds(@Param("conversationIds") List<Long> conversationIds,
+                                                      @Param("currentUserId") Long currentUserId);
 
     /**
      * Nạp tin nhắn kèm tệp đính kèm theo danh sách ID.
@@ -49,6 +57,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
                    "JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id AND cp.user_id = :currentUserId " +
                    "WHERE m.conversation_id IN :conversationIds " +
                    "  AND m.sender_id != :currentUserId " +
+                   "  AND m.created_at >= cp.joined_at " +
                    "  AND (cp.last_read_message_id IS NULL OR m.id > cp.last_read_message_id) " +
                    "GROUP BY m.conversation_id",
            nativeQuery = true)

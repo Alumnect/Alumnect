@@ -69,4 +69,7 @@ public class MentorResponseItemResponse {
 
     /** Mentor này có phải là Mentor được Học viên chốt chọn cho Request hay không */
     private boolean selected;
+
+    /** Mentor có lĩnh vực hỗ trợ trùng với ngành của Request (được ưu tiên hiển thị trước) */
+    private boolean sameIndustry;
 }

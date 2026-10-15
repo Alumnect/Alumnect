@@ -34,6 +34,7 @@ import java.util.Map;
 public class MentorPaymentController {
 
     private final MentorPaymentService mentorPaymentService;
+    private final com.alumnect.alumnect_backend.service.payment.PayOSWebhookRouter webhookRouter;
 
     /**
      * API khởi tạo phiên thanh toán gói Mentor qua PayOS.
@@ -95,7 +96,7 @@ public class MentorPaymentController {
     @Operation(summary = "Tiếp nhận Webhook IPN từ PayOS", description = "Endpoint công khai nhận thông báo thanh toán thành công từ PayOS")
     public ResponseEntity<Map<String, Object>> handleWebhook(@RequestBody Webhook webhook) {
         log.info("Nhận callback Webhook từ PayOS: {}", webhook);
-        mentorPaymentService.handlePayOSWebhook(webhook);
+        webhookRouter.route(webhook);
         return ResponseEntity.ok(Map.of("error", 0, "message", "Webhook processed successfully"));
     }
 }

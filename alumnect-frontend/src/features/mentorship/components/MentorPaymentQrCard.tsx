@@ -127,7 +127,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
             <QrCode className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-heading text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
               Quét Mã VietQR PayOS
             </h3>
             <p className="text-xs text-plum-500">Mở App Ngân hàng hoặc Ví để quét</p>
@@ -226,7 +226,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
         <div className="flex items-center justify-between py-1.5">
           <span className="text-plum-500">Nội dung chuyển khoản</span>
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded-md text-xs sm:text-sm">
+            <span className="font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-700/40 px-2 py-0.5 rounded-md text-xs sm:text-sm">
               {effectiveDescription}
             </span>
             <button

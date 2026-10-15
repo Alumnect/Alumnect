@@ -98,7 +98,7 @@ export const MENTORING_TERMS_SECTIONS: TermsSection[] = [
     content: [
       'AlumNect cung cấp giải pháp công nghệ kết nối, giám sát và bảo đảm an toàn cho các hoạt động Hướng dẫn & Hỗ trợ.',
       'Hệ thống có quyền tạm khóa hoặc đình chỉ Deal khi phát hiện dấu hiệu bất thường hoặc vi phạm Điều khoản.',
-      'Điều khoản Hướng dẫn & Hỗ trợ có thể được cập nhật định kỳ. Người dùng sẽ được yêu cầu xác nhận phiên bản mới trước khi tiếp tục sử dụng module.'
+      'Điều khoản Hướng dẫn & Hỗ trợ có thể được cập nhật định kỳ. Người dùng sẽ được yêu cầu xác nhận lại trước khi tiếp tục sử dụng module.'
     ]
   }
 ]

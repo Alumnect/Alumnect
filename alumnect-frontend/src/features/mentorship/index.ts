@@ -8,6 +8,7 @@ export * from './hooks/useMentoringTerms'
 export * from './components/MentoringTerms'
 export * from './components/MentoringTermsContent'
 export * from './components/MentoringTermsGate'
+export * from './components/MentoringTermsConsentModal'
 export * from './components/MentorshipLoadingSkeleton'
 
 // UC91 exports
@@ -20,7 +21,6 @@ export * from './components/MentorProfessionalSection'
 export * from './components/MentorMentoringSection'
 export * from './components/MentorCvSection'
 export * from './components/MentorPayoutBankSection'
-export * from './components/MentorCvAndBankSection'
 
 // UC92 exports (Xem & chọn gói Mentor)
 export * from './model/mentorSubscriptionTypes'
@@ -43,6 +43,7 @@ export * from './model/mentorStatusTypes'
 export * from './api/mentorStatusApi'
 export * from './components/MentorshipLayout'
 export * from './components/MentorshipSidebar'
+export * from './components/MentorPageHeader'
 export * from './hooks/useMentorStatus'
 export * from './components/MentorStatusHero'
 export * from './components/MentorRequirementChecklist'
@@ -86,6 +87,7 @@ export * from './model/mentoringRequestTypes'
 export * from './model/mentoringRequestSchema'
 export * from './api/mentoringRequestApi'
 export * from './hooks/useCreateMentoringRequest'
+export * from './api/mentoringGroupApi'
 export * from './components/CreateMentoringRequestForm'
 export * from './components/RequestSuccessModal'
 
@@ -178,5 +180,3 @@ export * from './components/MentoringTaskReportModal'
 // UC119 exports (Trao đổi & Hòa giải trong Ticket tranh chấp)
 export * from './components/MentoringTicketDiscussionThread'
 export * from './components/MentoringTicketDiscussionModal'
-
-

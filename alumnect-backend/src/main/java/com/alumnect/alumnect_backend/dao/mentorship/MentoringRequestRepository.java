@@ -66,6 +66,16 @@ public interface MentoringRequestRepository extends JpaRepository<MentoringReque
      */
     Optional<MentoringRequest> findByIdAndStudentId(Long id, Long studentId);
 
+    Optional<MentoringRequest> findByGroupId(Long groupId);
+
+    List<MentoringRequest> findByGroupIdOrderByCreatedAtDesc(Long groupId);
+
+    /** Request còn mở nhưng đã quá thời hạn mong muốn (job tự đóng Request) */
+    @Query("SELECT r.id FROM MentoringRequest r WHERE r.status = com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus.OPEN AND r.expectedDeadline < :now")
+    List<Long> findOpenRequestIdsPastDeadline(@Param("now") java.time.Instant now);
+
+    Optional<MentoringRequest> findByStudentIdAndClientRequestKey(Long studentId, String clientRequestKey);
+
     /**
      * Khóa bi quan (SELECT ... FOR UPDATE) bản ghi Request để tuần tự hóa các thao tác làm thay đổi
      * trạng thái chọn Mentor: Mentor ACCEPT, tạo Deal Ticket, xác nhận Deal và kích hoạt Task sau thanh toán.

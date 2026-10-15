@@ -42,7 +42,7 @@ public class MentoringConversationController {
     @Operation(summary = "Lấy ngữ cảnh Chat for Task", description = "Chỉ Học viên chủ Request hoặc đúng Mentor của cuộc hội thoại được truy cập")
     public ResponseEntity<ApiResponse<MentoringConversationResponse>> getConversationContext(@PathVariable Long conversationId) {
         MentoringConversationResponse response = chatContextService.getConversationContext(getCurrentUserId(), conversationId);
-        return ResponseEntity.ok(ApiResponse.success("Lấy ngữ cảnh Chat for Task thành công.", response));
+        return ResponseEntity.ok(ApiResponse.success("Lấy thông tin cuộc trò chuyện thành công.", response));
     }
 
     /**
@@ -55,7 +55,7 @@ public class MentoringConversationController {
     @Operation(summary = "Lấy các Chat for Task của Request", description = "Truy vết Request → Mentor đã ACCEPT → Conversation → Deal → Payment → Task")
     public ResponseEntity<ApiResponse<List<MentoringConversationResponse>>> getConversationsByRequest(@PathVariable Long requestId) {
         List<MentoringConversationResponse> response = chatContextService.getConversationsByRequest(getCurrentUserId(), requestId);
-        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách Chat for Task của Request thành công.", response));
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách cuộc trò chuyện của yêu cầu thành công.", response));
     }
 
     /**

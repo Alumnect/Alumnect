@@ -234,7 +234,7 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   className={cn(
                     'w-fit rounded-2xl px-4 py-2.5 shadow-xs',
                     isMe
-                      ? 'rounded-br-xs bg-brand-600 text-white'
+                      ? 'mentoring-chat-outgoing rounded-br-xs bg-brand-600 text-white'
                       : 'rounded-bl-xs border border-plum-900/10 bg-white text-plum-900 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]'
                   )}
                 >

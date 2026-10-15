@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,4 +51,7 @@ public interface MentoringWorkLogRepository extends JpaRepository<MentoringWorkL
      * @return Số lượng nhật ký khớp trạng thái
      */
     long countByTaskIdAndStatus(Long taskId, WorkLogStatus status);
+
+    List<MentoringWorkLog> findByStatusAndCreatedAtBefore(
+            WorkLogStatus status, Instant createdAt);
 }

@@ -251,6 +251,31 @@ export const mentoringTaskApi = {
     return res.data
   },
 
+  /** Mentor rút lại đề xuất gia hạn đang chờ */
+  cancelDeadlineExtension: async (extensionId: number): Promise<MentoringTaskDeadlineExtension> => {
+    const res = await http.put<unknown, ApiResponse<MentoringTaskDeadlineExtension>>(
+      `/mentoring/tasks/deadline-extensions/${extensionId}/cancel`
+    )
+    return res.data
+  },
+
+  /** Mentor rút lại đề xuất điều chỉnh, hoặc Học viên từ chối thanh toán bổ sung */
+  cancelTaskAmendment: async (amendmentId: number, reason?: string): Promise<MentoringTaskAmendment> => {
+    const res = await http.put<unknown, ApiResponse<MentoringTaskAmendment>>(
+      `/mentoring/tasks/amendments/${amendmentId}/cancel`,
+      { reason }
+    )
+    return res.data
+  },
+
+  /** Người tạo rút lại đề xuất dừng Task đang chờ */
+  cancelSettlementProposal: async (proposalId: number): Promise<MentoringTaskSettlementProposal> => {
+    const res = await http.put<unknown, ApiResponse<MentoringTaskSettlementProposal>>(
+      `/mentoring/tasks/settlement-proposals/${proposalId}/cancel`
+    )
+    return res.data
+  },
+
   /**
    * Phản hồi (chấp nhận hoặc từ chối) gia hạn Deadline (UC109).
    */

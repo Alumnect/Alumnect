@@ -192,3 +192,26 @@ export function useRespondSettlementProposal(taskId?: number) {
     },
   })
 }
+
+/**
+ * Hủy / từ chối đề xuất trong Task: Mentor rút lại gia hạn hoặc điều chỉnh, người tạo rút lại đề xuất dừng Task,
+ * Học viên từ chối thanh toán bổ sung.
+ */
+export function useCloseTaskProposal(taskId?: number) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    unknown,
+    Error,
+    { kind: 'EXTENSION' | 'AMENDMENT' | 'SETTLEMENT'; id: number; reason?: string }
+  >({
+    mutationFn: ({ kind, id, reason }) => {
+      if (kind === 'EXTENSION') return mentoringTaskApi.cancelDeadlineExtension(id)
+      if (kind === 'AMENDMENT') return mentoringTaskApi.cancelTaskAmendment(id, reason)
+      return mentoringTaskApi.cancelSettlementProposal(id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.detail(taskId) })
+      queryClient.invalidateQueries({ queryKey: RESOLUTION_QUERY_KEYS.all })
+    },
+  })
+}

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, UserX, AlertTriangle, Search, Trophy, Sparkles, UserCheck } from 'lucide-react'
+import { ArrowLeft, UserX, AlertTriangle, Search, Sparkles, UserCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Container } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
 import {
+  MentorPageHeader,
   MentoringTermsGate,
   useMentorDetail,
   SelectedMentorCard,
@@ -38,7 +39,7 @@ function MentorNotFoundState({ onBack }: { onBack: () => void }) {
         <UserX className="h-8 w-8" />
       </div>
       <div className="space-y-1.5">
-        <h3 className="font-heading text-xl font-black text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
           Không tìm thấy hồ sơ Mentor
         </h3>
         <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
@@ -77,18 +78,18 @@ function SelfRequestState({ mentorId }: { mentorId: number }) {
   const navigate = useNavigate()
 
   return (
-    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-brand-200/80 bg-white dark:bg-[#242526] dark:border-brand-800/40">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
+    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-brand-200/80 bg-white dark:bg-[#242526] dark:border-brand-700/40">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-50 text-brand-600 dark:bg-brand-700/60 dark:text-brand-400">
         <UserCheck className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h3 className="font-heading text-xl font-black text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
           Đây là hồ sơ Mentor của bạn
         </h3>
         <p className="text-sm font-semibold text-plum-700 dark:text-[#b0b3b8]">
           Bạn không thể tự gửi yêu cầu cố vấn cho chính tài khoản của mình.
         </p>
-        <p className="text-xs text-plum-500 dark:text-[#8f9399] bg-plum-50 dark:bg-white/5 p-3 rounded-2xl">
+        <p className="text-xs text-plum-500 dark:text-[#8f9399] bg-cream-100 dark:bg-white/5 p-3 rounded-2xl">
           Để cấu hình thông tin cố vấn hoặc quản lý các yêu cầu nhận được từ sinh viên, vui lòng truy cập trang Quản lý Trạng thái Cố vấn.
         </p>
       </div>
@@ -134,7 +135,7 @@ function EmptySupportedFieldsState({
         <AlertTriangle className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h3 className="font-heading text-xl font-black text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
           Mentor chưa thiết lập lĩnh vực hỗ trợ
         </h3>
         <p className="text-sm font-semibold text-plum-700 dark:text-[#b0b3b8]">
@@ -152,7 +153,7 @@ function EmptySupportedFieldsState({
           leftIcon={<ArrowLeft className="h-4 w-4" />}
           className="w-full sm:w-auto rounded-xl font-bold"
         >
-          Quay lại hồ sơ
+          Quay lại
         </Button>
         <Link to="/app/mentoring/discover" className="w-full sm:w-auto">
           <Button
@@ -189,7 +190,7 @@ function MentorUnavailableState({
         <AlertTriangle className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h3 className="font-heading text-xl font-black text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
           Mentor hiện không thể tiếp nhận yêu cầu
         </h3>
         <p className="text-sm font-semibold text-plum-700 dark:text-[#b0b3b8]">
@@ -305,66 +306,14 @@ function CreateDirectMentoringRequestContent() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="space-y-6 text-left max-w-4xl mx-auto"
+        className="w-full space-y-4 text-left"
       >
-        {/* Navigation Breadcrumb */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.06] pb-4 dark:border-[#393a3b]">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              leftIcon={<ArrowLeft className="h-4 w-4" />}
-              onClick={() => {
-                if (window.history.length > 2) {
-                  navigate(-1)
-                } else {
-                  navigate(`/app/mentoring/mentors/${mentor.mentorId}`)
-                }
-              }}
-              className="rounded-xl font-bold text-plum-700 hover:text-brand-600 dark:text-[#e4e6eb] dark:hover:text-brand-400"
-            >
-              Quay lại hồ sơ
-            </Button>
-            <span className="text-plum-300 dark:text-plum-600">/</span>
-            <span className="text-xs font-semibold text-plum-500 dark:text-[#8f9399]">
-              Gửi yêu cầu trực tiếp tới{' '}
-              <strong className="text-plum-800 dark:text-[#e4e6eb]">{mentor.fullName}</strong>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Link
-              to="/app/mentoring/discover"
-              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-plum-600 hover:text-brand-600 hover:bg-brand-50 transition-colors dark:text-[#b0b3b8] dark:hover:bg-white/5"
-            >
-              <Search className="h-3.5 w-3.5" />
-              <span>Khám phá Mentor</span>
-            </Link>
-            <Link
-              to="/app/mentoring/ranking"
-              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-plum-600 hover:text-gold-600 hover:bg-gold-50 transition-colors dark:text-[#b0b3b8] dark:hover:bg-white/5"
-            >
-              <Trophy className="h-3.5 w-3.5 text-gold-500" />
-              <span>Bảng xếp hạng</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Page Title & Context Header */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2.5">
-            <h1 className="font-heading text-2xl sm:text-3xl font-black text-plum-900 tracking-tight dark:text-[#e4e6eb]">
-              Gửi yêu cầu cố vấn trực tiếp
-            </h1>
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 border border-brand-200/60 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-800/40">
-              <Sparkles className="h-3.5 w-3.5 text-brand-500" />
-              <span>Yêu cầu trực tiếp</span>
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-plum-600 dark:text-[#8f9399]">
-            Yêu cầu này sẽ được gửi trực tiếp và duy nhất đến Mentor được chọn. Hệ thống không thực hiện cơ chế tự động phân phối sang các Mentor khác.
-          </p>
-        </div>
+        <MentorPageHeader
+          icon={<Sparkles className="h-4 w-4" />}
+          eyebrow={`Gửi riêng tới ${mentor.fullName}`}
+          title="Gửi yêu cầu cố vấn"
+          description="Yêu cầu này chỉ được gửi đến Mentor bạn đã chọn."
+        />
 
         {/* Selected Mentor Card Display */}
         <SelectedMentorCard mentor={mentor} />
@@ -398,7 +347,7 @@ function CreateDirectMentoringRequestContent() {
  */
 export function CreateDirectMentoringRequestPage() {
   return (
-    <Container className="py-4 sm:py-6">
+    <Container className="py-2 sm:py-4">
       <MentoringTermsGate source="MENTORING_HOME">
         <CreateDirectMentoringRequestContent />
       </MentoringTermsGate>

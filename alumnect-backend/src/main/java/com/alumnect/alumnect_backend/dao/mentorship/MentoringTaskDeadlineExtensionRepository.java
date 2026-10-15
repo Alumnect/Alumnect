@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,4 +31,7 @@ public interface MentoringTaskDeadlineExtensionRepository extends JpaRepository<
 
     /** Kiểm tra xem Task có yêu cầu gia hạn nào đang PENDING hay không */
     boolean existsByTaskIdAndStatus(Long taskId, MentoringExtensionStatus status);
+
+    List<MentoringTaskDeadlineExtension> findByStatusAndCreatedAtBefore(
+            MentoringExtensionStatus status, Instant createdAt);
 }

@@ -38,6 +38,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class MentoringRequestController {
 
     private final MentoringRequestService mentoringRequestService;
+    private final com.alumnect.alumnect_backend.service.mentorship.MentoringRequestLifecycleService requestLifecycleService;
+
+    /**
+     * Học viên hủy yêu cầu Mentoring đang mở (chưa kích hoạt Task).
+     */
+    @PostMapping("/{requestId:\\d+}/cancel")
+    @Operation(summary = "Học viên hủy yêu cầu mentoring đang mở")
+    public ResponseEntity<ApiResponse<Void>> cancelRequest(
+            @PathVariable Long requestId,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        requestLifecycleService.cancelByOwner(email, requestId, body != null ? body.get("reason") : null);
+        return ResponseEntity.ok(ApiResponse.success("Đã hủy yêu cầu mentoring", null));
+    }
 
     /**
      * API Tạo mới yêu cầu Mentoring (UC100 hoặc UC101 tùy thuộc vào mentorId trong payload).

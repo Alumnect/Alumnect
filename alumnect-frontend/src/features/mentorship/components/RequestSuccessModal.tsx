@@ -52,7 +52,7 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-plum-950/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-plum-900/40 backdrop-blur-sm"
           />
 
           {/* Modal Card */}
@@ -73,7 +73,7 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-heading text-lg font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+                <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
                   Tạo yêu cầu Mentoring thành công!
                 </h3>
                 <Sparkles className="h-4 w-4 text-brand-500 animate-pulse" />
@@ -98,7 +98,7 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
                       <span className="font-bold text-sm text-mint-900 dark:text-mint-200">
                         Đã gửi trực tiếp tới {data.targetMentorName || 'Mentor'}
                       </span>
-                      <Badge tone="mint" className="text-[10px]">
+                      <Badge tone="mint" className="text-[11px]">
                         Gửi trực tiếp
                       </Badge>
                     </div>
@@ -109,42 +109,42 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
                 </div>
               </div>
             ) : data.matchedCount > 0 ? (
-              <div className="rounded-2xl border border-brand-200/70 bg-brand-50/70 p-4 dark:border-brand-800/40 dark:bg-brand-950/30">
+              <div className="rounded-2xl border border-brand-200/70 bg-brand-50/70 p-4 dark:border-brand-700/40 dark:bg-brand-700/30">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white shadow-xs">
                     <Users className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-brand-900 dark:text-brand-200">
+                      <span className="font-bold text-sm text-brand-700 dark:text-brand-200">
                         Đã tự động phân phối tới {data.matchedCount} Mentor
                       </span>
-                      <Badge tone="brand" className="text-[10px]">
+                      <Badge tone="brand" className="text-[11px]">
                         Matching thành công
                       </Badge>
                     </div>
-                    <p className="text-xs leading-relaxed text-brand-800/80 dark:text-brand-300/80">
+                    <p className="text-xs leading-relaxed text-brand-700/80 dark:text-brand-300/80">
                       {data.distributionNote}
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-gold-200/80 bg-gold-50/70 p-4 dark:border-gold-800/40 dark:bg-gold-950/30">
+              <div className="rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-500 text-white shadow-xs">
                     <AlertCircle className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-gold-900 dark:text-gold-200">
+                      <span className="font-bold text-sm text-amber-900 dark:text-amber-200">
                         Yêu cầu đã được lưu vào hệ thống
                       </span>
-                      <Badge tone="gold" className="text-[10px]">
+                      <Badge tone="gold" className="text-[11px]">
                         Chờ kết nối
                       </Badge>
                     </div>
-                    <p className="text-xs leading-relaxed text-gold-800/90 dark:text-gold-300/80">
+                    <p className="text-xs leading-relaxed text-amber-800/90 dark:text-gold-300/80">
                       {data.distributionNote}
                     </p>
                   </div>

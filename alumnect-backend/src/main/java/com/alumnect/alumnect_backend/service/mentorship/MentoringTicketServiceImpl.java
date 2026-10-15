@@ -63,6 +63,11 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
     private final MentoringTicketEvidenceRepository evidenceRepository;
     private final MentoringTicketMessageRepository messageRepository;
     private final MentoringPaymentLedgerRepository ledgerRepository;
+    private final MentoringDisbursementService disbursementService;
+    private final MentoringRules mentoringRules;
+    private final MentorReputationService mentorReputationService;
+    private final MentoringTaskProposalCleaner proposalCleaner;
+    private final com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository mentorProfileRepository;
     private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
     private final NotificationService notificationService;
@@ -191,6 +196,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
         // 7. Cập nhật trạng thái Task sang CANCELLED (dừng thực hiện chờ Admin xử lý quyết toán/hoàn tiền)
         task.setStatus(MentoringTaskStatus.CANCELLED);
         taskRepository.save(task);
+        proposalCleaner.closeOpenProposals(task.getId(), "Task đã dừng theo thỏa thuận");
 
         // 8. Gửi tin nhắn hệ thống realtime vào Chat for Task
         if (task.getConversation() != null) {
@@ -294,6 +300,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
         // 6. Chuyển trạng thái Task sang DISPUTED (đóng băng hoạt động & payout ON_HOLD)
         task.setStatus(MentoringTaskStatus.DISPUTED);
         taskRepository.save(task);
+        proposalCleaner.closeOpenProposals(task.getId(), "Task chuyển sang tranh chấp");
 
         // 7. Gửi thông báo hệ thống realtime vào Chat for Task
         String senderRole = Objects.equals(currentUserId, task.getStudent().getId()) ? "Bên tạo yêu cầu" : "Bên thực hiện (Mentor)";
@@ -1064,6 +1071,9 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 throw new BadRequestException("Phương án giải quyết không hợp lệ.");
         }
 
+        mentoringRules.requireWholeVnd(mentorAmount, "Số tiền chi cho Mentor");
+        mentoringRules.requireWholeVnd(studentRefund, "Số tiền hoàn cho Học viên");
+
         // 2. Cập nhật Ticket
         ticket.setDecision(request.getDecision());
         ticket.setResolutionNote(request.getDecisionReason());
@@ -1078,12 +1088,20 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
         // 3. Cập nhật Mentoring Task
         if (mentorAmount.compareTo(BigDecimal.ZERO) > 0 && studentRefund.compareTo(BigDecimal.ZERO) == 0) {
             task.setStatus(MentoringTaskStatus.COMPLETED);
+            mentorReputationService.recordTaskCompleted(task.getMentor());
         } else if (studentRefund.compareTo(BigDecimal.ZERO) > 0 && mentorAmount.compareTo(BigDecimal.ZERO) == 0) {
             task.setStatus(MentoringTaskStatus.CANCELLED);
         } else {
             task.setStatus(MentoringTaskStatus.RESOLVED);
         }
         taskRepository.save(task);
+
+        // Tranh chấp được phân xử hoàn toàn cho Học viên: Mentor vi phạm cam kết → trừ điểm uy tín
+        if (ticket.getTicketType() == MentoringTicketType.DISPUTE
+                && request.getDecision() == com.alumnect.alumnect_backend.common.enums.MentoringTicketDecision.FULL_STUDENT_REFUND) {
+            mentorProfileRepository.findByUserId(task.getMentor().getId()).ifPresent(profile ->
+                    mentorReputationService.applyPenalty(profile.getId(), "Tranh chấp " + ticket.getTicketCode() + " được phân xử hoàn tiền toàn bộ cho Học viên"));
+        }
 
         // 4. Ghi Sổ quỹ giao dịch Mentoring (Payout & Refund độc lập - Bước 63 UC120)
         if (mentorAmount.compareTo(BigDecimal.ZERO) > 0) {
@@ -1095,13 +1113,16 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .mentor(task.getMentor())
                     .amount(mentorAmount)
                     .transactionType(MentoringLedgerTransactionType.PAYOUT)
-                    .status(MentoringLedgerStatus.SUCCEEDED)
-                    .providerReference("PAYOUT_TICKET_" + ticket.getTicketCode())
+                    .status(MentoringLedgerStatus.PENDING)
+                    .providerStatus(MentoringPayoutProcessor.QUEUED)
+                    .idempotencyKey("ALUMNECT-PAYOUT-TICKET-" + ticket.getTicketCode())
                     .deadlineSnapshot(task.getDeadline())
                     .note("Thù lao theo phán quyết Ticket " + ticket.getTicketCode() + ": " + request.getDecisionReason())
                     .build();
             MentoringPaymentLedger savedPayout = ledgerRepository.save(payoutLedger);
             ticket.setMentorPayoutLedger(savedPayout);
+            // Phán quyết của Admin là bước duyệt chi: gửi PayOS ngay sau khi transaction commit.
+            disbursementService.dispatchPayoutAfterCommit(savedPayout.getId());
         }
 
         if (studentRefund.compareTo(BigDecimal.ZERO) > 0) {
@@ -1113,13 +1134,16 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .mentor(task.getMentor())
                     .amount(studentRefund)
                     .transactionType(MentoringLedgerTransactionType.REFUND)
-                    .status(MentoringLedgerStatus.SUCCEEDED)
-                    .providerReference("REFUND_TICKET_" + ticket.getTicketCode())
+                    .status(MentoringLedgerStatus.PENDING)
+                    .providerStatus(MentoringPayoutProcessor.QUEUED)
+                    .idempotencyKey("ALUMNECT-REFUND-TICKET-" + ticket.getTicketCode())
                     .deadlineSnapshot(task.getDeadline())
                     .note("Hoàn phí theo phán quyết Ticket " + ticket.getTicketCode() + ": " + request.getDecisionReason())
                     .build();
             MentoringPaymentLedger savedRefund = ledgerRepository.save(refundLedger);
             ticket.setStudentRefundLedger(savedRefund);
+            // Hoàn tiền qua PayOS Kênh chi tới tài khoản nhận hoàn tiền của Học viên
+            disbursementService.dispatchPayoutAfterCommit(savedRefund.getId());
         }
 
         MentoringDisputeTicket savedTicket = ticketRepository.save(ticket);

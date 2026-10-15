@@ -51,4 +51,8 @@ public class MentoringTaskSettlementProposalResponse {
     /** Quyền thao tác */
     private Boolean canAccept;
     private Boolean canReject;
+    /** Người tạo được hủy đề xuất đang chờ */
+    private Boolean canCancel;
+    /** Học viên cần khai báo tài khoản nhận hoàn tiền trước khi đồng ý đề xuất có hoàn tiền */
+    private Boolean refundAccountRequired;
 }

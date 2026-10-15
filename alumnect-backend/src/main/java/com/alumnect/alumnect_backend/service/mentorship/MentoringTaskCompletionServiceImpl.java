@@ -17,6 +17,7 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,12 +35,16 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class MentoringTaskCompletionServiceImpl implements MentoringTaskCompletionService {
+    private final MentoringGroupService mentoringGroupService;
 
     private final MentoringTaskRepository taskRepository;
     private final MentoringTaskCompletionRepository completionRepository;
     private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
     private final MentoringDisbursementService disbursementService;
+    private final MentorReputationService mentorReputationService;
+    private final MentoringTaskProposalCleaner proposalCleaner;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -108,6 +113,15 @@ public class MentoringTaskCompletionServiceImpl implements MentoringTaskCompleti
             mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg.toString());
         }
 
+        notificationService.sendMentoringTaskEventNotification(
+                currentUser,
+                task.getStudent(),
+                task,
+                "COMPLETION_REVIEW",
+                String.valueOf(savedCompletion.getId()),
+                "Task đang chờ bạn nghiệm thu",
+                "Mentor đã nộp kết quả hoàn thành. Vui lòng xem và xác nhận Task.");
+
         log.info("Nộp kết quả hoàn thành Task id={} thành công, completionId={}", taskId, savedCompletion.getId());
         return toCompletionResponse(savedCompletion, currentUserId);
     }
@@ -154,6 +168,8 @@ public class MentoringTaskCompletionServiceImpl implements MentoringTaskCompleti
             task.setStatus(MentoringTaskStatus.COMPLETED);
             task.setCompletedAt(now);
             taskRepository.save(task);
+            mentorReputationService.recordTaskCompleted(task.getMentor());
+            proposalCleaner.closeOpenProposals(task.getId(), "Task đã hoàn thành");
             completionRepository.save(completion);
 
             // Tự động kích hoạt tạo quyết toán thù lao cho Mentor (mục 5.9 UC110)
@@ -179,6 +195,15 @@ public class MentoringTaskCompletionServiceImpl implements MentoringTaskCompleti
                 mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
             }
 
+            notificationService.sendMentoringTaskEventNotification(
+                    currentUser,
+                    task.getMentor(),
+                    task,
+                    "COMPLETED",
+                    String.valueOf(completion.getId()),
+                    "Task đã hoàn thành",
+                    "Học viên đã xác nhận nghiệm thu. Task đã hoàn thành và chuyển sang quyết toán.");
+
         } else {
             // =========================================================================
             // TỪ CHỐI / YÊU CẦU ĐIỀU CHỈNH: TASK QUAY VỀ IN_PROGRESS ĐỂ MENTOR BỔ SUNG
@@ -198,6 +223,15 @@ public class MentoringTaskCompletionServiceImpl implements MentoringTaskCompleti
                 String msg = String.format("⚠️ [Học viên] chưa đồng ý nghiệm thu và yêu cầu chỉnh sửa/bổ sung.\nLý do / Yêu cầu: %s", feedback);
                 mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
             }
+
+            notificationService.sendMentoringTaskEventNotification(
+                    currentUser,
+                    task.getMentor(),
+                    task,
+                    "COMPLETION_REVISION",
+                    String.valueOf(completion.getId()),
+                    "Cần bổ sung kết quả Task",
+                    "Học viên chưa xác nhận nghiệm thu và đã gửi yêu cầu chỉnh sửa.");
         }
 
         return toCompletionResponse(completion, currentUserId);
@@ -234,7 +268,7 @@ public class MentoringTaskCompletionServiceImpl implements MentoringTaskCompleti
         MentoringTask task = requireTask(taskId);
         boolean isStudent = Objects.equals(task.getStudent().getId(), currentUserId);
         boolean isMentor = Objects.equals(task.getMentor().getId(), currentUserId);
-        if (!isStudent && !isMentor) {
+        if (!isStudent && !isMentor && !mentoringGroupService.isActiveMember(task.getRequest(), currentUserId)) {
             throw new ForbiddenException("Bạn không có quyền truy cập thông tin nghiệm thu của nhiệm vụ này.");
         }
         return task;

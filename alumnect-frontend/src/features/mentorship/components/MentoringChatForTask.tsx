@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { mentoringWalletApi } from '../api/mentoringWalletApi'
+import { MentorReviewModal } from './MentorReviewModal'
+import { MentoringStatusStrip } from './MentoringUi'
 import {
   AlertCircle,
   AlertTriangle,
-  ArrowLeft,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -17,7 +20,9 @@ import {
   History,
   Loader2,
   MessagesSquare,
+  MoreHorizontal,
   RefreshCw,
+  Star,
   ThumbsUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -26,6 +31,7 @@ import {
   MessageBubble,
   MessageInput,
   useMessages,
+  useMarkAsRead,
   useSendMessage,
   useWebSocketChat,
   type Message,
@@ -60,6 +66,7 @@ import type { MentoringDeal, MentoringDealSnapshot } from '../model/mentoringDea
 import {
   MENTORING_PARTICIPATION_LABELS,
   MENTORING_REQUEST_FLOW_STATUS_LABELS,
+  MENTORING_RESPONSE_STATUS_LABELS,
   MENTORING_TASK_STATUS_LABELS,
   MENTORING_TASK_TYPE_LABELS,
   MENTORING_WORKING_MODE_LABELS,
@@ -102,9 +109,18 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const deal: MentoringDeal | null = ctx?.deal?.deal ?? null
   const snapshots = useMemo(() => ctx?.deal?.snapshots ?? [], [ctx?.deal?.snapshots])
   const isMentor = ctx?.myRole === 'MENTOR'
+  const isStudent = ctx?.myRole === 'STUDENT'
+  const isGroupMember = ctx?.myRole === 'GROUP_MEMBER'
+  const groupParticipants = ctx?.participants ?? []
+  const isGroupChat = Boolean(ctx?.groupId) && groupParticipants.length > 2
   const partnerId = isMentor ? ctx?.studentId : ctx?.mentorUserId
   const partnerName = (isMentor ? ctx?.studentName : ctx?.mentorName) || (isMentor ? 'Học viên' : 'Mentor')
   const partnerAvatar = isMentor ? ctx?.studentAvatar : ctx?.mentorAvatar
+  const { mutate: markConversationAsRead } = useMarkAsRead()
+
+  useEffect(() => {
+    markConversationAsRead(conversationId)
+  }, [conversationId, markConversationAsRead])
 
   // Trạng thái các modal / dialog
   const [isRequestPanelOpen, setIsRequestPanelOpen] = useState(false)
@@ -113,6 +129,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const [isAcceptByRequestOpen, setIsAcceptByRequestOpen] = useState(false)
   const [isPaymentOpen, setIsPaymentOpen] = useState(false)
   const [paymentDeal, setPaymentDeal] = useState<MentoringDeal | null>(null)
+  const [topUpAmendment, setTopUpAmendment] = useState<{ id: number; version?: number; additionalAmount?: number } | null>(null)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [isTaskOpen, setIsTaskOpen] = useState(false)
   const [rejectTarget, setRejectTarget] = useState<number | null>(null)
@@ -149,6 +166,30 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const [isTicketDiscussionOpen, setIsTicketDiscussionOpen] = useState(false)
 
   const { data: taskDetail, refetch: refetchTask } = useTaskDetail(ctx?.taskId ?? undefined)
+  // Task đã kết thúc: ẩn mọi thao tác Task và nhắn tin, chỉ còn xem lịch sử trao đổi
+  const currentTaskStatus = taskDetail?.overview?.status || ctx?.taskStatus
+  const isTaskFinished =
+    Boolean(ctx?.taskId) && ['COMPLETED', 'CANCELLED', 'RESOLVED'].includes(currentTaskStatus || '')
+  const isTaskOverdue = Boolean(taskDetail?.overview?.overdue)
+
+  // Học viên đánh giá Mentor sau khi Task hoàn thành (mỗi Task một lần)
+  const canReviewMentor = ctx?.myRole === 'STUDENT' && currentTaskStatus === 'COMPLETED' && Boolean(ctx?.taskId)
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
+  const { data: myReview, refetch: refetchReview } = useQuery({
+    queryKey: ['mentor-review', 'task', ctx?.taskId],
+    queryFn: () => mentoringWalletApi.getTaskReview(ctx!.taskId!),
+    enabled: canReviewMentor,
+  })
+  const submitReview = useMutation({
+    mutationFn: (payload: { rating: number; comment: string }) =>
+      mentoringWalletApi.submitReview({ taskId: ctx!.taskId!, rating: payload.rating, comment: payload.comment || undefined }),
+    onSuccess: () => {
+      toast.success('Cảm ơn bạn đã đánh giá Mentor!')
+      setIsReviewOpen(false)
+      refetchReview()
+    },
+    onError: (err: Error) => toast.error(err.message || 'Không thể gửi đánh giá'),
+  })
 
   const proposeMutation = useProposeDeal()
   const confirmMutation = useConfirmDeal()
@@ -179,6 +220,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   // Tin nhắn hệ thống realtime báo hiệu trạng thái nghiệp vụ thay đổi → tải lại ngữ cảnh từ backend
   useWebSocketChat((newMsg) => {
     if (newMsg.conversationId === conversationId) {
+      markConversationAsRead(conversationId)
       refetch()
       refetchTask()
     }
@@ -198,16 +240,31 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     return [...messagesData.pages.flatMap((page) => page.content || [])].reverse()
   }, [messagesData])
 
+  // Business events already have dedicated tickets and banners. Keep the chat
+  // focused on the conversation, except actionable adjustment requests.
+  const visibleMessages = useMemo(
+    () =>
+      messages.filter(
+        (message) =>
+          message.type !== 'SYSTEM' || Boolean(parseAdjustmentMessage(message.content))
+      ),
+    [messages]
+  )
+
   const timeline = useMemo<TimelineItem[]>(() => {
     const oldestLoaded = messages.length > 0 ? new Date(messages[0].createdAt).getTime() : 0
-    const items: TimelineItem[] = messages.map((m) => ({ kind: 'message', at: new Date(m.createdAt).getTime(), message: m }))
+    const items: TimelineItem[] = visibleMessages.map((m) => ({
+      kind: 'message',
+      at: new Date(m.createdAt).getTime(),
+      message: m,
+    }))
     snapshots.forEach((s) => {
       const at = new Date(s.createdAt).getTime()
       // Khi còn trang tin nhắn cũ chưa tải, chỉ hiển thị các phiên bản nằm trong khoảng thời gian đã tải
       if (!hasNextPage || at >= oldestLoaded) items.push({ kind: 'ticket', at, snapshot: s })
     })
     return items.sort((a, b) => a.at - b.at || (a.kind === 'ticket' ? -1 : 1))
-  }, [messages, snapshots, hasNextPage])
+  }, [messages, visibleMessages, snapshots, hasNextPage])
 
   // ---------------- Cuộn danh sách ----------------
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -316,6 +373,16 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   const openPayment = () => {
     if (!deal) return
+    setTopUpAmendment(null)
+    setPaymentDeal(deal)
+    setIsPaymentOpen(true)
+  }
+
+  // Thanh toán bổ sung cho Ticket điều chỉnh đã được chấp nhận (không phải thanh toán Deal ban đầu)
+  const openTopUpPayment = () => {
+    const amendment = taskDetail?.activeAmendment
+    if (!deal || !amendment || amendment.status !== 'AWAITING_TOPUP') return
+    setTopUpAmendment({ id: amendment.id, version: amendment.version, additionalAmount: amendment.additionalAmount })
     setPaymentDeal(deal)
     setIsPaymentOpen(true)
   }
@@ -400,7 +467,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   /** Hành động hợp lệ trên một phiên bản (chỉ phiên bản mới nhất mới có hành động) */
   const actionsFor = (version: number) => {
     const isLatest = Boolean(deal && version === deal.version)
-    const studentPending = isLatest && !isMentor && Boolean(deal?.canConfirm)
+    const studentPending = isLatest && isStudent && Boolean(deal?.canConfirm)
     const mentorCanReissue =
       isLatest && isMentor && Boolean(ctx?.canCreateDealTicket) && (deal?.status === 'SUPERSEDED' || deal?.status === 'REJECTED')
     return {
@@ -429,10 +496,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   if (error || !ctx) {
     return (
-      <div className="rounded-3xl border border-rose-200 bg-rose-50/70 p-6 text-center space-y-3 dark:bg-rose-950/20 dark:border-rose-900/30">
-        <AlertCircle className="mx-auto h-8 w-8 text-rose-500" />
-        <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
-          {error?.message || 'Không thể tải Chat for Task.'}
+      <div className="rounded-3xl border border-coral-200 bg-coral-50/70 p-6 text-center space-y-3 dark:bg-coral-950/20 dark:border-coral-900/30">
+        <AlertCircle className="mx-auto h-8 w-8 text-coral-500" />
+        <p className="text-sm font-bold text-coral-700 dark:text-coral-300">
+          {error?.message || 'Không thể tải cuộc trò chuyện.'}
         </p>
         {onBack && (
           <Button variant="secondary" size="sm" onClick={onBack}>
@@ -447,258 +514,176 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const isDealLockedUnpaid = deal?.status === 'DEAL_CONFIRMED' && !deal?.isPaid
   const lastPaymentStatus = ctx.latestPayment?.paymentStatus
 
+  const permissions = taskDetail?.permissions
+  const activeAmendment = taskDetail?.activeAmendment
+  const isTaskActive = Boolean(ctx.taskId) && !isTaskFinished && (isMentor || isStudent)
+
+  // Một thao tác chính duy nhất theo ngữ cảnh, để người dùng luôn biết bước tiếp theo
+  type PrimaryAction = { label: string; icon: React.ReactNode; onClick: () => void }
+  let primaryAction: PrimaryAction | null = null
+  if (isTaskFinished) {
+    if (canReviewMentor && !myReview) {
+      primaryAction = { label: 'Đánh giá Mentor', icon: <Star className="h-3.5 w-3.5" />, onClick: () => setIsReviewOpen(true) }
+    }
+  } else if (isStudent && isDealLockedUnpaid && deal?.canPay) {
+    primaryAction = {
+      label: lastPaymentStatus && lastPaymentStatus !== 'PENDING' ? 'Thanh toán lại' : 'Thanh toán',
+      icon: <CreditCard className="h-3.5 w-3.5" />,
+      onClick: openPayment,
+    }
+  } else if (isStudent && activeAmendment?.status === 'AWAITING_TOPUP' && activeAmendment.canTopUp) {
+    primaryAction = { label: 'Thanh toán bổ sung', icon: <CreditCard className="h-3.5 w-3.5" />, onClick: openTopUpPayment }
+  } else if (permissions?.canConfirmCompletion && taskDetail?.latestCompletion) {
+    primaryAction = { label: 'Nghiệm thu', icon: <CheckCircle2 className="h-3.5 w-3.5" />, onClick: () => setIsReviewCompletionOpen(true) }
+  } else if (permissions?.canSubmitCompletion) {
+    primaryAction = { label: 'Nộp hoàn thành', icon: <FileCheck className="h-3.5 w-3.5" />, onClick: () => setIsSubmitCompletionOpen(true) }
+  }
+
+  type ActionItem = { label: string; hint?: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }
+  const viewItems: ActionItem[] = []
+  if (ctx.taskId) viewItems.push({ label: 'Xem Task', hint: 'Tiến độ, Work Log, thông tin Deal', icon: <ClipboardCheck />, onClick: () => setIsTaskOpen(true) })
+  if (deal) viewItems.push({ label: 'Lịch sử phiên bản Deal', icon: <History />, onClick: () => setIsHistoryOpen(true) })
+  viewItems.push({
+    label: 'Chi tiết yêu cầu',
+    icon: <FileText />,
+    onClick: () => navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`),
+  })
+  if (ctx.taskId && isMentor) viewItems.push({ label: 'Báo cáo Task & tài chính', icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
+
+  const proposalItems: ActionItem[] = []
+  if (isTaskActive && isMentor && permissions?.canRequestExtension && taskDetail?.activeExtension?.status !== 'PENDING') {
+    proposalItems.push({ label: 'Gia hạn deadline', hint: 'Gửi đề xuất hạn chót mới', icon: <CalendarClock />, onClick: () => setIsExtensionModalOpen(true) })
+  }
+  if (isTaskActive && isMentor && permissions?.canRequestAmendment) {
+    proposalItems.push({ label: 'Điều chỉnh & tăng tiền', hint: 'Thay đổi phạm vi, deadline hoặc thêm tiền', icon: <Edit3 />, onClick: () => setIsAmendmentModalOpen(true) })
+  }
+  if (isTaskActive && permissions?.canProposeSettlement) {
+    proposalItems.push({ label: 'Dừng Task & chia quỹ', hint: 'Thỏa thuận kết thúc sớm', icon: <Scale />, onClick: () => setIsSettlementModalOpen(true) })
+  }
+
+  const supportItems: ActionItem[] = []
+  if (isTaskActive && permissions?.canSubmitSettlementTicket) {
+    supportItems.push({ label: 'Gửi thỏa thuận cho Ban Quản Trị', icon: <Send />, onClick: () => setIsSubmitSettlementTicketOpen(true) })
+  }
+  if (taskDetail?.activeTicket) {
+    supportItems.push({ label: 'Trao đổi với Ban Quản Trị', icon: <MessagesSquare />, onClick: () => setIsTicketDiscussionOpen(true) })
+    supportItems.push({ label: 'Bằng chứng tranh chấp', icon: <Paperclip />, onClick: () => setIsAddEvidenceOpen(true) })
+  }
+  if (isTaskActive && permissions?.canCreateDisputeTicket) {
+    supportItems.push({ label: 'Mở khiếu nại', hint: 'Nhờ Ban Quản Trị phân xử', icon: <AlertTriangle />, onClick: () => setIsCreateDisputeOpen(true), danger: true })
+  }
+
+  const actionGroups = [
+    { title: 'Xem', items: viewItems },
+    { title: 'Đề xuất', items: proposalItems },
+    { title: 'Hỗ trợ', items: supportItems },
+  ].filter((g) => g.items.length > 0)
+
   return (
-    <div className="flex h-[calc(100vh-140px)] min-h-[600px] flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#1e1f20]">
-      {/* Header */}
-      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] bg-white/90 px-4 py-3.5 backdrop-blur-md dark:border-white/10 dark:bg-[#242526]/90 sm:px-6">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#1e1f20]">
+      {/* Header: người trao đổi · một thao tác chính theo ngữ cảnh · menu thao tác */}
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] bg-white px-4 py-3 dark:border-white/10 dark:bg-[#242526] sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              title="Quay lại"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-plum-900/10 bg-plum-50/50 text-plum-700 transition-all hover:bg-brand-50 hover:text-brand-600 dark:border-white/10 dark:bg-white/5 dark:text-[#f0f2f5]"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-          )}
           <Avatar src={partnerAvatar || undefined} name={partnerName} size={40} className="ring-2 ring-brand-500/20" />
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="truncate font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">{partnerName}</h2>
-              <span className="rounded-full bg-brand-100/70 px-2.5 py-0.5 text-[10px] font-black text-brand-700 dark:bg-brand-950/70 dark:text-brand-300">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <h2 className="truncate font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">{partnerName}</h2>
+              <span className="rounded-full bg-cream-200 px-2 py-0.5 text-[11px] font-semibold text-plum-600 dark:bg-white/10 dark:text-[#b0b3b8]">
                 {isMentor ? 'Học viên' : 'Mentor'}
               </span>
-              {ctx.selectedMentor && (
-                <span className="rounded-full bg-mint-100 px-2.5 py-0.5 text-[10px] font-black text-mint-700 dark:bg-mint-950/50 dark:text-mint-300">
-                  Mentor được chọn
+              {isTaskOverdue && (
+                <span className="rounded-full bg-coral-100 px-2 py-0.5 text-[11px] font-semibold text-coral-700 dark:bg-coral-900/40 dark:text-coral-300">
+                  Quá hạn
+                </span>
+              )}
+              {isGroupMember && (
+                <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-semibold text-violet-500 dark:text-violet-300">
+                  Thành viên nhóm
                 </span>
               )}
             </div>
-            <p className="truncate text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-              Chat for Task · Request #{ctx.requestId}: <span className="font-semibold">{ctx.requestTitle}</span>
+            <p className="truncate text-xs text-plum-500 dark:text-[#b0b3b8]">
+              Yêu cầu #{ctx.requestId} · {ctx.requestTitle}
             </p>
+            {ctx.groupId && groupParticipants.length > 0 && (
+              <div className="mt-1 flex items-center gap-2" title={groupParticipants.map((p) => p.fullName).join(', ')}>
+                <div className="flex -space-x-1.5">
+                  {groupParticipants.slice(0, 6).map((p) => (
+                    <Avatar key={p.id} src={p.avatarUrl || undefined} name={p.fullName} size={20} className="ring-2 ring-white dark:ring-[#242526]" />
+                  ))}
+                </div>
+                <span className="truncate text-[11px] font-medium text-plum-500 dark:text-[#b0b3b8]">
+                  Nhóm {ctx.groupName} · {groupParticipants.length} người
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {deal && <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} isPaid={deal.isPaid} />}
-          {deal && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsHistoryOpen(true)}
-              leftIcon={<History className="h-3.5 w-3.5 text-brand-600" />}
-              className="rounded-xl text-xs font-bold"
-            >
-              Lịch sử phiên bản
+        <div className="flex items-center gap-2">
+          {deal && !ctx.taskId && <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} isPaid={deal.isPaid} />}
+          {primaryAction && (
+            <Button size="sm" onClick={primaryAction.onClick} leftIcon={primaryAction.icon} className="h-9 rounded-xl text-xs">
+              {primaryAction.label}
             </Button>
           )}
-          {ctx.taskId && (
+          {actionGroups.length > 0 && (
             <div className="relative" ref={taskActionMenuRef}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsTaskActionMenuOpen((v) => !v)}
-                leftIcon={<CalendarClock className="h-3.5 w-3.5 text-blue-600" />}
-                className="rounded-xl text-xs font-bold border-blue-200 dark:border-blue-900/40 hover:bg-blue-50/50"
+                leftIcon={<MoreHorizontal className="h-4 w-4" />}
+                aria-expanded={isTaskActionMenuOpen}
+                className="h-9 rounded-xl text-xs"
               >
-                Xử lý Task
+                Thao tác
               </Button>
               {isTaskActionMenuOpen && (
-                <div
-                  className="absolute right-0 top-full mt-1.5 z-50 w-72 max-h-[min(480px,calc(100vh-220px))] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150"
-                  onClick={() => setIsTaskActionMenuOpen(false)}
-                >
-                  <button
-                    onClick={() => {
-                      setIsExtensionModalOpen(true)
-                      setIsTaskActionMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
-                  >
-                    <CalendarClock className="w-4 h-4 text-blue-500 shrink-0" />
-                    <div>
-                      <div className="font-bold">Gia hạn Deadline</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Tạo Ticket đề xuất hạn chót mới</div>
+                <div className="absolute right-0 top-full z-50 mt-1.5 max-h-[min(520px,calc(100vh-200px))] w-72 overflow-y-auto rounded-2xl border border-cream-300 bg-white p-1.5 shadow-2xl dark:border-white/10 dark:bg-[#242526]">
+                  {actionGroups.map((group) => (
+                    <div key={group.title} className="py-1">
+                      <p className="px-2.5 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-wide text-plum-400">{group.title}</p>
+                      {group.items.map((item) => (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => {
+                            setIsTaskActionMenuOpen(false)
+                            item.onClick()
+                          }}
+                          className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition hover:bg-cream-100 dark:hover:bg-white/5 ${item.danger ? 'text-coral-600 dark:text-coral-300' : 'text-plum-800 dark:text-[#e4e6eb]'}`}
+                        >
+                          <span className={`mt-0.5 shrink-0 [&>svg]:h-4 [&>svg]:w-4 ${item.danger ? 'text-coral-600' : 'text-brand-600'}`}>{item.icon}</span>
+                          <span className="min-w-0">
+                            <span className="block text-xs font-semibold">{item.label}</span>
+                            {item.hint && <span className="block text-[11px] font-normal text-plum-500 dark:text-plum-400">{item.hint}</span>}
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsAmendmentModalOpen(true)
-                      setIsTaskActionMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
-                  >
-                    <Edit3 className="w-4 h-4 text-amber-500 shrink-0" />
-                    <div>
-                      <div className="font-bold">Điều chỉnh & Tăng tiền</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Bổ sung phạm vi và tiền</div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsSettlementModalOpen(true)
-                      setIsTaskActionMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition text-left"
-                  >
-                    <Scale className="w-4 h-4 text-purple-500 shrink-0" />
-                    <div>
-                      <div className="font-bold">Thỏa thuận dừng Task</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Thương lượng chia quỹ</div>
-                    </div>
-                  </button>
-                  {taskDetail?.permissions?.canSubmitCompletion && (
-                    <button
-                      onClick={() => {
-                        setIsSubmitCompletionOpen(true)
-                        setIsTaskActionMenuOpen(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition text-left"
-                    >
-                      <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <div>
-                        <div className="font-bold">Nộp hoàn thành Task</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Gửi kết quả nghiệm thu cuối cùng</div>
-                      </div>
-                    </button>
-                  )}
-                  {taskDetail?.permissions?.canConfirmCompletion && (
-                    <button
-                      onClick={() => {
-                        setIsReviewCompletionOpen(true)
-                        setIsTaskActionMenuOpen(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-xl transition text-left"
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                      <div>
-                        <div className="font-bold">Nghiệm thu Task</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Xác nhận hoàn thành & quyết toán</div>
-                      </div>
-                    </button>
-                  )}
-                  {taskDetail?.permissions?.canSubmitSettlementTicket && (
-                    <button
-                      onClick={() => {
-                        setIsSubmitSettlementTicketOpen(true)
-                        setIsTaskActionMenuOpen(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-xl transition text-left"
-                    >
-                      <Send className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                      <div>
-                        <div className="font-bold">Gửi Settlement Ticket</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Gửi Admin giải ngân theo thỏa thuận</div>
-                      </div>
-                    </button>
-                  )}
-                  {taskDetail?.permissions?.canCreateDisputeTicket && (
-                    <button
-                      onClick={() => {
-                        setIsCreateDisputeOpen(true)
-                        setIsTaskActionMenuOpen(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition text-left"
-                    >
-                      <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                      <div>
-                        <div className="font-bold">Mở khiếu nại tranh chấp</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Yêu cầu Admin can thiệp giải quyết</div>
-                      </div>
-                    </button>
-                  )}
-                  {(taskDetail?.permissions?.canSubmitDisputeEvidence || taskDetail?.activeTicket) && (
-                    <button
-                      onClick={() => {
-                        setIsAddEvidenceOpen(true)
-                        setIsTaskActionMenuOpen(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition text-left"
-                    >
-                      <Paperclip className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <div>
-                        <div className="font-bold">Bằng chứng tranh chấp</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Xem & nộp thêm tài liệu chứng từ</div>
-                      </div>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setIsTaskReportOpen(true)
-                      setIsTaskActionMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-xl transition text-left"
-                  >
-                    <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">Báo cáo Task & Tài chính</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Tổng kết kết quả & quyết toán tiền</div>
-                    </div>
-                  </button>
+                  ))}
                 </div>
               )}
             </div>
-          )}
-          {taskDetail?.permissions?.canSubmitCompletion && (
-            <Button
-              size="sm"
-              onClick={() => setIsSubmitCompletionOpen(true)}
-              leftIcon={<FileCheck className="h-3.5 w-3.5" />}
-              className="rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm"
-            >
-              Nộp hoàn thành
-            </Button>
-          )}
-          {taskDetail?.permissions?.canConfirmCompletion && (
-            <Button
-              size="sm"
-              onClick={() => setIsReviewCompletionOpen(true)}
-              leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-              className="rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm"
-            >
-              Nghiệm thu Task
-            </Button>
-          )}
-          {taskDetail?.permissions?.canSubmitSettlementTicket && (
-            <Button
-              size="sm"
-              onClick={() => setIsSubmitSettlementTicketOpen(true)}
-              leftIcon={<Send className="h-3.5 w-3.5" />}
-              className="rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-sm"
-            >
-              Gửi Settlement Ticket
-            </Button>
-          )}
-          {ctx.taskId && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setIsTaskOpen(true)}
-              leftIcon={<ClipboardCheck className="h-3.5 w-3.5" />}
-              className="rounded-xl text-xs font-black"
-            >
-              Xem Task
-            </Button>
           )}
         </div>
       </div>
 
       {/* Ngữ cảnh Request */}
-      <div className="border-b border-plum-900/[0.06] bg-plum-50/50 px-4 py-2 text-xs dark:border-white/5 dark:bg-black/20 sm:px-6">
+      <div className="border-b border-plum-900/[0.06] bg-cream-100 px-4 py-2 text-xs dark:border-white/5 dark:bg-black/20 sm:px-6">
         <button
           type="button"
           onClick={() => setIsRequestPanelOpen((v) => !v)}
           className="flex w-full items-center justify-between gap-2 text-left"
           aria-expanded={isRequestPanelOpen}
         >
-          <span className="flex min-w-0 items-center gap-2 text-plum-700 dark:text-plum-200">
+          <span className="flex min-w-0 items-center gap-2 text-plum-700 dark:text-[#e4e6eb]">
             <FileText className="h-4 w-4 shrink-0 text-brand-600" />
             <span className="shrink-0 font-bold">{MENTORING_REQUEST_FLOW_STATUS_LABELS[ctx.requestStatus] || ctx.requestStatus}</span>
             <span className="text-plum-400">•</span>
             <span className="truncate">
-              Ngân sách {formatVnd(ctx.budgetMin)} – {formatVnd(ctx.budgetMax)}
+              Ngân sách {requestPrice ? formatVnd(requestPrice) : 'Thỏa thuận'}
               {ctx.expectedDeadline ? ` • Mong muốn trước ${format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy')}` : ''}
             </span>
           </span>
@@ -708,7 +693,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           <div className="mt-2 grid gap-2 pb-1 text-plum-600 dark:text-[#b0b3b8] sm:grid-cols-2">
             <p className="sm:col-span-2 whitespace-pre-wrap text-plum-800 dark:text-[#e4e6eb]">{ctx.requestDescription}</p>
             <p>
-              Loại Request: <b>{ctx.requestType === 'DIRECT' ? 'Gửi trực tiếp (UC101)' : 'Yêu cầu chung (UC100)'}</b>
+              Loại yêu cầu: <b>{ctx.requestType === 'DIRECT' ? 'Gửi trực tiếp' : 'Yêu cầu chung'}</b>
               {ctx.industryName ? ` · ${ctx.industryName}` : ''}
             </p>
             <p>
@@ -719,7 +704,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               {MENTORING_PARTICIPATION_LABELS[ctx.participationType || ''] || ctx.participationType}
             </p>
             <p>
-              Phản hồi của Mentor: <b>{ctx.responseStatus}</b>
+              Phản hồi của Mentor: <b>{MENTORING_RESPONSE_STATUS_LABELS[ctx.responseStatus || ''] || ctx.responseStatus}</b>
               {ctx.respondedAt ? ` lúc ${format(new Date(ctx.respondedAt), 'dd/MM/yyyy HH:mm')}` : ''}
             </p>
             <button
@@ -735,45 +720,63 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         )}
       </div>
 
-      {/* Banner trạng thái nghiệp vụ */}
-      {ctx.readOnly && (
-        <div className="flex items-center gap-2.5 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-800 dark:text-amber-300 sm:px-6">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-          <span>{ctx.readOnlyReason} Cuộc trò chuyện ở chế độ chỉ đọc, lịch sử được giữ nguyên.</span>
-        </div>
+      {/* Dải trạng thái: chỉ đọc · Deal đã khóa chờ thanh toán · Task đang chạy · Task đã kết thúc */}
+      {ctx.readOnly && !isTaskFinished && (
+        <MentoringStatusStrip tone="gold" icon={<AlertTriangle />}>
+          {ctx.readOnlyReason} Cuộc trò chuyện chỉ còn để xem lại.
+        </MentoringStatusStrip>
       )}
       {isDealLockedUnpaid && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 sm:px-6">
-          <span className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            Deal phiên bản {deal?.version} đã khóa · {formatVnd(Number(deal?.agreedPrice))}
-            {lastPaymentStatus && lastPaymentStatus !== 'PAID'
-              ? ` · Lần thanh toán gần nhất ${PAYMENT_STATUS_LABELS[lastPaymentStatus] || lastPaymentStatus}`
-              : ''}
-          </span>
-          {deal?.canPay ? (
-            <Button size="sm" onClick={openPayment} leftIcon={<CreditCard className="h-3.5 w-3.5" />} className="rounded-xl text-xs font-black">
-              {lastPaymentStatus && lastPaymentStatus !== 'PENDING' ? 'Thanh toán lại' : 'Thanh toán'}
-            </Button>
-          ) : (
-            <span>Đang chờ Học viên thanh toán</span>
-          )}
-        </div>
+        <MentoringStatusStrip
+          tone="brand"
+          icon={<CreditCard />}
+          action={!deal?.canPay ? <span className="font-medium">Chờ Học viên thanh toán</span> : undefined}
+        >
+          Deal v{deal?.version} đã chốt · {formatVnd(Number(deal?.agreedPrice))}
+          {lastPaymentStatus && lastPaymentStatus !== 'PAID'
+            ? ` · Lần thanh toán gần nhất ${PAYMENT_STATUS_LABELS[lastPaymentStatus] || lastPaymentStatus}`
+            : ''}
+        </MentoringStatusStrip>
       )}
-      {ctx.taskId && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-mint-500/20 bg-mint-500/10 px-4 py-2.5 text-xs font-bold text-mint-800 dark:text-mint-300 sm:px-6">
-          <span className="flex items-center gap-2">
-            <ClipboardCheck className="h-4 w-4 shrink-0" />
-            Thanh toán thành công · Task #{ctx.taskId} ({MENTORING_TASK_STATUS_LABELS[ctx.taskStatus || ''] || ctx.taskStatus}). Chat này tiếp tục được dùng cho Task.
-          </span>
-          <button type="button" onClick={() => setIsTaskOpen(true)} className="font-black underline-offset-2 hover:underline">
-            Xem Task
-          </button>
-        </div>
+      {ctx.taskId && !isTaskFinished && (
+        <MentoringStatusStrip
+          tone="neutral"
+          icon={<ClipboardCheck />}
+          action={
+            <button type="button" onClick={() => setIsTaskOpen(true)} className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
+              Xem Task
+            </button>
+          }
+        >
+          Task #{ctx.taskId} · {MENTORING_TASK_STATUS_LABELS[currentTaskStatus || ''] || currentTaskStatus}
+          {taskDetail?.overview?.deadline ? ` · Deadline ${format(new Date(taskDetail.overview.deadline), 'HH:mm dd/MM/yyyy')}` : ''}
+        </MentoringStatusStrip>
+      )}
+      {isTaskFinished && (
+        <MentoringStatusStrip
+          tone={currentTaskStatus === 'COMPLETED' ? 'mint' : 'neutral'}
+          icon={<CheckCircle2 />}
+          action={canReviewMentor && myReview ? <span className="font-semibold">Bạn đã đánh giá {myReview.rating}★</span> : undefined}
+        >
+          {currentTaskStatus === 'COMPLETED'
+            ? 'Công việc đã hoàn thành.'
+            : currentTaskStatus === 'CANCELLED'
+              ? 'Công việc đã dừng.'
+              : 'Công việc đã được Ban Quản Trị giải quyết.'}{' '}
+          Cuộc trò chuyện chỉ còn để xem lại.
+        </MentoringStatusStrip>
+      )}
+      {isReviewOpen && (
+        <MentorReviewModal
+          mentorName={ctx.mentorName || 'Mentor'}
+          isSubmitting={submitReview.isPending}
+          onClose={() => setIsReviewOpen(false)}
+          onSubmit={(rating, comment) => submitReview.mutate({ rating, comment })}
+        />
       )}
 
       {/* Banner các Ticket xử lý Task (UC109: Gia hạn, Điều chỉnh, Phân chia tiền & UC110: Nghiệm thu Task & UC111: Settlement Ticket) */}
-      {ctx.taskId && (
+      {ctx.taskId && !isTaskFinished && (
         <MentoringTaskResolutionBanner
           taskId={ctx.taskId}
           activeExtension={taskDetail?.activeExtension}
@@ -786,9 +789,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           canSubmitSettlementTicket={taskDetail?.permissions?.canSubmitSettlementTicket}
           canCreateDisputeTicket={taskDetail?.permissions?.canCreateDisputeTicket}
           canSubmitDisputeEvidence={taskDetail?.permissions?.canSubmitDisputeEvidence}
-          isStudent={!isMentor}
+          isStudent={isStudent}
           isMentor={isMentor}
-          onOpenTopUpPayment={openPayment}
+          onOpenTopUpPayment={openTopUpPayment}
           onOpenReviewCompletion={() => setIsReviewCompletionOpen(true)}
           onOpenSubmitSettlementTicket={() => setIsSubmitSettlementTicketOpen(true)}
           onOpenCreateDispute={() => setIsCreateDisputeOpen(true)}
@@ -806,11 +809,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 space-y-3 overflow-y-auto bg-[#f8f9fa]/50 px-4 py-4 dark:bg-[#18191a] sm:px-6"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f8f9fa]/50 px-4 py-4 dark:bg-[#18191a] sm:px-6"
       >
         {isFetchingNextPage && (
           <div className="flex justify-center py-2">
-            <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold text-plum-500 shadow-xs dark:bg-white/10">
+            <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-plum-500 shadow-xs dark:bg-white/10">
               Đang tải tin nhắn cũ hơn...
             </span>
           </div>
@@ -824,10 +827,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           </div>
         ) : timeline.length === 0 ? (
           <div className="flex h-full min-h-[160px] flex-col items-center justify-center space-y-2 p-6 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/50">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-700/50">
               <MessagesSquare className="h-6 w-6" />
             </div>
-            <p className="font-heading text-sm font-black text-plum-800 dark:text-[#f0f2f5]">Bắt đầu trao đổi về Request</p>
+            <p className="font-display text-sm font-bold text-plum-800 dark:text-[#f0f2f5]">Bắt đầu trao đổi về Request</p>
             <p className="max-w-sm text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
               {isMentor
                 ? 'Trao đổi với Học viên, sau đó dùng nút "Giao dịch" để Chấp nhận Deal theo Request hoặc tạo Deal Ticket mới.'
@@ -855,7 +858,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   />
                 )
               }
-              return <MessageBubble key={`m-${item.message.id}`} message={item.message} isMe={item.message.senderId === currentUserId} />
+              return (
+                <MessageBubble
+                  key={`m-${item.message.id}`}
+                  message={item.message}
+                  isMe={item.message.senderId === currentUserId}
+                  isGroup={isGroupChat}
+                />
+              )
             }
             const ticket = buildTicket(item.snapshot)
             const actions = actionsFor(item.snapshot.version)
@@ -864,7 +874,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 key={`t-${item.snapshot.id}`}
                 ticket={ticket}
                 isMe={ticket.senderId === currentUserId}
-                isRecipient={!isMentor}
+                isRecipient={isStudent}
                 canAct={actions.canAct}
                 onConfirm={actions.onConfirm}
                 onReject={actions.onReject}
@@ -882,8 +892,8 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       {/* Ô nhập tin nhắn */}
       <div className="border-t border-plum-900/[0.08] bg-white p-3 dark:border-white/10 dark:bg-[#242526]">
         {!ctx.canSendMessage ? (
-          <div className="rounded-2xl bg-plum-50 p-3 text-center text-xs font-bold text-plum-500 dark:bg-white/5 dark:text-[#b0b3b8]">
-            {ctx.readOnlyReason || 'Cuộc hội thoại này ở chế độ chỉ đọc.'}
+          <div className="rounded-2xl bg-cream-100 p-3 text-center text-xs font-bold text-plum-500 dark:bg-white/5 dark:text-[#b0b3b8]">
+            {isTaskFinished ? 'Công việc đã kết thúc, không thể nhắn tin thêm.' : ctx.readOnlyReason || 'Cuộc hội thoại này ở chế độ chỉ đọc.'}
           </div>
         ) : (
           <MessageInput
@@ -895,10 +905,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                     type="button"
                     onClick={() => setIsDealMenuOpen((v) => !v)}
                     title="Giao dịch Deal Ticket"
-                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-orange-50/60 px-3 text-xs font-bold text-brand-700 transition-all hover:bg-brand-100 active:scale-95 dark:border-brand-800/40 dark:bg-brand-950/40 dark:text-brand-300"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-brand-50/60 px-3 text-xs font-bold text-brand-700 transition-all hover:bg-brand-100 active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40 dark:text-brand-300"
                   >
                     <Handshake className="h-4 w-4 shrink-0" />
-                    <span className="font-heading font-black">Giao dịch</span>
+                    <span className="font-display font-bold">Giao dịch</span>
                     <ChevronUp className={`h-3.5 w-3.5 transition-transform ${isDealMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isDealMenuOpen && (
@@ -933,7 +943,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                         }}
                         className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/5"
                       >
-                        <span className="rounded-lg bg-brand-100/70 p-1.5 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
+                        <span className="rounded-lg bg-brand-100/70 p-1.5 text-brand-600 dark:bg-brand-700/60 dark:text-brand-400">
                           <Edit3 className="h-4 w-4" />
                         </span>
                         <span className="min-w-0">
@@ -954,13 +964,13 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
       {/* Dialog: Chấp nhận Deal theo Request */}
       {isAcceptByRequestOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-950/60 p-4 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-900/60 p-4 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
-            <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">Chấp nhận Deal theo Request</h4>
+            <h4 className="font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">Chấp nhận Deal theo Request</h4>
             <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
               Hệ thống tạo Deal Ticket từ điều kiện hiện tại của Request. Bạn được tính là đã xác nhận phiên bản này; Học viên cần xác nhận để khóa Deal.
             </p>
-            <ul className="space-y-1.5 rounded-2xl bg-plum-50/70 p-3 text-xs text-plum-700 dark:bg-white/5 dark:text-[#e4e6eb]">
+            <ul className="space-y-1.5 rounded-2xl bg-cream-100/70 p-3 text-xs text-plum-700 dark:bg-white/5 dark:text-[#e4e6eb]">
               <li>Giá: <b>{formatVnd(requestPrice)}</b> (ngân sách tối đa Học viên đề xuất)</li>
               <li>Deadline: <b>{ctx.expectedDeadline ? format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy HH:mm') : '—'}</b></li>
               <li>Nhiệm vụ: <b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b></li>
@@ -975,7 +985,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 onClick={handleAcceptByRequest}
                 disabled={proposeMutation.isPending}
                 leftIcon={proposeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
-                className="rounded-xl font-black"
+                className="rounded-xl font-bold"
               >
                 Gửi Deal Ticket
               </Button>
@@ -988,9 +998,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       {/* Dialog: Từ chối */}
       {rejectTarget !== null && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md space-y-4 rounded-3xl border border-gray-200 bg-white p-6 text-left shadow-2xl dark:border-gray-800 dark:bg-[#202124]">
-            <h4 className="font-heading text-base font-black text-gray-900 dark:text-white">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
-            <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+          <div className="w-full max-w-md space-y-4 rounded-3xl border border-cream-300 bg-white p-6 text-left shadow-2xl dark:border-white/10 dark:bg-[#202124]">
+            <h4 className="font-display text-base font-bold text-plum-900 dark:text-white">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
+            <p className="text-xs leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
               Chỉ từ chối đề xuất hiện tại; Request vẫn giữ nguyên và hai bên có thể tiếp tục trao đổi.
             </p>
             <textarea
@@ -998,13 +1008,13 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Lý do (ví dụ: mức giá chưa phù hợp, deadline quá gấp...)"
-              className="w-full rounded-2xl border border-gray-200 bg-white p-3 text-xs text-gray-900 focus:border-red-500 focus:outline-none dark:border-gray-700 dark:bg-[#2d2e30] dark:text-gray-100"
+              className="w-full rounded-2xl border border-cream-300 bg-white p-3 text-xs text-plum-900 focus:border-coral-500 focus:outline-none dark:border-white/10 dark:bg-[#2d2e30] dark:text-[#e4e6eb]"
             />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" size="sm" onClick={() => setRejectTarget(null)} disabled={rejectMutation.isPending}>
                 Hủy
               </Button>
-              <Button size="sm" onClick={handleReject} disabled={rejectMutation.isPending} className="rounded-xl bg-red-600 text-white hover:bg-red-700">
+              <Button size="sm" onClick={handleReject} disabled={rejectMutation.isPending} className="rounded-xl bg-coral-600 text-white hover:bg-coral-700">
                 {rejectMutation.isPending ? 'Đang gửi...' : 'Từ chối'}
               </Button>
             </div>
@@ -1020,14 +1030,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         const currentDeadline = targetSnap ? targetSnap.deadline : deal?.deadline
         if (typeof document === 'undefined') return null
         return createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-950/60 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-900/60 p-4 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
                   <RefreshCw className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-heading text-base font-black text-plum-900 dark:text-[#f0f2f5]">
+                  <h4 className="font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">
                     Gửi Ticket Yêu cầu điều chỉnh Deal
                   </h4>
                   <p className="text-xs text-amber-700 dark:text-amber-400 font-bold">
@@ -1039,19 +1049,19 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               {/* Tóm tắt điều khoản phiên bản hiện tại */}
               <div className="rounded-2xl border border-amber-200/80 bg-amber-50/60 p-3 text-xs text-plum-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-[#e4e6eb] space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-plum-500 dark:text-gray-400">Giá đề xuất hiện tại:</span>
+                  <span className="text-plum-500 dark:text-plum-400">Giá đề xuất hiện tại:</span>
                   <span className="font-bold text-amber-700 dark:text-amber-300">{formatVnd(Number(currentPrice || 0))}</span>
                 </div>
                 {currentDeadline && (
                   <div className="flex justify-between">
-                    <span className="text-plum-500 dark:text-gray-400">Deadline hiện tại:</span>
+                    <span className="text-plum-500 dark:text-plum-400">Deadline hiện tại:</span>
                     <span className="font-semibold">{format(new Date(currentDeadline), 'dd/MM/yyyy HH:mm')}</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-plum-800 dark:text-gray-200">
+                <label className="text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
                   Nội dung điều chỉnh mong muốn (Ghi chú Ticket):
                 </label>
                 <textarea
@@ -1059,7 +1069,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   value={adjustNote}
                   onChange={(e) => setAdjustNote(e.target.value)}
                   placeholder="Ví dụ: Mong muốn giảm giá xuống 200.000đ hoặc dời deadline thêm 3 ngày..."
-                  className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 focus:border-amber-500 focus:outline-none dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                  className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
                 />
               </div>
 
@@ -1071,7 +1081,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   size="sm"
                   onClick={handleRequestAdjustment}
                   disabled={adjustMutation.isPending}
-                  className="rounded-xl font-black bg-amber-500 text-white hover:bg-amber-600"
+                  className="rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700"
                   leftIcon={adjustMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 >
                   {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi Ticket điều chỉnh'}
@@ -1093,7 +1103,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             isOpen
             onClose={() => setTicketModal(null)}
             ticket={ticketModal.ticket}
-            isRecipient={!isMentor}
+            isRecipient={isStudent}
             canAct={!isAdj && actions.canAct}
             onConfirm={!isAdj && actions.onConfirm ? async () => { setTicketModal(null); await actions.onConfirm?.() } : undefined}
             onReject={!isAdj && actions.onReject ? () => { setTicketModal(null); actions.onReject?.() } : undefined}
@@ -1131,10 +1141,16 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           isOpen={isPaymentOpen}
           onClose={() => {
             setIsPaymentOpen(false)
+            setTopUpAmendment(null)
             refetch()
+            refetchTask()
           }}
           deal={paymentDeal}
-          onSuccess={() => refetch()}
+          topUpAmendment={topUpAmendment}
+          onSuccess={() => {
+            refetch()
+            refetchTask()
+          }}
         />
       )}
 
@@ -1179,7 +1195,8 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           isOpen={isSettlementModalOpen}
           onClose={() => setIsSettlementModalOpen(false)}
           taskId={ctx.taskId}
-          totalBudget={taskDetail?.overview?.agreedPrice || Number(deal?.agreedPrice) || 0}
+          totalBudget={taskDetail?.overview?.escrowBalance ?? taskDetail?.overview?.agreedPrice ?? Number(deal?.agreedPrice ?? 0)}
+          requiresRefundAccount={isStudent && taskDetail?.permissions?.hasRefundAccount === false}
           onSuccess={() => {
             refetchTask()
             refetch()
@@ -1235,7 +1252,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onClose={() => setIsCreateDisputeOpen(false)}
           taskId={ctx.taskId}
           taskTitle={taskDetail?.overview?.taskTitle}
-          isRequester={!isMentor}
+          isRequester={isStudent}
           onSuccess={() => {
             refetchTask()
             refetch()
@@ -1250,7 +1267,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           onClose={() => setIsAddEvidenceOpen(false)}
           taskId={ctx.taskId}
           ticket={taskDetail.activeTicket}
-          isStudent={!isMentor}
+          isStudent={isStudent}
           onSuccess={() => {
             refetchTask()
             refetch()
@@ -1264,7 +1281,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           isOpen={isTaskReportOpen}
           onClose={() => setIsTaskReportOpen(false)}
           taskId={ctx.taskId}
-          isStudent={!isMentor}
+          isStudent={isStudent}
           isMentor={isMentor}
         />
       )}

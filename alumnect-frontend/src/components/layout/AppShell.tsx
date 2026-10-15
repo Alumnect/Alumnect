@@ -124,6 +124,7 @@ export function AppShell() {
 
   // Kiểm tra điều khoản Mentoring khi đang ở các trang thuộc /app/mentoring
   const isMentoringRoute = location.pathname.startsWith('/app/mentoring')
+  const isMentoringChatRoute = location.pathname.startsWith('/app/mentoring/chats/')
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
@@ -444,8 +445,10 @@ export function AppShell() {
           ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
           : location.pathname === '/app/messages'
           ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100vh-3.85rem)] overflow-y-auto no-scrollbar"
+          : isMentoringChatRoute
+          ? "h-[calc(100dvh-7.65rem)] max-w-[1560px] overflow-hidden px-3 py-3 sm:px-6 lg:h-[calc(100dvh-4.1rem)] lg:px-8"
           : isMentoringRoute
-          ? "max-w-[1560px] px-3 sm:px-6 lg:px-8 pb-28 pt-4 lg:pb-10"
+          ? "h-[calc(100vh-7.65rem)] max-w-[1560px] overflow-y-auto overscroll-contain px-3 pb-8 pt-3 scroll-pb-8 sm:px-6 lg:h-auto lg:overflow-visible lg:px-8 lg:pb-10 xl:h-[calc(100vh-4.1rem)] xl:overflow-hidden xl:pb-3"
           : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
         <ErrorBoundary>
@@ -456,6 +459,7 @@ export function AppShell() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={TRANSITION.page}
+                className={isMentoringChatRoute ? 'h-full min-h-0 overflow-hidden' : 'xl:min-h-full'}
               >
                 <Outlet />
               </motion.div>
@@ -475,7 +479,7 @@ export function AppShell() {
       </main>
 
       {/* ===== mobile bottom tab bar ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-plum-900/[0.07] bg-cream-50/95 lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-plum-900/[0.08] bg-cream-50/95 shadow-[0_-6px_20px_rgba(50,44,63,0.06)] backdrop-blur-xl lg:hidden dark:border-white/10 dark:bg-[#242526]/95">
         <div className="flex items-stretch justify-around">
           {APP_PRIMARY_NAV.map((item) => {
             const Icon = item.icon
@@ -486,8 +490,8 @@ export function AppShell() {
                 end={item.to === '/app'}
                 className={({ isActive }) =>
                   cn(
-                    'relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors',
-                    isActive ? 'text-brand-700' : 'text-plum-400',
+                    'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors min-[400px]:text-[11px]',
+                    isActive ? 'text-brand-700 dark:text-orange-300' : 'text-plum-500 dark:text-[#b0b3b8]',
                   )
                 }
               >
@@ -507,7 +511,7 @@ export function AppShell() {
                         className={isActive ? 'text-[#F27024]' : ''}
                       />
                     )}
-                    <span className="truncate">{item.label}</span>
+                    <span className="w-full truncate px-0.5 text-center">{item.label}</span>
                   </>
                 )}
               </NavLink>
@@ -515,7 +519,7 @@ export function AppShell() {
           })}
           <button
             onClick={() => setSheet(true)}
-            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold text-plum-400"
+            className="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold text-plum-500 min-[400px]:text-[11px] dark:text-[#b0b3b8]"
           >
             <SquaresFour size={22} weight={sheet ? 'fill' : 'regular'} />
             Thêm
@@ -590,14 +594,17 @@ export function AppShell() {
       </AnimatePresence>
 
       {/* Floating Preferences Dock (Theme & Language Switcher) - Góc dưới bên trái (Mini Compact) */}
-      <div className="fixed bottom-20 left-4 z-30 lg:bottom-6 lg:left-6 flex items-center rounded-full border border-slate-200/80 bg-white/85 p-0.5 shadow-md shadow-slate-900/5 backdrop-blur-md transition-all hover:bg-white hover:shadow-lg dark:border-[#393a3b] dark:bg-[#242526]/85 dark:hover:bg-[#242526] dark:shadow-black/20">
+      <div className={cn(
+        'fixed z-30 items-center rounded-full border border-slate-200/80 bg-white/90 p-1 shadow-md shadow-slate-900/5 backdrop-blur-md transition-all hover:bg-white hover:shadow-lg dark:border-[#393a3b] dark:bg-[#242526]/90 dark:hover:bg-[#242526] dark:shadow-black/20 lg:bottom-6 lg:left-6 lg:right-auto lg:top-auto lg:flex',
+        isMentoringRoute ? 'right-3 top-[4.55rem] flex' : 'bottom-20 left-4 flex',
+      )}>
         {/* Nút chuyển chế độ Sáng / Tối */}
         <button
           type="button"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
           title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-          className="group relative grid h-7 w-7 place-items-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-all cursor-pointer"
+          className="group relative grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-all cursor-pointer"
         >
           {theme === 'dark' ? (
             <Sun size={15} weight="fill" className="text-amber-400 transition-transform duration-300 group-hover:rotate-45" />
@@ -620,7 +627,7 @@ export function AppShell() {
             onClick={() => setLangMenuOpen((prev) => !prev)}
             aria-label="Chọn ngôn ngữ"
             title="Đổi ngôn ngữ (Language)"
-            className="group relative flex h-7 items-center gap-1 rounded-full px-2 text-[11px] font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-all cursor-pointer"
+            className="group relative flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5] transition-all cursor-pointer"
           >
             <GlobeSimple size={14} weight="bold" className="text-slate-400 group-hover:text-brand-500 dark:text-[#b0b3b8] dark:group-hover:text-brand-400 transition-colors" />
             <span className="tracking-wider">{currentLang.toUpperCase()}</span>

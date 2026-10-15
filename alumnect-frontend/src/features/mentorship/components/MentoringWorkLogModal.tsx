@@ -190,7 +190,7 @@ export function MentoringWorkLogModal({
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-plum-900 dark:text-white">
+              <h3 className="text-base font-bold text-plum-900 dark:text-white">
                 {isEditing ? 'Chỉnh sửa nhật ký công việc' : 'Thêm nhật ký công việc (Work Log)'}
               </h3>
               <p className="text-xs text-plum-400 dark:text-[#8f9399]">
@@ -313,7 +313,7 @@ export function MentoringWorkLogModal({
 
             <div className="flex items-center gap-3">
               <label
-                className={`inline-flex items-center gap-2 rounded-2xl border border-dashed border-plum-900/20 bg-slate-50/70 px-4 py-2.5 text-xs font-bold text-plum-600 transition-colors hover:border-brand-500 hover:text-brand-700 cursor-pointer dark:border-white/20 dark:bg-[#18191a] dark:text-[#b0b3b8] ${
+                className={`inline-flex items-center gap-2 rounded-2xl border border-dashed border-plum-900/20 bg-cream-100/70 px-4 py-2.5 text-xs font-bold text-plum-600 transition-colors hover:border-brand-500 hover:text-brand-700 cursor-pointer dark:border-white/20 dark:bg-[#18191a] dark:text-[#b0b3b8] ${
                   isUploading ? 'opacity-50 pointer-events-none' : ''
                 }`}
               >
@@ -342,7 +342,7 @@ export function MentoringWorkLogModal({
                 {attachments.map((att, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-plum-900/[0.06] bg-slate-50/80 p-2.5 text-xs dark:border-white/10 dark:bg-[#18191a]"
+                    className="flex items-center justify-between gap-2 rounded-xl border border-plum-900/[0.06] bg-cream-100/80 p-2.5 text-xs dark:border-white/10 dark:bg-[#18191a]"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <Paperclip className="h-3.5 w-3.5 text-brand-500 shrink-0" />

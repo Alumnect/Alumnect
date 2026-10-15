@@ -40,4 +40,10 @@ public interface MentorReputationService {
      * Áp dụng điểm phạt khi bị học viên báo cáo vi phạm được Quản trị viên duyệt (-50 điểm S_penalty).
      */
     void applyPenalty(Long mentorProfileId, String reason);
+
+    /** Đánh giá của người dùng hiện tại cho một Task (null nếu chưa có). */
+    MentorReviewResponse getTaskReview(String studentEmail, Long taskId);
+
+    /** Ghi nhận Mentor hoàn thành thêm một Task (chỉ số completedTasks). */
+    void recordTaskCompleted(com.alumnect.alumnect_backend.entity.user.User mentorUser);
 }

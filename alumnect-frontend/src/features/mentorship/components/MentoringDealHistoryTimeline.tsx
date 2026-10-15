@@ -30,10 +30,10 @@ export function MentoringDealHistoryTimeline({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 border-b border-plum-900/[0.06] pb-3 dark:border-white/10">
-        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400">
+        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-violet-500/5 text-violet-600 dark:bg-violet-600/40 dark:text-violet-400">
           <History className="h-4 w-4" />
         </span>
-        <h4 className="font-heading text-sm font-extrabold text-plum-900 dark:text-[#f0f2f5]">
+        <h4 className="font-display text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">
           Lịch sử điều chỉnh điều khoản ({snapshots.length} phiên bản)
         </h4>
       </div>
@@ -56,7 +56,7 @@ export function MentoringDealHistoryTimeline({
                 className={`absolute -left-6 top-1.5 flex h-5 w-5 items-center justify-center rounded-full ring-4 ring-white dark:ring-[#242526] transition-colors ${
                   isLatest
                     ? 'bg-brand-600 text-white shadow-xs'
-                    : 'bg-plum-200 text-plum-600 dark:bg-white/20 dark:text-white'
+                    : 'bg-cream-300 text-plum-600 dark:bg-white/20 dark:text-white'
                 }`}
               >
                 <GitCommit className="h-3 w-3" />
@@ -66,17 +66,17 @@ export function MentoringDealHistoryTimeline({
               <div
                 className={`rounded-2xl p-4 border text-xs transition-all ${
                   isLatest
-                    ? 'bg-brand-50/40 border-brand-200/60 shadow-xs dark:bg-brand-950/20 dark:border-brand-800/30'
+                    ? 'bg-brand-50/40 border-brand-200/60 shadow-xs dark:bg-brand-700/20 dark:border-brand-700/30'
                     : 'bg-white border-plum-900/[0.08] dark:bg-[#242526] dark:border-[#393a3b]'
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-plum-900/[0.04] pb-2 dark:border-white/5">
                   <div className="flex items-center gap-2">
-                    <span className="font-black text-plum-900 dark:text-[#f0f2f5]">
+                    <span className="font-bold text-plum-900 dark:text-[#f0f2f5]">
                       Phiên bản {snap.version}
                     </span>
                     {isLatest && (
-                      <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-bold text-white">
                         Hiện tại
                       </span>
                     )}
@@ -105,7 +105,7 @@ export function MentoringDealHistoryTimeline({
                 </div>
 
                 {snap.changeNote && (
-                  <p className="mt-2 rounded-xl bg-plum-50/60 p-2.5 text-[11px] text-plum-600 dark:bg-white/5 dark:text-[#b0b3b8] italic">
+                  <p className="mt-2 rounded-xl bg-cream-100/60 p-2.5 text-[11px] text-plum-600 dark:bg-white/5 dark:text-[#b0b3b8] italic">
                     &ldquo;{snap.changeNote}&rdquo;
                   </p>
                 )}

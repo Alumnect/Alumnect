@@ -168,7 +168,7 @@ export function AdminResolveTicketModal({
                   {ticket.ticketCode}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30">
-                  Phán quyết Admin (UC120)
+                  Phán quyết Admin
                 </span>
               </div>
               <h3 className="text-base font-bold text-white mt-0.5 line-clamp-1">

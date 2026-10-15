@@ -17,6 +17,7 @@ export type MentoringTaskStatus =
   | 'COMPLETED'
   | 'CANCELLED'
   | 'DISPUTED'
+  | 'RESOLVED'
 
 /**
  * Giai đoạn hiển thị cấp cao trên UI (3 giai đoạn chuẩn):
@@ -215,6 +216,10 @@ export interface MentoringPaymentSummary {
  */
 export interface MentoringTaskOverview {
   id: number
+  /** Task đang thực hiện nhưng đã quá deadline */
+  overdue?: boolean
+  /** Số tiền đang giữ trong quỹ ký quỹ của Task */
+  escrowBalance?: number
   taskTitle: string
   taskScope: string
   agreedPrice: number
@@ -266,6 +271,8 @@ export interface MentoringTaskActionPermissions {
   canSubmitSettlementTicket?: boolean
   canCreateDisputeTicket?: boolean
   canSubmitDisputeEvidence?: boolean
+  /** Học viên đã khai báo tài khoản nhận hoàn tiền */
+  hasRefundAccount?: boolean | null
 }
 
 /**
@@ -334,6 +341,8 @@ export interface MentoringTask {
  */
 export interface CreateTaskPaymentRequest {
   dealId: number
+  /** ID Ticket điều chỉnh đã chấp nhận (AWAITING_TOPUP) khi thanh toán bổ sung */
+  amendmentId?: number
 }
 
 /** Trạng thái giao dịch thanh toán (khớp enum PaymentStatus của backend) */
@@ -372,7 +381,7 @@ export interface MentoringTaskPaymentStatusResponse {
 /**
  * Trạng thái của Deadline Extension Ticket (UC109).
  */
-export type MentoringExtensionStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED'
+export type MentoringExtensionStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'SUPERSEDED' | 'CANCELLED'
 
 /**
  * Trạng thái của Task Amendment Ticket (UC109, mục 5.8).
@@ -382,7 +391,7 @@ export type MentoringAmendmentStatus = 'PENDING' | 'AWAITING_TOPUP' | 'APPLIED' 
 /**
  * Trạng thái của đề xuất dừng Task và phân chia tiền (UC109, mục 5.6).
  */
-export type MentoringSettlementProposalStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'SUPERSEDED'
+export type MentoringSettlementProposalStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'SUPERSEDED' | 'CANCELLED'
 
 /**
  * Dữ liệu Deadline Extension Ticket (UC109).
@@ -410,6 +419,8 @@ export interface MentoringTaskDeadlineExtension {
   updatedAt: string
   canConfirm?: boolean
   canReject?: boolean
+  /** Người tạo được rút lại đề xuất đang chờ */
+  canCancel?: boolean
 }
 
 /**
@@ -444,6 +455,10 @@ export interface MentoringTaskAmendment {
   canConfirm?: boolean
   canReject?: boolean
   canTopUp?: boolean
+  /** Mentor được rút lại đề xuất (đang chờ phản hồi hoặc chờ thanh toán) */
+  canCancel?: boolean
+  /** Học viên được từ chối thanh toán bổ sung */
+  canDeclineTopUp?: boolean
 }
 
 /**
@@ -472,6 +487,10 @@ export interface MentoringTaskSettlementProposal {
   updatedAt: string
   canAccept?: boolean
   canReject?: boolean
+  /** Người tạo được rút lại đề xuất đang chờ */
+  canCancel?: boolean
+  /** Học viên phải khai báo tài khoản nhận hoàn tiền trước khi đồng ý */
+  refundAccountRequired?: boolean
 }
 
 export interface CreateDeadlineExtensionPayload {
@@ -747,12 +766,12 @@ export interface MentoringTaskReport {
   totalAgreedPrice: number
   studentTotalPaid: number
   studentRefundAmount: number
-  studentRefundStatus: 'NO_REFUND' | 'PROCESSING' | 'REFUNDED' | 'ON_HOLD' | string
+  studentRefundStatus: 'NO_REFUND' | 'PENDING_REFUND' | 'PROCESSING' | 'REFUNDED' | 'FAILED' | 'ON_HOLD' | string
 
   mentorEarnedAmount: number
   platformFee: number
   mentorNetPayout: number
-  mentorPayoutStatus: 'PENDING_ESCROW' | 'PROCESSING' | 'PAID' | 'ON_HOLD' | 'CANCELLED' | string
+  mentorPayoutStatus: 'PENDING_ESCROW' | 'PROCESSING' | 'PAID' | 'FAILED' | 'ON_HOLD' | 'CANCELLED' | string
 
   platformFeeNote?: string | null
 

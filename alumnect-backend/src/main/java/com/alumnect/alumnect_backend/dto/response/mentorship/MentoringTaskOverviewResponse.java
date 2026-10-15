@@ -61,6 +61,12 @@ public class MentoringTaskOverviewResponse {
     /** Số ngày còn lại đến hạn (âm nếu đã quá hạn) */
     private Long daysRemaining;
 
+    /** Task đang thực hiện nhưng đã quá deadline */
+    private Boolean overdue;
+
+    /** Số tiền đang giữ trong quỹ ký quỹ của Task (dùng khi thỏa thuận dừng Task) */
+    private java.math.BigDecimal escrowBalance;
+
     /** Cờ cảnh báo quá hạn hoàn thành */
     private Boolean isOverdue;
 

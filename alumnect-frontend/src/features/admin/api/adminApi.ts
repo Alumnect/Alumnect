@@ -360,6 +360,62 @@ export const adminApi = {
    */
   getAdminTaskFundDetail: (taskId: number) =>
     http.get<any, ApiResponse<AdminTaskFundDetailDto>>(`/admin/mentoring/finances/tasks/${taskId}`),
+
+  /**
+   * Chi lại thù lao Mentor cho lệnh chi PayOS đã thất bại
+   */
+  retryAdminPayout: (ledgerId: number, note?: string) =>
+    http.post<any, ApiResponse<MentoringPaymentLedgerDto>>(
+      `/admin/mentoring/finances/ledgers/${ledgerId}/retry-payout`,
+      { note }
+    ),
+
+  /**
+   * Số dư tài khoản Kênh chi PayOS
+   */
+  getAdminPayoutBalance: () =>
+    http.get<any, ApiResponse<number>>('/admin/mentoring/finances/payout-balance'),
+
+  getRevenueOverview: (params?: { from?: string; to?: string }) =>
+    http.get<any, ApiResponse<AdminRevenueOverviewDto>>('/admin/revenue/overview', { params }),
+}
+
+export interface AdminMonthlyRevenueDto {
+  month: string
+  label: string
+  subscriptionRevenue: number
+  disputeFeeRevenue: number
+  totalRevenue: number
+}
+
+export interface AdminRevenueTransactionDto {
+  id: string
+  sourceType: 'MENTOR_SUBSCRIPTION' | 'DISPUTE_FEE'
+  referenceCode: string
+  payerName: string
+  payerEmail: string
+  description: string
+  paymentMethod: string
+  amount: number
+  occurredAt: string
+  status: string
+}
+
+export interface AdminRevenueOverviewDto {
+  totalOwnedRevenue: number
+  subscriptionRevenue: number
+  disputeFeeRevenue: number
+  currentMonthRevenue: number
+  previousMonthRevenue: number
+  monthGrowthPercent: number
+  successfulTransactionCount: number
+  escrowHolding: number
+  pendingMentorPayout: number
+  pendingStudentRefund: number
+  from?: string
+  to?: string
+  monthlyRevenue: AdminMonthlyRevenueDto[]
+  transactions: AdminRevenueTransactionDto[]
 }
 
 export interface AdminTaskParticipantDto {
@@ -406,6 +462,9 @@ export interface MentoringPaymentLedgerDto {
   transactionType: 'ESCROW_COLLECTION' | 'PAYOUT' | 'REFUND' | 'TOP_UP' | string
   status: 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | string
   providerReference?: string
+  providerStatus?: string
+  failureCode?: string
+  transactedAt?: string
   deadlineSnapshot?: string
   note?: string
   createdAt: string

@@ -29,6 +29,9 @@ public interface MentorProfileRepository extends JpaRepository<MentorProfile, Lo
      */
     List<MentorProfile> findByUserIdIn(List<Long> userIds);
 
+    /** Toàn bộ Mentor theo trạng thái hồ sơ (dùng để phân phối Request chung tới mọi Mentor đủ điều kiện) */
+    List<MentorProfile> findByMentorStatus(com.alumnect.alumnect_backend.common.enums.MentorStatus mentorStatus);
+
     /**
      * Truy vấn danh sách Mentor đủ điều kiện xếp hạng theo lĩnh vực chuyên môn (UC97).
      * Điều kiện lọc nghiêm ngặt (BR-02 & BR-06):

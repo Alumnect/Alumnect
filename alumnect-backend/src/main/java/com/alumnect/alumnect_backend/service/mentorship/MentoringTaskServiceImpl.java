@@ -32,6 +32,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
 
     private final MentoringTaskRepository taskRepository;
     private final MentoringTaskPaymentRepository paymentRepository;
+    private final MentoringPaymentLedgerRepository ledgerRepository;
     private final MentoringWorkLogRepository workLogRepository;
     private final MentoringTaskDeadlineExtensionRepository extensionRepository;
     private final MentoringTaskAmendmentRepository amendmentRepository;
@@ -40,6 +41,9 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final MentoringTaskResolutionService resolutionService;
     private final MentoringTaskCompletionService completionService;
     private final MentoringTicketService ticketService;
+    private final MentoringGroupService mentoringGroupService;
+    private final com.alumnect.alumnect_backend.dao.mentorship.UserRefundAccountRepository refundAccountRepository;
+    private final MentoringRules mentoringRules;
 
     @Override
     @Transactional(readOnly = true)
@@ -114,7 +118,8 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     }
 
     private void verifyParticipant(MentoringTask task, Long currentUserId) {
-        if (!task.getStudent().getId().equals(currentUserId) && !task.getMentor().getId().equals(currentUserId)) {
+        if (!task.getStudent().getId().equals(currentUserId) && !task.getMentor().getId().equals(currentUserId)
+                && !mentoringGroupService.isActiveMember(task.getRequest(), currentUserId)) {
             throw new ForbiddenException("Bạn không có quyền truy cập thông tin của Mentoring Task này.");
         }
     }
@@ -123,11 +128,24 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         return switch (stage) {
             case "PREPARATION" -> List.of(MentoringTaskStatus.PREPARATION);
             case "IN_PROGRESS" -> List.of(MentoringTaskStatus.IN_PROGRESS);
+            // Task còn đang chạy: chuẩn bị, đang thực hiện hoặc chờ nghiệm thu
+            case "ACTIVE" -> List.of(
+                    MentoringTaskStatus.PREPARATION,
+                    MentoringTaskStatus.IN_PROGRESS,
+                    MentoringTaskStatus.SUBMITTED
+            );
             case "ENDING" -> List.of(
                     MentoringTaskStatus.SUBMITTED,
                     MentoringTaskStatus.COMPLETED,
                     MentoringTaskStatus.CANCELLED,
-                    MentoringTaskStatus.DISPUTED
+                    MentoringTaskStatus.DISPUTED,
+                    MentoringTaskStatus.RESOLVED
+            );
+            // Task đã khép lại hẳn: hoàn thành, đã hủy hoặc đã được phân xử
+            case "CLOSED" -> List.of(
+                    MentoringTaskStatus.COMPLETED,
+                    MentoringTaskStatus.CANCELLED,
+                    MentoringTaskStatus.RESOLVED
             );
             default -> Collections.emptyList();
         };
@@ -210,7 +228,10 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .deadline(task.getDeadline())
                 .completedAt(task.getCompletedAt())
                 .daysRemaining(daysRemaining)
+                .overdue(deadline != null && deadline.isBefore(now)
+                        && (task.getStatus() == MentoringTaskStatus.PREPARATION || task.getStatus() == MentoringTaskStatus.IN_PROGRESS))
                 .isOverdue(isOverdue)
+                .escrowBalance(mentoringRules.escrowBalance(task.getId()))
                 .totalWorkLogs(totalLogs)
                 .confirmedWorkLogs(confirmedLogs)
                 .pendingWorkLogs(pendingLogs)
@@ -270,6 +291,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         // 7. Available Actions / Permissions
         boolean isStudent = task.getStudent().getId().equals(currentUserId);
         boolean isMentor = task.getMentor().getId().equals(currentUserId);
+        boolean isCoreParticipant = isStudent || isMentor;
         boolean isReadOnly = task.getStatus() == MentoringTaskStatus.COMPLETED
                 || task.getStatus() == MentoringTaskStatus.CANCELLED
                 || task.getStatus() == MentoringTaskStatus.DISPUTED;
@@ -277,17 +299,18 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         boolean canEditWorkLog = isMentor && !isReadOnly && workLogs.stream().anyMatch(w -> Boolean.TRUE.equals(w.getCanEdit()));
         boolean canConfirmWorkLog = isStudent && !isReadOnly && workLogs.stream().anyMatch(w -> w.getStatus() == WorkLogStatus.PENDING_CONFIRMATION);
 
-        boolean canRequestExtension = (isStudent || isMentor) && !isReadOnly;
-        boolean canRequestAmendment = (isStudent || isMentor) && !isReadOnly;
+        // Mentor (người được thuê) có đầy đủ chức năng Task; Học viên chỉ thỏa thuận dừng Task và mở khiếu nại
+        boolean canRequestExtension = isMentor && !isReadOnly;
+        boolean canRequestAmendment = isMentor && !isReadOnly;
         boolean canProposeSettlement = (isStudent || isMentor) && !isReadOnly;
         boolean canSubmitCompletion = isMentor && (task.getStatus() == MentoringTaskStatus.IN_PROGRESS || task.getStatus() == MentoringTaskStatus.PREPARATION);
         boolean canConfirmCompletion = isStudent && task.getStatus() == MentoringTaskStatus.SUBMITTED;
 
-        MentoringTaskDeadlineExtensionResponse activeExtension = resolutionService.getActiveExtension(currentUserId, task.getId());
-        MentoringTaskAmendmentResponse activeAmendment = resolutionService.getActiveAmendment(currentUserId, task.getId());
-        MentoringTaskSettlementProposalResponse activeSettlementProposal = resolutionService.getActiveSettlementProposal(currentUserId, task.getId());
+        MentoringTaskDeadlineExtensionResponse activeExtension = isCoreParticipant ? resolutionService.getActiveExtension(currentUserId, task.getId()) : null;
+        MentoringTaskAmendmentResponse activeAmendment = isCoreParticipant ? resolutionService.getActiveAmendment(currentUserId, task.getId()) : null;
+        MentoringTaskSettlementProposalResponse activeSettlementProposal = isCoreParticipant ? resolutionService.getActiveSettlementProposal(currentUserId, task.getId()) : null;
         MentoringTaskCompletionResponse latestCompletion = completionService.getLatestCompletion(currentUserId, task.getId());
-        MentoringDisputeTicketResponse activeTicket = ticketService.getActiveTicket(currentUserId, task.getId());
+        MentoringDisputeTicketResponse activeTicket = isCoreParticipant ? ticketService.getActiveTicket(currentUserId, task.getId()) : null;
 
         boolean canSubmitSettlementTicket = (isStudent || isMentor)
                 && activeSettlementProposal != null
@@ -319,6 +342,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .canSubmitSettlementTicket(canSubmitSettlementTicket)
                 .canCreateDisputeTicket(canCreateDisputeTicket)
                 .canSubmitDisputeEvidence(canSubmitDisputeEvidence)
+                .hasRefundAccount(isStudent ? refundAccountRepository.existsByUserId(currentUserId) : null)
                 .build();
 
         return MentoringTaskDetailResponse.builder()
@@ -339,6 +363,16 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .latestCompletion(latestCompletion)
                 .activeTicket(activeTicket)
                 .build();
+    }
+
+    /** Trạng thái chi/hoàn tiền lấy từ bút toán sổ quỹ thật, không suy diễn. */
+    private String ledgerProgressStatus(MentoringPaymentLedger ledger, String succeededStatus, String noLedgerStatus) {
+        if (ledger == null) return noLedgerStatus;
+        return switch (ledger.getStatus()) {
+            case SUCCEEDED -> succeededStatus;
+            case FAILED -> "FAILED";
+            case PENDING -> "PROCESSING";
+        };
     }
 
     private MentoringParticipantResponse toParticipantResponse(User user, String fallbackRole) {
@@ -487,6 +521,10 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
 
         verifyParticipant(task, currentUserId);
 
+        if (!task.getStudent().getId().equals(currentUserId) && !task.getMentor().getId().equals(currentUserId)) {
+            throw new ForbiddenException("Thành viên nhóm không có quyền xem báo cáo tài chính của Task.");
+        }
+
         MentoringDeal deal = task.getDeal();
 
         // 1. Task Duration
@@ -536,16 +574,13 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 || (activeTicket != null && activeTicket.getTicketType() == MentoringTicketType.DISPUTE);
 
         // 8. Financial Analysis
-        BigDecimal studentTotalPaid = totalAgreedPrice;
+        // Chỉ tính các giao dịch PayOS đã PAID thật, không lấy giá Deal thay thế.
+        BigDecimal studentTotalPaid = BigDecimal.ZERO;
         if (deal != null) {
-            List<MentoringTaskPayment> payments = paymentRepository.findByDealIdOrderByCreatedAtDesc(deal.getId());
-            BigDecimal paidSum = payments.stream()
+            studentTotalPaid = paymentRepository.findByDealIdOrderByCreatedAtDesc(deal.getId()).stream()
                     .filter(p -> p.getPaymentStatus() == PaymentStatus.PAID)
                     .map(MentoringTaskPayment::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            if (paidSum.compareTo(BigDecimal.ZERO) > 0) {
-                studentTotalPaid = paidSum;
-            }
         }
 
         BigDecimal mentorEarnedAmount;
@@ -555,6 +590,14 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
 
         BigDecimal studentRefundAmount = BigDecimal.ZERO;
         String studentRefundStatus = "NO_REFUND";
+        MentoringPaymentLedger latestPayout = ledgerRepository
+                .findFirstByTaskIdAndTransactionTypeOrderByCreatedAtDesc(
+                        task.getId(), MentoringLedgerTransactionType.PAYOUT)
+                .orElse(null);
+        MentoringPaymentLedger latestRefund = ledgerRepository
+                .findFirstByTaskIdAndTransactionTypeOrderByCreatedAtDesc(
+                        task.getId(), MentoringLedgerTransactionType.REFUND)
+                .orElse(null);
 
         if (isDisputed) {
             mentorEarnedAmount = BigDecimal.ZERO;
@@ -564,13 +607,17 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         } else if (activeTicket != null && activeTicket.getTicketType() == MentoringTicketType.SETTLEMENT) {
             mentorEarnedAmount = activeTicket.getMentorAmount() != null ? activeTicket.getMentorAmount() : BigDecimal.ZERO;
             mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
-            mentorPayoutStatus = "PROCESSING";
+            mentorPayoutStatus = mentorEarnedAmount.compareTo(BigDecimal.ZERO) > 0
+                    ? ledgerProgressStatus(latestPayout, "PAID", "PENDING_ESCROW")
+                    : "CANCELLED";
             studentRefundAmount = activeTicket.getStudentRefund() != null ? activeTicket.getStudentRefund() : BigDecimal.ZERO;
-            studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0 ? "PROCESSING" : "NO_REFUND";
+            studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0
+                    ? ledgerProgressStatus(latestRefund, "REFUNDED", "PENDING_REFUND")
+                    : "NO_REFUND";
         } else if (task.getStatus() == MentoringTaskStatus.COMPLETED) {
             mentorEarnedAmount = totalAgreedPrice;
             mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
-            mentorPayoutStatus = "PAID";
+            mentorPayoutStatus = ledgerProgressStatus(latestPayout, "PAID", "PENDING_ESCROW");
             studentRefundAmount = BigDecimal.ZERO;
             studentRefundStatus = "NO_REFUND";
         } else if (task.getStatus() == MentoringTaskStatus.CANCELLED) {
@@ -578,7 +625,9 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
             mentorNetPayout = BigDecimal.ZERO;
             mentorPayoutStatus = "CANCELLED";
             studentRefundAmount = studentTotalPaid;
-            studentRefundStatus = "REFUNDED";
+            studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0
+                    ? ledgerProgressStatus(latestRefund, "REFUNDED", "PENDING_REFUND")
+                    : "NO_REFUND";
         } else {
             mentorEarnedAmount = BigDecimal.ZERO;
             mentorNetPayout = BigDecimal.ZERO;

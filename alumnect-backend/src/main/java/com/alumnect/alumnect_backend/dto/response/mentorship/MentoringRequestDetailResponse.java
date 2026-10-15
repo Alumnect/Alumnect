@@ -104,6 +104,12 @@ public class MentoringRequestDetailResponse {
     /** ID Mentoring Task được kích hoạt sau khi thanh toán thành công (null khi chưa thanh toán) */
     private Long taskId;
 
+    private MentoringGroupResponse group;
+
+    /** Danh sách snapshot thành viên thực tế tham gia yêu cầu này */
+    @Builder.Default
+    private List<MentoringGroupMemberResponse> participatingMembers = new ArrayList<>();
+
     /**
      * Danh sách chi tiết phản hồi của từng Mentor thực sự liên quan đến yêu cầu:
      * - Nếu GENERAL: Danh sách các Mentor đã thực sự được phân phối yêu cầu.
@@ -111,4 +117,7 @@ public class MentoringRequestDetailResponse {
      */
     @Builder.Default
     private List<MentorResponseItemResponse> mentorResponses = new ArrayList<>();
+
+    /** Người xem là chủ Request và Request còn có thể hủy */
+    private boolean canCancel;
 }

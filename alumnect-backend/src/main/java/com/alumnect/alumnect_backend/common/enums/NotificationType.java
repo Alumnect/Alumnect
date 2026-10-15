@@ -47,5 +47,10 @@ public enum NotificationType {
     /**
      * Thông báo liên quan đến tiến trình Mentoring Task.
      */
-    MENTORING_TASK
+    MENTORING_TASK,
+
+    /** Lời mời và thay đổi thành viên của nhóm mentoring. */
+    MENTORING_GROUP,
+    /** Thông báo tài khoản Mentoring: request đóng, gói Mentor, chi trả và hoàn tiền */
+    MENTORING_ACCOUNT
 }

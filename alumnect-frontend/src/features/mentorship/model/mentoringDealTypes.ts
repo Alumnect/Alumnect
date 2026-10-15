@@ -64,7 +64,7 @@ export interface MentoringDeal {
   proposalSource?: ProposalSource
   requestId?: number | null
   requestTitle?: string | null
-  requestStatus?: 'OPEN' | 'MATCHED' | 'CLOSED' | 'CANCELLED' | null
+  requestStatus?: 'OPEN' | 'MATCHED' | 'CLOSED' | 'CANCELLED' | 'EXPIRED' | null
   studentId: number
   studentName?: string
   studentAvatar?: string | null

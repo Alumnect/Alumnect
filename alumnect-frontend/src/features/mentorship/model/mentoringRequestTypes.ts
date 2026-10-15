@@ -16,7 +16,7 @@ export type MentoringTaskType =
 /**
  * Trạng thái của yêu cầu Mentoring (UC100).
  */
-export type MentoringRequestStatus = 'OPEN' | 'MATCHED' | 'CLOSED' | 'CANCELLED'
+export type MentoringRequestStatus = 'OPEN' | 'MATCHED' | 'CLOSED' | 'CANCELLED' | 'EXPIRED'
 
 /**
  * Nhãn tiếng Việt và mô tả cho các loại nhiệm vụ.
@@ -96,6 +96,9 @@ export type IncomingRequestScope = 'ALL' | 'SAME_INDUSTRY' | 'SAME_FORMAT'
  */
 export interface CreateMentoringRequestPayload {
   mentorId?: number | null
+  groupId?: number | null
+  memberIds?: number[]
+  clientRequestKey?: string
   title: string
   description: string
   industryId: number
@@ -106,6 +109,66 @@ export interface CreateMentoringRequestPayload {
   taskType: MentoringTaskType
   expectedDeadline?: string | null
   attachments?: MentoringAttachmentItem[]
+}
+
+export type MentoringGroupMemberStatus = 'PENDING' | 'JOINED' | 'DECLINED' | 'REMOVED' | 'CANCELLED' | 'INVITED' | 'ACTIVE'
+
+export interface MentoringGroupMemberData {
+  id: number
+  groupId?: number
+  userId: number
+  fullName: string
+  email: string
+  avatarUrl?: string | null
+  major?: string | null
+  role?: string | null
+  leader: boolean
+  status: MentoringGroupMemberStatus
+  invitedAt: string
+  joinedAt?: string | null
+  removedAt?: string | null
+}
+
+export interface MentoringGroupRequestSummaryData {
+  id: number
+  title: string
+  requestType: 'GENERAL' | 'DIRECT'
+  status: MentoringRequestStatus
+  targetMentorId?: number | null
+  targetMentorName?: string | null
+  confirmedDealId?: number | null
+  taskId?: number | null
+  createdAt: string
+}
+
+export interface MentoringGroupData {
+  id: number
+  requestId?: number | null
+  name: string
+  description?: string | null
+  status: 'ACTIVE' | 'CLOSED' | 'CANCELLED'
+  leaderId: number
+  leaderName?: string | null
+  leaderAvatarUrl?: string | null
+  createdAt?: string
+  updatedAt?: string
+  maxMembers: number
+  joinedMemberCount?: number
+  pendingMemberCount?: number
+  canManage: boolean
+  members: MentoringGroupMemberData[]
+  requests?: MentoringGroupRequestSummaryData[]
+}
+
+export interface CreateMentoringGroupPayload {
+  name: string
+  description?: string
+}
+
+export interface UpdateMentoringGroupPayload {
+  name?: string
+  description?: string
+  status?: 'ACTIVE' | 'CLOSED'
 }
 
 /**
@@ -145,6 +208,8 @@ export interface MentorResponseItem {
   conversationId?: number | null
   /** Mentor này là Mentor được Học viên chốt chọn cho Request */
   selected?: boolean
+  /** Mentor có lĩnh vực hỗ trợ trùng ngành của Request (được ưu tiên hiển thị trước) */
+  sameIndustry?: boolean
 }
 
 /**
@@ -184,6 +249,9 @@ export interface CreateMentoringRequestData {
   attachments: MentoringAttachmentResponseData[]
   responseSummary?: MentoringResponseSummary
   directMentorResponseStatus?: string
+  groupId?: number | null
+  group?: MentoringGroupData | null
+  participatingMembers?: MentoringGroupMemberData[]
   createdAt: string
   updatedAt?: string
 }
@@ -194,6 +262,8 @@ export interface CreateMentoringRequestData {
 export interface MentoringRequestDetailData extends CreateMentoringRequestData {
   responseSummary: MentoringResponseSummary
   mentorResponses: MentorResponseItem[]
+  /** Người xem là chủ Request và còn có thể hủy */
+  canCancel?: boolean
   /** Mentor (users.id) được chốt chọn sau khi xác nhận Deal */
   selectedMentorUserId?: number | null
   /** Deal Ticket đã khóa của Request */

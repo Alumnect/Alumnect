@@ -50,4 +50,6 @@ public class MentoringTaskDeadlineExtensionResponse {
     /** Quyền thao tác của user hiện tại với Ticket này */
     private Boolean canConfirm;
     private Boolean canReject;
+    /** Người tạo được hủy đề xuất đang chờ */
+    private Boolean canCancel;
 }

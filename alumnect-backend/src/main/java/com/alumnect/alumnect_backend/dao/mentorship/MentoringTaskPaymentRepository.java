@@ -21,6 +21,11 @@ public interface MentoringTaskPaymentRepository extends JpaRepository<MentoringT
     /** Tìm giao dịch theo mã đơn hàng PayOS */
     Optional<MentoringTaskPayment> findByOrderCode(Long orderCode);
 
+    boolean existsByOrderCode(Long orderCode);
+
+    @Query("SELECT p.orderCode FROM MentoringTaskPayment p WHERE p.paymentStatus = com.alumnect.alumnect_backend.common.enums.PaymentStatus.PENDING")
+    List<Long> findPendingOrderCodes();
+
     /** Tìm và khóa bi quan (Pessimistic Write Lock) theo orderCode chống race-condition trong Webhook & Polling */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM MentoringTaskPayment p WHERE p.orderCode = :orderCode")
@@ -31,6 +36,11 @@ public interface MentoringTaskPaymentRepository extends JpaRepository<MentoringT
 
     /** Tìm tất cả giao dịch thanh toán của một Deal */
     List<MentoringTaskPayment> findByDealIdOrderByCreatedAtDesc(Long dealId);
+
+    /** Giao dịch top-up đang chờ của một Ticket điều chỉnh */
+    Optional<MentoringTaskPayment> findFirstByAmendmentIdAndPaymentStatusOrderByCreatedAtDesc(Long amendmentId, PaymentStatus status);
+
+    List<MentoringTaskPayment> findByAmendmentIdAndPaymentStatus(Long amendmentId, PaymentStatus status);
 
     /** Tìm giao dịch thanh toán đã thành công (PAID) của một Deal */
     Optional<MentoringTaskPayment> findFirstByDealIdAndPaymentStatus(Long dealId, PaymentStatus status);

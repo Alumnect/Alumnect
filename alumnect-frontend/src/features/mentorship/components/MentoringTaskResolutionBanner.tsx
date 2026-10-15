@@ -1,38 +1,37 @@
-import { useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import {
-  CalendarClock,
-  FileEdit,
-  Scale,
-  Check,
-  X,
-  Loader2,
-  AlertCircle,
-  CreditCard,
-  ArrowRight,
-  FileCheck,
-  CheckCircle2,
   AlertTriangle,
-  Paperclip,
+  ArrowRight,
+  CalendarClock,
+  Check,
+  CreditCard,
+  FileCheck,
+  FileEdit,
   FileText,
   MessageSquare,
+  Paperclip,
+  Scale,
+  Undo2,
+  X,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
-import { useAuthStore } from '@/store/authStore'
+import { Modal, toast } from '@/components/ui'
 import type {
-  MentoringTaskDeadlineExtension,
-  MentoringTaskAmendment,
-  MentoringTaskSettlementProposal,
-  MentoringTaskCompletion,
-  MentoringTaskStatus,
   MentoringDisputeTicket,
+  MentoringTaskAmendment,
+  MentoringTaskCompletion,
+  MentoringTaskDeadlineExtension,
+  MentoringTaskSettlementProposal,
+  MentoringTaskStatus,
 } from '../model/mentoringTaskTypes'
 import {
+  useCloseTaskProposal,
   useRespondDeadlineExtension,
-  useRespondTaskAmendment,
   useRespondSettlementProposal,
+  useRespondTaskAmendment,
 } from '../hooks/useMentoringTaskResolutions'
+import { MentoringActionButton, MentoringActionCard } from './MentoringUi'
 
 interface MentoringTaskResolutionBannerProps {
   taskId: number
@@ -58,6 +57,50 @@ interface MentoringTaskResolutionBannerProps {
   onRefresh?: () => void
 }
 
+type ProposalKind = 'EXTENSION' | 'AMENDMENT' | 'SETTLEMENT'
+type DialogState = { action: 'REJECT' | 'CANCEL' | 'DECLINE_TOPUP'; kind: ProposalKind; id: number }
+
+const KIND_LABEL: Record<ProposalKind, string> = {
+  EXTENSION: 'đề xuất gia hạn',
+  AMENDMENT: 'đề xuất điều chỉnh',
+  SETTLEMENT: 'đề xuất dừng Task',
+}
+
+function formatVnd(amount?: number | null) {
+  return new Intl.NumberFormat('vi-VN').format(Number(amount ?? 0)) + 'đ'
+}
+
+function formatDt(iso?: string | null) {
+  if (!iso) return '—'
+  try {
+    return format(parseISO(iso), 'HH:mm dd/MM/yyyy')
+  } catch {
+    return iso
+  }
+}
+
+function errorMessage(err: unknown, fallback: string) {
+  return err instanceof Error && err.message ? err.message : fallback
+}
+
+/** Một dòng thông tin "nhãn: giá trị" trong thẻ đề xuất. */
+function Detail({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <span>
+      <span className="text-plum-500 dark:text-plum-400">{label}: </span>
+      <span className="font-semibold text-plum-800 dark:text-[#e4e6eb]">{children}</span>
+    </span>
+  )
+}
+
+function WaitingNote({ children }: { children: ReactNode }) {
+  return <span className="text-xs font-medium text-plum-500 dark:text-plum-400">{children}</span>
+}
+
+/**
+ * Danh sách việc cần xử lý của Task trong Chat for Task: nghiệm thu, đề xuất gia hạn / điều chỉnh / dừng Task,
+ * thanh toán bổ sung và Ticket đang được Ban Quản Trị xử lý. Quyền thao tác lấy từ backend (canConfirm, canCancel...).
+ */
 export function MentoringTaskResolutionBanner({
   taskId,
   activeExtension,
@@ -68,696 +111,394 @@ export function MentoringTaskResolutionBanner({
   taskStatus,
   canConfirmCompletion,
   canSubmitSettlementTicket,
-  canCreateDisputeTicket,
-  canSubmitDisputeEvidence: _canSubmitDisputeEvidence,
   isStudent,
-  isMentor,
   onOpenTopUpPayment,
   onOpenReviewCompletion,
   onOpenSubmitSettlementTicket,
-  onOpenCreateDispute,
   onOpenAddEvidence,
   onOpenTaskReport,
   onOpenTicketDiscussion,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
-  const [rejectModal, setRejectModal] = useState<{
-    type: 'EXTENSION' | 'AMENDMENT' | 'SETTLEMENT'
-    id: number
-  } | null>(null)
-  const [rejectNote, setRejectNote] = useState('')
+  const [dialog, setDialog] = useState<DialogState | null>(null)
+  const [note, setNote] = useState('')
 
-  const respondExtensionMutation = useRespondDeadlineExtension(taskId)
-  const respondAmendmentMutation = useRespondTaskAmendment(taskId)
-  const respondSettlementMutation = useRespondSettlementProposal(taskId)
+  const respondExtension = useRespondDeadlineExtension(taskId)
+  const respondAmendment = useRespondTaskAmendment(taskId)
+  const respondSettlement = useRespondSettlementProposal(taskId)
+  const closeProposal = useCloseTaskProposal(taskId)
+  const isBusy = respondExtension.isPending || respondAmendment.isPending || respondSettlement.isPending || closeProposal.isPending
 
-  const formatVnd = (amt?: number) => {
-    if (typeof amt !== 'number') return '0đ'
-    return new Intl.NumberFormat('vi-VN').format(amt) + 'đ'
-  }
-
-  const formatDt = (iso?: string | null) => {
-    if (!iso) return ''
+  const run = async (action: () => Promise<unknown>, success: string, fallback: string) => {
     try {
-      return format(parseISO(iso), 'dd/MM/yyyy HH:mm')
-    } catch {
-      return iso
+      await action()
+      toast.success(success)
+      onRefresh?.()
+    } catch (err) {
+      toast.error(errorMessage(err, fallback))
     }
   }
 
-  const handleConfirmExtension = async (ext: MentoringTaskDeadlineExtension) => {
-    await respondExtensionMutation.mutateAsync({
-      extensionId: ext.id,
-      payload: { accept: true },
-    })
-    onRefresh?.()
-  }
-
-  const handleConfirmAmendment = async (amd: MentoringTaskAmendment) => {
-    await respondAmendmentMutation.mutateAsync({
-      amendmentId: amd.id,
-      payload: { accept: true },
-    })
-    onRefresh?.()
-  }
-
-  const handleConfirmSettlement = async (prop: MentoringTaskSettlementProposal) => {
-    await respondSettlementMutation.mutateAsync({
-      proposalId: prop.id,
-      payload: { accept: true },
-    })
-    onRefresh?.()
-  }
-
-  const handleConfirmReject = async () => {
-    if (!rejectModal) return
-    if (rejectModal.type === 'EXTENSION') {
-      await respondExtensionMutation.mutateAsync({
-        extensionId: rejectModal.id,
-        payload: { accept: false, responseNote: rejectNote.trim() || undefined },
-      })
-    } else if (rejectModal.type === 'AMENDMENT') {
-      await respondAmendmentMutation.mutateAsync({
-        amendmentId: rejectModal.id,
-        payload: { accept: false, responseNote: rejectNote.trim() || undefined },
-      })
-    } else if (rejectModal.type === 'SETTLEMENT') {
-      await respondSettlementMutation.mutateAsync({
-        proposalId: rejectModal.id,
-        payload: { accept: false, responseNote: rejectNote.trim() || undefined },
-      })
+  const accept = (kind: ProposalKind, id: number) => {
+    if (kind === 'EXTENSION') {
+      return run(() => respondExtension.mutateAsync({ extensionId: id, payload: { accept: true } }), 'Đã chấp nhận gia hạn.', 'Không thể chấp nhận gia hạn.')
     }
-    setRejectModal(null)
-    setRejectNote('')
-    onRefresh?.()
+    if (kind === 'AMENDMENT') {
+      return run(() => respondAmendment.mutateAsync({ amendmentId: id, payload: { accept: true } }), 'Đã chấp nhận điều chỉnh.', 'Không thể chấp nhận điều chỉnh.')
+    }
+    return run(() => respondSettlement.mutateAsync({ proposalId: id, payload: { accept: true } }), 'Đã đồng ý dừng Task. Hồ sơ đã được gửi Ban Quản Trị.', 'Không thể đồng ý đề xuất.')
   }
 
-  const currentUserId = Number(useAuthStore((state) => state.user?.id)) || 0
+  const closeDialog = () => {
+    setDialog(null)
+    setNote('')
+  }
 
-  // Phân định vai trò Bên gửi (Creator) và Bên nhận (Recipient)
-  const isExtensionCreator = Boolean(
-    activeExtension &&
-      (activeExtension.createdById === currentUserId ||
-        (isMentor && activeExtension.createdByRole === 'Mentor') ||
-        (isStudent && activeExtension.createdByRole !== 'Mentor'))
-  )
-  const isExtensionRecipient = Boolean(activeExtension && !isExtensionCreator)
+  const submitDialog = async () => {
+    if (!dialog) return
+    const reason = note.trim() || undefined
+    const { action, kind, id } = dialog
+    if (action === 'REJECT') {
+      const payload = { accept: false, responseNote: reason }
+      await run(
+        () =>
+          kind === 'EXTENSION'
+            ? respondExtension.mutateAsync({ extensionId: id, payload })
+            : kind === 'AMENDMENT'
+              ? respondAmendment.mutateAsync({ amendmentId: id, payload })
+              : respondSettlement.mutateAsync({ proposalId: id, payload }),
+        `Đã từ chối ${KIND_LABEL[kind]}.`,
+        'Không thể từ chối đề xuất.',
+      )
+    } else {
+      await run(
+        () => closeProposal.mutateAsync({ kind, id, reason }),
+        action === 'DECLINE_TOPUP' ? 'Đã từ chối thanh toán bổ sung.' : `Đã hủy ${KIND_LABEL[kind]}.`,
+        'Không thể hủy đề xuất.',
+      )
+    }
+    closeDialog()
+  }
 
-  const isAmendmentCreator = Boolean(
-    activeAmendment &&
-      (activeAmendment.createdById === currentUserId ||
-        (isMentor && activeAmendment.createdByRole === 'Mentor') ||
-        (isStudent && activeAmendment.createdByRole !== 'Mentor'))
-  )
-  const isAmendmentRecipient = Boolean(activeAmendment && !isAmendmentCreator)
+  const items: ReactNode[] = []
 
-  const isSettlementCreator = Boolean(
-    activeSettlementProposal &&
-      (activeSettlementProposal.createdById === currentUserId ||
-        (isMentor && activeSettlementProposal.createdByRole === 'Mentor') ||
-        (isStudent && activeSettlementProposal.createdByRole !== 'Mentor'))
-  )
-  const isSettlementRecipient = Boolean(activeSettlementProposal && !isSettlementCreator)
+  // 1. Kết quả hoàn thành chờ nghiệm thu
+  const isCompletionPending = taskStatus === 'SUBMITTED' || latestCompletion?.status === 'PENDING'
+  if (isCompletionPending) {
+    const canReview = Boolean(canConfirmCompletion && onOpenReviewCompletion)
+    items.push(
+      <MentoringActionCard
+        key="completion"
+        tone="mint"
+        icon={<FileCheck />}
+        title="Mentor đã nộp kết quả hoàn thành"
+        badge={canReview ? 'Chờ bạn nghiệm thu' : 'Chờ Học viên nghiệm thu'}
+        actions={
+          canReview ? (
+            <MentoringActionButton intent="primary" icon={<Check className="h-3.5 w-3.5" />} onClick={onOpenReviewCompletion}>
+              Xem & nghiệm thu
+            </MentoringActionButton>
+          ) : undefined
+        }
+      >
+        {latestCompletion?.finalSummary && <p className="line-clamp-2">{latestCompletion.finalSummary}</p>}
+      </MentoringActionCard>,
+    )
+  }
 
-  const isCompletionPending = taskStatus === 'SUBMITTED' || Boolean(latestCompletion && latestCompletion.status === 'PENDING')
-  const isTaskCompleted = taskStatus === 'COMPLETED'
+  // 2. Đề xuất gia hạn deadline
+  if (activeExtension?.status === 'PENDING') {
+    const ext = activeExtension
+    items.push(
+      <MentoringActionCard
+        key="extension"
+        tone="navy"
+        icon={<CalendarClock />}
+        title="Đề xuất gia hạn deadline"
+        badge={`Từ ${ext.createdByRole}`}
+        actions={
+          ext.canConfirm || ext.canReject ? (
+            <>
+              <MentoringActionButton intent="danger" icon={<X className="h-3.5 w-3.5" />} disabled={isBusy}
+                onClick={() => setDialog({ action: 'REJECT', kind: 'EXTENSION', id: ext.id })}>
+                Từ chối
+              </MentoringActionButton>
+              <MentoringActionButton intent="primary" icon={<Check className="h-3.5 w-3.5" />} loading={respondExtension.isPending}
+                disabled={isBusy} onClick={() => accept('EXTENSION', ext.id)}>
+                Chấp nhận
+              </MentoringActionButton>
+            </>
+          ) : (
+            <>
+              <WaitingNote>Chờ Học viên phản hồi</WaitingNote>
+              {ext.canCancel && (
+                <MentoringActionButton intent="ghost" icon={<Undo2 className="h-3.5 w-3.5" />} disabled={isBusy}
+                  onClick={() => setDialog({ action: 'CANCEL', kind: 'EXTENSION', id: ext.id })}>
+                  Hủy đề xuất
+                </MentoringActionButton>
+              )}
+            </>
+          )
+        }
+      >
+        <p className="flex flex-wrap items-center gap-1.5">
+          <span className="text-plum-500">{formatDt(ext.currentDeadline)}</span>
+          <ArrowRight className="h-3.5 w-3.5 text-plum-400" />
+          <span className="font-bold text-violet-500 dark:text-violet-300">{formatDt(ext.proposedDeadline)}</span>
+        </p>
+        {ext.reason && <p className="italic">“{ext.reason}”</p>}
+      </MentoringActionCard>,
+    )
+  }
 
-  const hasAnyBanner = Boolean(
-    (activeExtension && activeExtension.status === 'PENDING') ||
-    (activeAmendment && (activeAmendment.status === 'PENDING' || activeAmendment.status === 'AWAITING_TOPUP')) ||
-    (activeSettlementProposal && activeSettlementProposal.status === 'PENDING') ||
-    isCompletionPending ||
-    isTaskCompleted
-  )
+  // 3. Đề xuất điều chỉnh (chờ phản hồi hoặc chờ thanh toán bổ sung)
+  if (activeAmendment && (activeAmendment.status === 'PENDING' || activeAmendment.status === 'AWAITING_TOPUP')) {
+    const amd = activeAmendment
+    const awaitingTopUp = amd.status === 'AWAITING_TOPUP'
+    let actions: ReactNode
+    if (awaitingTopUp && amd.canTopUp) {
+      actions = (
+        <>
+          {amd.canDeclineTopUp && (
+            <MentoringActionButton intent="danger" icon={<X className="h-3.5 w-3.5" />} disabled={isBusy}
+              onClick={() => setDialog({ action: 'DECLINE_TOPUP', kind: 'AMENDMENT', id: amd.id })}>
+              Từ chối thanh toán
+            </MentoringActionButton>
+          )}
+          <MentoringActionButton intent="primary" icon={<CreditCard className="h-3.5 w-3.5" />} disabled={isBusy} onClick={onOpenTopUpPayment}>
+            Thanh toán {formatVnd(amd.additionalAmount)}
+          </MentoringActionButton>
+        </>
+      )
+    } else if (!awaitingTopUp && (amd.canConfirm || amd.canReject)) {
+      actions = (
+        <>
+          <MentoringActionButton intent="danger" icon={<X className="h-3.5 w-3.5" />} disabled={isBusy}
+            onClick={() => setDialog({ action: 'REJECT', kind: 'AMENDMENT', id: amd.id })}>
+            Từ chối
+          </MentoringActionButton>
+          <MentoringActionButton intent="primary" icon={<Check className="h-3.5 w-3.5" />} loading={respondAmendment.isPending}
+            disabled={isBusy} onClick={() => accept('AMENDMENT', amd.id)}>
+            Chấp nhận
+          </MentoringActionButton>
+        </>
+      )
+    } else {
+      actions = (
+        <>
+          <WaitingNote>{awaitingTopUp ? 'Chờ Học viên thanh toán' : 'Chờ Học viên phản hồi'}</WaitingNote>
+          {amd.canCancel && (
+            <MentoringActionButton intent="ghost" icon={<Undo2 className="h-3.5 w-3.5" />} disabled={isBusy}
+              onClick={() => setDialog({ action: 'CANCEL', kind: 'AMENDMENT', id: amd.id })}>
+              Hủy đề xuất
+            </MentoringActionButton>
+          )}
+        </>
+      )
+    }
+    const scopeChanged = Boolean(amd.newScope && amd.newScope !== amd.previousScope)
+    const deadlineChanged = Boolean(amd.newDeadline && amd.newDeadline !== amd.previousDeadline)
+    items.push(
+      <MentoringActionCard
+        key="amendment"
+        tone="gold"
+        icon={<FileEdit />}
+        title={`Đề xuất điều chỉnh Task (v${amd.version})`}
+        badge={awaitingTopUp ? 'Đã chấp nhận · chờ thanh toán' : `Từ ${amd.createdByRole}`}
+        actions={actions}
+      >
+        {(amd.additionalAmount > 0 || deadlineChanged) && (
+          <p className="flex flex-wrap gap-x-4 gap-y-1">
+            {amd.additionalAmount > 0 && <Detail label="Tiền bổ sung">{formatVnd(amd.additionalAmount)}</Detail>}
+            {deadlineChanged && <Detail label="Deadline mới">{formatDt(amd.newDeadline)}</Detail>}
+          </p>
+        )}
+        {scopeChanged && <p className="line-clamp-2">Phạm vi mới: {amd.newScope}</p>}
+        {amd.reason && <p className="italic">“{amd.reason}”</p>}
+      </MentoringActionCard>,
+    )
+  }
 
-  if (!hasAnyBanner) return null
+  // 4. Đề xuất dừng Task & chia quỹ
+  if (activeSettlementProposal?.status === 'PENDING') {
+    const prop = activeSettlementProposal
+    const needsRefundAccount = Boolean(prop.refundAccountRequired)
+    items.push(
+      <MentoringActionCard
+        key="settlement"
+        tone="coral"
+        icon={<Scale />}
+        title="Đề xuất dừng Task & chia quỹ"
+        badge={`Từ ${prop.createdByRole}`}
+        actions={
+          prop.canAccept || prop.canReject ? (
+            <>
+              <MentoringActionButton intent="danger" icon={<X className="h-3.5 w-3.5" />} disabled={isBusy}
+                onClick={() => setDialog({ action: 'REJECT', kind: 'SETTLEMENT', id: prop.id })}>
+                Từ chối
+              </MentoringActionButton>
+              <MentoringActionButton intent="primary" icon={<Check className="h-3.5 w-3.5" />} loading={respondSettlement.isPending}
+                disabled={isBusy || needsRefundAccount}
+                title={needsRefundAccount ? 'Cần khai báo tài khoản nhận hoàn tiền trước' : undefined}
+                onClick={() => accept('SETTLEMENT', prop.id)}>
+                Đồng ý
+              </MentoringActionButton>
+            </>
+          ) : (
+            <>
+              <WaitingNote>Chờ bên kia phản hồi</WaitingNote>
+              {prop.canCancel && (
+                <MentoringActionButton intent="ghost" icon={<Undo2 className="h-3.5 w-3.5" />} disabled={isBusy}
+                  onClick={() => setDialog({ action: 'CANCEL', kind: 'SETTLEMENT', id: prop.id })}>
+                  Hủy đề xuất
+                </MentoringActionButton>
+              )}
+            </>
+          )
+        }
+      >
+        <p className="flex flex-wrap gap-x-4 gap-y-1">
+          <Detail label="Mentor nhận">{formatVnd(prop.mentorAmount)}</Detail>
+          <Detail label="Hoàn Học viên">{formatVnd(prop.studentRefund)}</Detail>
+        </p>
+        {prop.reason && <p className="italic">“{prop.reason}”</p>}
+        {needsRefundAccount && (
+          <p className="font-semibold text-coral-700 dark:text-coral-300">
+            Bạn cần khai báo tài khoản nhận hoàn tiền trước khi đồng ý.{' '}
+            <Link to="/app/mentoring/refunds" className="underline">Khai báo ngay</Link>
+          </p>
+        )}
+      </MentoringActionCard>,
+    )
+  }
+
+  // 5. Thỏa thuận đã chốt nhưng chưa có Ticket (dữ liệu cũ, trước khi Ticket được gửi tự động)
+  if ((canSubmitSettlementTicket || activeSettlementProposal?.status === 'ACCEPTED') && !activeTicket) {
+    items.push(
+      <MentoringActionCard
+        key="settlement-ready"
+        tone="coral"
+        icon={<Scale />}
+        title="Hai bên đã đồng ý dừng Task"
+        badge="Cần gửi Ban Quản Trị"
+        actions={
+          <MentoringActionButton intent="primary" icon={<ArrowRight className="h-3.5 w-3.5" />} onClick={onOpenSubmitSettlementTicket}>
+            Gửi Ban Quản Trị
+          </MentoringActionButton>
+        }
+      >
+        <p>Gửi biên bản thỏa thuận để Ban Quản Trị chi trả cho Mentor và hoàn tiền cho Học viên.</p>
+      </MentoringActionCard>,
+    )
+  }
+
+  // 6. Ticket đang được Ban Quản Trị xử lý (khiếu nại hoặc dừng Task theo thỏa thuận)
+  if (activeTicket) {
+    const isDispute = activeTicket.ticketType === 'DISPUTE'
+    const statusLabel =
+      activeTicket.status === 'OPEN' ? 'Chờ tiếp nhận' : activeTicket.status === 'IN_REVIEW' ? 'Đang xử lý' : 'Đã giải quyết'
+    items.push(
+      <MentoringActionCard
+        key="ticket"
+        tone={isDispute ? 'coral' : 'navy'}
+        icon={isDispute ? <AlertTriangle /> : <FileCheck />}
+        title={isDispute ? `Khiếu nại #${activeTicket.ticketCode}` : `Dừng Task theo thỏa thuận #${activeTicket.ticketCode}`}
+        badge={statusLabel}
+        actions={
+          <>
+            {onOpenTicketDiscussion && (
+              <MentoringActionButton icon={<MessageSquare className="h-3.5 w-3.5" />} onClick={onOpenTicketDiscussion}>
+                Trao đổi
+              </MentoringActionButton>
+            )}
+            {onOpenAddEvidence && (
+              <MentoringActionButton icon={<Paperclip className="h-3.5 w-3.5" />} onClick={onOpenAddEvidence}>
+                Bằng chứng
+              </MentoringActionButton>
+            )}
+            {onOpenTaskReport && (
+              <MentoringActionButton intent="ghost" icon={<FileText className="h-3.5 w-3.5" />} onClick={onOpenTaskReport}>
+                Báo cáo
+              </MentoringActionButton>
+            )}
+          </>
+        }
+      >
+        {(activeTicket.mentorAmount != null || activeTicket.studentRefund != null) && (
+          <p className="flex flex-wrap gap-x-4 gap-y-1">
+            {activeTicket.mentorAmount != null && <Detail label="Mentor nhận">{formatVnd(activeTicket.mentorAmount)}</Detail>}
+            {activeTicket.studentRefund != null && <Detail label="Hoàn Học viên">{formatVnd(activeTicket.studentRefund)}</Detail>}
+          </p>
+        )}
+        <p>
+          {isDispute
+            ? 'Task tạm khóa trong lúc Ban Quản Trị phân xử. Bạn có thể trao đổi và bổ sung bằng chứng.'
+            : 'Task đã dừng. Ban Quản Trị đang chi trả và hoàn tiền theo thỏa thuận.'}
+        </p>
+        {isStudent && activeTicket.studentRefund != null && activeTicket.studentRefund > 0 && (
+          <p>
+            Tiền hoàn sẽ chuyển về tài khoản tại mục{' '}
+            <Link to="/app/mentoring/refunds" className="font-semibold text-brand-600 underline">Hoàn tiền</Link>.
+          </p>
+        )}
+      </MentoringActionCard>,
+    )
+  }
+
+  if (items.length === 0) return null
+
+  const dialogTitle = !dialog
+    ? ''
+    : dialog.action === 'REJECT'
+      ? `Từ chối ${KIND_LABEL[dialog.kind]}`
+      : dialog.action === 'DECLINE_TOPUP'
+        ? 'Từ chối thanh toán bổ sung'
+        : `Hủy ${KIND_LABEL[dialog.kind]}`
+  const dialogDescription = !dialog
+    ? ''
+    : dialog.action === 'REJECT'
+      ? 'Bên kia sẽ nhận được lý do và có thể gửi đề xuất mới.'
+      : dialog.action === 'DECLINE_TOPUP'
+        ? 'Đề xuất điều chỉnh sẽ đóng lại. Task giữ nguyên phạm vi, giá và deadline hiện tại.'
+        : 'Đề xuất sẽ được rút lại. Task tiếp tục với điều kiện hiện tại.'
+  // API hủy gia hạn / hủy đề xuất dừng Task không nhận lý do
+  const allowsNote = Boolean(dialog && (dialog.action !== 'CANCEL' || dialog.kind === 'AMENDMENT'))
 
   return (
-    <div className="border-b border-border bg-card/60 backdrop-blur-md px-4 py-2.5 space-y-2.5 transition-all">
-      {/* 0. TASK COMPLETION PENDING BANNER (UC110) */}
-      {isCompletionPending && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-emerald-600 text-white shadow-sm shrink-0 mt-0.5">
-              <FileCheck className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">
-                  {canConfirmCompletion || isStudent
-                    ? 'Cố vấn đã nộp kết quả nghiệm thu hoàn thành Task (UC110)'
-                    : 'Đã nộp kết quả hoàn thành Task (UC110)'}
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                  {canConfirmCompletion || isStudent ? 'Chờ bạn nghiệm thu' : 'Chờ học viên xác nhận'}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {latestCompletion?.finalSummary ||
-                  'Cố vấn đã hoàn thành công việc và gửi sản phẩm bàn giao.'}
-              </p>
-            </div>
-          </div>
-          {(canConfirmCompletion || isStudent) && onOpenReviewCompletion && (
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                size="sm"
-                className="h-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-xs rounded-lg shadow-sm"
-                onClick={onOpenReviewCompletion}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                Xem & Nghiệm thu
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+    <section className="space-y-2 border-b border-plum-900/[0.06] bg-white px-4 py-3 dark:border-white/10 dark:bg-[#242526] sm:px-6">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-plum-500 dark:text-plum-400">Cần xử lý</p>
+      {items}
 
-      {/* 0.1 TASK COMPLETED BANNER (UC110) */}
-      {isTaskCompleted && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center gap-3 shadow-sm">
-          <div className="p-1.5 rounded-lg bg-emerald-600 text-white shadow-sm shrink-0">
-            <CheckCircle2 className="w-4 h-4" />
+      <Modal
+        isOpen={Boolean(dialog)}
+        onClose={closeDialog}
+        title={dialogTitle}
+        icon={dialog?.action === 'CANCEL' ? <Undo2 className="h-5 w-5" /> : <X className="h-5 w-5" />}
+        maxWidthClassName="max-w-md"
+        footer={
+          <div className="flex justify-end gap-2">
+            <MentoringActionButton intent="ghost" onClick={closeDialog} disabled={isBusy}>
+              Quay lại
+            </MentoringActionButton>
+            <MentoringActionButton intent="danger" loading={isBusy} onClick={submitDialog}>
+              Xác nhận
+            </MentoringActionButton>
           </div>
-          <div className="text-xs text-emerald-900 dark:text-emerald-300 font-medium">
-            🎉 Nhiệm vụ đã hoàn thành xuất sắc! Hệ thống đã ghi nhận quyết toán thù lao cho Cố vấn.
-          </div>
-        </div>
-      )}
-
-      {/* 1. DEADLINE EXTENSION TICKET BANNER */}
-      {activeExtension && activeExtension.status === 'PENDING' && (
-        <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-blue-500 text-white shadow-sm shrink-0 mt-0.5">
-              <CalendarClock className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">
-                  Đề xuất gia hạn Deadline mới
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30">
-                  {activeExtension.createdByRole}: {activeExtension.createdByName}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                <span>Hạn chót cũ: <strong className="text-foreground">{formatDt(activeExtension.currentDeadline)}</strong></span>
-                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>Hạn chót mới: <strong className="text-blue-600 dark:text-blue-400">{formatDt(activeExtension.proposedDeadline)}</strong></span>
-              </div>
-              <p className="text-xs text-foreground/80 italic">
-                &ldquo;{activeExtension.reason}&rdquo;
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {isExtensionRecipient && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setRejectModal({ type: 'EXTENSION', id: activeExtension.id })}
-                  disabled={respondExtensionMutation.isPending}
-                  className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
-                >
-                  <X className="w-3.5 h-3.5 mr-1" />
-                  Từ chối
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleConfirmExtension(activeExtension)}
-                  disabled={respondExtensionMutation.isPending}
-                  className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                >
-                  {respondExtensionMutation.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                  ) : (
-                    <Check className="w-3.5 h-3.5 mr-1" />
-                  )}
-                  Chấp nhận gia hạn
-                </Button>
-              </>
-            )}
-            {!isExtensionRecipient && (
-              <span className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground font-medium">
-                Đang chờ đối phương phản hồi
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 2. TASK AMENDMENT TICKET BANNER */}
-      {activeAmendment && (activeAmendment.status === 'PENDING' || activeAmendment.status === 'AWAITING_TOPUP') && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-amber-500 text-white shadow-sm shrink-0 mt-0.5">
-              <FileEdit className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">
-                  Ticket điều chỉnh Task (v{activeAmendment.version})
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                  {activeAmendment.status === 'AWAITING_TOPUP' ? 'Chờ thanh toán top-up' : `${activeAmendment.createdByRole}: ${activeAmendment.createdByName}`}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                {activeAmendment.additionalAmount > 0 && (
-                  <span>Bổ sung tiền: <strong className="text-amber-600 dark:text-amber-400 font-bold">{formatVnd(activeAmendment.additionalAmount)}</strong></span>
-                )}
-                {activeAmendment.newDeadline && (
-                  <span>Hạn chót mới: <strong className="text-foreground">{formatDt(activeAmendment.newDeadline)}</strong></span>
-                )}
-              </div>
-              <p className="text-xs text-foreground/80 italic">
-                &ldquo;{activeAmendment.reason}&rdquo;
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {activeAmendment.status === 'PENDING' && isAmendmentRecipient && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setRejectModal({ type: 'AMENDMENT', id: activeAmendment.id })}
-                  disabled={respondAmendmentMutation.isPending}
-                  className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
-                >
-                  <X className="w-3.5 h-3.5 mr-1" />
-                  Từ chối
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleConfirmAmendment(activeAmendment)}
-                  disabled={respondAmendmentMutation.isPending}
-                  className="h-8 bg-amber-500 hover:bg-amber-600 text-white font-semibold"
-                >
-                  {respondAmendmentMutation.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                  ) : (
-                    <Check className="w-3.5 h-3.5 mr-1" />
-                  )}
-                  Chấp nhận điều chỉnh
-                </Button>
-              </>
-            )}
-
-            {activeAmendment.status === 'AWAITING_TOPUP' && isStudent && (
-              <Button
-                size="sm"
-                onClick={onOpenTopUpPayment}
-                className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-              >
-                <CreditCard className="w-3.5 h-3.5 mr-1" />
-                Thanh toán bổ sung {formatVnd(activeAmendment.additionalAmount)}
-              </Button>
-            )}
-
-            {activeAmendment.status === 'PENDING' && !isAmendmentRecipient && (
-              <span className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground font-medium">
-                Đang chờ đối phương xác nhận
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 3. SETTLEMENT PROPOSAL BANNER */}
-      {activeSettlementProposal && activeSettlementProposal.status === 'PENDING' && (
-        <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-purple-600 text-white shadow-sm shrink-0 mt-0.5">
-              <Scale className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">
-                  Đề xuất dừng Task & Phân chia tiền
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
-                  {activeSettlementProposal.createdByRole}: {activeSettlementProposal.createdByName}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                <span>Mentor nhận: <strong className="text-purple-600 dark:text-purple-400 font-bold">{formatVnd(activeSettlementProposal.mentorAmount)}</strong></span>
-                <span>•</span>
-                <span>Hoàn lại Bên tạo yêu cầu: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeSettlementProposal.studentRefund)}</strong></span>
-              </div>
-              <p className="text-xs text-foreground/80 italic">
-                &ldquo;{activeSettlementProposal.reason}&rdquo;
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {isSettlementRecipient && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setRejectModal({ type: 'SETTLEMENT', id: activeSettlementProposal.id })}
-                  disabled={respondSettlementMutation.isPending}
-                  className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
-                >
-                  <X className="w-3.5 h-3.5 mr-1" />
-                  Từ chối
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleConfirmSettlement(activeSettlementProposal)}
-                  disabled={respondSettlementMutation.isPending}
-                  className="h-8 bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                >
-                  {respondSettlementMutation.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                  ) : (
-                    <Check className="w-3.5 h-3.5 mr-1" />
-                  )}
-                  Đồng ý phân chia
-                </Button>
-              </>
-            )}
-            {!isSettlementRecipient && (
-              <span className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground font-medium">
-                Đang chờ đối phương đồng thuận
-              </span>
-            )}
-            {canCreateDisputeTicket && onOpenCreateDispute && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={onOpenCreateDispute}
-                className="h-8 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              >
-                <AlertTriangle className="w-3.5 h-3.5 mr-1 text-destructive" />
-                Khiếu nại
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 3.1. SETTLEMENT PROPOSAL ACCEPTED - READY TO SUBMIT TICKET BANNER (UC111) */}
-      {(canSubmitSettlementTicket || (activeSettlementProposal && activeSettlementProposal.status === 'ACCEPTED')) && !activeTicket && (
-        <div className="rounded-xl border border-purple-500/40 bg-purple-500/15 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-600 text-white shadow-sm shrink-0 mt-0.5">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">
-                  Thỏa thuận dừng Task đã được hai bên đồng thuận!
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                  Đã chốt phân chia
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                <span>Mentor nhận: <strong className="text-purple-600 dark:text-purple-400 font-bold">{formatVnd(activeSettlementProposal?.mentorAmount)}</strong></span>
-                <span>•</span>
-                <span>Hoàn lại Bên tạo yêu cầu: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeSettlementProposal?.studentRefund)}</strong></span>
-              </div>
-              <p className="text-xs text-foreground/80">
-                Bước tiếp theo: Gửi Settlement Ticket để Ban Quản Trị đối soát và giải ngân theo thỏa thuận (UC111).
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            <Button
-              size="sm"
-              onClick={onOpenSubmitSettlementTicket}
-              className="h-9 bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-sm"
-            >
-              <ArrowRight className="w-4 h-4 mr-1.5" />
-              Gửi Settlement Ticket tới Admin
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* 3.2. ACTIVE TICKET IN PROGRESS BANNER (UC111 & UC112) */}
-      {activeTicket && activeTicket.ticketType === 'DISPUTE' && (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-destructive text-white shadow-sm shrink-0 mt-0.5">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">
-                  Khiếu nại tranh chấp #{activeTicket.ticketCode}
-                </span>
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${activeTicket.status === 'RESOLVED'
-                    ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                    : 'bg-destructive/20 text-destructive border border-destructive/30'
-                    }`}
-                >
-                  {activeTicket.status === 'OPEN'
-                    ? 'Đang chờ Admin tiếp nhận'
-                    : activeTicket.status === 'IN_REVIEW'
-                      ? 'Admin đang thụ lý giải quyết'
-                      : activeTicket.status === 'RESOLVED'
-                        ? 'Admin đã có phán quyết (RESOLVED)'
-                        : activeTicket.status}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                {activeTicket.disputeReason && (
-                  <span>Lý do: <strong className="text-foreground">{activeTicket.disputeReason}</strong></span>
-                )}
-                {activeTicket.desiredSolution && (
-                  <>
-                    <span>•</span>
-                    <span>Phương án mong muốn: <strong className="text-destructive font-medium">{activeTicket.desiredSolution}</strong></span>
-                  </>
-                )}
-              </div>
-              {activeTicket.status === 'RESOLVED' ? (
-                <div className="text-xs text-foreground/90 space-y-0.5">
-                  <p className="font-semibold text-emerald-700 dark:text-emerald-300">
-                    Phán quyết: {activeTicket.decision === 'FULL_MENTOR_PAYMENT' ? 'Chi trả toàn bộ Cố vấn' : activeTicket.decision === 'FULL_STUDENT_REFUND' ? 'Hoàn trả toàn bộ Bên tạo yêu cầu' : 'Hòa giải chia tỷ lệ'}
-                    {activeTicket.mentorAmount != null && ` • Thù lao Mentor: ${formatVnd(activeTicket.mentorAmount)}`}
-                    {activeTicket.studentRefund != null && ` • Hoàn trả Bên tạo yêu cầu: ${formatVnd(activeTicket.studentRefund)}`}
-                  </p>
-                  {activeTicket.resolutionNote && (
-                    <p className="text-muted-foreground italic line-clamp-2">
-                      Lý do: {activeTicket.resolutionNote}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-foreground/80 italic">
-                  Nhiệm vụ đang ở trạng thái tranh chấp (DISPUTED). Mọi thao tác hoàn thành và quyết toán tạm thời đóng băng (ON_HOLD).
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {onOpenTaskReport && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onOpenTaskReport}
-                className="h-8 border-slate-300 dark:border-slate-700 text-xs font-semibold shadow-xs"
-              >
-                <FileText className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
-                Báo cáo Task
-              </Button>
-            )}
-            {onOpenAddEvidence && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onOpenAddEvidence}
-                className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10 text-xs font-semibold shadow-xs"
-              >
-                <Paperclip className="w-3.5 h-3.5 mr-1.5" />
-                Bằng chứng tranh chấp
-              </Button>
-            )}
-            {onOpenTicketDiscussion && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onOpenTicketDiscussion}
-                className="h-8 border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 text-xs font-semibold shadow-xs"
-              >
-                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
-                Trao đổi (UC119)
-              </Button>
-            )}
-            <span
-              className={`text-xs px-3 py-1.5 rounded-lg font-bold border ${activeTicket.status === 'RESOLVED'
-                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                : 'bg-destructive/15 text-destructive border border-destructive/30'
-                }`}
-            >
-              {activeTicket.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đang phân xử'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {activeTicket && activeTicket.ticketType === 'SETTLEMENT' && (
-        <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-600 text-white shadow-sm shrink-0 mt-0.5">
-              <FileCheck className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">
-                  Settlement Ticket #{activeTicket.ticketCode} (Giải ngân theo thỏa thuận)
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30">
-                  {activeTicket.status === 'OPEN'
-                    ? 'Đang chờ Admin tiếp nhận'
-                    : activeTicket.status === 'IN_REVIEW'
-                      ? 'Admin đang thụ lý xử lý'
-                      : activeTicket.status}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                {activeTicket.mentorAmount != null && (
-                  <span>Giải ngân Mentor: <strong className="text-purple-600 dark:text-purple-400 font-bold">{formatVnd(activeTicket.mentorAmount)}</strong></span>
-                )}
-                {activeTicket.studentRefund != null && (
-                  <>
-                    <span>•</span>
-                    <span>Hoàn tiền Bên tạo yêu cầu: <strong className="text-blue-600 dark:text-blue-400 font-bold">{formatVnd(activeTicket.studentRefund)}</strong></span>
-                  </>
-                )}
-              </div>
-              <p className="text-xs text-foreground/80 italic">
-                Nhiệm vụ đã dừng. Ban Quản Trị đang tiến hành xử lý vé theo biên bản thỏa thuận.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {onOpenTaskReport && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onOpenTaskReport}
-                className="h-8 border-slate-300 dark:border-slate-700 text-xs font-semibold shadow-xs"
-              >
-                <FileText className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
-                Báo cáo Task
-              </Button>
-            )}
-            {onOpenAddEvidence && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onOpenAddEvidence}
-                className="h-8 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 text-xs font-semibold shadow-xs"
-              >
-                <Paperclip className="w-3.5 h-3.5 mr-1.5" />
-                Chứng từ & Bằng chứng
-              </Button>
-            )}
-            {onOpenTicketDiscussion && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onOpenTicketDiscussion}
-                className="h-8 border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 text-xs font-semibold shadow-xs"
-              >
-                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
-                Trao đổi (UC119)
-              </Button>
-            )}
-            <span className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-300 font-semibold border border-blue-500/20">
-              Đang giải quyết
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* COMPLETED BANNER (UC114) */}
-      {taskStatus === 'COMPLETED' && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-emerald-600 text-white shadow-sm shrink-0 mt-0.5">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div className="space-y-0.5">
-              <span className="font-bold text-sm text-foreground">
-                Nhiệm vụ đã hoàn thành thành công
-              </span>
-              <p className="text-xs text-muted-foreground">
-                Kết quả công việc đã được nghiệm thu và tiền đã được giải ngân theo thỏa thuận.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-            {onOpenTaskReport && (
-              <Button
-                size="sm"
-                onClick={onOpenTaskReport}
-                className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm"
-              >
-                <FileText className="w-3.5 h-3.5 mr-1.5" />
-                Xem Báo cáo Task & Thanh toán
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Reject Modal */}
-      {rejectModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div
-            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h4 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-500" />
-              Xác nhận từ chối đề xuất
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Vui lòng nhập lý do từ chối để đối phương nắm thông tin và tiếp tục trao đổi.
-            </p>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-plum-600 dark:text-[#b0b3b8]">{dialogDescription}</p>
+          {allowsNote && (
             <textarea
               rows={3}
-              value={rejectNote}
-              onChange={(e) => setRejectNote(e.target.value)}
-              placeholder="Nhập lý do từ chối..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 resize-none"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Lý do (không bắt buộc)"
+              className="w-full resize-none rounded-xl border border-cream-300 bg-white px-3.5 py-2.5 text-sm text-plum-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-[#18191a] dark:text-white"
             />
-            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { setRejectModal(null); setRejectNote('') }}
-              >
-                Hủy
-              </Button>
-              <Button
-                size="sm"
-                className="h-8 bg-red-600 hover:bg-red-700 text-white font-semibold"
-                onClick={handleConfirmReject}
-                disabled={respondExtensionMutation.isPending || respondAmendmentMutation.isPending || respondSettlementMutation.isPending}
-              >
-                Xác nhận từ chối
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
+          )}
+        </div>
+      </Modal>
+    </section>
   )
 }

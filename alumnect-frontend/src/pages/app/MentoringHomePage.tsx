@@ -1,29 +1,35 @@
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import {
   MentoringTermsGate,
   MentorshipLoadingSkeleton,
   useMentoringTermsStatus,
   MentorCard,
   useMentorSearch,
+  useIncomingMentoringRequests,
+  useMyMentoringRequests,
+  useMyTasks,
 } from '@/features/mentorship'
 import type { MentorStatusResponse } from '@/features/mentorship/model/mentorStatusTypes'
-import { Container, Card, Badge } from '@/components/ui/primitives'
+import { mentoringWalletApi } from '@/features/mentorship/api/mentoringWalletApi'
+import { MentoringActionCard, MentoringStatTile } from '@/features/mentorship/components/MentoringUi'
+import { Container, Card } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { useMentorStatus } from '@/features/mentorship/hooks/useMentorStatus'
+import { vnd } from '@/lib/utils'
 import {
-  Compass,
-  FileText,
-  ShieldCheck,
   Sparkles,
   ArrowRight,
-  CheckCircle2,
   UserCheck,
-  Activity,
-  Clock,
-  Trophy,
   Search,
+  Inbox,
+  BriefcaseBusiness,
+  Landmark,
+  RotateCcw,
+  BookOpen,
+  ShieldAlert,
 } from 'lucide-react'
 
 // Hiệu ứng chuyển động mượt mà theo từng tầng (Staggered Animation)
@@ -54,6 +60,138 @@ type MentoringHomeContentProps = {
   status?: MentorStatusResponse
 }
 
+/**
+ * "Việc của bạn": số liệu thật dẫn thẳng tới việc cần làm tiếp theo.
+ * Mentor đang hoạt động: yêu cầu chờ phản hồi, Task đang chạy, thu nhập.
+ * Người thuê Mentor: yêu cầu đã gửi, Task đang chạy, hoàn tiền + nhắc khai báo tài khoản nhận hoàn tiền.
+ */
+function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
+  const isRequester = !isMentorActive
+  const incoming = useIncomingMentoringRequests({ status: 'WAITING', size: 1, enabled: isMentorActive })
+  const myRequests = useMyMentoringRequests({ page: 0, size: 1, enabled: isRequester })
+  const activeTasks = useMyTasks('ACTIVE', undefined, 0, 1)
+  const earnings = useQuery({
+    queryKey: ['mentoring-wallet', 'earnings'],
+    queryFn: mentoringWalletApi.getEarnings,
+    enabled: isMentorActive,
+  })
+  const refunds = useQuery({
+    queryKey: ['mentoring-wallet', 'refunds'],
+    queryFn: mentoringWalletApi.getRefunds,
+    enabled: isRequester,
+  })
+  const refundAccount = useQuery({
+    queryKey: ['mentoring-wallet', 'refund-account'],
+    queryFn: mentoringWalletApi.getRefundAccount,
+    enabled: isRequester,
+  })
+
+  const taskTile = (
+    <MentoringStatTile
+      to="/app/mentoring/tasks"
+      tone="navy"
+      icon={<BriefcaseBusiness />}
+      label="Task đang chạy"
+      value={activeTasks.data?.totalElements ?? 0}
+      hint="Chuẩn bị · đang làm · chờ nghiệm thu"
+      loading={activeTasks.isLoading}
+    />
+  )
+
+  const account = refundAccount.data
+  const missingRefundAccount = isRequester && refundAccount.isSuccess && !account
+  const payoutAccountInvalid = isMentorActive && Boolean(earnings.data?.bankAccountRequired)
+
+  return (
+    <motion.section variants={itemVariants} className="space-y-3">
+      <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">Việc của bạn</h2>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {isMentorActive ? (
+          <>
+            <MentoringStatTile
+              to="/app/mentoring/incoming-requests"
+              tone="brand"
+              icon={<Inbox />}
+              label="Yêu cầu chờ phản hồi"
+              value={incoming.data?.totalElements ?? 0}
+              hint="Phản hồi sớm để nhận Task"
+              loading={incoming.isLoading}
+            />
+            {taskTile}
+            <MentoringStatTile
+              to="/app/mentoring/earnings"
+              tone="mint"
+              icon={<Landmark />}
+              label="Thu nhập đang xử lý"
+              value={vnd(earnings.data?.totalProcessing ?? 0)}
+              hint={`Đã nhận ${vnd(earnings.data?.totalReceived ?? 0)}`}
+              loading={earnings.isLoading}
+            />
+          </>
+        ) : (
+          <>
+            <MentoringStatTile
+              to="/app/mentoring/requests"
+              tone="brand"
+              icon={<BookOpen />}
+              label="Yêu cầu đã gửi"
+              value={myRequests.data?.totalElements ?? 0}
+              hint="Theo dõi Mentor phản hồi"
+              loading={myRequests.isLoading}
+            />
+            {taskTile}
+            <MentoringStatTile
+              to="/app/mentoring/refunds"
+              tone="gold"
+              icon={<RotateCcw />}
+              label="Hoàn tiền đang xử lý"
+              value={vnd(refunds.data?.totalProcessing ?? 0)}
+              hint={
+                account
+                  ? `Nhận về ${account.bankName} ••• ${account.bankAccountNumber.slice(-4)}`
+                  : 'Chưa khai báo tài khoản nhận'
+              }
+              loading={refunds.isLoading}
+            />
+          </>
+        )}
+      </div>
+
+      {missingRefundAccount && (
+        <MentoringActionCard
+          tone="gold"
+          icon={<ShieldAlert />}
+          title="Khai báo tài khoản nhận hoàn tiền"
+          actions={
+            <ButtonLink to="/app/mentoring/refunds" size="sm" className="h-8 rounded-lg px-3 text-xs">
+              Khai báo ngay
+            </ButtonLink>
+          }
+        >
+          Bắt buộc trước khi gửi hoặc đồng ý thỏa thuận dừng Task. Khai báo sớm để tiền hoàn được chuyển ngay khi Task dừng
+          hoặc được Ban Quản Trị phân xử.
+        </MentoringActionCard>
+      )}
+
+      {payoutAccountInvalid && (
+        <MentoringActionCard
+          tone="coral"
+          icon={<ShieldAlert />}
+          title="Có khoản thù lao đang chờ tài khoản nhận tiền"
+          actions={
+            <ButtonLink to="/app/mentoring/become-mentor" size="sm" className="h-8 rounded-lg px-3 text-xs">
+              Cập nhật tài khoản
+            </ButtonLink>
+          }
+        >
+          Tài khoản ngân hàng trong hồ sơ Mentor chưa hợp lệ. Cập nhật để hệ thống chuyển thù lao cho bạn.
+        </MentoringActionCard>
+      )}
+    </motion.section>
+  )
+}
+
 function MentoringHomeContent({ status }: MentoringHomeContentProps) {
   const user = useAuthStore((s) => s.user)
   const isAlumni = user?.role === 'ALUMNI'
@@ -76,241 +214,100 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="space-y-6 py-4"
+      className="space-y-6"
     >
-      {/* 1. Hero Banner: Tối giản, gọn gàng, hiệu ứng hào quang mờ */}
+      {/* 1. Hero Banner: Tối giản, thanh lịch, gọn gàng */}
       <motion.div
         variants={itemVariants}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 border border-brand-500/20 shadow-xs dark:bg-[#242526] dark:border-[#393a3b] dark:from-brand-950/20"
+        className="mentor-page-header relative overflow-hidden rounded-2xl border border-plum-900/[0.08] bg-white p-5 shadow-xs sm:p-6 dark:border-white/10 dark:bg-[#242526]"
       >
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-500/5" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
 
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="brand" icon={<Sparkles className="h-3.5 w-3.5" />}>
-              Mạng Lưới Mentor FPT
-            </Badge>
-            {isMentorActive ? (
-              <Badge tone="success" icon={<CheckCircle2 className="h-3.5 w-3.5" />}>
-                Mentor đang hoạt động
-              </Badge>
-            ) : isExpired ? (
-              <Badge tone="danger" icon={<Clock className="h-3.5 w-3.5" />}>
-                Gói Mentor đã hết hạn
-              </Badge>
-            ) : isPaymentPending ? (
-              <Badge tone="gold" icon={<Activity className="h-3.5 w-3.5" />}>
-                Hồ sơ chờ thanh toán
-              </Badge>
-            ) : null}
-          </div>
-
-          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-plum-900 dark:text-[#e4e6eb]">
-            Hỗ Trợ & Đồng Hành Cùng Mentor
+        <div className="relative z-10 max-w-2xl space-y-2.5">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-plum-900 dark:text-[#e4e6eb]">
+            Kết nối cùng Mentor
           </h1>
 
           <p className="text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
             {isExpired
-              ? 'Gói dịch vụ Mentor của bạn đã hết hạn. Hãy gia hạn để tiếp tục nhận yêu cầu kết nối mới từ các thành viên trong mạng lưới.'
-              : 'Không gian kết nối và sẻ chia — nơi mọi người luôn sẵn sàng hỗ trợ, giúp đỡ và đồng hành cùng nhau trên mọi chặng đường phát triển.'}
+              ? 'Gói dịch vụ Mentor của bạn đã hết hạn. Hãy gia hạn để tiếp tục nhận yêu cầu kết nối mới từ các thành viên.'
+              : 'Tìm người đồng hành phù hợp để định hướng nghề nghiệp, phát triển kỹ năng và hoàn thành mục tiêu của bạn.'}
           </p>
 
-          {/* Các nút bấm tinh gọn, kích thước vừa vặn trên 1 hàng */}
-          <div className="flex flex-wrap items-center gap-2.5 pt-2">
-            {isAlumni ? (
-              isMentorActive ? (
-                <>
-                  <ButtonLink
-                    to="/app/mentoring/status"
-                    variant="primary"
-                    size="sm"
-                    leftIcon={<Activity className="h-3.5 w-3.5" />}
-                    className="shadow-xs"
-                  >
-                    Trạng thái & Gói Mentor
-                  </ButtonLink>
-                  <ButtonLink
-                    to="/app/mentoring/become-mentor"
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<UserCheck className="h-3.5 w-3.5" />}
-                  >
-                    Hồ sơ Mentor
-                  </ButtonLink>
-                </>
-              ) : isExpired ? (
-                <>
-                  <ButtonLink
-                    to="/app/mentoring/packages"
-                    variant="primary"
-                    size="sm"
-                    rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-                    className="shadow-xs"
-                  >
-                    Gia hạn gói Mentor
-                  </ButtonLink>
-                  <ButtonLink
-                    to="/app/mentoring/status"
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Activity className="h-3.5 w-3.5" />}
-                  >
-                    Trạng thái Mentor
-                  </ButtonLink>
-                  <ButtonLink
-                    to="/app/mentoring/become-mentor"
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<UserCheck className="h-3.5 w-3.5" />}
-                  >
-                    Hồ sơ Mentor
-                  </ButtonLink>
-                </>
-              ) : isPaymentPending ? (
-                <>
-                  <ButtonLink
-                    to="/app/mentoring/subscription?step=checkout"
-                    variant="primary"
-                    size="sm"
-                    rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-                    className="shadow-xs"
-                  >
-                    Kích hoạt gói Mentor
-                  </ButtonLink>
-                  <ButtonLink
-                    to="/app/mentoring/status"
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Activity className="h-3.5 w-3.5" />}
-                  >
-                    Xem trạng thái
-                  </ButtonLink>
-                </>
-              ) : status?.hasMentorProfile ? (
-                <>
-                  <ButtonLink
-                    to="/app/mentoring/become-mentor"
-                    variant="primary"
-                    size="sm"
-                    rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-                    className="shadow-xs"
-                  >
-                    Hoàn thiện hồ sơ Mentor
-                  </ButtonLink>
-                  <ButtonLink
-                    to="/app/mentoring/status"
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<Activity className="h-3.5 w-3.5" />}
-                  >
-                    Kiểm tra điều kiện
-                  </ButtonLink>
-                </>
-              ) : (
-                <ButtonLink
-                  to="/app/mentoring/become-mentor"
-                  variant="primary"
-                  size="sm"
-                  rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-                  className="shadow-xs"
-                >
-                  Đăng ký trở thành Mentor
-                </ButtonLink>
-              )
-            ) : null}
-
-            <ButtonLink
-              to="/app/mentoring/requests/create"
-              variant={isMentorActive ? "outline" : "primary"}
-              size="sm"
-              leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-              className="shadow-xs"
-            >
-              Tạo yêu cầu Mentoring
-            </ButtonLink>
-
+          {/* Cụm hành động chính tinh gọn, không lặp lại các nút trong sidebar */}
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <ButtonLink
               to="/app/mentoring/discover"
-              variant="outline"
+              variant="primary"
               size="sm"
-              leftIcon={<Search className="h-3.5 w-3.5 text-brand-600" />}
-              className="text-plum-700 hover:text-brand-600 dark:text-[#e4e6eb]"
+              leftIcon={<Search className="h-4 w-4" />}
+              className="shadow-xs font-semibold"
             >
-              Tìm kiếm Mentor
+              Khám phá Mentor
             </ButtonLink>
 
-            <ButtonLink
-              to="/app/mentoring/ranking"
-              variant="outline"
-              size="sm"
-              leftIcon={<Trophy className="h-3.5 w-3.5 text-gold-500" />}
-              className="text-plum-700 hover:text-brand-600 dark:text-[#e4e6eb]"
-            >
-              Bảng xếp hạng Mentor
-            </ButtonLink>
-
-            <ButtonLink
-              to="/app/mentoring/terms"
-              variant="ghost"
-              size="sm"
-              leftIcon={<ShieldCheck className="h-3.5 w-3.5 text-plum-500" />}
-              className="text-plum-600 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-[#e4e6eb]"
-            >
-              Điều khoản
-            </ButtonLink>
+            {isAlumni ? (
+              isMentorActive ? (
+                <ButtonLink
+                  to="/app/mentoring/become-mentor"
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<UserCheck className="h-4 w-4" />}
+                >
+                  Hồ sơ Mentor
+                </ButtonLink>
+              ) : isExpired ? (
+                <ButtonLink
+                  to="/app/mentoring/packages"
+                  variant="outline"
+                  size="sm"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  Gia hạn gói dịch vụ
+                </ButtonLink>
+              ) : isPaymentPending ? (
+                <ButtonLink
+                  to="/app/mentoring/subscription?step=checkout"
+                  variant="outline"
+                  size="sm"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  Kích hoạt gói dịch vụ
+                </ButtonLink>
+              ) : !status?.hasMentorProfile ? (
+                <ButtonLink
+                  to="/app/mentoring/become-mentor"
+                  variant="outline"
+                  size="sm"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  Đăng ký làm Mentor
+                </ButtonLink>
+              ) : null
+            ) : (
+              <ButtonLink
+                to="/app/mentoring/requests/create"
+                variant="outline"
+                size="sm"
+                leftIcon={<Sparkles className="h-4 w-4 text-brand-600" />}
+              >
+                Tạo yêu cầu
+              </ButtonLink>
+            )}
           </div>
         </div>
       </motion.div>
 
-      {/* 2. Lợi ích và các tính năng cốt lõi */}
-      <motion.div
-        variants={itemVariants}
-        className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3"
-      >
-        <Card hover className="p-5 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-2">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
-            <Compass className="h-5 w-5" />
-          </div>
-          <h3 className="font-heading text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Thỏa Thuận Hợp Tác Rõ Ràng
-          </h3>
-          <p className="text-xs text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
-            Thiết lập phạm vi công việc, mục tiêu hướng dẫn và ngân sách minh bạch trước khi bắt đầu lộ trình hỗ trợ.
-          </p>
-        </Card>
+      {/* 2. Việc cần làm tiếp theo */}
+      <MentoringWorkSummary isMentorActive={isMentorActive} />
 
-        <Card hover className="p-5 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-2">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gold-100 text-gold-600 dark:bg-gold-950/60 dark:text-gold-300">
-            <FileText className="h-5 w-5" />
-          </div>
-          <h3 className="font-heading text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Nhật Ký Hướng Dẫn & Tiến Độ
-          </h3>
-          <p className="text-xs text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
-            Mentor ghi nhận chi tiết từng buổi trao đổi và tiến độ nhiệm vụ; người học dễ dàng theo dõi và xác nhận.
-          </p>
-        </Card>
-
-        <Card hover className="p-5 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-2">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-mint-100 text-mint-600 dark:bg-mint-950/60 dark:text-mint-300">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <h3 className="font-heading text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Bảo Vệ Quyền Lợi & Quyết Toán
-          </h3>
-          <p className="text-xs text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
-            Hệ thống quản lý nguồn quỹ an toàn, thanh toán minh bạch và hỗ trợ hòa giải kịp thời từ Ban Quản trị.
-          </p>
-        </Card>
-      </motion.div>
-
-      {/* 3. Danh sách người hướng dẫn nổi bật - Lấy từ dữ liệu thật của hệ thống */}
+      {/* 3. Danh sách Mentor tiêu biểu */}
       <motion.div variants={itemVariants} className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h2 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
-              Mentor Tiêu Biểu Mạng Lưới FPT
+            <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+              Mentor tiêu biểu
             </h2>
             <p className="text-xs text-plum-500">Các Mentor uy tín và tích cực nhất đang đồng hành cùng sinh viên</p>
           </div>
@@ -318,7 +315,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
             to="/app/mentoring/discover"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
           >
-            <span>Khám phá tất cả Mentor</span>
+            <span>Xem tất cả</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>

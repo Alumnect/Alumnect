@@ -16,4 +16,7 @@ public class CreateTaskPaymentRequest {
     /** ID của thỏa thuận Mentoring Deal đã được xác nhận (DEAL_CONFIRMED) */
     @NotNull(message = "ID của thỏa thuận Deal không được để trống.")
     private Long dealId;
+
+    /** ID Ticket điều chỉnh đã được chấp nhận (AWAITING_TOPUP) khi thanh toán bổ sung; bỏ trống nếu thanh toán Deal ban đầu */
+    private Long amendmentId;
 }

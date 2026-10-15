@@ -37,6 +37,7 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
     private final MentoringDisputeTicketRepository ticketRepository;
     private final MentoringTicketEvidenceRepository evidenceRepository;
     private final UserRepository userRepository;
+    private final MentoringDisbursementService disbursementService;
 
     @Override
     @Transactional(readOnly = true)
@@ -159,11 +160,7 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
                 .map(MentoringPaymentLedger::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Fallback: Nếu hệ thống chưa ghi ledger thu (giao dịch ban đầu trước khi có ledger), lấy giá Deal
         BigDecimal initialPrice = task.getAgreedPrice() != null ? task.getAgreedPrice() : BigDecimal.ZERO;
-        if (totalCollected.compareTo(BigDecimal.ZERO) == 0 && initialPrice.compareTo(BigDecimal.ZERO) > 0) {
-            totalCollected = initialPrice;
-        }
 
         // Tổng tiền thu bổ sung qua Task Amendments đã thanh toán thành công (APPLIED)
         BigDecimal totalTopUp = amendmentRepository.findByTaskIdAndStatus(task.getId(), MentoringAmendmentStatus.APPLIED).stream()
@@ -246,6 +243,16 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
                 .build();
     }
 
+    @Override
+    public MentoringPaymentLedgerResponse retryFailedPayout(Long adminUserId, Long ledgerId, String note) {
+        return toLedgerResponse(disbursementService.retryFailedPayout(adminUserId, ledgerId, note));
+    }
+
+    @Override
+    public BigDecimal getPayoutBalance() {
+        return disbursementService.getPayoutBalance();
+    }
+
     private MentoringPaymentLedgerResponse toLedgerResponse(MentoringPaymentLedger l) {
         if (l == null) return null;
         return MentoringPaymentLedgerResponse.builder()
@@ -260,6 +267,9 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
                 .transactionType(l.getTransactionType())
                 .status(l.getStatus())
                 .providerReference(l.getProviderReference())
+                .providerStatus(l.getProviderStatus())
+                .failureCode(l.getFailureCode())
+                .transactedAt(l.getTransactedAt())
                 .deadlineSnapshot(l.getDeadlineSnapshot())
                 .note(l.getNote())
                 .createdAt(l.getCreatedAt())

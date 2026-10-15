@@ -3,7 +3,10 @@ package com.alumnect.alumnect_backend.service.mentorship;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.AdminTaskFundDetailResponse;
 import com.alumnect.alumnect_backend.dto.response.mentorship.AdminTaskFundSummaryResponse;
+import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringPaymentLedgerResponse;
 import org.springframework.data.domain.Pageable;
+
+import java.math.BigDecimal;
 
 /**
  * Service quản lý Quỹ Task, Sổ quỹ giao dịch và lịch sử tài chính cho Quản trị viên (UC121 & Mục 5.7, 5.10).
@@ -36,4 +39,10 @@ public interface MentoringFinanceService {
      * @return Chi tiết sổ quỹ và lịch sử tài chính
      */
     AdminTaskFundDetailResponse getTaskFundDetail(Long adminUserId, Long taskId);
+
+    /** Admin chi lại lệnh chi thù lao Mentor đang FAILED với idempotency key mới. */
+    MentoringPaymentLedgerResponse retryFailedPayout(Long adminUserId, Long ledgerId, String note);
+
+    /** Số dư tài khoản Kênh chi PayOS. */
+    BigDecimal getPayoutBalance();
 }

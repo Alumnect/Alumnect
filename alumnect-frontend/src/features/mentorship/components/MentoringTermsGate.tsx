@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useMentoringTermsStatus } from '../hooks/useMentoringTerms'
-import { MentoringTerms } from './MentoringTerms'
+import { MentoringTermsConsentModal } from './MentoringTermsConsentModal'
 import type { MentoringEntrySource } from '../model/mentoringTermsTypes'
 import { Card, Skeleton } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -17,7 +17,7 @@ interface MentoringTermsGateProps {
  * 1. Gọi GET /mentoring/terms/status để kiểm tra trạng thái điều khoản từ Backend.
  * 2. Hiển thị Shimmer Skeleton trong khi đang tải (tránh flash UI).
  * 3. Nếu accepted = true: cho phép kết xuất nội dung bên trong ({children}).
- * 4. Nếu accepted = false: hiển thị giao diện Điều khoản MentoringTerms (UC90).
+ * 4. Nếu accepted = false: khóa nội dung và hiển thị popup xác nhận bắt buộc (UC90).
  * 5. Nếu xảy ra lỗi: hiển thị thông báo lỗi và nút Thử lại, không tự động cho vào.
  */
 export function MentoringTermsGate({
@@ -59,7 +59,7 @@ export function MentoringTermsGate({
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-950/50 dark:text-coral-400">
             <AlertTriangle className="h-7 w-7" />
           </div>
-          <h2 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
             Không thể kiểm tra trạng thái điều khoản
           </h2>
           <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8]">
@@ -83,13 +83,15 @@ export function MentoringTermsGate({
 
   // 3. Nếu người dùng ĐÃ chấp nhận phiên bản điều khoản hiện tại: Cho phép truy cập
   if (data?.accepted) {
-    return <div className="w-full">{children}</div>
+    return <div className="h-full min-h-0 w-full">{children}</div>
   }
 
-  // 4. Nếu người dùng CHƯA chấp nhận phiên bản điều khoản hiện tại: Hiển thị UC90
+  // 4. Chưa chấp nhận: khóa chức năng và yêu cầu xác nhận bằng popup bắt buộc.
   return (
     <div className="w-full">
-      <MentoringTerms source={source} />
+      <MentoringTermsConsentModal
+        source={source}
+      />
     </div>
   )
 }

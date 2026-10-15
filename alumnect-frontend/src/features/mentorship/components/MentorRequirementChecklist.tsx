@@ -136,8 +136,8 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
     <Card hover={false} className="p-5 sm:p-7 border border-plum-900/10 bg-white dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-plum-900/10 pb-4 dark:border-[#393a3b]">
         <div>
-          <h2 className="font-heading text-base sm:text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
-            Điều Kiện Hồ Sơ Mentor
+          <h2 className="font-display text-base sm:text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+            Điều kiện hồ sơ Mentor
           </h2>
           <p className="text-xs text-plum-500 dark:text-[#8a8d91] mt-0.5">
             Các tiêu chuẩn thẩm định chuyên môn và cam kết đạo đức nghề nghiệp
@@ -157,15 +157,15 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
               </div>
               <div className="min-w-0 space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-heading text-sm font-bold text-plum-900 dark:text-[#e4e6eb]">
+                  <h3 className="font-display text-sm font-bold text-plum-900 dark:text-[#e4e6eb]">
                     {item.title}
                   </h3>
                   {item.isMet ? (
-                    <Badge tone="success" icon={<CheckCircle2 className="h-3 w-3" />} className="text-[10px] py-0 px-1.5">
+                    <Badge tone="success" icon={<CheckCircle2 className="h-3 w-3" />} className="text-[11px] py-0 px-1.5">
                       Đạt
                     </Badge>
                   ) : (
-                    <Badge tone="danger" icon={<XCircle className="h-3 w-3" />} className="text-[10px] py-0 px-1.5">
+                    <Badge tone="danger" icon={<XCircle className="h-3 w-3" />} className="text-[11px] py-0 px-1.5">
                       Chưa đạt
                     </Badge>
                   )}

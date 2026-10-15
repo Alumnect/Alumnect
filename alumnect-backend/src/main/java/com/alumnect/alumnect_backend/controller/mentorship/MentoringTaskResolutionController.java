@@ -59,6 +59,29 @@ public class MentoringTaskResolutionController {
         return ResponseEntity.ok(ApiResponse.success("Phản hồi đề xuất gia hạn thành công", response));
     }
 
+    @PutMapping("/deadline-extensions/{extensionId}/cancel")
+    @Operation(summary = "Mentor hủy đề xuất gia hạn Deadline đang chờ phản hồi")
+    public ResponseEntity<ApiResponse<MentoringTaskDeadlineExtensionResponse>> cancelDeadlineExtension(@PathVariable Long extensionId) {
+        return ResponseEntity.ok(ApiResponse.success("Đã hủy đề xuất gia hạn",
+                resolutionService.cancelDeadlineExtension(getCurrentUserId(), extensionId)));
+    }
+
+    @PutMapping("/amendments/{amendmentId}/cancel")
+    @Operation(summary = "Mentor hủy đề xuất điều chỉnh / Học viên từ chối thanh toán bổ sung")
+    public ResponseEntity<ApiResponse<MentoringTaskAmendmentResponse>> cancelTaskAmendment(
+            @PathVariable Long amendmentId,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        return ResponseEntity.ok(ApiResponse.success("Đã đóng đề xuất điều chỉnh",
+                resolutionService.cancelTaskAmendment(getCurrentUserId(), amendmentId, body != null ? body.get("reason") : null)));
+    }
+
+    @PutMapping("/settlement-proposals/{proposalId}/cancel")
+    @Operation(summary = "Người tạo hủy đề xuất dừng Task đang chờ phản hồi")
+    public ResponseEntity<ApiResponse<MentoringTaskSettlementProposalResponse>> cancelSettlementProposal(@PathVariable Long proposalId) {
+        return ResponseEntity.ok(ApiResponse.success("Đã hủy đề xuất dừng Task",
+                resolutionService.cancelSettlementProposal(getCurrentUserId(), proposalId)));
+    }
+
     @GetMapping("/{taskId}/deadline-extensions")
     @Operation(summary = "Lấy lịch sử các đề xuất gia hạn Deadline của Task (UC109)")
     public ResponseEntity<ApiResponse<List<MentoringTaskDeadlineExtensionResponse>>> getDeadlineExtensions(

@@ -36,10 +36,10 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
       className="border border-plum-900/[0.08] bg-white p-6 sm:p-7 text-left space-y-6 dark:bg-[#242526] dark:border-[#393a3b]"
     >
       <div className="flex items-center gap-2.5 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/5 text-violet-600 dark:bg-violet-600/40 dark:text-violet-400">
           <Sparkles className="h-4 w-4" />
         </span>
-        <h2 className="font-heading text-lg font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
           Lĩnh vực hỗ trợ & Kỹ năng chuyên môn
         </h2>
       </div>
@@ -49,7 +49,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
         <div className="flex items-center gap-2">
           <Briefcase className="h-4 w-4 text-brand-600" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
-            Lĩnh vực cố vấn có thể hỗ trợ (Supported Fields)
+            Lĩnh vực cố vấn
           </h3>
         </div>
 
@@ -86,7 +86,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
             {mentor.topics.map((topic, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 rounded-xl bg-plum-50 px-3 py-1.5 text-xs font-semibold text-plum-800 border border-plum-900/5 dark:bg-white/5 dark:text-[#e4e6eb]"
+                className="inline-flex items-center gap-1 rounded-xl bg-cream-100 px-3 py-1.5 text-xs font-semibold text-plum-800 border border-plum-900/5 dark:bg-white/5 dark:text-[#e4e6eb]"
               >
                 <span>#{topic}</span>
               </span>
@@ -100,7 +100,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-mint-600" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
-            Kỹ năng kỹ thuật & chuyên môn (Skills)
+            Kỹ năng chuyên môn
           </h3>
         </div>
 

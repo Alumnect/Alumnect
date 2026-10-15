@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
-import { ArrowLeft, Sparkles } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { Container } from '@/components/ui/primitives'
 import { useMentorIndustries } from '@/features/mentorship/hooks/useMentorRegistration'
 import { useMentorRanking } from '@/features/mentorship/hooks/useMentorRanking'
@@ -55,23 +54,7 @@ export function MentorRankingPage() {
   const selectedIndustry = industries.find((ind) => ind.id === selectedFieldId)
 
   return (
-    <Container className="space-y-5 py-4 sm:space-y-6 sm:py-6">
-      {/* Thanh điều hướng quay lại Trang chủ Mentoring */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link
-          to="/app/mentoring"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-plum-600 hover:text-brand-600 transition-colors dark:text-[#b0b3b8] dark:hover:text-[#e4e6eb]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Về Không gian Cố vấn</span>
-        </Link>
-
-        <span className="hidden items-center gap-1 text-xs text-plum-400 sm:flex dark:text-[#8a8d91]">
-          <Sparkles className="h-3.5 w-3.5 text-gold-500" />
-          Cập nhật theo mạng lưới cựu sinh viên FPT
-        </span>
-      </div>
-
+    <Container className="space-y-5 py-2 sm:space-y-6 sm:py-4">
       {/* Hero Header */}
       <MentorRankingHeader
         selectedFieldName={selectedIndustry?.name}

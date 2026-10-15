@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskAmendment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,4 +29,12 @@ public interface MentoringTaskAmendmentRepository extends JpaRepository<Mentorin
 
     /** Đếm số phiên bản đã tạo của Task */
     long countByTaskId(Long taskId);
+
+    List<MentoringTaskAmendment> findByStatusAndCreatedAtBefore(
+            MentoringAmendmentStatus status, Instant createdAt);
+
+    /** Khóa bản ghi để tuần tự hóa tạo checkout và áp dụng top-up cho cùng một Ticket */
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT a FROM MentoringTaskAmendment a WHERE a.id = :id")
+    Optional<MentoringTaskAmendment> findByIdForUpdate(@org.springframework.data.repository.query.Param("id") Long id);
 }

@@ -42,7 +42,7 @@ export function MentorPaymentSuccessCard({
       className="mx-auto max-w-xl p-8 rounded-3xl border border-mint-200 bg-white dark:bg-[#242526] text-center shadow-glow space-y-6"
     >
       {/* Icon chúc mừng tinh gọn */}
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-mint-50 dark:bg-mint-950/40 text-mint-600 dark:text-mint-400">
         <CheckCircle2 className="h-9 w-9" />
       </div>
 
@@ -52,7 +52,7 @@ export function MentorPaymentSuccessCard({
             Thanh toán thành công
           </Badge>
         </div>
-        <h2 className="font-heading text-2xl font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-2xl font-bold text-plum-900 dark:text-[#e4e6eb]">
           Chúc Mừng Bạn Đã Trở Thành Mentor!
         </h2>
       </div>

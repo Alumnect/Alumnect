@@ -22,6 +22,7 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,12 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final MentoringConversationService mentoringConversationService;
+    private final NotificationService notificationService;
+    private final MentoringTaskPaymentService taskPaymentService;
+    private final MentoringRules mentoringRules;
+    private final com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerRepository ledgerRepository;
+    private final MentoringTicketService ticketService;
+    private final com.alumnect.alumnect_backend.dao.mentorship.UserRefundAccountRepository refundAccountRepository;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
             .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -62,6 +69,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
             Long currentUserId, Long taskId, CreateDeadlineExtensionRequest request) {
 
         MentoringTask task = requireActiveTask(taskId, currentUserId);
+        requireMentor(task, currentUserId, "đề xuất gia hạn Deadline");
         User currentUser = requireUser(currentUserId);
 
         Instant proposedDeadline = request.getProposedDeadline();
@@ -101,6 +109,12 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
                 senderRole, formatDateTime(proposedDeadline), request.getReason().trim());
         mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
 
+        notificationService.sendMentoringTaskEventNotification(
+                currentUser, recipient, task,
+                "EXTENSION_CONFIRM", String.valueOf(saved.getId()),
+                "Cần xác nhận gia hạn Task",
+                "Đối phương đã đề xuất thời hạn mới. Vui lòng xem và phản hồi.");
+
         return toExtensionResponse(saved, currentUserId);
     }
 
@@ -121,6 +135,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         }
 
         MentoringTask task = extension.getTask();
+        requireTaskOpenForProposals(task);
         User currentUser = requireUser(currentUserId);
         String responderRole = isStudent(task, currentUserId) ? "Học viên" : "Mentor";
 
@@ -130,6 +145,9 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         extension.setResponseNote(request.getResponseNote());
 
         if (Boolean.TRUE.equals(request.getAccept())) {
+            if (!extension.getProposedDeadline().isAfter(Instant.now())) {
+                throw new ConflictException("Hạn chót đề xuất đã qua. Mentor cần gửi đề xuất gia hạn mới.");
+            }
             // Kiểm tra deadline hiện tại của Task có còn khớp với thời điểm tạo ticket không
             if (!task.getDeadline().equals(extension.getCurrentDeadline())) {
                 throw new ConflictException("Hạn chót hiện tại của Task đã bị thay đổi trước đó, không thể áp dụng Ticket này.");
@@ -155,6 +173,11 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         }
 
         MentoringTaskDeadlineExtension saved = extensionRepository.save(extension);
+        notificationService.sendMentoringTaskEventNotification(
+                currentUser, extension.getCreatedBy(), task,
+                "EXTENSION_RESPONSE", String.valueOf(saved.getId()),
+                Boolean.TRUE.equals(request.getAccept()) ? "Đã chấp nhận gia hạn Task" : "Đã từ chối gia hạn Task",
+                "Đề xuất gia hạn của bạn đã được đối phương phản hồi.");
         return toExtensionResponse(saved, currentUserId);
     }
 
@@ -186,6 +209,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
             Long currentUserId, Long taskId, CreateTaskAmendmentRequest request) {
 
         MentoringTask task = requireActiveTask(taskId, currentUserId);
+        requireMentor(task, currentUserId, "đề xuất điều chỉnh phạm vi và bổ sung tiền");
         User currentUser = requireUser(currentUserId);
         User recipient = getOtherParticipant(task, currentUserId);
 
@@ -196,11 +220,33 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         if (additionalAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Số tiền bổ sung không được âm.");
         }
+        if (additionalAmount.signum() > 0) {
+            mentoringRules.requirePayableAmount(additionalAmount, "Số tiền bổ sung");
+        }
+        String requestedScope = request.getNewScope() != null && !request.getNewScope().isBlank() ? request.getNewScope().trim() : null;
+        String requestedResult = request.getNewExpectedResult() != null && !request.getNewExpectedResult().isBlank()
+                ? request.getNewExpectedResult().trim() : null;
+        Instant requestedDeadline = request.getNewDeadline();
+        if (requestedDeadline != null && !requestedDeadline.isAfter(Instant.now())) {
+            throw new BadRequestException("Hạn chót mới phải ở trong tương lai.");
+        }
+        boolean changesSomething = additionalAmount.signum() > 0
+                || (requestedScope != null && !requestedScope.equals(task.getTaskScope()))
+                || (requestedResult != null && !requestedResult.equals(task.getExpectedResult()))
+                || (requestedDeadline != null && !requestedDeadline.equals(task.getDeadline()));
+        if (!changesSomething) {
+            throw new BadRequestException("Đề xuất điều chỉnh chưa có thay đổi nào so với Task hiện tại.");
+        }
 
         // Đánh dấu các amendment PENDING cũ thành SUPERSEDED
-        List<MentoringTaskAmendment> pendingList = amendmentRepository
-                .findByTaskIdAndStatus(taskId, MentoringAmendmentStatus.PENDING);
+        List<MentoringTaskAmendment> pendingList = new java.util.ArrayList<>(amendmentRepository
+                .findByTaskIdAndStatus(taskId, MentoringAmendmentStatus.PENDING));
+        pendingList.addAll(amendmentRepository.findByTaskIdAndStatus(taskId, MentoringAmendmentStatus.AWAITING_TOPUP));
         for (MentoringTaskAmendment oldAmend : pendingList) {
+            // Ticket cũ đang chờ top-up bị thay thế: hủy link thanh toán chưa trả để tiền không vào nhầm Ticket cũ
+            if (oldAmend.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP) {
+                taskPaymentService.cancelPendingTopUpPayments(oldAmend.getId(), "Ticket điều chỉnh đã được thay thế bằng phiên bản mới");
+            }
             oldAmend.setStatus(MentoringAmendmentStatus.SUPERSEDED);
             amendmentRepository.save(oldAmend);
         }
@@ -234,6 +280,12 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
                 senderRole, version, amountText, request.getReason().trim());
         mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
 
+        notificationService.sendMentoringTaskEventNotification(
+                currentUser, recipient, task,
+                "AMENDMENT_CONFIRM", String.valueOf(saved.getId()),
+                "Cần xác nhận điều chỉnh Task",
+                "Đối phương đã gửi đề xuất điều chỉnh. Vui lòng xem và phản hồi.");
+
         return toAmendmentResponse(saved, currentUserId);
     }
 
@@ -254,6 +306,12 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         }
 
         MentoringTask task = amendment.getTask();
+        requireTaskOpenForProposals(task);
+        if (Boolean.TRUE.equals(request.getAccept()) && amendment.getNewDeadline() != null
+                && !amendment.getNewDeadline().equals(amendment.getPreviousDeadline())
+                && !amendment.getNewDeadline().isAfter(Instant.now())) {
+            throw new ConflictException("Hạn chót trong đề xuất điều chỉnh đã qua. Mentor cần gửi đề xuất mới.");
+        }
         User currentUser = requireUser(currentUserId);
         String responderRole = isStudent(task, currentUserId) ? "Học viên" : "Mentor";
 
@@ -290,6 +348,13 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         }
 
         MentoringTaskAmendment saved = amendmentRepository.save(amendment);
+        notificationService.sendMentoringTaskEventNotification(
+                currentUser, amendment.getCreatedBy(), task,
+                "AMENDMENT_RESPONSE", String.valueOf(saved.getId()),
+                Boolean.TRUE.equals(request.getAccept()) ? "Đã chấp nhận điều chỉnh Task" : "Đã từ chối điều chỉnh Task",
+                amendment.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP
+                        ? "Đề xuất đã được chấp nhận và đang chờ thanh toán bổ sung."
+                        : "Đề xuất điều chỉnh của bạn đã được đối phương phản hồi.");
         return toAmendmentResponse(saved, currentUserId);
     }
 
@@ -306,7 +371,9 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
     @Transactional(readOnly = true)
     public MentoringTaskAmendmentResponse getActiveAmendment(Long currentUserId, Long taskId) {
         MentoringTask task = requireParticipantTask(taskId, currentUserId);
+        // Ticket đang chờ phản hồi, hoặc đã được chấp nhận và đang chờ Học viên thanh toán bổ sung
         return amendmentRepository.findFirstByTaskIdAndStatusOrderByCreatedAtDesc(task.getId(), MentoringAmendmentStatus.PENDING)
+                .or(() -> amendmentRepository.findFirstByTaskIdAndStatusOrderByCreatedAtDesc(task.getId(), MentoringAmendmentStatus.AWAITING_TOPUP))
                 .map(a -> toAmendmentResponse(a, currentUserId))
                 .orElse(null);
     }
@@ -327,9 +394,18 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         BigDecimal mentorAmount = request.getMentorAmount() != null ? request.getMentorAmount() : BigDecimal.ZERO;
         BigDecimal studentRefund = request.getStudentRefund() != null ? request.getStudentRefund() : BigDecimal.ZERO;
         BigDecimal total = mentorAmount.add(studentRefund);
+        mentoringRules.requireWholeVnd(mentorAmount, "Số tiền cho Mentor");
+        mentoringRules.requireWholeVnd(studentRefund, "Số tiền hoàn cho Học viên");
 
-        if (total.compareTo(task.getAgreedPrice()) > 0) {
-            throw new BadRequestException("Tổng số tiền phân chia (" + formatVnd(total) + ") không được vượt quá tổng quỹ Task (" + formatVnd(task.getAgreedPrice()) + ").");
+        if (isStudent(task, currentUserId) && studentRefund.signum() > 0) {
+            requireRefundAccount(currentUserId);
+        }
+
+        // Phải chia hết đúng số tiền đang giữ trong quỹ ký quỹ của Task (không để thừa / thiếu tiền)
+        BigDecimal escrowBalance = mentoringRules.escrowBalance(task.getId());
+        if (total.compareTo(escrowBalance) != 0) {
+            throw new BadRequestException("Tổng số tiền phân chia (" + formatVnd(total) + ") phải bằng đúng số tiền đang giữ trong quỹ Task ("
+                    + formatVnd(escrowBalance) + ").");
         }
 
         // Đánh dấu các đề xuất dừng Task PENDING cũ là SUPERSEDED
@@ -358,6 +434,12 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
                 senderRole, formatVnd(mentorAmount), formatVnd(studentRefund), request.getReason().trim());
         mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
 
+        notificationService.sendMentoringTaskEventNotification(
+                currentUser, recipient, task,
+                "SETTLEMENT_CONFIRM", String.valueOf(saved.getId()),
+                "Cần xác nhận thỏa thuận Task",
+                "Đối phương đã gửi đề xuất dừng Task và phân chia quỹ. Vui lòng phản hồi.");
+
         return toSettlementProposalResponse(saved, currentUserId);
     }
 
@@ -378,6 +460,11 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         }
 
         MentoringTask task = proposal.getTask();
+        requireTaskOpenForProposals(task);
+        if (Boolean.TRUE.equals(request.getAccept()) && isStudent(task, currentUserId)
+                && proposal.getStudentRefund() != null && proposal.getStudentRefund().signum() > 0) {
+            requireRefundAccount(currentUserId);
+        }
         User currentUser = requireUser(currentUserId);
         String responderRole = isStudent(task, currentUserId) ? "Học viên" : "Mentor";
 
@@ -402,6 +489,19 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         }
 
         MentoringTaskSettlementProposal saved = settlementProposalRepository.save(proposal);
+        if (saved.getStatus() == MentoringSettlementProposalStatus.ACCEPTED) {
+            // Dừng Task ngay khi hai bên đồng thuận: gửi Settlement Ticket cho Admin, Task không còn nhận Work Log
+            ticketService.submitSettlementTicket(currentUserId, task.getId(),
+                    com.alumnect.alumnect_backend.dto.request.mentorship.SubmitSettlementTicketRequest.builder()
+                            .proposalId(saved.getId())
+                            .note("Tự động gửi khi hai bên đồng thuận dừng Task.")
+                            .build());
+        }
+        notificationService.sendMentoringTaskEventNotification(
+                currentUser, proposal.getCreatedBy(), task,
+                "SETTLEMENT_RESPONSE", String.valueOf(saved.getId()),
+                Boolean.TRUE.equals(request.getAccept()) ? "Đã đồng ý thỏa thuận Task" : "Đã từ chối thỏa thuận Task",
+                "Đề xuất dừng Task và phân chia quỹ của bạn đã được phản hồi.");
         return toSettlementProposalResponse(saved, currentUserId);
     }
 
@@ -424,6 +524,101 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
     }
 
     // =========================================================================
+    // HỦY / TỪ CHỐI ĐỀ XUẤT
+    // =========================================================================
+
+    @Override
+    @Transactional
+    public MentoringTaskDeadlineExtensionResponse cancelDeadlineExtension(Long currentUserId, Long extensionId) {
+        MentoringTaskDeadlineExtension extension = extensionRepository.findById(extensionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket gia hạn (ID: " + extensionId + ")."));
+        if (!Objects.equals(extension.getCreatedBy().getId(), currentUserId)) {
+            throw new ForbiddenException("Chỉ người tạo mới được hủy đề xuất gia hạn này.");
+        }
+        if (extension.getStatus() != MentoringExtensionStatus.PENDING) {
+            throw new ConflictException("Đề xuất gia hạn đã được xử lý, không thể hủy.");
+        }
+        MentoringTask task = extension.getTask();
+        User currentUser = requireUser(currentUserId);
+        extension.setStatus(MentoringExtensionStatus.CANCELLED);
+        MentoringTaskDeadlineExtension saved = extensionRepository.save(extension);
+
+        mentoringConversationService.postSystemMessage(task.getConversation(), currentUser,
+                "↩️ Mentor đã HỦY đề xuất gia hạn Deadline. Hạn chót vẫn giữ nguyên: " + formatDateTime(task.getDeadline()) + ".");
+        notificationService.sendMentoringTaskEventNotification(currentUser, extension.getRecipient(), task,
+                "EXTENSION_CANCELLED", String.valueOf(saved.getId()),
+                "Đề xuất gia hạn đã bị hủy", "Mentor đã rút lại đề xuất gia hạn Deadline.");
+        return toExtensionResponse(saved, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public MentoringTaskAmendmentResponse cancelTaskAmendment(Long currentUserId, Long amendmentId, String reason) {
+        MentoringTaskAmendment amendment = amendmentRepository.findByIdForUpdate(amendmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Ticket điều chỉnh Task (ID: " + amendmentId + ")."));
+        MentoringTask task = amendment.getTask();
+        User currentUser = requireUser(currentUserId);
+        boolean isCreator = Objects.equals(amendment.getCreatedBy().getId(), currentUserId);
+        boolean isStudentRecipient = Objects.equals(amendment.getRecipient().getId(), currentUserId) && isStudent(task, currentUserId);
+        String note = reason != null && !reason.isBlank() ? reason.trim() : null;
+        boolean awaitingTopUp = amendment.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP;
+
+        String message;
+        String title;
+        if (isCreator && (amendment.getStatus() == MentoringAmendmentStatus.PENDING || awaitingTopUp)) {
+            amendment.setStatus(MentoringAmendmentStatus.CANCELLED);
+            title = "Đề xuất điều chỉnh đã bị hủy";
+            message = String.format("↩️ Mentor đã HỦY đề xuất điều chỉnh Task (v%d). Task giữ nguyên phạm vi, giá và deadline hiện tại.%s",
+                    amendment.getVersion(), note != null ? "\nLý do: " + note : "");
+        } else if (isStudentRecipient && awaitingTopUp) {
+            amendment.setStatus(MentoringAmendmentStatus.REJECTED);
+            amendment.setRespondedBy(currentUser);
+            amendment.setRespondedAt(Instant.now());
+            title = "Học viên từ chối thanh toán bổ sung";
+            message = String.format("❌ Học viên đã TỪ CHỐI thanh toán bổ sung %s cho điều chỉnh Task (v%d). Task giữ nguyên phạm vi, giá và deadline hiện tại.%s",
+                    formatVnd(amendment.getAdditionalAmount()), amendment.getVersion(), note != null ? "\nLý do: " + note : "");
+        } else {
+            throw new ConflictException("Bạn không thể hủy đề xuất điều chỉnh này ở trạng thái hiện tại.");
+        }
+
+        if (awaitingTopUp) {
+            // Hủy link thanh toán bổ sung chưa trả để Học viên không trả tiền cho đề xuất đã đóng
+            taskPaymentService.cancelPendingTopUpPayments(amendment.getId(), "Đề xuất điều chỉnh đã bị hủy");
+        }
+        MentoringTaskAmendment saved = amendmentRepository.save(amendment);
+        mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, message);
+        User other = getOtherParticipant(task, currentUserId);
+        notificationService.sendMentoringTaskEventNotification(currentUser, other, task,
+                "AMENDMENT_CLOSED", String.valueOf(saved.getId()), title, message.replaceFirst("^\\S+ ", ""));
+        return toAmendmentResponse(saved, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public MentoringTaskSettlementProposalResponse cancelSettlementProposal(Long currentUserId, Long proposalId) {
+        MentoringTaskSettlementProposal proposal = settlementProposalRepository.findById(proposalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Đề xuất phân chia tiền (ID: " + proposalId + ")."));
+        if (!Objects.equals(proposal.getCreatedBy().getId(), currentUserId)) {
+            throw new ForbiddenException("Chỉ người tạo mới được hủy đề xuất dừng Task này.");
+        }
+        if (proposal.getStatus() != MentoringSettlementProposalStatus.PENDING) {
+            throw new ConflictException("Đề xuất dừng Task đã được xử lý, không thể hủy.");
+        }
+        MentoringTask task = proposal.getTask();
+        User currentUser = requireUser(currentUserId);
+        proposal.setStatus(MentoringSettlementProposalStatus.CANCELLED);
+        MentoringTaskSettlementProposal saved = settlementProposalRepository.save(proposal);
+
+        String role = isStudent(task, currentUserId) ? "Học viên" : "Mentor";
+        mentoringConversationService.postSystemMessage(task.getConversation(), currentUser,
+                "↩️ " + role + " đã HỦY đề xuất dừng Task. Task tiếp tục thực hiện bình thường.");
+        notificationService.sendMentoringTaskEventNotification(currentUser, proposal.getRecipient(), task,
+                "SETTLEMENT_CANCELLED", String.valueOf(saved.getId()),
+                "Đề xuất dừng Task đã bị hủy", role + " đã rút lại đề xuất dừng Task.");
+        return toSettlementProposalResponse(saved, currentUserId);
+    }
+
+    // =========================================================================
     // HELPER & MAPPING METHODS
     // =========================================================================
 
@@ -438,7 +633,37 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         if (task.getStatus() == MentoringTaskStatus.DISPUTED) {
             throw new BadRequestException("Task đang trong trạng thái tranh chấp, mọi thay đổi đều bị khóa.");
         }
+        if (task.getStatus() == MentoringTaskStatus.RESOLVED) {
+            throw new BadRequestException("Task đã được Ban Quản Trị giải quyết, không thể thao tác.");
+        }
         return task;
+    }
+
+    private boolean isTaskOpenForProposals(MentoringTask task) {
+        return task.getStatus() == MentoringTaskStatus.PREPARATION
+                || task.getStatus() == MentoringTaskStatus.IN_PROGRESS
+                || task.getStatus() == MentoringTaskStatus.SUBMITTED;
+    }
+
+    /** Đề xuất chỉ được phản hồi khi Task còn đang thực hiện. */
+    private void requireTaskOpenForProposals(MentoringTask task) {
+        if (!isTaskOpenForProposals(task)) {
+            throw new ConflictException("Task không còn ở trạng thái thực hiện nên không thể phản hồi đề xuất này.");
+        }
+    }
+
+    /** Học viên phải khai báo tài khoản nhận hoàn tiền trước khi thỏa thuận dừng Task có hoàn tiền. */
+    private void requireRefundAccount(Long studentId) {
+        if (!refundAccountRepository.existsByUserId(studentId)) {
+            throw new BadRequestException("Vui lòng khai báo tài khoản nhận hoàn tiền (mục Hoàn tiền) trước khi gửi hoặc đồng ý thỏa thuận dừng Task có hoàn tiền.");
+        }
+    }
+
+    /** Gia hạn và điều chỉnh/tăng tiền do Mentor (người được thuê) đề xuất; Học viên chỉ phản hồi. */
+    private void requireMentor(MentoringTask task, Long currentUserId, String action) {
+        if (!Objects.equals(task.getMentor().getId(), currentUserId)) {
+            throw new ForbiddenException("Chỉ Mentor của Task mới có quyền " + action + ". Học viên có thể phản hồi, thỏa thuận dừng Task hoặc mở khiếu nại.");
+        }
     }
 
     private MentoringTask requireParticipantTask(Long taskId, Long currentUserId) {
@@ -523,6 +748,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
                 .updatedAt(e.getUpdatedAt())
                 .canConfirm(isRecipient && isPending && isTaskActive)
                 .canReject(isRecipient && isPending && isTaskActive)
+                .canCancel(Objects.equals(e.getCreatedBy().getId(), currentUserId) && isPending && isTaskActive)
                 .build();
     }
 
@@ -564,7 +790,10 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
                 .updatedAt(a.getUpdatedAt())
                 .canConfirm(isRecipient && isPending && isTaskActive)
                 .canReject(isRecipient && isPending && isTaskActive)
-                .canTopUp(isStudent && a.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP)
+                .canTopUp(isStudent && a.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP && isTaskActive)
+                .canCancel(Objects.equals(a.getCreatedBy().getId(), currentUserId) && isTaskActive
+                        && (isPending || a.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP))
+                .canDeclineTopUp(isStudent && isRecipient && a.getStatus() == MentoringAmendmentStatus.AWAITING_TOPUP)
                 .build();
     }
 
@@ -600,6 +829,10 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
                 .updatedAt(p.getUpdatedAt())
                 .canAccept(isRecipient && isPending && isTaskActive)
                 .canReject(isRecipient && isPending && isTaskActive)
+                .canCancel(Objects.equals(p.getCreatedBy().getId(), currentUserId) && isPending && isTaskActive)
+                .refundAccountRequired(isRecipient && isPending && isStudent(p.getTask(), currentUserId)
+                        && p.getStudentRefund() != null && p.getStudentRefund().signum() > 0
+                        && !refundAccountRepository.existsByUserId(currentUserId))
                 .build();
     }
 }

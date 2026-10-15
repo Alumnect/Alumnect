@@ -48,10 +48,10 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
         className="border border-plum-900/[0.08] bg-white p-6 text-left space-y-4 shadow-sm dark:bg-[#242526] dark:border-[#393a3b]"
       >
         <div className="flex items-center gap-2.5 border-b border-plum-900/[0.06] pb-3 dark:border-[#393a3b]">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-700/40 dark:text-brand-400">
             <Send className="h-4 w-4" />
           </span>
-          <h3 className="font-heading text-base font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+          <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
             Thông tin phiên cố vấn
           </h3>
         </div>
@@ -85,7 +85,7 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
 
         {isSelfMentor ? (
           <div className="space-y-3 pt-1">
-            <div className="rounded-xl bg-brand-50/80 p-3 border border-brand-200/60 dark:bg-brand-950/30 dark:border-brand-800/30 flex items-center gap-2 text-brand-900 dark:text-brand-200 text-xs font-semibold">
+            <div className="rounded-xl bg-brand-50/80 p-3 border border-brand-200/60 dark:bg-brand-700/30 dark:border-brand-700/30 flex items-center gap-2 text-brand-700 dark:text-brand-200 text-xs font-semibold">
               <Info className="h-4 w-4 text-brand-600 shrink-0" />
               <span>Đây là hồ sơ cố vấn của bạn</span>
             </div>
@@ -94,7 +94,7 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
               variant="outline"
               size="lg"
               onClick={() => navigate('/app/mentoring/status')}
-              className="w-full rounded-2xl font-bold py-3 border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-800 dark:text-brand-300"
+              className="w-full rounded-2xl font-bold py-3 border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300"
             >
               Quản lý hồ sơ Mentor
             </Button>
@@ -111,9 +111,9 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
               size="lg"
               leftIcon={<Send className="h-4 w-4" />}
               onClick={handleOpenRequest}
-              className="w-full rounded-2xl font-black py-3 bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 active:scale-[0.98]"
+              className="w-full rounded-2xl font-bold py-3 bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 active:scale-[0.98]"
             >
-              Đặt lịch hẹn cố vấn
+              Gửi yêu cầu cố vấn
             </Button>
           </div>
         ) : (
@@ -131,7 +131,7 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
                   mentor.availabilityReason || 'Mentor hiện đang tạm ngưng tiếp nhận yêu cầu cố vấn mới do gói dịch vụ đã hết hạn hoặc Mentor đang bận.'
                 )
               }
-              className="w-full rounded-2xl font-bold py-3 bg-plum-100 text-plum-500 hover:bg-plum-200 dark:bg-white/5 dark:text-plum-400"
+              className="w-full rounded-2xl font-bold py-3 bg-cream-200 text-plum-500 hover:bg-cream-300 dark:bg-white/5 dark:text-plum-400"
             >
               Tạm ngưng nhận yêu cầu
             </Button>

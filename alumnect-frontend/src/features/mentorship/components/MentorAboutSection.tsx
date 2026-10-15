@@ -24,10 +24,10 @@ export function MentorAboutSection({ mentor }: MentorAboutSectionProps) {
       className="border border-plum-900/[0.08] bg-white p-6 sm:p-7 text-left space-y-5 dark:bg-[#242526] dark:border-[#393a3b]"
     >
       <div className="flex items-center gap-2.5 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-700/40 dark:text-brand-400">
           <BookOpen className="h-4 w-4" />
         </span>
-        <h2 className="font-heading text-lg font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
           Giới thiệu & Định hướng cố vấn
         </h2>
       </div>

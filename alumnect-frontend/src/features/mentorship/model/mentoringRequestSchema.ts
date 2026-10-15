@@ -15,6 +15,8 @@ export const mentoringAttachmentSchema = z.object({
 export const createMentoringRequestSchema = z
   .object({
     mentorId: z.number().optional().nullable(),
+    groupId: z.coerce.number().positive('Vui lòng chọn một nhóm hợp lệ').optional().nullable(),
+    memberIds: z.array(z.number().positive()).max(9).default([]),
 
     title: z
       .string()
@@ -42,7 +44,7 @@ export const createMentoringRequestSchema = z
         return isNaN(num) ? null : num
       })
       .refine((val) => val === null || val >= 0, {
-        message: 'Ngân sách tối thiểu không được âm',
+        message: 'Ngân sách không được âm (bắt đầu từ 0 VNĐ)',
       }),
 
     budgetMax: z
@@ -53,14 +55,14 @@ export const createMentoringRequestSchema = z
         return isNaN(num) ? null : num
       })
       .refine((val) => val === null || val >= 0, {
-        message: 'Ngân sách tối đa không được âm',
+        message: 'Ngân sách tối đa không được âm (bắt đầu từ 0 VNĐ)',
       }),
 
     workingMode: z.enum(['ONLINE', 'OFFLINE', 'BOTH'], {
       message: 'Hình thức làm việc không được để trống',
     }),
 
-    participationType: z.enum(['INDIVIDUAL', 'GROUP', 'BOTH'], {
+    participationType: z.enum(['INDIVIDUAL', 'GROUP'], {
       message: 'Hình thức tham gia không được để trống',
     }),
 
@@ -108,6 +110,18 @@ export const createMentoringRequestSchema = z
     {
       message: 'Ngân sách tối đa không được nhỏ hơn ngân sách tối thiểu',
       path: ['budgetMax'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.participationType === 'GROUP') {
+        return typeof data.groupId === 'number' && data.groupId > 0
+      }
+      return true
+    },
+    {
+      message: 'Vui lòng chọn một nhóm đã tạo trước khi gửi yêu cầu dạng nhóm',
+      path: ['groupId'],
     }
   )
 

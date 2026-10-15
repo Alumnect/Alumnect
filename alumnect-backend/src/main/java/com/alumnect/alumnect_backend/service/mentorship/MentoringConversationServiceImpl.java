@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.service.mentorship;
 import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
 import com.alumnect.alumnect_backend.common.enums.ConversationType;
 import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.common.enums.MessageType;
 import com.alumnect.alumnect_backend.common.enums.ParticipantRole;
 import com.alumnect.alumnect_backend.dao.message.ConversationParticipantRepository;
@@ -11,6 +12,7 @@ import com.alumnect.alumnect_backend.dao.message.MessageRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dto.response.message.MessageResponse;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.message.ConversationParticipant;
 import com.alumnect.alumnect_backend.entity.message.Message;
@@ -21,6 +23,8 @@ import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.message.MessageMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -45,8 +49,14 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
     /** Lý do chỉ đọc khi Request đã chốt một Mentor khác (BR-DEAL-03) */
     public static final String READ_ONLY_OTHER_MENTOR = "Request đã chọn Mentor khác.";
 
+    /** Lý do chỉ đọc khi Task đã kết thúc (hoàn thành, hủy hoặc đã giải quyết tranh chấp) */
+    public static final String READ_ONLY_TASK_FINISHED = "Nhiệm vụ đã kết thúc. Bạn chỉ có thể xem lại lịch sử trao đổi.";
+
     /** Lý do chỉ đọc khi Request đã bị hủy */
     public static final String READ_ONLY_REQUEST_CANCELLED = "Request đã bị hủy.";
+
+    /** Lý do chỉ đọc khi Request đã quá thời hạn mong muốn và bị hệ thống đóng */
+    public static final String READ_ONLY_REQUEST_EXPIRED = "Request đã hết hạn.";
 
     private final ConversationRepository conversationRepository;
     private final ConversationParticipantRepository participantRepository;
@@ -54,6 +64,11 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
     private final UserProfileRepository userProfileRepository;
     private final MessageMapper messageMapper;
     private final SimpMessagingTemplate messagingTemplate;
+
+    /** Lazy để tránh vòng phụ thuộc; dùng đồng bộ thành viên nhóm vào Chat for Task. */
+    @Autowired
+    @Lazy
+    private MentoringGroupService mentoringGroupService;
 
     /**
      * Lấy hoặc tạo mới Chat for Task. Tính idempotent được bảo đảm bởi khóa bi quan trên phản hồi (Request - Mentor)
@@ -71,6 +86,8 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
         if (existing.isPresent()) {
             log.info("Tái sử dụng Chat for Task id={} của requestId={}, mentorUserId={}",
                     existing.get().getId(), request.getId(), mentor.getId());
+            // Bổ sung thành viên nhóm còn thiếu (hội thoại tạo trước khi hỗ trợ nhóm)
+            mentoringGroupService.synchronizeConversationParticipants(request, existing.get());
             return existing.get();
         }
 
@@ -106,6 +123,8 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
 
         log.info("Tạo mới Chat for Task id={} cho requestId={}, studentId={}, mentorUserId={}",
                 conversation.getId(), request.getId(), student.getId(), mentor.getId());
+        // Request nhóm: thành viên nhóm cùng tham gia trao đổi Deal với Mentor ngay từ đầu
+        mentoringGroupService.synchronizeConversationParticipants(request, conversation);
         return conversation;
     }
 
@@ -122,14 +141,16 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy cuộc trò chuyện (ID: " + conversationId + ")."));
 
         if (conversation.getType() != ConversationType.MENTORING || conversation.getMentoringRequest() == null) {
-            throw new BadRequestException("Cuộc trò chuyện này không phải Chat for Task của một Mentoring Request.");
+            throw new BadRequestException("Cuộc trò chuyện này không thuộc yêu cầu Mentoring.");
         }
 
         boolean isStudent = Objects.equals(conversation.getMentoringStudent().getId(), currentUserId);
         boolean isMentor = Objects.equals(conversation.getMentoringMentor().getId(), currentUserId);
-        if (!isStudent && !isMentor) {
+        // Thành viên nhóm mentoring được thêm làm participant từ giai đoạn Deal
+        boolean isGroupParticipant = participantRepository.existsByConversationIdAndUserId(conversationId, currentUserId);
+        if (!isStudent && !isMentor && !isGroupParticipant) {
             log.warn("Truy cập trái phép Chat for Task id={} bởi userId={}", conversationId, currentUserId);
-            throw new ForbiddenException("Bạn không phải thành viên của Chat for Task này.");
+            throw new ForbiddenException("Bạn không phải thành viên của cuộc trò chuyện này.");
         }
         return conversation;
     }
@@ -143,6 +164,15 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
         if (request.getStatus() == MentoringRequestStatus.CANCELLED) {
             return READ_ONLY_REQUEST_CANCELLED;
         }
+        if (request.getStatus() == MentoringRequestStatus.EXPIRED) {
+            return READ_ONLY_REQUEST_EXPIRED;
+        }
+        MentoringTask task = conversation.getMentoringTask();
+        if (task != null && (task.getStatus() == MentoringTaskStatus.COMPLETED
+                || task.getStatus() == MentoringTaskStatus.CANCELLED
+                || task.getStatus() == MentoringTaskStatus.RESOLVED)) {
+            return READ_ONLY_TASK_FINISHED;
+        }
         User selectedMentor = request.getSelectedMentor();
         if (selectedMentor != null && !Objects.equals(selectedMentor.getId(), conversation.getMentoringMentor().getId())) {
             return READ_ONLY_OTHER_MENTOR;
@@ -154,7 +184,7 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
     public void assertWritable(Conversation conversation) {
         String reason = resolveReadOnlyReason(conversation);
         if (reason != null) {
-            throw new ConflictException("Chat for Task đang ở chế độ chỉ đọc: " + reason);
+            throw new ConflictException("Cuộc trò chuyện đang ở chế độ chỉ đọc: " + reason);
         }
     }
 

@@ -60,7 +60,6 @@ public class Endpoints {
         "/api/v1/groups/{groupId:\\d+}/posts",   // Danh sách thảo luận trong nhóm — Service tự chặn nhóm riêng tư với người ngoài nhóm
         "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}", // Chi tiết bài viết thảo luận trong nhóm
         "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}/comments", // Danh sách bình luận trong bài viết
-        "/api/v1/admin/mentor-packages" // Lấy danh sách toàn bộ gói Mentor dành cho Admin (UC95)
     };
 
 
@@ -68,6 +67,7 @@ public class Endpoints {
     public static final String[] PUBLIC_POST = {
         "/api/v1/mentoring/subscriptions/payment/webhook", // Tiếp nhận Webhook IPN từ PayOS (UC93)
         "/api/v1/mentoring/task-payments/webhook", // Tiếp nhận Webhook IPN từ PayOS cho Task Payment (UC105)
+        "/api/v1/payments/payos/webhook", // Webhook PayOS dùng chung (định tuyến theo orderCode)
         "/api/v1/auth/register", // Đăng ký tài khoản mới
         "/api/v1/auth/login",    // Đăng nhập lấy JWT token
         "/api/v1/auth/google",   // Đăng nhập bằng Google OAuth2

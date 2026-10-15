@@ -118,33 +118,33 @@ export function MentoringAddEvidenceModal({
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white dark:bg-[#242526] border border-cream-300 dark:border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+        <div className="px-6 py-4 border-b border-cream-300 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-amber-50 to-brand-50 dark:from-amber-950/20 dark:to-brand-700/20">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 rounded-xl">
               <FileText className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg font-bold text-plum-900 dark:text-white">
                   Bằng chứng tranh chấp
                 </h3>
                 <span className="text-xs px-2 py-0.5 font-mono font-medium rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
                   {ticket.ticketCode}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                UC113 — Bổ sung tài liệu & chứng từ phục vụ Ban Quản Trị phân xử
+              <p className="text-xs text-plum-500 dark:text-plum-400">
+                Bổ sung tài liệu & chứng từ phục vụ Ban Quản Trị phân xử
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="p-1.5 text-plum-400 hover:text-plum-600 dark:hover:text-[#e4e6eb] rounded-lg hover:bg-cream-200 dark:hover:bg-[#3a3b3c] transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -153,21 +153,21 @@ export function MentoringAddEvidenceModal({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Ticket Information Card */}
-          <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-2">
+          <div className="p-4 bg-cream-100 dark:bg-[#3a3b3c]/50 rounded-xl border border-cream-300 dark:border-white/10 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400">
                 Tiêu đề khiếu nại
               </span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
                 {ticket.status}
               </span>
             </div>
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+            <p className="text-sm font-semibold text-plum-800 dark:text-[#e4e6eb]">
               {ticket.title}
             </p>
             {ticket.disputeReason && (
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                <span className="font-medium text-slate-700 dark:text-slate-300">Lý do: </span>
+              <p className="text-xs text-plum-600 dark:text-plum-400">
+                <span className="font-medium text-plum-700 dark:text-[#b0b3b8]">Lý do: </span>
                 {ticket.disputeReason}
               </p>
             )}
@@ -176,18 +176,18 @@ export function MentoringAddEvidenceModal({
           {/* Existing Evidences Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-plum-400 flex items-center gap-1.5">
                 <Paperclip className="w-3.5 h-3.5" />
                 Danh sách bằng chứng đã nộp ({evidences.length})
               </h4>
             </div>
 
             {isLoadingEvidences ? (
-              <div className="py-6 flex items-center justify-center text-sm text-slate-400">
+              <div className="py-6 flex items-center justify-center text-sm text-plum-400">
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Đang tải danh sách bằng chứng...
               </div>
             ) : evidences.length === 0 ? (
-              <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+              <div className="p-4 rounded-xl border border-dashed border-cream-300 dark:border-white/10 text-center text-xs text-plum-400">
                 Chưa có bằng chứng nào được tải lên cho Ticket này.
               </div>
             ) : (
@@ -195,32 +195,32 @@ export function MentoringAddEvidenceModal({
                 {evidences.map((ev) => (
                   <div
                     key={ev.id}
-                    className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 transition space-y-1.5"
+                    className="p-3 bg-white dark:bg-[#3a3b3c]/80 rounded-xl border border-cream-300 dark:border-white/10 hover:border-plum-300 transition space-y-1.5"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
+                        <span className="text-xs font-semibold text-plum-800 dark:text-[#e4e6eb] truncate">
                           {ev.title}
                         </span>
                         {ev.uploadedBy?.role && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-cream-200 dark:bg-white/10 text-plum-600 dark:text-[#b0b3b8] font-medium">
                             {ev.uploadedBy.role === 'MENTOR' ? 'Mentor' : 'Học viên'}
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-slate-400 whitespace-nowrap">
+                      <span className="text-[11px] text-plum-400 whitespace-nowrap">
                         {formatDate(ev.createdAt)}
                       </span>
                     </div>
 
                     {ev.description && (
-                      <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
+                      <p className="text-xs text-plum-600 dark:text-[#b0b3b8] line-clamp-2">
                         {ev.description}
                       </p>
                     )}
 
                     <div className="pt-1 flex items-center justify-between text-xs">
-                      <span className="text-[11px] text-slate-400 truncate">
+                      <span className="text-[11px] text-plum-400 truncate">
                         Người gửi: {ev.uploadedBy?.fullName || 'N/A'}
                       </span>
                       <a
@@ -241,8 +241,8 @@ export function MentoringAddEvidenceModal({
 
           {/* Form Submit Evidence (UC113) */}
           {isTicketClosed ? (
-            <div className="p-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-slate-400 flex-shrink-0" />
+            <div className="p-3.5 bg-cream-200 dark:bg-[#3a3b3c] text-plum-600 dark:text-[#b0b3b8] rounded-xl text-xs flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-plum-400 flex-shrink-0" />
               <span>Ticket này đã kết thúc xử lý. Không thể gửi thêm bằng chứng mới.</span>
             </div>
           ) : (
@@ -255,14 +255,14 @@ export function MentoringAddEvidenceModal({
               </div>
 
               {errorMsg && (
-                <div className="p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 rounded-lg text-xs flex items-center gap-2">
+                <div className="p-3 bg-coral-50 dark:bg-coral-950/50 border border-coral-200 dark:border-coral-900 text-coral-700 dark:text-coral-300 rounded-lg text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
               {successMsg && (
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs flex items-center gap-2">
+                <div className="p-3 bg-mint-50 dark:bg-mint-950/50 border border-mint-200 dark:border-mint-900 text-mint-700 dark:text-mint-300 rounded-lg text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   <span>{successMsg}</span>
                 </div>
@@ -270,20 +270,20 @@ export function MentoringAddEvidenceModal({
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Tiêu đề bằng chứng <span className="text-red-500">*</span>
+                  <label className="block text-xs font-medium text-plum-700 dark:text-[#b0b3b8] mb-1">
+                    Tiêu đề bằng chứng <span className="text-coral-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="VD: Ảnh chụp màn hình thỏa thuận bàn giao, Logs tiến độ..."
-                    className="w-full text-xs px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full text-xs px-3 py-2 bg-white dark:bg-[#242526] border border-plum-300 dark:border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-plum-700 dark:text-[#b0b3b8] mb-1">
                     Mô tả / Giải thích nội dung bằng chứng
                   </label>
                   <textarea
@@ -291,29 +291,29 @@ export function MentoringAddEvidenceModal({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Nêu rõ bằng chứng này minh họa cho vấn đề gì để BQT nắm bắt nhanh nhất..."
-                    className="w-full text-xs px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full text-xs px-3 py-2 bg-white dark:bg-[#242526] border border-plum-300 dark:border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Đường dẫn URL tệp <span className="text-red-500">*</span>
+                    <label className="block text-xs font-medium text-plum-700 dark:text-[#b0b3b8] mb-1">
+                      Đường dẫn URL tệp <span className="text-coral-500">*</span>
                     </label>
                     <div className="relative">
-                      <LinkIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                      <LinkIcon className="w-3.5 h-3.5 text-plum-400 absolute left-2.5 top-2.5" />
                       <input
                         type="url"
                         value={fileUrl}
                         onChange={(e) => setFileUrl(e.target.value)}
                         placeholder="https://..."
-                        className="w-full text-xs pl-8 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
+                        className="w-full text-xs pl-8 pr-3 py-2 bg-white dark:bg-[#242526] border border-plum-300 dark:border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-plum-700 dark:text-[#b0b3b8] mb-1">
                       Tên tệp hiển thị (tùy chọn)
                     </label>
                     <input
@@ -321,7 +321,7 @@ export function MentoringAddEvidenceModal({
                       value={fileName}
                       onChange={(e) => setFileName(e.target.value)}
                       placeholder="VD: hop-dong-ban-giao.pdf"
-                      className="w-full text-xs px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full text-xs px-3 py-2 bg-white dark:bg-[#242526] border border-plum-300 dark:border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export function MentoringAddEvidenceModal({
                   <Button
                     type="submit"
                     disabled={addEvidenceMutation.isPending}
-                    className="text-xs bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-sm"
+                    className="text-xs bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-sm"
                   >
                     {addEvidenceMutation.isPending ? (
                       <>
@@ -351,8 +351,8 @@ export function MentoringAddEvidenceModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="px-6 py-3.5 bg-cream-100 dark:bg-[#3a3b3c]/50 border-t border-cream-300 dark:border-white/10 flex items-center justify-between">
+          <p className="text-[11px] text-plum-500 dark:text-plum-400">
             Bằng chứng tải lên sẽ được hiển thị cho cả hai bên và Ban Quản Trị.
           </p>
           <Button
