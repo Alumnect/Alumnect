@@ -45,11 +45,11 @@ export const MENTORING_REQUEST_FLOW_STATUS_LABELS: Record<string, string> = {
   CANCELLED: 'Đã hủy',
 }
 
-/** Nhãn trạng thái Mentoring Task */
+/** Nhãn trạng thái Mentoring Task: nguồn nhãn duy nhất cho huy hiệu, chat, modal và trang Admin. */
 export const MENTORING_TASK_STATUS_LABELS: Record<string, string> = {
   PREPARATION: 'Chuẩn bị',
   IN_PROGRESS: 'Đang thực hiện',
-  SUBMITTED: 'Đã nộp kết quả',
+  SUBMITTED: 'Chờ nghiệm thu',
   COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy',
   DISPUTED: 'Đang tranh chấp',

@@ -2,20 +2,21 @@ import type { ReactNode } from 'react'
 import { AlertTriangle, CheckCircle2, Clock, FileCheck2, Gavel, PlayCircle, XCircle } from 'lucide-react'
 import type { MentoringTaskStatus, MentoringTaskUIStage } from '../model/mentoringTaskTypes'
 import { MentoringBadge, type MentoringTone } from './MentoringUi'
+import { MENTORING_TASK_STATUS_LABELS } from '../model/mentoringFlowLabels'
 
 interface MentoringTaskBadgeProps {
   status: MentoringTaskStatus
   className?: string
 }
 
-const TASK_STATUS: Record<MentoringTaskStatus, { label: string; tone: MentoringTone; icon: ReactNode }> = {
-  PREPARATION: { label: 'Chuẩn bị', tone: 'gold', icon: <Clock /> },
-  IN_PROGRESS: { label: 'Đang thực hiện', tone: 'brand', icon: <PlayCircle /> },
-  SUBMITTED: { label: 'Chờ nghiệm thu', tone: 'navy', icon: <FileCheck2 /> },
-  COMPLETED: { label: 'Hoàn thành', tone: 'mint', icon: <CheckCircle2 /> },
-  DISPUTED: { label: 'Đang tranh chấp', tone: 'coral', icon: <AlertTriangle /> },
-  RESOLVED: { label: 'Đã phân xử', tone: 'neutral', icon: <Gavel /> },
-  CANCELLED: { label: 'Đã hủy', tone: 'neutral', icon: <XCircle /> },
+const TASK_STATUS: Record<MentoringTaskStatus, { tone: MentoringTone; icon: ReactNode }> = {
+  PREPARATION: { tone: 'gold', icon: <Clock /> },
+  IN_PROGRESS: { tone: 'brand', icon: <PlayCircle /> },
+  SUBMITTED: { tone: 'navy', icon: <FileCheck2 /> },
+  COMPLETED: { tone: 'mint', icon: <CheckCircle2 /> },
+  DISPUTED: { tone: 'coral', icon: <AlertTriangle /> },
+  RESOLVED: { tone: 'neutral', icon: <Gavel /> },
+  CANCELLED: { tone: 'neutral', icon: <XCircle /> },
 }
 
 /** Huy hiệu trạng thái của Mentoring Task (UC105 - UC108, UC120). */
@@ -23,7 +24,7 @@ export function MentoringTaskBadge({ status, className }: MentoringTaskBadgeProp
   const config = TASK_STATUS[status] ?? TASK_STATUS.CANCELLED
   return (
     <MentoringBadge tone={config.tone} icon={config.icon} className={className}>
-      {config.label}
+      {MENTORING_TASK_STATUS_LABELS[status] ?? MENTORING_TASK_STATUS_LABELS.CANCELLED}
     </MentoringBadge>
   )
 }

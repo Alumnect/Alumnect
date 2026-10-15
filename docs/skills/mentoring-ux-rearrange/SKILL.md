@@ -95,3 +95,4 @@ Trang đã có nút quay lại (TaskDetail, RequestDetail, GroupDetail, Incoming
 ## Trạng thái tổng (cập nhật)
 - A xong (Admin drawer/hồ sơ cố vấn là overlay đã có nút đóng, không cần thêm). B xong.
 - D xong: khối "Việc cần làm tiếp" trên trang task (`MentoringTaskDetailPage`), thanh tiến trình giai đoạn đã có sẵn. Chỉ đọc `permissions` + trạng thái Work Log; nút gọi lại `handleOpenAddLog` hoặc cuộn tới danh sách Work Log; ẩn khi Task kết thúc/tranh chấp/chỉ xem. Còn lại: C, E, F.
+- C (nhãn trạng thái **Task**) xong: nguồn duy nhất `MENTORING_TASK_STATUS_LABELS` (`mentoringFlowLabels.ts`); `MentoringTaskBadge`, sổ quỹ Admin và modal sổ quỹ đều dùng nó. Sửa: `SUBMITTED` luôn là "Chờ nghiệm thu"; modal sổ quỹ trước đây thiếu `SUBMITTED` nên hiện chữ thô. Chưa gom: nhãn Ticket ở `AdminMentoringTicketsPage` (có tone/icon riêng), nhãn Deal/Request đã nằm trong cùng file nhãn.

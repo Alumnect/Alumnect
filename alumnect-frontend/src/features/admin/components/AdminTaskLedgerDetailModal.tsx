@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MENTORING_TASK_STATUS_LABELS } from '@/features/mentorship'
 import { Link } from 'react-router-dom'
 import {
   X,
@@ -91,15 +92,17 @@ export function AdminTaskLedgerDetailModal({
   const renderTaskStatusBadge = (status?: string) => {
     switch (status) {
       case 'COMPLETED':
-        return <Badge tone="success">Hoàn thành</Badge>
+        return <Badge tone="success">{MENTORING_TASK_STATUS_LABELS.COMPLETED}</Badge>
       case 'RESOLVED':
-        return <Badge tone="brand">Đã xử lý hòa giải</Badge>
+        return <Badge tone="brand">{MENTORING_TASK_STATUS_LABELS.RESOLVED}</Badge>
       case 'IN_PROGRESS':
-        return <Badge tone="aqua">Đang thực hiện</Badge>
+        return <Badge tone="aqua">{MENTORING_TASK_STATUS_LABELS.IN_PROGRESS}</Badge>
       case 'DISPUTED':
-        return <Badge tone="danger">Đang tranh chấp</Badge>
+        return <Badge tone="danger">{MENTORING_TASK_STATUS_LABELS.DISPUTED}</Badge>
       case 'CANCELLED':
-        return <Badge tone="neutral">Đã hủy</Badge>
+        return <Badge tone="neutral">{MENTORING_TASK_STATUS_LABELS.CANCELLED}</Badge>
+      case 'SUBMITTED':
+        return <Badge tone="gold">{MENTORING_TASK_STATUS_LABELS.SUBMITTED}</Badge>
       default:
         return <Badge tone="neutral">{status || 'Chưa bắt đầu'}</Badge>
     }
