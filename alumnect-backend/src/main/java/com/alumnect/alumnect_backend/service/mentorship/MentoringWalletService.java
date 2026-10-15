@@ -34,6 +34,7 @@ public class MentoringWalletService {
     private final UserProfileRepository userProfileRepository;
     private final MentoringPaymentLedgerRepository ledgerRepository;
     private final UserRefundAccountRepository refundAccountRepository;
+    private final RefundAccountResolver refundAccountResolver;
     private final MentoringDisbursementService disbursementService;
 
     @Transactional(readOnly = true)
@@ -53,7 +54,7 @@ public class MentoringWalletService {
     @Transactional(readOnly = true)
     public RefundAccountResponse getRefundAccount(String email) {
         User user = requireUser(email);
-        return refundAccountRepository.findByUserId(user.getId()).map(this::toResponse).orElse(null);
+        return refundAccountResolver.find(user.getId()).map(this::toResponse).orElse(null);
     }
 
     @Transactional

@@ -1,17 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { ChevronDown, Menu, Sparkles, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useMentorStatus } from '../hooks/useMentorStatus'
 import { useMentoringTermsStatus } from '../hooks/useMentoringTerms'
-import { MENTORSHIP_NAVIGATION, type MentorshipNavigationItem } from '../constants/mentorshipNavigation'
+import {
+  MENTORSHIP_NAVIGATION,
+  MENTORSHIP_TERMS_ITEM,
+  type MentorshipNavigationItem,
+} from '../constants/mentorshipNavigation'
+import { mentoringGroupApi } from '../api/mentoringGroupApi'
 import { useConversations } from '@/features/message'
 
-type MentorshipSidebarContentProps = {
-  onNavigate?: () => void
-}
+type MentorshipSidebarContentProps = { onNavigate?: () => void }
 
 function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps) {
   const location = useLocation()
@@ -22,202 +26,188 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
   const { data: mentorStatus } = useMentorStatus(isAlumni && hasAcceptedTerms)
   const hasMentorProfile = mentorStatus?.hasMentorProfile ?? false
   const { data: mentoringConversations = [] } = useConversations('primary', 'MENTORING')
-  const mentoringUnreadCount = mentoringConversations.reduce(
-    (total, conversation) => total + conversation.unreadCount,
-    0,
-  )
+  const { data: groupInvitations = [] } = useQuery({
+    queryKey: ['mentoring-groups', 'invitations'],
+    queryFn: () => mentoringGroupApi.getInvitations(),
+    enabled: hasAcceptedTerms,
+    staleTime: 30_000,
+  })
 
-  const sections = useMemo(
-    () =>
-      MENTORSHIP_NAVIGATION.map((section) => ({
-        ...section,
-        items: section.items.filter((item) => {
-          if (!hasAcceptedTerms) return item.to === '/app/mentoring/terms'
-          if (item.planned || (item.audience === 'alumni' && !isAlumni)) return false
-          if (item.visibility === 'without-profile') return !hasMentorProfile
-          if (item.visibility === 'with-profile') return hasMentorProfile
-          return true
-        }),
-      })).filter((section) => section.items.length > 0),
-    [hasAcceptedTerms, hasMentorProfile, isAlumni],
-  )
+  const mentoringUnreadCount = mentoringConversations.reduce((sum, item) => sum + item.unreadCount, 0)
 
-  const activeItemKey = useMemo(() => {
-    const allItems = sections.flatMap((section) =>
-      section.items.map((item) => ({
-        key: `${section.label}-${item.to}-${item.label}`,
-        item,
-      })),
-    )
+  const isVisible = (item: MentorshipNavigationItem) => {
+    if (item.planned || (item.audience === 'alumni' && !isAlumni)) return false
+    if (item.visibility === 'without-profile') return !hasMentorProfile
+    if (item.visibility === 'with-profile') return hasMentorProfile
+    return true
+  }
 
-    // 1. Kiểm tra khớp chính xác URL (Exact match)
-    const exactMatch = allItems.find(({ item }) => {
-      const paths = item.activePaths ?? [item.to]
+  const sections = useMemo(() => {
+    if (!hasAcceptedTerms) return []
+    return MENTORSHIP_NAVIGATION.map((section) => ({
+      ...section,
+      items: section.items
+        .filter(isVisible)
+        .map((item) => ({ ...item, children: item.children?.filter(isVisible) }))
+        .filter((item) => !item.children || item.children.length > 0),
+    })).filter((section) => section.items.length > 0)
+  }, [hasAcceptedTerms, hasMentorProfile, isAlumni])
+
+  const allLeafItems = useMemo(() => sections.flatMap((section) =>
+    section.items.flatMap((item) => item.children ?? [item])), [sections])
+
+  const activeItem = useMemo(() => {
+    if (location.pathname.endsWith('/request')) {
+      const createItem = allLeafItems.find((item) => item.to === '/app/mentoring/requests/create')
+      if (createItem) return createItem
+    }
+    const exact = allLeafItems.find((item) => {
+      const paths = item.activePaths ?? (item.to ? [item.to] : [])
       return paths.includes(location.pathname)
     })
-    if (exactMatch) return exactMatch.key
+    if (exact) return exact
+    return allLeafItems
+      .filter((item) => !item.end && (item.activePaths ?? (item.to ? [item.to] : []))
+        .some((path) => location.pathname.startsWith(`${path}/`)))
+      .sort((a, b) => Math.max(...(b.activePaths ?? [b.to ?? '']).map((path) => path.length)) - Math.max(...(a.activePaths ?? [a.to ?? '']).map((path) => path.length)))[0]
+  }, [allLeafItems, location.pathname])
 
-    // 2. Kiểm tra khớp tiền tố (Prefix match) cho các trang con chi tiết (ngoại trừ item có end: true)
-    const prefixMatches = allItems.filter(({ item }) => {
-      if (item.end) return false
-      const paths = item.activePaths ?? [item.to]
-      return paths.some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))
-    })
+  const activeParentLabels = useMemo(() => new Set(sections.flatMap((section) =>
+    section.items.filter((item) => item.children?.includes(activeItem as MentorshipNavigationItem)).map((item) => item.label))), [activeItem, sections])
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
-    if (prefixMatches.length === 0) return null
-    if (prefixMatches.length === 1) return prefixMatches[0].key
+  useEffect(() => {
+    if (!activeParentLabels.size) return
+    setExpanded((current) => new Set([...current, ...activeParentLabels]))
+  }, [activeParentLabels])
 
-    // 3. Nếu có nhiều mục cùng khớp tiền tố, ưu tiên mục có đường dẫn dài nhất (chi tiết nhất)
-    prefixMatches.sort((a, b) => {
-      const maxA = Math.max(...(a.item.activePaths ?? [a.item.to]).map((p) => p.length))
-      const maxB = Math.max(...(b.item.activePaths ?? [b.item.to]).map((p) => p.length))
-      return maxB - maxA
-    })
-    return prefixMatches[0].key
-  }, [sections, location.pathname])
+  const badgeFor = (item: MentorshipNavigationItem) => {
+    if (item.to === '/app/mentoring/messages') return mentoringUnreadCount
+    if (item.to === '/app/mentoring/groups') return groupInvitations.length
+    return 0
+  }
 
-  const renderItem = (sectionLabel: string, item: MentorshipNavigationItem) => {
+  const renderBadge = (count: number) => count > 0 ? (
+    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[10px] font-extrabold text-white shadow-sm">
+      {count > 99 ? '99+' : count}
+    </span>
+  ) : null
+
+  const renderLink = (item: MentorshipNavigationItem, nested = false) => {
+    if (!item.to) return null
     const Icon = item.icon
-    const itemKey = `${sectionLabel}-${item.to}-${item.label}`
-    const isActive = itemKey === activeItemKey
-
+    const isActive = activeItem === item || item.to === location.pathname
     return (
       <NavLink
-        key={itemKey}
+        key={`${item.label}-${item.to}`}
         to={item.to}
         end={item.end}
         onClick={onNavigate}
         className={cn(
-          'group relative flex h-9 items-center gap-2.5 rounded-xl px-2.5 text-[13px] font-medium transition-all duration-150',
+          'group relative flex items-center rounded-xl font-medium transition-all duration-150',
+          nested ? 'h-8 gap-2 pl-8 pr-2.5 text-[12px]' : 'h-10 gap-2.5 px-3 text-[13px]',
           isActive
-            ? 'font-semibold text-brand-700 dark:text-brand-300'
+            ? 'bg-brand-50 font-semibold text-brand-700 shadow-[inset_3px_0_0_#f27024] dark:bg-brand-500/15 dark:text-brand-300'
             : 'text-plum-600 hover:bg-plum-900/[0.04] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-white/[0.05] dark:hover:text-white',
         )}
       >
-        {isActive && (
-          <motion.span
-            layoutId="mentorship-sidebar-active-indicator"
-            className="absolute inset-0 rounded-xl bg-brand-50 shadow-[inset_2.5px_0_0_#f27024] dark:bg-brand-500/15"
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-          />
-        )}
-        <span className="relative z-10 flex w-full items-center gap-2.5">
-          <Icon
-            className={cn(
-              'h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-105',
-              isActive ? 'text-brand-600 dark:text-brand-400' : 'text-plum-400 dark:text-[#8f9399]',
-            )}
-          />
-          <span className="min-w-0 flex-1 truncate">{item.label}</span>
-          {item.to === '/app/mentoring/messages' && mentoringUnreadCount > 0 && (
-            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-bold text-white">
-              {mentoringUnreadCount > 99 ? '99+' : mentoringUnreadCount}
-            </span>
-          )}
-        </span>
+        <Icon className={cn('shrink-0 transition-colors', nested ? 'h-3.5 w-3.5' : 'h-4 w-4', isActive ? 'text-brand-600 dark:text-brand-400' : 'text-plum-400 dark:text-[#8f9399]')} />
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        {renderBadge(badgeFor(item))}
       </NavLink>
     )
   }
 
-  return (
-    <div>
-      <nav aria-label="Điều hướng Mentorship" className="space-y-3">
-        {sections.map((section) => (
-          <section
-            key={section.label}
-            className="border-t border-plum-900/[0.06] pt-2.5 first:border-t-0 first:pt-0 dark:border-[#393a3b]"
-          >
-            <h3 className="mb-1 px-2.5 text-[11px] font-bold uppercase tracking-wider text-plum-400/80 dark:text-[#8f9399]">
-              {section.label}
-            </h3>
-            <div className="space-y-0.5">
-              {section.items.map((item) => renderItem(section.label, item))}
-            </div>
-          </section>
-        ))}
-      </nav>
+  const renderParent = (item: MentorshipNavigationItem) => {
+    const Icon = item.icon
+    const isOpen = expanded.has(item.label)
+    const isActive = item.children?.includes(activeItem as MentorshipNavigationItem) ?? false
+    return (
+      <div key={item.label}>
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          onClick={() => setExpanded((current) => {
+            const next = new Set(current)
+            next.has(item.label) ? next.delete(item.label) : next.add(item.label)
+            return next
+          })}
+          className={cn(
+            'group flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-[13px] font-medium transition-colors',
+            isActive ? 'font-semibold text-brand-700 dark:text-brand-300' : 'text-plum-600 hover:bg-plum-900/[0.04] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-white/[0.05] dark:hover:text-white',
+          )}
+        >
+          <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-brand-600' : 'text-plum-400 dark:text-[#8f9399]')} />
+          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          <ChevronDown className={cn('h-3.5 w-3.5 text-plum-400 transition-transform duration-200', isOpen && 'rotate-180')} />
+        </button>
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="overflow-hidden"
+            >
+              <div className="relative ml-4 space-y-0.5 py-1 before:absolute before:bottom-2 before:left-1 before:top-1 before:w-px before:bg-plum-900/[0.08] dark:before:bg-white/10">
+                {item.children?.map((child) => renderLink(child, true))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    )
+  }
 
-      {hasAcceptedTerms && isAlumni && mentorStatus && (
-        <div className="mt-3 border-t border-plum-900/[0.06] pt-2.5 dark:border-[#393a3b]">
-          <div className="flex items-center gap-2 rounded-xl bg-brand-50/60 px-2.5 py-1.5 border border-brand-100/70 dark:bg-brand-500/10 dark:border-brand-500/20">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mint-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-mint-500" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium text-plum-400 dark:text-[#8f9399]">Trạng thái Mentor</p>
-              <p className="text-xs font-semibold leading-5 text-plum-800 dark:text-[#e4e6eb]">
-                {mentorStatus.active ? 'Hồ sơ Mentor đã sẵn sàng.' : mentorStatus.statusMessage}
-              </p>
-            </div>
-          </div>
+  return (
+    <div className="flex min-h-full flex-col">
+      <div className="mb-3 flex items-center gap-2.5 px-2 pt-1">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-sm"><Sparkles className="h-4 w-4" /></span>
+        <div className="min-w-0"><p className="text-sm font-extrabold text-plum-950 dark:text-white">Mentoring</p><p className="truncate text-[10px] text-plum-400">Kết nối · Hợp tác · Đồng hành</p></div>
+      </div>
+
+      {hasAcceptedTerms ? (
+        <nav aria-label="Điều hướng Mentoring" className="space-y-3">
+          {sections.map((section) => (
+            <section key={section.label} className="border-t border-plum-900/[0.06] pt-2.5 first:border-t-0 first:pt-0 dark:border-[#393a3b]">
+              <h3 className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-plum-400/80 dark:text-[#8f9399]">{section.label}</h3>
+              <div className="space-y-0.5">{section.items.map((item) => item.children ? renderParent(item) : renderLink(item))}</div>
+            </section>
+          ))}
+        </nav>
+      ) : (
+        <div className="rounded-xl border border-brand-100 bg-brand-50/70 p-3 dark:border-brand-500/20 dark:bg-brand-500/10">
+          <p className="text-xs font-bold text-plum-900 dark:text-white">Hoàn tất bước xác nhận</p>
+          <p className="mt-1 text-[11px] leading-4 text-plum-500 dark:text-[#b0b3b8]">Đọc và chấp nhận điều khoản để sử dụng các chức năng Mentoring.</p>
         </div>
       )}
+
+      <div className="mt-3 border-t border-plum-900/[0.06] pt-2.5 dark:border-[#393a3b]">
+        {renderLink(MENTORSHIP_TERMS_ITEM)}
+        {hasAcceptedTerms && isAlumni && mentorStatus && (
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-brand-100/70 bg-brand-50/60 px-3 py-2 dark:border-brand-500/20 dark:bg-brand-500/10">
+            <span className={cn('h-2 w-2 shrink-0 rounded-full', mentorStatus.active ? 'bg-emerald-500' : 'bg-amber-500')} />
+            <div className="min-w-0 flex-1"><p className="text-[10px] text-plum-400">Trạng thái Mentor</p><p className="truncate text-xs font-semibold text-plum-800 dark:text-[#e4e6eb]">{mentorStatus.active ? 'Mentor đang hoạt động' : mentorStatus.statusMessage}</p></div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
 export function MentorshipSidebar() {
   const [isOpen, setIsOpen] = useState(false)
-
   return (
     <>
       <div className="mb-4 xl:hidden">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="inline-flex min-h-11 w-auto items-center justify-center gap-2 rounded-xl border border-plum-900/[0.08] bg-white px-4 text-sm font-semibold text-plum-700 shadow-xs transition-colors hover:bg-brand-50 hover:text-brand-700 dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#e4e6eb] dark:hover:bg-brand-500/15 dark:hover:text-brand-300"
-          aria-expanded={isOpen}
-          aria-controls="mentorship-mobile-drawer"
-        >
-          <Menu className="h-4 w-4 text-brand-600" aria-hidden="true" />
-          Menu Mentorship
-        </button>
+        <button type="button" onClick={() => setIsOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-plum-900/[0.08] bg-white px-4 text-sm font-semibold text-plum-700 shadow-xs transition-colors hover:bg-brand-50 hover:text-brand-700 dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#e4e6eb]" aria-expanded={isOpen} aria-controls="mentorship-mobile-drawer"><Menu className="h-4 w-4 text-brand-600" /> Menu Mentoring</button>
       </div>
-
-      <aside
-        className="hidden h-full min-h-0 w-full overflow-y-auto no-scrollbar xl:block"
-        aria-label="Mentorship sidebar"
-      >
-        <div className="rounded-2xl border border-plum-900/[0.07] bg-white p-2.5 shadow-xs dark:border-[#393a3b] dark:bg-[#242526]">
-          <MentorshipSidebarContent />
-        </div>
+      <aside className="hidden h-full min-h-0 w-full overflow-y-auto no-scrollbar xl:block" aria-label="Mentoring sidebar">
+        <div className="min-h-full rounded-2xl border border-plum-900/[0.07] bg-white p-2.5 shadow-xs dark:border-[#393a3b] dark:bg-[#242526]"><MentorshipSidebarContent /></div>
       </aside>
-
       <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.button
-              type="button"
-              aria-label="Đóng menu Mentorship"
-              className="fixed inset-0 top-16 z-40 bg-plum-900/30 backdrop-blur-sm dark:bg-black/60 xl:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-            />
-            <motion.aside
-              id="mentorship-mobile-drawer"
-              className="fixed inset-y-0 left-0 top-16 z-50 w-[min(88vw,300px)] overflow-y-auto no-scrollbar border-r border-plum-900/[0.08] bg-white p-4 shadow-2xl dark:border-[#393a3b] dark:bg-[#18191a] xl:hidden"
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 340, damping: 32 }}
-            >
-              <div className="mb-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  aria-label="Đóng menu Mentorship"
-                  className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
-                >
-                  <X className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-              <MentorshipSidebarContent onNavigate={() => setIsOpen(false)} />
-            </motion.aside>
-          </>
-        )}
+        {isOpen && <><motion.button type="button" aria-label="Đóng menu Mentoring" className="fixed inset-0 top-16 z-40 bg-plum-900/30 backdrop-blur-sm dark:bg-black/60 xl:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} /><motion.aside id="mentorship-mobile-drawer" className="fixed inset-y-0 left-0 top-16 z-50 w-[min(88vw,310px)] overflow-y-auto no-scrollbar border-r border-plum-900/[0.08] bg-white p-4 shadow-2xl dark:border-[#393a3b] dark:bg-[#18191a] xl:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', stiffness: 340, damping: 32 }}><div className="mb-2 flex justify-end"><button type="button" onClick={() => setIsOpen(false)} aria-label="Đóng menu Mentoring" className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 dark:hover:bg-[#3a3b3c]"><X className="h-4 w-4" /></button></div><MentorshipSidebarContent onNavigate={() => setIsOpen(false)} /></motion.aside></>}
       </AnimatePresence>
     </>
   )

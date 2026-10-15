@@ -43,7 +43,7 @@ class MentoringAuditFixesTest {
     @Mock MentoringPaymentLedgerRepository ledgerRepository;
     @Mock MentorProfileRepository mentorProfileRepository;
     @Mock MentorPayoutAccountRepository payoutAccountRepository;
-    @Mock UserRefundAccountRepository refundAccountRepository;
+    @Mock RefundAccountResolver refundAccountResolver;
     @Mock MentoringDisbursementGateway gateway;
     @Mock NotificationService notificationService;
     @Mock MentoringTaskRepository taskRepository;
@@ -58,7 +58,7 @@ class MentoringAuditFixesTest {
         MentoringPaymentLedger refund = ledger(MentoringLedgerTransactionType.REFUND, "50000");
         when(ledgerRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(refund));
         when(ledgerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(refundAccountRepository.findByUserId(1L)).thenReturn(Optional.of(UserRefundAccount.builder()
+        when(refundAccountResolver.find(1L)).thenReturn(Optional.of(UserRefundAccount.builder()
                 .user(student).bankName("ACB").bankBin("970416").bankAccountNumber("123456789").bankAccountHolder("SV A").build()));
         when(gateway.processPayout(any())).thenReturn(DisbursementResult.builder()
                 .providerReference("payout-1").status(MentoringLedgerStatus.PENDING).providerStatus("PROCESSING").build());
@@ -156,7 +156,7 @@ class MentoringAuditFixesTest {
 
     private MentoringPayoutProcessor processor(long minAmount) {
         MentoringPayoutProcessor processor = new MentoringPayoutProcessor(ledgerRepository, mentorProfileRepository,
-                payoutAccountRepository, refundAccountRepository, gateway, notificationService);
+                payoutAccountRepository, refundAccountResolver, gateway, notificationService);
         ReflectionTestUtils.setField(processor, "minPayoutAmount", minAmount);
         return processor;
     }

@@ -5,7 +5,6 @@ import com.alumnect.alumnect_backend.common.enums.MentoringLedgerTransactionType
 import com.alumnect.alumnect_backend.dao.mentorship.MentorPayoutAccountRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerRepository;
-import com.alumnect.alumnect_backend.dao.mentorship.UserRefundAccountRepository;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringPaymentLedger;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.exception.ConflictException;
@@ -56,7 +55,7 @@ public class MentoringPayoutProcessor {
     private final MentoringPaymentLedgerRepository ledgerRepository;
     private final MentorProfileRepository mentorProfileRepository;
     private final MentorPayoutAccountRepository payoutAccountRepository;
-    private final UserRefundAccountRepository refundAccountRepository;
+    private final RefundAccountResolver refundAccountResolver;
     private final MentoringDisbursementGateway disbursementGateway;
     private final NotificationService notificationService;
 
@@ -197,7 +196,7 @@ public class MentoringPayoutProcessor {
     private Optional<Beneficiary> findBeneficiary(MentoringPaymentLedger ledger) {
         if (ledger.getTransactionType() == MentoringLedgerTransactionType.REFUND) {
             User student = ledger.getStudent();
-            return refundAccountRepository.findByUserId(student.getId())
+            return refundAccountResolver.find(student.getId())
                     .filter(a -> isValidAccount(a.getBankBin(), a.getBankAccountNumber()))
                     .map(a -> new Beneficiary(student, a.getBankName(), a.getBankBin(), a.getBankAccountNumber(), a.getBankAccountHolder()));
         }

@@ -54,7 +54,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
     private final MentoringRules mentoringRules;
     private final com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerRepository ledgerRepository;
     private final MentoringTicketService ticketService;
-    private final com.alumnect.alumnect_backend.dao.mentorship.UserRefundAccountRepository refundAccountRepository;
+    private final RefundAccountResolver refundAccountResolver;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
             .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -654,7 +654,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
 
     /** Học viên phải khai báo tài khoản nhận hoàn tiền trước khi thỏa thuận dừng Task có hoàn tiền. */
     private void requireRefundAccount(Long studentId) {
-        if (!refundAccountRepository.existsByUserId(studentId)) {
+        if (!refundAccountResolver.exists(studentId)) {
             throw new BadRequestException("Vui lòng khai báo tài khoản nhận hoàn tiền (mục Hoàn tiền) trước khi gửi hoặc đồng ý thỏa thuận dừng Task có hoàn tiền.");
         }
     }
@@ -832,7 +832,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
                 .canCancel(Objects.equals(p.getCreatedBy().getId(), currentUserId) && isPending && isTaskActive)
                 .refundAccountRequired(isRecipient && isPending && isStudent(p.getTask(), currentUserId)
                         && p.getStudentRefund() != null && p.getStudentRefund().signum() > 0
-                        && !refundAccountRepository.existsByUserId(currentUserId))
+                        && !refundAccountResolver.exists(currentUserId))
                 .build();
     }
 }

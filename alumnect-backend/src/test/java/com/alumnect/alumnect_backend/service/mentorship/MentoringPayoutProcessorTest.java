@@ -33,13 +33,13 @@ class MentoringPayoutProcessorTest {
     @Mock MentorProfileRepository mentorProfileRepository;
     @Mock MentorPayoutAccountRepository payoutAccountRepository;
     @Mock MentoringDisbursementGateway gateway;
-    @Mock com.alumnect.alumnect_backend.dao.mentorship.UserRefundAccountRepository refundAccountRepository;
+    @Mock RefundAccountResolver refundAccountResolver;
     @Mock com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
     MentoringPayoutProcessor processor;
     MentoringPaymentLedger ledger;
 
     @BeforeEach void setup() {
-        processor = new MentoringPayoutProcessor(ledgerRepository, mentorProfileRepository, payoutAccountRepository, refundAccountRepository, gateway, notificationService);
+        processor = new MentoringPayoutProcessor(ledgerRepository, mentorProfileRepository, payoutAccountRepository, refundAccountResolver, gateway, notificationService);
         User mentor = new User();
         mentor.setId(7L);
         MentoringTask task = new MentoringTask();

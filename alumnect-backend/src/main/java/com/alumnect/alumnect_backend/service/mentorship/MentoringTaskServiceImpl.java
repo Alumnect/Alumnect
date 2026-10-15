@@ -42,7 +42,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final MentoringTaskCompletionService completionService;
     private final MentoringTicketService ticketService;
     private final MentoringGroupService mentoringGroupService;
-    private final com.alumnect.alumnect_backend.dao.mentorship.UserRefundAccountRepository refundAccountRepository;
+    private final RefundAccountResolver refundAccountResolver;
     private final MentoringRules mentoringRules;
 
     @Override
@@ -342,7 +342,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .canSubmitSettlementTicket(canSubmitSettlementTicket)
                 .canCreateDisputeTicket(canCreateDisputeTicket)
                 .canSubmitDisputeEvidence(canSubmitDisputeEvidence)
-                .hasRefundAccount(isStudent ? refundAccountRepository.existsByUserId(currentUserId) : null)
+                .hasRefundAccount(isStudent ? refundAccountResolver.exists(currentUserId) : null)
                 .build();
 
         return MentoringTaskDetailResponse.builder()

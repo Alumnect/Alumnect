@@ -52,7 +52,7 @@ class MentoringProposalRulesTest {
     @Mock MentoringRules mentoringRules;
     @Mock MentoringPaymentLedgerRepository ledgerRepository;
     @Mock MentoringTicketService ticketService;
-    @Mock UserRefundAccountRepository refundAccountRepository;
+    @Mock RefundAccountResolver refundAccountResolver;
     @InjectMocks MentoringTaskResolutionServiceImpl service;
 
     User student = user(STUDENT_ID);
@@ -72,7 +72,7 @@ class MentoringProposalRulesTest {
                 .createdBy(mentor).recipient(student).mentorAmount(new BigDecimal("1000")).studentRefund(new BigDecimal("3000"))
                 .totalAmount(new BigDecimal("4000")).status(MentoringSettlementProposalStatus.PENDING).build();
         when(settlementProposalRepository.findById(5L)).thenReturn(Optional.of(proposal));
-        when(refundAccountRepository.existsByUserId(STUDENT_ID)).thenReturn(false);
+        when(refundAccountResolver.exists(STUDENT_ID)).thenReturn(false);
 
         RespondSettlementProposalRequest accept = new RespondSettlementProposalRequest();
         accept.setAccept(true);
