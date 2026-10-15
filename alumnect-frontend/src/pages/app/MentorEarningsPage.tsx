@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Landmark, ShieldAlert } from 'lucide-react'
-import { ButtonLink, Container } from '@/components/ui'
+import { BackLink, ButtonLink, Container } from '@/components/ui'
 import { MentorPageHeader, MentoringTermsGate } from '@/features/mentorship'
 import { mentoringWalletApi } from '@/features/mentorship/api/mentoringWalletApi'
 import { MentoringWalletTable } from '@/features/mentorship/components/MentoringWalletTable'
@@ -15,6 +15,7 @@ function MentorEarningsContent() {
 
   return (
     <div className="space-y-5">
+      <BackLink to="/app/mentoring">Tổng quan Mentoring</BackLink>
       <MentorPageHeader
         icon={<Landmark className="h-4 w-4" />}
         eyebrow="Dành cho Mentor"

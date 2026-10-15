@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { Container, EmptyState, Button } from '@/components/ui'
+import { Container, EmptyState, Button, useBackNavigation } from '@/components/ui'
 import { MentoringChatForTask, MentoringTermsGate } from '@/features/mentorship'
 
 /**
@@ -10,13 +10,14 @@ export function MentoringChatPage() {
   const { conversationId } = useParams<{ conversationId: string }>()
   const navigate = useNavigate()
   const id = Number(conversationId)
+  const goBack = useBackNavigation('/app/mentoring/messages')
 
   return (
     <Container className="h-full min-h-0 px-0 py-0 sm:px-0">
       <MentoringTermsGate source="MENTORING_HOME">
         {Number.isFinite(id) && id > 0 ? (
           <div className="h-full min-h-0">
-            <MentoringChatForTask conversationId={id} onBack={() => navigate(-1)} />
+            <MentoringChatForTask conversationId={id} onBack={goBack} />
           </div>
         ) : (
           <EmptyState

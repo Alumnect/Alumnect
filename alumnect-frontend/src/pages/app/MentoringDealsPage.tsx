@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Handshake, RefreshCw } from 'lucide-react'
-import { Button, ButtonLink, Container, EmptyState, Pagination } from '@/components/ui'
+import { BackLink, Button, ButtonLink, Container, EmptyState, Pagination } from '@/components/ui'
 import {
   MentoringTermsGate,
   MentorPageHeader,
@@ -45,6 +45,7 @@ function MentoringDealsContent() {
 
   return (
     <div className="space-y-5">
+      <BackLink to="/app/mentoring">Tổng quan Mentoring</BackLink>
       <MentorPageHeader
         icon={<Handshake className="h-4 w-4" />}
         eyebrow="Thỏa thuận và thanh toán"

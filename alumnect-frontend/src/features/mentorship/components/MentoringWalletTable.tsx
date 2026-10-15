@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, Clock, Wallet } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
 import { cn, vnd } from '@/lib/utils'
@@ -89,7 +90,7 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
               <li key={item.ledgerId} className="space-y-2 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-text">{item.taskId ? `Task #${item.taskId}` : '—'}</p>
+                    <p className="text-sm font-semibold text-text">{item.taskId ? (<Link to={`/app/mentoring/tasks/${item.taskId}`} className="rounded font-semibold text-text transition-colors hover:text-primary-solid hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">{`Task #${item.taskId}`}</Link>) : '—'}</p>
                     {item.taskTitle && <p className="truncate text-xs text-text-subtle">{item.taskTitle}</p>}
                   </div>
                   <p className="shrink-0 font-display text-sm font-bold text-text">{vnd(item.amount)}</p>
@@ -118,7 +119,7 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
               {items.map((item) => (
                 <tr key={item.ledgerId} className="align-top">
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-text">{item.taskId ? `Task #${item.taskId}` : '—'}</p>
+                    <p className="font-semibold text-text">{item.taskId ? (<Link to={`/app/mentoring/tasks/${item.taskId}`} className="rounded font-semibold text-text transition-colors hover:text-primary-solid hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">{`Task #${item.taskId}`}</Link>) : '—'}</p>
                     {item.taskTitle && <p className="max-w-[220px] truncate text-xs text-text-subtle">{item.taskTitle}</p>}
                   </td>
                   <td className="px-4 py-3 text-text-muted">{item.counterpartName || '—'}</td>

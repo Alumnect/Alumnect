@@ -1,4 +1,4 @@
-import { Container } from '@/components/ui'
+import { BackLink, Container } from '@/components/ui'
 import { Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
 import { MentorStatusDashboard } from '@/features/mentorship'
@@ -31,6 +31,7 @@ export function MentorStatusPage() {
   }
   return (
     <Container className="py-2 sm:py-4">
+      <BackLink to="/app/mentoring" className="mb-3">Tổng quan Mentoring</BackLink>
       <MentorStatusDashboard />
     </Container>
   )

@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Award } from 'lucide-react'
-import { Container } from '@/components/ui'
+import { BackLink, Container } from '@/components/ui'
 import { Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
 import { MentoringTermsGate, MentorSubscriptionList, MentorPaymentCheckout } from '@/features/mentorship'
@@ -37,6 +37,9 @@ export function MentorSubscriptionPage() {
 
   return (
     <Container className="py-2 sm:py-4">
+      {!isCheckout && (
+        <BackLink to="/app/mentoring" className="mb-3">Tổng quan Mentoring</BackLink>
+            )}
       <MentoringTermsGate source="BECOME_MENTOR">
         {isCheckout ? (
           <MentorPaymentCheckout onBack={() => setSearchParams({})} />

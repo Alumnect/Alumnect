@@ -9,6 +9,7 @@ import {
   type CreateMentoringRequestData,
 } from '@/features/mentorship'
 import { Container } from '@/components/ui/primitives'
+import { BackLink } from '@/components/ui'
 
 function CreateMentoringRequestContent() {
   const navigate = useNavigate()
@@ -27,6 +28,7 @@ function CreateMentoringRequestContent() {
 
   return (
     <div className="w-full space-y-4 text-left">
+      <BackLink to="/app/mentoring/requests" smart>Quay lại</BackLink>
       <MentorPageHeader
         icon={<Sparkles className="h-4 w-4" />}
         eyebrow="Kết nối tự động"

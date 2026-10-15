@@ -1,5 +1,6 @@
 import { MentoringTermsGate, MentorRegistrationForm } from '@/features/mentorship'
 import { Container, Card } from '@/components/ui/primitives'
+import { BackLink } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
 import { Award } from 'lucide-react'
 
@@ -34,6 +35,7 @@ function BecomeMentorContent() {
 export function BecomeMentorPage() {
   return (
     <Container className="py-2 sm:py-4">
+      <BackLink to="/app/mentoring" className="mb-3">Tổng quan Mentoring</BackLink>
       <MentoringTermsGate source="BECOME_MENTOR">
         <BecomeMentorContent />
       </MentoringTermsGate>

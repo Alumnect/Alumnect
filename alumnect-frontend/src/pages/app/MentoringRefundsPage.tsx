@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, RotateCcw, Save, ShieldAlert } from 'lucide-react'
-import { Container, toast } from '@/components/ui'
+import { BackLink, Container, toast } from '@/components/ui'
 import { MentorPageHeader, MentoringTermsGate, TASK_QUERY_KEYS } from '@/features/mentorship'
 import { mentoringWalletApi } from '@/features/mentorship/api/mentoringWalletApi'
 import { MentoringWalletTable } from '@/features/mentorship/components/MentoringWalletTable'
@@ -51,6 +51,7 @@ function MentoringRefundsContent() {
 
   return (
     <div className="space-y-5">
+      <BackLink to="/app/mentoring">Tổng quan Mentoring</BackLink>
       <MentorPageHeader
         icon={<RotateCcw className="h-4 w-4" />}
         eyebrow="Thanh toán Mentoring"

@@ -61,7 +61,7 @@ import { MentoringTicketDiscussionModal } from './MentoringTicketDiscussionModal
 import { useTaskDetail } from '../hooks/useMentoringTasks'
 import { useMentoringConversation } from '../hooks/useMentoringConversation'
 import { useConfirmDeal, useProposeDeal, useRejectDeal, useRequestAdjustment } from '../hooks/useMentoringDeals'
-import { CalendarClock, Scale, Send, Paperclip } from 'lucide-react'
+import { ArrowLeft, CalendarClock, Scale, Send, Paperclip } from 'lucide-react'
 import type { MentoringDeal, MentoringDealSnapshot } from '../model/mentoringDealTypes'
 import {
   MENTORING_PARTICIPATION_LABELS,
@@ -584,6 +584,16 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       {/* Header: người trao đổi · một thao tác chính theo ngữ cảnh · menu thao tác */}
       <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Quay lại"
+              className="-ml-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-text-muted transition-colors hover:bg-surface-2 hover:text-primary-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus sm:-ml-3"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
           <Avatar src={partnerAvatar || undefined} name={partnerName} size={40} className="ring-2 ring-primary/20" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">

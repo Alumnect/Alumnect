@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
+import { BackLink } from '@/components/ui'
 import { MentoringTerms } from '@/features/mentorship'
 import type { MentoringEntrySource } from '@/features/mentorship'
 
@@ -13,6 +14,7 @@ export function MentoringTermsPage() {
 
   return (
     <div className="w-full">
+      <BackLink to="/app/mentoring" className="mb-3">Tổng quan Mentoring</BackLink>
       <MentoringTerms source={source} />
     </div>
   )

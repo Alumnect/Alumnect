@@ -1,7 +1,7 @@
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Container } from '@/components/ui/primitives'
-import { toast } from '@/components/ui'
+import { BackLink, toast } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
 import {
   MentoringTermsGate,
@@ -128,6 +128,7 @@ function MentorDetailContent() {
 export function MentorDetailPage() {
   return (
     <Container className="py-2 sm:py-4">
+      <BackLink to="/app/mentoring/discover" smart className="mb-3">Khám phá Mentor</BackLink>
       <MentoringTermsGate source="MENTORING_HOME">
         <MentorDetailContent />
       </MentoringTermsGate>
