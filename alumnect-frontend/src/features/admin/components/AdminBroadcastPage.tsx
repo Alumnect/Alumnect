@@ -160,8 +160,8 @@ export function AdminBroadcastPage() {
               className={cn(
                 'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
                 statusFilter === tab.value
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-xs'
-                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                  ? 'bg-primary-solid text-on-primary shadow-xs'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               )}
             >
               {tab.label}
@@ -172,7 +172,7 @@ export function AdminBroadcastPage() {
         {/* Time filter tabs & Thống kê */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-plum-500 flex items-center gap-1">
+            <span className="text-xs font-bold text-text-subtle flex items-center gap-1">
               <Calendar size={13} className="text-gold-500" /> Mốc thời gian:
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -187,7 +187,7 @@ export function AdminBroadcastPage() {
                     'rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer select-none',
                     timeFilter === t.value
                       ? 'bg-plum-900 text-white shadow-xs'
-                      : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                      : 'bg-surface-2 text-text-muted hover:bg-surface-3'
                   )}
                 >
                   {t.name}
@@ -196,8 +196,8 @@ export function AdminBroadcastPage() {
             </div>
           </div>
 
-          <span className="text-xs text-plum-400 font-medium">
-            Tổng cộng: <strong className="text-plum-900 font-bold">{totalElements}</strong> thông báo
+          <span className="text-xs text-text-subtle font-medium">
+            Tổng cộng: <strong className="text-text font-bold">{totalElements}</strong> thông báo
           </span>
         </div>
       </div>
@@ -226,7 +226,7 @@ export function AdminBroadcastPage() {
           />
         ) : notifications.length === 0 ? (
           <EmptyState
-            icon={<Megaphone size={28} className="text-plum-400" />}
+            icon={<Megaphone size={28} className="text-text-subtle" />}
             title="Không có thông báo nào"
             description="Hiện không có thông báo hệ thống nào phù hợp với bộ lọc đã chọn."
           />
@@ -235,7 +235,7 @@ export function AdminBroadcastPage() {
             <Card hover={false} className="overflow-x-auto">
               <table className="w-full min-w-[780px] text-sm text-left">
                 <thead>
-                  <tr className="border-b border-plum-900/8 text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
+                  <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2">
                     <th className="px-5 py-3.5 font-bold">Tiêu đề & Nội dung</th>
                     <th className="px-5 py-3.5 font-bold">Đối tượng nhận</th>
                     <th className="px-5 py-3.5 font-bold text-center">Trạng thái</th>
@@ -243,14 +243,14 @@ export function AdminBroadcastPage() {
                     <th className="px-5 py-3.5 font-bold text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-plum-900/5">
+                <tbody className="divide-y divide-border">
                   {notifications.map((item) => (
-                    <tr key={item.id} className="transition-colors hover:bg-plum-900/[0.015]">
+                    <tr key={item.id} className="transition-colors hover:bg-surface-2">
                       {/* Tiêu đề & Nội dung */}
                       <td className="px-5 py-4 max-w-xs">
                         <div className="min-w-0">
-                          <p className="font-bold text-plum-950 text-sm leading-snug line-clamp-1">{item.title}</p>
-                          <p className="text-xs text-plum-500 mt-1 line-clamp-2">{item.content}</p>
+                          <p className="font-bold text-text text-sm leading-snug line-clamp-1">{item.title}</p>
+                          <p className="text-xs text-text-subtle mt-1 line-clamp-2">{item.content}</p>
                         </div>
                       </td>
 
@@ -262,7 +262,7 @@ export function AdminBroadcastPage() {
                           </Badge>
                         ) : item.recipientType === 'USER_ROLE' ? (
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] text-plum-400 font-medium">Nhóm vai trò:</span>
+                            <span className="text-xs text-text-subtle font-medium">Nhóm vai trò:</span>
                             <Badge
                               tone={
                                 item.recipientRole === 'STUDENT'
@@ -288,10 +288,10 @@ export function AdminBroadcastPage() {
                               size={30}
                             />
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-plum-900 truncate">
+                              <p className="text-xs font-bold text-text truncate">
                                 {item.recipientUser?.fullName || 'Người dùng'}
                               </p>
-                              <p className="text-[10px] text-plum-400 truncate">{item.recipientUser?.email}</p>
+                              <p className="text-xs text-text-subtle truncate">{item.recipientUser?.email}</p>
                             </div>
                           </div>
                         )}
@@ -317,7 +317,7 @@ export function AdminBroadcastPage() {
 
                       {/* Mốc thời gian */}
                       <td className="px-5 py-4">
-                        <div className="flex flex-col gap-1 text-[11px] text-plum-600">
+                        <div className="flex flex-col gap-1 text-xs text-text-muted">
                           {item.status === 'SCHEDULED' ? (
                             <div>
                               <span className="text-gold-700 font-semibold">Hẹn gửi: </span>
@@ -325,14 +325,14 @@ export function AdminBroadcastPage() {
                             </div>
                           ) : (
                             <div>
-                              <span className="text-emerald-700 font-semibold">Đã gửi: </span>
+                              <span className="text-success font-semibold">Đã gửi: </span>
                               <strong>[{formatDateTime(item.sentAt || item.createdAt)}]</strong>
                             </div>
                           )}
-                          <div className="text-plum-400">
+                          <div className="text-text-subtle">
                             <span>Hết hạn: </span>
                             {item.durationType === 'FOREVER' || !item.expiresAt ? (
-                              <span className="font-semibold text-plum-500">Vĩnh viễn</span>
+                              <span className="font-semibold text-text-subtle">Vĩnh viễn</span>
                             ) : (
                               <span>[{formatDateTime(item.expiresAt)}]</span>
                             )}
@@ -353,7 +353,7 @@ export function AdminBroadcastPage() {
                             variant="secondary"
                             size="sm"
                             onClick={() => setDetailItem(item)}
-                            className="h-8 px-2.5 text-xs font-bold bg-plum-900/[0.04] text-plum-700 hover:bg-plum-900/[0.08]"
+                            className="h-8 px-2.5 text-xs font-bold bg-surface-2 text-text-muted hover:bg-surface-3"
                             title="Xem chi tiết"
                           >
                             <Eye size={13} />
@@ -365,7 +365,7 @@ export function AdminBroadcastPage() {
                               variant="secondary"
                               size="sm"
                               onClick={() => setCancelTargetId(item.id)}
-                              className="h-8 px-2 text-xs font-bold border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                              className="h-8 px-2 text-xs font-bold border border-danger-border bg-danger-soft text-danger hover:bg-danger-border/60"
                               title="Hủy lịch gửi"
                             >
                               <Trash2 size={13} />
@@ -378,7 +378,7 @@ export function AdminBroadcastPage() {
                               variant="secondary"
                               size="sm"
                               onClick={() => setArchiveTargetId(item.id)}
-                              className="h-8 px-2 text-xs font-bold border border-plum-900/15 bg-plum-900/[0.03] text-plum-700 hover:bg-plum-900/[0.07]"
+                              className="h-8 px-2 text-xs font-bold border border-border-strong bg-surface-2 text-text-muted hover:bg-border"
                               title="Lưu trữ thông báo"
                             >
                               <Archive size={13} />
@@ -418,26 +418,26 @@ export function AdminBroadcastPage() {
 
           <Card
             hover={false}
-            className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-white max-h-[90vh] flex flex-col pop"
+            className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface max-h-[90vh] flex flex-col pop"
           >
             {/* Header Modal */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white rounded-t-3xl shrink-0">
+            <div className="flex items-center justify-between p-6 border-b border-border bg-surface rounded-t-3xl shrink-0">
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-600 border border-brand-100">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-primary-solid border border-primary-soft-border">
                   <Megaphone size={20} />
                 </span>
                 <div>
-                  <h3 className="text-lg font-bold text-plum-900 tracking-tight leading-tight">
+                  <h3 className="text-lg font-bold text-text tracking-tight leading-tight">
                     Chi tiết thông báo hệ thống
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  <p className="text-xs text-text-subtle font-medium mt-0.5">
                     Mã #{detailItem.id} · Tạo lúc {formatDateTime(detailItem.createdAt)}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setDetailItem(null)}
-                className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
+                className="grid h-9 w-9 place-items-center rounded-xl text-text-subtle hover:bg-surface-2 hover:text-text transition-colors cursor-pointer"
                 title="Đóng cửa sổ"
               >
                 <X size={18} />
@@ -449,10 +449,10 @@ export function AdminBroadcastPage() {
               {/* Tiêu đề & Trạng thái phát hành */}
               <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-brand-50/40 border border-brand-100/70">
                 <div className="space-y-1 min-w-0 flex-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 block">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle block">
                     Tiêu đề thông báo
                   </span>
-                  <h4 className="text-base font-black text-plum-950 leading-snug">
+                  <h4 className="text-base font-black text-text leading-snug">
                     {detailItem.title}
                   </h4>
                 </div>
@@ -465,11 +465,11 @@ export function AdminBroadcastPage() {
               </div>
 
               {/* Nội dung thông báo */}
-              <div className="rounded-2xl border border-plum-900/10 bg-white p-4 space-y-2 shadow-2xs">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 block">
+              <div className="rounded-2xl border border-border bg-surface p-4 space-y-2 shadow-2xs">
+                <span className="text-xs font-bold uppercase tracking-wider text-text-subtle block">
                   Nội dung phát thanh
                 </span>
-                <div className="p-3.5 rounded-xl bg-plum-900/[0.02] border border-plum-900/5 text-sm font-medium text-plum-800 leading-relaxed whitespace-pre-wrap">
+                <div className="p-3.5 rounded-xl bg-surface-2 border border-border text-sm font-medium text-text leading-relaxed whitespace-pre-wrap">
                   {detailItem.content}
                 </div>
               </div>
@@ -477,16 +477,16 @@ export function AdminBroadcastPage() {
               {/* Thông tin đối tượng nhận & Thời hạn hiệu lực */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Đối tượng nhận */}
-                <div className="p-4 rounded-2xl bg-plum-900/[0.02] border border-plum-900/8 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 flex items-center gap-1.5">
-                    <Users size={14} className="text-brand-500" /> Đối tượng nhận thông báo
+                <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                    <Users size={14} className="text-primary-solid" /> Đối tượng nhận thông báo
                   </span>
                   {detailItem.recipientType === 'ALL_USERS' ? (
                     <div>
                       <Badge tone="brand" className="text-xs font-bold">
                         Tất cả người dùng
                       </Badge>
-                      <p className="text-xs text-plum-500 mt-1">Toàn bộ thành viên có tài khoản ACTIVE</p>
+                      <p className="text-xs text-text-subtle mt-1">Toàn bộ thành viên có tài khoản ACTIVE</p>
                     </div>
                   ) : detailItem.recipientType === 'USER_ROLE' ? (
                     <div>
@@ -508,7 +508,7 @@ export function AdminBroadcastPage() {
                               : 'Quản trị viên'
                         }
                       </Badge>
-                      <p className="text-xs text-plum-500 mt-1">
+                      <p className="text-xs text-text-subtle mt-1">
                         Gửi tới tất cả {
                           detailItem.recipientRole === 'STUDENT'
                             ? 'sinh viên'
@@ -526,10 +526,10 @@ export function AdminBroadcastPage() {
                         size={36}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-plum-900 truncate">
+                        <p className="text-xs font-bold text-text truncate">
                           {detailItem.recipientUser?.fullName || 'Người dùng chỉ định'}
                         </p>
-                        <p className="text-[11px] text-plum-400 truncate">
+                        <p className="text-xs text-text-subtle truncate">
                           {detailItem.recipientUser?.email}
                         </p>
                       </div>
@@ -538,15 +538,15 @@ export function AdminBroadcastPage() {
                 </div>
 
                 {/* Thời hạn hiệu lực */}
-                <div className="p-4 rounded-2xl bg-plum-900/[0.02] border border-plum-900/8 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 flex items-center gap-1.5">
+                <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
                     <Hourglass size={14} className="text-gold-500" /> Thời hạn hiệu lực
                   </span>
                   <div>
-                    <span className="text-sm font-bold text-plum-900 block">
+                    <span className="text-sm font-bold text-text block">
                       {DURATION_LABELS[detailItem.durationType] || detailItem.durationType}
                     </span>
-                    <p className="text-xs text-plum-500 mt-1">
+                    <p className="text-xs text-text-subtle mt-1">
                       {detailItem.expiresAt
                         ? `Hết hiệu lực: ${formatDateTime(detailItem.expiresAt)}`
                         : 'Thông báo duy trì vĩnh viễn không giới hạn thời gian'}
@@ -558,14 +558,14 @@ export function AdminBroadcastPage() {
               {/* Mốc thời gian & Quản trị viên phát hành */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Mốc thời gian */}
-                <div className="p-4 rounded-2xl bg-plum-900/[0.02] border border-plum-900/8 space-y-1.5 text-xs">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 flex items-center gap-1.5">
-                    <Calendar size={14} className="text-brand-500" /> Tiến trình thời gian
+                <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-1.5 text-xs">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                    <Calendar size={14} className="text-primary-solid" /> Tiến trình thời gian
                   </span>
                   <div className="pt-1 space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-plum-500">Khởi tạo:</span>
-                      <span className="font-semibold text-plum-900">{formatDateTime(detailItem.createdAt)}</span>
+                      <span className="text-text-subtle">Khởi tạo:</span>
+                      <span className="font-semibold text-text">{formatDateTime(detailItem.createdAt)}</span>
                     </div>
                     {detailItem.scheduledAt && (
                       <div className="flex justify-between items-center">
@@ -575,14 +575,14 @@ export function AdminBroadcastPage() {
                     )}
                     {detailItem.sentAt && (
                       <div className="flex justify-between items-center">
-                        <span className="text-emerald-600 font-medium">Thời điểm gửi:</span>
-                        <span className="font-bold text-emerald-700">{formatDateTime(detailItem.sentAt)}</span>
+                        <span className="text-success font-medium">Thời điểm gửi:</span>
+                        <span className="font-bold text-success">{formatDateTime(detailItem.sentAt)}</span>
                       </div>
                     )}
                     {detailItem.expiresAt && (
                       <div className="flex justify-between items-center">
-                        <span className="text-plum-500">Hết hiệu lực:</span>
-                        <span className="font-semibold text-plum-900">{formatDateTime(detailItem.expiresAt)}</span>
+                        <span className="text-text-subtle">Hết hiệu lực:</span>
+                        <span className="font-semibold text-text">{formatDateTime(detailItem.expiresAt)}</span>
                       </div>
                     )}
                     {detailItem.archivedAt && (
@@ -595,9 +595,9 @@ export function AdminBroadcastPage() {
                 </div>
 
                 {/* Quản trị viên phát hành */}
-                <div className="p-4 rounded-2xl bg-plum-900/[0.02] border border-plum-900/8 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 flex items-center gap-1.5">
-                    <User size={14} className="text-brand-500" /> Quản trị viên phát hành
+                <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                    <User size={14} className="text-primary-solid" /> Quản trị viên phát hành
                   </span>
                   <div className="flex items-center gap-3 pt-0.5">
                     <Avatar
@@ -606,10 +606,10 @@ export function AdminBroadcastPage() {
                       size={36}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-plum-900 truncate">
+                      <p className="text-xs font-bold text-text truncate">
                         {detailItem.createdBy?.fullName || 'Quản trị viên'}
                       </p>
-                      <p className="text-[11px] text-plum-400 truncate">
+                      <p className="text-xs text-text-subtle truncate">
                         {detailItem.createdBy?.email}
                       </p>
                     </div>
@@ -619,7 +619,7 @@ export function AdminBroadcastPage() {
             </div>
 
             {/* Footer Modal Actions */}
-            <div className="p-4 border-t border-plum-900/8 bg-plum-900/[0.01] flex items-center justify-between shrink-0">
+            <div className="p-4 border-t border-border bg-surface-2 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 {detailItem.status === 'SCHEDULED' && (
                   <Button
@@ -627,7 +627,7 @@ export function AdminBroadcastPage() {
                     onClick={() => {
                       setCancelTargetId(detailItem.id)
                     }}
-                    className="bg-red-600 text-white hover:bg-red-700 font-bold border-transparent shadow-xs"
+                    className="bg-danger text-text-inverse hover:opacity-90 font-bold border-transparent shadow-xs"
                     leftIcon={<XCircle size={15} />}
                   >
                     Hủy lịch hẹn gửi
@@ -641,7 +641,7 @@ export function AdminBroadcastPage() {
                     onClick={() => {
                       setArchiveTargetId(detailItem.id)
                     }}
-                    className="font-bold bg-plum-900/5 hover:bg-plum-900/10 text-plum-800"
+                    className="font-bold bg-surface-2 hover:bg-surface-3 text-text"
                     leftIcon={<Archive size={15} />}
                   >
                     Lưu trữ thông báo
@@ -664,9 +664,9 @@ export function AdminBroadcastPage() {
             className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
             onClick={() => setCancelTargetId(null)}
           />
-          <Card hover={false} className="relative z-10 w-full max-w-sm bg-white p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
-            <h3 className="text-base font-bold text-plum-950">Xác nhận hủy thông báo hẹn giờ?</h3>
-            <p className="text-xs text-plum-500 mt-2 leading-relaxed">
+          <Card hover={false} className="relative z-10 w-full max-w-sm bg-surface p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
+            <h3 className="text-base font-bold text-text">Xác nhận hủy thông báo hẹn giờ?</h3>
+            <p className="text-xs text-text-subtle mt-2 leading-relaxed">
               Thông báo này sẽ không được phát hành tự động nữa. Trạng thái sẽ chuyển sang ĐÃ HỦY.
             </p>
             <div className="mt-5 flex justify-end gap-2.5">
@@ -675,7 +675,7 @@ export function AdminBroadcastPage() {
               </Button>
               <Button
                 size="sm"
-                className="bg-red-600 text-white hover:bg-red-700 font-bold"
+                className="bg-danger text-text-inverse hover:opacity-90 font-bold"
                 disabled={cancelMutation.isPending}
                 onClick={() => handleCancelScheduled(cancelTargetId)}
               >
@@ -695,14 +695,14 @@ export function AdminBroadcastPage() {
             className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
             onClick={() => setArchiveTargetId(null)}
           />
-          <Card hover={false} className="relative z-10 w-full max-w-sm bg-white p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
+          <Card hover={false} className="relative z-10 w-full max-w-sm bg-surface p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
             <div className="flex items-center gap-2.5 mb-2">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold-100 text-gold-700">
                 <Archive size={18} />
               </span>
-              <h3 className="text-base font-bold text-plum-950">Lưu trữ thông báo?</h3>
+              <h3 className="text-base font-bold text-text">Lưu trữ thông báo?</h3>
             </div>
-            <p className="text-xs text-plum-600 mt-2 leading-relaxed">
+            <p className="text-xs text-text-muted mt-2 leading-relaxed">
               Thông báo sẽ được chuyển vào <strong>Kho lưu trữ</strong> và ngừng hiển thị.
             </p>
             <div className="mt-5 flex justify-end gap-2.5">
@@ -711,7 +711,7 @@ export function AdminBroadcastPage() {
               </Button>
               <Button
                 size="sm"
-                className="bg-gradient-to-r from-gold-400 to-gold-500 text-plum-950 font-bold hover:from-gold-500 hover:to-gold-600 shadow-xs"
+                className="bg-primary-solid text-on-primary font-bold hover:bg-primary-hover shadow-xs"
                 disabled={archiveMutation.isPending}
                 onClick={() => handleArchive(archiveTargetId)}
               >

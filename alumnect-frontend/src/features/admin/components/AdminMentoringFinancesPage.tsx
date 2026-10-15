@@ -111,30 +111,30 @@ export function AdminMentoringFinancesPage() {
   }
 
   return (
-    <div className="space-y-6 text-slate-800 dark:text-slate-100">
+    <div className="space-y-6 text-text">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[#F27024] text-xs sm:text-sm font-bold tracking-wide uppercase">
+          <div className="flex items-center gap-2 text-primary-solid text-xs sm:text-sm font-bold tracking-wide uppercase">
             <Wallet className="w-4 h-4" />
             <span>Quản trị tài chính Mentoring Task</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-text mt-1">
             Sổ quỹ & Đối soát tài chính theo Task
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-text-subtle mt-1">
             Theo dõi dòng tiền ký quỹ Escrow, thù lao chi Cố vấn, hoàn trả Học viên và đối soát sổ quỹ chi tiết từng nhiệm vụ.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div
-            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1e2022] px-3.5 py-2 text-right shadow-2xs"
+            className="rounded-xl border border-border bg-surface dark:bg-bg px-3.5 py-2 text-right shadow-2xs"
             title={payoutBalance.isError
               ? (payoutBalance.error as Error)?.message || 'Không đọc được số dư Kênh chi PayOS (kiểm tra key và IP whitelist)'
               : undefined}
           >
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Số dư Kênh chi PayOS</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">Số dư Kênh chi PayOS</p>
             <p className={`text-sm font-extrabold ${payoutBalance.isError ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
               {payoutBalance.isLoading ? '…' : payoutBalance.isError ? 'Không khả dụng' : formatVnd(payoutBalance.data)}
             </p>
@@ -144,7 +144,7 @@ export function AdminMentoringFinancesPage() {
             size="sm"
             onClick={() => { refetch(); payoutBalance.refetch() }}
             disabled={isFetching}
-            className="gap-2 text-xs font-semibold bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
+            className="gap-2 text-xs font-semibold bg-surface hover:bg-surface-2 text-text-muted border border-border"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
             Làm mới
@@ -154,64 +154,64 @@ export function AdminMentoringFinancesPage() {
 
       {/* KPI Highlight Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-50/50 to-white dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-[#1e2022] border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
-          <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+        <div className="p-4 rounded-2xl bg-success-soft border border-success-border shadow-xs">
+          <div className="flex items-center justify-between text-text-muted">
             <span className="text-xs font-bold uppercase tracking-wider">Tổng thu ký quỹ (Trang này)</span>
-            <ArrowDownLeft className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <ArrowDownLeft className="w-4 h-4 text-success" />
           </div>
-          <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">
+          <p className="text-xl font-extrabold text-success mt-2">
             {formatVnd(pageTotalCollected)}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-text-subtle mt-1">
             Từ {tasks.length} nhiệm vụ trên trang
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 via-blue-50/50 to-white dark:from-blue-950/30 dark:via-blue-950/10 dark:to-[#1e2022] border border-blue-200/80 dark:border-blue-800/60 shadow-xs">
-          <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+        <div className="p-4 rounded-2xl bg-info-soft border border-info-border shadow-xs">
+          <div className="flex items-center justify-between text-text-muted">
             <span className="text-xs font-bold uppercase tracking-wider">Đang giữ trong Escrow</span>
-            <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <Wallet className="w-4 h-4 text-info" />
           </div>
-          <p className="text-xl font-extrabold text-blue-600 dark:text-blue-400 mt-2">
+          <p className="text-xl font-extrabold text-info mt-2">
             {formatVnd(pageEscrowHolding)}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-text-subtle mt-1">
             Tiền bảo đảm thực hiện Task
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-purple-50/50 to-white dark:from-purple-950/30 dark:via-purple-950/10 dark:to-[#1e2022] border border-purple-200/80 dark:border-purple-800/60 shadow-xs">
-          <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+        <div className="p-4 rounded-2xl bg-primary-soft border border-primary-soft-border shadow-xs">
+          <div className="flex items-center justify-between text-text-muted">
             <span className="text-xs font-bold uppercase tracking-wider">Đã chi Cố vấn (Payout)</span>
-            <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <ArrowUpRight className="w-4 h-4 text-primary-solid" />
           </div>
-          <p className="text-xl font-extrabold text-purple-600 dark:text-purple-400 mt-2">
+          <p className="text-xl font-extrabold text-primary-solid mt-2">
             {formatVnd(pageTotalPayout)}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-text-subtle mt-1">
             Thù lao hoàn thành hoặc hòa giải
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-50/50 to-white dark:from-amber-950/30 dark:via-amber-950/10 dark:to-[#1e2022] border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
-          <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+        <div className="p-4 rounded-2xl bg-warning-soft border border-warning-border shadow-xs">
+          <div className="flex items-center justify-between text-text-muted">
             <span className="text-xs font-bold uppercase tracking-wider">Đã hoàn Học viên (Refund)</span>
-            <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <RotateCcw className="w-4 h-4 text-warning" />
           </div>
-          <p className="text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-2">
+          <p className="text-xl font-extrabold text-warning mt-2">
             {formatVnd(pageTotalRefund)}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-text-subtle mt-1">
             Hoàn tiền hủy Task hoặc hòa giải
           </p>
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1e2022] shadow-xs space-y-4">
+      <div className="p-4 rounded-2xl border border-border bg-surface dark:bg-bg shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-subtle" />
             <input
               type="text"
               placeholder="Tìm theo Mã Task, Tên Task..."
@@ -220,21 +220,21 @@ export function AdminMentoringFinancesPage() {
                 setKeyword(e.target.value)
                 setPage(0)
               }}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full pl-9 pr-4 py-2 bg-surface-2 border border-border rounded-xl text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Lọc Trạng thái Task */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Trạng thái Task:</span>
+              <span className="text-xs text-text-subtle font-medium">Trạng thái Task:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value)
                   setPage(0)
                 }}
-                className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                className="bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
               >
                 <option value="ALL">Tất cả trạng thái</option>
                 <option value="PREPARATION">Chuẩn bị (PREPARATION)</option>
@@ -249,14 +249,14 @@ export function AdminMentoringFinancesPage() {
 
             {/* Lọc Trạng thái Quyết toán */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Quyết toán:</span>
+              <span className="text-xs text-text-subtle font-medium">Quyết toán:</span>
               <select
                 value={settlementFilter}
                 onChange={(e) => {
                   setSettlementFilter(e.target.value)
                   setPage(0)
                 }}
-                className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                className="bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
               >
                 <option value="ALL">Tất cả quyết toán</option>
                 <option value="HOLDING_ESCROW">Đang giữ Escrow</option>
@@ -267,7 +267,7 @@ export function AdminMentoringFinancesPage() {
             </div>
 
             {(keyword || statusFilter !== 'ALL' || settlementFilter !== 'ALL') && (
-              <Button variant="ghost" size="sm" onClick={handleResetFilters} className="text-xs text-slate-600 dark:text-slate-300">
+              <Button variant="ghost" size="sm" onClick={handleResetFilters} className="text-xs text-text-muted">
                 Đặt lại
               </Button>
             )}
@@ -276,7 +276,7 @@ export function AdminMentoringFinancesPage() {
       </div>
 
       {/* Main Table */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1e2022] shadow-xs">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface dark:bg-bg shadow-xs">
         {isLoading ? (
           <div className="p-6 space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -284,7 +284,7 @@ export function AdminMentoringFinancesPage() {
             ))}
           </div>
         ) : isError ? (
-          <div className="p-8 text-center space-y-3 text-rose-600 dark:text-rose-400">
+          <div className="p-8 text-center space-y-3 text-danger">
             <AlertTriangle className="w-10 h-10 mx-auto" />
             <p className="font-semibold text-sm">Lỗi tải danh sách Sổ quỹ: {(error as any)?.message || 'Vui lòng thử lại.'}</p>
             <Button size="sm" variant="secondary" onClick={() => refetch()}>
@@ -294,7 +294,7 @@ export function AdminMentoringFinancesPage() {
         ) : tasks.length === 0 ? (
           <div className="p-8">
             <EmptyState
-              icon={<Wallet className="w-12 h-12 text-slate-400" />}
+              icon={<Wallet className="w-12 h-12 text-text-subtle" />}
               title="Không tìm thấy nhiệm vụ nào"
               description="Không có nhiệm vụ Mentoring Task nào phù hợp với bộ lọc hiện tại."
               action={
@@ -308,8 +308,8 @@ export function AdminMentoringFinancesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-900/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="bg-surface-2 text-xs font-bold text-text-subtle uppercase tracking-wider border-b border-border">
                 <tr>
                   <th className="px-4 py-3.5">Mã Task & Tiêu đề</th>
                   <th className="px-4 py-3.5">Các bên tham gia</th>
@@ -322,26 +322,26 @@ export function AdminMentoringFinancesPage() {
                   <th className="px-4 py-3.5 text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-border">
                 {tasks.map((task) => (
-                  <tr key={task.taskId} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors group">
+                  <tr key={task.taskId} className="hover:bg-surface-2 transition-colors group">
                     {/* Mã & Tiêu đề */}
                     <td className="px-4 py-3.5 max-w-xs">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-[#F27024]">#{task.taskId}</span>
+                        <span className="font-mono text-xs font-bold text-primary-solid">#{task.taskId}</span>
                         {task.activeTicketId && (
                           <span
-                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-danger-soft text-danger"
                             title={`Có Ticket ${task.activeTicketCode || ''} (${task.activeTicketStatus || ''})`}
                           >
                             TICKET
                           </span>
                         )}
                       </div>
-                      <p className="font-semibold text-slate-900 dark:text-white text-sm line-clamp-2 mt-0.5" title={task.taskTitle}>
+                      <p className="font-semibold text-text text-sm line-clamp-2 mt-0.5" title={task.taskTitle}>
                         {task.taskTitle}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-text-subtle mt-0.5">
                         Ngày tạo: {formatDateTime(task.createdAt)}
                       </p>
                     </td>
@@ -350,18 +350,18 @@ export function AdminMentoringFinancesPage() {
                     <td className="px-4 py-3.5">
                       <div className="space-y-1.5 min-w-[170px]">
                         <div className="flex items-center gap-1.5 text-xs">
-                          <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 flex items-center justify-center text-[9px] font-bold">
+                          <span className="w-4 h-4 rounded-full bg-info-soft text-info flex items-center justify-center text-xs font-bold">
                             H
                           </span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[140px]" title={task.student?.fullName}>
+                          <span className="font-medium text-text truncate max-w-[140px]" title={task.student?.fullName}>
                             {task.student?.fullName || 'Học viên'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs">
-                          <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 flex items-center justify-center text-[9px] font-bold">
+                          <span className="w-4 h-4 rounded-full bg-primary-soft text-primary-solid flex items-center justify-center text-xs font-bold">
                             C
                           </span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[140px]" title={task.mentor?.fullName}>
+                          <span className="font-medium text-text truncate max-w-[140px]" title={task.mentor?.fullName}>
                             {task.mentor?.fullName || 'Cố vấn'}
                           </span>
                         </div>
@@ -369,32 +369,32 @@ export function AdminMentoringFinancesPage() {
                     </td>
 
                     {/* Tổng thu */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    <td className="px-4 py-3.5 font-bold text-sm text-success whitespace-nowrap">
                       +{formatVnd(task.totalCollected)}
                       {task.totalTopUpAmount > 0 && (
-                        <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">
+                        <span className="block text-xs font-normal text-text-subtle">
                           Gồm +{formatVnd(task.totalTopUpAmount)}
                         </span>
                       )}
                     </td>
 
                     {/* Giữ Escrow */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                    <td className="px-4 py-3.5 font-bold text-sm text-info whitespace-nowrap">
                       {formatVnd(task.escrowHoldingAmount)}
                       {task.lockedAmount > 0 && (
-                        <span className="block text-[10px] font-normal text-rose-500">
+                        <span className="block text-xs font-normal text-danger">
                           Khóa: {formatVnd(task.lockedAmount)}
                         </span>
                       )}
                     </td>
 
                     {/* Chi Cố vấn */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-purple-600 dark:text-purple-400 whitespace-nowrap">
+                    <td className="px-4 py-3.5 font-bold text-sm text-primary-solid whitespace-nowrap">
                       {task.totalPayout > 0 ? `-${formatVnd(task.totalPayout)}` : '0 ₫'}
                     </td>
 
                     {/* Hoàn Học viên */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                    <td className="px-4 py-3.5 font-bold text-sm text-warning whitespace-nowrap">
                       {task.totalRefund > 0 ? `-${formatVnd(task.totalRefund)}` : '0 ₫'}
                     </td>
 
@@ -414,7 +414,7 @@ export function AdminMentoringFinancesPage() {
                         size="sm"
                         variant="secondary"
                         onClick={() => handleOpenDetail(task.taskId)}
-                        className="gap-1.5 text-xs font-semibold bg-white hover:bg-orange-50 hover:text-[#F27024] hover:border-orange-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all shadow-2xs"
+                        className="gap-1.5 text-xs font-semibold bg-surface hover:bg-primary-soft hover:text-primary-solid hover:border-orange-300 text-text-muted border border-border transition-all shadow-2xs"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         Xem Sổ quỹ
@@ -429,10 +429,10 @@ export function AdminMentoringFinancesPage() {
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Hiển thị <strong className="text-slate-800 dark:text-slate-200">{tasks.length}</strong> trên tổng số{' '}
-              <strong className="text-slate-800 dark:text-slate-200">{totalElements}</strong> nhiệm vụ
+          <div className="p-4 border-t border-border flex items-center justify-between">
+            <p className="text-xs text-text-subtle">
+              Hiển thị <strong className="text-text">{tasks.length}</strong> trên tổng số{' '}
+              <strong className="text-text">{totalElements}</strong> nhiệm vụ
             </p>
             <Pagination
               page={page}

@@ -153,32 +153,32 @@ export function AdminResolveTicketModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-2xl bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
-        <div className="flex items-center justify-between px-6 py-4.5 bg-gradient-to-r from-purple-700 via-indigo-700 to-indigo-900 text-white shadow-xs">
+        <div className="flex items-center justify-between px-6 py-4.5 bg-primary-solid text-on-primary shadow-xs">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-white/10 rounded-xl backdrop-blur-md">
-              <Scale className="w-5 h-5 text-purple-200" />
+              <Scale className="w-5 h-5 text-on-primary/80" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/20 text-purple-100 font-semibold">
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/20 text-on-primary font-semibold">
                   {ticket.ticketCode}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30">
                   Phán quyết Admin
                 </span>
               </div>
-              <h3 className="text-base font-bold text-white mt-0.5 line-clamp-1">
+              <h3 className="text-base font-bold text-on-primary mt-0.5 line-clamp-1">
                 {ticket.taskTitle || ticket.title}
               </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 text-on-primary/70 hover:text-on-primary rounded-lg hover:bg-on-primary/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -187,25 +187,25 @@ export function AdminResolveTicketModal({
         {/* Body Form */}
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
           {/* Quỹ Escrow khả dụng */}
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between p-4 bg-surface-2 rounded-xl border border-border">
             <div>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">
+              <span className="text-xs text-text-subtle font-medium block">
                 Tổng quỹ ký quỹ Escrow của Task
               </span>
-              <span className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5 block">
+              <span className="text-xl font-extrabold text-text mt-0.5 block">
                 {formatVnd(availableFund)}
               </span>
             </div>
-            <div className="text-right text-xs text-slate-500 dark:text-slate-400">
-              <span className="block">Học viên: <strong className="text-slate-700 dark:text-slate-200">{ticket.student?.fullName || ticket.studentName || 'Học viên'}</strong></span>
-              <span className="block">Cố vấn: <strong className="text-slate-700 dark:text-slate-200">{ticket.mentor?.fullName || ticket.mentorName || 'Cố vấn'}</strong></span>
+            <div className="text-right text-xs text-text-subtle">
+              <span className="block">Học viên: <strong className="text-text-muted">{ticket.student?.fullName || ticket.studentName || 'Học viên'}</strong></span>
+              <span className="block">Cố vấn: <strong className="text-text-muted">{ticket.mentor?.fullName || ticket.mentorName || 'Cố vấn'}</strong></span>
             </div>
           </div>
 
           {/* Chọn 3 phương án lớn */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">
-              Chọn phương án giải quyết (Decision Option) <span className="text-red-500">*</span>
+            <label className="text-xs font-semibold text-text-muted block mb-2">
+              Chọn phương án giải quyết (Decision Option) <span className="text-danger">*</span>
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Option 1: Full Mentor */}
@@ -213,20 +213,20 @@ export function AdminResolveTicketModal({
                 onClick={() => setDecision('FULL_MENTOR_PAYMENT')}
                 className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                   decision === 'FULL_MENTOR_PAYMENT'
-                    ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20 shadow-xs'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    ? 'border-success bg-success-soft shadow-xs'
+                    : 'border-border hover:border-border-strong'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                  <div className="p-1.5 rounded-lg bg-success-soft text-success">
                     <GraduationCap className="w-4 h-4" />
                   </div>
                   {decision === 'FULL_MENTOR_PAYMENT' && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <CheckCircle2 className="w-4 h-4 text-success" />
                   )}
                 </div>
-                <div className="text-xs font-bold text-slate-900 dark:text-white">Chi toàn bộ Mentor</div>
-                <p className="text-3xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                <div className="text-xs font-bold text-text">Chi toàn bộ Mentor</div>
+                <p className="text-3xs text-text-subtle mt-1 leading-relaxed">
                   Cố vấn nhận 100% thù lao, Học viên 0đ
                 </p>
               </div>
@@ -236,20 +236,20 @@ export function AdminResolveTicketModal({
                 onClick={() => setDecision('PARTIAL_SPLIT')}
                 className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                   decision === 'PARTIAL_SPLIT'
-                    ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/20 shadow-xs'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    ? 'border-primary-solid bg-primary-soft shadow-xs'
+                    : 'border-border hover:border-border-strong'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400">
+                  <div className="p-1.5 rounded-lg bg-primary-soft text-primary-solid">
                     <Scale className="w-4 h-4" />
                   </div>
                   {decision === 'PARTIAL_SPLIT' && (
-                    <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                    <CheckCircle2 className="w-4 h-4 text-primary-solid" />
                   )}
                 </div>
-                <div className="text-xs font-bold text-slate-900 dark:text-white">Hòa giải chia tỷ lệ</div>
-                <p className="text-3xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                <div className="text-xs font-bold text-text">Hòa giải chia tỷ lệ</div>
+                <p className="text-3xs text-text-subtle mt-1 leading-relaxed">
                   Phân chia thù lao & hoàn tiền theo thỏa thuận
                 </p>
               </div>
@@ -259,20 +259,20 @@ export function AdminResolveTicketModal({
                 onClick={() => setDecision('FULL_STUDENT_REFUND')}
                 className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                   decision === 'FULL_STUDENT_REFUND'
-                    ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 shadow-xs'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    ? 'border-info bg-info-soft shadow-xs'
+                    : 'border-border hover:border-border-strong'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
+                  <div className="p-1.5 rounded-lg bg-info-soft text-info">
                     <RotateCcw className="w-4 h-4" />
                   </div>
                   {decision === 'FULL_STUDENT_REFUND' && (
-                    <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                    <CheckCircle2 className="w-4 h-4 text-info" />
                   )}
                 </div>
-                <div className="text-xs font-bold text-slate-900 dark:text-white">Hoàn trả toàn bộ</div>
-                <p className="text-3xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                <div className="text-xs font-bold text-text">Hoàn trả toàn bộ</div>
+                <p className="text-3xs text-text-subtle mt-1 leading-relaxed">
                   Học viên hoàn 100%, Cố vấn nhận 0đ
                 </p>
               </div>
@@ -281,19 +281,19 @@ export function AdminResolveTicketModal({
 
           {/* Cấu hình phân chia chi tiết (nếu là PARTIAL_SPLIT) */}
           {decision === 'PARTIAL_SPLIT' && (
-            <div className="p-4 bg-purple-50/30 dark:bg-purple-950/10 rounded-xl border border-purple-200 dark:border-purple-800/40 space-y-3.5 animate-in fade-in duration-150">
+            <div className="p-4 bg-primary-soft rounded-xl border border-primary-soft-border space-y-3.5 animate-in fade-in duration-150">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-purple-900 dark:text-purple-300">
+                <span className="text-xs font-bold text-primary-solid">
                   Cơ chế phân chia hòa giải
                 </span>
-                <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-1 bg-surface p-0.5 rounded-lg border border-border">
                   <button
                     type="button"
                     onClick={() => setSplitMode('AMOUNT')}
                     className={`px-2.5 py-1 text-2xs rounded-md font-medium transition-colors flex items-center gap-1 ${
                       splitMode === 'AMOUNT'
-                        ? 'bg-purple-600 text-white shadow-2xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                        ? 'bg-primary-solid text-on-primary shadow-2xs'
+                        : 'text-text-muted hover:text-text'
                     }`}
                   >
                     <DollarSign className="w-3 h-3" /> Số tiền
@@ -303,8 +303,8 @@ export function AdminResolveTicketModal({
                     onClick={() => setSplitMode('PERCENTAGE')}
                     className={`px-2.5 py-1 text-2xs rounded-md font-medium transition-colors flex items-center gap-1 ${
                       splitMode === 'PERCENTAGE'
-                        ? 'bg-purple-600 text-white shadow-2xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                        ? 'bg-primary-solid text-on-primary shadow-2xs'
+                        : 'text-text-muted hover:text-text'
                     }`}
                   >
                     <Percent className="w-3 h-3" /> Tỷ lệ %
@@ -315,8 +315,8 @@ export function AdminResolveTicketModal({
               {splitMode === 'PERCENTAGE' ? (
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-emerald-700 dark:text-emerald-400">Mentor: {mentorPercentage}%</span>
-                    <span className="text-blue-700 dark:text-blue-400">Student: {100 - mentorPercentage}%</span>
+                    <span className="text-success">Mentor: {mentorPercentage}%</span>
+                    <span className="text-info">Student: {100 - mentorPercentage}%</span>
                   </div>
                   <input
                     type="range"
@@ -325,9 +325,9 @@ export function AdminResolveTicketModal({
                     step="5"
                     value={mentorPercentage}
                     onChange={(e) => handlePercentageChange(Number(e.target.value))}
-                    className="w-full accent-purple-600 cursor-pointer"
+                    className="w-full accent-primary-solid cursor-pointer"
                   />
-                  <div className="flex justify-between text-2xs text-slate-500">
+                  <div className="flex justify-between text-2xs text-text-subtle">
                     <span>{formatVnd(calculatedMentorAmount)}</span>
                     <span>{formatVnd(calculatedStudentRefund)}</span>
                   </div>
@@ -335,7 +335,7 @@ export function AdminResolveTicketModal({
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor={mentorAmountId} className="text-2xs font-medium text-slate-600 dark:text-slate-400 block mb-1">
+                    <label htmlFor={mentorAmountId} className="text-2xs font-medium text-text-muted block mb-1">
                       Thù lao Cố vấn (VNĐ)
                     </label>
                     <input
@@ -345,11 +345,11 @@ export function AdminResolveTicketModal({
                       max={netFund}
                       value={mentorAmount}
                       onChange={(e) => handleMentorAmountChange(Math.max(0, Number(e.target.value)))}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-border-strong bg-surface font-semibold focus:outline-hidden focus:ring-2 focus:ring-focus"
                     />
                   </div>
                   <div>
-                    <label htmlFor={studentRefundId} className="text-2xs font-medium text-slate-600 dark:text-slate-400 block mb-1">
+                    <label htmlFor={studentRefundId} className="text-2xs font-medium text-text-muted block mb-1">
                       Hoàn trả Học viên (VNĐ)
                     </label>
                     <input
@@ -359,7 +359,7 @@ export function AdminResolveTicketModal({
                       max={netFund}
                       value={studentRefund}
                       onChange={(e) => setStudentRefund(Math.max(0, Number(e.target.value)))}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-border-strong bg-surface font-semibold focus:outline-hidden focus:ring-2 focus:ring-focus"
                     />
                   </div>
                 </div>
@@ -368,12 +368,12 @@ export function AdminResolveTicketModal({
           )}
 
           {/* Phí xử lý tranh chấp (nếu có) */}
-          <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between p-3 bg-surface-2 rounded-xl border border-border">
             <div>
-              <label htmlFor={disputeFeeId} className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+              <label htmlFor={disputeFeeId} className="text-xs font-semibold text-text-muted block">
                 Phí xử lý tranh chấp (Dispute Fee)
               </label>
-              <span className="text-3xs text-slate-500 dark:text-slate-400">
+              <span className="text-3xs text-text-subtle">
                 Khấu trừ vào quỹ trước khi phân bổ theo chính sách nếu áp dụng (mặc định 0đ)
               </span>
             </div>
@@ -385,38 +385,38 @@ export function AdminResolveTicketModal({
                 max={availableFund}
                 value={disputeFee}
                 onChange={(e) => setDisputeFee(Math.max(0, Number(e.target.value)))}
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-right font-semibold focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border-strong bg-surface text-right font-semibold focus:outline-hidden focus:ring-2 focus:ring-focus"
               />
             </div>
           </div>
 
           {/* Bảng đối soát tài chính phân bổ */}
-          <div className="p-3.5 bg-slate-900 text-white rounded-xl space-y-2">
-            <div className="text-2xs uppercase tracking-wider text-slate-400 font-bold mb-1">
+          <div className="p-3.5 bg-text text-text-inverse rounded-xl space-y-2">
+            <div className="text-2xs uppercase tracking-wider text-text-subtle font-bold mb-1">
               Bảng đối soát tài chính phân bổ
             </div>
             <div className="flex justify-between text-xs py-1 border-b border-slate-800">
               <span className="text-slate-300">Cố vấn (Mentor) thực nhận:</span>
-              <span className="font-bold text-emerald-400">{formatVnd(calculatedMentorAmount)}</span>
+              <span className="font-bold text-success">{formatVnd(calculatedMentorAmount)}</span>
             </div>
             <div className="flex justify-between text-xs py-1 border-b border-slate-800">
               <span className="text-slate-300">Học viên (Student) hoàn trả:</span>
-              <span className="font-bold text-blue-400">{formatVnd(calculatedStudentRefund)}</span>
+              <span className="font-bold text-info">{formatVnd(calculatedStudentRefund)}</span>
             </div>
             {disputeFee > 0 && (
               <div className="flex justify-between text-xs py-1 border-b border-slate-800">
                 <span className="text-slate-300">Phí xử lý tranh chấp:</span>
-                <span className="font-bold text-amber-400">{formatVnd(disputeFee)}</span>
+                <span className="font-bold text-warning">{formatVnd(disputeFee)}</span>
               </div>
             )}
             <div className="flex justify-between text-xs pt-1 font-bold">
               <span>Tổng phân bổ / Quỹ khả dụng:</span>
-              <span className={isFundBalanced ? 'text-emerald-400' : 'text-red-400'}>
+              <span className={isFundBalanced ? 'text-success' : 'text-danger'}>
                 {formatVnd(totalAllocated)} / {formatVnd(availableFund)}
               </span>
             </div>
             {!isFundBalanced && (
-              <div className="text-3xs text-red-400 font-medium">
+              <div className="text-3xs text-danger font-medium">
                 ⚠️ Tổng tiền phân bổ không khớp quỹ Escrow. Vui lòng điều chỉnh lại số tiền!
               </div>
             )}
@@ -425,10 +425,10 @@ export function AdminResolveTicketModal({
           {/* Lý do phán quyết */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Căn cứ & Lý do phán quyết <span className="text-red-500">*</span>
+              <label className="text-xs font-semibold text-text-muted">
+                Căn cứ & Lý do phán quyết <span className="text-danger">*</span>
               </label>
-              <span className="text-3xs text-slate-400">Tối thiểu 10 ký tự</span>
+              <span className="text-3xs text-text-subtle">Tối thiểu 10 ký tự</span>
             </div>
 
             {/* Nút Preset */}
@@ -438,7 +438,7 @@ export function AdminResolveTicketModal({
                   key={idx}
                   type="button"
                   onClick={() => setDecisionReason(p.text)}
-                  className="px-2 py-0.5 text-3xs font-medium rounded-md bg-purple-100/60 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 transition-colors flex items-center gap-1"
+                  className="px-2 py-0.5 text-3xs font-medium rounded-md bg-primary-soft text-primary-solid hover:bg-primary-soft-border transition-colors flex items-center gap-1"
                 >
                   <Sparkles className="w-2.5 h-2.5" /> {p.label}
                 </button>
@@ -450,21 +450,21 @@ export function AdminResolveTicketModal({
               value={decisionReason}
               onChange={(e) => setDecisionReason(e.target.value)}
               placeholder="Nhập căn cứ pháp lý, khối lượng công việc hoàn thành và lý do đưa ra phán quyết này..."
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-border-strong bg-surface focus:outline-hidden focus:ring-2 focus:ring-focus"
             />
           </div>
 
           {/* Cảnh báo pháp lý */}
-          <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800/40 flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-2xs text-amber-800 dark:text-amber-300 leading-relaxed">
+          <div className="p-3 bg-warning-soft rounded-xl border border-warning-border flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+            <p className="text-2xs text-warning leading-relaxed">
               Phán quyết này là quyết định cuối cùng và sẽ khép lại Ticket. Hệ thống sẽ cập nhật trạng thái Task và tự động tạo các giao dịch giải ngân/hoàn tiền độc lập trong sổ quỹ Mentoring.
             </p>
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 bg-surface-2 border-t border-border flex items-center justify-between">
           <Button variant="ghost" onClick={onClose} disabled={resolveMutation.isPending}>
             Hủy bỏ
           </Button>
@@ -484,7 +484,7 @@ export function AdminResolveTicketModal({
                   setIsConfirmStep(true)
                 }}
                 disabled={!isFundBalanced}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                className="bg-primary-solid hover:bg-primary-hover text-on-primary"
               >
                 Xác nhận phán quyết
               </Button>
@@ -501,7 +501,7 @@ export function AdminResolveTicketModal({
                   variant="primary"
                   onClick={handleSubmit}
                   disabled={resolveMutation.isPending}
-                  className="bg-purple-700 hover:bg-purple-800 text-white flex items-center gap-1.5"
+                  className="bg-primary-solid hover:bg-primary-hover text-on-primary flex items-center gap-1.5"
                 >
                   {resolveMutation.isPending ? (
                     <>

@@ -149,8 +149,8 @@ export function AdminOverviewPage() {
         count: pendingReportCount,
         badgeText: 'Cần xử lý ngay',
         badgeTone: 'rose' as const,
-        icon: <Flag className="h-4 w-4 text-rose-600 dark:text-rose-400" />,
-        iconBg: 'bg-rose-100 dark:bg-rose-950/50',
+        icon: <Flag className="h-4 w-4 text-danger" />,
+        iconBg: 'bg-danger-soft',
         actionLabel: 'Xử lý',
         actionHref: '/admin/reports',
         isUrgent: true,
@@ -166,8 +166,8 @@ export function AdminOverviewPage() {
         count: pendingMentorCount,
         badgeText: 'Chờ thanh toán',
         badgeTone: 'gold' as const,
-        icon: <Compass className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
-        iconBg: 'bg-amber-100 dark:bg-amber-950/50',
+        icon: <Compass className="h-4 w-4 text-warning" />,
+        iconBg: 'bg-warning-soft',
         actionLabel: 'Xem danh sách',
         actionHref: '/admin/mentor-packages',
         isUrgent: false,
@@ -200,8 +200,8 @@ export function AdminOverviewPage() {
         count: lockedUserCount,
         badgeText: 'Đang khóa',
         badgeTone: 'neutral' as const,
-        icon: <Lock className="h-4 w-4 text-slate-600 dark:text-slate-400" />,
-        iconBg: 'bg-slate-100 dark:bg-[#323436]',
+        icon: <Lock className="h-4 w-4 text-text-muted" />,
+        iconBg: 'bg-surface-2 dark:bg-surface-2',
         actionLabel: 'Kiểm tra',
         actionHref: '/admin/users',
         isUrgent: false,
@@ -264,8 +264,8 @@ export function AdminOverviewPage() {
           timeAgo: formatTimeAgo(u.createdAt),
           actorName: u.fullName,
           actorAvatar: u.avatarUrl,
-          icon: <UserPlus className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />,
-          iconTone: 'bg-emerald-100 dark:bg-emerald-950/50',
+          icon: <UserPlus className="h-3.5 w-3.5 text-success" />,
+          iconTone: 'bg-success-soft',
           linkUrl: '/admin/users',
         })
       })
@@ -283,8 +283,8 @@ export function AdminOverviewPage() {
           timeAgo: formatTimeAgo(r.createdAt),
           actorName: r.reporterName,
           actorAvatar: r.reporterAvatarUrl,
-          icon: <Flag className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />,
-          iconTone: 'bg-rose-100 dark:bg-rose-950/50',
+          icon: <Flag className="h-3.5 w-3.5 text-danger" />,
+          iconTone: 'bg-danger-soft',
           linkUrl: '/admin/reports',
         })
       })
@@ -373,23 +373,23 @@ export function AdminOverviewPage() {
         <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" gap={0.07}>
           {kpis.map((k) => (
             <StaggerItem key={k.label}>
-              <Card hover={false} className="p-5 border border-plum-900/10 dark:border-[#393a3b] shadow-xs">
-                <p className="text-xs font-semibold text-plum-500 dark:text-[#a0a3a7]">{k.label}</p>
-                <p className="mt-2 text-3xl font-black text-plum-900 dark:text-[#f0f2f5]">
+              <Card hover={false} className="p-5 border border-border shadow-xs">
+                <p className="text-xs font-semibold text-text-subtle dark:text-text-muted">{k.label}</p>
+                <p className="mt-2 text-3xl font-black text-text">
                   <Counter value={k.value} compactFmt={k.value > 9999} />
                 </p>
                 <p
                   className={cn(
                     'mt-2 inline-flex items-center gap-1 text-xs font-bold',
                     k.isWarning
-                      ? 'text-amber-600 dark:text-amber-400'
+                      ? 'text-warning'
                       : k.up
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-rose-500'
+                      ? 'text-success'
+                      : 'text-danger'
                   )}
                 >
                   <ArrowUpRight size={14} /> {k.delta}
-                  <span className="font-medium text-plum-400 dark:text-slate-500"> so với tháng trước</span>
+                  <span className="font-medium text-text-subtle"> so với tháng trước</span>
                 </p>
               </Card>
             </StaggerItem>
@@ -413,24 +413,24 @@ export function AdminOverviewPage() {
           <Reveal>
             <Card
               hover={false}
-              className="p-5 sm:p-6 rounded-2xl border border-plum-900/10 dark:border-[#393a3b] shadow-xs flex flex-col h-full"
+              className="p-5 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col h-full"
             >
               {/* Card Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#333537] mb-4">
+              <div className="flex items-center justify-between pb-4 border-b border-border dark:border-border mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400">
+                  <div className="p-2 rounded-xl bg-primary-soft text-primary-solid">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="font-extrabold text-base text-plum-900 dark:text-[#f0f2f5] flex items-center gap-2">
+                    <h2 className="font-extrabold text-base text-text flex items-center gap-2">
                       <span>Cần xử lý</span>
                       {totalActionItems > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white animate-pulse">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning text-text-inverse animate-pulse">
                           {totalActionItems}
                         </span>
                       )}
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-[#a0a3a7] mt-0.5">
+                    <p className="text-xs text-text-subtle dark:text-text-muted mt-0.5">
                       Danh sách công việc và hàng đợi cần Quản trị viên can thiệp
                     </p>
                   </div>
@@ -440,7 +440,7 @@ export function AdminOverviewPage() {
                   <button
                     type="button"
                     onClick={handleRefreshAll}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2e3033] transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-text-subtle hover:text-text-muted hover:bg-surface-2 dark:hover:bg-surface-2 transition-colors cursor-pointer"
                     title="Tải lại dữ liệu"
                   >
                     <RefreshCw className="h-4 w-4" />
@@ -456,7 +456,7 @@ export function AdminOverviewPage() {
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/70 dark:bg-[#222426] border border-slate-100 dark:border-[#333537]"
+                        className="flex items-center justify-between p-3.5 rounded-xl bg-surface-2 dark:bg-surface border border-border dark:border-border"
                       >
                         <div className="flex items-center gap-3">
                           <Skeleton className="h-9 w-9 rounded-xl" />
@@ -473,13 +473,13 @@ export function AdminOverviewPage() {
 
                 {/* 2. Error State */}
                 {!isLoadingPendingCards && isErrorPendingCards && (
-                  <div className="p-6 text-center bg-rose-50/50 dark:bg-rose-950/20 rounded-xl border border-rose-200/80 dark:border-rose-900/40 space-y-3">
-                    <AlertTriangle className="h-8 w-8 text-rose-500 mx-auto" />
+                  <div className="p-6 text-center bg-danger-soft rounded-xl border border-danger-border space-y-3">
+                    <AlertTriangle className="h-8 w-8 text-danger mx-auto" />
                     <div>
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-[#f0f2f5]">
+                      <h4 className="text-sm font-bold text-text">
                         Không thể tải danh sách công việc
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-text-subtle mt-0.5">
                         Đã xảy ra sự cố khi kết nối tới một số dịch vụ hàng đợi.
                       </p>
                     </div>
@@ -497,14 +497,14 @@ export function AdminOverviewPage() {
                 {/* 3. Empty State (Khi đã xử lý xong hết) */}
                 {!isLoadingPendingCards && !isErrorPendingCards && actionItems.length === 0 && (
                   <div className="py-10 px-4 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
+                    <div className="w-12 h-12 rounded-2xl bg-success-soft text-success flex items-center justify-center mx-auto shadow-inner">
                       <CheckCircle2 className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-extrabold text-slate-800 dark:text-[#f0f2f5]">
+                      <h3 className="text-sm font-extrabold text-text">
                         Đã xử lý hết các yêu cầu
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-[#a0a3a7] max-w-sm mx-auto mt-1">
+                      <p className="text-xs text-text-subtle dark:text-text-muted max-w-sm mx-auto mt-1">
                         Hiện không có công việc nào tồn đọng đang chờ Quản trị viên xử lý. Hệ thống đang vận hành ổn định!
                       </p>
                     </div>
@@ -520,8 +520,8 @@ export function AdminOverviewPage() {
                         className={cn(
                           'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl transition-all border',
                           item.isUrgent
-                            ? 'bg-rose-50/40 dark:bg-rose-950/15 border-rose-200/80 dark:border-rose-900/40 hover:border-rose-300'
-                            : 'bg-slate-50/70 dark:bg-[#222426] border-slate-200/70 dark:border-[#333537] hover:border-brand-500/40'
+                            ? 'bg-danger-soft border-danger-border hover:border-danger-border'
+                            : 'bg-surface-2 dark:bg-surface border-border dark:border-border hover:border-brand-500/40'
                         )}
                       >
                         {/* Icon & Title */}
@@ -537,14 +537,14 @@ export function AdminOverviewPage() {
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-bold text-xs sm:text-sm text-plum-900 dark:text-[#f0f2f5] truncate">
+                              <h3 className="font-bold text-xs sm:text-sm text-text truncate">
                                 {item.title}
                               </h3>
-                              <Badge tone={item.badgeTone} className="text-[10px] font-bold px-2 py-0.2">
+                              <Badge tone={item.badgeTone} className="text-xs font-bold px-2 py-0.2">
                                 {item.count} {item.badgeText}
                               </Badge>
                             </div>
-                            <p className="text-[11px] text-slate-500 dark:text-[#a0a3a7] truncate mt-0.5">
+                            <p className="text-xs text-text-subtle dark:text-text-muted truncate mt-0.5">
                               {item.description}
                             </p>
                           </div>
@@ -560,8 +560,8 @@ export function AdminOverviewPage() {
                             className={cn(
                               'rounded-xl text-xs font-bold px-3.5 py-1.5 transition-all cursor-pointer flex items-center gap-1.5',
                               item.isUrgent
-                                ? 'bg-gradient-to-r from-rose-600 to-rose-500 text-white hover:from-rose-700 hover:to-rose-600 shadow-sm'
-                                : 'bg-white dark:bg-[#1c1d1f] text-plum-800 dark:text-[#e4e6eb] hover:bg-slate-100 dark:hover:bg-[#2e3033] border border-slate-200 dark:border-slate-700'
+                                ? 'bg-danger text-text-inverse hover:opacity-90 shadow-raised'
+                                : 'bg-surface dark:bg-bg text-text hover:bg-surface-2 dark:hover:bg-surface-2 border border-border'
                             )}
                           >
                             <span>{item.actionLabel}</span>
@@ -582,19 +582,19 @@ export function AdminOverviewPage() {
           <Reveal direction="left">
             <Card
               hover={false}
-              className="p-5 sm:p-6 rounded-2xl border border-plum-900/10 dark:border-[#393a3b] shadow-xs flex flex-col h-full"
+              className="p-5 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col h-full"
             >
               {/* Card Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#333537] mb-4">
+              <div className="flex items-center justify-between pb-4 border-b border-border dark:border-border mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+                  <div className="p-2 rounded-xl bg-success-soft text-success">
                     <Clock className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="font-extrabold text-base text-plum-900 dark:text-[#f0f2f5]">
+                    <h2 className="font-extrabold text-base text-text">
                       Hoạt động gần đây
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-[#a0a3a7] mt-0.5">
+                    <p className="text-xs text-text-subtle dark:text-text-muted mt-0.5">
                       Nhật ký thao tác và sự kiện mới nhất
                     </p>
                   </div>
@@ -603,7 +603,7 @@ export function AdminOverviewPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/admin/users')}
-                  className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-0.5"
+                  className="text-xs font-bold text-primary-solid hover:underline cursor-pointer flex items-center gap-0.5"
                 >
                   <span>Xem tất cả</span>
                   <ChevronRight className="h-3 w-3" />
@@ -631,10 +631,10 @@ export function AdminOverviewPage() {
                 {/* 2. Empty State */}
                 {!isLoadingRecentCards && recentActivities.length === 0 && (
                   <div className="py-8 text-center space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#2a2b2d] flex items-center justify-center mx-auto text-slate-400">
+                    <div className="w-10 h-10 rounded-full bg-surface-2 dark:bg-[#2a2b2d] flex items-center justify-center mx-auto text-text-subtle">
                       <Sparkles className="h-5 w-5" />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-[#a0a3a7]">
+                    <p className="text-xs text-text-subtle dark:text-text-muted">
                       Chưa có hoạt động mới nào được ghi nhận.
                     </p>
                   </div>
@@ -642,14 +642,14 @@ export function AdminOverviewPage() {
 
                 {/* 3. Activity Feed List */}
                 {!isLoadingRecentCards && recentActivities.length > 0 && (
-                  <ul className="divide-y divide-slate-100 dark:divide-[#2e3033]">
+                  <ul className="divide-y divide-border dark:divide-[#2e3033]">
                     {recentActivities.map((act) => (
                       <li
                         key={act.id}
                         onClick={() => act.linkUrl && navigate(act.linkUrl)}
                         className={cn(
                           'py-3 flex items-center gap-3 transition-colors rounded-xl px-1.5 -mx-1.5',
-                          act.linkUrl ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-[#242628]' : ''
+                          act.linkUrl ? 'cursor-pointer hover:bg-surface-2 dark:hover:bg-surface' : ''
                         )}
                       >
                         {/* Avatar or Icon */}
@@ -658,10 +658,10 @@ export function AdminOverviewPage() {
                             <img
                               src={act.actorAvatar}
                               alt={act.actorName}
-                              className="h-8.5 w-8.5 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+                              className="h-8.5 w-8.5 rounded-full object-cover ring-1 ring-border"
                             />
                           ) : (
-                            <div className="h-8.5 w-8.5 rounded-full bg-slate-100 dark:bg-[#323436] flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <div className="h-8.5 w-8.5 rounded-full bg-surface-2 dark:bg-surface-2 flex items-center justify-center text-xs font-bold text-text-muted">
                               {act.actorName ? act.actorName.charAt(0).toUpperCase() : 'U'}
                             </div>
                           )}
@@ -669,7 +669,7 @@ export function AdminOverviewPage() {
                           {/* Mini tone badge icon */}
                           <span
                             className={cn(
-                              'absolute -bottom-1 -right-1 p-0.5 rounded-full ring-2 ring-white dark:ring-[#1c1d1f]',
+                              'absolute -bottom-1 -right-1 p-0.5 rounded-full ring-2 ring-surface dark:ring-[#1c1d1f]',
                               act.iconTone
                             )}
                           >
@@ -679,16 +679,16 @@ export function AdminOverviewPage() {
 
                         {/* Content text */}
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-plum-900 dark:text-[#f0f2f5] truncate">
+                          <p className="text-xs font-bold text-text truncate">
                             {act.title}
                           </p>
-                          <p className="text-[11px] text-slate-500 dark:text-[#a0a3a7] truncate">
+                          <p className="text-xs text-text-subtle dark:text-text-muted truncate">
                             {act.description}
                           </p>
                         </div>
 
                         {/* Time indicator */}
-                        <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap pl-1">
+                        <div className="text-xs font-semibold text-text-subtle shrink-0 whitespace-nowrap pl-1">
                           {act.timeAgo}
                         </div>
                       </li>

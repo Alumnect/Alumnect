@@ -96,18 +96,18 @@ export function AdminMentorListSection() {
   const getSubStatusInfo = (status?: string) => {
     switch (status) {
       case 'ACTIVE':
-        return { text: 'Đang hiệu lực', className: 'text-emerald-700 bg-emerald-50 border-emerald-200' }
+        return { text: 'Đang hiệu lực', className: 'text-success bg-success-soft border-success-border' }
       case 'PAID':
-        return { text: 'Đã thanh toán', className: 'text-emerald-700 bg-emerald-50 border-emerald-200' }
+        return { text: 'Đã thanh toán', className: 'text-success bg-success-soft border-success-border' }
       case 'EXPIRED':
-        return { text: 'Đã hết hạn', className: 'text-rose-700 bg-rose-50 border-rose-200' }
+        return { text: 'Đã hết hạn', className: 'text-danger bg-danger-soft border-danger-border' }
       case 'PENDING_PAYMENT':
       case 'PENDING':
-        return { text: 'Chờ thanh toán', className: 'text-amber-700 bg-amber-50 border-amber-200' }
+        return { text: 'Chờ thanh toán', className: 'text-warning bg-warning-soft border-warning-border' }
       case 'CANCELLED':
-        return { text: 'Đã hủy', className: 'text-slate-600 bg-slate-50 border-slate-200' }
+        return { text: 'Đã hủy', className: 'text-text-muted bg-surface-2 border-border' }
       default:
-        return { text: status || 'Chưa đăng ký', className: 'text-slate-600 bg-slate-50 border-slate-200' }
+        return { text: status || 'Chưa đăng ký', className: 'text-text-muted bg-surface-2 border-border' }
     }
   }
 
@@ -141,12 +141,12 @@ export function AdminMentorListSection() {
   return (
     <div className="space-y-4">
       {/* Control Bar: Search Input & Multi-Criteria Filter (UC115) */}
-      <div className="flex flex-col gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+      <div className="flex flex-col gap-3 bg-surface p-3.5 rounded-xl border border-border shadow-2xs">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
             {/* Search Input */}
             <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-text-subtle" />
               <input
                 type="text"
                 value={keyword}
@@ -155,7 +155,7 @@ export function AdminMentorListSection() {
                   setPage(0)
                 }}
                 placeholder="Tìm theo tên, email, vị trí, công ty..."
-                className="w-full h-9 rounded-lg border border-slate-300 bg-white pl-9 pr-8 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                className="w-full h-9 rounded-lg border border-border-strong bg-surface pl-9 pr-8 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
               {keyword && (
                 <button
@@ -164,7 +164,7 @@ export function AdminMentorListSection() {
                     setKeyword('')
                     setPage(0)
                   }}
-                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  className="absolute right-2.5 top-2.5 text-text-subtle hover:text-text-muted p-0.5 cursor-pointer"
                   title="Xóa tìm kiếm"
                 >
                   <X size={14} />
@@ -180,7 +180,7 @@ export function AdminMentorListSection() {
                   setStatusFilter(e.target.value)
                   setPage(0)
                 }}
-                className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-700 focus:border-[#F27024] focus:outline-none cursor-pointer"
+                className="h-9 rounded-lg border border-border-strong bg-surface px-2.5 text-xs text-text-muted focus:border-primary focus:outline-none cursor-pointer"
               >
                 <option value="ALL">Tất cả trạng thái Mentor</option>
                 <option value="ACTIVE">Đang hoạt động</option>
@@ -198,7 +198,7 @@ export function AdminMentorListSection() {
                   setSubStatusFilter(e.target.value)
                   setPage(0)
                 }}
-                className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-700 focus:border-[#F27024] focus:outline-none cursor-pointer"
+                className="h-9 rounded-lg border border-border-strong bg-surface px-2.5 text-xs text-text-muted focus:border-primary focus:outline-none cursor-pointer"
               >
                 <option value="ALL">Tất cả gói dịch vụ</option>
                 <option value="ACTIVE">Đang hiệu lực</option>
@@ -215,15 +215,15 @@ export function AdminMentorListSection() {
                 variant="secondary"
                 size="sm"
                 onClick={handleResetFilters}
-                className="gap-1.5 text-xs text-slate-600 hover:text-slate-900 border-slate-300 h-9 shrink-0"
+                className="gap-1.5 text-xs text-text-muted hover:text-text border-border-strong h-9 shrink-0"
               >
                 <RotateCcw size={12} /> Đặt lại
               </Button>
             )}
           </div>
 
-          <div className="text-xs text-slate-500 self-end lg:self-center shrink-0">
-            Tổng cộng: <strong className="text-slate-900 font-semibold">{totalElements}</strong> Cố vấn
+          <div className="text-xs text-text-subtle self-end lg:self-center shrink-0">
+            Tổng cộng: <strong className="text-text font-semibold">{totalElements}</strong> Cố vấn
           </div>
         </div>
       </div>
@@ -245,11 +245,11 @@ export function AdminMentorListSection() {
 
       {/* Error state */}
       {isError && (
-        <Card hover={false} className="p-8 text-center border-red-200 bg-red-50/30">
+        <Card hover={false} className="p-8 text-center border-danger-border bg-danger-soft">
           <div className="space-y-3">
-            <Users className="mx-auto h-8 w-8 text-red-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Lỗi tải danh sách Cố vấn</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <Users className="mx-auto h-8 w-8 text-danger" />
+            <h3 className="text-sm font-semibold text-text">Lỗi tải danh sách Cố vấn</h3>
+            <p className="text-xs text-text-subtle max-w-sm mx-auto">
               {(error as any)?.message || 'Không thể kết nối máy chủ cơ sở dữ liệu.'}
             </p>
             <Button
@@ -267,7 +267,7 @@ export function AdminMentorListSection() {
       {/* Empty State */}
       {!isLoading && !isError && mentors.length === 0 && (
         <EmptyState
-          icon={<Users size={28} className="text-slate-400" />}
+          icon={<Users size={28} className="text-text-subtle" />}
           title="Không tìm thấy Cố vấn nào"
           description={
             keyword
@@ -280,11 +280,11 @@ export function AdminMentorListSection() {
       {/* Mentor Table */}
       {!isLoading && !isError && mentors.length > 0 && (
         <div className="space-y-4">
-          <Card hover={false} className="p-0 border border-slate-200 overflow-hidden shadow-xs">
+          <Card hover={false} className="p-0 border border-border overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+              <table className="w-full min-w-[760px] text-sm text-left">
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50">
+                  <tr className="border-b border-border text-xs font-semibold uppercase tracking-wider text-text-subtle bg-surface-2">
                     <th className="px-4 py-3.5 w-[22%]">Cố vấn</th>
                     <th className="px-4 py-3.5 w-[20%]">Vị trí & Tổ chức</th>
                     <th className="px-3 py-3.5 text-center w-[12%]">Trạng thái</th>
@@ -293,12 +293,12 @@ export function AdminMentorListSection() {
                     <th className="px-4 py-3.5 text-right w-[14%]">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {mentors.map((m: AdminMentorCvDto) => {
                     const statusInfo = getMentorStatusInfo(m.mentorStatus)
                     const subInfo = getSubStatusInfo(m.subscriptionStatus)
                     return (
-                      <tr key={m.mentorProfileId} className="transition-colors hover:bg-slate-50/70">
+                      <tr key={m.mentorProfileId} className="transition-colors hover:bg-surface-2">
                         {/* Avatar & Name */}
                         <td className="px-4 py-3.5">
                           <div
@@ -309,37 +309,37 @@ export function AdminMentorListSection() {
                               <img
                                 src={m.avatarUrl}
                                 alt={m.mentorName}
-                                className="h-9 w-9 rounded-full object-cover border border-slate-200 shrink-0"
+                                className="h-9 w-9 rounded-full object-cover border border-border shrink-0"
                               />
                             ) : (
-                              <div className="h-9 w-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-medium text-xs shrink-0">
+                              <div className="h-9 w-9 rounded-full bg-surface-2 text-text-muted flex items-center justify-center font-medium text-xs shrink-0">
                                 <User size={15} />
                               </div>
                             )}
                             <div className="min-w-0">
-                              <p className="font-semibold text-xs text-slate-900 group-hover/user:text-[#F27024] transition-colors truncate">
+                              <p className="font-semibold text-xs text-text group-hover/user:text-[#F27024] transition-colors truncate">
                                 {m.mentorName}
                               </p>
-                              <p className="text-[11px] text-slate-400 truncate">{m.mentorEmail}</p>
+                              <p className="text-xs text-text-subtle truncate">{m.mentorEmail}</p>
                             </div>
                           </div>
                         </td>
 
                         {/* Position & Company */}
                         <td className="px-4 py-3.5 text-xs">
-                          <p className="font-medium text-slate-800 flex items-center gap-1.5 truncate">
-                            <Briefcase size={13} className="text-slate-400 shrink-0" />
+                          <p className="font-medium text-text flex items-center gap-1.5 truncate">
+                            <Briefcase size={13} className="text-text-subtle shrink-0" />
                             <span className="truncate">{m.currentPosition || 'Chưa cập nhật'}</span>
                           </p>
-                          <p className="text-slate-500 flex items-center gap-1.5 mt-0.5 text-[11px] truncate">
-                            <Building2 size={13} className="text-slate-400 shrink-0" />
+                          <p className="text-text-subtle flex items-center gap-1.5 mt-0.5 text-xs truncate">
+                            <Building2 size={13} className="text-text-subtle shrink-0" />
                             <span className="truncate">{m.currentCompany || 'Chưa cập nhật'}</span>
                           </p>
                         </td>
 
                         {/* Status */}
                         <td className="px-3 py-3.5 text-center whitespace-nowrap">
-                          <Badge tone={statusInfo.tone} className="px-2 py-0.5 font-medium text-[11px]">
+                          <Badge tone={statusInfo.tone} className="px-2 py-0.5 font-medium text-xs">
                             {statusInfo.text}
                           </Badge>
                         </td>
@@ -348,37 +348,37 @@ export function AdminMentorListSection() {
                         <td className="px-4 py-3.5 text-xs">
                           {m.packageName ? (
                             <div className="space-y-1">
-                              <div className="flex items-center gap-1.5 font-medium text-slate-900">
-                                <Crown size={13} className="text-amber-500 shrink-0" />
+                              <div className="flex items-center gap-1.5 font-medium text-text">
+                                <Crown size={13} className="text-warning shrink-0" />
                                 <span className="truncate">{m.packageName}</span>
                                 {m.subscriptionStatus && (
                                   <span
-                                    className={`inline-block text-[10px] font-medium px-1.5 py-0.2 rounded border ${subInfo.className}`}
+                                    className={`inline-block whitespace-nowrap text-xs font-medium px-1.5 py-0.2 rounded border ${subInfo.className}`}
                                   >
                                     {subInfo.text}
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[11px] text-slate-400 flex items-center gap-2 font-mono">
+                              <div className="text-xs text-text-subtle flex items-center gap-2 font-mono">
                                 <span>Từ: {formatDate(m.subscriptionStartDate)}</span>
                                 <span>-</span>
                                 <span>Đến: {formatDate(m.subscriptionEndDate)}</span>
                               </div>
                             </div>
                           ) : (
-                            <span className="text-slate-400 italic text-xs">Chưa đăng ký gói</span>
+                            <span className="text-text-subtle italic text-xs">Chưa đăng ký gói</span>
                           )}
                         </td>
 
                         {/* Performance Metrics */}
                         <td className="px-3 py-3.5 text-center whitespace-nowrap text-xs">
                           <div className="inline-flex flex-col items-center gap-1">
-                            <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px]">
-                              <Award size={11} className="text-amber-600" />
+                            <span className="inline-flex items-center gap-1 font-semibold text-warning bg-warning-soft px-2 py-0.5 rounded border border-warning-border text-xs">
+                              <Award size={11} className="text-warning" />
                               {m.reputationScore ?? 0} đ
                             </span>
-                            <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                              <CheckCircle2 size={11} className="text-emerald-600" />
+                            <span className="text-xs text-text-subtle flex items-center gap-1">
+                              <CheckCircle2 size={11} className="text-success" />
                               {m.completedTasks ?? 0} task
                             </span>
                           </div>
@@ -394,10 +394,10 @@ export function AdminMentorListSection() {
                                 setSelectedCvMentorId(m.mentorProfileId)
                                 setIsCvModalOpen(true)
                               }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-surface text-xs font-medium text-text-muted hover:bg-surface-2 hover:border-border-strong transition-colors cursor-pointer"
                               title="Xem tệp CV"
                             >
-                              <FileText size={13} className="text-slate-500" />
+                              <FileText size={13} className="text-text-subtle" />
                               <span>Xem CV</span>
                             </button>
 
@@ -405,10 +405,10 @@ export function AdminMentorListSection() {
                             <button
                               type="button"
                               onClick={() => setSelectedMentorDetail(m)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border bg-surface text-xs font-medium text-text-muted hover:bg-surface-2 hover:border-border-strong transition-colors cursor-pointer"
                               title="Xem thông tin chi tiết"
                             >
-                              <Eye size={13} className="text-slate-500" />
+                              <Eye size={13} className="text-text-subtle" />
                               <span>Chi tiết</span>
                             </button>
                           </div>
@@ -443,21 +443,21 @@ export function AdminMentorListSection() {
           />
 
           {/* Modal Container */}
-          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col overflow-hidden text-slate-800">
+          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
               <div>
-                <h2 className="text-[20px] font-semibold text-slate-900 leading-tight">
+                <h2 className="text-[20px] font-semibold text-text leading-tight">
                   Chi tiết hồ sơ Mentor
                 </h2>
-                <p className="text-[13px] text-slate-500 mt-0.5">
+                <p className="text-[13px] text-text-subtle mt-0.5">
                   Thông tin chuyên môn, gói dịch vụ và tài khoản nhận chi trả.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedMentorDetail(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-text-subtle hover:text-text-muted hover:bg-surface-2 rounded-lg transition-colors cursor-pointer"
                 aria-label="Đóng"
               >
                 <X size={18} />
@@ -467,43 +467,43 @@ export function AdminMentorListSection() {
             {/* Scrollable Modal Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
               {/* Profile Card Summary */}
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-surface-2 border border-border">
                 {selectedMentorDetail.avatarUrl ? (
                   <img
                     src={selectedMentorDetail.avatarUrl}
                     alt={selectedMentorDetail.mentorName}
-                    className="h-14 w-14 rounded-full object-cover border border-slate-300 shrink-0"
+                    className="h-14 w-14 rounded-full object-cover border border-border-strong shrink-0"
                   />
                 ) : (
-                  <div className="h-14 w-14 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-semibold text-xl shrink-0">
+                  <div className="h-14 w-14 rounded-full bg-surface-3 text-text-muted flex items-center justify-center font-semibold text-xl shrink-0">
                     <User size={24} />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base font-semibold text-slate-900">
+                    <h3 className="text-base font-semibold text-text">
                       {selectedMentorDetail.mentorName}
                     </h3>
                     <Badge
                       tone={getMentorStatusInfo(selectedMentorDetail.mentorStatus).tone}
-                      className="text-[11px] font-medium px-2 py-0.5"
+                      className="text-xs font-medium px-2 py-0.5"
                     >
                       {getMentorStatusInfo(selectedMentorDetail.mentorStatus).text}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{selectedMentorDetail.mentorEmail}</p>
+                  <p className="text-xs text-text-subtle mt-0.5">{selectedMentorDetail.mentorEmail}</p>
 
                   {/* Badges metrics */}
                   <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-medium text-[11px]">
-                      <Award size={12} className="text-amber-600" /> Uy tín: {selectedMentorDetail.reputationScore ?? 0} điểm
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-warning-soft text-warning border border-warning-border font-medium text-xs">
+                      <Award size={12} className="text-warning" /> Uy tín: {selectedMentorDetail.reputationScore ?? 0} điểm
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium text-[11px]">
-                      <CheckCircle2 size={12} className="text-emerald-600" /> Đã hoàn thành: {selectedMentorDetail.completedTasks ?? 0} task
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-success-soft text-success border border-success-border font-medium text-xs">
+                      <CheckCircle2 size={12} className="text-success" /> Đã hoàn thành: {selectedMentorDetail.completedTasks ?? 0} task
                     </span>
                     {selectedMentorDetail.rating !== undefined && Number(selectedMentorDetail.rating) > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 font-medium text-[11px]">
-                        <Star size={12} className="text-amber-500 fill-amber-500" /> {selectedMentorDetail.rating} ({selectedMentorDetail.reviewCount ?? 0} đánh giá)
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-info-soft text-info border border-info-border font-medium text-xs">
+                        <Star size={12} className="text-warning fill-warning" /> {selectedMentorDetail.rating} ({selectedMentorDetail.reviewCount ?? 0} đánh giá)
                       </span>
                     )}
                   </div>
@@ -512,34 +512,34 @@ export function AdminMentorListSection() {
 
               {/* Nhóm 1: Thông tin chuyên môn */}
               <div className="space-y-3">
-                <h4 className="text-[13px] font-semibold uppercase tracking-wider text-slate-500">
+                <h4 className="text-[13px] font-semibold uppercase tracking-wider text-text-subtle">
                   Thông tin chuyên môn
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Vị trí hiện tại:</span>
-                    <span className="font-medium text-slate-800">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Vị trí hiện tại:</span>
+                    <span className="font-medium text-text">
                       {selectedMentorDetail.currentPosition || 'Chưa cập nhật'}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Công ty / Tổ chức:</span>
-                    <span className="font-medium text-slate-800">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Công ty / Tổ chức:</span>
+                    <span className="font-medium text-text">
                       {selectedMentorDetail.currentCompany || 'Chưa cập nhật'}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Hình thức cố vấn:</span>
-                    <span className="font-medium text-slate-800">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Hình thức cố vấn:</span>
+                    <span className="font-medium text-text">
                       {formatWorkingMode(selectedMentorDetail.workingMode)}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Loại hình cố vấn:</span>
-                    <span className="font-medium text-slate-800">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Loại hình cố vấn:</span>
+                    <span className="font-medium text-text">
                       {formatMentoringType(selectedMentorDetail.mentoringType)}
                     </span>
                   </div>
@@ -547,9 +547,9 @@ export function AdminMentorListSection() {
 
                 {/* Bio */}
                 {selectedMentorDetail.bio && (
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white text-xs">
-                    <span className="text-slate-400 block mb-1">Lời giới thiệu (Bio):</span>
-                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  <div className="p-3 rounded-lg border border-border bg-surface text-xs">
+                    <span className="text-text-subtle block mb-1">Lời giới thiệu (Bio):</span>
+                    <p className="text-text-muted leading-relaxed whitespace-pre-wrap">
                       {selectedMentorDetail.bio}
                     </p>
                   </div>
@@ -558,14 +558,14 @@ export function AdminMentorListSection() {
                 {/* Supported Fields */}
                 {selectedMentorDetail.supportedFields && selectedMentorDetail.supportedFields.length > 0 && (
                   <div className="space-y-1.5">
-                    <span className="text-xs text-slate-500 font-medium block">
+                    <span className="text-xs text-text-subtle font-medium block">
                       Lĩnh vực hỗ trợ chuyên môn:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedMentorDetail.supportedFields.map((field, idx) => (
                         <span
                           key={idx}
-                          className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium"
+                          className="px-2.5 py-1 rounded-md bg-surface-2 text-text-muted border border-border text-xs font-medium"
                         >
                           {field}
                         </span>
@@ -577,14 +577,14 @@ export function AdminMentorListSection() {
                 {/* Topics */}
                 {selectedMentorDetail.topics && selectedMentorDetail.topics.length > 0 && (
                   <div className="space-y-1.5">
-                    <span className="text-xs text-slate-500 font-medium block">
+                    <span className="text-xs text-text-subtle font-medium block">
                       Chủ đề cố vấn chuyên sâu:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedMentorDetail.topics.map((topic, idx) => (
                         <span
                           key={idx}
-                          className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium"
+                          className="px-2.5 py-1 rounded-md bg-surface-2 text-text-muted border border-border text-xs font-medium"
                         >
                           {topic}
                         </span>
@@ -595,35 +595,35 @@ export function AdminMentorListSection() {
               </div>
 
               {/* Nhóm 2: Gói dịch vụ & Thời hạn */}
-              <div className="space-y-3 pt-2 border-t border-slate-200">
-                <h4 className="text-[13px] font-semibold uppercase tracking-wider text-slate-500">
+              <div className="space-y-3 pt-2 border-t border-border">
+                <h4 className="text-[13px] font-semibold uppercase tracking-wider text-text-subtle">
                   Gói dịch vụ & Thời hạn
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Gói đăng ký:</span>
-                    <span className="font-semibold text-slate-900">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Gói đăng ký:</span>
+                    <span className="font-semibold text-text">
                       {selectedMentorDetail.packageName || 'Chưa đăng ký gói'}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Trạng thái hiệu lực:</span>
-                    <span className="font-medium text-slate-800">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Trạng thái hiệu lực:</span>
+                    <span className="font-medium text-text">
                       {getSubStatusInfo(selectedMentorDetail.subscriptionStatus).text}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Ngày kích hoạt:</span>
-                    <span className="font-mono text-slate-700">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Ngày kích hoạt:</span>
+                    <span className="font-mono text-text-muted">
                       {formatDate(selectedMentorDetail.subscriptionStartDate)}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                    <span className="text-slate-400 block mb-1">Ngày hết hạn:</span>
-                    <span className="font-mono text-slate-700">
+                  <div className="p-3 rounded-lg border border-border bg-surface">
+                    <span className="text-text-subtle block mb-1">Ngày hết hạn:</span>
+                    <span className="font-mono text-text-muted">
                       {formatDate(selectedMentorDetail.subscriptionEndDate)}
                     </span>
                   </div>
@@ -632,28 +632,28 @@ export function AdminMentorListSection() {
 
               {/* Nhóm 3: Tài khoản thanh toán (nếu có) */}
               {(selectedMentorDetail.bankName || selectedMentorDetail.bankAccountNumber) && (
-                <div className="space-y-3 pt-2 border-t border-slate-200">
-                  <h4 className="text-[13px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <h4 className="text-[13px] font-semibold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
                     <CreditCard size={14} /> Tài khoản ngân hàng nhận chi trả
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                      <span className="text-slate-400 block mb-1">Ngân hàng:</span>
-                      <span className="font-medium text-slate-800">
+                    <div className="p-3 rounded-lg border border-border bg-surface">
+                      <span className="text-text-subtle block mb-1">Ngân hàng:</span>
+                      <span className="font-medium text-text">
                         {selectedMentorDetail.bankName || '—'}
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                      <span className="text-slate-400 block mb-1">Số tài khoản:</span>
-                      <span className="font-mono font-medium text-slate-800">
+                    <div className="p-3 rounded-lg border border-border bg-surface">
+                      <span className="text-text-subtle block mb-1">Số tài khoản:</span>
+                      <span className="font-mono font-medium text-text">
                         {selectedMentorDetail.bankAccountNumber || '—'}
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                      <span className="text-slate-400 block mb-1">Chủ tài khoản:</span>
-                      <span className="font-medium text-slate-800 uppercase">
+                    <div className="p-3 rounded-lg border border-border bg-surface">
+                      <span className="text-text-subtle block mb-1">Chủ tài khoản:</span>
+                      <span className="font-medium text-text uppercase">
                         {selectedMentorDetail.bankAccountHolder || '—'}
                       </span>
                     </div>
@@ -663,14 +663,14 @@ export function AdminMentorListSection() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-surface shrink-0">
               <button
                 type="button"
                 onClick={() => {
                   setSelectedCvMentorId(selectedMentorDetail.mentorProfileId)
                   setIsCvModalOpen(true)
                 }}
-                className="px-3.5 py-2 text-xs font-medium text-[#F27024] bg-orange-50 border border-orange-200 hover:bg-orange-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-2 text-xs font-medium text-primary-solid bg-primary-soft border border-orange-200 hover:bg-orange-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <FileText size={14} />
                 <span>Xem tệp CV gốc</span>
@@ -679,7 +679,7 @@ export function AdminMentorListSection() {
               <button
                 type="button"
                 onClick={() => setSelectedMentorDetail(null)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm font-medium text-text-muted bg-surface border border-border-strong hover:bg-surface-2 rounded-lg transition-colors cursor-pointer"
               >
                 Đóng
               </button>
