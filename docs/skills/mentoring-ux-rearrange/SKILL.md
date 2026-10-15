@@ -91,3 +91,7 @@ Trang đã có nút quay lại (TaskDetail, RequestDetail, GroupDetail, Incoming
 - Cần đổi route, gộp trang, hoặc thêm dữ liệu từ backend.
 - Không chắc một nút có thuộc luồng nào.
 - Bất kỳ thay đổi nào có thể đổi hành vi, dù nhỏ.
+
+## Trạng thái tổng (cập nhật)
+- A xong (Admin drawer/hồ sơ cố vấn là overlay đã có nút đóng, không cần thêm). B xong.
+- D xong: khối "Việc cần làm tiếp" trên trang task (`MentoringTaskDetailPage`), thanh tiến trình giai đoạn đã có sẵn. Chỉ đọc `permissions` + trạng thái Work Log; nút gọi lại `handleOpenAddLog` hoặc cuộn tới danh sách Work Log; ẩn khi Task kết thúc/tranh chấp/chỉ xem. Còn lại: C, E, F.

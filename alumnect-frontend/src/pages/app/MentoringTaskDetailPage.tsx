@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -6,6 +6,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
+  ListChecks,
+  Plus,
 } from 'lucide-react'
 import { Container, Button, EmptyState } from '@/components/ui'
 import {
@@ -117,6 +119,32 @@ function MentoringTaskDetailContent() {
 
   const overdue = Boolean(overview.overdue ?? overview.isOverdue)
 
+  // "Việc cần làm tiếp": chỉ đọc quyền và Work Log đã có để gợi ý bước kế tiếp, không tạo thao tác mới.
+  const pendingLogCount = workLogs.filter((log) => log.status === 'PENDING_CONFIRMATION').length
+  const isTaskEnded = ['COMPLETED', 'CANCELLED', 'RESOLVED', 'DISPUTED'].includes(overview.status)
+  let nextAction: { text: string; button?: { label: string; icon: ReactNode; onClick: () => void } } | null = null
+  if (!isTaskEnded && !permissions.isReadOnly) {
+    if (permissions.isStudent && permissions.canConfirmWorkLog && pendingLogCount > 0) {
+      nextAction = {
+        text: `Có ${pendingLogCount} Work Log đang chờ bạn xác nhận hoặc yêu cầu làm rõ.`,
+        button: {
+          label: 'Xem Work Log',
+          icon: <ListChecks className="h-3.5 w-3.5" />,
+          onClick: () => document.getElementById('task-work-logs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+        },
+      }
+    } else if (permissions.isMentor && permissions.canAddWorkLog) {
+      nextAction = {
+        text: pendingLogCount > 0
+          ? `${pendingLogCount} Work Log đang chờ học viên xác nhận. Bạn có thể ghi tiếp tiến độ.`
+          : 'Ghi Work Log để học viên theo dõi và nghiệm thu tiến độ.',
+        button: { label: 'Thêm Work Log', icon: <Plus className="h-3.5 w-3.5" />, onClick: handleOpenAddLog },
+      }
+    } else if (permissions.isStudent && pendingLogCount === 0) {
+      nextAction = { text: 'Đang chờ Mentor ghi Work Log tiếp theo.' }
+    }
+  }
+
   return (
     <div className="space-y-6 pb-12">
       {/* Điều hướng & thao tác chính */}
@@ -174,6 +202,23 @@ function MentoringTaskDetailContent() {
         </div>
       </header>
 
+      {nextAction && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary-soft-border bg-primary-soft px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5 text-sm text-text">
+            <ListChecks className="h-4 w-4 shrink-0 text-primary-solid" />
+            <p>
+              <span className="font-semibold">Việc cần làm tiếp: </span>
+              {nextAction.text}
+            </p>
+          </div>
+          {nextAction.button && (
+            <Button size="sm" onClick={nextAction.button.onClick} leftIcon={nextAction.button.icon} className="h-9 rounded-xl text-xs">
+              {nextAction.button.label}
+            </Button>
+          )}
+        </div>
+      )}
+
       {permissions.isReadOnly && overview.status === 'COMPLETED' && (
         <div className="flex items-center gap-2.5 rounded-2xl border border-success-border bg-success-soft px-4 py-3 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
@@ -195,15 +240,17 @@ function MentoringTaskDetailContent() {
           <MentoringTaskOverviewCard overview={overview} />
 
           {/* Section 2: Work Logs (UC107 & UC108) */}
-          <MentoringWorkLogList
-            taskId={overview.id}
-            workLogs={workLogs}
-            canAddWorkLog={permissions.canAddWorkLog}
-            canConfirmWorkLog={permissions.canConfirmWorkLog}
-            isStudent={permissions.isStudent}
-            onAddWorkLog={handleOpenAddLog}
-            onEditWorkLog={handleOpenEditLog}
-          />
+          <div id="task-work-logs" className="scroll-mt-24">
+            <MentoringWorkLogList
+              taskId={overview.id}
+              workLogs={workLogs}
+              canAddWorkLog={permissions.canAddWorkLog}
+              canConfirmWorkLog={permissions.canConfirmWorkLog}
+              isStudent={permissions.isStudent}
+              onAddWorkLog={handleOpenAddLog}
+              onEditWorkLog={handleOpenEditLog}
+            />
+          </div>
 
           {/* Section 3: Task History (Audit Trail) */}
           <MentoringTaskHistoryTimeline history={history} />
