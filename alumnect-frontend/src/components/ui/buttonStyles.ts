@@ -5,15 +5,15 @@ export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'text-white bg-gradient-to-r from-[#F27024] to-[#FF8C38] shadow-[0_6px_20px_-6px_rgba(242,112,36,0.5)] hover:shadow-[0_10px_28px_-8px_rgba(242,112,36,0.65)] hover:-translate-y-0.5 font-bold',
+    'text-on-primary bg-primary-solid shadow-raised hover:bg-primary-hover font-bold',
   secondary:
-    'text-slate-800 bg-white border border-slate-200/80 shadow-sm hover:border-[#F27024]/40 hover:text-[#F27024] hover:-translate-y-0.5 font-semibold',
+    'text-text bg-surface border border-border shadow-raised hover:border-primary hover:text-primary-solid font-semibold',
   outline:
-    'text-slate-700 border border-slate-200 hover:border-[#F27024] hover:text-[#F27024] hover:bg-[#F27024]/5',
-  ghost: 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
+    'text-text-muted border border-border-strong hover:border-primary hover:text-primary-solid hover:bg-primary-soft',
+  ghost: 'text-text-muted hover:text-text hover:bg-surface-2',
   gold:
-    'text-slate-900 bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_8px_20px_-8px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 font-bold',
-  glass: 'text-slate-800 glass hover:bg-white/90',
+    'text-text bg-warning-soft border border-warning-border hover:bg-warning-border/40 font-bold',
+  glass: 'text-text glass hover:bg-surface-2',
 }
 
 const SIZES: Record<ButtonSize, string> = {
@@ -26,7 +26,7 @@ const SIZES: Record<ButtonSize, string> = {
 export function buttonClasses(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', className?: string) {
   return cn(
     'group/btn sheen press relative inline-flex items-center justify-center overflow-hidden font-semibold whitespace-nowrap transition-all duration-300 select-none',
-    'focus-visible:outline-2 focus-visible:outline-brand-400 disabled:opacity-50 disabled:pointer-events-none',
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50 disabled:pointer-events-none',
     VARIANTS[variant],
     SIZES[size],
     className,

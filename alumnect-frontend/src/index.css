@@ -16,6 +16,11 @@
   --font-display: 'Sora', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Cỡ chữ nhỏ hơn text-xs: trước đây text-2xs/text-3xs được dùng nhưng chưa định nghĩa */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
 
   /* ---- Clean Slate canvas (replacing old yellowish cream) ---- */
   --color-ink-950: #f8fafc;
@@ -155,6 +160,147 @@
   --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
   --default-transition-duration: 200ms;
   --default-transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* ============================================================================
+   Design tokens ngữ nghĩa (docs/design-system.md, mục 2)
+   Lớp 1: giá trị theo chế độ sáng/tối (--c-*) — nơi DUY NHẤT chứa mã màu của UI mới.
+   Lớp 2: ánh xạ sang Tailwind (@theme inline) để dùng bg-surface, text-text-muted...
+   Component dùng token này KHÔNG cần viết dark:. Token cũ (ink/cream/plum/brand...) giữ nguyên.
+   ========================================================================== */
+:root {
+  --c-bg: #f8fafc;
+  --c-surface: #ffffff;
+  --c-surface-2: #f1f5f9;
+  --c-surface-3: #e2e8f0;
+  --c-overlay: rgb(15 23 42 / 0.45);
+
+  --c-border: #e2e8f0;
+  --c-border-strong: #cbd5e1;
+
+  --c-text: #0f172a;
+  --c-text-muted: #475569;
+  --c-text-subtle: #64748b;
+  --c-text-disabled: #94a3b8;
+  --c-text-inverse: #ffffff;
+
+  --c-primary: #f27024;
+  --c-primary-solid: #c2410c;
+  --c-primary-hover: #9a3412;
+  --c-primary-soft: #fff4ec;
+  --c-primary-soft-border: #fec7a8;
+  --c-on-primary: #ffffff;
+
+  --c-info: #004f9e;
+  --c-info-soft: #e8f0fa;
+  --c-info-border: #b9d0ec;
+
+  --c-success: #047857;
+  --c-success-soft: #ecfdf5;
+  --c-success-border: #a7f3d0;
+
+  --c-warning: #b45309;
+  --c-warning-soft: #fffbeb;
+  --c-warning-border: #fde68a;
+
+  --c-danger: #be123c;
+  --c-danger-soft: #fff1f2;
+  --c-danger-border: #fecdd3;
+
+  --c-focus: #f27024;
+
+  --c-shadow-raised: 0 6px 16px -4px rgb(15 23 42 / 0.12), 0 2px 4px rgb(15 23 42 / 0.06);
+  --c-shadow-overlay: 0 20px 48px -12px rgb(15 23 42 / 0.28);
+
+  /* z-index theo tầng (thay cho z-[100], z-[9999]...) */
+  --z-sticky: 20;
+  --z-nav: 30;
+  --z-dropdown: 40;
+  --z-overlay: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+}
+
+html.dark {
+  --c-bg: #18191a;
+  --c-surface: #242526;
+  --c-surface-2: #3a3b3c;
+  --c-surface-3: #4e4f50;
+  --c-overlay: rgb(0 0 0 / 0.65);
+
+  --c-border: #393a3b;
+  --c-border-strong: #4e4f50;
+
+  --c-text: #e4e6eb;
+  --c-text-muted: #b0b3b8;
+  --c-text-subtle: #8f9399;
+  --c-text-disabled: #65676b;
+  --c-text-inverse: #18191a;
+
+  --c-primary: #ff8c38;
+  --c-primary-solid: #f27024;
+  --c-primary-hover: #ff8c38;
+  --c-primary-soft: #2d2621;
+  --c-primary-soft-border: #4a382b;
+  --c-on-primary: #18191a;
+
+  --c-info: #7cb7ff;
+  --c-info-soft: #1f2a3a;
+  --c-info-border: #2d4466;
+
+  --c-success: #4ade80;
+  --c-success-soft: #14261c;
+  --c-success-border: #1f4a30;
+
+  --c-warning: #fbbf24;
+  --c-warning-soft: #2a2417;
+  --c-warning-border: #4d3f17;
+
+  --c-danger: #fb7185;
+  --c-danger-soft: #2d1a1f;
+  --c-danger-border: #55252f;
+
+  --c-focus: #ff8c38;
+
+  --c-shadow-raised: 0 8px 20px rgb(0 0 0 / 0.55);
+  --c-shadow-overlay: 0 24px 56px rgb(0 0 0 / 0.7);
+}
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-overlay: var(--c-overlay);
+  --color-border: var(--c-border);
+  --color-border-strong: var(--c-border-strong);
+  --color-text: var(--c-text);
+  --color-text-muted: var(--c-text-muted);
+  --color-text-subtle: var(--c-text-subtle);
+  --color-text-disabled: var(--c-text-disabled);
+  --color-text-inverse: var(--c-text-inverse);
+  --color-primary: var(--c-primary);
+  --color-primary-solid: var(--c-primary-solid);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-soft: var(--c-primary-soft);
+  --color-primary-soft-border: var(--c-primary-soft-border);
+  --color-on-primary: var(--c-on-primary);
+  --color-info: var(--c-info);
+  --color-info-soft: var(--c-info-soft);
+  --color-info-border: var(--c-info-border);
+  --color-success: var(--c-success);
+  --color-success-soft: var(--c-success-soft);
+  --color-success-border: var(--c-success-border);
+  --color-warning: var(--c-warning);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-warning-border: var(--c-warning-border);
+  --color-danger: var(--c-danger);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-danger-border: var(--c-danger-border);
+  --color-focus: var(--c-focus);
+
+  --shadow-raised: var(--c-shadow-raised);
+  --shadow-overlay: var(--c-shadow-overlay);
 }
 
 /* ---- Keyframes ---- */

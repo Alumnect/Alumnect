@@ -16,7 +16,7 @@ export function Button({ variant, size, leftIcon, rightIcon, className, children
   return (
     <button className={buttonClasses(variant, size, className)} {...rest}>
       {leftIcon ? <span className="inline-flex shrink-0 items-center justify-center pointer-events-none">{leftIcon}</span> : null}
-      {children !== undefined && children !== null ? <span>{children}</span> : null}
+      {children !== undefined && children !== null ? <span className="inline-flex min-w-0 items-center gap-[inherit]">{children}</span> : null}
       {rightIcon ? <span className="inline-flex shrink-0 items-center justify-center pointer-events-none">{rightIcon}</span> : null}
     </button>
   )
@@ -42,7 +42,7 @@ export function ButtonLink({ to, href, variant, size, leftIcon, rightIcon, class
   const inner = (
     <>
       {leftIcon ? <span className="inline-flex shrink-0 items-center justify-center pointer-events-none">{leftIcon}</span> : null}
-      {children !== undefined && children !== null ? <span>{children}</span> : null}
+      {children !== undefined && children !== null ? <span className="inline-flex min-w-0 items-center gap-[inherit]">{children}</span> : null}
       {rightIcon ? <span className="inline-flex shrink-0 items-center justify-center pointer-events-none">{rightIcon}</span> : null}
     </>
   )

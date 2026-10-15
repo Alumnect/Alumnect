@@ -11,16 +11,24 @@ export function Container({ className, children }: { className?: string; childre
 
 export type BadgeTone = 'brand' | 'gold' | 'aqua' | 'violet' | 'neutral' | 'success' | 'danger' | 'mint' | 'rose'
 
+const TONE_BRAND = 'bg-primary-soft text-primary-solid ring-primary-soft-border'
+const TONE_INFO = 'bg-info-soft text-info ring-info-border'
+const TONE_SUCCESS = 'bg-success-soft text-success ring-success-border'
+const TONE_WARNING = 'bg-warning-soft text-warning ring-warning-border'
+const TONE_DANGER = 'bg-danger-soft text-danger ring-danger-border'
+const TONE_NEUTRAL = 'bg-surface-2 text-text-muted ring-border'
+
+/** Các tone cũ là alias của 6 tone chuẩn: brand, info, success, warning, danger, neutral. */
 const BADGE_TONES: Record<BadgeTone, string> = {
-  brand: 'bg-brand-100 text-brand-700 ring-brand-300/60',
-  gold: 'bg-gold-300/50 text-gold-700 ring-gold-400/60',
-  aqua: 'bg-aqua-400/20 text-aqua-700 ring-aqua-500/40',
-  violet: 'bg-violet-200/60 text-violet-600 ring-violet-300/70',
-  neutral: 'bg-plum-900/[0.05] text-plum-600 ring-plum-900/10',
-  success: 'bg-mint-300/50 text-mint-700 ring-mint-400/60',
-  danger: 'bg-coral-300/50 text-coral-700 ring-coral-400/60',
-  mint: 'bg-mint-300/50 text-mint-700 ring-mint-400/60',
-  rose: 'bg-rose-300/50 text-rose-700 ring-rose-400/60',
+  brand: TONE_BRAND,
+  gold: TONE_WARNING,
+  aqua: TONE_INFO,
+  violet: TONE_BRAND,
+  neutral: TONE_NEUTRAL,
+  success: TONE_SUCCESS,
+  danger: TONE_DANGER,
+  mint: TONE_SUCCESS,
+  rose: TONE_DANGER,
 }
 
 export function Badge({
@@ -38,7 +46,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ring-1 ring-inset',
+        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset',
         BADGE_TONES[tone],
         className,
       )}
@@ -60,8 +68,8 @@ export function Card({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-3xl dark:bg-[#242526] dark:border-[#393a3b] dark:text-[#e4e6eb]',
-        glass ? 'glass' : 'card-surface',
+        'group relative overflow-hidden rounded-2xl bg-surface border border-border text-text shadow-raised',
+        glass && 'glass',
         hover && 'hover-lift',
         className,
       )}
@@ -102,14 +110,14 @@ export function Avatar({
           onError={() => setFailed(true)}
           className={cn(
             'h-full w-full rounded-full object-cover',
-            ring && 'ring-2 ring-brand-300 ring-offset-2 ring-offset-cream-50',
+            ring && 'ring-2 ring-primary ring-offset-2 ring-offset-bg',
           )}
         />
       ) : (
         <span
           className={cn(
-            'flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-violet-400 font-bold text-white',
-            ring && 'ring-2 ring-brand-300 ring-offset-2 ring-offset-cream-50',
+            'flex h-full w-full items-center justify-center rounded-full bg-primary-solid font-bold text-on-primary',
+            ring && 'ring-2 ring-primary ring-offset-2 ring-offset-bg',
           )}
           style={{ fontSize: Math.max(11, size * 0.36) }}
           aria-hidden
@@ -142,12 +150,12 @@ export function EmptyState({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center rounded-3xl border border-dashed border-plum-900/15 bg-white/50 px-6 py-16 text-center', className)}>
-      <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-brand-100 text-brand-600">
+    <div className={cn('flex flex-col items-center justify-center rounded-2xl border border-dashed border-border-strong bg-surface px-6 py-16 text-center', className)}>
+      <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft text-primary-solid">
         {icon ?? <Search size={24} />}
       </span>
-      <h3 className="text-lg font-bold text-plum-900">{title}</h3>
-      {description && <p className="mt-1.5 max-w-sm text-sm text-plum-500">{description}</p>}
+      <h3 className="text-lg font-bold text-text">{title}</h3>
+      {description && <p className="mt-1.5 max-w-sm text-sm text-text-muted">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   )

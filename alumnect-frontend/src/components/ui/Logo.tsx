@@ -12,8 +12,8 @@ export function Logo({ className, to = '/', compact }: { className?: string; to?
       </span>
       {!compact && (
         <span className="hidden xl:inline-block ml-1 text-2xl font-bold tracking-normal leading-none" style={{ fontFamily: "'Caveat', 'Dancing Script', cursive" }}>
-          <span className="text-[#004F9E] dark:text-[#7cc4ff]">Alum</span>
-          <span className="text-[#F27024] dark:text-[#ffad73]">Nect</span>
+          <span className="text-info">Alum</span>
+          <span className="text-primary-solid dark:text-[#ffad73]">Nect</span>
         </span>
       )}
     </Link>

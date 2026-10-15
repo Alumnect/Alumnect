@@ -60,36 +60,16 @@ export function ToastContainer() {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed top-5 right-5 z-[99999] flex max-w-sm w-full flex-col gap-2.5 px-3 sm:px-0"
+      className="pointer-events-none fixed inset-x-0 top-3 z-[99999] mx-auto flex w-full max-w-sm flex-col gap-2.5 px-3 sm:inset-x-auto sm:right-5 sm:top-5 sm:px-0"
     >
       <AnimatePresence mode="popLayout">
         {toasts.map((item) => {
           const config = {
-            success: {
-              icon: CheckCircle2,
-              border: 'border-emerald-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-emerald-500/40 dark:text-[#f0f2f5]',
-              iconClass: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400',
-            },
-            error: {
-              icon: AlertCircle,
-              border: 'border-rose-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-rose-500/40 dark:text-[#f0f2f5]',
-              iconClass: 'text-rose-500 bg-rose-50 dark:bg-rose-500/20 dark:text-rose-400',
-            },
-            warning: {
-              icon: AlertTriangle,
-              border: 'border-amber-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-amber-500/40 dark:text-[#f0f2f5]',
-              iconClass: 'text-amber-500 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400',
-            },
-            info: {
-              icon: Info,
-              border: 'border-brand-500/30 bg-white/95 text-slate-900 dark:bg-[#242526] dark:border-brand-500/40 dark:text-[#f0f2f5]',
-              iconClass: 'text-brand-500 bg-brand-50 dark:bg-brand-500/20 dark:text-brand-400',
-            },
-            notification: {
-              icon: Bell,
-              border: 'border-emerald-500/30 bg-white text-slate-900 shadow-xl shadow-emerald-950/5 ring-1 ring-emerald-500/20 dark:bg-[#242526] dark:border-emerald-500/40 dark:text-[#f0f2f5] dark:ring-emerald-500/30',
-              iconClass: 'text-emerald-600 bg-emerald-50 ring-1 ring-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-400 dark:ring-emerald-500/40',
-            },
+            success: { icon: CheckCircle2, border: 'border-success-border', iconClass: 'bg-success-soft text-success' },
+            error: { icon: AlertCircle, border: 'border-danger-border', iconClass: 'bg-danger-soft text-danger' },
+            warning: { icon: AlertTriangle, border: 'border-warning-border', iconClass: 'bg-warning-soft text-warning' },
+            info: { icon: Info, border: 'border-info-border', iconClass: 'bg-info-soft text-info' },
+            notification: { icon: Bell, border: 'border-primary-soft-border', iconClass: 'bg-primary-soft text-primary-solid' },
           }[item.type]
 
           const Icon = config.icon
@@ -102,18 +82,19 @@ export function ToastContainer() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12, scale: 0.95, transition: TRANSITION.exit }}
               transition={TRANSITION.pop}
-              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-3.5 shadow-lg shadow-black/10 backdrop-blur-md dark:shadow-black/50 ${config.border}`}
+              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border bg-surface p-3.5 text-text shadow-overlay ${config.border}`}
             >
               <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${config.iconClass}`}>
                 <Icon size={18} />
               </div>
               <div className="flex-1 pt-0.5">
-                <p className="text-xs font-semibold leading-relaxed break-words text-slate-900 dark:text-[#f0f2f5]">{item.message}</p>
+                <p className="break-words text-sm font-semibold leading-relaxed text-text">{item.message}</p>
               </div>
               <button
                 type="button"
                 onClick={() => removeToast(item.id)}
-                className="shrink-0 rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white transition-colors cursor-pointer"
+                aria-label="Đóng thông báo"
+                className="-m-1.5 grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
               >
                 <X size={14} />
               </button>
