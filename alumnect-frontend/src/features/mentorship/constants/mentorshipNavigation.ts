@@ -69,7 +69,7 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
         ],
       },
       {
-        label: 'Mentoring của tôi',
+        label: 'Với tư cách học viên',
         icon: BookOpen,
         audience: 'common',
         children: [
@@ -126,7 +126,7 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
     ],
   },
   {
-    label: 'Dành cho Mentor',
+    label: 'Với tư cách Mentor',
     items: [
       {
         label: 'Đăng ký làm Mentor',
