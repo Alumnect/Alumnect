@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Scale,
   Search,
@@ -37,7 +38,9 @@ import { AdminResolveTicketModal } from './AdminResolveTicketModal'
  * Cho phép theo dõi, tìm kiếm, lọc và xem chi tiết các Dispute/Settlement Ticket cần Admin can thiệp.
  */
 export function AdminMentoringTicketsPage() {
-  const [keyword, setKeyword] = useState('')
+  const [searchParams] = useSearchParams()
+  // Cho phép mở trang với sẵn từ khóa (?keyword=...), ví dụ từ sổ quỹ của Task
+  const [keyword, setKeyword] = useState(() => searchParams.get('keyword') ?? '')
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [page, setPage] = useState(0)
@@ -483,6 +486,17 @@ export function AdminMentoringTicketsPage() {
                     <span>Nhiệm vụ: <strong className="text-text-muted">{selectedTicket.taskTitle || `#Task ${selectedTicket.taskId}`}</strong></span>
                     <span>•</span>
                     <span>Tạo lúc: {formatDate(selectedTicket.createdAt)}</span>
+                    {selectedTicket.taskId ? (
+                      <>
+                        <span>•</span>
+                        <Link
+                          to={`/admin/mentoring-finances?taskId=${selectedTicket.taskId}`}
+                          className="font-semibold text-primary-solid hover:underline"
+                        >
+                          Xem sổ quỹ Task
+                        </Link>
+                      </>
+                    ) : null}
                   </p>
                 </div>
                 <button

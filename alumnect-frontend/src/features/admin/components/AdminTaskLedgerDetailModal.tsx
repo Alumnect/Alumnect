@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   X,
   Wallet,
@@ -596,7 +597,12 @@ export function AdminTaskLedgerDetailModal({
                           <div key={t.id} className="p-4 rounded-2xl border border-border bg-surface-2 space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-bold text-primary-solid">TICKET #{t.ticketCode}</span>
+                                <Link
+                                  to={`/admin/mentoring-tickets?keyword=${encodeURIComponent(String(t.ticketCode))}`}
+                                  className="font-mono text-xs font-bold text-primary-solid hover:underline"
+                                >
+                                  TICKET #{t.ticketCode}
+                                </Link>
                                 <Badge tone={t.status === 'RESOLVED' ? 'success' : t.status === 'IN_REVIEW' ? 'gold' : 'danger'}>
                                   {t.status}
                                 </Badge>

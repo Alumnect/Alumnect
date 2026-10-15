@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Wallet,
   Search,
@@ -20,9 +21,16 @@ export function AdminMentoringFinancesPage() {
   const [settlementFilter, setSettlementFilter] = useState<string>('ALL')
   const [page, setPage] = useState(0)
 
+  // Cho phép mở thẳng sổ quỹ của một task từ liên kết (?taskId=...), ví dụ từ trang Ticket
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [linkedTaskId] = useState<number | null>(() => {
+    const n = Number(searchParams.get('taskId'))
+    return Number.isInteger(n) && n > 0 ? n : null
+  })
+
   // State mở modal xem sổ quỹ
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(linkedTaskId)
+  const [isModalOpen, setIsModalOpen] = useState(linkedTaskId !== null)
 
   // Lấy danh sách Quỹ Task từ server
   const { data, isLoading, isError, error, refetch, isFetching } = useAdminTaskFunds({
@@ -450,6 +458,11 @@ export function AdminMentoringFinancesPage() {
         onClose={() => {
           setIsModalOpen(false)
           setSelectedTaskId(null)
+          if (searchParams.has('taskId')) {
+            const next = new URLSearchParams(searchParams)
+            next.delete('taskId')
+            setSearchParams(next, { replace: true })
+          }
         }}
       />
     </div>

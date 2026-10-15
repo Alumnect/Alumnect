@@ -55,7 +55,7 @@ Trang đã có nút quay lại (TaskDetail, RequestDetail, GroupDetail, Incoming
 - Còn lại của mục A: kiểm tra từng trang trong bảng chưa liệt kê ở trên (Admin drawer/hồ sơ cố vấn) và trang chi tiết đã có nút cũ nếu muốn thống nhất giao diện sang `BackLink`.
 
 ### B. Liên kết chéo giữa các trang
-- **Đã làm (học viên/mentor):** cột Task ở Thu nhập và Hoàn tiền (`MentoringWalletTable`) link sang `/app/mentoring/tasks/:id`; đã bấm thử. Còn lại: Thỏa thuận, Admin.
+- **Đã làm (học viên/mentor):** cột Task ở Thu nhập và Hoàn tiền (`MentoringWalletTable`) link sang `/app/mentoring/tasks/:id`; đã bấm thử. Thỏa thuận: đã có "Mở Task", không thêm link yêu cầu gốc (phụ thuộc vai). **Admin (đã làm, được duyệt đổi logic nhỏ):** Ticket → "Xem sổ quỹ Task" (`/admin/mentoring-finances?taskId=N`, trang sổ quỹ đọc `taskId` hợp lệ để mở modal, xoá param khi đóng); sổ quỹ → mã ticket (`/admin/mentoring-tickets?keyword=<mã>`, trang ticket dùng làm từ khoá ban đầu). Đã bấm thử cả hai chiều, param sai (`abc`) không mở modal.
 - Thu nhập, Hoàn tiền: mỗi dòng task link sang `/tasks/:id`.
 - Thỏa thuận: link sang yêu cầu gốc và task (nếu đã có).
 - Admin ticket ↔ sổ quỹ ↔ task: link hai chiều khi bản ghi có mã task.
