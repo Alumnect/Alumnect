@@ -22,9 +22,9 @@ import {
 function DirectRequestSkeleton() {
   return (
     <div className="space-y-6 animate-pulse text-left">
-      <div className="h-10 w-48 rounded-xl bg-plum-900/[0.06] dark:bg-white/[0.06]" />
-      <div className="h-44 rounded-3xl bg-plum-900/[0.06] dark:bg-white/[0.06]" />
-      <div className="h-96 rounded-3xl bg-plum-900/[0.06] dark:bg-white/[0.06]" />
+      <div className="h-10 w-48 rounded-xl bg-border dark:bg-white/[0.06]" />
+      <div className="h-44 rounded-3xl bg-border dark:bg-white/[0.06]" />
+      <div className="h-96 rounded-3xl bg-border dark:bg-white/[0.06]" />
     </div>
   )
 }
@@ -34,15 +34,15 @@ function DirectRequestSkeleton() {
  */
 function MentorNotFoundState({ onBack }: { onBack: () => void }) {
   return (
-    <Card hover={false} className="p-8 sm:p-12 text-center max-w-lg mx-auto space-y-5 border border-plum-900/10 dark:bg-[#242526] dark:border-[#393a3b]">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-coral-50 text-coral-600 dark:bg-coral-950/40 dark:text-coral-400">
+    <Card hover={false} className="p-8 sm:p-12 text-center max-w-lg mx-auto space-y-5 border border-border dark:bg-surface">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-danger-soft text-danger">
         <UserX className="h-8 w-8" />
       </div>
       <div className="space-y-1.5">
-        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-text">
           Không tìm thấy hồ sơ Mentor
         </h3>
-        <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
+        <p className="text-xs text-text-subtle leading-relaxed">
           Mentor bạn đang tìm kiếm không tồn tại hoặc đã ngừng cung cấp dịch vụ cố vấn trên hệ thống AlumNect.
         </p>
       </div>
@@ -61,7 +61,7 @@ function MentorNotFoundState({ onBack }: { onBack: () => void }) {
             variant="primary"
             size="md"
             leftIcon={<Search className="h-4 w-4" />}
-            className="w-full rounded-xl font-bold bg-brand-600 hover:bg-brand-700"
+            className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
             Khám phá Mentor khác
           </Button>
@@ -78,18 +78,18 @@ function SelfRequestState({ mentorId }: { mentorId: number }) {
   const navigate = useNavigate()
 
   return (
-    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-brand-200/80 bg-white dark:bg-[#242526] dark:border-brand-700/40">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-50 text-brand-600 dark:bg-brand-700/60 dark:text-brand-400">
+    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-brand-200/80 bg-surface dark:border-brand-700/40">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary-solid">
         <UserCheck className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-text">
           Đây là hồ sơ Mentor của bạn
         </h3>
-        <p className="text-sm font-semibold text-plum-700 dark:text-[#b0b3b8]">
+        <p className="text-sm font-semibold text-text-muted">
           Bạn không thể tự gửi yêu cầu cố vấn cho chính tài khoản của mình.
         </p>
-        <p className="text-xs text-plum-500 dark:text-[#8f9399] bg-cream-100 dark:bg-white/5 p-3 rounded-2xl">
+        <p className="text-xs text-text-subtle bg-surface-2 p-3 rounded-2xl">
           Để cấu hình thông tin cố vấn hoặc quản lý các yêu cầu nhận được từ sinh viên, vui lòng truy cập trang Quản lý Trạng thái Cố vấn.
         </p>
       </div>
@@ -107,7 +107,7 @@ function SelfRequestState({ mentorId }: { mentorId: number }) {
           <Button
             variant="primary"
             size="md"
-            className="w-full rounded-xl font-bold bg-brand-600 hover:bg-brand-700"
+            className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
             Quản lý cố vấn của tôi
           </Button>
@@ -130,18 +130,18 @@ function EmptySupportedFieldsState({
   const navigate = useNavigate()
 
   return (
-    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-amber-200/80 bg-white dark:bg-[#242526] dark:border-amber-800/40">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-warning-border bg-surface">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-warning-soft text-warning">
         <AlertTriangle className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-text">
           Mentor chưa thiết lập lĩnh vực hỗ trợ
         </h3>
-        <p className="text-sm font-semibold text-plum-700 dark:text-[#b0b3b8]">
+        <p className="text-sm font-semibold text-text-muted">
           Mentor <strong>{mentorName}</strong> hiện chưa đăng ký bất kỳ lĩnh vực chuyên môn hỗ trợ nào.
         </p>
-        <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-2xl border border-amber-200/60 dark:border-amber-800/40">
+        <p className="text-xs text-warning bg-warning-soft p-3 rounded-2xl border border-warning-border">
           Yêu cầu cố vấn trực tiếp cần ít nhất một lĩnh vực chuyên môn phù hợp để phân loại nhiệm vụ.
         </p>
       </div>
@@ -160,7 +160,7 @@ function EmptySupportedFieldsState({
             variant="primary"
             size="md"
             leftIcon={<Search className="h-4 w-4" />}
-            className="w-full rounded-xl font-bold bg-brand-600 hover:bg-brand-700"
+            className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
             Tìm Mentor khác
           </Button>
@@ -185,18 +185,18 @@ function MentorUnavailableState({
   const navigate = useNavigate()
 
   return (
-    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-coral-200/80 bg-white dark:bg-[#242526] dark:border-coral-800/40">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-coral-100 text-coral-600 dark:bg-coral-950/60 dark:text-coral-400">
+    <Card hover={false} className="p-8 sm:p-12 text-center max-w-xl mx-auto space-y-5 border border-danger-border bg-surface">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-danger-soft text-danger">
         <AlertTriangle className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <h3 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="font-display text-xl font-bold text-text">
           Mentor hiện không thể tiếp nhận yêu cầu
         </h3>
-        <p className="text-sm font-semibold text-plum-700 dark:text-[#b0b3b8]">
+        <p className="text-sm font-semibold text-text-muted">
           Mentor <strong>{mentorName}</strong> hiện đang tạm ngưng nhận các yêu cầu cố vấn mới.
         </p>
-        <p className="text-xs text-coral-600 dark:text-coral-400 bg-coral-50 dark:bg-coral-950/40 p-3 rounded-2xl border border-coral-200/60 dark:border-coral-800/40">
+        <p className="text-xs text-danger bg-danger-soft p-3 rounded-2xl border border-danger-border">
           Lý do: {reason || 'Gói cố vấn của Mentor đã hết hạn hoặc Mentor đang trong trạng thái tạm ngưng.'}
         </p>
       </div>
@@ -215,7 +215,7 @@ function MentorUnavailableState({
             variant="primary"
             size="md"
             leftIcon={<Search className="h-4 w-4" />}
-            className="w-full rounded-xl font-bold bg-brand-600 hover:bg-brand-700"
+            className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
             Tìm Mentor khác
           </Button>

@@ -57,7 +57,7 @@ export function MentorSearchHeader({
         title="Khám phá Mentor"
         description="Tìm Mentor phù hợp theo chuyên môn, kinh nghiệm và hình thức hỗ trợ."
         actions={!isLoading ? (
-          <span className="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-200 dark:bg-brand-400/15 dark:text-brand-200 dark:ring-brand-300/20">
+          <span className="rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary-solid ring-1 ring-inset ring-brand-200 dark:ring-brand-300/20">
             {totalElements} Mentor
           </span>
         ) : undefined}
@@ -67,8 +67,8 @@ export function MentorSearchHeader({
       <div className="relative z-20 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         {/* Input ô tìm kiếm */}
         <div className="relative flex-1">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-plum-400 dark:text-[#8f9399]">
-            <Search className="h-4 w-4 text-brand-500" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-text-subtle">
+            <Search className="h-4 w-4 text-primary-solid" aria-hidden="true" />
           </div>
 
           <input
@@ -77,7 +77,7 @@ export function MentorSearchHeader({
             onChange={(e) => setLocalKeyword(e.target.value)}
             placeholder="Tìm theo tên mentor, từ khóa, lĩnh vực, chuyên ngành..."
             aria-label="Tìm kiếm Mentor"
-            className="h-11 w-full rounded-xl border border-plum-900/10 bg-white pl-10 pr-9 text-sm font-medium text-plum-900 shadow-2xs transition-all placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400/20 dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#e4e6eb] dark:placeholder:text-[#8f9399]"
+            className="h-11 w-full rounded-xl border border-border bg-surface pl-10 pr-9 text-sm font-medium text-text shadow-2xs transition-all placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-brand-400/20"
           />
 
           {localKeyword && (
@@ -85,7 +85,7 @@ export function MentorSearchHeader({
               type="button"
               onClick={handleClear}
               aria-label="Xóa từ khóa tìm kiếm"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-plum-400 transition-colors hover:text-plum-700 dark:hover:text-white"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-subtle transition-colors hover:text-text-muted"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -108,7 +108,7 @@ export function MentorSearchHeader({
             ]}
             placeholder="Sắp xếp kết quả"
             align="right"
-            icon={<ArrowUpDown className="h-3.5 w-3.5 text-brand-500" />}
+            icon={<ArrowUpDown className="h-3.5 w-3.5 text-primary-solid" />}
           />
         </div>
       </div>

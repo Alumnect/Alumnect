@@ -244,7 +244,7 @@ export function MessagesPage() {
     <div className="mx-auto h-full max-w-6xl">
       <Card
         hover={false}
-        className="grid h-full grid-cols-1 overflow-hidden border border-plum-900/10 bg-white/70 shadow-sm backdrop-blur-xl md:grid-cols-[340px_1fr]"
+        className="grid h-full grid-cols-1 overflow-hidden border border-border bg-surface/70 shadow-sm backdrop-blur-xl md:grid-cols-[340px_1fr]"
       >
         {/* Danh sách các cuộc trò chuyện bên trái */}
         <div className={`${activeGeneralConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>

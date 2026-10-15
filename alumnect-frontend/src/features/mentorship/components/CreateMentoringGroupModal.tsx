@@ -66,21 +66,21 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
       <div className="w-full max-w-lg animate-in fade-in zoom-in-95 duration-150">
-        <Card hover={false} className="border border-plum-900/15 p-6 shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
-          <div className="flex items-center justify-between border-b border-plum-900/10 pb-4 dark:border-white/10">
+        <Card hover={false} className="border border-border-strong p-6 shadow-2xl dark:bg-surface">
+          <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-primary-solid">
                 <Users size={20} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-plum-900 dark:text-white">Tạo nhóm Mentoring</h2>
-                <p className="text-xs text-plum-500 dark:text-plum-400">Mô hình Group-First: tạo nhóm trước khi gửi yêu cầu</p>
+                <h2 className="text-base font-bold text-text">Tạo nhóm Mentoring</h2>
+                <p className="text-xs text-text-subtle">Mô hình Group-First: tạo nhóm trước khi gửi yêu cầu</p>
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-plum-400 hover:bg-plum-900/5 hover:text-plum-700 dark:text-plum-400 dark:hover:bg-white/10 dark:hover:text-white"
+              className="rounded-lg p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
             >
               <X size={18} />
             </button>
@@ -88,14 +88,14 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
             {error && (
-              <div className="rounded-xl border border-coral-200 bg-coral-50 p-3 text-xs font-medium text-coral-700 dark:border-coral-900/40 dark:bg-coral-900/20 dark:text-coral-300">
+              <div className="rounded-xl border border-danger-border bg-danger-soft p-3 text-xs font-medium text-danger">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-bold text-plum-900 dark:text-white mb-1.5">
-                Tên nhóm <span className="text-coral-500">*</span>
+              <label className="block text-xs font-bold text-text mb-1.5">
+                Tên nhóm <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -103,15 +103,15 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ví dụ: Nhóm đồ án tốt nghiệp Capstone K16, Nhóm học Java Spring..."
                 maxLength={200}
-                className="w-full rounded-xl border border-plum-900/15 px-3.5 py-2.5 text-xs text-plum-900 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-[#3a3b3c] dark:bg-[#18191a] dark:text-white"
+                className="w-full rounded-xl border border-border-strong px-3.5 py-2.5 text-xs text-text outline-none transition focus:border-primary focus:ring-1 focus:ring-primary dark:bg-bg"
                 autoFocus
               />
-              <span className="mt-1 block text-[11px] text-plum-400 dark:text-plum-400">Tối đa 200 ký tự</span>
+              <span className="mt-1 block text-xs text-text-subtle">Tối đa 200 ký tự</span>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-plum-900 dark:text-white mb-1.5">
-                Mô tả nhóm <span className="text-plum-400 font-normal">(tùy chọn)</span>
+              <label className="block text-xs font-bold text-text mb-1.5">
+                Mô tả nhóm <span className="text-text-subtle font-normal">(tùy chọn)</span>
               </label>
               <textarea
                 value={description}
@@ -119,11 +119,11 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
                 placeholder="Mô tả mục tiêu, định hướng hoặc các thành viên cần tìm..."
                 rows={3}
                 maxLength={2000}
-                className="w-full rounded-xl border border-plum-900/15 px-3.5 py-2.5 text-xs text-plum-900 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-[#3a3b3c] dark:bg-[#18191a] dark:text-white resize-none"
+                className="w-full rounded-xl border border-border-strong px-3.5 py-2.5 text-xs text-text outline-none transition focus:border-primary focus:ring-1 focus:ring-primary dark:bg-bg resize-none"
               />
             </div>
 
-            <div className="rounded-xl bg-amber-500/10 p-3 text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+            <div className="rounded-xl bg-warning-soft p-3 text-xs leading-relaxed text-warning">
               💡 Sau khi tạo nhóm, bạn sẽ là <strong>Trưởng nhóm</strong> và có thể mời các thành viên tham gia trước khi submit Mentoring Request.
             </div>
 

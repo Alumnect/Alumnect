@@ -73,10 +73,10 @@ export function MentorSubscriptionList() {
 
   if (isErrorPackages) {
     return (
-      <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-coral-200 bg-coral-50/50">
-        <AlertCircle className="w-10 h-10 text-coral-500 mx-auto mb-3" />
-        <h3 className="font-bold text-coral-900 text-lg">Không thể tải danh sách gói Mentor</h3>
-        <p className="mt-1 text-xs text-coral-700">{errorPackages?.message || 'Đã xảy ra lỗi hệ thống.'}</p>
+      <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-danger-border bg-danger-soft">
+        <AlertCircle className="w-10 h-10 text-danger mx-auto mb-3" />
+        <h3 className="font-bold text-danger text-lg">Không thể tải danh sách gói Mentor</h3>
+        <p className="mt-1 text-xs text-danger">{errorPackages?.message || 'Đã xảy ra lỗi hệ thống.'}</p>
         <Button
           variant="secondary"
           size="sm"
@@ -101,33 +101,33 @@ export function MentorSubscriptionList() {
       {/* 1. Thông báo gói Mentor hiện tại nếu đã kích hoạt hoặc đang chờ thanh toán (không hiển thị đơn đã hủy) */}
       {mySubscription && mySubscription.status !== 'CANCELLED' && (
         <Reveal>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl border border-mint-500/40 bg-mint-50/50 dark:bg-mint-950/20 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl border border-success bg-success-soft shadow-xs">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint-500 text-white shrink-0 shadow-xs">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success text-text-inverse shrink-0 shadow-xs">
                 <Award className="h-4 w-4" />
               </div>
               <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                <h3 className="font-bold text-sm text-plum-800 dark:text-[#f0f2f5]">
+                <h3 className="font-bold text-sm text-text">
                   {mySubscription.packageName}
                 </h3>
                 {isCurrentlyActive ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-mint-100 text-mint-800 dark:bg-mint-900/60 dark:text-mint-300">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-success-soft text-success">
                     Đang hoạt động
                   </span>
                 ) : mySubscription.status === 'PENDING_PAYMENT' ? (
-                  <Badge tone="gold" className="text-[11px] px-2 py-0.5">
+                  <Badge tone="gold" className="text-xs px-2 py-0.5">
                     Chờ thanh toán
                   </Badge>
                 ) : mySubscription.status === 'EXPIRED' ? (
-                  <Badge tone="danger" className="text-[11px] px-2 py-0.5">
+                  <Badge tone="danger" className="text-xs px-2 py-0.5">
                     Đã hết hạn
                   </Badge>
                 ) : null}
-                <span className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+                <span className="text-xs text-text-subtle">
                   {vnd(mySubscription.priceAtPurchase)} / {mySubscription.durationMonths} tháng
                 </span>
                 {mySubscription.endDate && (
-                  <span className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+                  <span className="text-xs text-text-subtle">
                     • Hạn dùng: {formatExpiry(mySubscription.endDate)}
                   </span>
                 )}

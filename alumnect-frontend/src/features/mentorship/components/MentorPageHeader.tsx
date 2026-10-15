@@ -25,26 +25,26 @@ export function MentorPageHeader({
   return (
     <header
       className={cn(
-        'mentor-page-header flex flex-col gap-4 rounded-2xl border border-plum-900/[0.08] bg-white p-5 shadow-xs sm:p-6 md:flex-row md:items-center md:justify-between dark:border-white/10 dark:bg-[#242526]',
+        'mentor-page-header flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6 md:flex-row md:items-center md:justify-between',
         className,
       )}
     >
       <div className="min-w-0 max-w-3xl">
         {eyebrow && (
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-brand-700 dark:text-brand-300">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary-solid">
             {icon && (
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-400/15 dark:text-brand-300">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary-solid">
                 {icon}
               </span>
             )}
             <span>{eyebrow}</span>
           </div>
         )}
-        <h1 className="font-display text-2xl font-bold tracking-tight text-plum-900 sm:text-3xl dark:text-white">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-text sm:text-3xl">
           {title}
         </h1>
         {description && (
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-plum-600 dark:text-[#c7c9cc]">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted dark:text-text-muted">
             {description}
           </p>
         )}

@@ -119,18 +119,18 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
         : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(checkout.qrCodeUrl)}`
 
   return (
-    <Card hover={false} className="p-6 sm:p-8 rounded-3xl border border-plum-900/10 bg-white dark:bg-[#242526] shadow-card space-y-6">
+    <Card hover={false} className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-card space-y-6">
       {/* Header trạng thái & Đồng hồ đếm ngược */}
-      <div className="flex items-center justify-between border-b border-plum-900/5 pb-4">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
             <QrCode className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-text">
               Quét Mã VietQR PayOS
             </h3>
-            <p className="text-xs text-plum-500">Mở App Ngân hàng hoặc Ví để quét</p>
+            <p className="text-xs text-text-subtle">Mở App Ngân hàng hoặc Ví để quét</p>
           </div>
         </div>
 
@@ -142,9 +142,9 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
       </div>
 
       {/* Vùng hiển thị mã QR Code VietQR */}
-      <div className="flex flex-col items-center justify-center rounded-2xl bg-cream-50 dark:bg-[#18191a] p-5 border border-plum-900/5">
+      <div className="flex flex-col items-center justify-center rounded-2xl bg-bg p-5 border border-border">
         {checkout.qrCodeUrl ? (
-          <div className="relative group p-3 bg-white rounded-2xl shadow-sm border border-plum-900/10">
+          <div className="relative group p-3 bg-surface rounded-2xl shadow-sm border border-border">
             <img
               src={qrImageSrc}
               alt="Mã VietQR thanh toán PayOS"
@@ -152,16 +152,16 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
             />
           </div>
         ) : (
-          <div className="flex h-56 w-56 items-center justify-center text-plum-400 text-xs">
+          <div className="flex h-56 w-56 items-center justify-center text-text-subtle text-xs">
             Đang tải mã VietQR...
           </div>
         )}
 
         {isPolling && (
-          <div className="mt-3.5 flex items-center gap-2 text-xs text-brand-600 dark:text-brand-400 font-medium">
+          <div className="mt-3.5 flex items-center gap-2 text-xs text-primary-solid font-medium">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-solid"></span>
             </span>
             <span>Đang chờ bạn quét mã và chuyển tiền...</span>
           </div>
@@ -169,72 +169,72 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
       </div>
 
       {/* Thông tin chuyển khoản chi tiết */}
-      <div className="space-y-3 rounded-2xl bg-plum-900/[0.02] p-4 text-xs">
+      <div className="space-y-3 rounded-2xl bg-surface-2 p-4 text-xs">
         {/* Số tiền thanh toán */}
-        <div className="flex items-center justify-between py-1.5 border-b border-plum-900/5">
-          <span className="text-plum-500">Số tiền cần thanh toán</span>
+        <div className="flex items-center justify-between py-1.5 border-b border-border">
+          <span className="text-text-subtle">Số tiền cần thanh toán</span>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-sm text-brand-600 dark:text-brand-400">
+            <span className="font-bold text-sm text-primary-solid">
               {vnd(checkout.amount)}
             </span>
             <button
               onClick={() => copyToClipboard(checkout.amount.toString(), 'Số tiền')}
-              className="text-plum-400 hover:text-brand-600 transition-colors"
+              className="text-text-subtle hover:text-primary-solid transition-colors"
               title="Sao chép số tiền"
             >
-              {copiedField === 'Số tiền' ? <Check className="h-3.5 w-3.5 text-mint-600" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedField === 'Số tiền' ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
           </div>
         </div>
 
         {/* Ngân hàng thụ hưởng */}
-        <div className="flex items-center justify-between py-1.5 border-b border-plum-900/5">
-          <span className="text-plum-500">Ngân hàng thụ hưởng</span>
-          <span className="font-semibold text-plum-900 dark:text-[#e4e6eb]">
+        <div className="flex items-center justify-between py-1.5 border-b border-border">
+          <span className="text-text-subtle">Ngân hàng thụ hưởng</span>
+          <span className="font-semibold text-text">
             {getBankName(effectiveBin)}
           </span>
         </div>
 
         {/* Số tài khoản */}
         {effectiveAccountNumber && (
-          <div className="flex items-center justify-between py-1.5 border-b border-plum-900/5">
-            <span className="text-plum-500">Số tài khoản</span>
+          <div className="flex items-center justify-between py-1.5 border-b border-border">
+            <span className="text-text-subtle">Số tài khoản</span>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-semibold text-plum-900 dark:text-[#e4e6eb]">
+              <span className="font-mono font-semibold text-text">
                 {effectiveAccountNumber}
               </span>
               <button
                 onClick={() => copyToClipboard(effectiveAccountNumber, 'Số tài khoản')}
-                className="text-plum-400 hover:text-brand-600 transition-colors"
+                className="text-text-subtle hover:text-primary-solid transition-colors"
                 title="Sao chép số tài khoản"
               >
-                {copiedField === 'Số tài khoản' ? <Check className="h-3.5 w-3.5 text-mint-600" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedField === 'Số tài khoản' ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>
         )}
 
         {/* Tên chủ tài khoản */}
-        <div className="flex items-center justify-between py-1.5 border-b border-plum-900/5">
-          <span className="text-plum-500">Chủ tài khoản</span>
-          <span className="font-semibold text-plum-900 dark:text-[#e4e6eb]">
+        <div className="flex items-center justify-between py-1.5 border-b border-border">
+          <span className="text-text-subtle">Chủ tài khoản</span>
+          <span className="font-semibold text-text">
             {checkout.accountName || 'PAYOS / NGUOI THU HUONG'}
           </span>
         </div>
 
         {/* Nội dung chuyển khoản */}
         <div className="flex items-center justify-between py-1.5">
-          <span className="text-plum-500">Nội dung chuyển khoản</span>
+          <span className="text-text-subtle">Nội dung chuyển khoản</span>
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-700/40 px-2 py-0.5 rounded-md text-xs sm:text-sm">
+            <span className="font-mono font-bold text-primary-solid bg-primary-soft px-2 py-0.5 rounded-md text-xs sm:text-sm">
               {effectiveDescription}
             </span>
             <button
               onClick={() => copyToClipboard(effectiveDescription, 'Nội dung chuyển khoản')}
-              className="text-plum-400 hover:text-brand-600 transition-colors"
+              className="text-text-subtle hover:text-primary-solid transition-colors"
               title="Sao chép nội dung chuyển khoản"
             >
-              {copiedField === 'Nội dung chuyển khoản' ? <Check className="h-3.5 w-3.5 text-mint-600" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedField === 'Nội dung chuyển khoản' ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
           </div>
         </div>
@@ -243,8 +243,8 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
 
 
       {/* Cam kết bảo mật */}
-      <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-plum-400">
-        <ShieldCheck className="h-3.5 w-3.5 text-mint-600" />
+      <div className="flex items-center justify-center gap-1.5 text-center text-xs text-text-subtle">
+        <ShieldCheck className="h-3.5 w-3.5 text-success" />
         <span>Thanh toán bảo mật trực tiếp qua Napas 247 & PayOS</span>
       </div>
     </Card>

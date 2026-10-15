@@ -30,12 +30,12 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
 
   if (!canView) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-plum-900/15 px-6 py-10 text-center">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
+      <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border-strong px-6 py-10 text-center">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
           <Lock size={22} />
         </span>
-        <p className="font-bold text-plum-900">Danh sách thành viên chỉ dành cho thành viên nhóm</p>
-        <p className="max-w-sm text-sm text-plum-500">Hãy tham gia hội nhóm để xem thành viên và nội dung dành riêng cho thành viên.</p>
+        <p className="font-bold text-text">Danh sách thành viên chỉ dành cho thành viên nhóm</p>
+        <p className="max-w-sm text-sm text-text-subtle">Hãy tham gia hội nhóm để xem thành viên và nội dung dành riêng cho thành viên.</p>
       </div>
     )
   }
@@ -74,16 +74,16 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
   return (
     <div>
       <div className="relative mb-4">
-        <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+        <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           maxLength={GROUP_SEARCH_MAX}
           placeholder="Tìm thành viên theo tên…"
-          className="h-10 w-full rounded-xl bg-plum-900/[0.04] pl-10 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="h-10 w-full rounded-xl bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         {search && (
-          <button onClick={() => setSearch('')} aria-label="Xóa tìm kiếm" className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 hover:bg-plum-900/[0.06]">
+          <button onClick={() => setSearch('')} aria-label="Xóa tìm kiếm" className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle hover:bg-border">
             <X size={13} />
           </button>
         )}
@@ -92,30 +92,30 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
       {isLoading ? (
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-plum-900/[0.05]" />
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-surface-2" />
           ))}
         </div>
       ) : isError ? (
-        <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">{(error as Error)?.message ?? 'Không tải được danh sách thành viên.'}</p>
+        <p className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{(error as Error)?.message ?? 'Không tải được danh sách thành viên.'}</p>
       ) : members.length === 0 ? (
         <EmptyState icon={<Search size={22} />} title="Không tìm thấy thành viên" description={keyword ? 'Thử từ khóa khác.' : 'Hội nhóm chưa có thành viên.'} className="py-10" />
       ) : (
         <>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-plum-400">{total} thành viên</p>
-          <ul className="divide-y divide-plum-900/5">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">{total} thành viên</p>
+          <ul className="divide-y divide-border">
             {members.map((m) => (
               <li key={m.userId} className="flex items-center gap-3 py-3">
                 <Link to={`/app/profile?userId=${m.userId}`} className="shrink-0">
                   <Avatar src={m.avatarUrl ?? ''} name={m.fullName} size={42} />
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <Link to={`/app/profile?userId=${m.userId}`} className="block truncate text-sm font-semibold text-plum-900 hover:text-brand-600">
+                  <Link to={`/app/profile?userId=${m.userId}`} className="block truncate text-sm font-semibold text-text hover:text-primary-solid">
                     {m.fullName}
                   </Link>
-                  {m.headline && <p className="truncate text-xs text-plum-500">{m.headline}</p>}
+                  {m.headline && <p className="truncate text-xs text-text-subtle">{m.headline}</p>}
                 </div>
                 {m.role !== 'MEMBER' && (
-                  <Badge tone={m.role === 'OWNER' ? 'gold' : 'brand'} icon={m.role === 'OWNER' ? <Crown size={10} /> : <ShieldCheck size={10} />} className="px-2 py-0.5 text-[10px]">
+                  <Badge tone={m.role === 'OWNER' ? 'gold' : 'brand'} icon={m.role === 'OWNER' ? <Crown size={10} /> : <ShieldCheck size={10} />} className="px-2 py-0.5 text-xs">
                     {ROLE_LABEL[m.role]}
                   </Badge>
                 )}
@@ -128,7 +128,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
                         onClick={() => changeRole(m)}
                         disabled={roleMut.isPending}
                         leftIcon={m.role === 'ADMIN' ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
-                        className="w-auto px-3.5 justify-center rounded-full border-plum-900/15 text-xs font-semibold text-plum-700 hover:bg-plum-900/[0.04] dark:border-[#393a3b] dark:text-[#f0f2f5] dark:hover:bg-[#3a3b3c]"
+                        className="w-auto px-3.5 justify-center rounded-full border-border-strong text-xs font-semibold text-text-muted hover:bg-surface-2"
                       >
                         {m.role === 'ADMIN' ? 'Gỡ quyền Quản trị' : 'Bổ nhiệm Quản trị'}
                       </Button>
@@ -140,7 +140,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
                         onClick={() => setToRemove(m)}
                         aria-label={`Xóa ${m.fullName} khỏi nhóm`}
                         leftIcon={<UserX size={14} />}
-                        className="w-auto px-3.5 justify-center rounded-full border-rose-200 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:border-rose-300 dark:border-rose-900/40 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                        className="w-auto px-3.5 justify-center rounded-full border-danger-border text-xs font-semibold text-danger hover:bg-danger-soft hover:border-danger-border"
                       >
                         Xóa
                       </Button>

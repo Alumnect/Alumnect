@@ -49,7 +49,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
 
   if (loading) {
     return (
-      <div className="mt-2 w-64 sm:w-72 animate-pulse rounded-xl border border-plum-900/10 bg-plum-900/5 p-3 dark:border-white/10 dark:bg-white/5">
+      <div className="mt-2 w-64 sm:w-72 animate-pulse rounded-xl border border-border bg-surface-2 p-3">
         <div className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-full bg-slate-300 dark:bg-slate-700" />
           <div className="space-y-1.5 flex-1">
@@ -70,7 +70,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
       <div className="mt-1">
         <Link
           to={`/app/posts/${postId}`}
-          className="inline-flex items-center gap-1.5 text-xs underline font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+          className="inline-flex items-center gap-1.5 text-xs underline font-medium text-primary-solid hover:text-primary-solid"
         >
           <span>Xem bài viết #{postId}</span>
           <ExternalLink size={12} />
@@ -84,7 +84,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
   const renderBadge = () => {
     if (post.type === 'event' || post.event) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+        <span className="inline-flex items-center gap-1 rounded-md bg-purple-100 px-1.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
           <Calendar size={10} />
           Sự kiện
         </span>
@@ -92,7 +92,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
     }
     if (post.type === 'recruitment' || post.job) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+        <span className="inline-flex items-center gap-1 rounded-md bg-success-soft px-1.5 py-0.5 text-xs font-semibold text-success">
           <Briefcase size={10} />
           Tuyển dụng
         </span>
@@ -100,7 +100,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
     }
     if (post.type === 'achievement') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+        <span className="inline-flex items-center gap-1 rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-semibold text-warning">
           <Award size={10} />
           Thành tích
         </span>
@@ -114,13 +114,13 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
       to={`/app/posts/${postId}`}
       className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition-all hover:shadow-md ${
         isMe
-          ? 'border-brand-400/40 bg-white/95 text-plum-900 shadow-2xs hover:bg-white dark:border-brand-500/30 dark:bg-[#242526] dark:text-[#f0f2f5]'
-          : 'border-plum-900/10 bg-slate-50/80 text-plum-900 hover:bg-white dark:border-[#3a3b3c] dark:bg-[#242526] dark:text-[#f0f2f5]'
+          ? 'border-brand-400/40 bg-surface text-text shadow-2xs hover:bg-surface dark:border-brand-500/30'
+          : 'border-border bg-surface-2 text-text hover:bg-surface'
       }`}
     >
       {/* Thumbnail nếu bài viết có hình */}
       {thumbnail && (
-        <div className="relative aspect-video w-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+        <div className="relative aspect-video w-full overflow-hidden bg-surface-3">
           <img
             src={thumbnail}
             alt="Post preview"
@@ -137,11 +137,11 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
           <div className="flex items-center gap-2 min-w-0">
             <Avatar src={post.avatar || undefined} name={post.author} size={24} />
             <div className="min-w-0">
-              <p className="truncate text-xs font-semibold leading-tight text-plum-900 dark:text-[#f0f2f5]">
+              <p className="truncate text-xs font-semibold leading-tight text-text">
                 {post.author}
               </p>
               {post.role && (
-                <p className="truncate text-[10px] text-plum-500 dark:text-[#b0b3b8]">{post.role}</p>
+                <p className="truncate text-xs text-text-subtle">{post.role}</p>
               )}
             </div>
           </div>
@@ -150,17 +150,17 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
 
         {/* Nội dung tóm tắt bài viết */}
         {post.text && (
-          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-plum-700 dark:text-[#e4e6eb]">
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-text-muted">
             {post.text}
           </p>
         )}
 
         {/* Thông tin sự kiện / việc làm nếu có */}
         {post.event && (
-          <div className="mt-2 rounded-lg bg-purple-50 p-2 text-[11px] text-purple-900 dark:bg-purple-950/40 dark:text-purple-200">
+          <div className="mt-2 rounded-lg bg-purple-50 p-2 text-xs text-purple-900 dark:bg-purple-950/40 dark:text-purple-200">
             <p className="font-semibold truncate">{post.event.title}</p>
             {post.event.location && (
-              <p className="text-[10px] text-purple-700 dark:text-purple-300 truncate mt-0.5">
+              <p className="text-xs text-purple-700 dark:text-purple-300 truncate mt-0.5">
                 {post.event.location}
               </p>
             )}
@@ -168,10 +168,10 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
         )}
 
         {post.job && (
-          <div className="mt-2 rounded-lg bg-emerald-50 p-2 text-[11px] text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+          <div className="mt-2 rounded-lg bg-success-soft p-2 text-xs text-success">
             <p className="font-semibold truncate">{post.job.title}</p>
             {post.job.company && (
-              <p className="text-[10px] text-emerald-700 dark:text-emerald-300 truncate mt-0.5">
+              <p className="text-xs text-success truncate mt-0.5">
                 {post.job.company}
               </p>
             )}
@@ -179,7 +179,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
         )}
 
         {/* Footer xem bài viết */}
-        <div className="mt-2.5 flex items-center justify-between border-t border-plum-900/5 pt-2 text-[11px] font-medium text-brand-600 dark:border-white/10 dark:text-brand-400">
+        <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs font-medium text-primary-solid">
           <span className="inline-flex items-center gap-1">
             <FileText size={12} />
             Xem bài viết

@@ -46,19 +46,19 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
   if (adj) {
     return (
       <div className={cn('my-2 flex w-full flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
-        <div className="max-w-md overflow-hidden rounded-2xl border border-amber-300/80 border-l-4 border-l-amber-500 bg-[#fdfaf5] p-3.5 text-xs text-gray-900 shadow-sm dark:border-amber-700/60 dark:bg-[#252422] dark:text-gray-100">
-          <div className="flex items-center justify-between gap-2 pb-2 border-b border-amber-200/60 dark:border-gray-700">
-            <span className="font-heading font-black text-amber-800 dark:text-amber-300">
+        <div className="max-w-md overflow-hidden rounded-2xl border border-warning-border border-l-4 border-l-amber-500 bg-[#fdfaf5] p-3.5 text-xs text-text shadow-sm dark:bg-[#252422]">
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-warning-border">
+            <span className="font-heading font-black text-warning">
               TICKET YÊU CẦU ĐIỀU CHỈNH
             </span>
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+            <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-bold text-warning">
               v{adj.version}
             </span>
           </div>
-          <div className="mt-2.5 rounded-xl border border-amber-300/60 bg-amber-50/90 p-2.5 font-bold text-amber-950 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-100">
+          <div className="mt-2.5 rounded-xl border border-warning-border bg-warning-soft p-2.5 font-bold text-warning">
             "{adj.note}"
           </div>
-          <div className="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+          <div className="mt-2 flex items-center justify-between text-xs text-text-subtle">
             <span>{adj.senderName} yêu cầu điều chỉnh</span>
             {formattedTime && <span>{formattedTime}</span>}
           </div>
@@ -71,9 +71,9 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
     return (
       <div className="my-2 flex w-full flex-col items-center justify-center gap-1">
         {formattedTime && (
-          <span className="text-[10px] font-medium text-plum-400 dark:text-[#8a8d91]">{formattedTime}</span>
+          <span className="text-xs font-medium text-text-subtle dark:text-text-subtle">{formattedTime}</span>
         )}
-        <span className="rounded-full bg-plum-900/[0.05] px-3.5 py-1 text-xs font-medium text-plum-600 shadow-2xs dark:bg-white/10 dark:text-[#b0b3b8]">
+        <span className="rounded-full bg-surface-2 px-3.5 py-1 text-xs font-medium text-text-muted shadow-2xs">
           {message.content}
         </span>
       </div>
@@ -98,7 +98,7 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
       <div className={cn('flex flex-col gap-1 max-w-[78%] sm:max-w-[65%]', isMe ? 'items-end' : 'items-start')}>
         {/* Tên người gửi trong nhóm */}
         {isGroup && !isMe && (
-          <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 px-1">
+          <span className="text-xs font-semibold text-primary-solid px-1">
             {message.senderName}
           </span>
         )}
@@ -130,12 +130,12 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                     </button>
                     {!hasText && (
                       <span className={cn(
-                        'pointer-events-none absolute bottom-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs',
+                        'pointer-events-none absolute bottom-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-xs',
                         isMe ? 'right-2' : 'left-2'
                       )}>
                         <span>{formattedTime}</span>
                         {isMe && message.status === 'sending' && <Clock size={10} className="animate-spin text-white/80" />}
-                        {isMe && message.status === 'error' && <AlertCircle size={10} className="text-rose-400" />}
+                        {isMe && message.status === 'error' && <AlertCircle size={10} className="text-danger" />}
                         {isMe && (!message.status || message.status === 'sent') && <Check size={10} className="text-white/80" />}
                       </span>
                     )}
@@ -156,12 +156,12 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                     />
                     {!hasText && (
                       <span className={cn(
-                        'pointer-events-none absolute bottom-3 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs',
+                        'pointer-events-none absolute bottom-3 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-xs',
                         isMe ? 'right-3' : 'left-3'
                       )}>
                         <span>{formattedTime}</span>
                         {isMe && message.status === 'sending' && <Clock size={10} className="animate-spin text-white/80" />}
-                        {isMe && message.status === 'error' && <AlertCircle size={10} className="text-rose-400" />}
+                        {isMe && message.status === 'error' && <AlertCircle size={10} className="text-danger" />}
                         {isMe && (!message.status || message.status === 'sent') && <Check size={10} className="text-white/80" />}
                       </span>
                     )}
@@ -178,21 +178,21 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   target="_blank"
                   rel="noreferrer"
                   className={cn(
-                    'flex max-w-[280px] items-center gap-3 rounded-2xl border border-plum-900/10 bg-white p-3 text-xs shadow-xs transition-all hover:bg-plum-900/[0.02] hover:shadow-sm sm:max-w-sm',
+                    'flex max-w-[280px] items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-xs shadow-xs transition-all hover:bg-surface-2 hover:shadow-sm sm:max-w-sm',
                     isMe ? 'rounded-br-xs' : 'rounded-bl-xs'
                   )}
                 >
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary-solid">
                     <FileText size={20} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-plum-900">{att.fileName || 'Tài liệu đính kèm'}</p>
-                    <p className="text-[11px] text-plum-400">
+                    <p className="truncate font-bold text-text">{att.fileName || 'Tài liệu đính kèm'}</p>
+                    <p className="text-xs text-text-subtle">
                       {formatFileSize(att.fileSize)}
                       {!hasText && ` • ${formattedTime}`}
                     </p>
                   </div>
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-plum-400 hover:text-brand-600">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-text-subtle hover:text-primary-solid">
                     <Download size={16} />
                   </span>
                 </a>
@@ -234,8 +234,8 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   className={cn(
                     'w-fit rounded-2xl px-4 py-2.5 shadow-xs',
                     isMe
-                      ? 'mentoring-chat-outgoing rounded-br-xs bg-brand-600 text-white'
-                      : 'rounded-bl-xs border border-plum-900/10 bg-white text-plum-900 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]'
+                      ? 'mentoring-chat-outgoing rounded-br-xs bg-primary-solid text-on-primary'
+                      : 'rounded-bl-xs border border-border bg-surface text-text'
                   )}
                 >
                   <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
@@ -243,8 +243,8 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   </p>
                   <div
                     className={cn(
-                      'mt-1 flex items-center gap-1 text-[10px]',
-                      isMe ? 'justify-end text-white/75' : 'justify-start text-plum-400 dark:text-[#b0b3b8]'
+                      'mt-1 flex items-center gap-1 text-xs',
+                      isMe ? 'justify-end text-white/75' : 'justify-start text-text-subtle'
                     )}
                   >
                     <span>{formattedTime}</span>
@@ -274,23 +274,23 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   {!noteText && (
                     <div
                       className={cn(
-                        'mt-1 flex items-center gap-1 px-1.5 text-[11px] font-medium',
-                        isMe ? 'justify-end text-plum-500 dark:text-[#b0b3b8]' : 'justify-start text-slate-400 dark:text-[#8a8d91]'
+                        'mt-1 flex items-center gap-1 px-1.5 text-xs font-medium',
+                        isMe ? 'justify-end text-text-subtle' : 'justify-start text-text-subtle dark:text-text-subtle'
                       )}
                     >
                       <span>{formattedTime}</span>
                       {isMe && message.status === 'sending' && (
-                        <span title="Đang gửi..." className="inline-flex items-center text-brand-600">
+                        <span title="Đang gửi..." className="inline-flex items-center text-primary-solid">
                           <Clock size={11} className="animate-spin" />
                         </span>
                       )}
                       {isMe && message.status === 'error' && (
-                        <span title="Gửi thất bại" className="inline-flex items-center text-rose-500">
+                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
                           <AlertCircle size={11} />
                         </span>
                       )}
                       {isMe && (!message.status || message.status === 'sent') && (
-                        <span title="Đã gửi" className="inline-flex items-center text-emerald-600">
+                        <span title="Đã gửi" className="inline-flex items-center text-success">
                           <Check size={11} />
                         </span>
                       )}
@@ -310,23 +310,23 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   {!noteText && (
                     <div
                       className={cn(
-                        'mt-1 flex items-center gap-1 px-1.5 text-[11px] font-medium',
-                        isMe ? 'justify-end text-plum-500 dark:text-[#b0b3b8]' : 'justify-start text-slate-400 dark:text-[#8a8d91]'
+                        'mt-1 flex items-center gap-1 px-1.5 text-xs font-medium',
+                        isMe ? 'justify-end text-text-subtle' : 'justify-start text-text-subtle dark:text-text-subtle'
                       )}
                     >
                       <span>{formattedTime}</span>
                       {isMe && message.status === 'sending' && (
-                        <span title="Đang gửi..." className="inline-flex items-center text-brand-600">
+                        <span title="Đang gửi..." className="inline-flex items-center text-primary-solid">
                           <Clock size={11} className="animate-spin" />
                         </span>
                       )}
                       {isMe && message.status === 'error' && (
-                        <span title="Gửi thất bại" className="inline-flex items-center text-rose-500">
+                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
                           <AlertCircle size={11} />
                         </span>
                       )}
                       {isMe && (!message.status || message.status === 'sent') && (
-                        <span title="Đã gửi" className="inline-flex items-center text-emerald-600">
+                        <span title="Đã gửi" className="inline-flex items-center text-success">
                           <Check size={11} />
                         </span>
                       )}
@@ -342,23 +342,23 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   {!noteText && (
                     <div
                       className={cn(
-                        'mt-1 flex items-center gap-1 px-1.5 text-[11px] font-medium',
-                        isMe ? 'justify-end text-plum-500 dark:text-[#b0b3b8]' : 'justify-start text-slate-400 dark:text-[#8a8d91]'
+                        'mt-1 flex items-center gap-1 px-1.5 text-xs font-medium',
+                        isMe ? 'justify-end text-text-subtle' : 'justify-start text-text-subtle dark:text-text-subtle'
                       )}
                     >
                       <span>{formattedTime}</span>
                       {isMe && message.status === 'sending' && (
-                        <span title="Đang gửi..." className="inline-flex items-center text-brand-600">
+                        <span title="Đang gửi..." className="inline-flex items-center text-primary-solid">
                           <Clock size={11} className="animate-spin" />
                         </span>
                       )}
                       {isMe && message.status === 'error' && (
-                        <span title="Gửi thất bại" className="inline-flex items-center text-rose-500">
+                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
                           <AlertCircle size={11} />
                         </span>
                       )}
                       {isMe && (!message.status || message.status === 'sent') && (
-                        <span title="Đã gửi" className="inline-flex items-center text-emerald-600">
+                        <span title="Đã gửi" className="inline-flex items-center text-success">
                           <Check size={11} />
                         </span>
                       )}

@@ -134,14 +134,14 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
   // 3. Trạng thái Lỗi khi tạo đơn PayOS
   if (isCheckoutError) {
     return (
-      <Card hover={false} className="mx-auto max-w-lg p-8 rounded-3xl border border-coral-200 bg-coral-50/50 text-center space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600">
+      <Card hover={false} className="mx-auto max-w-lg p-8 rounded-3xl border border-danger-border bg-danger-soft text-center space-y-4">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
           <AlertCircle className="h-7 w-7" />
         </div>
-        <h3 className="font-display text-lg font-bold text-coral-900">
+        <h3 className="font-display text-lg font-bold text-danger">
           Không thể tạo phiên thanh toán PayOS
         </h3>
-        <p className="text-xs text-coral-700">
+        <p className="text-xs text-danger">
           {checkoutError?.message || 'Đã xảy ra lỗi khi kết nối với cổng thanh toán PayOS.'}
         </p>
         <div className="pt-2 flex justify-center gap-3">
@@ -177,50 +177,50 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
       {/* Cột trái: Tóm tắt thông tin gói và quyền lợi */}
       <div className="lg:col-span-5 space-y-5">
         <div>
-          <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-xl font-bold text-text">
             Chi Tiết Thanh Toán
           </h2>
-          <p className="text-xs text-plum-500 mt-1">
+          <p className="text-xs text-text-subtle mt-1">
             Xác nhận thông tin gói Mentor trước khi quét mã chuyển khoản.
           </p>
         </div>
 
         {/* Thẻ gói dịch vụ tóm tắt */}
-        <Card hover={false} className="p-6 rounded-3xl border border-plum-900/10 bg-white dark:bg-[#242526] shadow-sm space-y-4">
+        <Card hover={false} className="p-6 rounded-3xl border border-border bg-surface shadow-sm space-y-4">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary-solid">
                 Gói đã chọn
               </span>
-              <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb] mt-0.5">
+              <h3 className="font-display text-lg font-bold text-text mt-0.5">
                 {checkoutData?.packageName}
               </h3>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 dark:bg-brand-700/40 px-3 py-1 text-xs font-bold text-brand-600 border border-brand-200/60 dark:border-brand-700/40 shadow-2xs">
-              <Clock className="h-3.5 w-3.5 text-brand-600" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid border border-primary-soft-border shadow-2xs">
+              <Clock className="h-3.5 w-3.5 text-primary-solid" />
               {checkoutData?.durationMonths || mySubscription?.durationMonths || 1} Tháng
             </span>
           </div>
 
-          <div className="pt-2 border-t border-plum-900/5">
-            <span className="text-xs text-plum-400">Tổng thanh toán:</span>
-            <div className="text-2xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <div className="pt-2 border-t border-border">
+            <span className="text-xs text-text-subtle">Tổng thanh toán:</span>
+            <div className="text-2xl font-bold text-text">
               {vnd(checkoutData?.amount || 0)}
             </div>
           </div>
 
           {/* Quyền lợi nổi bật */}
-          <div className="space-y-2 pt-2 border-t border-plum-900/5 text-xs text-plum-600 dark:text-[#b0b3b8]">
+          <div className="space-y-2 pt-2 border-t border-border text-xs text-text-muted">
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-mint-600 shrink-0" />
+              <Check className="h-4 w-4 text-success shrink-0" />
               <span>Kích hoạt ngay lập tức sau khi chuyển khoản thành công</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-mint-600 shrink-0" />
+              <Check className="h-4 w-4 text-success shrink-0" />
               <span>Bảo toàn 100% thời gian còn lại nếu bạn đang mua gia hạn</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-mint-600 shrink-0" />
+              <Check className="h-4 w-4 text-success shrink-0" />
               <span>Xuất hiện trên bản đồ và danh sách Mentor kết nối sinh viên</span>
             </div>
           </div>
@@ -230,7 +230,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
             <Button
               variant="secondary"
               size="sm"
-              className="w-full text-xs text-plum-500 hover:text-coral-600"
+              className="w-full text-xs text-text-subtle hover:text-danger"
               onClick={handleCancelPayment}
               disabled={cancelMutation.isPending}
             >

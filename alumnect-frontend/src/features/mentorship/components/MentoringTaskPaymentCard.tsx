@@ -30,14 +30,14 @@ export function MentoringTaskPaymentCard({ payment }: MentoringTaskPaymentCardPr
   const paidAt = formatPaidAt(payment.paidAt)
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-mint-200 bg-mint-50/70 px-4 py-3 dark:border-mint-500/20 dark:bg-mint-950/20">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-mint-100 text-mint-700 dark:bg-mint-500/20 dark:text-mint-300">
+    <div className="flex items-center gap-3 rounded-2xl border border-success-border bg-success-soft px-4 py-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-soft text-success">
         <CheckCircle2 className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-bold text-mint-800 dark:text-mint-200">Đã thanh toán</p>
+        <p className="text-sm font-bold text-success">Đã thanh toán</p>
         {paidAt && (
-          <p className="mt-0.5 text-xs font-medium text-plum-500 dark:text-[#b0b3b8]">
+          <p className="mt-0.5 text-xs font-medium text-text-subtle">
             {paidAt}
           </p>
         )}

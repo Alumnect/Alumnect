@@ -28,17 +28,17 @@ export function MentoringTaskDealSection({
   }
 
   return (
-    <div className="rounded-3xl border border-plum-900/[0.08] bg-white p-6 shadow-xs dark:border-[#393a3b] dark:bg-[#242526]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.06] pb-4 dark:border-white/[0.06]">
+    <div className="rounded-3xl border border-border bg-surface p-6 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4 dark:border-white/[0.06]">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
             <Handshake className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="text-base font-bold text-plum-900 dark:text-white">
+            <h4 className="text-base font-bold text-text">
               Thỏa thuận Mentoring Deal gốc
             </h4>
-            <span className="text-xs font-mono font-bold text-plum-400 dark:text-[#8f9399]">
+            <span className="text-xs font-mono font-bold text-text-subtle">
               #DEAL-{deal.id} (Phiên bản v{deal.version})
             </span>
           </div>
@@ -47,7 +47,7 @@ export function MentoringTaskDealSection({
         {conversationId && (
           <Link
             to={`/app/mentoring/chats/${conversationId}`}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-50 px-3.5 py-2 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:hover:bg-brand-500/25"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-soft"
           >
             <MessageSquare className="h-4 w-4" />
             <span>Mở tin nhắn</span>
@@ -57,41 +57,41 @@ export function MentoringTaskDealSection({
 
       <div className="mt-5 space-y-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+          <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             Phạm vi công việc đã chốt
           </span>
-          <p className="mt-1 text-sm leading-relaxed text-plum-800 dark:text-[#e4e6eb]">
+          <p className="mt-1 text-sm leading-relaxed text-text">
             {deal.taskScope}
           </p>
         </div>
 
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+          <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             Kết quả kỳ vọng đầu ra (Expected Result)
           </span>
-          <div className="mt-1 flex items-start gap-2 rounded-2xl border border-plum-900/[0.06] bg-cream-100/70 p-3.5 text-sm text-plum-700 dark:border-white/10 dark:bg-[#18191a] dark:text-[#b0b3b8]">
-            <Target className="h-4 w-4 shrink-0 text-brand-500 mt-0.5" />
+          <div className="mt-1 flex items-start gap-2 rounded-2xl border border-border bg-cream-100/70 p-3.5 text-sm text-text-muted dark:bg-bg">
+            <Target className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
             <p className="leading-relaxed">{deal.expectedResult}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 pt-2">
-          <div className="rounded-2xl border border-plum-900/[0.06] bg-cream-100/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
-            <span className="text-[11px] font-bold text-plum-400 dark:text-[#8f9399]">Mức giá thỏa thuận</span>
-            <p className="mt-1 text-sm font-bold text-brand-700 dark:text-brand-300">
+          <div className="rounded-2xl border border-border bg-cream-100/70 p-3.5 dark:bg-bg">
+            <span className="text-xs font-bold text-text-subtle">Mức giá thỏa thuận</span>
+            <p className="mt-1 text-sm font-bold text-primary-solid">
               {formatPrice(deal.agreedPrice)}
             </p>
           </div>
-          <div className="rounded-2xl border border-plum-900/[0.06] bg-cream-100/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
-            <span className="text-[11px] font-bold text-plum-400 dark:text-[#8f9399]">Thời hạn Deal</span>
-            <p className="mt-1 text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">
+          <div className="rounded-2xl border border-border bg-cream-100/70 p-3.5 dark:bg-bg">
+            <span className="text-xs font-bold text-text-subtle">Thời hạn Deal</span>
+            <p className="mt-1 text-sm font-bold text-text">
               {formatDeadline(deal.deadline)}
             </p>
           </div>
-          <div className="col-span-2 rounded-2xl border border-plum-900/[0.06] bg-cream-100/70 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
-            <span className="text-[11px] font-bold text-plum-400 dark:text-[#8f9399]">Trạng thái thanh toán</span>
-            <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-mint-600 dark:text-mint-400">
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-mint-500" />
+          <div className="col-span-2 rounded-2xl border border-border bg-cream-100/70 p-3.5 dark:bg-bg">
+            <span className="text-xs font-bold text-text-subtle">Trạng thái thanh toán</span>
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-success">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
               <span>Đã thanh toán (PAID)</span>
             </p>
           </div>

@@ -64,7 +64,7 @@ function MentoringRefundsContent() {
         </MentoringActionCard>
       )}
 
-      <section className="overflow-hidden rounded-2xl border border-plum-900/[0.08] bg-white shadow-xs dark:border-white/10 dark:bg-[#242526]">
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-xs">
         {account.isSuccess &&
           (saved ? (
             <MentoringStatusStrip tone="mint" icon={<CheckCircle2 />}>
@@ -77,7 +77,7 @@ function MentoringRefundsContent() {
           ))}
 
         <div className="p-5 sm:p-6">
-          <h2 className="font-display text-base font-bold text-plum-900 dark:text-white">Tài khoản nhận hoàn tiền</h2>
+          <h2 className="font-display text-base font-bold text-text">Tài khoản nhận hoàn tiền</h2>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <MentoringField label="Ngân hàng" required>

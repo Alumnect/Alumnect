@@ -99,16 +99,16 @@ export function MentorFilterBar({
   ]
 
   return (
-    <div className="relative z-10 rounded-2xl border border-plum-900/10 bg-white/70 p-3 sm:p-3.5 shadow-2xs backdrop-blur-md space-y-2.5 dark:border-[#393a3b] dark:bg-[#242526]/70">
+    <div className="relative z-10 rounded-2xl border border-border bg-surface/70 p-3 sm:p-3.5 shadow-2xs backdrop-blur-md space-y-2.5">
       {/* Tiêu đề & nút Reset bộ lọc */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Filter className="h-3.5 w-3.5 text-brand-600" />
-          <span className="text-xs font-bold uppercase tracking-wider text-plum-700 dark:text-[#e4e6eb]">
+          <Filter className="h-3.5 w-3.5 text-primary-solid" />
+          <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
             Bộ lọc tiêu chí
           </span>
           {activeFilterCount > 0 && (
-            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+            <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
               {activeFilterCount} đang áp dụng
             </span>
           )}
@@ -118,7 +118,7 @@ export function MentorFilterBar({
           <button
             type="button"
             onClick={onClearFilters}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-solid transition-colors hover:text-primary-solid cursor-pointer"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span>Xóa bộ lọc</span>
@@ -168,19 +168,19 @@ export function MentorFilterBar({
 
       {/* Hiển thị các Active Filter Chips */}
       {activeFilterCount > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-plum-900/[0.05] dark:border-[#393a3b]">
-          <span className="text-[11px] font-semibold text-plum-400 dark:text-[#8f9399]">
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border">
+          <span className="text-xs font-semibold text-text-subtle">
             Đang lọc theo:
           </span>
 
           {params.keyword && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold text-brand-700 ring-1 ring-inset ring-brand-300 dark:bg-brand-700/30 dark:text-brand-300">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-solid ring-1 ring-inset ring-brand-300">
               <span>Từ khóa: &quot;{params.keyword}&quot;</span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ keyword: undefined, page: 0 })}
                 aria-label="Xóa lọc từ khóa"
-                className="hover:text-brand-700"
+                className="hover:text-primary-solid"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -188,13 +188,13 @@ export function MentorFilterBar({
           )}
 
           {selectedIndustry && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-cream-200 px-2.5 py-0.5 text-[11px] font-semibold text-plum-800 ring-1 ring-inset ring-plum-300 dark:bg-white/10 dark:text-[#e4e6eb]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text ring-1 ring-inset ring-plum-300">
               <span>Lĩnh vực: {selectedIndustry.name}</span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ fieldId: undefined, page: 0 })}
                 aria-label="Xóa lọc lĩnh vực"
-                className="hover:text-plum-900"
+                className="hover:text-text"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -202,13 +202,13 @@ export function MentorFilterBar({
           )}
 
           {selectedMajor && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-cream-200 px-2.5 py-0.5 text-[11px] font-semibold text-plum-800 ring-1 ring-inset ring-plum-300 dark:bg-white/10 dark:text-[#e4e6eb]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text ring-1 ring-inset ring-plum-300">
               <span>Ngành: {selectedMajor.name}</span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ majorId: undefined, page: 0 })}
                 aria-label="Xóa lọc chuyên ngành"
-                className="hover:text-plum-900"
+                className="hover:text-text"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -216,7 +216,7 @@ export function MentorFilterBar({
           )}
 
           {params.workingMode && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-aqua-50 px-2.5 py-0.5 text-[11px] font-semibold text-aqua-800 ring-1 ring-inset ring-aqua-300 dark:bg-aqua-950/40 dark:text-aqua-300">
+            <span className="inline-flex items-center gap-1 rounded-full bg-aqua-50 px-2.5 py-0.5 text-xs font-semibold text-aqua-800 ring-1 ring-inset ring-aqua-300 dark:bg-aqua-950/40 dark:text-aqua-300">
               <span>
                 Hình thức: {params.workingMode === 'ONLINE' ? 'Trực tuyến' : params.workingMode === 'OFFLINE' ? 'Trực tiếp' : 'Linh hoạt'}
               </span>
@@ -232,7 +232,7 @@ export function MentorFilterBar({
           )}
 
           {params.mentoringType && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/5 px-2.5 py-0.5 text-[11px] font-semibold text-violet-600 ring-1 ring-inset ring-violet-300 dark:bg-violet-600/40 dark:text-violet-300">
+            <span className="inline-flex items-center gap-1 rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-semibold text-info ring-1 ring-inset ring-info-border">
               <span>
                 Phương thức: {params.mentoringType === 'INDIVIDUAL' ? '1 kèm 1' : params.mentoringType === 'GROUP' ? 'Theo nhóm' : '1-1 & Nhóm'}
               </span>
@@ -240,7 +240,7 @@ export function MentorFilterBar({
                 type="button"
                 onClick={() => onFilterChange({ mentoringType: undefined, page: 0 })}
                 aria-label="Xóa lọc phương thức hướng dẫn"
-                className="hover:text-violet-600"
+                className="hover:text-info"
               >
                 <X className="h-3 w-3" />
               </button>

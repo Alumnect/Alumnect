@@ -486,7 +486,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   // ---------------- Render ----------------
   if (isLoading) {
     return (
-      <div className="space-y-3 rounded-3xl border border-plum-900/[0.08] bg-white p-6 dark:border-white/10 dark:bg-[#1e1f20]">
+      <div className="space-y-3 rounded-3xl border border-border bg-surface p-6 dark:bg-bg">
         <Skeleton className="h-10 w-1/2" />
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-64 w-full" />
@@ -496,9 +496,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   if (error || !ctx) {
     return (
-      <div className="rounded-3xl border border-coral-200 bg-coral-50/70 p-6 text-center space-y-3 dark:bg-coral-950/20 dark:border-coral-900/30">
-        <AlertCircle className="mx-auto h-8 w-8 text-coral-500" />
-        <p className="text-sm font-bold text-coral-700 dark:text-coral-300">
+      <div className="rounded-3xl border border-danger-border bg-danger-soft p-6 text-center space-y-3">
+        <AlertCircle className="mx-auto h-8 w-8 text-danger" />
+        <p className="text-sm font-bold text-danger">
           {error?.message || 'Không thể tải cuộc trò chuyện.'}
         </p>
         {onBack && (
@@ -580,39 +580,39 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   ].filter((g) => g.items.length > 0)
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#1e1f20]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm dark:bg-bg">
       {/* Header: người trao đổi · một thao tác chính theo ngữ cảnh · menu thao tác */}
-      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] bg-white px-4 py-3 dark:border-white/10 dark:bg-[#242526] sm:px-6">
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <Avatar src={partnerAvatar || undefined} name={partnerName} size={40} className="ring-2 ring-brand-500/20" />
+          <Avatar src={partnerAvatar || undefined} name={partnerName} size={40} className="ring-2 ring-primary/20" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <h2 className="truncate font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">{partnerName}</h2>
-              <span className="rounded-full bg-cream-200 px-2 py-0.5 text-[11px] font-semibold text-plum-600 dark:bg-white/10 dark:text-[#b0b3b8]">
+              <h2 className="truncate font-display text-base font-bold text-text">{partnerName}</h2>
+              <span className="rounded-full bg-surface-3 px-2 py-0.5 text-xs font-semibold text-text-muted">
                 {isMentor ? 'Học viên' : 'Mentor'}
               </span>
               {isTaskOverdue && (
-                <span className="rounded-full bg-coral-100 px-2 py-0.5 text-[11px] font-semibold text-coral-700 dark:bg-coral-900/40 dark:text-coral-300">
+                <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold text-danger">
                   Quá hạn
                 </span>
               )}
               {isGroupMember && (
-                <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] font-semibold text-violet-500 dark:text-violet-300">
+                <span className="rounded-full bg-info-soft px-2 py-0.5 text-xs font-semibold text-info">
                   Thành viên nhóm
                 </span>
               )}
             </div>
-            <p className="truncate text-xs text-plum-500 dark:text-[#b0b3b8]">
+            <p className="truncate text-xs text-text-subtle">
               Yêu cầu #{ctx.requestId} · {ctx.requestTitle}
             </p>
             {ctx.groupId && groupParticipants.length > 0 && (
               <div className="mt-1 flex items-center gap-2" title={groupParticipants.map((p) => p.fullName).join(', ')}>
                 <div className="flex -space-x-1.5">
                   {groupParticipants.slice(0, 6).map((p) => (
-                    <Avatar key={p.id} src={p.avatarUrl || undefined} name={p.fullName} size={20} className="ring-2 ring-white dark:ring-[#242526]" />
+                    <Avatar key={p.id} src={p.avatarUrl || undefined} name={p.fullName} size={20} className="ring-2 ring-surface" />
                   ))}
                 </div>
-                <span className="truncate text-[11px] font-medium text-plum-500 dark:text-[#b0b3b8]">
+                <span className="truncate text-xs font-medium text-text-subtle">
                   Nhóm {ctx.groupName} · {groupParticipants.length} người
                 </span>
               </div>
@@ -640,10 +640,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 Thao tác
               </Button>
               {isTaskActionMenuOpen && (
-                <div className="absolute right-0 top-full z-50 mt-1.5 max-h-[min(520px,calc(100vh-200px))] w-72 overflow-y-auto rounded-2xl border border-cream-300 bg-white p-1.5 shadow-2xl dark:border-white/10 dark:bg-[#242526]">
+                <div className="absolute right-0 top-full z-50 mt-1.5 max-h-[min(520px,calc(100vh-200px))] w-72 overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 shadow-2xl">
                   {actionGroups.map((group) => (
                     <div key={group.title} className="py-1">
-                      <p className="px-2.5 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-wide text-plum-400">{group.title}</p>
+                      <p className="px-2.5 pb-1 pt-1.5 text-xs font-bold uppercase tracking-wide text-text-subtle">{group.title}</p>
                       {group.items.map((item) => (
                         <button
                           key={item.label}
@@ -652,12 +652,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                             setIsTaskActionMenuOpen(false)
                             item.onClick()
                           }}
-                          className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition hover:bg-cream-100 dark:hover:bg-white/5 ${item.danger ? 'text-coral-600 dark:text-coral-300' : 'text-plum-800 dark:text-[#e4e6eb]'}`}
+                          className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition hover:bg-surface-2 ${item.danger ? 'text-coral-600 dark:text-coral-300' : 'text-plum-800 dark:text-text'}`}
                         >
                           <span className={`mt-0.5 shrink-0 [&>svg]:h-4 [&>svg]:w-4 ${item.danger ? 'text-coral-600' : 'text-brand-600'}`}>{item.icon}</span>
                           <span className="min-w-0">
                             <span className="block text-xs font-semibold">{item.label}</span>
-                            {item.hint && <span className="block text-[11px] font-normal text-plum-500 dark:text-plum-400">{item.hint}</span>}
+                            {item.hint && <span className="block text-xs font-normal text-text-subtle">{item.hint}</span>}
                           </span>
                         </button>
                       ))}
@@ -671,27 +671,27 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       </div>
 
       {/* Ngữ cảnh Request */}
-      <div className="border-b border-plum-900/[0.06] bg-cream-100 px-4 py-2 text-xs dark:border-white/5 dark:bg-black/20 sm:px-6">
+      <div className="border-b border-border bg-surface-2 px-4 py-2 text-xs sm:px-6">
         <button
           type="button"
           onClick={() => setIsRequestPanelOpen((v) => !v)}
           className="flex w-full items-center justify-between gap-2 text-left"
           aria-expanded={isRequestPanelOpen}
         >
-          <span className="flex min-w-0 items-center gap-2 text-plum-700 dark:text-[#e4e6eb]">
-            <FileText className="h-4 w-4 shrink-0 text-brand-600" />
+          <span className="flex min-w-0 items-center gap-2 text-text-muted">
+            <FileText className="h-4 w-4 shrink-0 text-primary-solid" />
             <span className="shrink-0 font-bold">{MENTORING_REQUEST_FLOW_STATUS_LABELS[ctx.requestStatus] || ctx.requestStatus}</span>
-            <span className="text-plum-400">•</span>
+            <span className="text-text-subtle">•</span>
             <span className="truncate">
               Ngân sách {requestPrice ? formatVnd(requestPrice) : 'Thỏa thuận'}
               {ctx.expectedDeadline ? ` • Mong muốn trước ${format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy')}` : ''}
             </span>
           </span>
-          {isRequestPanelOpen ? <ChevronUp className="h-4 w-4 text-plum-400" /> : <ChevronDown className="h-4 w-4 text-plum-400" />}
+          {isRequestPanelOpen ? <ChevronUp className="h-4 w-4 text-text-subtle" /> : <ChevronDown className="h-4 w-4 text-text-subtle" />}
         </button>
         {isRequestPanelOpen && (
-          <div className="mt-2 grid gap-2 pb-1 text-plum-600 dark:text-[#b0b3b8] sm:grid-cols-2">
-            <p className="sm:col-span-2 whitespace-pre-wrap text-plum-800 dark:text-[#e4e6eb]">{ctx.requestDescription}</p>
+          <div className="mt-2 grid gap-2 pb-1 text-text-muted sm:grid-cols-2">
+            <p className="sm:col-span-2 whitespace-pre-wrap text-text">{ctx.requestDescription}</p>
             <p>
               Loại yêu cầu: <b>{ctx.requestType === 'DIRECT' ? 'Gửi trực tiếp' : 'Yêu cầu chung'}</b>
               {ctx.industryName ? ` · ${ctx.industryName}` : ''}
@@ -712,7 +712,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               onClick={() =>
                 navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`)
               }
-              className="justify-self-start font-bold text-brand-600 hover:underline dark:text-brand-400"
+              className="justify-self-start font-bold text-primary-solid hover:underline"
             >
               Mở trang chi tiết Request →
             </button>
@@ -743,7 +743,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           tone="neutral"
           icon={<ClipboardCheck />}
           action={
-            <button type="button" onClick={() => setIsTaskOpen(true)} className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
+            <button type="button" onClick={() => setIsTaskOpen(true)} className="font-semibold text-primary-solid hover:underline">
               Xem Task
             </button>
           }
@@ -809,11 +809,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f8f9fa]/50 px-4 py-4 dark:bg-[#18191a] sm:px-6"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f8f9fa]/50 px-4 py-4 dark:bg-bg sm:px-6"
       >
         {isFetchingNextPage && (
           <div className="flex justify-center py-2">
-            <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-plum-500 shadow-xs dark:bg-white/10">
+            <span className="rounded-full bg-surface px-3 py-1 text-xs font-bold text-text-subtle shadow-xs">
               Đang tải tin nhắn cũ hơn...
             </span>
           </div>
@@ -827,11 +827,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           </div>
         ) : timeline.length === 0 ? (
           <div className="flex h-full min-h-[160px] flex-col items-center justify-center space-y-2 p-6 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-700/50">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary-solid">
               <MessagesSquare className="h-6 w-6" />
             </div>
-            <p className="font-display text-sm font-bold text-plum-800 dark:text-[#f0f2f5]">Bắt đầu trao đổi về Request</p>
-            <p className="max-w-sm text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+            <p className="font-display text-sm font-bold text-text">Bắt đầu trao đổi về Request</p>
+            <p className="max-w-sm text-xs leading-relaxed text-text-subtle">
               {isMentor
                 ? 'Trao đổi với Học viên, sau đó dùng nút "Giao dịch" để Chấp nhận Deal theo Request hoặc tạo Deal Ticket mới.'
                 : 'Trao đổi với Mentor về phạm vi, giá và thời hạn. Deal Ticket của Mentor sẽ hiển thị tại đây.'}
@@ -890,9 +890,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       </div>
 
       {/* Ô nhập tin nhắn */}
-      <div className="border-t border-plum-900/[0.08] bg-white p-3 dark:border-white/10 dark:bg-[#242526]">
+      <div className="border-t border-border bg-surface p-3">
         {!ctx.canSendMessage ? (
-          <div className="rounded-2xl bg-cream-100 p-3 text-center text-xs font-bold text-plum-500 dark:bg-white/5 dark:text-[#b0b3b8]">
+          <div className="rounded-2xl bg-surface-2 p-3 text-center text-xs font-bold text-text-subtle">
             {isTaskFinished ? 'Công việc đã kết thúc, không thể nhắn tin thêm.' : ctx.readOnlyReason || 'Cuộc hội thoại này ở chế độ chỉ đọc.'}
           </div>
         ) : (
@@ -905,14 +905,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                     type="button"
                     onClick={() => setIsDealMenuOpen((v) => !v)}
                     title="Giao dịch Deal Ticket"
-                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-brand-50/60 px-3 text-xs font-bold text-brand-700 transition-all hover:bg-brand-100 active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40 dark:text-brand-300"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-brand-50/60 px-3 text-xs font-bold text-primary-solid transition-all hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
                   >
                     <Handshake className="h-4 w-4 shrink-0" />
                     <span className="font-display font-bold">Giao dịch</span>
                     <ChevronUp className={`h-3.5 w-3.5 transition-transform ${isDealMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isDealMenuOpen && (
-                    <div className="absolute bottom-13 left-0 z-40 w-72 space-y-1 rounded-2xl border border-plum-900/10 bg-white p-2 text-xs shadow-2xl dark:border-white/10 dark:bg-[#242526] sm:w-80">
+                    <div className="absolute bottom-13 left-0 z-40 w-72 space-y-1 rounded-2xl border border-border bg-surface p-2 text-xs shadow-2xl sm:w-80">
                       <button
                         type="button"
                         disabled={!ctx.canAcceptDealByRequest}
@@ -920,14 +920,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           setIsDealMenuOpen(false)
                           setIsAcceptByRequestOpen(true)
                         }}
-                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/5"
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <span className="rounded-lg bg-mint-100/70 p-1.5 text-mint-700 dark:bg-mint-950/60 dark:text-mint-300">
+                        <span className="rounded-lg bg-success-soft p-1.5 text-success">
                           <ThumbsUp className="h-4 w-4" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block font-bold text-plum-900 dark:text-[#f0f2f5]">Chấp nhận Deal theo Request</span>
-                          <span className="block text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+                          <span className="block font-bold text-text">Chấp nhận Deal theo Request</span>
+                          <span className="block text-xs text-text-subtle">
                             {ctx.canAcceptDealByRequest
                               ? `Giá ${formatVnd(requestPrice)} · deadline theo Request`
                               : ctx.acceptByRequestUnavailableReason || 'Không khả dụng ở trạng thái hiện tại'}
@@ -941,14 +941,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           setIsDealMenuOpen(false)
                           setIsFormOpen(true)
                         }}
-                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-brand-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/5"
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <span className="rounded-lg bg-brand-100/70 p-1.5 text-brand-600 dark:bg-brand-700/60 dark:text-brand-400">
+                        <span className="rounded-lg bg-brand-100/70 p-1.5 text-primary-solid dark:bg-brand-700/60">
                           <Edit3 className="h-4 w-4" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block font-bold text-plum-900 dark:text-[#f0f2f5]">Deal lại / Tạo Deal Ticket</span>
-                          <span className="block text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+                          <span className="block font-bold text-text">Deal lại / Tạo Deal Ticket</span>
+                          <span className="block text-xs text-text-subtle">
                             {ctx.canCreateDealTicket ? 'Nhập phạm vi, giá, deadline và kết quả mới' : 'Deal đã khóa hoặc Request không còn mở'}
                           </span>
                         </span>
@@ -965,12 +965,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       {/* Dialog: Chấp nhận Deal theo Request */}
       {isAcceptByRequestOpen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-900/60 p-4 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
-            <h4 className="font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">Chấp nhận Deal theo Request</h4>
-            <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+          <div className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-6 text-left shadow-2xl">
+            <h4 className="font-display text-base font-bold text-text">Chấp nhận Deal theo Request</h4>
+            <p className="text-xs text-text-subtle">
               Hệ thống tạo Deal Ticket từ điều kiện hiện tại của Request. Bạn được tính là đã xác nhận phiên bản này; Học viên cần xác nhận để khóa Deal.
             </p>
-            <ul className="space-y-1.5 rounded-2xl bg-cream-100/70 p-3 text-xs text-plum-700 dark:bg-white/5 dark:text-[#e4e6eb]">
+            <ul className="space-y-1.5 rounded-2xl bg-cream-100/70 p-3 text-xs text-text-muted dark:bg-white/5">
               <li>Giá: <b>{formatVnd(requestPrice)}</b> (ngân sách tối đa Học viên đề xuất)</li>
               <li>Deadline: <b>{ctx.expectedDeadline ? format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy HH:mm') : '—'}</b></li>
               <li>Nhiệm vụ: <b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b></li>
@@ -998,9 +998,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       {/* Dialog: Từ chối */}
       {rejectTarget !== null && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md space-y-4 rounded-3xl border border-cream-300 bg-white p-6 text-left shadow-2xl dark:border-white/10 dark:bg-[#202124]">
-            <h4 className="font-display text-base font-bold text-plum-900 dark:text-white">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
-            <p className="text-xs leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
+          <div className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-6 text-left shadow-2xl dark:bg-surface">
+            <h4 className="font-display text-base font-bold text-text">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
+            <p className="text-xs leading-relaxed text-text-muted">
               Chỉ từ chối đề xuất hiện tại; Request vẫn giữ nguyên và hai bên có thể tiếp tục trao đổi.
             </p>
             <textarea
@@ -1008,13 +1008,13 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Lý do (ví dụ: mức giá chưa phù hợp, deadline quá gấp...)"
-              className="w-full rounded-2xl border border-cream-300 bg-white p-3 text-xs text-plum-900 focus:border-coral-500 focus:outline-none dark:border-white/10 dark:bg-[#2d2e30] dark:text-[#e4e6eb]"
+              className="w-full rounded-2xl border border-border bg-surface p-3 text-xs text-text focus:border-danger focus:outline-none dark:bg-[#2d2e30]"
             />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" size="sm" onClick={() => setRejectTarget(null)} disabled={rejectMutation.isPending}>
                 Hủy
               </Button>
-              <Button size="sm" onClick={handleReject} disabled={rejectMutation.isPending} className="rounded-xl bg-coral-600 text-white hover:bg-coral-700">
+              <Button size="sm" onClick={handleReject} disabled={rejectMutation.isPending} className="rounded-xl bg-danger text-text-inverse hover:opacity-90">
                 {rejectMutation.isPending ? 'Đang gửi...' : 'Từ chối'}
               </Button>
             </div>
@@ -1031,37 +1031,37 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         if (typeof document === 'undefined') return null
         return createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-900/60 p-4 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-md space-y-4 rounded-3xl border border-plum-900/10 bg-white p-6 text-left shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
+            <div className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-6 text-left shadow-2xl">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning text-text-inverse shadow-xs">
                   <RefreshCw className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">
+                  <h4 className="font-display text-base font-bold text-text">
                     Gửi Ticket Yêu cầu điều chỉnh Deal
                   </h4>
-                  <p className="text-xs text-amber-700 dark:text-amber-400 font-bold">
+                  <p className="text-xs text-warning font-bold">
                     Điều chỉnh Deal Ticket phiên bản {adjustTarget}
                   </p>
                 </div>
               </div>
 
               {/* Tóm tắt điều khoản phiên bản hiện tại */}
-              <div className="rounded-2xl border border-amber-200/80 bg-amber-50/60 p-3 text-xs text-plum-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-[#e4e6eb] space-y-1">
+              <div className="rounded-2xl border border-warning-border bg-warning-soft p-3 text-xs text-text-muted space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-plum-500 dark:text-plum-400">Giá đề xuất hiện tại:</span>
-                  <span className="font-bold text-amber-700 dark:text-amber-300">{formatVnd(Number(currentPrice || 0))}</span>
+                  <span className="text-text-subtle">Giá đề xuất hiện tại:</span>
+                  <span className="font-bold text-warning">{formatVnd(Number(currentPrice || 0))}</span>
                 </div>
                 {currentDeadline && (
                   <div className="flex justify-between">
-                    <span className="text-plum-500 dark:text-plum-400">Deadline hiện tại:</span>
+                    <span className="text-text-subtle">Deadline hiện tại:</span>
                     <span className="font-semibold">{format(new Date(currentDeadline), 'dd/MM/yyyy HH:mm')}</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
+                <label className="text-xs font-bold text-text">
                   Nội dung điều chỉnh mong muốn (Ghi chú Ticket):
                 </label>
                 <textarea
@@ -1069,7 +1069,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   value={adjustNote}
                   onChange={(e) => setAdjustNote(e.target.value)}
                   placeholder="Ví dụ: Mong muốn giảm giá xuống 200.000đ hoặc dời deadline thêm 3 ngày..."
-                  className="w-full rounded-2xl border border-plum-900/15 bg-white p-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                  className="w-full rounded-2xl border border-border-strong bg-surface p-3 text-xs text-text focus:border-primary focus:outline-none"
                 />
               </div>
 
@@ -1081,7 +1081,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   size="sm"
                   onClick={handleRequestAdjustment}
                   disabled={adjustMutation.isPending}
-                  className="rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700"
+                  className="rounded-xl font-bold bg-primary-solid text-on-primary hover:bg-primary-hover"
                   leftIcon={adjustMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 >
                   {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi Ticket điều chỉnh'}

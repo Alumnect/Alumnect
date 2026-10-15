@@ -85,9 +85,9 @@ export function MentoringDeadlineExtensionModal({
     >
       <div className="space-y-4">
         <MentoringFormError message={errorMsg} />
-        <div className="rounded-xl border border-cream-300 bg-cream-100 px-3.5 py-2.5 text-sm dark:border-white/10 dark:bg-white/[0.04]">
-          <span className="text-plum-500 dark:text-plum-400">Hạn chót hiện tại: </span>
-          <span className="font-semibold text-plum-900 dark:text-white">{currentLabel}</span>
+        <div className="rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm dark:bg-white/[0.04]">
+          <span className="text-text-subtle">Hạn chót hiện tại: </span>
+          <span className="font-semibold text-text">{currentLabel}</span>
         </div>
         <MentoringField label="Hạn chót mới" required>
           <input
@@ -104,7 +104,7 @@ export function MentoringDeadlineExtensionModal({
               key={days}
               type="button"
               onClick={() => setProposedDeadline(toDateTimeLocal(new Date(base.getTime() + days * 86400000)))}
-              className="rounded-lg border border-cream-300 px-3 py-1.5 text-xs font-semibold text-plum-700 transition hover:border-brand-500 hover:text-brand-600 dark:border-white/10 dark:text-[#e4e6eb]"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-text-muted transition hover:border-primary hover:text-primary-solid"
             >
               +{days} ngày
             </button>

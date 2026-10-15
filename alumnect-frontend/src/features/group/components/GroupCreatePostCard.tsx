@@ -130,13 +130,13 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
   }
 
   return (
-    <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+    <Card hover={false} className="rounded-3xl border border-border p-5 shadow-card dark:bg-surface">
       <div className="flex items-start gap-3.5">
         <Avatar
           src={user?.avatarUrl ?? ''}
           name={user?.name ?? 'Thành viên'}
           size={42}
-          className="shrink-0 ring-2 ring-brand-500/20"
+          className="shrink-0 ring-2 ring-primary/20"
         />
 
         <div className="flex-1">
@@ -150,7 +150,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                 aria-label="Nội dung bài thảo luận"
                 placeholder={`Bạn muốn chia sẻ điều gì với cộng đồng ${groupName} hôm nay?`}
                 rows={isFocused || images.length > 0 ? 3 : 2}
-                className="w-full resize-none rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] p-3 text-sm text-plum-900 transition-all placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] dark:focus:border-brand-400 dark:focus:bg-[#242526]"
+                className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-3 text-sm text-text transition-all placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
               />
             </div>
 
@@ -163,11 +163,11 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                   aria-haspopup="listbox"
                   aria-expanded={topicMenuOpen}
                   onClick={toggleTopicMenu}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-plum-600 transition-colors hover:text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:text-[#b0b3b8] dark:hover:text-brand-400 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-text-muted transition-colors hover:text-primary-solid focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                 >
                   <span>Chủ đề bài viết</span>
                   {currentTopic && (
-                    <span className="rounded-full bg-brand-500/10 px-2 py-0.5 text-[11px] font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+                    <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
                       #{currentTopic}
                     </span>
                   )}
@@ -186,11 +186,11 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                         exit={{ opacity: 0, y: -6, scale: 0.96 }}
                         transition={{ duration: 0.15, ease: 'easeOut' }}
                         style={{ top: topicMenuPosition.top, left: topicMenuPosition.left, transformOrigin: 'top' }}
-                        className="fixed z-[100] w-56 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-brand-500/15 bg-white/95 p-1.5 shadow-[0_12px_36px_rgba(31,24,48,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-[#242526]/95"
+                        className="fixed z-[100] w-56 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-brand-500/15 bg-surface p-1.5 shadow-[0_12px_36px_rgba(31,24,48,0.14)] backdrop-blur-xl dark:border-white/10"
                       >
                       <div className="mb-1 flex items-center justify-between px-2 py-1">
-                        <span className="text-[9px] font-black uppercase tracking-[0.14em] text-plum-400">Chọn chủ đề</span>
-                        <span className="text-[9px] font-medium text-plum-400">{topics.length} lựa chọn</span>
+                        <span className="text-xs font-black uppercase tracking-[0.14em] text-text-subtle">Chọn chủ đề</span>
+                        <span className="text-xs font-medium text-text-subtle">{topics.length} lựa chọn</span>
                       </div>
                       {[null, ...topics].map((topic, index) => {
                         const selected = currentTopic === topic
@@ -209,8 +209,8 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                             }}
                             className={`group/topic flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-all duration-150 cursor-pointer ${
                               selected
-                                ? 'bg-brand-500/10 font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
-                                : 'font-medium text-plum-700 hover:bg-plum-900/[0.045] hover:text-brand-600 dark:text-plum-200 dark:hover:bg-[#3a3b3c] dark:hover:text-brand-300'
+                                ? 'bg-primary-soft font-bold text-primary-solid'
+                                : 'font-medium text-text-muted hover:bg-surface-2 hover:text-primary-solid'
                             }`}
                           >
                             <span>{topic ? `#${topic}` : 'Không chọn chủ đề'}</span>
@@ -232,12 +232,12 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
             {images.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2.5">
                 {images.map((img, idx) => (
-                  <div key={idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-plum-900/10 dark:border-[#393a3b]">
+                  <div key={idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-border">
                     <img src={img} alt="Đính kèm" className="h-full w-full object-cover" />
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
-                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-plum-900/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-rose-600"
+                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-plum-900/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-90"
                     >
                       <X size={12} />
                     </button>
@@ -262,7 +262,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
             )}
 
             {/* Thanh công cụ đính kèm & Đăng bài */}
-            <div className="mt-3 flex items-center justify-between border-t border-plum-900/[0.06] pt-3 dark:border-[#393a3b]">
+            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
               <div className="flex items-center gap-1">
                 <input
                   ref={fileInputRef}
@@ -275,12 +275,12 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                 />
                 <label
                   htmlFor={`group-post-file-input-${groupId}`}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-brand-600 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-brand-400"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-text-muted transition-colors hover:bg-surface-2 hover:text-primary-solid"
                 >
                   {uploading ? (
-                    <Loader2 size={16} className="animate-spin text-brand-500" />
+                    <Loader2 size={16} className="animate-spin text-primary-solid" />
                   ) : (
-                    <ImagePlus size={16} className="text-emerald-500" />
+                    <ImagePlus size={16} className="text-success" />
                   )}
                   <span>Ảnh/video {images.length + videos.length > 0 ? `(${images.length + videos.length}/10)` : ''}</span>
                 </label>

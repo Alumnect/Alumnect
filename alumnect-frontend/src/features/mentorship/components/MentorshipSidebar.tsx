@@ -88,7 +88,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
   }
 
   const renderBadge = (count: number) => count > 0 ? (
-    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[10px] font-extrabold text-white shadow-sm">
+    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-solid px-1.5 text-xs font-extrabold text-on-primary shadow-sm">
       {count > 99 ? '99+' : count}
     </span>
   ) : null
@@ -107,11 +107,11 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
           'group relative flex items-center rounded-xl font-medium transition-all duration-150',
           nested ? 'h-8 gap-2 pl-8 pr-2.5 text-[12px]' : 'h-10 gap-2.5 px-3 text-[13px]',
           isActive
-            ? 'bg-brand-50 font-semibold text-brand-700 shadow-[inset_3px_0_0_#f27024] dark:bg-brand-500/15 dark:text-brand-300'
-            : 'text-plum-600 hover:bg-plum-900/[0.04] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-white/[0.05] dark:hover:text-white',
+            ? 'bg-primary-soft font-semibold text-primary-solid shadow-[inset_3px_0_0_#f27024]'
+            : 'text-text-muted hover:bg-surface-2 hover:text-text dark:hover:bg-white/[0.05]',
         )}
       >
-        <Icon className={cn('shrink-0 transition-colors', nested ? 'h-3.5 w-3.5' : 'h-4 w-4', isActive ? 'text-brand-600 dark:text-brand-400' : 'text-plum-400 dark:text-[#8f9399]')} />
+        <Icon className={cn('shrink-0 transition-colors', nested ? 'h-3.5 w-3.5' : 'h-4 w-4', isActive ? 'text-primary-solid' : 'text-text-subtle')} />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
         {renderBadge(badgeFor(item))}
       </NavLink>
@@ -134,12 +134,12 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
           })}
           className={cn(
             'group flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-[13px] font-medium transition-colors',
-            isActive ? 'font-semibold text-brand-700 dark:text-brand-300' : 'text-plum-600 hover:bg-plum-900/[0.04] hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:bg-white/[0.05] dark:hover:text-white',
+            isActive ? 'font-semibold text-primary-solid' : 'text-text-muted hover:bg-surface-2 hover:text-text dark:hover:bg-white/[0.05]',
           )}
         >
-          <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-brand-600' : 'text-plum-400 dark:text-[#8f9399]')} />
+          <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary-solid' : 'text-text-subtle')} />
           <span className="min-w-0 flex-1 truncate">{item.label}</span>
-          <ChevronDown className={cn('h-3.5 w-3.5 text-plum-400 transition-transform duration-200', isOpen && 'rotate-180')} />
+          <ChevronDown className={cn('h-3.5 w-3.5 text-text-subtle transition-transform duration-200', isOpen && 'rotate-180')} />
         </button>
         <AnimatePresence initial={false}>
           {isOpen && (
@@ -164,31 +164,31 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
     <div className="flex min-h-full flex-col">
       <div className="mb-3 flex items-center gap-2.5 px-2 pt-1">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-sm"><Sparkles className="h-4 w-4" /></span>
-        <div className="min-w-0"><p className="text-sm font-extrabold text-plum-950 dark:text-white">Mentoring</p><p className="truncate text-[10px] text-plum-400">Kết nối · Hợp tác · Đồng hành</p></div>
+        <div className="min-w-0"><p className="text-sm font-extrabold text-text">Mentoring</p><p className="truncate text-xs text-text-subtle">Kết nối · Hợp tác · Đồng hành</p></div>
       </div>
 
       {hasAcceptedTerms ? (
         <nav aria-label="Điều hướng Mentoring" className="space-y-3">
           {sections.map((section) => (
-            <section key={section.label} className="border-t border-plum-900/[0.06] pt-2.5 first:border-t-0 first:pt-0 dark:border-[#393a3b]">
-              <h3 className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-plum-400/80 dark:text-[#8f9399]">{section.label}</h3>
+            <section key={section.label} className="border-t border-border pt-2.5 first:border-t-0 first:pt-0">
+              <h3 className="mb-1 px-3 text-xs font-bold uppercase tracking-[0.12em] text-plum-400/80 dark:text-text-subtle">{section.label}</h3>
               <div className="space-y-0.5">{section.items.map((item) => item.children ? renderParent(item) : renderLink(item))}</div>
             </section>
           ))}
         </nav>
       ) : (
-        <div className="rounded-xl border border-brand-100 bg-brand-50/70 p-3 dark:border-brand-500/20 dark:bg-brand-500/10">
-          <p className="text-xs font-bold text-plum-900 dark:text-white">Hoàn tất bước xác nhận</p>
-          <p className="mt-1 text-[11px] leading-4 text-plum-500 dark:text-[#b0b3b8]">Đọc và chấp nhận điều khoản để sử dụng các chức năng Mentoring.</p>
+        <div className="rounded-xl border border-primary-soft-border bg-brand-50/70 p-3 dark:bg-brand-500/10">
+          <p className="text-xs font-bold text-text">Hoàn tất bước xác nhận</p>
+          <p className="mt-1 text-xs leading-4 text-text-subtle">Đọc và chấp nhận điều khoản để sử dụng các chức năng Mentoring.</p>
         </div>
       )}
 
-      <div className="mt-3 border-t border-plum-900/[0.06] pt-2.5 dark:border-[#393a3b]">
+      <div className="mt-3 border-t border-border pt-2.5">
         {renderLink(MENTORSHIP_TERMS_ITEM)}
         {hasAcceptedTerms && isAlumni && mentorStatus && (
-          <div className="mt-2 flex items-center gap-2 rounded-xl border border-brand-100/70 bg-brand-50/60 px-3 py-2 dark:border-brand-500/20 dark:bg-brand-500/10">
-            <span className={cn('h-2 w-2 shrink-0 rounded-full', mentorStatus.active ? 'bg-emerald-500' : 'bg-amber-500')} />
-            <div className="min-w-0 flex-1"><p className="text-[10px] text-plum-400">Trạng thái Mentor</p><p className="truncate text-xs font-semibold text-plum-800 dark:text-[#e4e6eb]">{mentorStatus.active ? 'Mentor đang hoạt động' : mentorStatus.statusMessage}</p></div>
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-brand-100/70 bg-primary-soft px-3 py-2 dark:border-brand-500/20">
+            <span className={cn('h-2 w-2 shrink-0 rounded-full', mentorStatus.active ? 'bg-success' : 'bg-warning')} />
+            <div className="min-w-0 flex-1"><p className="text-xs text-text-subtle">Trạng thái Mentor</p><p className="truncate text-xs font-semibold text-text">{mentorStatus.active ? 'Mentor đang hoạt động' : mentorStatus.statusMessage}</p></div>
           </div>
         )}
       </div>
@@ -201,13 +201,13 @@ export function MentorshipSidebar() {
   return (
     <>
       <div className="mb-4 xl:hidden">
-        <button type="button" onClick={() => setIsOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-plum-900/[0.08] bg-white px-4 text-sm font-semibold text-plum-700 shadow-xs transition-colors hover:bg-brand-50 hover:text-brand-700 dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#e4e6eb]" aria-expanded={isOpen} aria-controls="mentorship-mobile-drawer"><Menu className="h-4 w-4 text-brand-600" /> Menu Mentoring</button>
+        <button type="button" onClick={() => setIsOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text-muted shadow-xs transition-colors hover:bg-primary-soft hover:text-primary-solid" aria-expanded={isOpen} aria-controls="mentorship-mobile-drawer"><Menu className="h-4 w-4 text-primary-solid" /> Menu Mentoring</button>
       </div>
       <aside className="hidden h-full min-h-0 w-full overflow-y-auto no-scrollbar xl:block" aria-label="Mentoring sidebar">
-        <div className="min-h-full rounded-2xl border border-plum-900/[0.07] bg-white p-2.5 shadow-xs dark:border-[#393a3b] dark:bg-[#242526]"><MentorshipSidebarContent /></div>
+        <div className="min-h-full rounded-2xl border border-border bg-surface p-2.5 shadow-xs"><MentorshipSidebarContent /></div>
       </aside>
       <AnimatePresence>
-        {isOpen && <><motion.button type="button" aria-label="Đóng menu Mentoring" className="fixed inset-0 top-16 z-40 bg-plum-900/30 backdrop-blur-sm dark:bg-black/60 xl:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} /><motion.aside id="mentorship-mobile-drawer" className="fixed inset-y-0 left-0 top-16 z-50 w-[min(88vw,310px)] overflow-y-auto no-scrollbar border-r border-plum-900/[0.08] bg-white p-4 shadow-2xl dark:border-[#393a3b] dark:bg-[#18191a] xl:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', stiffness: 340, damping: 32 }}><div className="mb-2 flex justify-end"><button type="button" onClick={() => setIsOpen(false)} aria-label="Đóng menu Mentoring" className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 dark:hover:bg-[#3a3b3c]"><X className="h-4 w-4" /></button></div><MentorshipSidebarContent onNavigate={() => setIsOpen(false)} /></motion.aside></>}
+        {isOpen && <><motion.button type="button" aria-label="Đóng menu Mentoring" className="fixed inset-0 top-16 z-40 bg-plum-900/30 backdrop-blur-sm dark:bg-black/60 xl:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} /><motion.aside id="mentorship-mobile-drawer" className="fixed inset-y-0 left-0 top-16 z-50 w-[min(88vw,310px)] overflow-y-auto no-scrollbar border-r border-border bg-surface p-4 shadow-2xl xl:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', stiffness: 340, damping: 32 }}><div className="mb-2 flex justify-end"><button type="button" onClick={() => setIsOpen(false)} aria-label="Đóng menu Mentoring" className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle hover:bg-surface-2 hover:text-text"><X className="h-4 w-4" /></button></div><MentorshipSidebarContent onNavigate={() => setIsOpen(false)} /></motion.aside></>}
       </AnimatePresence>
     </>
   )

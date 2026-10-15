@@ -91,22 +91,22 @@ export function MentoringWorkLogList({
     switch (log.status) {
       case 'PENDING_CONFIRMATION':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/80 px-3 py-0.5 text-xs font-bold text-amber-800 ring-1 ring-amber-400/40 dark:bg-amber-950/40 dark:text-amber-300">
-            <Clock className="h-3.5 w-3.5 text-amber-600" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-0.5 text-xs font-bold text-warning ring-1 ring-warning">
+            <Clock className="h-3.5 w-3.5 text-warning" />
             <span>Chờ học viên xác nhận</span>
           </span>
         )
       case 'CONFIRMED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-mint-100/80 px-3 py-0.5 text-xs font-bold text-mint-800 ring-1 ring-mint-400/40 dark:bg-mint-950/40 dark:text-mint-300">
-            <CheckCircle2 className="h-3.5 w-3.5 text-mint-600" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-0.5 text-xs font-bold text-success ring-1 ring-success">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
             <span>Đã xác nhận nghiệm thu</span>
           </span>
         )
       case 'REJECTED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-coral-100/80 px-3 py-0.5 text-xs font-bold text-coral-800 ring-1 ring-coral-400/40 dark:bg-coral-950/40 dark:text-coral-300">
-            <AlertCircle className="h-3.5 w-3.5 text-coral-600" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-0.5 text-xs font-bold text-danger ring-1 ring-danger">
+            <AlertCircle className="h-3.5 w-3.5 text-danger" />
             <span>Yêu cầu điều chỉnh</span>
           </span>
         )
@@ -167,18 +167,18 @@ export function MentoringWorkLogList({
   }
 
   return (
-    <div className="rounded-3xl border border-plum-900/[0.08] bg-white p-6 shadow-xs dark:border-[#393a3b] dark:bg-[#242526]">
+    <div className="rounded-3xl border border-border bg-surface p-6 shadow-xs">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.06] pb-4 dark:border-white/[0.06]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4 dark:border-white/[0.06]">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="text-base font-bold text-plum-900 dark:text-white">
+            <h4 className="text-base font-bold text-text">
               Nhật ký công việc (Work Logs)
             </h4>
-            <p className="text-xs text-plum-400 dark:text-[#8f9399]">
+            <p className="text-xs text-text-subtle">
               {workLogs.length} bản ghi đã ghi nhận ({workLogs.filter((w) => w.status === 'PENDING_CONFIRMATION').length} chờ xác nhận)
             </p>
           </div>
@@ -199,13 +199,13 @@ export function MentoringWorkLogList({
       {/* Work Logs List or Empty State */}
       {workLogs.length === 0 ? (
         <div className="py-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-plum-900/[0.04] text-plum-400 dark:bg-white/5 dark:text-[#8f9399]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 text-text-subtle">
             <FileText className="h-7 w-7" />
           </div>
-          <h5 className="mt-4 text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">
+          <h5 className="mt-4 text-sm font-bold text-text">
             Chưa có Work Log nào được ghi nhận
           </h5>
-          <p className="mt-1 text-xs text-plum-400 dark:text-[#8f9399] max-w-sm mx-auto">
+          <p className="mt-1 text-xs text-text-subtle max-w-sm mx-auto">
             {canAddWorkLog
               ? 'Hãy tạo Work Log đầu tiên để ghi lại tiến độ công việc và gửi cho học viên xác nhận nghiệm thu.'
               : 'Mentor sẽ sớm cập nhật nhật ký công việc tại đây để bạn tiện theo dõi và nghiệm thu.'}
@@ -245,29 +245,29 @@ export function MentoringWorkLogList({
                 className={cn(
                   'rounded-2xl border p-5 transition-all duration-200',
                   log.status === 'PENDING_CONFIRMATION'
-                    ? 'border-amber-400/40 bg-amber-50/20 dark:border-amber-500/30 dark:bg-amber-950/10'
+                    ? 'border-warning bg-warning-soft'
                     : log.status === 'CONFIRMED'
-                    ? 'border-mint-300/60 bg-mint-50/10 dark:border-mint-800/40 dark:bg-mint-950/10'
-                    : 'border-coral-300/60 bg-coral-50/15 dark:border-coral-800/40 dark:bg-coral-950/10'
+                    ? 'border-success-border bg-success-soft'
+                    : 'border-danger-border bg-danger-soft'
                 )}
               >
                 {/* Log Header */}
-                <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-plum-900/[0.05] dark:border-white/[0.05]">
+                <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-border dark:border-white/[0.05]">
                   <div className="flex items-center gap-2.5">
-                    <span className="rounded-lg bg-plum-900/[0.06] px-2.5 py-1 text-xs font-mono font-bold text-plum-700 dark:bg-white/10 dark:text-[#e4e6eb]">
+                    <span className="rounded-lg bg-border px-2.5 py-1 text-xs font-mono font-bold text-text-muted">
                       Log #{logNumber}
                     </span>
-                    <span className="flex items-center gap-1 text-xs font-bold text-plum-600 dark:text-[#e4e6eb]">
-                      <Calendar className="h-3.5 w-3.5 text-brand-500" />
+                    <span className="flex items-center gap-1 text-xs font-bold text-text-muted">
+                      <Calendar className="h-3.5 w-3.5 text-primary-solid" />
                       Ngày thực hiện: {formatDate(log.logDate)}
                     </span>
                     {log.revisionNumber && log.revisionNumber > 1 && (
-                      <span className="rounded-md bg-violet-500/10 px-2 py-0.5 text-[11px] font-bold text-violet-500 dark:bg-violet-600/40 dark:text-violet-300">
+                      <span className="rounded-md bg-info-soft px-2 py-0.5 text-xs font-bold text-info">
                         Phiên bản v{log.revisionNumber}
                       </span>
                     )}
                     {isLatest && (
-                      <span className="rounded-md bg-brand-100 px-1.5 py-0.5 text-[11px] font-bold uppercase text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+                      <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-bold uppercase text-primary-solid">
                         Mới nhất
                       </span>
                     )}
@@ -280,7 +280,7 @@ export function MentoringWorkLogList({
                       <button
                         type="button"
                         onClick={() => onEditWorkLog(log)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-plum-900/[0.08] px-2.5 py-1 text-xs font-bold text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:border-white/10 dark:text-[#b0b3b8] dark:hover:bg-brand-500/15 dark:hover:text-brand-300"
+                        className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-text-muted transition-colors hover:bg-primary-soft hover:text-primary-solid"
                         title="Chỉnh sửa nhật ký công việc"
                       >
                         <Edit2 className="h-3 w-3" />
@@ -293,38 +293,38 @@ export function MentoringWorkLogList({
                 {/* Log Content Grid */}
                 <div className="mt-4 space-y-3 text-sm">
                   <div>
-                    <span className="block text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+                    <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
                       Mô tả tóm tắt
                     </span>
-                    <p className="mt-1 font-bold text-plum-900 dark:text-white leading-relaxed">
+                    <p className="mt-1 font-bold text-text leading-relaxed">
                       {log.description}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-plum-900/[0.06] bg-cream-100/70 p-4 dark:border-white/10 dark:bg-[#18191a]">
-                    <span className="block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#8f9399]">
+                  <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
+                    <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
                       Nội dung công việc hoàn thành
                     </span>
-                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-plum-800 dark:text-[#e4e6eb] leading-relaxed">
+                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
                       {log.workCompleted}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-plum-900/[0.06] bg-cream-100/70 p-4 dark:border-white/10 dark:bg-[#18191a]">
-                    <span className="block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#8f9399]">
+                  <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
+                    <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
                       Kết quả & Sản phẩm đạt được
                     </span>
-                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-plum-800 dark:text-[#e4e6eb] leading-relaxed">
+                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
                       {log.result}
                     </p>
                   </div>
 
                   {log.nextAction && (
                     <div>
-                      <span className="block text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+                      <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
                         Hành động tiếp theo
                       </span>
-                      <p className="mt-1 text-xs text-plum-600 dark:text-[#8f9399] leading-relaxed">
+                      <p className="mt-1 text-xs text-text-muted leading-relaxed">
                         {log.nextAction}
                       </p>
                     </div>
@@ -333,7 +333,7 @@ export function MentoringWorkLogList({
                   {/* Attachments Section */}
                   {log.attachments && log.attachments.length > 0 && (
                     <div className="pt-2">
-                      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+                      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">
                         <Paperclip className="h-3.5 w-3.5" />
                         Tài liệu minh chứng đính kèm ({log.attachments.length})
                       </span>
@@ -347,20 +347,20 @@ export function MentoringWorkLogList({
                               href={att.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="group inline-flex items-center gap-2 rounded-xl border border-plum-900/[0.08] bg-white px-3 py-2 text-xs font-bold text-plum-700 shadow-2xs transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-white/10 dark:bg-[#18191a] dark:text-[#e4e6eb] dark:hover:bg-brand-500/10 dark:hover:text-brand-300"
+                              className="group inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-text-muted shadow-2xs transition-all hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid"
                             >
                               {isImage ? (
-                                <ImageIcon className="h-4 w-4 text-brand-500 shrink-0" />
+                                <ImageIcon className="h-4 w-4 text-primary-solid shrink-0" />
                               ) : (
-                                <File className="h-4 w-4 text-violet-500 shrink-0" />
+                                <File className="h-4 w-4 text-info shrink-0" />
                               )}
                               <span className="truncate max-w-[180px]">{att.fileName}</span>
                               {att.fileSize && (
-                                <span className="text-[11px] text-plum-400 dark:text-[#8f9399]">
+                                <span className="text-xs text-text-subtle">
                                   ({formatFileSize(att.fileSize)})
                                 </span>
                               )}
-                              <ExternalLink className="h-3 w-3 text-plum-400 opacity-60 group-hover:opacity-100" />
+                              <ExternalLink className="h-3 w-3 text-text-subtle opacity-60 group-hover:opacity-100" />
                             </a>
                           )
                         })}
@@ -370,18 +370,18 @@ export function MentoringWorkLogList({
 
                   {/* Confirmed Notice / Evidence preservation */}
                   {log.status === 'CONFIRMED' && (
-                    <div className="rounded-2xl border border-mint-300/60 bg-mint-50/70 p-4 text-xs text-mint-900 dark:border-mint-700/60 dark:bg-mint-950/40 dark:text-mint-200 flex items-start gap-3">
-                      <ShieldCheck className="h-4 w-4 text-mint-600 dark:text-mint-400 shrink-0 mt-0.5" />
+                    <div className="rounded-2xl border border-success-border bg-success-soft p-4 text-xs text-success flex items-start gap-3">
+                      <ShieldCheck className="h-4 w-4 text-success shrink-0 mt-0.5" />
                       <div>
-                        <div className="font-bold text-mint-900 dark:text-mint-100">
+                        <div className="font-bold text-success">
                           Đã xác nhận nghiệm thu bởi {log.confirmedByName || 'Học viên'} {log.confirmedAt ? `lúc ${formatDateTime(log.confirmedAt)}` : ''}
                         </div>
                         {log.studentFeedback && (
-                          <p className="mt-1.5 text-mint-800 dark:text-mint-200 whitespace-pre-line font-medium">
+                          <p className="mt-1.5 text-success whitespace-pre-line font-medium">
                             "{log.studentFeedback}"
                           </p>
                         )}
-                        <p className="mt-1.5 text-[11px] text-mint-700/80 dark:text-mint-400/80">
+                        <p className="mt-1.5 text-xs text-success">
                           Bản ghi này đã trở thành bằng chứng nghiệm thu được bảo vệ, Mentor không thể chỉnh sửa hoặc xóa bỏ.
                         </p>
                       </div>
@@ -390,17 +390,17 @@ export function MentoringWorkLogList({
 
                   {/* Clarification requested notice */}
                   {log.status === 'REJECTED' && (
-                    <div className="rounded-2xl border border-coral-300/60 bg-coral-50/70 p-4 text-xs text-coral-900 dark:border-coral-700/60 dark:bg-coral-950/40 dark:text-coral-200 flex items-start gap-3">
-                      <AlertCircle className="h-4 w-4 text-coral-600 dark:text-coral-400 shrink-0 mt-0.5" />
+                    <div className="rounded-2xl border border-danger-border bg-danger-soft p-4 text-xs text-danger flex items-start gap-3">
+                      <AlertCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
                       <div className="flex-1">
-                        <div className="font-bold flex items-center justify-between text-coral-900 dark:text-coral-100">
+                        <div className="font-bold flex items-center justify-between text-danger">
                           <span>Yêu cầu điều chỉnh từ học viên</span>
-                          <span className="text-[11px] font-normal text-coral-700/80 dark:text-coral-400/80">
+                          <span className="text-xs font-normal text-danger">
                             Đang chờ Mentor bổ sung & gửi lại
                           </span>
                         </div>
                         {log.studentFeedback && (
-                          <p className="mt-2 font-medium text-coral-900 dark:text-coral-100 whitespace-pre-line bg-white/80 dark:bg-black/30 p-3 rounded-xl border border-coral-200/60 dark:border-coral-800/40">
+                          <p className="mt-2 font-medium text-danger whitespace-pre-line bg-surface/80 p-3 rounded-xl border border-danger-border">
                             "{log.studentFeedback}"
                           </p>
                         )}
@@ -414,7 +414,7 @@ export function MentoringWorkLogList({
                       <button
                         type="button"
                         onClick={() => setExpandedHistoryLogId(isHistoryOpen ? null : log.id)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-plum-600 hover:text-brand-600 dark:text-[#b0b3b8] dark:hover:text-brand-400 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-text-muted hover:text-primary-solid transition-colors"
                       >
                         <History className="h-3.5 w-3.5" />
                         <span>Lịch sử phản hồi & các phiên bản sửa đổi ({log.feedbacks?.length || 0})</span>
@@ -425,7 +425,7 @@ export function MentoringWorkLogList({
                         <div className="mt-2.5 space-y-2 rounded-xl border border-border bg-muted/40 p-3 text-xs">
                           {log.feedbacks?.map((fb) => (
                             <div key={fb.id} className="border-b border-border/50 pb-2 last:border-b-0 last:pb-0">
-                              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span className="font-bold text-foreground">
                                   {fb.action === 'CONFIRMED' ? 'Xác nhận nghiệm thu' : 'Yêu cầu điều chỉnh (v' + fb.revisionNumber + ')'}
                                 </span>
@@ -449,11 +449,11 @@ export function MentoringWorkLogList({
                   <div className="mt-4 rounded-2xl border border-mint-300/80 bg-linear-to-r from-mint-50/90 via-mint-50/50 to-mint-50/90 p-4 shadow-2xs dark:border-mint-700/60 dark:from-mint-950/40 dark:via-[#1c2e2e] dark:to-mint-950/40">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
-                        <h6 className="text-xs font-bold text-mint-900 dark:text-mint-200 flex items-center gap-1.5">
-                          <CheckCircle2 className="h-4 w-4 text-mint-600 dark:text-mint-400 shrink-0" />
+                        <h6 className="text-xs font-bold text-success flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                           Học viên xác nhận nghiệm thu phần công việc này
                         </h6>
-                        <p className="text-[11px] text-mint-700/90 dark:text-mint-300/90 mt-0.5">
+                        <p className="text-xs text-success mt-0.5">
                           Kiểm tra nội dung hoàn thành và tài liệu minh chứng để xác nhận nghiệm thu hoặc yêu cầu Mentor điều chỉnh.
                         </p>
                       </div>
@@ -468,9 +468,9 @@ export function MentoringWorkLogList({
                             setFeedbackText('')
                             setActionError(null)
                           }}
-                          className="rounded-xl border-coral-300 text-coral-700 hover:bg-coral-50 hover:border-coral-400 text-xs font-bold dark:border-coral-800 dark:text-coral-300 dark:hover:bg-coral-950/40"
+                          className="rounded-xl border-danger-border text-danger hover:bg-danger-soft hover:border-danger text-xs font-bold"
                         >
-                          <RotateCcw className="h-3.5 w-3.5 mr-1 text-coral-600" />
+                          <RotateCcw className="h-3.5 w-3.5 mr-1 text-danger" />
                           Yêu cầu điều chỉnh
                         </Button>
 
@@ -482,7 +482,7 @@ export function MentoringWorkLogList({
                             setFeedbackText('')
                             setActionError(null)
                           }}
-                          className="rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-xs shadow-brand-600/30"
+                          className="rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-xs shadow-brand-600/30"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                           Xác nhận nghiệm thu
@@ -493,7 +493,7 @@ export function MentoringWorkLogList({
                 )}
 
                 {/* Footer metadata */}
-                <div className="mt-4 flex items-center justify-between border-t border-plum-900/[0.04] pt-3 text-[11px] text-plum-400 dark:border-white/[0.04] dark:text-[#8f9399]">
+                <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs text-text-subtle dark:border-white/[0.04]">
                   <div className="flex items-center gap-2">
                     <Avatar
                       src={log.mentorAvatar || undefined}
@@ -514,44 +514,44 @@ export function MentoringWorkLogList({
       {confirmingLog && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div
-            className="w-full max-w-md rounded-3xl border border-plum-900/[0.08] bg-white p-6 shadow-2xl space-y-4 dark:border-white/10 dark:bg-[#1f2022]"
+            className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-2xl space-y-4 dark:bg-[#1f2022]"
             role="dialog"
             aria-modal="true"
           >
-            <div className="flex items-center justify-between border-b border-plum-900/[0.06] pb-3 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between border-b border-border pb-3 dark:border-white/[0.06]">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-mint-100 text-mint-700 dark:bg-mint-950/60 dark:text-mint-300">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success-soft text-success">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
-                <h3 className="text-base font-bold text-plum-900 dark:text-white">
+                <h3 className="text-base font-bold text-text">
                   Xác nhận nghiệm thu công việc
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setConfirmingLog(null)}
-                className="rounded-xl p-1.5 text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-700 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
+                className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-3.5 text-xs">
-              <div className="rounded-2xl border border-mint-500/30 bg-mint-500/10 p-3.5 text-mint-950 dark:border-mint-500/30 dark:bg-mint-500/10 dark:text-mint-200 leading-relaxed font-medium">
-                Bạn xác nhận nội dung công việc Mentor đã ghi nhận là chính xác. <strong className="font-bold text-mint-900 dark:text-mint-100">Thao tác này không đồng nghĩa với việc xác nhận hoàn thành toàn bộ Mentoring Task.</strong>
+              <div className="rounded-2xl border border-success bg-success-soft p-3.5 text-success leading-relaxed font-medium">
+                Bạn xác nhận nội dung công việc Mentor đã ghi nhận là chính xác. <strong className="font-bold text-success">Thao tác này không đồng nghĩa với việc xác nhận hoàn thành toàn bộ Mentoring Task.</strong>
               </div>
 
-              <div className="rounded-2xl border border-plum-900/[0.06] bg-cream-100/80 p-3.5 dark:border-white/10 dark:bg-[#18191a]">
-                <p className="text-[11px] font-bold text-plum-400 dark:text-[#8f9399]">
-                  Nhật ký công việc ngày <strong className="text-plum-800 dark:text-[#e4e6eb]">{formatDate(confirmingLog.logDate)}</strong>:
+              <div className="rounded-2xl border border-border bg-cream-100/80 p-3.5 dark:bg-bg">
+                <p className="text-xs font-bold text-text-subtle">
+                  Nhật ký công việc ngày <strong className="text-text">{formatDate(confirmingLog.logDate)}</strong>:
                 </p>
-                <p className="mt-1 font-bold text-plum-900 dark:text-white">
+                <p className="mt-1 font-bold text-text">
                   "{confirmingLog.description}"
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
+                <label className="block text-xs font-bold text-text-muted mb-1.5">
                   Nhận xét phản hồi gửi Mentor (Tùy chọn):
                 </label>
                 <textarea
@@ -560,19 +560,19 @@ export function MentoringWorkLogList({
                   placeholder="Ví dụ: Nội dung hoàn thành đúng hạn, hướng dẫn rất nhiệt tình và rõ ràng..."
                   rows={3}
                   maxLength={2000}
-                  className="w-full rounded-2xl border border-plum-300 bg-cream-100 p-3 text-xs text-plum-900 placeholder:text-plum-400 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-hidden dark:border-white/15 dark:bg-[#18191a] dark:text-[#e4e6eb] dark:placeholder:text-[#8f9399] transition-all"
+                  className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-hidden transition-all"
                 />
               </div>
 
               {actionError && (
-                <div className="flex items-center gap-2 rounded-2xl border border-coral-200 bg-coral-50 p-3 text-xs font-bold text-coral-700 dark:border-coral-900/50 dark:bg-coral-950/40 dark:text-coral-300">
+                <div className="flex items-center gap-2 rounded-2xl border border-danger-border bg-danger-soft p-3 text-xs font-bold text-danger">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
                   <span>{actionError}</span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-plum-900/[0.06] dark:border-white/[0.06]">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border dark:border-white/[0.06]">
               <Button
                 variant="outline"
                 size="sm"
@@ -586,7 +586,7 @@ export function MentoringWorkLogList({
                 size="sm"
                 onClick={handleConfirmSubmit}
                 disabled={confirmMutation.isPending}
-                className="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-xs shadow-brand-600/30"
+                className="rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary font-bold shadow-xs shadow-brand-600/30"
               >
                 {confirmMutation.isPending && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -603,36 +603,36 @@ export function MentoringWorkLogList({
       {rejectingLog && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div
-            className="w-full max-w-md rounded-3xl border border-plum-900/[0.08] bg-white p-6 shadow-2xl space-y-4 dark:border-white/10 dark:bg-[#1f2022]"
+            className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-2xl space-y-4 dark:bg-[#1f2022]"
             role="dialog"
             aria-modal="true"
           >
-            <div className="flex items-center justify-between border-b border-plum-900/[0.06] pb-3 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between border-b border-border pb-3 dark:border-white/[0.06]">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral-100 text-coral-700 dark:bg-coral-950/50 dark:text-coral-300">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <RotateCcw className="h-5 w-5" />
                 </div>
-                <h3 className="text-base font-bold text-plum-900 dark:text-white">
+                <h3 className="text-base font-bold text-text">
                   Yêu cầu Mentor điều chỉnh Work Log
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setRejectingLog(null)}
-                className="rounded-xl p-1.5 text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-700 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
+                className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-3.5 text-xs">
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200 leading-relaxed font-medium">
+              <div className="rounded-2xl border border-warning bg-warning-soft p-3.5 text-warning leading-relaxed font-medium">
                 Vui lòng chỉ rõ lý do hoặc những phần kết quả cần bổ sung/chỉnh sửa để Mentor nắm bắt và cập nhật lại Work Log này.
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
-                  Lý do / Hướng dẫn điều chỉnh <span className="text-coral-500">* (tối thiểu 5 ký tự)</span>:
+                <label className="block text-xs font-bold text-text-muted mb-1.5">
+                  Lý do / Hướng dẫn điều chỉnh <span className="text-danger">* (tối thiểu 5 ký tự)</span>:
                 </label>
                 <textarea
                   value={feedbackText}
@@ -643,22 +643,22 @@ export function MentoringWorkLogList({
                   placeholder="Ví dụ: Cần đính kèm thêm slide tài liệu hướng dẫn và cập nhật kết quả kiểm thử chức năng..."
                   rows={4}
                   maxLength={2000}
-                  className="w-full rounded-2xl border border-plum-300 bg-cream-100 p-3 text-xs text-plum-900 placeholder:text-plum-400 focus:bg-white focus:border-coral-500 focus:ring-2 focus:ring-coral-500/20 focus:outline-hidden dark:border-white/15 dark:bg-[#18191a] dark:text-[#e4e6eb] dark:placeholder:text-[#8f9399] transition-all"
+                  className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-danger focus:ring-2 focus:ring-danger focus:outline-hidden transition-all"
                 />
-                <span className="mt-1 block text-right text-[11px] text-plum-400 dark:text-[#8f9399]">
+                <span className="mt-1 block text-right text-xs text-text-subtle">
                   {feedbackText.length}/2000 ký tự
                 </span>
               </div>
 
               {actionError && (
-                <div className="flex items-center gap-2 rounded-2xl border border-coral-200 bg-coral-50 p-3 text-xs font-bold text-coral-700 dark:border-coral-900/50 dark:bg-coral-950/40 dark:text-coral-300">
+                <div className="flex items-center gap-2 rounded-2xl border border-danger-border bg-danger-soft p-3 text-xs font-bold text-danger">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
                   <span>{actionError}</span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-plum-900/[0.06] dark:border-white/[0.06]">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border dark:border-white/[0.06]">
               <Button
                 variant="outline"
                 size="sm"
@@ -672,7 +672,7 @@ export function MentoringWorkLogList({
                 size="sm"
                 onClick={handleRejectSubmit}
                 disabled={rejectMutation.isPending || feedbackText.trim().length < 5}
-                className="rounded-xl bg-coral-600 hover:bg-coral-700 text-white font-bold shadow-xs shadow-coral-600/30"
+                className="rounded-xl bg-danger hover:opacity-90 text-text-inverse font-bold shadow-xs shadow-coral-600/30"
               >
                 {rejectMutation.isPending && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />

@@ -101,26 +101,26 @@ export function ChatWindow({
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-plum-900/[0.02] dark:bg-transparent">
-        <Loader2 size={36} className="animate-spin text-brand-500 mb-3" />
-        <p className="text-sm font-medium text-plum-500">Đang chuẩn bị cuộc trò chuyện...</p>
+      <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-surface-2 dark:bg-transparent">
+        <Loader2 size={36} className="animate-spin text-primary-solid mb-3" />
+        <p className="text-sm font-medium text-text-subtle">Đang chuẩn bị cuộc trò chuyện...</p>
       </div>
     )
   }
 
   if (!conversation) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-plum-900/[0.02] dark:bg-transparent">
-        <div className="mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-brand-50 text-brand-500 shadow-sm dark:bg-brand-500/20 dark:text-brand-400">
+      <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-surface-2 dark:bg-transparent">
+        <div className="mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-primary-soft text-primary-solid shadow-sm">
           <MessagesSquare size={32} />
         </div>
-        <h3 className="text-lg font-bold text-plum-900 dark:text-[#f0f2f5]">Chưa chọn cuộc trò chuyện</h3>
-        <p className="mt-1 max-w-sm text-sm text-plum-400 dark:text-[#b0b3b8]">
+        <h3 className="text-lg font-bold text-text">Chưa chọn cuộc trò chuyện</h3>
+        <p className="mt-1 max-w-sm text-sm text-text-subtle">
           Hãy chọn một thành viên từ danh sách bên trái hoặc nhấn Nhắn tin từ trang danh bạ để bắt đầu trao đổi.
         </p>
         <Link
           to="/app/alumni"
-          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:scale-105 hover:bg-brand-700 active:scale-95"
+          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-xs font-bold text-on-primary shadow-sm transition-all duration-200 hover:scale-105 hover:bg-primary-hover active:scale-95"
         >
           <Users size={16} />
           Khám phá danh bạ thành viên
@@ -159,9 +159,9 @@ export function ChatWindow({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-plum-900/[0.01] dark:bg-transparent">
+    <div className="flex h-full min-h-0 flex-col bg-surface-2 dark:bg-transparent">
       {/* Header cuộc trò chuyện */}
-      <div className="flex shrink-0 items-center justify-between border-b border-plum-900/10 bg-white/80 px-5 py-3.5 backdrop-blur-md dark:border-[#393a3b] dark:bg-[#242526]/80">
+      <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface/80 px-5 py-3.5 backdrop-blur-md">
         {isGroup ? (
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -170,14 +170,14 @@ export function ChatWindow({
               className="relative shrink-0 transition-opacity hover:opacity-85"
               title="Xem thông tin và quản lý nhóm"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-50 text-brand-600 shadow-xs ring-1 ring-brand-500/20 dark:bg-brand-500/20 dark:text-brand-400">
+              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary-soft text-primary-solid shadow-xs ring-1 ring-primary/20">
                 {conversation.avatarUrl ? (
                   <img src={conversation.avatarUrl} alt="Group" className="h-full w-full rounded-2xl object-cover" />
                 ) : (
                   <Users size={18} />
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 grid h-3.5 w-3.5 place-items-center rounded-full bg-brand-600 text-white shadow-xs">
+              <div className="absolute -bottom-1 -right-1 grid h-3.5 w-3.5 place-items-center rounded-full bg-primary-solid text-on-primary shadow-xs">
                 <Users size={8} />
               </div>
             </button>
@@ -186,14 +186,14 @@ export function ChatWindow({
                 <button
                   type="button"
                   onClick={() => setIsGroupInfoOpen(true)}
-                  className="truncate text-left text-sm font-bold text-plum-900 transition-colors hover:text-brand-600 dark:text-[#f0f2f5] dark:hover:text-brand-400"
+                  className="truncate text-left text-sm font-bold text-text transition-colors hover:text-primary-solid"
                   title="Xem thông tin và quản lý nhóm"
                 >
                   {displayName}
                 </button>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="font-medium text-plum-400 dark:text-[#b0b3b8]">
+                <span className="font-medium text-text-subtle">
                   {conversation.memberCount || 2} thành viên
                 </span>
               </div>
@@ -211,13 +211,13 @@ export function ChatWindow({
               size={42}
             />
             <div>
-              <h3 className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">{displayName}</h3>
+              <h3 className="text-sm font-bold text-text">{displayName}</h3>
               {conversation.recipientMajor ? (
-                <p className="text-xs font-medium text-plum-500 dark:text-[#b0b3b8]">
+                <p className="text-xs font-medium text-text-subtle">
                   {conversation.recipientMajor}
                 </p>
               ) : (
-                <p className="text-xs font-medium text-plum-400 dark:text-[#b0b3b8]">
+                <p className="text-xs font-medium text-text-subtle">
                   Thành viên AlumNect
                 </p>
               )}
@@ -231,9 +231,9 @@ export function ChatWindow({
             <Link
               to={`/app/groups/${conversation.communityGroupId}`}
               title={`Đến trang hội nhóm: ${conversation.communityGroupName || displayName}`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-brand-500/20 bg-brand-50/70 px-2.5 py-1.5 text-xs font-semibold text-brand-700 transition-all hover:bg-brand-100 hover:border-brand-500/30 active:scale-95 dark:border-brand-500/30 dark:bg-brand-950/50 dark:text-brand-300 dark:hover:bg-brand-900/50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary-soft-border bg-brand-50/70 px-2.5 py-1.5 text-xs font-semibold text-primary-solid transition-all hover:bg-primary-soft hover:border-primary-soft-border active:scale-95 dark:bg-brand-950/50"
             >
-              <Users size={13} className="shrink-0 text-brand-600 dark:text-brand-400" />
+              <Users size={13} className="shrink-0 text-primary-solid" />
               <span className="hidden sm:inline max-w-[120px] md:max-w-[180px] truncate">
                 {conversation.communityGroupName || 'Hội nhóm'}
               </span>
@@ -245,7 +245,7 @@ export function ChatWindow({
               type="button"
               onClick={() => setIsGroupInfoOpen(true)}
               title="Thông tin nhóm"
-              className="grid h-8 w-8 place-items-center rounded-xl bg-plum-900/[0.04] text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-600 dark:bg-[#3a3b3c] dark:text-[#b0b3b8] dark:hover:bg-[#4e4f50] dark:hover:text-white"
+              className="grid h-8 w-8 place-items-center rounded-xl bg-surface-2 text-text-muted transition-colors hover:bg-primary-soft hover:text-primary-solid"
             >
               <Info size={16} />
             </button>
@@ -255,7 +255,7 @@ export function ChatWindow({
 
       {/* Banner Tin nhắn chờ từ người lạ */}
       {isStrangerRequest && (
-        <div className="flex shrink-0 items-center justify-between border-b border-amber-200 bg-amber-50/80 px-5 py-3 text-xs text-amber-900 backdrop-blur-sm dark:border-amber-900/30 dark:bg-amber-950/40 dark:text-amber-200">
+        <div className="flex shrink-0 items-center justify-between border-b border-warning-border bg-warning-soft px-5 py-3 text-xs text-warning backdrop-blur-sm">
           <p className="font-medium">
             Người này không nằm trong danh bạ theo dõi của bạn. Bạn có muốn chấp nhận cuộc trò chuyện không?
           </p>
@@ -264,7 +264,7 @@ export function ChatWindow({
               size="sm"
               onClick={handleAcceptRequest}
               disabled={acceptConversationMutation.isPending}
-              className="h-7 rounded-xl bg-brand-600 px-3 text-[11px] font-bold text-white hover:bg-brand-700"
+              className="h-7 rounded-xl bg-primary-solid px-3 text-xs font-bold text-on-primary hover:bg-primary-hover"
             >
               <Check size={12} className="mr-1" />
               Chấp nhận
@@ -274,7 +274,7 @@ export function ChatWindow({
               variant="outline"
               onClick={handleDeleteRequest}
               disabled={deleteConversationMutation.isPending}
-              className="h-7 rounded-xl border-amber-300 text-[11px] font-bold text-red-600 hover:bg-red-50 dark:border-amber-800 dark:text-red-400"
+              className="h-7 rounded-xl border-warning-border text-xs font-bold text-danger hover:bg-danger-soft"
             >
               <Trash2 size={12} className="mr-1" />
               Xóa
@@ -291,7 +291,7 @@ export function ChatWindow({
       >
         {isFetchingNextPage && (
           <div className="flex justify-center py-2">
-            <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+            <Loader2 className="h-5 w-5 animate-spin text-primary-solid" />
           </div>
         )}
 
@@ -302,12 +302,12 @@ export function ChatWindow({
                 key={i}
                 className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="h-12 w-48 animate-pulse rounded-2xl bg-plum-900/10 dark:bg-slate-700" />
+                <div className="h-12 w-48 animate-pulse rounded-2xl bg-surface-3" />
               </div>
             ))}
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-center text-plum-400 dark:text-[#b0b3b8]">
+          <div className="flex h-full flex-col items-center justify-center text-center text-text-subtle">
             <p className="text-sm">Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên! 👋</p>
           </div>
         ) : (

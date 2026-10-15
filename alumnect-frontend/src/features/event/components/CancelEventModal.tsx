@@ -30,7 +30,7 @@ export function CancelEventModal({
       isOpen={isOpen}
       onClose={handleClose}
       title="Hủy tổ chức sự kiện"
-      icon={<Ban size={18} className="text-rose-500" />}
+      icon={<Ban size={18} className="text-danger" />}
       maxWidthClassName="max-w-md"
       footer={
         <div className="flex justify-end gap-2.5">
@@ -56,7 +56,7 @@ export function CancelEventModal({
                 <Ban size={16} />
               )
             }
-            className="border-rose-500 bg-rose-600 text-white hover:bg-rose-700"
+            className="border-danger bg-danger text-text-inverse hover:opacity-90"
           >
             {isPending ? 'Đang hủy…' : 'Xác nhận hủy sự kiện'}
           </Button>
@@ -64,17 +64,17 @@ export function CancelEventModal({
       }
     >
       <div className="space-y-3">
-        <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50/70 p-3 text-xs text-rose-900">
-          <AlertTriangle size={16} className="shrink-0 text-rose-600" />
-          <p className="text-rose-800">
+        <div className="flex items-center gap-2.5 rounded-xl border border-danger-border bg-danger-soft p-3 text-xs text-danger">
+          <AlertTriangle size={16} className="shrink-0 text-danger" />
+          <p className="text-danger">
             <strong>Lưu ý:</strong> Sự kiện và danh sách đăng ký sẽ bị hủy vĩnh viễn, không thể mở lại.
           </p>
         </div>
 
-        <p className="text-sm leading-relaxed text-plum-700">
+        <p className="text-sm leading-relaxed text-text-muted">
           Bạn có chắc chắn muốn hủy sự kiện{' '}
           {eventTitle ? (
-            <span className="font-bold text-plum-900">"{eventTitle}"</span>
+            <span className="font-bold text-text">"{eventTitle}"</span>
           ) : (
             'này'
           )}{' '}

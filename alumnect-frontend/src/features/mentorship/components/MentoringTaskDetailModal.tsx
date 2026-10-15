@@ -37,23 +37,23 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-6 text-left space-y-5 max-h-[90vh] overflow-y-auto chat-scrollbar dark:bg-[#242526] dark:border-[#393a3b]">
+      <div className="relative w-full max-w-xl bg-surface rounded-3xl border border-border shadow-2xl p-6 text-left space-y-5 max-h-[90vh] overflow-y-auto chat-scrollbar">
         <button
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="absolute right-5 top-5 p-2 text-plum-400 hover:text-plum-700 rounded-full hover:bg-cream-100 transition-colors dark:hover:bg-white/5"
+          className="absolute right-5 top-5 p-2 text-text-subtle hover:text-text-muted rounded-full hover:bg-surface-2 transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-mint-50 text-mint-700 dark:bg-mint-950/40 dark:text-mint-300">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-success-soft text-success">
             <ClipboardCheck className="h-6 w-6" />
           </span>
           <div>
-            <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#f0f2f5]">Mentoring Task #{taskId}</h3>
-            <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+            <h3 className="font-display text-lg font-bold text-text">Mentoring Task #{taskId}</h3>
+            <p className="text-xs text-text-subtle">
               {overview ? MENTORING_TASK_STATUS_LABELS[overview.status] || overview.status : 'Đang tải...'}
             </p>
           </div>
@@ -66,48 +66,48 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
             <Skeleton className="h-12 w-full" />
           </div>
         ) : error || !detail || !overview ? (
-          <p className="rounded-2xl bg-coral-50 p-3 text-xs font-semibold text-coral-700 dark:bg-coral-950/30 dark:text-coral-300">
+          <p className="rounded-2xl bg-danger-soft p-3 text-xs font-semibold text-danger">
             {error?.message || 'Không thể tải thông tin Task.'}
           </p>
         ) : (
           <div className="space-y-4 text-sm">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">Phạm vi công việc</p>
-              <p className="mt-1 whitespace-pre-wrap text-plum-900 dark:text-[#f0f2f5]">{overview.taskScope}</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">Phạm vi công việc</p>
+              <p className="mt-1 whitespace-pre-wrap text-text">{overview.taskScope}</p>
             </div>
             {deal && (
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">Kết quả kỳ vọng</p>
-                <p className="mt-1 whitespace-pre-wrap text-plum-900 dark:text-[#f0f2f5]">{deal.expectedResult}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">Kết quả kỳ vọng</p>
+                <p className="mt-1 whitespace-pre-wrap text-text">{deal.expectedResult}</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-2xl bg-cream-100/70 p-3 dark:bg-white/5">
-                <p className="flex items-center gap-1 font-bold text-plum-500 dark:text-[#b0b3b8]">
+                <p className="flex items-center gap-1 font-bold text-text-subtle">
                   <Wallet className="h-3.5 w-3.5" /> Giá đã thanh toán
                 </p>
-                <p className="mt-1 font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">{formatVnd(overview.agreedPrice)}</p>
+                <p className="mt-1 font-display text-base font-bold text-text">{formatVnd(overview.agreedPrice)}</p>
               </div>
               <div className="rounded-2xl bg-cream-100/70 p-3 dark:bg-white/5">
-                <p className="flex items-center gap-1 font-bold text-plum-500 dark:text-[#b0b3b8]">
+                <p className="flex items-center gap-1 font-bold text-text-subtle">
                   <CalendarDays className="h-3.5 w-3.5" /> Deadline
                 </p>
-                <p className="mt-1 font-display text-base font-bold text-plum-900 dark:text-[#f0f2f5]">{formatDate(overview.deadline)}</p>
+                <p className="mt-1 font-display text-base font-bold text-text">{formatDate(overview.deadline)}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-1.5 text-[11px] font-semibold">
-              <span className="rounded-full bg-brand-50 px-2.5 py-1 text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+            <div className="flex flex-wrap gap-1.5 text-xs font-semibold">
+              <span className="rounded-full bg-primary-soft px-2.5 py-1 text-primary-solid">
                 {MENTORING_TASK_TYPE_LABELS[overview.taskType] || overview.taskType}
               </span>
-              <span className="rounded-full bg-cream-200 px-2.5 py-1 text-plum-700 dark:bg-white/10 dark:text-[#e4e6eb]">
+              <span className="rounded-full bg-surface-3 px-2.5 py-1 text-text-muted">
                 {MENTORING_WORKING_MODE_LABELS[overview.workingMode] || overview.workingMode}
               </span>
-              <span className="rounded-full bg-cream-200 px-2.5 py-1 text-plum-700 dark:bg-white/10 dark:text-[#e4e6eb]">
+              <span className="rounded-full bg-surface-3 px-2.5 py-1 text-text-muted">
                 {MENTORING_PARTICIPATION_LABELS[overview.participationType] || overview.participationType}
               </span>
             </div>
-            <div className="rounded-2xl border border-plum-900/[0.08] p-3 text-xs text-plum-600 dark:border-white/10 dark:text-[#b0b3b8] space-y-1">
-              <p className="flex items-center gap-1.5 font-bold text-plum-800 dark:text-[#e4e6eb]">
+            <div className="rounded-2xl border border-border p-3 text-xs text-text-muted space-y-1">
+              <p className="flex items-center gap-1.5 font-bold text-text">
                 <Link2 className="h-3.5 w-3.5" /> Truy vết nghiệp vụ
               </p>
               <p>Request #{detail.requestId ?? '—'}{detail.requestTitle ? ` · ${detail.requestTitle}` : ''}</p>
@@ -121,7 +121,7 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
                   onClose()
                   navigate(`/app/mentoring/tasks/${overview.id}`)
                 }}
-                className="w-full rounded-2xl bg-brand-600 text-white hover:bg-brand-700 text-xs font-bold gap-2 py-2.5 shadow-sm shadow-brand-600/20"
+                className="w-full rounded-2xl bg-primary-solid text-on-primary hover:bg-primary-hover text-xs font-bold gap-2 py-2.5 shadow-sm shadow-brand-600/20"
               >
                 <span>Mở trang chi tiết & Quản lý Work Log</span>
                 <ExternalLink className="h-3.5 w-3.5" />

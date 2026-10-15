@@ -113,15 +113,15 @@ export function MentoringTaskAmendmentModal({
     >
       <div className="space-y-4">
         <MentoringFormError message={errorMsg} />
-        <div className="grid gap-2 rounded-xl border border-cream-300 bg-cream-100 px-3.5 py-2.5 text-sm dark:border-white/10 dark:bg-white/[0.04] sm:grid-cols-2">
+        <div className="grid gap-2 rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm dark:bg-white/[0.04] sm:grid-cols-2">
           <p>
-            <span className="text-plum-500 dark:text-plum-400">Giá hiện tại: </span>
-            <span className="font-semibold text-plum-900 dark:text-white">{formatVnd(currentPrice)}</span>
-            {amount > 0 && <span className="font-semibold text-brand-600"> → {formatVnd(currentPrice + amount)}</span>}
+            <span className="text-text-subtle">Giá hiện tại: </span>
+            <span className="font-semibold text-text">{formatVnd(currentPrice)}</span>
+            {amount > 0 && <span className="font-semibold text-primary-solid"> → {formatVnd(currentPrice + amount)}</span>}
           </p>
           <p>
-            <span className="text-plum-500 dark:text-plum-400">Deadline: </span>
-            <span className="font-semibold text-plum-900 dark:text-white">{deadlineLabel}</span>
+            <span className="text-text-subtle">Deadline: </span>
+            <span className="font-semibold text-text">{deadlineLabel}</span>
           </p>
         </div>
 

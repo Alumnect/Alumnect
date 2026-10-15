@@ -33,7 +33,7 @@ export function MentorRankingList({
         {/* Skeleton Top 3 Podium */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-3xl border border-plum-900/10 p-6 bg-white/60 space-y-3 text-center dark:bg-[#242526] dark:border-[#393a3b]">
+            <div key={i} className="rounded-3xl border border-border p-6 bg-surface/60 space-y-3 text-center">
               <Skeleton className="mx-auto h-16 w-16 rounded-full" />
               <Skeleton className="mx-auto h-4 w-32" />
               <Skeleton className="mx-auto h-3 w-48" />
@@ -48,7 +48,7 @@ export function MentorRankingList({
         {/* Skeleton Ranking List */}
         <div className="space-y-3 pt-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-3xl border border-plum-900/10 p-4 bg-white/60 flex items-center justify-between dark:bg-[#242526] dark:border-[#393a3b]">
+            <div key={i} className="rounded-3xl border border-border p-4 bg-surface/60 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-9 w-9 rounded-2xl" />
                 <Skeleton className="h-12 w-12 rounded-full" />
@@ -71,9 +71,9 @@ export function MentorRankingList({
   // 2. Trạng thái Lỗi nghiệp vụ (Error State - hiển thị error.message từ Backend)
   if (isError) {
     return (
-      <div className="rounded-3xl border border-coral-500/30 bg-coral-50/50 p-6 text-coral-800 dark:bg-coral-950/20 dark:border-coral-900/40 dark:text-coral-300">
+      <div className="rounded-3xl border border-danger bg-danger-soft p-6 text-danger">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-coral-600 mt-0.5 shrink-0" />
+          <AlertCircle className="h-5 w-5 text-danger mt-0.5 shrink-0" />
           <div className="space-y-1">
             <h3 className="font-display text-sm font-bold">Không thể tải bảng xếp hạng Mentor</h3>
             <p className="text-xs leading-relaxed opacity-90">
@@ -111,10 +111,10 @@ export function MentorRankingList({
       {/* Danh sách toàn bộ Mentor theo thứ hạng */}
       <div className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-          <h2 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-base font-bold text-text">
             Danh sách thứ hạng ({totalElements})
           </h2>
-          <span className="text-xs text-plum-500 dark:text-[#8a8d91]">
+          <span className="text-xs text-text-subtle dark:text-text-subtle">
             Trang {page + 1} / {totalPages || 1}
           </span>
         </div>

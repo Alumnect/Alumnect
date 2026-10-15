@@ -8,7 +8,7 @@ export function MentorDetailSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       {/* Skeleton Header Card */}
-      <Card hover={false} className="border border-plum-900/[0.08] bg-white p-6 sm:p-8 dark:bg-[#242526] dark:border-[#393a3b]">
+      <Card hover={false} className="border border-border bg-surface p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <Skeleton className="h-24 w-24 sm:h-28 sm:w-28 rounded-full shrink-0" />
           <div className="flex-1 space-y-3 w-full">
@@ -35,7 +35,7 @@ export function MentorDetailSkeleton() {
         {/* Cột chính (2/3) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Card Giới thiệu */}
-          <Card hover={false} className="border border-plum-900/[0.08] bg-white p-6 dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
+          <Card hover={false} className="border border-border bg-surface p-6 space-y-4">
             <Skeleton className="h-6 w-36 rounded-md" />
             <Skeleton className="h-4 w-full rounded-md" />
             <Skeleton className="h-4 w-5/6 rounded-md" />
@@ -43,7 +43,7 @@ export function MentorDetailSkeleton() {
           </Card>
 
           {/* Card Kỹ năng & Chuyên môn */}
-          <Card hover={false} className="border border-plum-900/[0.08] bg-white p-6 dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
+          <Card hover={false} className="border border-border bg-surface p-6 space-y-4">
             <Skeleton className="h-6 w-44 rounded-md" />
             <div className="flex flex-wrap gap-2">
               <Skeleton className="h-7 w-20 rounded-xl" />
@@ -54,7 +54,7 @@ export function MentorDetailSkeleton() {
           </Card>
 
           {/* Card Kinh nghiệm sự nghiệp */}
-          <Card hover={false} className="border border-plum-900/[0.08] bg-white p-6 dark:bg-[#242526] dark:border-[#393a3b] space-y-6">
+          <Card hover={false} className="border border-border bg-surface p-6 space-y-6">
             <Skeleton className="h-6 w-52 rounded-md" />
             <div className="space-y-4">
               <div className="space-y-2">
@@ -73,7 +73,7 @@ export function MentorDetailSkeleton() {
 
         {/* Cột phụ (1/3) */}
         <div className="space-y-6">
-          <Card hover={false} className="border border-plum-900/[0.08] bg-white p-6 dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
+          <Card hover={false} className="border border-border bg-surface p-6 space-y-4">
             <Skeleton className="h-6 w-40 rounded-md" />
             <div className="grid grid-cols-2 gap-3">
               <Skeleton className="h-18 rounded-2xl" />
@@ -83,7 +83,7 @@ export function MentorDetailSkeleton() {
             </div>
           </Card>
 
-          <Card hover={false} className="border border-plum-900/[0.08] bg-white p-6 dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
+          <Card hover={false} className="border border-border bg-surface p-6 space-y-4">
             <Skeleton className="h-6 w-48 rounded-md" />
             <Skeleton className="h-12 w-full rounded-2xl" />
           </Card>

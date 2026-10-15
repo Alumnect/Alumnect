@@ -49,24 +49,24 @@ export function MyRequestCard({ request }: MyRequestCardProps) {
   ].filter(Boolean) as { icon: ReactNode; text: string }[]
 
   return (
-    <article className="rounded-2xl border border-plum-900/[0.08] bg-white p-5 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm dark:border-white/10 dark:bg-[#242526] dark:hover:border-brand-500/40">
+    <article className="rounded-2xl border border-border bg-surface p-5 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm dark:hover:border-brand-500/40">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
           <RequestStatusBadge status={request.status} />
           <RequestTypeBadge type={request.requestType} />
         </div>
-        <span className="shrink-0 text-xs text-plum-400 dark:text-[#8f9399]">{formatDate(request.createdAt)}</span>
+        <span className="shrink-0 text-xs text-text-subtle">{formatDate(request.createdAt)}</span>
       </div>
 
       <Link
         to={detailPath}
-        className="mt-3 block font-display text-base font-bold text-plum-900 transition-colors hover:text-brand-600 dark:text-white dark:hover:text-brand-400"
+        className="mt-3 block font-display text-base font-bold text-text transition-colors hover:text-primary-solid"
       >
         {request.title}
       </Link>
-      <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">{request.description}</p>
+      <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-text-muted">{request.description}</p>
 
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-plum-500 dark:text-[#b0b3b8]">
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-text-subtle">
         {request.industryName && <li>{request.industryName}</li>}
         {facts.map((f) => (
           <li key={f.text} className="inline-flex items-center gap-1.5 [&>svg]:h-3.5 [&>svg]:w-3.5 [&>svg]:text-plum-400">
@@ -76,11 +76,11 @@ export function MyRequestCard({ request }: MyRequestCardProps) {
         ))}
       </ul>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-plum-900/[0.06] pt-4 dark:border-white/10">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         {isDirect ? (
           <div className="flex min-w-0 items-center gap-2">
             <Avatar src={request.targetMentorAvatar || undefined} name={request.targetMentorName || 'Mentor'} size={28} />
-            <span className="truncate text-sm font-medium text-plum-800 dark:text-[#e4e6eb]">{request.targetMentorName || 'Mentor'}</span>
+            <span className="truncate text-sm font-medium text-text">{request.targetMentorName || 'Mentor'}</span>
             <MentorResponseStatusBadge status={request.directMentorResponseStatus || 'WAITING'} />
           </div>
         ) : (

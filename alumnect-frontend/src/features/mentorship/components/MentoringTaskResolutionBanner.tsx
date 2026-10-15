@@ -87,14 +87,14 @@ function errorMessage(err: unknown, fallback: string) {
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
     <span>
-      <span className="text-plum-500 dark:text-plum-400">{label}: </span>
-      <span className="font-semibold text-plum-800 dark:text-[#e4e6eb]">{children}</span>
+      <span className="text-text-subtle">{label}: </span>
+      <span className="font-semibold text-text">{children}</span>
     </span>
   )
 }
 
 function WaitingNote({ children }: { children: ReactNode }) {
-  return <span className="text-xs font-medium text-plum-500 dark:text-plum-400">{children}</span>
+  return <span className="text-xs font-medium text-text-subtle">{children}</span>
 }
 
 /**
@@ -242,9 +242,9 @@ export function MentoringTaskResolutionBanner({
         }
       >
         <p className="flex flex-wrap items-center gap-1.5">
-          <span className="text-plum-500">{formatDt(ext.currentDeadline)}</span>
-          <ArrowRight className="h-3.5 w-3.5 text-plum-400" />
-          <span className="font-bold text-violet-500 dark:text-violet-300">{formatDt(ext.proposedDeadline)}</span>
+          <span className="text-text-subtle">{formatDt(ext.currentDeadline)}</span>
+          <ArrowRight className="h-3.5 w-3.5 text-text-subtle" />
+          <span className="font-bold text-info">{formatDt(ext.proposedDeadline)}</span>
         </p>
         {ext.reason && <p className="italic">“{ext.reason}”</p>}
       </MentoringActionCard>,
@@ -363,7 +363,7 @@ export function MentoringTaskResolutionBanner({
         </p>
         {prop.reason && <p className="italic">“{prop.reason}”</p>}
         {needsRefundAccount && (
-          <p className="font-semibold text-coral-700 dark:text-coral-300">
+          <p className="font-semibold text-danger">
             Bạn cần khai báo tài khoản nhận hoàn tiền trước khi đồng ý.{' '}
             <Link to="/app/mentoring/refunds" className="underline">Khai báo ngay</Link>
           </p>
@@ -438,7 +438,7 @@ export function MentoringTaskResolutionBanner({
         {isStudent && activeTicket.studentRefund != null && activeTicket.studentRefund > 0 && (
           <p>
             Tiền hoàn sẽ chuyển về tài khoản tại mục{' '}
-            <Link to="/app/mentoring/refunds" className="font-semibold text-brand-600 underline">Hoàn tiền</Link>.
+            <Link to="/app/mentoring/refunds" className="font-semibold text-primary-solid underline">Hoàn tiền</Link>.
           </p>
         )}
       </MentoringActionCard>,
@@ -465,8 +465,8 @@ export function MentoringTaskResolutionBanner({
   const allowsNote = Boolean(dialog && (dialog.action !== 'CANCEL' || dialog.kind === 'AMENDMENT'))
 
   return (
-    <section className="space-y-2 border-b border-plum-900/[0.06] bg-white px-4 py-3 dark:border-white/10 dark:bg-[#242526] sm:px-6">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-plum-500 dark:text-plum-400">Cần xử lý</p>
+    <section className="space-y-2 border-b border-border bg-surface px-4 py-3 sm:px-6">
+      <p className="text-xs font-bold uppercase tracking-wide text-text-subtle">Cần xử lý</p>
       {items}
 
       <Modal
@@ -487,14 +487,14 @@ export function MentoringTaskResolutionBanner({
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-plum-600 dark:text-[#b0b3b8]">{dialogDescription}</p>
+          <p className="text-sm text-text-muted">{dialogDescription}</p>
           {allowsNote && (
             <textarea
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Lý do (không bắt buộc)"
-              className="w-full resize-none rounded-xl border border-cream-300 bg-white px-3.5 py-2.5 text-sm text-plum-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-[#18191a] dark:text-white"
+              className="w-full resize-none rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           )}
         </div>

@@ -30,21 +30,22 @@ export function MentoringTermsConsentModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[80] grid place-items-center overflow-y-auto bg-plum-900/55 p-4 dark:bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[80] flex items-end justify-center overflow-y-auto bg-overlay backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="mentoring-consent-title"
       aria-describedby="mentoring-consent-description"
     >
-      <div className="w-full max-w-lg rounded-2xl border border-white/70 bg-white p-5 shadow-2xl sm:p-6 dark:border-white/10 dark:bg-[#242526]">
-        <div className="flex items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-400/15 dark:text-brand-300">
+      <div className="relative w-full max-h-[92vh] overflow-y-auto rounded-t-2xl border border-border bg-surface p-5 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-text shadow-overlay sm:max-w-lg sm:rounded-2xl sm:p-6">
+        <span aria-hidden className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-surface-3 sm:hidden" />
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary-solid">
             <ShieldCheck className="h-5 w-5" />
           </span>
           <div>
             <h2
               id="mentoring-consent-title"
-              className="font-display text-xl font-bold text-plum-900 sm:text-2xl dark:text-white"
+              className="font-display text-lg font-bold leading-snug text-text sm:text-2xl"
             >
               Chấp nhận điều khoản Mentoring
             </h2>
@@ -53,29 +54,29 @@ export function MentoringTermsConsentModal({
 
         <p
           id="mentoring-consent-description"
-          className="mt-4 text-sm leading-6 text-plum-600 dark:text-[#c7c9cc]"
+          className="mt-4 text-sm leading-6 text-text-muted"
         >
           Các chức năng Mentor chỉ được mở sau khi bạn xác nhận quy tắc tham gia và bảo vệ quyền lợi của các bên.
         </p>
 
-        <div className="mt-4 space-y-2 rounded-xl border border-plum-900/[0.07] bg-cream-50/70 p-3.5 text-sm text-plum-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-[#e4e6eb]">
+        <div className="mt-4 space-y-2 rounded-xl border border-border bg-surface-2 p-3.5 text-sm text-text-muted">
           <p className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-mint-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
             Cung cấp thông tin trung thực và bảo mật dữ liệu trao đổi.
           </p>
           <p className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-mint-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
             Giao tiếp tôn trọng, minh bạch về phạm vi và chi phí.
           </p>
           <p className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-mint-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
             Tuân thủ thỏa thuận và quy trình xử lý của AlumNect.
           </p>
         </div>
 
         <Link
           to={`/app/mentoring/terms?source=${source}`}
-          className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300"
+          className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-primary-solid hover:underline"
         >
           <FileText className="h-4 w-4" />
           Đọc toàn bộ điều khoản
@@ -85,23 +86,23 @@ export function MentoringTermsConsentModal({
           className={cn(
             'mt-3 flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors',
             isChecked
-              ? 'border-brand-300 bg-brand-50/50 dark:border-brand-300/30 dark:bg-brand-400/10'
-              : 'border-plum-900/[0.09] dark:border-white/10',
+              ? 'border-primary-soft-border bg-primary-soft'
+              : 'border-border',
           )}
         >
           <input
             type="checkbox"
             checked={isChecked}
             onChange={(event) => setIsChecked(event.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-plum-300 text-brand-600 focus:ring-brand-500"
+            className="mt-0.5 h-5 w-5 shrink-0 rounded border-border-strong accent-primary-solid focus:ring-primary"
           />
-          <span className="text-sm font-medium leading-5 text-plum-800 dark:text-[#e4e6eb]">
+          <span className="text-sm font-medium leading-5 text-text">
             Tôi đã đọc, hiểu và đồng ý với Điều khoản Mentoring.
           </span>
         </label>
 
         {acceptMutation.isError && (
-          <p className="mt-3 text-sm font-medium text-coral-700 dark:text-coral-300" role="alert">
+          <p className="mt-3 rounded-xl border border-danger-border bg-danger-soft p-3 text-sm font-medium text-danger" role="alert">
             {acceptMutation.error?.message || 'Không thể ghi nhận xác nhận. Vui lòng thử lại.'}
           </p>
         )}

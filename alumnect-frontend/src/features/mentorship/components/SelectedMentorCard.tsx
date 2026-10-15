@@ -26,21 +26,21 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
   return (
     <Card
       hover={false}
-      className="relative overflow-hidden border border-brand-500/20 bg-gradient-to-br from-white via-cream-50/40 to-brand-50/30 p-6 sm:p-7 shadow-sm rounded-3xl dark:from-[#242526] dark:via-[#242526] dark:to-brand-700/20 dark:border-brand-500/20 text-left"
+      className="relative overflow-hidden border border-primary-soft-border bg-gradient-to-br from-white via-cream-50/40 to-brand-50/30 p-6 sm:p-7 shadow-sm rounded-3xl dark:from-surface dark:via-surface dark:to-brand-700/20 text-left"
     >
       {/* Decorative Pastel Background Glow */}
       <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-brand-300/20 via-violet-300/15 to-transparent blur-2xl" />
 
       {/* Header Tag Phân biệt Direct Request */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-plum-900/[0.06] dark:border-white/[0.06]">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/10 px-3 py-1 text-xs font-bold text-brand-700 border border-brand-500/25 dark:bg-brand-500/20 dark:text-brand-300">
-          <Target className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-border dark:border-white/[0.06]">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid border border-brand-500/25">
+          <Target className="h-3.5 w-3.5 text-primary-solid" />
           <span>Yêu cầu cố vấn trực tiếp (Direct Request)</span>
         </div>
 
         <Link
           to={`/app/mentoring/mentors/${mentor.mentorId}`}
-          className="inline-flex items-center gap-1 text-xs font-bold text-plum-600 hover:text-brand-600 transition-colors dark:text-[#b0b3b8] dark:hover:text-brand-400"
+          className="inline-flex items-center gap-1 text-xs font-bold text-text-muted hover:text-primary-solid transition-colors"
         >
           <span>Xem trang chi tiết</span>
           <ExternalLink className="h-3 w-3" />
@@ -59,7 +59,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
           />
           {mentor.mentorStatus === 'ACTIVE' && (
             <span
-              className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white bg-mint-500 shadow-sm dark:border-[#242526]"
+              className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white bg-success shadow-sm dark:border-border"
               title="Mentor đang hoạt động"
             />
           )}
@@ -68,22 +68,22 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
         {/* Thông tin chính của Mentor */}
         <div className="flex-1 min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-plum-900 dark:text-[#e4e6eb] truncate">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-text truncate">
               {mentor.fullName}
             </h2>
 
             {mentor.isVerifiedAlumni && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-700 border border-brand-200/60 dark:bg-brand-700/40 dark:text-brand-300 dark:border-brand-700/40"
+                className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid border border-primary-soft-border"
                 title="Cựu sinh viên FPT University đã được xác thực"
               >
-                <ShieldCheck className="h-3 w-3 text-brand-600 dark:text-brand-400" />
+                <ShieldCheck className="h-3 w-3 text-primary-solid" />
                 <span>Xác thực FPT</span>
               </span>
             )}
           </div>
 
-          <p className="text-sm font-semibold text-plum-700 dark:text-[#b0b3b8]">
+          <p className="text-sm font-semibold text-text-muted">
             {mentor.currentPosition
               ? `${mentor.currentPosition}${mentor.currentCompany ? ` @ ${mentor.currentCompany}` : ''}`
               : mentor.headline || 'Cố vấn chuyên môn'}
@@ -91,8 +91,8 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
 
           {/* Học vị & Cơ sở */}
           {mentor.academicInfo && (
-            <div className="flex items-center gap-1.5 text-xs text-plum-500 dark:text-[#8f9399]">
-              <GraduationCap className="h-3.5 w-3.5 text-brand-500 shrink-0" />
+            <div className="flex items-center gap-1.5 text-xs text-text-subtle">
+              <GraduationCap className="h-3.5 w-3.5 text-primary-solid shrink-0" />
               <span>
                 {mentor.academicInfo.campus || 'Đại học FPT'}
                 {mentor.academicInfo.majorName ? ` • ${mentor.academicInfo.majorName}` : ''}
@@ -104,38 +104,38 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 rounded-2xl bg-white/70 p-3.5 border border-plum-900/[0.05] dark:bg-white/[0.03] dark:border-white/[0.05]">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 rounded-2xl bg-surface/70 p-3.5 border border-border dark:bg-white/[0.03] dark:border-white/[0.05]">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-gold-600 dark:bg-amber-950/40 dark:text-gold-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-warning-soft text-warning">
             <Trophy className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-[11px] text-plum-400 dark:text-[#8f9399]">Uy tín</div>
-            <strong className="text-xs sm:text-sm font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <div className="text-xs text-text-subtle">Uy tín</div>
+            <strong className="text-xs sm:text-sm font-bold text-text">
               {mentor.reputationScore ?? 0} pts
             </strong>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-coral-50 text-coral-600 dark:bg-coral-950/40 dark:text-coral-400">
-            <Star className="h-4 w-4 fill-coral-500 text-coral-500" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-danger-soft text-danger">
+            <Star className="h-4 w-4 fill-danger text-danger" />
           </div>
           <div>
-            <div className="text-[11px] text-plum-400 dark:text-[#8f9399]">Đánh giá</div>
-            <strong className="text-xs sm:text-sm font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <div className="text-xs text-text-subtle">Đánh giá</div>
+            <strong className="text-xs sm:text-sm font-bold text-text">
               {mentor.rating ? Number(mentor.rating).toFixed(1) : '5.0'} ★
             </strong>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-mint-50 text-mint-600 dark:bg-mint-950/40 dark:text-mint-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-success-soft text-success">
             <CheckCircle2 className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-[11px] text-plum-400 dark:text-[#8f9399]">Hoàn thành</div>
-            <strong className="text-xs sm:text-sm font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <div className="text-xs text-text-subtle">Hoàn thành</div>
+            <strong className="text-xs sm:text-sm font-bold text-text">
               {mentor.completedTasks ?? 0} phiên
             </strong>
           </div>
@@ -144,9 +144,9 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
 
       {/* Lĩnh vực hỗ trợ (Supported Fields) */}
       {mentor.supportedFields && mentor.supportedFields.length > 0 && (
-        <div className="mt-4 pt-3.5 border-t border-plum-900/[0.05] dark:border-white/[0.05] space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-plum-700 dark:text-[#e4e6eb]">
-            <Briefcase className="h-3.5 w-3.5 text-brand-500" />
+        <div className="mt-4 pt-3.5 border-t border-border dark:border-white/[0.05] space-y-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-text-muted">
+            <Briefcase className="h-3.5 w-3.5 text-primary-solid" />
             <span>Lĩnh vực Mentor nhận cố vấn:</span>
           </div>
 
@@ -154,7 +154,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
             {mentor.supportedFields.map((field) => (
               <span
                 key={field.id}
-                className="inline-flex items-center rounded-xl bg-white px-2.5 py-1 text-xs font-bold text-brand-700 border border-brand-200/70 shadow-2xs dark:bg-[#18191a] dark:text-brand-300 dark:border-brand-700/40"
+                className="inline-flex items-center rounded-xl bg-surface px-2.5 py-1 text-xs font-bold text-primary-solid border border-brand-200/70 shadow-2xs dark:border-brand-700/40"
               >
                 {field.name}
               </span>

@@ -130,6 +130,7 @@ export function MentoringGroupsPage() {
   return (
     <Container className="py-2 sm:py-4 space-y-6">
       <MentoringTermsGate source="MENTORING_HOME">
+      <div className="space-y-6">
         <MentorPageHeader
           icon={<Users className="h-4 w-4" />}
           eyebrow="Học nhóm"
@@ -158,13 +159,13 @@ export function MentoringGroupsPage() {
           {/* Search Input */}
           {activeTab !== 'INVITATIONS' && (
             <div className="relative w-full md:w-64 shrink-0">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-plum-400" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
               <input
                 type="text"
                 placeholder="Tìm kiếm nhóm..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-plum-900/10 bg-white py-2 pl-9 pr-3 text-xs outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 dark:border-[#3a3b3c] dark:bg-[#18191a] dark:text-white"
+                className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-3 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-focus text-text"
               />
             </div>
           )}
@@ -179,10 +180,10 @@ export function MentoringGroupsPage() {
                 <Skeleton className="h-28 rounded-2xl" />
               </div>
             ) : invitations.length === 0 ? (
-              <Card hover={false} className="border border-dashed border-plum-900/10 p-12 text-center space-y-3 dark:border-white/10">
-                <Inbox className="mx-auto h-10 w-10 text-plum-400 opacity-60" />
-                <p className="font-bold text-sm text-plum-900 dark:text-white">Không có lời mời nào</p>
-                <p className="text-xs text-plum-500 max-w-sm mx-auto dark:text-[#8f9399]">
+              <Card hover={false} className="border border-dashed border-border p-12 text-center space-y-3">
+                <Inbox className="mx-auto h-10 w-10 text-text-subtle opacity-60" />
+                <p className="font-bold text-sm text-text">Không có lời mời nào</p>
+                <p className="text-xs text-text-subtle max-w-sm mx-auto">
                   Bạn hiện không có lời mời tham gia nhóm mentoring nào đang chờ phản hồi.
                 </p>
               </Card>
@@ -194,29 +195,29 @@ export function MentoringGroupsPage() {
                     <Card
                       key={group.id}
                       hover={false}
-                      className="border border-amber-300/80 bg-amber-50/20 p-5 sm:p-6 transition-all dark:border-amber-700/60 dark:bg-amber-950/20"
+                      className="border border-warning-border bg-warning-soft p-5 sm:p-6 transition-all"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                            <span className="rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning">
                               Lời mời gia nhập nhóm
                             </span>
-                            <span className="text-xs text-plum-400">•</span>
-                            <span className="text-xs text-plum-500">
+                            <span className="text-xs text-text-subtle">•</span>
+                            <span className="text-xs text-text-subtle">
                               {group.joinedMemberCount || group.members?.filter((m) => m.status === 'JOINED' || m.status === 'ACTIVE').length || 1} thành viên
                             </span>
                           </div>
-                          <h3 className="font-display text-base font-bold text-plum-900 dark:text-white">
+                          <h3 className="font-display text-base font-bold text-text">
                             {group.name}
                           </h3>
                           {group.description && (
-                            <p className="text-xs text-plum-600 line-clamp-2 max-w-xl dark:text-[#b0b3b8]">
+                            <p className="text-xs text-text-muted line-clamp-2 max-w-xl">
                               {group.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-2 pt-1 text-xs text-plum-500 dark:text-[#8f9399]">
-                            <Shield className="h-3.5 w-3.5 text-brand-500" />
+                          <div className="flex items-center gap-2 pt-1 text-xs text-text-subtle">
+                            <Shield className="h-3.5 w-3.5 text-primary-solid" />
                             <span>
                               Người mời (Trưởng nhóm): <strong>{group.leaderName || leaderMember?.fullName || 'Trưởng nhóm'}</strong>
                             </span>
@@ -229,7 +230,7 @@ export function MentoringGroupsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => navigate(`/app/mentoring/groups/${group.id}`)}
-                            className="text-xs font-bold rounded-xl border-plum-900/10"
+                            className="text-xs font-bold rounded-xl border-border"
                           >
                             Xem nhóm
                           </Button>
@@ -238,7 +239,7 @@ export function MentoringGroupsPage() {
                             size="sm"
                             onClick={() => setDeclineTarget(group)}
                             disabled={declineMutation.isPending || acceptMutation.isPending}
-                            className="text-xs font-bold rounded-xl text-coral-600 hover:bg-coral-50"
+                            className="text-xs font-bold rounded-xl text-danger hover:bg-danger-soft"
                           >
                             <X className="h-4 w-4 mr-1" />
                             Từ chối
@@ -277,20 +278,20 @@ export function MentoringGroupsPage() {
                 <Skeleton className="h-56 rounded-2xl" />
               </div>
             ) : errorGroups ? (
-              <Card hover={false} className="border border-coral-200 p-8 text-center space-y-3">
-                <AlertCircle className="mx-auto h-8 w-8 text-coral-500" />
-                <p className="font-bold text-sm text-plum-900 dark:text-white">Không thể tải danh sách nhóm</p>
+              <Card hover={false} className="border border-danger-border p-8 text-center space-y-3">
+                <AlertCircle className="mx-auto h-8 w-8 text-danger" />
+                <p className="font-bold text-sm text-text">Không thể tải danh sách nhóm</p>
                 <Button variant="outline" size="sm" onClick={() => refetchGroups()} className="rounded-xl">
                   <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Thử lại
                 </Button>
               </Card>
             ) : filteredGroups.length === 0 ? (
-              <Card hover={false} className="border border-dashed border-plum-900/10 p-12 text-center space-y-4 dark:border-white/10">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-700/40">
+              <Card hover={false} className="border border-dashed border-border p-12 text-center space-y-4">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary-solid">
                   <Users className="h-7 w-7" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-bold text-base text-plum-900 dark:text-white">
+                  <h3 className="font-bold text-base text-text">
                     {searchQuery
                       ? 'Không tìm thấy nhóm phù hợp'
                       : activeTab === 'MANAGED'
@@ -299,7 +300,7 @@ export function MentoringGroupsPage() {
                       ? 'Bạn chưa tham gia nhóm cố vấn nào'
                       : 'Bạn chưa có nhóm cố vấn nào'}
                   </h3>
-                  <p className="text-xs text-plum-500 max-w-sm mx-auto dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle max-w-sm mx-auto">
                     {searchQuery
                       ? 'Thử tìm kiếm với từ khóa khác.'
                       : 'Hãy tạo nhóm đầu tiên để mời các bạn học và gửi yêu cầu Mentoring cùng nhau.'}
@@ -334,24 +335,24 @@ export function MentoringGroupsPage() {
                     <Card
                       key={group.id}
                       hover={false}
-                      className="flex flex-col justify-between border border-plum-900/[0.08] bg-white p-5 transition-all hover:shadow-md dark:bg-[#242526] dark:border-[#393a3b]"
+                      className="flex flex-col justify-between border border-border bg-surface p-5 transition-all hover:shadow-md"
                     >
                       <div className="space-y-4">
                         {/* Header: Icon, Name & Badges */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 min-w-0">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 font-display font-bold text-base shadow-xs dark:bg-brand-700/40 dark:text-brand-300">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-solid font-display font-bold text-base shadow-xs">
                               {group.name.slice(0, 2).toUpperCase()}
                             </div>
                             <div className="min-w-0">
                               <Link
                                 to={`/app/mentoring/groups/${group.id}`}
-                                className="font-display font-bold text-sm text-plum-900 hover:text-brand-600 truncate block dark:text-white"
+                                className="font-display font-bold text-sm text-text hover:text-primary-solid truncate block"
                               >
                                 {group.name}
                               </Link>
-                              <div className="flex items-center gap-1.5 text-[11px] text-plum-400 mt-0.5">
-                                <Shield className="h-3 w-3 text-brand-500" />
+                              <div className="flex items-center gap-1.5 text-xs text-text-subtle mt-0.5">
+                                <Shield className="h-3 w-3 text-primary-solid" />
                                 <span className="truncate">
                                   {isLeader ? 'Bạn là Trưởng nhóm' : `Trưởng nhóm: ${group.leaderName || 'N/A'}`}
                                 </span>
@@ -359,7 +360,7 @@ export function MentoringGroupsPage() {
                             </div>
                           </div>
                           {isLeader && (
-                            <span className="shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+                            <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
                               Quản lý
                             </span>
                           )}
@@ -367,28 +368,28 @@ export function MentoringGroupsPage() {
 
                         {/* Description */}
                         {group.description ? (
-                          <p className="text-xs text-plum-600 line-clamp-2 leading-relaxed dark:text-[#b0b3b8]">
+                          <p className="text-xs text-text-muted line-clamp-2 leading-relaxed">
                             {group.description}
                           </p>
                         ) : (
-                          <p className="text-xs text-plum-400 italic">Chưa có mô tả nhóm.</p>
+                          <p className="text-xs text-text-subtle italic">Chưa có mô tả nhóm.</p>
                         )}
 
                         {/* Stats Summary */}
-                        <div className="flex flex-wrap items-center gap-3 border-t border-plum-900/5 pt-3 text-[11px] text-plum-500 dark:border-white/5 dark:text-[#8f9399]">
-                          <span className="flex items-center gap-1 font-semibold text-plum-700 dark:text-white">
-                            <Users className="h-3.5 w-3.5 text-mint-600" />
+                        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3 text-xs text-text-subtle">
+                          <span className="flex items-center gap-1 font-semibold text-text-muted">
+                            <Users className="h-3.5 w-3.5 text-success" />
                             {joinedCount} thành viên
                           </span>
                           {isLeader && pendingCount > 0 && (
-                            <span className="flex items-center gap-1 font-bold text-amber-700 dark:text-amber-300">
+                            <span className="flex items-center gap-1 font-bold text-warning">
                               <Clock className="h-3.5 w-3.5" />
                               {pendingCount} chờ duyệt
                             </span>
                           )}
                           {requestCount > 0 && (
                             <span className="flex items-center gap-1">
-                              <Layers className="h-3.5 w-3.5 text-brand-500" />
+                              <Layers className="h-3.5 w-3.5 text-primary-solid" />
                               {requestCount} yêu cầu
                             </span>
                           )}
@@ -396,10 +397,10 @@ export function MentoringGroupsPage() {
                       </div>
 
                       {/* Card Footer Actions */}
-                      <div className="flex items-center justify-between gap-2 border-t border-plum-900/5 mt-4 pt-3 dark:border-white/5">
+                      <div className="flex items-center justify-between gap-2 border-t border-border mt-4 pt-3">
                         <Link
                           to={`/app/mentoring/groups/${group.id}`}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-plum-700 hover:text-brand-600 dark:text-[#e4e6eb]"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-text-muted hover:text-primary-solid"
                         >
                           Xem chi tiết <ChevronRight className="h-3.5 w-3.5" />
                         </Link>
@@ -411,7 +412,7 @@ export function MentoringGroupsPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setInvitingGroup(group)}
-                                className="h-8 text-xs font-bold px-2.5 rounded-lg text-brand-700 hover:bg-brand-50"
+                                className="h-8 text-xs font-bold px-2.5 rounded-lg text-primary-solid hover:bg-primary-soft"
                                 title="Mời thành viên"
                               >
                                 <UserPlus className="h-3.5 w-3.5" />
@@ -431,7 +432,7 @@ export function MentoringGroupsPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setLeavingGroup(group)}
-                              className="h-8 text-xs font-bold px-2.5 rounded-lg text-coral-600 hover:bg-coral-50"
+                              className="h-8 text-xs font-bold px-2.5 rounded-lg text-danger hover:bg-danger-soft"
                               title="Rời nhóm"
                             >
                               <LogOut className="h-3.5 w-3.5" />
@@ -471,16 +472,16 @@ export function MentoringGroupsPage() {
         {/* DIALOG: Confirmation to Decline Invitation */}
         {declineTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-coral-200">
+            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral-100 text-coral-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display text-base font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-base font-bold text-text">
                     Từ chối lời mời tham gia nhóm?
                   </h3>
-                  <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle leading-relaxed">
                     Bạn có chắc chắn muốn từ chối lời mời tham gia nhóm <strong>{declineTarget.name}</strong> không?
                   </p>
                 </div>
@@ -499,7 +500,7 @@ export function MentoringGroupsPage() {
                   size="sm"
                   onClick={() => declineMutation.mutate(declineTarget.id)}
                   disabled={declineMutation.isPending}
-                  className="bg-coral-600 hover:bg-coral-700 text-white"
+                  className="bg-danger hover:opacity-90 text-text-inverse"
                 >
                   {declineMutation.isPending ? 'Đang xử lý...' : 'Từ chối lời mời'}
                 </Button>
@@ -511,16 +512,16 @@ export function MentoringGroupsPage() {
         {/* DIALOG: Confirmation to Leave Group */}
         {leavingGroup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-coral-200">
+            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral-100 text-coral-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <LogOut className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display text-base font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-base font-bold text-text">
                     Rời khỏi nhóm Mentoring?
                   </h3>
-                  <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle leading-relaxed">
                     Bạn sẽ không còn là thành viên của nhóm <strong>{leavingGroup.name}</strong> và không thể tham gia vào các yêu cầu mới của nhóm.
                   </p>
                 </div>
@@ -539,7 +540,7 @@ export function MentoringGroupsPage() {
                   size="sm"
                   onClick={() => leaveMutation.mutate(leavingGroup.id)}
                   disabled={leaveMutation.isPending}
-                  className="bg-coral-600 hover:bg-coral-700 text-white"
+                  className="bg-danger hover:opacity-90 text-text-inverse"
                 >
                   {leaveMutation.isPending ? 'Đang xử lý...' : 'Xác nhận rời nhóm'}
                 </Button>
@@ -547,6 +548,7 @@ export function MentoringGroupsPage() {
             </Card>
           </div>
         )}
+      </div>
       </MentoringTermsGate>
     </Container>
   )

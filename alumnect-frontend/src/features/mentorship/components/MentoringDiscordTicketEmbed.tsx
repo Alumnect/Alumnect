@@ -90,36 +90,36 @@ export function MentoringDiscordTicketEmbed({
     switch (ticket.status) {
       case 'CONFIRMED':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-mint-300 bg-mint-50 px-2.5 py-0.5 text-[11px] font-semibold text-mint-700 dark:border-mint-800/60 dark:bg-mint-950/40 dark:text-mint-300">
+          <span className="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success">
             <Check className="h-3 w-3" />
             Đã xác nhận
           </span>
         )
       case 'REJECTED':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-coral-300 bg-coral-50 px-2.5 py-0.5 text-[11px] font-semibold text-coral-700 dark:border-coral-800/60 dark:bg-coral-950/40 dark:text-coral-300">
+          <span className="inline-flex items-center gap-1 rounded-full border border-danger-border bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">
             <X className="h-3 w-3" />
             Đã từ chối
           </span>
         )
       case 'ADJUSTMENT':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+          <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
             <RefreshCw className="h-3 w-3" />
             Đã yêu cầu điều chỉnh
           </span>
         )
       case 'SUPERSEDED':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-plum-300 bg-cream-200 px-2.5 py-0.5 text-[11px] font-semibold text-plum-600 dark:border-white/10 dark:bg-[#3a3b3c] dark:text-plum-400">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text-muted dark:bg-surface-2">
             Đã thay thế
           </span>
         )
       case 'PENDING':
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
-            <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+          <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
+            <Clock className="h-3 w-3 text-warning" />
             Chờ xác nhận
           </span>
         )
@@ -137,11 +137,11 @@ export function MentoringDiscordTicketEmbed({
           className="ring-1 ring-white/10 shrink-0"
         />
         <div className={cn("flex items-baseline gap-2", isMe ? "flex-row-reverse" : "flex-row")}>
-          <span className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">
+          <span className="text-sm font-bold text-text">
             {ticket.senderName}
           </span>
           {timeString && (
-            <span className="text-[11px] font-medium text-plum-400 dark:text-plum-500">
+            <span className="text-xs font-medium text-text-subtle">
               {timeString}
             </span>
           )}
@@ -154,8 +154,8 @@ export function MentoringDiscordTicketEmbed({
           className={cn(
             'max-w-xl rounded-2xl px-4 py-2 text-sm shadow-2xs',
             isMe
-              ? 'mr-0 sm:mr-11 bg-brand-600 text-white'
-              : 'ml-0 sm:ml-11 bg-cream-200 dark:bg-[#2b2d31] text-plum-800 dark:text-[#e4e6eb]'
+              ? 'mr-0 sm:mr-11 bg-primary-solid text-on-primary'
+              : 'ml-0 sm:ml-11 bg-surface-3 dark:bg-[#2b2d31] text-text'
           )}
         >
           {accompanyingText}
@@ -165,21 +165,21 @@ export function MentoringDiscordTicketEmbed({
       {/* 3. Thẻ tương tác Ticket phong cách xám trắng & viền cam */}
       <div
         className={cn(
-          'w-full max-w-xl overflow-hidden rounded-2xl border border-brand-200/90 dark:border-brand-500/30 border-l-4 border-l-brand-500 bg-[#f4f6f8] dark:bg-[#22252d] p-4 sm:p-5 text-plum-900 dark:text-[#e4e6eb] shadow-md',
+          'w-full max-w-xl overflow-hidden rounded-2xl border border-brand-200/90 dark:border-brand-500/30 border-l-4 border-l-brand-500 bg-[#f4f6f8] dark:bg-[#22252d] p-4 sm:p-5 text-text shadow-md',
           isMe ? 'mr-0 sm:mr-11 self-end' : 'ml-0 sm:ml-11 self-start'
         )}
       >
         {/* Header Thẻ: Icon + Loại Ticket + Mã + Status */}
-        <div className="flex items-start justify-between gap-3 pb-3 border-b border-cream-300 dark:border-white/10">
+        <div className="flex items-start justify-between gap-3 pb-3 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white shadow-xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-solid text-on-primary shadow-xs">
               {isExtension ? <CalendarClock className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
             </div>
             <div>
-              <h4 className="font-display text-sm sm:text-base font-bold uppercase tracking-wider text-plum-900 dark:text-white">
+              <h4 className="font-display text-sm sm:text-base font-bold uppercase tracking-wider text-text">
                 {isExtension ? 'TICKET GIA HẠN' : 'DEAL TICKET'}
               </h4>
-              <p className="text-xs text-plum-500 dark:text-plum-400 font-medium">
+              <p className="text-xs text-text-subtle font-medium">
                 {ticket.ticketCode}
                 {ticket.version ? ` · Phiên bản ${ticket.version}` : ''}
               </p>
@@ -190,15 +190,15 @@ export function MentoringDiscordTicketEmbed({
         </div>
 
         {/* Nội dung chính dạng danh sách có icon */}
-        <div className="py-3.5 space-y-2.5 text-xs sm:text-sm text-plum-800 dark:text-[#e4e6eb]">
+        <div className="py-3.5 space-y-2.5 text-xs sm:text-sm text-text">
           {!isExtension ? (
             <>
               {/* Phạm vi */}
               <div className="flex items-start gap-2.5">
-                <FileText className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400 mt-0.5" />
+                <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                 <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                  <span className="text-plum-500 dark:text-plum-400 shrink-0">Phạm vi:</span>
-                  <span className="font-bold text-plum-900 dark:text-white line-clamp-2">
+                  <span className="text-text-subtle shrink-0">Phạm vi:</span>
+                  <span className="font-bold text-text line-clamp-2">
                     {ticket.taskScope || 'Chưa cung cấp'}
                   </span>
                 </div>
@@ -206,10 +206,10 @@ export function MentoringDiscordTicketEmbed({
 
               {/* Giá thỏa thuận */}
               <div className="flex items-center gap-2.5">
-                <CircleDollarSign className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400" />
+                <CircleDollarSign className="h-4 w-4 shrink-0 text-primary-solid" />
                 <div className="flex items-center gap-2">
-                  <span className="text-plum-500 dark:text-plum-400">Giá thỏa thuận:</span>
-                  <span className="font-bold text-brand-600 dark:text-brand-400 text-sm sm:text-base">
+                  <span className="text-text-subtle">Giá thỏa thuận:</span>
+                  <span className="font-bold text-primary-solid text-sm sm:text-base">
                     {formatVND(ticket.agreedPrice)}
                   </span>
                 </div>
@@ -217,10 +217,10 @@ export function MentoringDiscordTicketEmbed({
 
               {/* Deadline */}
               <div className="flex items-center gap-2.5">
-                <Calendar className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400" />
+                <Calendar className="h-4 w-4 shrink-0 text-primary-solid" />
                 <div className="flex items-center gap-2">
-                  <span className="text-plum-500 dark:text-plum-400">Deadline:</span>
-                  <span className="font-bold text-plum-900 dark:text-white">
+                  <span className="text-text-subtle">Deadline:</span>
+                  <span className="font-bold text-text">
                     {formatDate(ticket.deadline)}
                   </span>
                 </div>
@@ -228,10 +228,10 @@ export function MentoringDiscordTicketEmbed({
 
               {/* Hình thức */}
               <div className="flex items-center gap-2.5">
-                <MessageSquare className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400" />
+                <MessageSquare className="h-4 w-4 shrink-0 text-primary-solid" />
                 <div className="flex items-center gap-2">
-                  <span className="text-plum-500 dark:text-plum-400">Hình thức:</span>
-                  <span className="font-semibold text-plum-900 dark:text-white">
+                  <span className="text-text-subtle">Hình thức:</span>
+                  <span className="font-semibold text-text">
                     {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || 'Linh hoạt'}
                     {' · '}
                     {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || 'Cá nhân (1-1)'}
@@ -241,13 +241,13 @@ export function MentoringDiscordTicketEmbed({
 
               {/* Loại nhiệm vụ & nguồn đề xuất */}
               <div className="flex items-start gap-2.5">
-                <FileText className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400 mt-0.5" />
+                <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-plum-700 ring-1 ring-cream-300 dark:bg-white/5 dark:text-[#b0b3b8] dark:ring-white/10">
+                  <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-text-muted ring-1 ring-border">
                     {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || 'Nhiệm vụ'}
                   </span>
                   {ticket.proposalSource && (
-                    <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700 ring-1 ring-brand-200 dark:bg-brand-700/30 dark:text-brand-300 dark:ring-brand-700/40">
+                    <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-solid ring-1 ring-brand-200 dark:ring-brand-700/40">
                       {PROPOSAL_SOURCE_LABELS[ticket.proposalSource] || ticket.proposalSource}
                     </span>
                   )}
@@ -257,10 +257,10 @@ export function MentoringDiscordTicketEmbed({
               {/* Kết quả kỳ vọng */}
               {ticket.expectedResult && (
                 <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400 mt-0.5" />
+                  <Check className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                   <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                    <span className="text-plum-500 dark:text-plum-400 shrink-0">Kết quả:</span>
-                    <span className="font-semibold text-plum-900 dark:text-white line-clamp-2">{ticket.expectedResult}</span>
+                    <span className="text-text-subtle shrink-0">Kết quả:</span>
+                    <span className="font-semibold text-text line-clamp-2">{ticket.expectedResult}</span>
                   </div>
                 </div>
               )}
@@ -269,10 +269,10 @@ export function MentoringDiscordTicketEmbed({
             <>
               {/* Deadline hiện tại */}
               <div className="flex items-center gap-2.5">
-                <Calendar className="h-4 w-4 shrink-0 text-plum-500 dark:text-plum-400" />
+                <Calendar className="h-4 w-4 shrink-0 text-text-subtle" />
                 <div className="flex items-center gap-2">
-                  <span className="text-plum-500 dark:text-plum-400">Deadline hiện tại:</span>
-                  <span className="font-medium text-plum-700 dark:text-[#b0b3b8]">
+                  <span className="text-text-subtle">Deadline hiện tại:</span>
+                  <span className="font-medium text-text-muted">
                     {formatDate(ticket.currentDeadline)}
                   </span>
                 </div>
@@ -280,10 +280,10 @@ export function MentoringDiscordTicketEmbed({
 
               {/* Deadline đề xuất */}
               <div className="flex items-center gap-2.5">
-                <Clock className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400" />
+                <Clock className="h-4 w-4 shrink-0 text-primary-solid" />
                 <div className="flex items-center gap-2">
-                  <span className="text-plum-500 dark:text-plum-400">Deadline đề xuất:</span>
-                  <span className="font-bold text-brand-600 dark:text-brand-400">
+                  <span className="text-text-subtle">Deadline đề xuất:</span>
+                  <span className="font-bold text-primary-solid">
                     {formatDate(ticket.proposedDeadline)}
                   </span>
                 </div>
@@ -291,10 +291,10 @@ export function MentoringDiscordTicketEmbed({
 
               {/* Lý do */}
               <div className="flex items-start gap-2.5">
-                <FileText className="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400 mt-0.5" />
+                <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                 <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                  <span className="text-plum-500 dark:text-plum-400 shrink-0">Lý do:</span>
-                  <span className="font-semibold text-plum-900 dark:text-white line-clamp-2">
+                  <span className="text-text-subtle shrink-0">Lý do:</span>
+                  <span className="font-semibold text-text line-clamp-2">
                     {ticket.extensionReason || 'Chưa cung cấp'}
                   </span>
                 </div>
@@ -304,12 +304,12 @@ export function MentoringDiscordTicketEmbed({
         </div>
 
         {/* Footer Thẻ: "Xem chi tiết →" và các nút thao tác */}
-        <div className="flex items-center justify-between border-t border-cream-300 dark:border-white/10 pt-3">
+        <div className="flex items-center justify-between border-t border-border pt-3">
           {/* Nút Xem chi tiết */}
           <button
             type="button"
             onClick={onViewDetail}
-            className="group flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
+            className="group flex items-center gap-1 text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors"
           >
             <span>Xem chi tiết</span>
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -326,7 +326,7 @@ export function MentoringDiscordTicketEmbed({
                     onClick={onReject}
                     disabled={isRejecting || isConfirming}
                     title="Từ chối thỏa thuận này"
-                    className="inline-flex items-center justify-center rounded-xl border border-coral-500/80 bg-coral-50/60 px-3 py-1.5 text-xs font-bold text-coral-600 transition-all hover:bg-coral-100 active:scale-95 disabled:opacity-50 dark:bg-coral-950/30 dark:border-coral-500/60 dark:text-coral-300"
+                    className="inline-flex items-center justify-center rounded-xl border border-danger bg-danger-soft px-3 py-1.5 text-xs font-bold text-danger transition-all hover:bg-danger-border/60 active:scale-95 disabled:opacity-50"
                   >
                     {isRejecting ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -342,9 +342,9 @@ export function MentoringDiscordTicketEmbed({
                       onClick={onRevert}
                       disabled={isRejecting || isConfirming}
                       title="Yêu cầu Mentor điều chỉnh lại giá, hạn chót hoặc nội dung"
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                     >
-                      <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      <RefreshCw className="h-3.5 w-3.5 text-warning" />
                       <span>Yêu cầu điều chỉnh</span>
                     </button>
                   )}
@@ -354,7 +354,7 @@ export function MentoringDiscordTicketEmbed({
                     type="button"
                     onClick={onConfirm}
                     disabled={isConfirming || isRejecting}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-brand-600 active:scale-95 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition-all hover:bg-primary-solid active:scale-95 disabled:opacity-50"
                   >
                     {isConfirming ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -365,8 +365,8 @@ export function MentoringDiscordTicketEmbed({
                 </>
               ) : (
                 /* Người gửi: hiển thị trạng thái chờ đối phương phản hồi */
-                <span className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-white/90 px-3 py-1 text-[11px] font-semibold text-plum-700 shadow-2xs dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#b0b3b8]">
-                  <Clock className="h-3 w-3 text-amber-500" />
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1 text-xs font-semibold text-text-muted shadow-2xs">
+                  <Clock className="h-3 w-3 text-warning" />
                   Chờ phản hồi
                 </span>
               )
@@ -379,26 +379,26 @@ export function MentoringDiscordTicketEmbed({
                       <button
                         type="button"
                         onClick={onPay}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-brand-700 active:scale-95"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition-all hover:bg-primary-hover active:scale-95"
                       >
                         <CreditCard className="h-3.5 w-3.5" />
                         <span>Thanh toán Task ngay</span>
                       </button>
                     ) : (
-                      <span className="text-[11px] font-semibold text-mint-600 dark:text-mint-400">
+                      <span className="text-xs font-semibold text-success">
                         Đã chốt • Chờ thanh toán
                       </span>
                     )}
                   </>
                 ) : (
-                  <span className="text-[11px] font-bold text-mint-600 dark:text-mint-400">
+                  <span className="text-xs font-bold text-success">
                     Đã thanh toán
                   </span>
                 )}
               </div>
             ) : ticket.status === 'REJECTED' ? (
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-coral-600 dark:text-coral-400">
+                <span className="text-xs font-bold text-danger">
                   Đã từ chối {ticket.handlerName ? `(${ticket.handlerName})` : ''}
                 </span>
                 {onRevert && (
@@ -406,16 +406,16 @@ export function MentoringDiscordTicketEmbed({
                     type="button"
                     onClick={onRevert}
                     title="Đề xuất lại các điều khoản mới (Deal lại)"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                   >
-                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <RefreshCw className="h-3.5 w-3.5 text-warning" />
                     <span>Deal lại</span>
                   </button>
                 )}
               </div>
             ) : ticket.status === 'ADJUSTMENT' ? (
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                <span className="text-xs font-semibold text-warning">
                   Chờ Mentor gửi phiên bản mới
                 </span>
                 {onRevert && (
@@ -423,15 +423,15 @@ export function MentoringDiscordTicketEmbed({
                     type="button"
                     onClick={onRevert}
                     title="Gửi phiên bản Deal Ticket mới"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/80 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 dark:bg-amber-950/40 dark:border-amber-600/60 dark:text-amber-300"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95"
                   >
-                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <RefreshCw className="h-3.5 w-3.5 text-warning" />
                     <span>Deal lại</span>
                   </button>
                 )}
               </div>
             ) : (
-              <span className="text-[11px] font-medium text-plum-500 dark:text-plum-400">
+              <span className="text-xs font-medium text-text-subtle">
                 Đã thay thế bởi phiên bản mới
               </span>
             )}
@@ -443,7 +443,7 @@ export function MentoringDiscordTicketEmbed({
       {timeString && (
         <span
           className={cn(
-            'text-[11px] text-plum-400 dark:text-plum-500',
+            'text-xs text-text-subtle',
             isMe ? 'mr-1 sm:mr-12 text-right' : 'ml-1 sm:ml-12 text-left'
           )}
         >

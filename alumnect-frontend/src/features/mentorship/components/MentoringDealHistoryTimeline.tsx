@@ -18,7 +18,7 @@ export function MentoringDealHistoryTimeline({
 }: MentoringDealHistoryTimelineProps) {
   if (!snapshots || snapshots.length === 0) {
     return (
-      <div className="p-8 text-center text-xs text-plum-400 dark:text-[#8a8d91]">
+      <div className="p-8 text-center text-xs text-text-subtle dark:text-text-subtle">
         Chưa có lịch sử phiên bản nào được ghi nhận.
       </div>
     )
@@ -29,11 +29,11 @@ export function MentoringDealHistoryTimeline({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 border-b border-plum-900/[0.06] pb-3 dark:border-white/10">
-        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-violet-500/5 text-violet-600 dark:bg-violet-600/40 dark:text-violet-400">
+      <div className="flex items-center gap-2 border-b border-border pb-3">
+        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-info-soft text-info">
           <History className="h-4 w-4" />
         </span>
-        <h4 className="font-display text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">
+        <h4 className="font-display text-sm font-bold text-text">
           Lịch sử điều chỉnh điều khoản ({snapshots.length} phiên bản)
         </h4>
       </div>
@@ -53,10 +53,10 @@ export function MentoringDealHistoryTimeline({
             <div key={snap.id} className="relative group">
               {/* Điểm nút Timeline */}
               <span
-                className={`absolute -left-6 top-1.5 flex h-5 w-5 items-center justify-center rounded-full ring-4 ring-white dark:ring-[#242526] transition-colors ${
+                className={`absolute -left-6 top-1.5 flex h-5 w-5 items-center justify-center rounded-full ring-4 ring-white dark:ring-border transition-colors ${
                   isLatest
-                    ? 'bg-brand-600 text-white shadow-xs'
-                    : 'bg-cream-300 text-plum-600 dark:bg-white/20 dark:text-white'
+                    ? 'bg-primary-solid text-on-primary shadow-xs'
+                    : 'bg-surface-3 text-text-muted'
                 }`}
               >
                 <GitCommit className="h-3 w-3" />
@@ -66,22 +66,22 @@ export function MentoringDealHistoryTimeline({
               <div
                 className={`rounded-2xl p-4 border text-xs transition-all ${
                   isLatest
-                    ? 'bg-brand-50/40 border-brand-200/60 shadow-xs dark:bg-brand-700/20 dark:border-brand-700/30'
-                    : 'bg-white border-plum-900/[0.08] dark:bg-[#242526] dark:border-[#393a3b]'
+                    ? 'bg-brand-50/40 border-primary-soft-border shadow-xs dark:bg-brand-700/20'
+                    : 'bg-surface border-border'
                 }`}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-plum-900/[0.04] pb-2 dark:border-white/5">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-plum-900 dark:text-[#f0f2f5]">
+                    <span className="font-bold text-text">
                       Phiên bản {snap.version}
                     </span>
                     {isLatest && (
-                      <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                      <span className="rounded-full bg-primary-solid px-2 py-0.5 text-xs font-bold text-on-primary">
                         Hiện tại
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] text-plum-400 dark:text-[#8a8d91]">
+                  <span className="text-xs text-text-subtle dark:text-text-subtle">
                     {formattedDate}
                   </span>
                 </div>
@@ -94,24 +94,24 @@ export function MentoringDealHistoryTimeline({
                       name={snap.modifiedByName || 'Thành viên'}
                       size={24}
                     />
-                    <span className="font-bold text-plum-800 dark:text-[#e4e6eb]">
+                    <span className="font-bold text-text">
                       {snap.modifiedByName || 'Thành viên'}
                     </span>
                   </div>
 
-                  <span className="font-semibold text-mint-700 dark:text-mint-400">
+                  <span className="font-semibold text-success">
                     {formattedPrice}
                   </span>
                 </div>
 
                 {snap.changeNote && (
-                  <p className="mt-2 rounded-xl bg-cream-100/60 p-2.5 text-[11px] text-plum-600 dark:bg-white/5 dark:text-[#b0b3b8] italic">
+                  <p className="mt-2 rounded-xl bg-cream-100/60 p-2.5 text-xs text-text-muted dark:bg-white/5 italic">
                     &ldquo;{snap.changeNote}&rdquo;
                   </p>
                 )}
 
                 {/* Tóm tắt nhanh phạm vi công việc */}
-                <p className="mt-2 text-[11px] text-plum-500 line-clamp-2 dark:text-[#8a8d91]">
+                <p className="mt-2 text-xs text-text-subtle line-clamp-2 dark:text-text-subtle">
                   <strong>Phạm vi:</strong> {snap.taskScope}
                 </p>
               </div>

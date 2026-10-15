@@ -76,7 +76,7 @@ function MentoringDealsContent() {
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 animate-pulse rounded-2xl border border-plum-900/[0.08] bg-cream-100 dark:border-white/10 dark:bg-white/[0.04]" />
+            <div key={i} className="h-64 animate-pulse rounded-2xl border border-border bg-surface-2 dark:bg-white/[0.04]" />
           ))}
         </div>
       ) : isError ? (

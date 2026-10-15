@@ -15,14 +15,14 @@ export function MentorStatusPage() {
   if (!isAlumni) {
     return (
       <Container className="py-12">
-        <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b]">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-gold-600 dark:bg-amber-950/50 dark:text-gold-300">
+        <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-border bg-surface">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-warning-soft text-warning">
             <Activity className="h-7 w-7" />
           </div>
-          <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-xl font-bold text-text">
             Tính năng dành cho cựu sinh viên
           </h2>
-          <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
+          <p className="mt-2 text-sm text-text-muted leading-relaxed">
             Bạn cần là cựu sinh viên đã xác thực để đăng ký và quản lý hồ sơ Mentor.
           </p>
         </Card>

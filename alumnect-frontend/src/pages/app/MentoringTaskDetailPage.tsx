@@ -124,7 +124,7 @@ function MentoringTaskDetailContent() {
         <button
           type="button"
           onClick={() => navigate('/app/mentoring/tasks')}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-plum-600 transition hover:text-brand-600 dark:text-[#b0b3b8]"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted transition hover:text-primary-solid"
         >
           <ArrowLeft className="h-4 w-4" />
           Nhiệm vụ của tôi
@@ -154,19 +154,19 @@ function MentoringTaskDetailContent() {
       </div>
 
       {/* Tiêu đề Task & tiến độ */}
-      <header className="rounded-3xl border border-plum-900/[0.08] bg-white p-5 shadow-xs dark:border-white/10 dark:bg-[#242526] sm:p-6">
+      <header className="rounded-3xl border border-border bg-surface p-5 shadow-xs sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-lg bg-cream-200 px-2 py-0.5 font-mono text-xs font-semibold text-plum-600 dark:bg-white/10 dark:text-[#b0b3b8]">
+          <span className="rounded-lg bg-surface-3 px-2 py-0.5 font-mono text-xs font-semibold text-text-muted">
             Task #{overview.id}
           </span>
           <MentoringTaskBadge status={overview.status} />
           {overdue && (
-            <span className="rounded-full bg-coral-100 px-2.5 py-0.5 text-xs font-semibold text-coral-700 dark:bg-coral-900/40 dark:text-coral-300">
+            <span className="rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">
               Quá hạn
             </span>
           )}
         </div>
-        <h1 className="mt-2 break-words font-display text-xl font-bold tracking-tight text-plum-900 dark:text-[#f0f2f5] sm:text-2xl">
+        <h1 className="mt-2 break-words font-display text-xl font-bold tracking-tight text-text sm:text-2xl">
           {overview.taskTitle}
         </h1>
         <div className="mt-5">
@@ -175,13 +175,13 @@ function MentoringTaskDetailContent() {
       </header>
 
       {permissions.isReadOnly && overview.status === 'COMPLETED' && (
-        <div className="flex items-center gap-2.5 rounded-2xl border border-mint-200 bg-mint-50 px-4 py-3 text-sm text-mint-800 dark:border-mint-700/30 dark:bg-mint-900/20 dark:text-mint-300">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-success-border bg-success-soft px-4 py-3 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           Task đã hoàn thành. Toàn bộ thông tin và Work Log được lưu ở chế độ chỉ xem.
         </div>
       )}
       {permissions.isDisputed && (
-        <div className="flex items-center gap-2.5 rounded-2xl border border-coral-200 bg-coral-50 px-4 py-3 text-sm text-coral-700 dark:border-coral-700/40 dark:bg-coral-900/20 dark:text-coral-300">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-danger-border bg-danger-soft px-4 py-3 text-sm text-danger">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           Task đang được Ban Quản Trị phân xử khiếu nại. Work Log mới tạm thời bị khóa.
         </div>

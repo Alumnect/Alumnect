@@ -75,35 +75,35 @@ export function EventHistoryView() {
     switch (item.attendanceState) {
       case 'UPCOMING':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-600/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-info-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
             <Clock size={12} className="text-sky-100 shrink-0" />
             <span>Sắp diễn ra</span>
           </span>
         )
       case 'ONGOING':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
             <Radio size={12} className="animate-pulse text-amber-100 shrink-0" />
             <span>Đang diễn ra</span>
           </span>
         )
       case 'PAST':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
             <CheckCircle2 size={12} className="text-emerald-100 shrink-0" />
             <span>Đã tham gia</span>
           </span>
         )
       case 'REGISTRATION_CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
             <XCircle size={12} className="text-rose-100 shrink-0" />
             <span>Đã hủy đăng ký</span>
           </span>
         )
       case 'EVENT_CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-700/95 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-danger px-3 py-1 text-xs font-bold uppercase tracking-wide text-text-inverse shadow-md ring-1 ring-white/25 backdrop-blur-xs">
             <Ban size={12} className="text-red-100 shrink-0" />
             <span>Sự kiện bị hủy</span>
           </span>
@@ -120,7 +120,7 @@ export function EventHistoryView() {
   return (
     <div className="space-y-6">
       {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-plum-900/10 pb-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
         {FILTER_OPTIONS.map((opt) => (
           <button
             key={opt.key}
@@ -129,8 +129,8 @@ export function EventHistoryView() {
             className={cn(
               'rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all',
               filter === opt.key
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                ? 'bg-primary-solid text-on-primary shadow-sm'
+                : 'bg-surface-2 text-text-muted hover:bg-surface-3'
             )}
           >
             {opt.label}
@@ -142,8 +142,8 @@ export function EventHistoryView() {
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-            <p className="text-sm font-medium text-plum-500">Đang tải lịch sử tham gia...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-primary-solid" />
+            <p className="text-sm font-medium text-text-subtle">Đang tải lịch sử tham gia...</p>
           </div>
         </div>
       ) : isError ? (
@@ -159,7 +159,7 @@ export function EventHistoryView() {
         />
       ) : items.length === 0 ? (
         <EmptyState
-          icon={<CalendarCheck size={28} className="text-brand-500" />}
+          icon={<CalendarCheck size={28} className="text-primary-solid" />}
           title={
             filter === 'all'
               ? 'Bạn chưa tham gia sự kiện nào'
@@ -198,7 +198,7 @@ export function EventHistoryView() {
                   className="group h-full flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-glow"
                 >
                   {/* Event Cover & Date Badge */}
-                  <div className="relative h-44 shrink-0 overflow-hidden bg-plum-100">
+                  <div className="relative h-44 shrink-0 overflow-hidden bg-surface-2">
                     {postLink ? (
                       <Link to={postLink} className="block h-full w-full">
                         <SmartImage
@@ -223,10 +223,10 @@ export function EventHistoryView() {
 
                     {/* Date badge */}
                     <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center shadow-sm">
-                      <span className="text-[10px] font-bold uppercase text-gold-600">
+                      <span className="text-xs font-bold uppercase text-warning">
                         {dateInfo.month}
                       </span>
-                      <span className="text-xl font-extrabold text-plum-900">{dateInfo.day}</span>
+                      <span className="text-xl font-extrabold text-text">{dateInfo.day}</span>
                     </div>
 
                     {/* Attendance status badge */}
@@ -240,39 +240,39 @@ export function EventHistoryView() {
                     <div>
                       {postLink ? (
                         <Link to={postLink} className="block group/title">
-                          <h3 className="text-base font-bold text-plum-900 line-clamp-2 transition-colors group-hover/title:text-brand-600 group-hover/title:underline">
+                          <h3 className="text-base font-bold text-text line-clamp-2 transition-colors group-hover/title:text-brand-600 group-hover/title:underline">
                             {item.title || 'Sự kiện chưa đặt tên'}
                           </h3>
                         </Link>
                       ) : (
-                        <h3 className="text-base font-bold text-plum-900 line-clamp-2">
+                        <h3 className="text-base font-bold text-text line-clamp-2">
                           {item.title || 'Sự kiện chưa đặt tên'}
                         </h3>
                       )}
 
                       {item.location && (
-                        <p className="mt-2 flex items-center gap-1.5 text-xs text-plum-500 truncate">
-                          <MapPin size={13} className="shrink-0 text-plum-400" />
+                        <p className="mt-2 flex items-center gap-1.5 text-xs text-text-subtle truncate">
+                          <MapPin size={13} className="shrink-0 text-text-subtle" />
                           <span className="truncate">{item.location}</span>
                         </p>
                       )}
 
-                      <p className="mt-1 flex items-center gap-1.5 text-xs text-plum-500">
-                        <Clock size={13} className="shrink-0 text-plum-400" />
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-text-subtle">
+                        <Clock size={13} className="shrink-0 text-text-subtle" />
                         <span>
                           {dateInfo.dateStr} {dateInfo.timeStr && `· ${dateInfo.timeStr}`}
                         </span>
                       </p>
 
                       {item.registeredAt && (
-                        <p className="mt-2 text-[11px] text-plum-400">
+                        <p className="mt-2 text-xs text-text-subtle">
                           Đã đăng ký: {formatRegisteredAt(item.registeredAt)}
                         </p>
                       )}
                     </div>
 
                     {/* Card Footer: Organizer & Action */}
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-plum-900/8 pt-4">
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
                       {/* Organizer */}
                       <div className="flex flex-1 items-center gap-2 min-w-0">
                         <Link
@@ -281,7 +281,7 @@ export function EventHistoryView() {
                               ? `/app/profile?userId=${item.organizerId}`
                               : '/app/profile'
                           }
-                          className="flex items-center gap-2 min-w-0 hover:text-brand-600 transition-colors group/author"
+                          className="flex items-center gap-2 min-w-0 hover:text-primary-solid transition-colors group/author"
                           title={item.organizerName || 'Ban tổ chức'}
                         >
                           <Avatar
@@ -289,7 +289,7 @@ export function EventHistoryView() {
                             name={item.organizerName || 'Ban tổ chức'}
                             size={26}
                           />
-                          <span className="text-xs font-medium text-plum-800 truncate group-hover/author:underline group-hover/author:text-brand-600">
+                          <span className="text-xs font-medium text-text truncate group-hover/author:underline group-hover/author:text-brand-600">
                             {item.organizerName || 'Ban tổ chức'}
                           </span>
                         </Link>
@@ -305,10 +305,10 @@ export function EventHistoryView() {
                               status: item.eventStatus,
                             })
                           }}
-                          className="shrink-0 hidden sm:inline-flex items-center gap-1 text-[11px] text-plum-500 hover:text-brand-600 hover:bg-brand-50/50 py-0.5 px-1.5 rounded transition-colors"
+                          className="shrink-0 hidden sm:inline-flex items-center gap-1 text-xs text-text-subtle hover:text-primary-solid hover:bg-primary-soft py-0.5 px-1.5 rounded transition-colors"
                           title="Bấm để xem danh sách người tham gia"
                         >
-                          <Users size={11} className="text-brand-500" />
+                          <Users size={11} className="text-primary-solid" />
                           <span>
                             {item.attendeeCount}
                             {item.capacity ? ` / ${compact(item.capacity)}` : ''}

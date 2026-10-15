@@ -130,36 +130,36 @@ export function MentoringTicketDetailModal({
     switch (ticket.status) {
       case 'CONFIRMED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-mint-200 bg-mint-50 px-3 py-1 text-xs font-semibold text-mint-700 dark:border-mint-800/60 dark:bg-mint-950/40 dark:text-mint-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-success-border bg-success-soft px-3 py-1 text-xs font-semibold text-success">
             <Check className="h-3.5 w-3.5" />
             Đã xác nhận
           </span>
         )
       case 'REJECTED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-coral-200 bg-coral-50 px-3 py-1 text-xs font-semibold text-coral-700 dark:border-coral-800/60 dark:bg-coral-950/40 dark:text-coral-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-danger-border bg-danger-soft px-3 py-1 text-xs font-semibold text-danger">
             <X className="h-3.5 w-3.5" />
             Đã từ chối
           </span>
         )
       case 'ADJUSTMENT':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/90 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-warning-border bg-warning-soft px-3 py-1 text-xs font-semibold text-warning">
             <RefreshCw className="h-3.5 w-3.5" />
             Đã yêu cầu điều chỉnh
           </span>
         )
       case 'SUPERSEDED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-cream-300 bg-cream-100 px-3 py-1 text-xs font-semibold text-plum-500 dark:border-white/10 dark:bg-[#3a3b3c] dark:text-plum-400">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-xs font-semibold text-text-subtle">
             Đã thay thế
           </span>
         )
       case 'PENDING':
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/90 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-300">
-            <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-warning-border bg-warning-soft px-3 py-1 text-xs font-semibold text-warning">
+            <Clock className="h-3.5 w-3.5 text-warning" />
             Chờ xác nhận
           </span>
         )
@@ -178,19 +178,19 @@ export function MentoringTicketDetailModal({
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Main Card Modal */}
-      <div className="relative z-10 flex w-full max-w-lg max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-cream-300 bg-white text-plum-900 shadow-2xl dark:border-white/10 dark:bg-[#202124] dark:text-[#e4e6eb]">
+      <div className="relative z-10 flex w-full max-w-lg max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-border bg-surface text-text shadow-2xl dark:bg-surface">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-cream-200 px-6 py-5 dark:border-white/10">
+        <div className="flex items-center justify-between border-b border-border px-6 py-5">
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm ${isAdjustment ? 'bg-amber-500' : isExtension ? 'bg-violet-500' : 'bg-brand-500'}`}>
               {isAdjustment ? <RefreshCw className="h-5 w-5" /> : isExtension ? <CalendarClock className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
             </div>
             <div>
-              <h3 className="font-display text-lg font-bold text-plum-900 dark:text-white sm:text-xl">
+              <h3 className="font-display text-lg font-bold text-text sm:text-xl">
                 {title}
               </h3>
-              <p className="text-xs font-medium text-plum-500 dark:text-plum-400">
+              <p className="text-xs font-medium text-text-subtle">
                 {ticket.ticketCode}
                 {ticket.version ? ` · Phiên bản ${ticket.version}` : ''}
               </p>
@@ -202,7 +202,7 @@ export function MentoringTicketDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-1.5 text-plum-400 hover:bg-cream-200 hover:text-plum-600 transition-colors dark:hover:bg-[#3a3b3c] dark:hover:text-[#e4e6eb]"
+              className="rounded-full p-1.5 text-text-subtle hover:bg-surface-3 hover:text-text-muted transition-colors dark:hover:bg-surface-2"
               title="Đóng popup"
             >
               <X className="h-5 w-5" />
@@ -218,28 +218,28 @@ export function MentoringTicketDetailModal({
               src={ticket.senderAvatar || undefined}
               name={ticket.senderName}
               size={44}
-              className="ring-2 ring-violet-500/10 shrink-0"
+              className="ring-2 ring-info shrink-0"
             />
             <div>
-              <h4 className="text-sm font-bold text-plum-900 dark:text-white">
+              <h4 className="text-sm font-bold text-text">
                 {ticket.senderName}
               </h4>
-              <p className="text-xs text-plum-500 dark:text-plum-400">
+              <p className="text-xs text-text-subtle">
                 {ticket.senderRole || 'Người gửi'}
               </p>
             </div>
           </div>
 
-          <div className="h-px w-full bg-cream-200 dark:bg-[#3a3b3c]" />
+          <div className="h-px w-full bg-surface-3 dark:bg-surface-2" />
 
           {/* Box ghi chú yêu cầu điều chỉnh từ học viên nếu có */}
           {isAdjustment && ticket.adjustmentNote && (
-            <div className="rounded-2xl border border-amber-300/80 bg-amber-50/90 p-4 dark:border-amber-800/50 dark:bg-amber-950/30">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 mb-1.5">
+            <div className="rounded-2xl border border-warning-border bg-warning-soft p-4">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-warning mb-1.5">
                 <RefreshCw className="h-3.5 w-3.5" />
                 <span>NỘI DUNG YÊU CẦU ĐIỀU CHỈNH TỪ HỌC VIÊN:</span>
               </div>
-              <p className="text-sm sm:text-base font-bold text-amber-950 dark:text-amber-100 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm sm:text-base font-bold text-warning whitespace-pre-wrap leading-relaxed">
                 "{ticket.adjustmentNote}"
               </p>
             </div>
@@ -250,24 +250,24 @@ export function MentoringTicketDetailModal({
             /* Nội dung DEAL TICKET hoặc Deal phiên bản cần điều chỉnh */
             <div className="space-y-4 text-sm">
               {isAdjustment && (
-                <div className="text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-plum-400">
+                <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">
                   Thông tin Deal phiên bản {ticket.version} cần điều chỉnh:
                 </div>
               )}
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                   Phạm vi công việc
                 </span>
-                <p className="font-semibold text-plum-900 dark:text-[#e4e6eb] whitespace-pre-wrap leading-relaxed">
+                <p className="font-semibold text-text whitespace-pre-wrap leading-relaxed">
                   {ticket.taskScope || 'Chưa có thông tin'}
                 </p>
               </div>
 
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                   Kết quả bàn giao
                 </span>
-                <p className="font-semibold text-plum-900 dark:text-[#e4e6eb] whitespace-pre-wrap leading-relaxed">
+                <p className="font-semibold text-text whitespace-pre-wrap leading-relaxed">
                   {ticket.expectedResult || 'Theo thỏa thuận của hai bên'}
                 </p>
               </div>
@@ -275,47 +275,47 @@ export function MentoringTicketDetailModal({
               {/* 2 Cột: Giá thỏa thuận & Deadline */}
               <div className="grid grid-cols-2 gap-4 pt-1">
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                     Giá thỏa thuận
                   </span>
-                  <p className="font-display text-lg font-bold text-plum-900 dark:text-white">
+                  <p className="font-display text-lg font-bold text-text">
                     {formatVND(ticket.agreedPrice)}
                   </p>
                 </div>
 
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                     Deadline
                   </span>
-                  <p className="font-display text-lg font-bold text-plum-900 dark:text-white">
+                  <p className="font-display text-lg font-bold text-text">
                     {formatDate(ticket.deadline)}
                   </p>
                 </div>
               </div>
 
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                   Hình thức
                 </span>
-                <p className="font-semibold text-plum-900 dark:text-[#e4e6eb]">
+                <p className="font-semibold text-text">
                   {getWorkingModeLabel()}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                     Loại nhiệm vụ
                   </span>
-                  <p className="font-semibold text-plum-900 dark:text-[#e4e6eb]">
+                  <p className="font-semibold text-text">
                     {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || '—'}
                   </p>
                 </div>
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                     Nguồn đề xuất
                   </span>
-                  <p className="font-semibold text-plum-900 dark:text-[#e4e6eb]">
+                  <p className="font-semibold text-text">
                     {PROPOSAL_SOURCE_LABELS[ticket.proposalSource || ''] || '—'}
                   </p>
                 </div>
@@ -323,10 +323,10 @@ export function MentoringTicketDetailModal({
 
               {ticket.changeNote && (
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                     Ghi chú phiên bản
                   </span>
-                  <p className="font-medium text-plum-700 dark:text-[#b0b3b8] whitespace-pre-wrap">{ticket.changeNote}</p>
+                  <p className="font-medium text-text-muted whitespace-pre-wrap">{ticket.changeNote}</p>
                 </div>
               )}
             </div>
@@ -335,29 +335,29 @@ export function MentoringTicketDetailModal({
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                     Deadline hiện tại
                   </span>
-                  <p className="font-display text-base font-bold text-plum-700 dark:text-[#b0b3b8]">
+                  <p className="font-display text-base font-bold text-text-muted">
                     {formatDate(ticket.currentDeadline)}
                   </p>
                 </div>
 
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                     Deadline đề xuất
                   </span>
-                  <p className="font-display text-base font-bold text-violet-500 dark:text-violet-400">
+                  <p className="font-display text-base font-bold text-info">
                     {formatDate(ticket.proposedDeadline)}
                   </p>
                 </div>
               </div>
 
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-plum-500 dark:text-plum-400 mb-1">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
                   Lý do gia hạn
                 </span>
-                <p className="font-semibold text-plum-900 dark:text-[#e4e6eb] whitespace-pre-wrap leading-relaxed">
+                <p className="font-semibold text-text whitespace-pre-wrap leading-relaxed">
                   {ticket.extensionReason || 'Chưa cung cấp lý do'}
                 </p>
               </div>
@@ -365,8 +365,8 @@ export function MentoringTicketDetailModal({
           )}
 
           {/* Hộp thông báo chỉ dẫn (Blue Alert Box) */}
-          <div className="flex items-start gap-3 rounded-2xl border border-violet-500/10 bg-violet-500/5 p-3.5 text-xs font-medium text-violet-600 dark:border-violet-600/40 dark:bg-violet-600/40 dark:text-violet-300">
-            <Info className="h-4 w-4 shrink-0 text-violet-500 dark:text-violet-400 mt-0.5" />
+          <div className="flex items-start gap-3 rounded-2xl border border-info bg-info-soft p-3.5 text-xs font-medium text-info">
+            <Info className="h-4 w-4 shrink-0 text-info mt-0.5" />
             <p className="leading-relaxed">
               {!isExtension
                 ? 'Xác nhận đúng phiên bản này để khóa Deal, chọn Mentor cho Request và chuyển sang thanh toán. Task chỉ được tạo sau khi thanh toán thành công.'
@@ -376,8 +376,8 @@ export function MentoringTicketDetailModal({
 
           {/* Lịch sử người xử lý nếu đã xử lý xong */}
           {ticket.status !== 'PENDING' && ticket.handlerName && (
-            <div className="rounded-xl bg-cream-100 p-3 text-xs text-plum-500 dark:bg-[#3a3b3c]/60 dark:text-plum-400">
-              <span className="font-semibold text-plum-700 dark:text-[#b0b3b8]">
+            <div className="rounded-xl bg-surface-2 p-3 text-xs text-text-subtle">
+              <span className="font-semibold text-text-muted">
                 {ticket.status === 'CONFIRMED' ? 'Đã xác nhận bởi: ' : 'Đã từ chối bởi: '}
               </span>
               {ticket.handlerName}
@@ -387,7 +387,7 @@ export function MentoringTicketDetailModal({
         </div>
 
         {/* Sticky Footer */}
-        <div className="border-t border-cream-200 bg-white/95 px-6 py-4 backdrop-blur-xs flex items-center justify-end gap-3 dark:border-white/10 dark:bg-[#202124]/95">
+        <div className="border-t border-border bg-surface px-6 py-4 backdrop-blur-xs flex items-center justify-end gap-3 dark:bg-surface/95">
           {canAct && isRecipient && ticket.status === 'PENDING' ? (
             <>
               {/* Nút Từ chối dạng viền đỏ */}
@@ -395,7 +395,7 @@ export function MentoringTicketDetailModal({
                 type="button"
                 onClick={onReject}
                 disabled={isRejecting || isConfirming}
-                className="inline-flex items-center justify-center rounded-2xl border-2 border-coral-500 px-5 py-2.5 text-sm font-bold text-coral-500 transition-all hover:bg-coral-50 active:scale-95 disabled:opacity-50 dark:border-coral-500/80 dark:text-coral-400 dark:hover:bg-coral-950/30"
+                className="inline-flex items-center justify-center rounded-2xl border-2 border-danger px-5 py-2.5 text-sm font-bold text-danger transition-all hover:bg-danger-soft active:scale-95 disabled:opacity-50"
               >
                 {isRejecting ? (
                   <>
@@ -413,9 +413,9 @@ export function MentoringTicketDetailModal({
                   type="button"
                   onClick={onRevert}
                   disabled={isRejecting || isConfirming}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-amber-500/80 bg-amber-50 px-5 py-2.5 text-sm font-bold text-amber-800 transition-all hover:bg-amber-100 active:scale-95 disabled:opacity-50 dark:bg-amber-950/30 dark:border-amber-600 dark:text-amber-300"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-warning bg-warning-soft px-5 py-2.5 text-sm font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                 >
-                  <RefreshCw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <RefreshCw className="h-4 w-4 text-warning" />
                   <span>Yêu cầu điều chỉnh</span>
                 </button>
               )}
@@ -425,7 +425,7 @@ export function MentoringTicketDetailModal({
                 type="button"
                 onClick={onConfirm}
                 disabled={isConfirming || isRejecting}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-brand-600 active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-solid px-6 py-2.5 text-sm font-bold text-on-primary shadow-sm transition-all hover:bg-primary-solid active:scale-95 disabled:opacity-50"
               >
                 {isConfirming ? (
                   <>
@@ -442,14 +442,14 @@ export function MentoringTicketDetailModal({
             </>
           ) : ticket.status === 'CONFIRMED' && !ticket.isPaid ? (
             <div className="flex w-full items-center justify-between gap-3">
-              <span className="text-xs font-semibold text-mint-700 dark:text-mint-300">
+              <span className="text-xs font-semibold text-success">
                 {!ticket.isMentor ? 'Thanh toán để chuyển Task sang PREPARATION!' : 'Đã chốt thỏa thuận • Chờ Học viên thanh toán'}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-2xl border border-cream-300 bg-white px-4 py-2 text-xs font-bold text-plum-700 shadow-2xs hover:bg-cream-100 dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#e4e6eb]"
+                  className="rounded-2xl border border-border bg-surface px-4 py-2 text-xs font-bold text-text-muted shadow-2xs hover:bg-surface-2"
                 >
                   Đóng
                 </button>
@@ -457,7 +457,7 @@ export function MentoringTicketDetailModal({
                   <button
                     type="button"
                     onClick={onPay}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-brand-700 active:scale-95"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-sm font-bold text-on-primary shadow-sm transition-all hover:bg-primary-hover active:scale-95"
                   >
                     <CreditCard className="h-4 w-4" />
                     <span>Thanh toán Task ngay</span>
@@ -467,7 +467,7 @@ export function MentoringTicketDetailModal({
             </div>
           ) : (
             <div className="flex w-full items-center justify-between">
-              <span className="text-xs text-plum-500 dark:text-plum-400">
+              <span className="text-xs text-text-subtle">
                 {ticket.status === 'PENDING'
                   ? 'Đang chờ đối phương xác nhận'
                   : ticket.status === 'CONFIRMED'
@@ -488,7 +488,7 @@ export function MentoringTicketDetailModal({
                       onClose()
                       onRevert()
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-brand-700 active:scale-95"
+                    className="inline-flex items-center gap-1.5 rounded-2xl bg-primary-solid px-4 py-2 text-xs font-bold text-on-primary shadow-2xs hover:bg-primary-hover active:scale-95"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     <span>Tạo Deal Ticket mới</span>
@@ -497,7 +497,7 @@ export function MentoringTicketDetailModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-2xl border border-cream-300 bg-white px-5 py-2 text-xs font-bold text-plum-700 shadow-2xs hover:bg-cream-100 dark:border-white/10 dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-white/10"
+                  className="rounded-2xl border border-border bg-surface px-5 py-2 text-xs font-bold text-text-muted shadow-2xs hover:bg-surface-2"
                 >
                   Đóng
                 </button>

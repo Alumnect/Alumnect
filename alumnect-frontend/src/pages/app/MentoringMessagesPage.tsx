@@ -28,21 +28,21 @@ function MentoringMessagesContent() {
         description="Theo dõi trao đổi với Mentor hoặc học viên theo từng yêu cầu và Task."
       />
 
-      <div className="rounded-3xl border border-plum-900/[0.08] bg-white p-4 shadow-xs dark:border-white/10 dark:bg-[#242526] sm:p-5">
-        <label className="flex h-11 items-center gap-2 rounded-2xl border border-plum-900/10 bg-cream-100/50 px-3.5 dark:border-white/10 dark:bg-[#18191a]">
-          <Search className="h-4 w-4 shrink-0 text-plum-400" />
+      <div className="rounded-3xl border border-border bg-surface p-4 shadow-xs sm:p-5">
+        <label className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-cream-100/50 px-3.5 dark:bg-bg">
+          <Search className="h-4 w-4 shrink-0 text-text-subtle" />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm Mentor hoặc học viên..."
-            className="min-w-0 flex-1 border-0 bg-transparent text-sm text-plum-900 outline-none placeholder:text-plum-400 dark:text-white"
+            className="min-w-0 flex-1 border-0 bg-transparent text-sm text-text outline-none placeholder:text-text-subtle"
           />
         </label>
 
         <div className="mt-4 space-y-2">
           {isLoading ? (
             [1, 2, 3].map((item) => (
-              <div key={item} className="h-20 animate-pulse rounded-2xl bg-cream-100 dark:bg-white/5" />
+              <div key={item} className="h-20 animate-pulse rounded-2xl bg-surface-2" />
             ))
           ) : filteredConversations.length === 0 ? (
             <EmptyState
@@ -55,7 +55,7 @@ function MentoringMessagesContent() {
                 key={conversation.id}
                 type="button"
                 onClick={() => navigate(`/app/mentoring/chats/${conversation.id}`)}
-                className="flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-3 text-left transition-colors hover:border-brand-100 hover:bg-brand-50/60 dark:hover:border-brand-500/20 dark:hover:bg-brand-500/10"
+                className="flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-3 text-left transition-colors hover:border-primary-soft-border hover:bg-primary-soft"
               >
                 <Avatar
                   src={conversation.recipientAvatar || undefined}
@@ -64,22 +64,22 @@ function MentoringMessagesContent() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-bold text-plum-900 dark:text-white">
+                    <p className="truncate text-sm font-bold text-text">
                       {conversation.recipientName}
                     </p>
                     {conversation.unreadCount > 0 && (
-                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-bold text-white">
+                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-solid px-1.5 text-xs font-bold text-on-primary">
                         {conversation.unreadCount}
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-plum-500 dark:text-[#b0b3b8]">
+                  <p className="mt-0.5 truncate text-xs text-text-subtle">
                     {conversation.lastMessage || 'Bắt đầu trao đổi Mentoring'}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-2 text-plum-400">
+                <div className="flex shrink-0 items-center gap-2 text-text-subtle">
                   {conversation.lastMessageAt && (
-                    <span className="hidden text-[11px] sm:inline">
+                    <span className="hidden text-xs sm:inline">
                       {format(new Date(conversation.lastMessageAt), 'dd/MM · HH:mm')}
                     </span>
                   )}

@@ -17,11 +17,11 @@ import { GroupPostCard, useGroupDetail, useGroupPostDetail } from '@/features/gr
 /** Trạng thái lỗi/không có quyền dùng chung một khung thẻ cho gọn. */
 function StateCard({ icon, title, description, actions }: { icon: React.ReactNode; title: string; description: string; actions: React.ReactNode }) {
   return (
-    <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-plum-900/[0.08] p-12 text-center shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400 dark:bg-white/5">{icon}</span>
+    <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-border p-12 text-center shadow-card dark:bg-surface">
+      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-surface-2 text-text-subtle">{icon}</span>
       <div>
-        <h2 className="text-xl font-extrabold text-plum-900 dark:text-white">{title}</h2>
-        <p className="mt-1.5 text-sm text-plum-500 dark:text-[#b0b3b8]">{description}</p>
+        <h2 className="text-xl font-extrabold text-text">{title}</h2>
+        <p className="mt-1.5 text-sm text-text-subtle">{description}</p>
       </div>
       <div className="flex flex-wrap justify-center gap-2.5 pt-2">{actions}</div>
     </Card>
@@ -40,7 +40,7 @@ export function GroupPostDetailPage() {
 
   const backToGroup = `/app/groups/${groupIdParam}`
   const backLink = (
-    <Link to={backToGroup} className="inline-flex items-center gap-2 text-sm font-semibold text-plum-500 transition-colors hover:text-brand-600 dark:text-[#b0b3b8] dark:hover:text-brand-400">
+    <Link to={backToGroup} className="inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-primary-solid">
       <ArrowLeft size={16} /> {group ? `Quay lại ${group.name}` : 'Quay lại hội nhóm'}
     </Link>
   )

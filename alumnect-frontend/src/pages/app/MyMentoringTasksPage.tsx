@@ -86,7 +86,7 @@ function MyMentoringTasksContent() {
           }}
         />
         <div className="relative w-full sm:w-64">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-plum-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
           <input
             type="search"
             placeholder="Tìm theo tiêu đề, người tham gia..."
@@ -100,7 +100,7 @@ function MyMentoringTasksContent() {
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-72 animate-pulse rounded-2xl border border-plum-900/[0.08] bg-cream-100 dark:border-white/10 dark:bg-white/[0.04]" />
+            <div key={i} className="h-72 animate-pulse rounded-2xl border border-border bg-surface-2 dark:bg-white/[0.04]" />
           ))}
         </div>
       ) : isError ? (
@@ -129,7 +129,7 @@ function MyMentoringTasksContent() {
         />
       ) : (
         <div className="space-y-4">
-          <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+          <p className="text-xs text-text-subtle">
             {searchQuery.trim() ? `${filteredTasks.length} kết quả trong trang này` : `${totalElements} Task`}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

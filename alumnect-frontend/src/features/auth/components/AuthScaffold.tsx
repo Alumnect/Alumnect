@@ -20,7 +20,7 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
       <div className="relative z-10 hidden lg:flex flex-col max-w-lg mt-[-10vh]">
         {/* Logo */}
         <Link to="/" className="mb-10 inline-flex items-center gap-4 transition-transform duration-200 hover:scale-105 cursor-pointer group" title="Về trang chủ AlumNect">
-          <div className="rounded bg-white px-3 py-2 flex items-center transition-shadow group-hover:shadow-md">
+          <div className="rounded bg-surface px-3 py-2 flex items-center transition-shadow group-hover:shadow-md">
             <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo_2010.svg" alt="FPT" className="h-6" />
           </div>
           <style>
@@ -49,7 +49,7 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
         </p>
       </div>
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl sm:p-10">
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-surface p-8 shadow-2xl sm:p-10">
         {children}
       </div>
     </div>
@@ -70,7 +70,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   return (
     <div className="relative">
       {icon && (
-        <div className="pointer-events-none absolute inset-y-0 left-3 flex w-6 items-center justify-center text-gray-400 dark:text-[#b0b3b8] z-10">
+        <div className="pointer-events-none absolute inset-y-0 left-3 flex w-6 items-center justify-center text-text-subtle z-10">
           {icon}
         </div>
       )}
@@ -79,31 +79,31 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
         {...rest}
         placeholder=" "
         className={cn(
-          'peer block w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 pb-2.5 pt-4 text-sm text-gray-900 focus:border-[#F27024] focus:outline-none focus:ring-0 dark:border-[#4e4f50] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:focus:border-[#F27024] [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white] dark:[&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_#3a3b3c]',
+          'peer block w-full appearance-none rounded-xl border border-border-strong bg-surface px-4 pb-2.5 pt-4 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_var(--c-surface)]',
           icon && 'pl-11',
-          error && 'border-red-500 focus:border-red-500 dark:border-rose-500',
+          error && 'border-danger focus:border-danger focus:ring-danger/25',
           trailing && 'pr-11',
           className,
         )}
       />
       <label
         className={cn(
-          'pointer-events-none absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform px-1 text-xs font-medium text-gray-500 duration-300',
-          'bg-white dark:bg-[#242526] dark:text-[#b0b3b8]',
-          'peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:!bg-transparent dark:peer-placeholder-shown:!bg-transparent',
-          'peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:bg-white peer-focus:text-[#F27024] dark:peer-focus:bg-[#242526] dark:peer-focus:text-[#F27024]',
+          'pointer-events-none absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform px-1 text-xs font-medium text-text-muted duration-300',
+          'bg-surface',
+          'peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:!bg-transparent',
+          'peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:bg-surface peer-focus:text-primary-solid',
           icon && 'left-10',
-          error && 'peer-focus:text-red-500 dark:peer-focus:text-rose-400'
+          error && 'peer-focus:text-danger'
         )}
       >
         {label}
       </label>
       {trailing && (
-        <div className="absolute inset-y-0 right-3 flex w-6 items-center justify-center text-gray-500 dark:text-[#b0b3b8]">
+        <div className="absolute inset-y-0 right-3 flex w-6 items-center justify-center text-text-muted">
           {trailing}
         </div>
       )}
-      {error && <span className="mt-1 block text-xs text-red-500 dark:text-rose-400">{error}</span>}
+      {error && <span className="mt-1 block text-sm text-danger">{error}</span>}
     </div>
   )
 })

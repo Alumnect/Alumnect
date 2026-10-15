@@ -22,20 +22,20 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
     }
     if (rank === 2) {
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-cream-300 text-plum-800 font-bold text-sm border border-plum-300">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-surface-3 text-text font-bold text-sm border border-border-strong">
           <Medal className="h-4 w-4" />
         </span>
       )
     }
     if (rank === 3) {
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-100 text-amber-900 font-bold text-sm border border-amber-300">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-warning-soft text-warning font-bold text-sm border border-warning-border">
           <Award className="h-4 w-4" />
         </span>
       )
     }
     return (
-      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-plum-900/[0.06] text-plum-700 font-bold text-sm dark:bg-white/[0.08] dark:text-[#e4e6eb]">
+      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-border text-text-muted font-bold text-sm dark:bg-white/[0.08]">
         #{rank}
       </span>
     )
@@ -45,10 +45,10 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
     <Card
       hover
       className={cn(
-        'border bg-white/90 p-4 transition-all duration-200 backdrop-blur-sm sm:p-5 dark:border-[#393a3b] dark:bg-[#242526]',
+        'border bg-surface p-4 transition-all duration-200 backdrop-blur-sm sm:p-5 dark:border-border',
         mentor.rank <= 3
-          ? 'border-brand-500/30 shadow-xs'
-          : 'border-plum-900/10 hover:border-brand-300 hover:shadow-md hover:shadow-brand-500/5',
+          ? 'border-primary-soft-border shadow-xs'
+          : 'border-border hover:border-primary-soft-border hover:shadow-md hover:shadow-brand-500/5',
       )}
     >
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -72,16 +72,16 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
             <div className="flex items-center gap-2">
               <Link
                 to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
-                className="font-display text-sm sm:text-base font-bold text-plum-900 hover:text-brand-600 transition-colors truncate dark:text-[#e4e6eb] dark:hover:text-brand-400"
+                className="font-display text-sm sm:text-base font-bold text-text hover:text-primary-solid transition-colors truncate"
               >
                 {mentor.fullName}
               </Link>
-              <Badge tone="brand" className="text-[11px] px-2 py-0.5 hidden sm:inline-flex">
+              <Badge tone="brand" className="text-xs px-2 py-0.5 hidden sm:inline-flex">
                 {mentor.fieldName}
               </Badge>
             </div>
 
-            <p className="mt-0.5 text-xs text-plum-600 truncate dark:text-[#b0b3b8]">
+            <p className="mt-0.5 text-xs text-text-muted truncate">
               {mentor.currentPosition
                 ? `${mentor.currentPosition}${mentor.currentCompany ? ` • ${mentor.currentCompany}` : ''}`
                 : mentor.headline || 'Cố vấn chuyên môn'}
@@ -90,32 +90,32 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
         </div>
 
         {/* Cột phải: Các chỉ số hiệu suất & CTA */}
-        <div className="grid grid-cols-2 items-center gap-2 border-t border-plum-900/10 pt-3 sm:flex sm:flex-nowrap sm:justify-end sm:gap-3 sm:border-t-0 sm:pt-0 dark:border-[#393a3b]">
+        <div className="grid grid-cols-2 items-center gap-2 border-t border-border pt-3 sm:flex sm:flex-nowrap sm:justify-end sm:gap-3 sm:border-t-0 sm:pt-0">
           {/* Chỉ số Uy tín (Reputation Score) */}
-          <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 dark:bg-amber-950/40">
-            <Flame className="h-4 w-4 text-gold-500 shrink-0" />
+          <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-warning-soft px-3 py-1.5">
+            <Flame className="h-4 w-4 text-warning shrink-0" />
             <div className="text-left">
-              <p className="text-[11px] uppercase font-bold text-gold-700 dark:text-gold-300">Uy tín</p>
-              <p className="text-xs font-bold text-amber-950 dark:text-amber-200">{mentor.reputationScore}</p>
+              <p className="text-xs uppercase font-bold text-warning">Uy tín</p>
+              <p className="text-xs font-bold text-warning">{mentor.reputationScore}</p>
             </div>
           </div>
 
           {/* Chỉ số Nhiệm vụ đã hoàn thành (Completed Tasks) */}
-          <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-brand-50 px-3 py-1.5 dark:bg-brand-700/40">
-            <CheckCircle2 className="h-4 w-4 text-brand-500 shrink-0" />
+          <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-primary-soft px-3 py-1.5">
+            <CheckCircle2 className="h-4 w-4 text-primary-solid shrink-0" />
             <div className="text-left">
-              <p className="text-[11px] uppercase font-bold text-brand-700 dark:text-brand-300">Nhiệm vụ</p>
-              <p className="text-xs font-bold text-brand-700 dark:text-brand-200">{mentor.completedTasks}</p>
+              <p className="text-xs uppercase font-bold text-primary-solid">Nhiệm vụ</p>
+              <p className="text-xs font-bold text-primary-solid">{mentor.completedTasks}</p>
             </div>
           </div>
 
           {/* Đánh giá sao */}
           {mentor.rating > 0 && (
-            <div className="hidden lg:flex items-center gap-1 text-xs font-bold text-plum-700 dark:text-[#e4e6eb]">
-              <Star className="h-3.5 w-3.5 fill-gold-400 text-gold-400" />
+            <div className="hidden lg:flex items-center gap-1 text-xs font-bold text-text-muted">
+              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
               <span>{Number(mentor.rating).toFixed(1)}</span>
               {mentor.reviewCount > 0 && (
-                <span className="text-[11px] text-plum-400 font-normal">({mentor.reviewCount})</span>
+                <span className="text-xs text-text-subtle font-normal">({mentor.reviewCount})</span>
               )}
             </div>
           )}
@@ -123,7 +123,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           {/* Nút Xem chi tiết hồ sơ Mentor */}
           <Link
             to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
-            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 px-3.5 py-2 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-500 hover:text-white sm:col-auto sm:py-1.5 dark:bg-brand-700/40 dark:text-brand-300 dark:hover:bg-brand-600"
+            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-solid hover:text-white sm:col-auto sm:py-1.5"
           >
             <span>Chi tiết</span>
             <ExternalLink className="h-3 w-3" />

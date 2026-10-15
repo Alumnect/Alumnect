@@ -151,19 +151,19 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
   return (
     <>
       <div className="flex items-center gap-2">
-        <Sparkles size={20} className="text-brand-500 animate-pulse" />
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Gia nhập AlumNect</span>
+        <Sparkles size={20} className="text-primary-solid animate-pulse" />
+        <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">Gia nhập AlumNect</span>
       </div>
-      <h2 className="mt-1 text-3xl font-extrabold text-plum-900 tracking-tight">Đăng ký tài khoản</h2>
-      <p className="mt-1 text-sm text-plum-500">Kết nối với cộng đồng sinh viên và cựu sinh viên FPTU.</p>
+      <h2 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Đăng ký tài khoản</h2>
+      <p className="mt-1 text-sm text-text-subtle">Kết nối với cộng đồng sinh viên và cựu sinh viên FPTU.</p>
 
       {googleData && (
-        <div className="mt-4 rounded-xl bg-brand-500/10 border border-brand-500/20 p-3 text-xs text-brand-700 flex items-start gap-2 animate-pop">
-          <Sparkles size={16} className="shrink-0 mt-0.5 text-brand-600 animate-pulse" />
+        <div className="mt-4 rounded-xl bg-primary-soft border border-primary-soft-border p-3 text-xs text-primary-solid flex items-start gap-2 animate-pop">
+          <Sparkles size={16} className="shrink-0 mt-0.5 text-primary-solid animate-pulse" />
           <div>
             <p className="font-bold">Đăng ký qua Google</p>
-            <p className="mt-0.5 text-plum-600">
-              Hệ thống đã nhận email xác thực <strong className="text-plum-900 font-semibold">{googleData.email}</strong>. Vui lòng điền thông tin dưới đây để hoàn tất hồ sơ.
+            <p className="mt-0.5 text-text-muted">
+              Hệ thống đã nhận email xác thực <strong className="text-text font-semibold">{googleData.email}</strong>. Vui lòng điền thông tin dưới đây để hoàn tất hồ sơ.
             </p>
           </div>
         </div>
@@ -184,21 +184,21 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
               className={cn(
                 'relative rounded-2xl border p-4 text-left transition-all duration-300',
                 active
-                  ? 'border-brand-400/60 bg-brand-500/10 ring-2 ring-brand-500/30'
-                  : 'border-plum-900/10 bg-plum-900/[0.03] hover:border-plum-900/20 hover:bg-plum-900/[0.05]',
+                  ? 'border-brand-400/60 bg-primary-soft ring-2 ring-primary/30'
+                  : 'border-border bg-surface-2 hover:border-border-strong hover:bg-surface-2',
               )}
             >
-              <r.icon size={20} className={active ? 'text-brand-600' : 'text-plum-400'} />
-              <p className="mt-2 text-sm font-bold text-plum-900">{r.label}</p>
-              <p className="text-xs text-plum-400">{r.desc}</p>
-              {active && <BadgeCheck size={16} className="absolute right-3 top-3 text-brand-500" />}
+              <r.icon size={20} className={active ? 'text-primary-solid' : 'text-text-subtle'} />
+              <p className="mt-2 text-sm font-bold text-text">{r.label}</p>
+              <p className="text-xs text-text-subtle">{r.desc}</p>
+              {active && <BadgeCheck size={16} className="absolute right-3 top-3 text-primary-solid" />}
             </button>
           )
         })}
       </div>
 
       {(registerMutation.isError || googleRegisterMutation.isError) && (
-        <div className="mt-4 rounded-xl bg-coral-50 border border-coral-200/50 p-3 text-xs text-coral-600 flex items-start gap-2 animate-pop">
+        <div className="mt-4 rounded-xl bg-danger-soft border border-danger-border p-3 text-xs text-danger flex items-start gap-2 animate-pop">
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <span>{registerMutation.error?.message || googleRegisterMutation.error?.message}</span>
         </div>
@@ -221,7 +221,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           trailing={<Mail size={16} />}
           error={errors.email?.message}
           disabled={!!googleData}
-          className={cn(googleData && 'bg-plum-900/[0.05] cursor-not-allowed')}
+          className={cn(googleData && 'bg-surface-2 cursor-not-allowed')}
           {...register('email')}
         />
 
@@ -235,7 +235,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-700 dark:text-[#b0b3b8] dark:hover:text-white transition-colors cursor-pointer"
+                className="flex h-6 w-6 items-center justify-center text-text-subtle hover:text-text-muted transition-colors cursor-pointer"
                 aria-label="Ẩn/hiện mật khẩu"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -247,11 +247,11 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
 
         {/* Dropdown Chuyên ngành */}
         <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold text-plum-700">Chuyên ngành</span>
+          <span className="mb-1.5 block text-sm font-semibold text-text-muted">Chuyên ngành</span>
           <select
             className={cn(
-              'h-12 w-full rounded-xl border border-plum-900/10 bg-cream-100 px-3 text-sm text-plum-900 transition-colors focus:border-brand-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/25',
-              errors.majorId && 'border-coral-400/60 focus:ring-coral-500/25 focus:border-coral-500'
+              'h-12 w-full rounded-xl border border-border bg-surface-2 px-3 text-sm text-text transition-colors focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500/25',
+              errors.majorId && 'border-danger focus:ring-danger focus:border-danger'
             )}
             disabled={isLoadingMajors}
             {...register('majorId')}
@@ -264,7 +264,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
             ))}
           </select>
           {errors.majorId && (
-            <span className="mt-1 block text-xs font-medium text-coral-500">{errors.majorId.message}</span>
+            <span className="mt-1 block text-xs font-medium text-danger">{errors.majorId.message}</span>
           )}
         </label>
 
@@ -279,45 +279,45 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         {/* Các trường đặc thù của ALUMNI */}
         {currentRole === 'ALUMNI' && (
           <div className="space-y-4 p-4 rounded-2xl bg-gold-400/5 border border-gold-400/15 animate-pop">
-            <div className="text-xs font-semibold text-gold-700 flex items-center gap-1.5">
+            <div className="text-xs font-semibold text-warning flex items-center gap-1.5">
               <GraduationCap size={16} />
               <span>Yêu cầu xác minh cho Cựu sinh viên</span>
             </div>
 
             {/* Upload tệp tin minh chứng tốt nghiệp */}
             <div className="block">
-              <span className="mb-1.5 block text-sm font-semibold text-plum-700">Minh chứng bằng tốt nghiệp</span>
-              <div className="relative flex items-center justify-center border-2 border-dashed border-plum-900/15 rounded-xl bg-cream-100/50 p-4 transition-colors hover:bg-cream-100">
+              <span className="mb-1.5 block text-sm font-semibold text-text-muted">Minh chứng bằng tốt nghiệp</span>
+              <div className="relative flex items-center justify-center border-2 border-dashed border-border-strong rounded-xl bg-cream-100/50 p-4 transition-colors hover:bg-surface-2">
                 {isUploading ? (
                   <div className="flex flex-col items-center py-2">
-                    <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
-                    <span className="mt-2 text-xs text-plum-500">Đang tải ảnh lên Cloudflare R2...</span>
+                    <Loader2 className="h-6 w-6 animate-spin text-primary-solid" />
+                    <span className="mt-2 text-xs text-text-subtle">Đang tải ảnh lên Cloudflare R2...</span>
                   </div>
                 ) : currentProofUrl ? (
                   <div className="w-full flex flex-col items-center">
-                    <img src={currentProofUrl} alt="Minh chứng" className="h-28 w-full object-cover rounded-lg border border-plum-900/10" />
-                    <span className="mt-2 text-xs text-mint-600 font-medium flex items-center gap-1">
+                    <img src={currentProofUrl} alt="Minh chứng" className="h-28 w-full object-cover rounded-lg border border-border" />
+                    <span className="mt-2 text-xs text-success font-medium flex items-center gap-1">
                       <CheckCircle2 size={12} /> Tải lên thành công!
                     </span>
-                    <label className="mt-2 text-xs text-brand-600 hover:text-brand-700 font-bold cursor-pointer">
+                    <label className="mt-2 text-xs text-primary-solid hover:text-primary-solid font-bold cursor-pointer">
                       Thay đổi tệp
                       <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
                     </label>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center cursor-pointer w-full py-4">
-                    <Upload className="h-6 w-6 text-plum-400" />
-                    <span className="mt-2 text-xs font-semibold text-plum-600">Nhấp để tải ảnh lên (JPG, PNG)</span>
-                    <span className="text-[10px] text-plum-400 mt-1">Ảnh chụp bằng tốt nghiệp hoặc bảng điểm</span>
+                    <Upload className="h-6 w-6 text-text-subtle" />
+                    <span className="mt-2 text-xs font-semibold text-text-muted">Nhấp để tải ảnh lên (JPG, PNG)</span>
+                    <span className="text-xs text-text-subtle mt-1">Ảnh chụp bằng tốt nghiệp hoặc bảng điểm</span>
                     <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
                   </label>
                 )}
               </div>
               {errors.proofUrl && (
-                <span className="mt-1 block text-xs font-medium text-coral-500">{errors.proofUrl.message}</span>
+                <span className="mt-1 block text-xs font-medium text-danger">{errors.proofUrl.message}</span>
               )}
               {uploadError && (
-                <span className="mt-1 block text-xs font-medium text-coral-500">{uploadError}</span>
+                <span className="mt-1 block text-xs font-medium text-danger">{uploadError}</span>
               )}
             </div>
           </div>
@@ -338,9 +338,9 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
       {!googleData && (
         <>
           <div className="my-6 flex items-center gap-4">
-            <span className="h-px flex-1 bg-plum-900/[0.06]" />
+            <span className="h-px flex-1 bg-border" />
             <span className="text-xs font-semibold uppercase tracking-wider text-plum-300">hoặc</span>
-            <span className="h-px flex-1 bg-plum-900/[0.06]" />
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <div className="flex justify-center mb-4">
@@ -357,9 +357,9 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         </>
       )}
 
-      <p className="mt-8 text-center text-sm text-plum-500">
+      <p className="mt-8 text-center text-sm text-text-subtle">
         Đã có tài khoản?{' '}
-        <Link to="/login" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">
+        <Link to="/login" className="font-bold text-primary-solid hover:text-primary-solid transition-colors">
           Đăng nhập ngay
         </Link>
       </p>

@@ -75,7 +75,7 @@ export function IncomingRequestResponseModal({
               onClick={handleSubmit}
               disabled={isLoading}
               leftIcon={<XCircle className="h-3.5 w-3.5" />}
-              className="h-8 rounded-lg bg-coral-600 px-3 text-xs text-white hover:bg-coral-700 hover:text-white"
+              className="h-8 rounded-lg bg-danger px-3 text-xs text-text-inverse hover:opacity-90 hover:text-white"
             >
               {isLoading ? 'Đang gửi...' : 'Từ chối yêu cầu'}
             </Button>
@@ -85,12 +85,12 @@ export function IncomingRequestResponseModal({
     >
       <div className="space-y-4">
         <MentoringFormError message={errorMsg} />
-        <div className="rounded-xl bg-cream-100 px-3.5 py-2.5 text-sm dark:bg-white/[0.04]">
-          <p className="font-semibold text-plum-900 dark:text-white">{requestTitle}</p>
-          <p className="mt-0.5 text-xs text-plum-500 dark:text-[#b0b3b8]">Người gửi: {studentName}</p>
+        <div className="rounded-xl bg-surface-2 px-3.5 py-2.5 text-sm dark:bg-white/[0.04]">
+          <p className="font-semibold text-text">{requestTitle}</p>
+          <p className="mt-0.5 text-xs text-text-subtle">Người gửi: {studentName}</p>
         </div>
 
-        <p className="text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
+        <p className="text-sm leading-relaxed text-text-muted">
           {isAccept
             ? 'Hai bên sẽ được mở phần trao đổi. Việc này chưa tạo thỏa thuận và không thu tiền của người học.'
             : 'Người học sẽ thấy bạn đã từ chối. Quyết định này không thể hoàn tác.'}

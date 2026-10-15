@@ -33,7 +33,7 @@ import {
 import { formatVnd } from '@/features/mentorship/model/mentoringFlowLabels'
 import { cn } from '@/lib/utils'
 
-const CARD = 'rounded-2xl border border-plum-900/[0.08] bg-white p-5 shadow-xs dark:border-white/10 dark:bg-[#242526] sm:p-6'
+const CARD = 'rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6'
 
 function formatDateTime(value?: string | null) {
   if (!value) return '—'
@@ -59,12 +59,12 @@ function formatFileSize(bytes?: number) {
 
 function Fact({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
-    <div className="rounded-xl bg-cream-100 px-3.5 py-3 dark:bg-white/[0.04]">
-      <dt className="flex items-center gap-1.5 text-xs text-plum-500 dark:text-[#b0b3b8] [&>svg]:h-3.5 [&>svg]:w-3.5">
+    <div className="rounded-xl bg-surface-2 px-3.5 py-3 dark:bg-white/[0.04]">
+      <dt className="flex items-center gap-1.5 text-xs text-text-subtle [&>svg]:h-3.5 [&>svg]:w-3.5">
         {icon}
         {label}
       </dt>
-      <dd className="mt-1 text-sm font-semibold text-plum-900 dark:text-white">{value}</dd>
+      <dd className="mt-1 text-sm font-semibold text-text">{value}</dd>
     </div>
   )
 }
@@ -144,7 +144,7 @@ function MentoringRequestDetailContent() {
       <div className="flex items-center justify-between gap-3">
         <Link
           to="/app/mentoring/requests"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-plum-600 transition-colors hover:text-brand-600 dark:text-[#b0b3b8] dark:hover:text-brand-400"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted transition-colors hover:text-primary-solid"
         >
           <ArrowLeft className="h-4 w-4" />
           Yêu cầu của tôi
@@ -156,7 +156,7 @@ function MentoringRequestDetailContent() {
               size="sm"
               onClick={() => setConfirmCancel(true)}
               leftIcon={<XCircle className="h-4 w-4" />}
-              className="border border-coral-200 text-coral-600 hover:bg-coral-50 hover:text-coral-700 dark:border-coral-700/40 dark:text-coral-300 dark:hover:bg-coral-900/30"
+              className="border border-danger-border text-danger hover:bg-danger-soft hover:text-danger"
             >
               Hủy yêu cầu
             </Button>
@@ -178,8 +178,8 @@ function MentoringRequestDetailContent() {
           <RequestStatusBadge status={data.status} />
           <RequestTypeBadge type={data.requestType} />
         </div>
-        <h1 className="mt-3 font-display text-xl font-bold tracking-tight text-plum-900 dark:text-white sm:text-2xl">{data.title}</h1>
-        <p className="mt-2 text-xs text-plum-500 dark:text-[#b0b3b8]">
+        <h1 className="mt-3 font-display text-xl font-bold tracking-tight text-text sm:text-2xl">{data.title}</h1>
+        <p className="mt-2 text-xs text-text-subtle">
           Tạo lúc {formatDateTime(data.createdAt)}
           {data.industryName ? ` · Ngành ${data.industryName}` : ''}
         </p>
@@ -189,10 +189,10 @@ function MentoringRequestDetailContent() {
         <div className="space-y-5 lg:col-span-8">
           <section className="space-y-3">
             <div>
-              <h2 className="font-display text-base font-bold text-plum-900 dark:text-white">
+              <h2 className="font-display text-base font-bold text-text">
                 Phản hồi từ Mentor ({mentorResponses.length})
               </h2>
-              <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+              <p className="text-xs text-text-subtle">
                 {isDirect
                   ? 'Yêu cầu được gửi riêng cho Mentor bạn chọn.'
                   : 'Yêu cầu được gửi tới mọi Mentor; Mentor cùng ngành được xếp lên trước.'}
@@ -213,7 +213,7 @@ function MentoringRequestDetailContent() {
             ) : (
               <>
                 {primaryResponses.length === 0 && (
-                  <p className="rounded-2xl border border-dashed border-plum-900/15 px-4 py-5 text-center text-sm text-plum-500 dark:border-white/15 dark:text-[#b0b3b8]">
+                  <p className="rounded-2xl border border-dashed border-border-strong px-4 py-5 text-center text-sm text-text-subtle">
                     Chưa có Mentor cùng ngành hoặc Mentor nào đồng ý. Xem danh sách Mentor khác bên dưới.
                   </p>
                 )}
@@ -222,7 +222,7 @@ function MentoringRequestDetailContent() {
                 ))}
 
                 {otherResponses.length > 0 && (
-                  <div className="rounded-2xl border border-plum-900/[0.08] bg-white dark:border-white/10 dark:bg-[#242526]">
+                  <div className="rounded-2xl border border-border bg-surface">
                     <button
                       type="button"
                       onClick={() => setShowOtherMentors((v) => !v)}
@@ -230,17 +230,17 @@ function MentoringRequestDetailContent() {
                       className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
                     >
                       <span>
-                        <span className="block text-sm font-semibold text-plum-900 dark:text-white">
+                        <span className="block text-sm font-semibold text-text">
                           Mentor khác đã nhận yêu cầu ({otherResponses.length})
                         </span>
-                        <span className="block text-xs text-plum-500 dark:text-[#b0b3b8]">
+                        <span className="block text-xs text-text-subtle">
                           Khác ngành, chưa phản hồi. Mentor nào đồng ý sẽ được đưa lên danh sách chính.
                         </span>
                       </span>
-                      <ChevronDown className={cn('h-5 w-5 shrink-0 text-plum-400 transition-transform', showOtherMentors && 'rotate-180')} />
+                      <ChevronDown className={cn('h-5 w-5 shrink-0 text-text-subtle transition-transform', showOtherMentors && 'rotate-180')} />
                     </button>
                     {showOtherMentors && (
-                      <div className="space-y-3 border-t border-plum-900/[0.06] p-3 dark:border-white/10">
+                      <div className="space-y-3 border-t border-border p-3">
                         {otherResponses.map((response) => (
                           <MentorResponseCard key={`${response.mentorProfileId}-${response.distributedAt}`} response={response} />
                         ))}
@@ -253,8 +253,8 @@ function MentoringRequestDetailContent() {
           </section>
 
           <section className={CARD}>
-            <h2 className="font-display text-base font-bold text-plum-900 dark:text-white">Nội dung yêu cầu</h2>
-            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-plum-800 dark:text-[#e4e6eb]">
+            <h2 className="font-display text-base font-bold text-text">Nội dung yêu cầu</h2>
+            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-text">
               {data.description}
             </p>
             <dl className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -276,9 +276,9 @@ function MentoringRequestDetailContent() {
             </dl>
 
             {data.attachments && data.attachments.length > 0 && (
-              <div className="mt-5 border-t border-plum-900/[0.06] pt-4 dark:border-white/10">
-                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-plum-800 dark:text-[#e4e6eb]">
-                  <Paperclip className="h-4 w-4 text-plum-400" />
+              <div className="mt-5 border-t border-border pt-4">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-text">
+                  <Paperclip className="h-4 w-4 text-text-subtle" />
                   Tài liệu đính kèm ({data.attachments.length})
                 </h3>
                 <ul className="mt-2.5 space-y-2">
@@ -288,13 +288,13 @@ function MentoringRequestDetailContent() {
                         href={file.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between gap-3 rounded-xl border border-cream-300 px-3 py-2.5 transition-colors hover:border-brand-500/40 hover:bg-cream-100 dark:border-white/10 dark:hover:bg-white/[0.04]"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:border-brand-500/40 hover:bg-surface-2 dark:hover:bg-white/[0.04]"
                       >
-                        <span className="flex min-w-0 items-center gap-2 text-sm text-plum-800 dark:text-[#e4e6eb]">
+                        <span className="flex min-w-0 items-center gap-2 text-sm text-text">
                           <span className="truncate font-medium">{file.fileName}</span>
-                          {file.fileSize ? <span className="shrink-0 text-xs text-plum-400">{formatFileSize(file.fileSize)}</span> : null}
+                          {file.fileSize ? <span className="shrink-0 text-xs text-text-subtle">{formatFileSize(file.fileSize)}</span> : null}
                         </span>
-                        <Download className="h-4 w-4 shrink-0 text-plum-400" />
+                        <Download className="h-4 w-4 shrink-0 text-text-subtle" />
                       </a>
                     </li>
                   ))}
@@ -314,11 +314,11 @@ function MentoringRequestDetailContent() {
 
           {data.group && (
             <section className={CARD}>
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-plum-900 dark:text-white">
-                <Users className="h-4 w-4 text-brand-600" />
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-text">
+                <Users className="h-4 w-4 text-primary-solid" />
                 {data.group.name}
               </h2>
-              <p className="mt-1 text-xs text-plum-500 dark:text-[#b0b3b8]">
+              <p className="mt-1 text-xs text-text-subtle">
                 {activeMembers.length}/{data.group.maxMembers} thành viên · cùng tham gia trao đổi với Mentor
               </p>
               <div className="mt-3 flex -space-x-2">
@@ -328,7 +328,7 @@ function MentoringRequestDetailContent() {
                       src={member.avatarUrl || undefined}
                       name={member.fullName}
                       size={32}
-                      className="ring-2 ring-white dark:ring-[#242526]"
+                      className="ring-2 ring-surface"
                     />
                   </span>
                 ))}
@@ -337,8 +337,8 @@ function MentoringRequestDetailContent() {
           )}
 
           <section className={CARD}>
-            <h2 className="text-sm font-semibold text-plum-900 dark:text-white">Lưu ý</h2>
-            <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
+            <h2 className="text-sm font-semibold text-text">Lưu ý</h2>
+            <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-text-muted">
               <li>• Mentor "đồng ý" chỉ là đồng ý trao đổi, chưa phải thỏa thuận.</li>
               <li>• Task được tạo sau khi hai bên chốt thỏa thuận và bạn thanh toán.</li>
               <li>• Chưa có phản hồi sau 48 giờ? Hãy tìm Mentor khác hoặc tạo yêu cầu mới.</li>

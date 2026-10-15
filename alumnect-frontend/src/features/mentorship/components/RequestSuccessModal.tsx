@@ -62,24 +62,24 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-plum-900/10 text-left dark:bg-[#242526] dark:border-[#393a3b]"
+            className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-surface p-6 sm:p-8 shadow-2xl border border-border text-left"
             role="dialog"
             aria-modal="true"
           >
           {/* Header Icon */}
-          <div className="flex items-center gap-3 pb-3 border-b border-plum-900/[0.08] dark:border-[#393a3b]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mint-100 text-mint-700 dark:bg-mint-950/60 dark:text-mint-300">
+          <div className="flex items-center gap-3 pb-3 border-b border-border">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success-soft text-success">
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+                <h3 className="font-display text-lg font-bold text-text">
                   Tạo yêu cầu Mentoring thành công!
                 </h3>
-                <Sparkles className="h-4 w-4 text-brand-500 animate-pulse" />
+                <Sparkles className="h-4 w-4 text-primary-solid animate-pulse" />
               </div>
-              <p className="text-xs text-plum-500 dark:text-[#8f9399]">
-                Mã yêu cầu: <span className="font-semibold text-plum-700 dark:text-[#e4e6eb]">#{data.id}</span>
+              <p className="text-xs text-text-subtle">
+                Mã yêu cầu: <span className="font-semibold text-text-muted">#{data.id}</span>
               </p>
             </div>
           </div>
@@ -88,21 +88,21 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
           <div className="my-5 space-y-4">
             {/* Box thông báo trạng thái phân phối */}
             {data.requestType === 'DIRECT' || data.targetMentorId ? (
-              <div className="rounded-2xl border border-mint-200/80 bg-mint-50/70 p-4 dark:border-mint-800/40 dark:bg-mint-950/30">
+              <div className="rounded-2xl border border-success-border bg-success-soft p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint-600 text-white shadow-xs">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success text-text-inverse shadow-xs">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-mint-900 dark:text-mint-200">
+                      <span className="font-bold text-sm text-success">
                         Đã gửi trực tiếp tới {data.targetMentorName || 'Mentor'}
                       </span>
-                      <Badge tone="mint" className="text-[11px]">
+                      <Badge tone="mint" className="text-xs">
                         Gửi trực tiếp
                       </Badge>
                     </div>
-                    <p className="text-xs leading-relaxed text-mint-800/90 dark:text-mint-300/80">
+                    <p className="text-xs leading-relaxed text-success">
                       {data.distributionNote || 'Yêu cầu đã được gửi trực tiếp tới Mentor được chọn và đang chờ phản hồi tiếp nhận.'}
                     </p>
                   </div>
@@ -111,15 +111,15 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
             ) : data.matchedCount > 0 ? (
               <div className="rounded-2xl border border-brand-200/70 bg-brand-50/70 p-4 dark:border-brand-700/40 dark:bg-brand-700/30">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white shadow-xs">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-solid text-on-primary shadow-xs">
                     <Users className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-brand-700 dark:text-brand-200">
+                      <span className="font-bold text-sm text-primary-solid">
                         Đã tự động phân phối tới {data.matchedCount} Mentor
                       </span>
-                      <Badge tone="brand" className="text-[11px]">
+                      <Badge tone="brand" className="text-xs">
                         Matching thành công
                       </Badge>
                     </div>
@@ -130,21 +130,21 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
+              <div className="rounded-2xl border border-warning-border bg-warning-soft p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-500 text-white shadow-xs">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-warning text-text-inverse shadow-xs">
                     <AlertCircle className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-amber-900 dark:text-amber-200">
+                      <span className="font-bold text-sm text-warning">
                         Yêu cầu đã được lưu vào hệ thống
                       </span>
-                      <Badge tone="gold" className="text-[11px]">
+                      <Badge tone="gold" className="text-xs">
                         Chờ kết nối
                       </Badge>
                     </div>
-                    <p className="text-xs leading-relaxed text-amber-800/90 dark:text-gold-300/80">
+                    <p className="text-xs leading-relaxed text-warning dark:text-gold-300/80">
                       {data.distributionNote}
                     </p>
                   </div>
@@ -153,38 +153,38 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
             )}
 
             {/* Chi tiết tóm tắt yêu cầu */}
-            <div className="rounded-2xl border border-plum-900/[0.08] bg-cream-50/60 p-4 space-y-2.5 text-xs dark:bg-white/[0.03] dark:border-[#393a3b]">
+            <div className="rounded-2xl border border-border bg-cream-50/60 p-4 space-y-2.5 text-xs dark:bg-white/[0.03]">
               {data.targetMentorName && (
-                <div className="flex justify-between items-center py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
-                  <span className="text-plum-500 dark:text-[#8f9399]">Mentor nhận yêu cầu:</span>
-                  <span className="font-bold text-brand-700 dark:text-brand-300">{data.targetMentorName}</span>
+                <div className="flex justify-between items-center py-1 border-b border-border dark:border-white/[0.05]">
+                  <span className="text-text-subtle">Mentor nhận yêu cầu:</span>
+                  <span className="font-bold text-primary-solid">{data.targetMentorName}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
-                <span className="text-plum-500 dark:text-[#8f9399]">Tiêu đề:</span>
-                <span className="font-bold text-plum-900 max-w-[280px] truncate dark:text-[#e4e6eb]">{data.title}</span>
+              <div className="flex justify-between items-center py-1 border-b border-border dark:border-white/[0.05]">
+                <span className="text-text-subtle">Tiêu đề:</span>
+                <span className="font-bold text-text max-w-[280px] truncate">{data.title}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
-                <span className="text-plum-500 dark:text-[#8f9399]">Lĩnh vực:</span>
-                <span className="font-semibold text-brand-700 dark:text-brand-300">{data.industryName}</span>
+              <div className="flex justify-between items-center py-1 border-b border-border dark:border-white/[0.05]">
+                <span className="text-text-subtle">Lĩnh vực:</span>
+                <span className="font-semibold text-primary-solid">{data.industryName}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
-                <span className="text-plum-500 dark:text-[#8f9399]">Loại nhiệm vụ:</span>
-                <span className="font-medium text-plum-800 dark:text-[#e4e6eb]">{taskTypeOption?.label || data.taskType}</span>
+              <div className="flex justify-between items-center py-1 border-b border-border dark:border-white/[0.05]">
+                <span className="text-text-subtle">Loại nhiệm vụ:</span>
+                <span className="font-medium text-text">{taskTypeOption?.label || data.taskType}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
-                <span className="text-plum-500 dark:text-[#8f9399]">Hình thức & Tham gia:</span>
-                <span className="font-medium text-plum-800 dark:text-[#e4e6eb]">
+              <div className="flex justify-between items-center py-1 border-b border-border dark:border-white/[0.05]">
+                <span className="text-text-subtle">Hình thức & Tham gia:</span>
+                <span className="font-medium text-text">
                   {WORKING_MODE_LABELS[data.workingMode]} • {PARTICIPATION_TYPE_LABELS[data.participationType]}
                 </span>
               </div>
               {data.expectedDeadline && (
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-plum-500 flex items-center gap-1 dark:text-[#8f9399]">
-                    <Calendar className="h-3 w-3 text-brand-500" />
+                  <span className="text-text-subtle flex items-center gap-1">
+                    <Calendar className="h-3 w-3 text-primary-solid" />
                     Thời hạn mong muốn:
                   </span>
-                  <span className="font-semibold text-plum-800 dark:text-[#e4e6eb]">
+                  <span className="font-semibold text-text">
                     {new Date(data.expectedDeadline).toLocaleDateString('vi-VN')}
                   </span>
                 </div>

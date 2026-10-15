@@ -30,13 +30,13 @@ export function MentoringTermsGate({
   if (isLoading) {
     return (
       <div className="w-full py-4">
-        <Card hover={false} className="mx-auto max-w-4xl space-y-6 border border-plum-900/[0.08] bg-white p-8 dark:bg-[#242526] dark:border-[#393a3b]">
+        <Card hover={false} className="mx-auto max-w-4xl space-y-6 border border-border bg-surface p-8">
           <div className="space-y-3">
             <Skeleton className="h-6 w-48 rounded-full" />
             <Skeleton className="h-9 w-80 rounded-xl" />
             <Skeleton className="h-4 w-96 rounded-lg" />
           </div>
-          <div className="space-y-4 rounded-2xl border border-plum-900/[0.05] p-6">
+          <div className="space-y-4 rounded-2xl border border-border p-6">
             <Skeleton className="h-5 w-full rounded-md" />
             <Skeleton className="h-4 w-5/6 rounded-md" />
             <Skeleton className="h-4 w-4/6 rounded-md" />
@@ -55,14 +55,14 @@ export function MentoringTermsGate({
   if (isError) {
     return (
       <div className="w-full py-8">
-        <Card hover={false} className="mx-auto max-w-md border border-coral-200 bg-white p-8 text-center shadow-soft dark:bg-[#242526] dark:border-coral-900/50">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-950/50 dark:text-coral-400">
+        <Card hover={false} className="mx-auto max-w-md border border-danger-border bg-surface p-8 text-center shadow-soft">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
             <AlertTriangle className="h-7 w-7" />
           </div>
-          <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-lg font-bold text-text">
             Không thể kiểm tra trạng thái điều khoản
           </h2>
-          <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8]">
+          <p className="mt-2 text-sm text-text-muted">
             {error?.message || 'Đã có lỗi xảy ra khi xác thực trạng thái điều khoản. Vui lòng thử lại.'}
           </p>
           <div className="mt-6 flex justify-center">

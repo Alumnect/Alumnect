@@ -43,7 +43,7 @@ export function DeleteQuestionModal({
         onClick={handleDelete}
         disabled={deleteQuestion.isPending}
         leftIcon={deleteQuestion.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
-        className="border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
+        className="border-danger bg-danger text-text-inverse hover:opacity-90"
       >
         {deleteQuestion.isPending ? 'Đang xóa…' : 'Xóa'}
       </Button>
@@ -55,12 +55,12 @@ export function DeleteQuestionModal({
       isOpen
       onClose={deleteQuestion.isPending ? () => {} : onClose}
       title="Xóa câu hỏi"
-      icon={<AlertTriangle size={18} className="text-rose-500" />}
+      icon={<AlertTriangle size={18} className="text-danger" />}
       footer={footer}
     >
-      <p className="text-sm text-plum-600">Bạn có chắc muốn xóa câu hỏi này không?</p>
+      <p className="text-sm text-text-muted">Bạn có chắc muốn xóa câu hỏi này không?</p>
       {deleteQuestion.isError && (
-        <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600">
+        <p className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
           {(deleteQuestion.error as Error)?.message || 'Không thể xóa câu hỏi, vui lòng thử lại sau.'}
         </p>
       )}

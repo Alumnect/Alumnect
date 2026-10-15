@@ -45,48 +45,48 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
     <>
       <Card
         hover={false}
-        className="border border-plum-900/[0.08] bg-white p-6 text-left space-y-4 shadow-sm dark:bg-[#242526] dark:border-[#393a3b]"
+        className="border border-border bg-surface p-6 text-left space-y-4 shadow-sm"
       >
-        <div className="flex items-center gap-2.5 border-b border-plum-900/[0.06] pb-3 dark:border-[#393a3b]">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-700/40 dark:text-brand-400">
+        <div className="flex items-center gap-2.5 border-b border-border pb-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
             <Send className="h-4 w-4" />
           </span>
-          <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h3 className="font-display text-base font-bold text-text">
             Thông tin phiên cố vấn
           </h3>
         </div>
 
         {/* Thông số buổi hẹn mẫu */}
-        <div className="space-y-2 text-xs text-plum-700 dark:text-[#b0b3b8]">
-          <div className="flex items-center justify-between py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
-            <span className="inline-flex items-center gap-1.5 text-plum-500 dark:text-[#8f9399]">
-              <Clock className="h-3.5 w-3.5 text-brand-500" />
+        <div className="space-y-2 text-xs text-text-muted">
+          <div className="flex items-center justify-between py-1 border-b border-border dark:border-white/[0.05]">
+            <span className="inline-flex items-center gap-1.5 text-text-subtle">
+              <Clock className="h-3.5 w-3.5 text-primary-solid" />
               <span>Thời lượng gợi ý</span>
             </span>
-            <strong className="text-plum-900 dark:text-[#e4e6eb]">45 – 60 phút</strong>
+            <strong className="text-text">45 – 60 phút</strong>
           </div>
 
-          <div className="flex items-center justify-between py-1 border-b border-plum-900/[0.04] dark:border-white/[0.05]">
-            <span className="inline-flex items-center gap-1.5 text-plum-500 dark:text-[#8f9399]">
-              <Laptop className="h-3.5 w-3.5 text-brand-500" />
+          <div className="flex items-center justify-between py-1 border-b border-border dark:border-white/[0.05]">
+            <span className="inline-flex items-center gap-1.5 text-text-subtle">
+              <Laptop className="h-3.5 w-3.5 text-primary-solid" />
               <span>Nền tảng gặp mặt</span>
             </span>
-            <strong className="text-plum-900 dark:text-[#e4e6eb]">Google Meet / Zoom</strong>
+            <strong className="text-text">Google Meet / Zoom</strong>
           </div>
 
           <div className="flex items-center justify-between py-1">
-            <span className="inline-flex items-center gap-1.5 text-plum-500 dark:text-[#8f9399]">
-              <HeartHandshake className="h-3.5 w-3.5 text-mint-600" />
+            <span className="inline-flex items-center gap-1.5 text-text-subtle">
+              <HeartHandshake className="h-3.5 w-3.5 text-success" />
               <span>Mức phí tham khảo</span>
             </span>
-            <strong className="text-mint-700 dark:text-mint-400 font-bold">Hỗ trợ cộng đồng</strong>
+            <strong className="text-success font-bold">Hỗ trợ cộng đồng</strong>
           </div>
         </div>
 
         {isSelfMentor ? (
           <div className="space-y-3 pt-1">
-            <div className="rounded-xl bg-brand-50/80 p-3 border border-brand-200/60 dark:bg-brand-700/30 dark:border-brand-700/30 flex items-center gap-2 text-brand-700 dark:text-brand-200 text-xs font-semibold">
-              <Info className="h-4 w-4 text-brand-600 shrink-0" />
+            <div className="rounded-xl bg-primary-soft p-3 border border-primary-soft-border flex items-center gap-2 text-primary-solid text-xs font-semibold">
+              <Info className="h-4 w-4 text-primary-solid shrink-0" />
               <span>Đây là hồ sơ cố vấn của bạn</span>
             </div>
 
@@ -94,15 +94,15 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
               variant="outline"
               size="lg"
               onClick={() => navigate('/app/mentoring/status')}
-              className="w-full rounded-2xl font-bold py-3 border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300"
+              className="w-full rounded-2xl font-bold py-3 border-primary-soft-border text-primary-solid hover:bg-primary-soft"
             >
               Quản lý hồ sơ Mentor
             </Button>
           </div>
         ) : mentor.canReceiveRequest ? (
           <div className="space-y-3 pt-1">
-            <div className="rounded-xl bg-mint-50/70 p-3 border border-mint-200/50 dark:bg-mint-950/30 dark:border-mint-800/30 flex items-center gap-2 text-mint-900 dark:text-mint-200 text-xs font-semibold">
-              <CheckCircle className="h-4 w-4 text-mint-600 shrink-0" />
+            <div className="rounded-xl bg-success-soft p-3 border border-success-border flex items-center gap-2 text-success text-xs font-semibold">
+              <CheckCircle className="h-4 w-4 text-success shrink-0" />
               <span>Mentor đang sẵn sàng nhận yêu cầu</span>
             </div>
 
@@ -111,15 +111,15 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
               size="lg"
               leftIcon={<Send className="h-4 w-4" />}
               onClick={handleOpenRequest}
-              className="w-full rounded-2xl font-bold py-3 bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 active:scale-[0.98]"
+              className="w-full rounded-2xl font-bold py-3 bg-primary-solid hover:bg-primary-hover shadow-raised active:scale-[0.98]"
             >
               Gửi yêu cầu cố vấn
             </Button>
           </div>
         ) : (
           <div className="space-y-3 pt-1">
-            <div className="rounded-xl bg-coral-50/70 p-3 border border-coral-200/60 dark:bg-coral-950/30 dark:border-coral-800/30 flex items-start gap-2 text-coral-900 dark:text-coral-200 text-xs">
-              <AlertTriangle className="h-4 w-4 text-coral-600 shrink-0 mt-0.5" />
+            <div className="rounded-xl bg-danger-soft p-3 border border-danger-border flex items-start gap-2 text-danger text-xs">
+              <AlertTriangle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
               <span>{mentor.availabilityReason || 'Mentor tạm ngưng tiếp nhận yêu cầu mới.'}</span>
             </div>
 
@@ -131,7 +131,7 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
                   mentor.availabilityReason || 'Mentor hiện đang tạm ngưng tiếp nhận yêu cầu cố vấn mới do gói dịch vụ đã hết hạn hoặc Mentor đang bận.'
                 )
               }
-              className="w-full rounded-2xl font-bold py-3 bg-cream-200 text-plum-500 hover:bg-cream-300 dark:bg-white/5 dark:text-plum-400"
+              className="w-full rounded-2xl font-bold py-3 bg-surface-3 text-text-subtle hover:bg-surface-3"
             >
               Tạm ngưng nhận yêu cầu
             </Button>

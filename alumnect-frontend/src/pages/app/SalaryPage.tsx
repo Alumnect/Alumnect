@@ -28,21 +28,21 @@ const JOB_TITLE_SEARCH_MAX_LENGTH = 150
 function getJobStyle(role: string) {
   const r = role.toLowerCase()
   if (r.includes('data') || r.includes('analyst') || r.includes('dữ liệu') || r.includes('bi')) {
-    return { icon: BarChart3, bg: 'bg-sky-100 text-sky-600', badge: 'bg-sky-50 text-sky-700 border-sky-200/60' }
+    return { icon: BarChart3, bg: 'bg-info-soft text-info', badge: 'bg-info-soft text-info border-info-border' }
   }
   if (r.includes('design') || r.includes('ui') || r.includes('ux') || r.includes('thiết kế') || r.includes('graphic')) {
-    return { icon: Palette, bg: 'bg-rose-100 text-rose-600', badge: 'bg-rose-50 text-rose-700 border-rose-200/60' }
+    return { icon: Palette, bg: 'bg-danger-soft text-danger', badge: 'bg-danger-soft text-danger border-danger-border' }
   }
   if (r.includes('dev') || r.includes('lập trình') || r.includes('engineer') || r.includes('kỹ sư') || r.includes('software') || r.includes('frontend') || r.includes('backend') || r.includes('fullstack')) {
-    return { icon: Code2, bg: 'bg-brand-100 text-brand-600', badge: 'bg-brand-50 text-brand-700 border-brand-200/60' }
+    return { icon: Code2, bg: 'bg-primary-soft text-primary-solid', badge: 'bg-primary-soft text-primary-solid border-primary-soft-border' }
   }
   if (r.includes('market') || r.includes('seo') || r.includes('content') || r.includes('quảng cáo') || r.includes('media')) {
-    return { icon: Megaphone, bg: 'bg-violet-100 text-violet-600', badge: 'bg-violet-50 text-violet-700 border-violet-200/60' }
+    return { icon: Megaphone, bg: 'bg-info-soft text-info', badge: 'bg-info-soft text-info border-info-border' }
   }
   if (r.includes('business') || r.includes('sales') || r.includes('kinh doanh') || r.includes('finance') || r.includes('tài chính') || r.includes('manager') || r.includes('quản lý') || r.includes('pm')) {
-    return { icon: Briefcase, bg: 'bg-emerald-100 text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200/60' }
+    return { icon: Briefcase, bg: 'bg-success-soft text-success', badge: 'bg-success-soft text-success border-success-border' }
   }
-  return { icon: Users, bg: 'bg-amber-100 text-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200/60' }
+  return { icon: Users, bg: 'bg-warning-soft text-warning', badge: 'bg-warning-soft text-warning border-warning-border' }
 }
 
 /** Khung xương hiển thị trong lúc tải thống kê lần đầu (UC53). */
@@ -50,12 +50,12 @@ function SalarySkeleton() {
   return (
     <div className="space-y-5">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="rounded-2xl border border-plum-900/5 p-4 bg-plum-900/[0.01]">
+        <div key={i} className="rounded-2xl border border-border p-4 bg-surface-2">
           <div className="mb-2.5 flex items-center justify-between">
-            <div className="h-4 w-44 animate-pulse rounded bg-plum-900/[0.06]" />
-            <div className="h-3.5 w-24 animate-pulse rounded bg-plum-900/[0.05]" />
+            <div className="h-4 w-44 animate-pulse rounded bg-border" />
+            <div className="h-3.5 w-24 animate-pulse rounded bg-surface-2" />
           </div>
-          <div className="h-8 w-full animate-pulse rounded-full bg-plum-900/[0.04]" />
+          <div className="h-8 w-full animate-pulse rounded-full bg-surface-2" />
         </div>
       ))}
     </div>
@@ -66,12 +66,12 @@ function SalarySkeleton() {
 function SalaryStatsError({ message, onRetry }: { message?: string; onRetry: () => void }) {
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tải được thống kê lương</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">Không tải được thống kê lương</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
       </div>
       <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} onClick={onRetry}>
         Thử lại
@@ -160,7 +160,7 @@ export function SalaryPage() {
             <Button
               variant="secondary"
               size="sm"
-              leftIcon={<History size={15} className="text-brand-600" />}
+              leftIcon={<History size={15} className="text-primary-solid" />}
               onClick={() => setFeedOpen(true)}
             >
               Đóng góp gần đây
@@ -194,19 +194,19 @@ export function SalaryPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           {/* 1. Tìm kiếm chức danh */}
           <div className="relative">
-            <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+            <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
               value={jobTitleInput}
               onChange={(e) => setJobTitleInput(e.target.value)}
               placeholder="Tìm theo chức danh..."
               maxLength={JOB_TITLE_SEARCH_MAX_LENGTH}
-              className="h-11 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] pl-10 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-colors dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:placeholder-[#b0b3b8]"
+              className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors dark:placeholder-[#b0b3b8]"
             />
             {jobTitleInput && (
               <button
                 onClick={() => setJobTitleInput('')}
                 aria-label="Xóa tìm kiếm"
-                className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f0f2f5]"
+                className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
               >
                 <X size={13} />
               </button>
@@ -223,9 +223,9 @@ export function SalaryPage() {
             searchable
             itemIcon={(name) => {
               const Icon = getIndustryIcon(name)
-              return <Icon size={15} className="text-brand-600 shrink-0" />
+              return <Icon size={15} className="text-primary-solid shrink-0" />
             }}
-            buttonIcon={<LayoutGrid size={15} className="text-brand-600" />}
+            buttonIcon={<LayoutGrid size={15} className="text-primary-solid" />}
           />
 
           {/* 3. Chọn khu vực (tỉnh / thành phố) */}
@@ -236,24 +236,24 @@ export function SalaryPage() {
             placeholder="Tất cả khu vực"
             searchPlaceholder="Tìm tỉnh / thành phố…"
             searchable
-            buttonIcon={<MapPin size={15} className="text-brand-600" />}
+            buttonIcon={<MapPin size={15} className="text-primary-solid" />}
           />
         </div>
 
         {/* Hàng lọc Cấp bậc & Nút Xóa bộ lọc */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-plum-900/5 dark:border-[#393a3b]">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-border">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-plum-500 dark:text-[#b0b3b8] mr-1 flex items-center gap-1">
-              <Filter size={12} className="text-plum-400 dark:text-[#b0b3b8]" /> Cấp bậc:
+            <span className="text-xs font-semibold text-text-subtle mr-1 flex items-center gap-1">
+              <Filter size={12} className="text-text-subtle" /> Cấp bậc:
             </span>
             <button
               type="button"
               onClick={() => setLevel(null)}
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-semibold transition-all',
+                'min-h-8 rounded-full px-3 py-1 text-sm font-semibold transition-colors',
                 level === null
-                  ? 'bg-plum-900 text-white shadow-xs dark:bg-white dark:text-[#18191a]'
-                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50]'
+                  ? 'bg-text text-bg shadow-raised'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               )}
             >
               Tất cả
@@ -264,10 +264,10 @@ export function SalaryPage() {
                 type="button"
                 onClick={() => setLevel(level === lv ? null : lv)}
                 className={cn(
-                  'rounded-full px-3 py-1 text-xs font-semibold transition-all',
+                  'min-h-8 rounded-full px-3 py-1 text-sm font-semibold transition-colors',
                   level === lv
-                    ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white shadow-xs'
-                    : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50]'
+                    ? 'bg-primary-solid text-on-primary shadow-raised'
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3'
                 )}
               >
                 {lv}
@@ -278,7 +278,7 @@ export function SalaryPage() {
           {isFiltering && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 shrink-0 ml-auto"
+              className="flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger shrink-0 ml-auto"
             >
               <X size={13} /> Xóa bộ lọc
             </button>
@@ -291,10 +291,10 @@ export function SalaryPage() {
         <Card hover={false} className="overflow-hidden p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-plum-900">
+              <h2 className="text-base sm:text-lg font-bold text-text">
                 Mức lương theo vị trí
               </h2>
-              <span className="text-xs text-plum-400 font-medium">(Triệu VNĐ / tháng)</span>
+              <span className="text-xs text-text-subtle font-medium">(Triệu VNĐ / tháng)</span>
             </div>
           </div>
 
@@ -320,7 +320,7 @@ export function SalaryPage() {
                 const IconComponent = style.icon
                 return (
                   <StaggerItem key={`${s.role}-${s.level}-${s.region}`}>
-                    <div className="rounded-2xl border border-plum-900/8 bg-white p-4 shadow-xs">
+                    <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
                       {/* Tiêu đề vị trí & số mẫu */}
                       <div className="flex items-center gap-3 mb-2.5">
                         <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl', style.bg)}>
@@ -328,14 +328,14 @@ export function SalaryPage() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
-                            <h3 className="truncate font-bold text-sm text-plum-900">
+                            <h3 className="truncate font-bold text-sm text-text">
                               {s.role}
                               <span className={cn('ml-2 font-semibold text-xs px-2 py-0.5 rounded-md border', style.badge)}>
                                 {s.level}
                               </span>
-                              <span className="ml-1.5 font-normal text-xs text-plum-400">· {s.region}</span>
+                              <span className="ml-1.5 font-normal text-xs text-text-subtle">· {s.region}</span>
                             </h3>
-                            <span className="shrink-0 text-xs font-medium text-plum-400 flex items-center gap-1">
+                            <span className="shrink-0 text-xs font-medium text-text-subtle flex items-center gap-1">
                               <Users size={12} /> {s.samples} lượt chia sẻ
                             </span>
                           </div>
@@ -345,21 +345,21 @@ export function SalaryPage() {
                       {/* Tóm tắt mức lương rõ ràng, dễ hiểu */}
                       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-xs text-plum-500 font-medium">Mức phổ biến:</span>
-                          <span className="text-base sm:text-lg font-extrabold text-brand-600">{s.median} Triệu</span>
-                          <span className="text-xs text-plum-400">/ tháng</span>
+                          <span className="text-xs text-text-subtle font-medium">Mức phổ biến:</span>
+                          <span className="text-base sm:text-lg font-extrabold text-primary-solid">{s.median} Triệu</span>
+                          <span className="text-xs text-text-subtle">/ tháng</span>
                         </div>
-                        <div className="text-xs text-plum-500">
-                          Khoảng lương: <strong className="text-plum-800 font-bold">{s.p25} – {s.p75} Triệu</strong>
+                        <div className="text-xs text-text-subtle">
+                          Khoảng lương: <strong className="text-text font-bold">{s.p25} – {s.p75} Triệu</strong>
                         </div>
                       </div>
 
                       {/* Thanh trực quan dải lương */}
                       <div className="space-y-1.5">
-                        <div className="relative h-3.5 rounded-full bg-plum-900/[0.05] overflow-hidden">
+                        <div className="relative h-3.5 rounded-full bg-surface-2 overflow-hidden">
                           {/* Dải lương từ thấp đến cao */}
                           <div
-                            className="absolute top-0 h-full rounded-full bg-gradient-to-r from-brand-500 to-violet-500 transition-all duration-500"
+                            className="absolute top-0 h-full rounded-full bg-primary-solid transition-all duration-500"
                             style={{ left: `${(s.p25 / max) * 100}%`, width: `${((s.p75 - s.p25) / max) * 100}%` }}
                           />
                           {/* Vạch mốc lương phổ biến */}
@@ -370,9 +370,9 @@ export function SalaryPage() {
                         </div>
 
                         {/* 3 mốc số bên dưới: Khởi điểm | Phổ biến nhất | Cao nhất */}
-                        <div className="flex items-center justify-between text-[11px] text-plum-500 font-medium pt-0.5">
+                        <div className="flex items-center justify-between text-xs text-text-subtle font-medium pt-0.5">
                           <span>Từ <strong>{s.p25} Tr</strong></span>
-                          <span className="text-brand-600 font-bold">Phổ biến: {s.median} Tr</span>
+                          <span className="text-primary-solid font-bold">Phổ biến: {s.median} Tr</span>
                           <span>Đến <strong>{s.p75} Tr</strong></span>
                         </div>
                       </div>
@@ -385,7 +385,7 @@ export function SalaryPage() {
 
           {/* Thanh phân trang khi có nhiều hơn 1 trang */}
           {totalStatsPages > 1 && (
-            <div className="mt-4 pt-4 border-t border-plum-900/5 flex items-center justify-center">
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-center">
               <Pagination
                 page={statsPage}
                 totalPages={totalStatsPages}

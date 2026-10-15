@@ -38,7 +38,7 @@ function BackLink() {
   return (
     <Link
       to="/app/forum"
-      className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-plum-500 transition-colors hover:text-brand-600"
+      className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-text-subtle transition-colors hover:text-primary-solid"
     >
       <ArrowLeft size={16} /> Quay lại danh sách câu hỏi
     </Link>
@@ -50,19 +50,19 @@ function DetailSkeleton() {
   return (
     <Card hover={false} className="p-6 sm:p-8">
       <div className="space-y-4">
-        <div className="h-4 w-24 animate-pulse rounded bg-plum-900/[0.06]" />
-        <div className="h-7 w-3/4 animate-pulse rounded bg-plum-900/[0.07]" />
+        <div className="h-4 w-24 animate-pulse rounded bg-border" />
+        <div className="h-7 w-3/4 animate-pulse rounded bg-border" />
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 animate-pulse rounded-full bg-plum-900/[0.07]" />
+          <div className="h-10 w-10 animate-pulse rounded-full bg-border" />
           <div className="space-y-1.5">
-            <div className="h-3.5 w-32 animate-pulse rounded bg-plum-900/[0.06]" />
-            <div className="h-3 w-24 animate-pulse rounded bg-plum-900/[0.05]" />
+            <div className="h-3.5 w-32 animate-pulse rounded bg-border" />
+            <div className="h-3 w-24 animate-pulse rounded bg-surface-2" />
           </div>
         </div>
         <div className="space-y-2.5 pt-2">
-          <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.05]" />
-          <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.05]" />
-          <div className="h-3.5 w-2/3 animate-pulse rounded bg-plum-900/[0.05]" />
+          <div className="h-3.5 w-full animate-pulse rounded bg-surface-2" />
+          <div className="h-3.5 w-full animate-pulse rounded bg-surface-2" />
+          <div className="h-3.5 w-2/3 animate-pulse rounded bg-surface-2" />
         </div>
       </div>
     </Card>
@@ -75,12 +75,12 @@ function DetailSkeleton() {
 function NotFoundState() {
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
         <SearchX size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tìm thấy câu hỏi</p>
-        <p className="mt-1 text-sm text-plum-500">
+        <p className="font-bold text-text">Không tìm thấy câu hỏi</p>
+        <p className="mt-1 text-sm text-text-subtle">
           Câu hỏi này không tồn tại hoặc đã bị ẩn/xóa khỏi diễn đàn.
         </p>
       </div>
@@ -99,12 +99,12 @@ function NotFoundState() {
 function DetailError({ message, onRetry }: { message?: string; onRetry: () => void }) {
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tải được chi tiết câu hỏi</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">Không tải được chi tiết câu hỏi</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
       </div>
       <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
     </Card>
@@ -172,13 +172,13 @@ function QuestionDetailContent({
           aria-label={voted ? 'Bỏ bình chọn câu hỏi' : 'Bình chọn câu hỏi'}
           className={cn(
             'grid h-11 w-11 place-items-center rounded-xl ring-1 ring-inset transition-colors',
-            voted ? 'bg-brand-500/10 text-brand-600 ring-brand-500/30' : 'bg-plum-900/[0.04] text-plum-500 ring-plum-900/10 hover:bg-plum-900/[0.08]',
+            voted ? 'bg-primary-soft text-primary-solid ring-primary/30' : 'bg-surface-2 text-text-subtle ring-border hover:bg-surface-3',
           )}
         >
           <ChevronUp size={20} />
         </button>
-        <span className="text-sm font-bold text-plum-900">{votes}</span>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-plum-400">bình chọn</span>
+        <span className="text-sm font-bold text-text">{votes}</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-subtle">bình chọn</span>
       </div>
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
@@ -187,22 +187,22 @@ function QuestionDetailContent({
         {(q.topic || q.major || canEdit) && (
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5">
-              {q.topic && <Badge tone="violet" className="px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>}
-              {q.major && <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>}
+              {q.topic && <Badge tone="violet" className="px-2.5 py-0.5 text-xs">{q.topic}</Badge>}
+              {q.major && <Badge tone="aqua" className="px-2.5 py-0.5 text-xs">{q.major}</Badge>}
             </div>
             {canEdit && (
               <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-brand-600"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-primary-solid"
                 >
                   <Pencil size={13} /> Chỉnh sửa
                 </button>
                 <button
                   type="button"
                   onClick={onDelete}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-400/50 hover:bg-rose-500/[0.06] hover:text-rose-600"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition-all hover:-translate-y-0.5 hover:border-danger hover:bg-danger-soft hover:text-danger"
                 >
                   <Trash2 size={13} /> Xóa
                 </button>
@@ -210,36 +210,36 @@ function QuestionDetailContent({
             )}
           </div>
         )}
-        <h1 className="text-2xl font-extrabold leading-snug text-plum-900 sm:text-[1.75rem]">{q.title}</h1>
+        <h1 className="text-2xl font-extrabold leading-snug text-text sm:text-[1.75rem]">{q.title}</h1>
 
         {/* Hàng thông tin tác giả + thời gian đăng */}
-        <div className="mt-4 flex flex-wrap items-center gap-3 border-b border-plum-900/8 pb-5">
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-5">
           <Link
             to={q.authorId ? `/app/profile?userId=${q.authorId}` : '/app/profile'}
-            className="flex items-center gap-3 min-w-0 hover:text-brand-600 transition-colors group"
+            className="flex items-center gap-3 min-w-0 hover:text-primary-solid transition-colors group"
           >
             <Avatar src={q.avatar} name={q.author} size={40} verified={q.verified} />
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-plum-900 group-hover:text-brand-600 group-hover:underline">{q.author}</p>
+              <p className="truncate text-sm font-bold text-text group-hover:text-primary-solid group-hover:underline">{q.author}</p>
               {q.authorHeadline ? (
-                <p className="truncate text-xs text-plum-500">{q.authorHeadline}</p>
+                <p className="truncate text-xs text-text-subtle">{q.authorHeadline}</p>
               ) : null}
             </div>
           </Link>
-          <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-plum-400">
+          <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-text-subtle">
             <Clock size={13} />
             {postedAt ? <span title={postedAt}>{postedAt}</span> : <span>{q.time}</span>}
           </span>
         </div>
 
         {/* Nội dung đầy đủ của câu hỏi — giữ nguyên xuống dòng của người dùng */}
-        <div className="mt-5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-700">
+        <div className="mt-5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-text-muted">
           {q.body || 'Câu hỏi này chưa có nội dung chi tiết.'}
         </div>
 
         {/* Ảnh đính kèm của câu hỏi — carousel dùng chung với bài đăng (kéo/vuốt xem tất cả ảnh) */}
         {q.images.length > 0 && (
-          <div className="mt-5 overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+          <div className="mt-5 overflow-hidden rounded-xl border border-border shadow-sm">
             <ImageCarousel images={q.images} height={420} altPrefix="Ảnh câu hỏi" />
           </div>
         )}
@@ -252,7 +252,7 @@ function QuestionDetailContent({
             aria-pressed={voted}
             className={cn(
               'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold transition-colors',
-              voted ? 'bg-brand-500/10 text-brand-600' : 'text-plum-500 hover:bg-plum-900/[0.06]',
+              voted ? 'bg-primary-soft text-primary-solid' : 'text-text-subtle hover:bg-border',
             )}
           >
             <ChevronUp size={15} /> {votes} bình chọn
@@ -299,7 +299,7 @@ export function QuestionDetailPage() {
             <QuestionDetailContent q={data} canEdit={canEdit} canVote={canVote} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
           </div>
           {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
-          <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
+          <div className="border-t border-border bg-surface-2 p-6 sm:p-8">
             <AnswersSection questionId={data.id} count={data.answers} />
           </div>
         </Card>

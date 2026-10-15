@@ -89,38 +89,38 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
   if (verifySuccess) {
     return (
       <div className="animate-pop text-center py-4 space-y-6">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-inner">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success-soft text-success border border-success-border shadow-inner">
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: [1.25, 1], opacity: 1 }}
             transition={{ duration: 0.45, type: 'spring', bounce: 0.55 }}
           >
-            <CheckCircle2 size={46} className="text-emerald-500" />
+            <CheckCircle2 size={46} className="text-success" />
           </motion.div>
         </div>
 
         <div>
-          <h2 className="text-2xl font-extrabold text-plum-900 tracking-tight">
+          <h2 className="text-2xl font-extrabold text-text tracking-tight">
             Xác thực email thành công!
           </h2>
-          <p className="mt-2 text-sm text-plum-600 leading-relaxed max-w-sm mx-auto">
+          <p className="mt-2 text-sm text-text-muted leading-relaxed max-w-sm mx-auto">
             {verifySuccess}
           </p>
         </div>
 
         {/* Khối loading chuyển trang kèm thanh tiến trình */}
-        <div className="rounded-2xl bg-cream-100 p-4 border border-plum-900/[0.06] text-center space-y-3">
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-plum-600">
-            <Loader2 size={15} className="animate-spin text-brand-600" />
+        <div className="rounded-2xl bg-surface-2 p-4 border border-border text-center space-y-3">
+          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-text-muted">
+            <Loader2 size={15} className="animate-spin text-primary-solid" />
             <span>
               Đang chuyển hướng về trang Đăng nhập trong{' '}
-              <strong className="text-brand-600 font-bold">{countdown}s</strong>...
+              <strong className="text-primary-solid font-bold">{countdown}s</strong>...
             </span>
           </div>
 
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-plum-900/[0.08]">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
             <motion.div
-              className="h-full bg-brand-500 rounded-full"
+              className="h-full bg-primary-solid rounded-full"
               initial={{ width: '100%' }}
               animate={{ width: `${(countdown / 3) * 100}%` }}
               transition={{ duration: 1, ease: 'linear' }}
@@ -147,19 +147,19 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
       <button 
         type="button" 
         onClick={onBack}
-        className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700 mb-6 group transition-colors"
+        className="inline-flex items-center gap-1 text-xs font-bold text-primary-solid hover:text-primary-solid mb-6 group transition-colors"
       >
         <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /> 
         Quay lại sửa thông tin
       </button>
       
-      <h2 className="text-3xl font-extrabold text-plum-900 tracking-tight">Xác thực Email</h2>
-      <p className="mt-2 text-sm text-plum-500 leading-relaxed">
-        Chúng tôi đã gửi mã xác thực OTP 6 số đến địa chỉ <strong className="text-plum-900">{email}</strong>. Vui lòng kiểm tra email (cả hòm thư Spam) và nhập mã vào bên dưới.
+      <h2 className="text-3xl font-extrabold text-text tracking-tight">Xác thực Email</h2>
+      <p className="mt-2 text-sm text-text-subtle leading-relaxed">
+        Chúng tôi đã gửi mã xác thực OTP 6 số đến địa chỉ <strong className="text-text">{email}</strong>. Vui lòng kiểm tra email (cả hòm thư Spam) và nhập mã vào bên dưới.
       </p>
 
       {verifyError && (
-        <div className="mt-4 rounded-xl bg-coral-50 border border-coral-200/50 p-3 text-xs text-coral-600 flex items-start gap-2">
+        <div className="mt-4 rounded-xl bg-danger-soft border border-danger-border p-3 text-xs text-danger flex items-start gap-2">
           <AlertCircle size={16} className="shrink-0 mt-0.5" />
           <span>{verifyError}</span>
         </div>
@@ -167,7 +167,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
 
       <form className="mt-6 space-y-4" onSubmit={handleVerifyOtp} noValidate>
         <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold text-plum-700">Mã xác thực OTP (6 chữ số)</span>
+          <span className="mb-1.5 block text-sm font-semibold text-text-muted">Mã xác thực OTP (6 chữ số)</span>
           <input
             type="text"
             placeholder="123456"
@@ -175,7 +175,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
             value={otpToken}
             disabled={verifyEmailMutation.isPending}
             onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ''))}
-            className="h-12 w-full tracking-[0.5em] text-center font-mono font-bold text-lg rounded-xl border border-plum-900/10 bg-cream-100 px-4 text-plum-900 placeholder:text-plum-300 focus:border-brand-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="h-12 w-full tracking-[0.5em] text-center font-mono font-bold text-lg rounded-xl border border-border bg-surface-2 px-4 text-text placeholder:text-plum-300 focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
             required
           />
         </label>
@@ -194,15 +194,15 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
 
       <div className="mt-6 flex flex-col items-center justify-center gap-2">
         {cooldown > 0 ? (
-          <p className="text-xs text-plum-400">
-            Gửi lại mã OTP sau: <span className="font-semibold text-brand-600">{Math.floor(cooldown / 60)} phút {cooldown % 60} giây</span>
+          <p className="text-xs text-text-subtle">
+            Gửi lại mã OTP sau: <span className="font-semibold text-primary-solid">{Math.floor(cooldown / 60)} phút {cooldown % 60} giây</span>
           </p>
         ) : (
           <button
             type="button"
             onClick={handleResendOtp}
             disabled={resendOtpMutation.isPending}
-            className="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors disabled:opacity-50"
+            className="text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors disabled:opacity-50"
           >
             {resendOtpMutation.isPending ? 'Đang gửi...' : 'Gửi lại mã OTP mới'}
           </button>

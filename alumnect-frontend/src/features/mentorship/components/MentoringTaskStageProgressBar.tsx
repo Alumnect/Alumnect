@@ -51,18 +51,18 @@ export function MentoringTaskStageProgressBar({
   const currentIndex = getStageIndex(currentStage)
 
   return (
-    <div className={cn('rounded-3xl border border-plum-900/[0.08] bg-white p-5 shadow-xs dark:border-[#393a3b] dark:bg-[#242526]', className)}>
+    <div className={cn('rounded-3xl border border-border bg-surface p-5 shadow-xs', className)}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+          <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             Tiến trình Mentoring Task
           </span>
-          <h4 className="text-base font-bold text-plum-900 dark:text-white">
+          <h4 className="text-base font-bold text-text">
             {STAGES[currentIndex].title}
           </h4>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="h-2 w-28 sm:w-36 overflow-hidden rounded-full bg-plum-900/[0.08] dark:bg-white/10">
+          <div className="h-2 w-28 sm:w-36 overflow-hidden rounded-full bg-surface-3">
             <motion.div
               className="h-full rounded-full bg-linear-to-r from-brand-500 via-violet-500 to-mint-500"
               initial={{ width: 0 }}
@@ -70,7 +70,7 @@ export function MentoringTaskStageProgressBar({
               transition={{ duration: 0.6, ease: 'easeOut' }}
             />
           </div>
-          <span className="text-xs font-bold text-plum-700 dark:text-[#e4e6eb] min-w-[36px] text-right">
+          <span className="text-xs font-bold text-text-muted min-w-[36px] text-right">
             {progressPercentage}%
           </span>
         </div>
@@ -88,20 +88,20 @@ export function MentoringTaskStageProgressBar({
               className={cn(
                 'relative flex items-center gap-3.5 rounded-2xl p-3.5 transition-all duration-200 border',
                 isCurrent
-                  ? 'border-brand-500/30 bg-brand-50/70 shadow-xs dark:border-brand-500/40 dark:bg-brand-500/10'
+                  ? 'border-primary-soft-border bg-brand-50/70 shadow-xs dark:bg-brand-500/10'
                   : isPassed
-                  ? 'border-mint-500/25 bg-mint-50/50 dark:border-mint-500/30 dark:bg-mint-500/10'
-                  : 'border-plum-900/[0.06] bg-cream-100/70 opacity-80 dark:border-white/10 dark:bg-[#18191a]'
+                  ? 'border-success bg-success-soft'
+                  : 'border-border bg-cream-100/70 opacity-80 dark:bg-bg'
               )}
             >
               <div
                 className={cn(
                   'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold transition-transform',
                   isCurrent
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 scale-105'
+                    ? 'bg-primary-solid text-on-primary shadow-md shadow-brand-500/25 scale-105'
                     : isPassed
-                    ? 'bg-mint-600 text-white'
-                    : 'bg-plum-900/10 text-plum-500 dark:bg-white/10 dark:text-[#b0b3b8]'
+                    ? 'bg-success text-text-inverse'
+                    : 'bg-surface-3 text-text-subtle'
                 )}
               >
                 {isPassed ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
@@ -109,26 +109,26 @@ export function MentoringTaskStageProgressBar({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
                     Giai đoạn {idx + 1}
                   </span>
                   {isCurrent && (
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary-solid animate-pulse" />
                   )}
                 </div>
                 <p
                   className={cn(
                     'truncate text-sm font-bold',
                     isCurrent
-                      ? 'text-brand-700 dark:text-brand-200 font-bold'
+                      ? 'text-primary-solid font-bold'
                       : isPassed
-                      ? 'text-mint-900 dark:text-mint-200'
-                      : 'text-plum-600 dark:text-[#b0b3b8]'
+                      ? 'text-success'
+                      : 'text-text-muted'
                   )}
                 >
                   {stage.title}
                 </p>
-                <p className="truncate text-xs text-plum-400 dark:text-[#8f9399]">
+                <p className="truncate text-xs text-text-subtle">
                   {stage.subtitle}
                 </p>
               </div>

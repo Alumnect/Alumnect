@@ -31,9 +31,9 @@ export function MentorPaymentFailedCard({
   return (
     <Card
       hover={false}
-      className="mx-auto max-w-xl p-8 rounded-3xl border border-coral-200 bg-white dark:bg-[#242526] text-center shadow-card space-y-6"
+      className="mx-auto max-w-xl p-8 rounded-3xl border border-danger-border bg-surface text-center shadow-card space-y-6"
     >
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-950/40 dark:text-coral-400">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle className="h-8 w-8" />
       </div>
 
@@ -43,10 +43,10 @@ export function MentorPaymentFailedCard({
             {status === 'EXPIRED' ? 'Đã Hết Hạn' : status === 'CANCELLED' ? 'Đã Hủy' : 'Thanh Toán Thất Bại'}
           </Badge>
         </div>
-        <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-xl font-bold text-text">
           Không Thể Hoàn Tất Thanh Toán
         </h2>
-        <p className="text-sm text-plum-600 dark:text-[#b0b3b8] max-w-md mx-auto">
+        <p className="text-sm text-text-muted max-w-md mx-auto">
           {getStatusText()} Đừng lo lắng, gói dịch vụ Mentor của bạn chưa bị trừ tiền và bạn có thể tạo lại phiên thanh toán mới bất cứ lúc nào.
         </p>
       </div>

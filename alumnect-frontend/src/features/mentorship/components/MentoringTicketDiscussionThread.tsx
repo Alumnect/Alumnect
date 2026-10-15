@@ -145,34 +145,34 @@ export function MentoringTicketDiscussionThread({
   }
 
   return (
-    <div className="flex flex-col h-[560px] bg-cream-100 dark:bg-[#242526]/60 rounded-xl border border-cream-300 dark:border-white/10 overflow-hidden">
+    <div className="flex flex-col h-[560px] bg-surface-2 rounded-xl border border-border overflow-hidden">
       {/* 1. Header trao đổi */}
-      <div className="px-4 py-3 bg-white dark:bg-[#242526] border-b border-cream-300 dark:border-white/10 flex items-center justify-between shrink-0 shadow-2xs">
+      <div className="px-4 py-3 bg-surface border-b border-border flex items-center justify-between shrink-0 shadow-2xs">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-violet-500/10 dark:bg-violet-600/40 text-violet-500 dark:text-violet-400 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-info-soft text-info flex items-center justify-center">
             <MessageSquare size={17} />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-plum-900 dark:text-[#e4e6eb] flex items-center gap-2">
+            <h4 className="text-sm font-bold text-text flex items-center gap-2">
               Kênh Trao Đổi & Hòa Giải 3 Bên
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/5 text-violet-500 dark:bg-violet-600/30 dark:text-violet-300 border border-violet-500/20 dark:border-violet-600">
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-info-soft text-info border border-info">
                 Audit Trail
               </span>
             </h4>
-            <p className="text-[11px] text-plum-500 dark:text-plum-400">
+            <p className="text-xs text-text-subtle">
               Trao đổi minh bạch giữa Học viên, Cố vấn và Ban Quản Trị để tìm tiếng nói chung
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 text-xs">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/5 text-violet-500 text-[11px] font-medium border border-violet-500/20">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-info-soft text-info text-xs font-medium border border-info">
             <User size={11} /> {studentName}
           </span>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-mint-50 text-mint-700 text-[11px] font-medium border border-mint-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success-soft text-success text-xs font-medium border border-success-border">
             <GraduationCap size={11} /> {mentorName}
           </span>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/5 text-violet-500 text-[11px] font-medium border border-violet-500/20">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-info-soft text-info text-xs font-medium border border-info">
             <ShieldCheck size={11} /> Admin
           </span>
         </div>
@@ -181,17 +181,17 @@ export function MentoringTicketDiscussionThread({
       {/* 2. Message History Feed */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3.5">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-full text-plum-400 gap-2">
-            <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
+          <div className="flex flex-col items-center justify-center h-full text-text-subtle gap-2">
+            <Loader2 className="h-6 w-6 animate-spin text-info" />
             <p className="text-xs">Đang tải lịch sử trao đổi...</p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-white dark:bg-[#242526]/40 rounded-xl border border-dashed border-plum-300 dark:border-white/10">
-            <div className="h-12 w-12 rounded-full bg-violet-500/5 dark:bg-violet-600/40 text-violet-500 flex items-center justify-center mb-2">
+          <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-surface rounded-xl border border-dashed border-border-strong">
+            <div className="h-12 w-12 rounded-full bg-info-soft text-info flex items-center justify-center mb-2">
               <MessageSquare size={22} />
             </div>
-            <p className="text-sm font-bold text-plum-800 dark:text-[#e4e6eb]">Chưa có tin nhắn nào</p>
-            <p className="text-xs text-plum-400 mt-1 max-w-sm">
+            <p className="text-sm font-bold text-text">Chưa có tin nhắn nào</p>
+            <p className="text-xs text-text-subtle mt-1 max-w-sm">
               Đây là kênh trao đổi chính thức có lưu vết. Hãy gửi tin nhắn làm rõ vấn đề hoặc đưa ra đề xuất phân bổ tiền hòa giải.
             </p>
           </div>
@@ -207,10 +207,10 @@ export function MentoringTicketDiscussionThread({
                 key={msg.id}
                 className={`p-3.5 rounded-xl border transition-all ${
                   isAdminMsg
-                    ? 'bg-violet-500/5 dark:bg-violet-600/20 border-violet-500/20 dark:border-violet-600/60 shadow-2xs'
+                    ? 'bg-info-soft border-info shadow-2xs'
                     : isStudentMsg
-                    ? 'bg-violet-500/5 dark:bg-violet-600/20 border-violet-500/20 dark:border-violet-600/60'
-                    : 'bg-mint-50/40 dark:bg-mint-950/20 border-mint-200 dark:border-mint-800/60'
+                    ? 'bg-info-soft border-info'
+                    : 'bg-success-soft border-success-border'
                 }`}
               >
                 {/* Header message: Sender badge + timestamp */}
@@ -218,22 +218,22 @@ export function MentoringTicketDiscussionThread({
                   <div className="flex items-center gap-2">
                     <div
                       className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white ${
-                        isAdminMsg ? 'bg-violet-500' : isStudentMsg ? 'bg-violet-500' : 'bg-mint-600'
+                        isAdminMsg ? 'bg-info' : isStudentMsg ? 'bg-info' : 'bg-success'
                       }`}
                     >
                       {isAdminMsg ? 'AD' : isStudentMsg ? 'HV' : 'CV'}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-plum-900 dark:text-[#e4e6eb]">
+                      <span className="text-xs font-bold text-text">
                         {msg.senderName}
                       </span>
                       <span
                         className={`px-1.5 py-0.2 rounded text-[11px] font-semibold ${
                           isAdminMsg
-                            ? 'bg-violet-500/10 text-violet-500 dark:bg-violet-600/40 dark:text-violet-300'
+                            ? 'bg-info-soft text-info'
                             : isStudentMsg
-                            ? 'bg-violet-500/10 text-violet-500 dark:bg-violet-600/40 dark:text-violet-300'
-                            : 'bg-mint-100 text-mint-700 dark:bg-mint-900/40 dark:text-mint-300'
+                            ? 'bg-info-soft text-info'
+                            : 'bg-success-soft text-success'
                         }`}
                       >
                         {isAdminMsg ? 'Ban Quản Trị' : isStudentMsg ? 'Bên tạo yêu cầu' : 'Bên thực hiện (Mentor)'}
@@ -241,7 +241,7 @@ export function MentoringTicketDiscussionThread({
                     </div>
                   </div>
 
-                  <span className="text-[11px] text-plum-400 whitespace-nowrap">
+                  <span className="text-xs text-text-subtle whitespace-nowrap">
                     {formatDateTime(msg.createdAt)}
                   </span>
                 </div>
@@ -250,27 +250,27 @@ export function MentoringTicketDiscussionThread({
                 {isOffer && (
                   <div className="mb-2.5 p-3 rounded-lg bg-gradient-to-r from-violet-500/10 to-violet-500/10 dark:from-violet-600/60 dark:to-violet-600/60 border border-violet-300 dark:border-violet-500">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <Scale className="h-4 w-4 text-violet-500 dark:text-violet-300" />
-                      <span className="text-xs font-bold text-violet-600 dark:text-violet-500/20 uppercase tracking-wide">
+                      <Scale className="h-4 w-4 text-info" />
+                      <span className="text-xs font-bold text-info uppercase tracking-wide">
                         Phương án hòa giải phân bổ tiền đề xuất
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-white/80 dark:bg-[#242526]/80 p-2 rounded border border-violet-500/20 dark:border-violet-600">
-                        <span className="text-[11px] text-plum-500 block">Mentor nhận thù lao:</span>
-                        <strong className="text-sm text-mint-600 dark:text-mint-400 font-bold">
+                      <div className="bg-surface/80 p-2 rounded border border-info">
+                        <span className="text-xs text-text-subtle block">Mentor nhận thù lao:</span>
+                        <strong className="text-sm text-success font-bold">
                           {formatVnd(msg.proposedMentorAmount)}
                         </strong>
                       </div>
-                      <div className="bg-white/80 dark:bg-[#242526]/80 p-2 rounded border border-violet-500/20 dark:border-violet-600">
-                        <span className="text-[11px] text-plum-500 block">Bên tạo yêu cầu được hoàn:</span>
-                        <strong className="text-sm text-violet-500 dark:text-violet-400 font-bold">
+                      <div className="bg-surface/80 p-2 rounded border border-info">
+                        <span className="text-xs text-text-subtle block">Bên tạo yêu cầu được hoàn:</span>
+                        <strong className="text-sm text-info font-bold">
                           {formatVnd(msg.proposedStudentRefund)}
                         </strong>
                       </div>
                     </div>
                     {msg.deadline && (
-                      <p className="text-[11px] text-violet-600 dark:text-violet-300 mt-2 flex items-center gap-1 font-medium">
+                      <p className="text-xs text-info mt-2 flex items-center gap-1 font-medium">
                         <Clock size={12} /> Hạn chót phản hồi: <strong>{formatDateTime(msg.deadline)}</strong>
                       </p>
                     )}
@@ -279,8 +279,8 @@ export function MentoringTicketDiscussionThread({
 
                 {/* Deadline Card nếu là DEADLINE_REQUEST */}
                 {isDeadline && msg.deadline && (
-                  <div className="mb-2.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
-                    <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+                  <div className="mb-2.5 p-2.5 rounded-lg bg-warning-soft border border-warning-border flex items-center gap-2 text-xs text-warning">
+                    <Clock className="h-4 w-4 text-warning shrink-0" />
                     <span>
                       Yêu cầu phản hồi / bổ sung hồ sơ trước: <strong>{formatDateTime(msg.deadline)}</strong>
                     </span>
@@ -288,7 +288,7 @@ export function MentoringTicketDiscussionThread({
                 )}
 
                 {/* Message Body Content */}
-                <p className="text-xs text-plum-800 dark:text-[#e4e6eb] whitespace-pre-wrap leading-relaxed">
+                <p className="text-xs text-text whitespace-pre-wrap leading-relaxed">
                   {msg.content}
                 </p>
 
@@ -300,21 +300,21 @@ export function MentoringTicketDiscussionThread({
                       return (
                         <div
                           key={idx}
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-[#3a3b3c] border border-cream-300 dark:border-white/10 text-xs shadow-2xs hover:border-plum-400 transition-colors"
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface border border-border text-xs shadow-2xs hover:border-plum-400 transition-colors"
                         >
                           {isImg ? (
-                            <Eye size={12} className="text-violet-500" />
+                            <Eye size={12} className="text-info" />
                           ) : (
-                            <FileText size={12} className="text-violet-500" />
+                            <FileText size={12} className="text-info" />
                           )}
-                          <span className="font-medium text-[11px] text-plum-700 dark:text-[#b0b3b8] max-w-[140px] truncate">
+                          <span className="font-medium text-xs text-text-muted max-w-[140px] truncate">
                             {att.title || att.fileName || 'Tệp đính kèm'}
                           </span>
                           {isImg ? (
                             <button
                               type="button"
                               onClick={() => setPreviewImage(att.fileUrl)}
-                              className="text-[11px] font-semibold text-violet-500 hover:underline ml-1"
+                              className="text-xs font-semibold text-info hover:underline ml-1"
                             >
                               Xem ảnh
                             </button>
@@ -323,7 +323,7 @@ export function MentoringTicketDiscussionThread({
                               href={att.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[11px] font-semibold text-violet-500 hover:underline ml-1"
+                              className="text-xs font-semibold text-info hover:underline ml-1"
                             >
                               Mở
                             </a>
@@ -342,24 +342,24 @@ export function MentoringTicketDiscussionThread({
 
       {/* 3. Input Controls (Nếu vé đã đóng -> Chế độ Read-only) */}
       {isClosed ? (
-        <div className="p-3 bg-cream-200 dark:bg-[#242526] border-t border-cream-300 dark:border-white/10 text-center shrink-0">
-          <p className="text-xs text-plum-500 font-medium flex items-center justify-center gap-1.5">
-            <CheckCircle2 size={14} className="text-mint-600" />
+        <div className="p-3 bg-surface-3 dark:bg-surface border-t border-border text-center shrink-0">
+          <p className="text-xs text-text-subtle font-medium flex items-center justify-center gap-1.5">
+            <CheckCircle2 size={14} className="text-success" />
             Vé đã được giải quyết hoặc kết thúc ({ticketStatus}). Kênh trao đổi được lưu trữ dưới dạng Chỉ đọc (Read-only).
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSend} className="p-3 bg-white dark:bg-[#242526] border-t border-cream-300 dark:border-white/10 space-y-2.5 shrink-0 shadow-xs">
+        <form onSubmit={handleSend} className="p-3 bg-surface border-t border-border space-y-2.5 shrink-0 shadow-xs">
           {/* Action Tabs: Loại tin nhắn */}
           <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
-            <div className="flex items-center gap-1 bg-cream-200 dark:bg-[#3a3b3c] p-0.5 rounded-lg border border-cream-300 dark:border-white/10">
+            <div className="flex items-center gap-1 bg-surface-3 dark:bg-surface-2 p-0.5 rounded-lg border border-border">
               <button
                 type="button"
                 onClick={() => setMessageType('TEXT')}
                 className={`px-2.5 py-1 rounded-md font-semibold text-xs transition-colors ${
                   messageType === 'TEXT'
-                    ? 'bg-white dark:bg-white/10 text-plum-900 dark:text-white shadow-2xs'
-                    : 'text-plum-600 hover:text-plum-900'
+                    ? 'bg-surface text-text shadow-2xs'
+                    : 'text-text-muted hover:text-text'
                 }`}
               >
                 Trao đổi
@@ -369,8 +369,8 @@ export function MentoringTicketDiscussionThread({
                 onClick={() => setMessageType('MEDIATION_OFFER')}
                 className={`px-2.5 py-1 rounded-md font-semibold text-xs flex items-center gap-1 transition-colors ${
                   messageType === 'MEDIATION_OFFER'
-                    ? 'bg-violet-500 text-white shadow-2xs'
-                    : 'text-violet-500 hover:text-violet-600'
+                    ? 'bg-info text-text-inverse shadow-2xs'
+                    : 'text-info hover:text-info'
                 }`}
               >
                 <Scale size={12} /> Đề xuất hòa giải
@@ -381,8 +381,8 @@ export function MentoringTicketDiscussionThread({
                   onClick={() => setMessageType('DEADLINE_REQUEST')}
                   className={`px-2.5 py-1 rounded-md font-semibold text-xs flex items-center gap-1 transition-colors ${
                     messageType === 'DEADLINE_REQUEST'
-                      ? 'bg-amber-600 text-white shadow-2xs'
-                      : 'text-amber-700 hover:text-amber-900'
+                      ? 'bg-warning text-text-inverse shadow-2xs'
+                      : 'text-warning hover:text-warning'
                   }`}
                 >
                   <Clock size={12} /> Hạn chót phản hồi
@@ -393,7 +393,7 @@ export function MentoringTicketDiscussionThread({
             <button
               type="button"
               onClick={() => setShowAttachInput(!showAttachInput)}
-              className="text-xs text-plum-600 hover:text-violet-500 flex items-center gap-1 font-medium transition-colors"
+              className="text-xs text-text-muted hover:text-info flex items-center gap-1 font-medium transition-colors"
             >
               <Paperclip size={13} />
               {showAttachInput ? 'Đóng đính kèm' : 'Đính kèm tệp / link'}
@@ -402,18 +402,18 @@ export function MentoringTicketDiscussionThread({
 
           {/* Form phụ nếu chọn Đề xuất hòa giải */}
           {messageType === 'MEDIATION_OFFER' && (
-            <div className="p-3 rounded-lg bg-violet-500/5 dark:bg-violet-600/30 border border-violet-500/20 dark:border-violet-600 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-xs text-violet-600 dark:text-violet-500/20 font-bold">
+            <div className="p-3 rounded-lg bg-info-soft border border-info space-y-2 text-xs">
+              <div className="flex items-center justify-between text-xs text-info font-bold">
                 <span>Phân bổ số tiền thỏa thuận:</span>
                 {totalAmount && totalAmount > 0 && (
-                  <span className="font-normal text-plum-500">
+                  <span className="font-normal text-text-subtle">
                     Tổng quỹ bảo đảm: <strong>{formatVnd(totalAmount)}</strong>
                   </span>
                 )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[11px] font-semibold text-plum-700 dark:text-[#b0b3b8] block mb-0.5">
+                  <label className="text-xs font-semibold text-text-muted block mb-0.5">
                     Thù lao đề xuất cho Mentor (VND):
                   </label>
                   <input
@@ -429,11 +429,11 @@ export function MentoringTicketDiscussionThread({
                       }
                     }}
                     placeholder="ví dụ: 500000"
-                    className="w-full px-2.5 py-1.5 rounded-md border border-plum-300 dark:border-white/10 bg-white dark:bg-[#3a3b3c] text-xs font-semibold"
+                    className="w-full px-2.5 py-1.5 rounded-md border border-border-strong bg-surface text-xs font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-plum-700 dark:text-[#b0b3b8] block mb-0.5">
+                  <label className="text-xs font-semibold text-text-muted block mb-0.5">
                     Hoàn tiền cho Bên tạo yêu cầu (VND):
                   </label>
                   <input
@@ -449,7 +449,7 @@ export function MentoringTicketDiscussionThread({
                       }
                     }}
                     placeholder="ví dụ: 1000000"
-                    className="w-full px-2.5 py-1.5 rounded-md border border-plum-300 dark:border-white/10 bg-white dark:bg-[#3a3b3c] text-xs font-semibold"
+                    className="w-full px-2.5 py-1.5 rounded-md border border-border-strong bg-surface text-xs font-semibold"
                   />
                 </div>
               </div>
@@ -458,8 +458,8 @@ export function MentoringTicketDiscussionThread({
 
           {/* Form phụ nếu Admin chọn Hạn chót phản hồi */}
           {messageType === 'DEADLINE_REQUEST' && (
-            <div className="p-2.5 rounded-lg bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-center justify-between gap-2 text-xs">
-              <span className="font-semibold text-amber-900 dark:text-amber-200">
+            <div className="p-2.5 rounded-lg bg-warning-soft border border-warning-border flex items-center justify-between gap-2 text-xs">
+              <span className="font-semibold text-warning">
                 Thời hạn yêu cầu phản hồi:
               </span>
               <div className="flex items-center gap-1.5">
@@ -470,8 +470,8 @@ export function MentoringTicketDiscussionThread({
                     onClick={() => setDeadlineDays(days)}
                     className={`px-2 py-0.5 rounded text-xs font-semibold border ${
                       deadlineDays === days
-                        ? 'bg-amber-600 text-white border-amber-600'
-                        : 'bg-white dark:bg-[#3a3b3c] text-plum-700 border-plum-300'
+                        ? 'bg-warning text-text-inverse border-warning'
+                        : 'bg-surface text-text-muted border-border-strong'
                     }`}
                   >
                     {days} ngày
@@ -483,20 +483,20 @@ export function MentoringTicketDiscussionThread({
 
           {/* Form đính kèm file nếu bật */}
           {showAttachInput && (
-            <div className="p-2.5 rounded-lg bg-cream-100 dark:bg-[#3a3b3c]/60 border border-cream-300 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 rounded-lg bg-surface-2 border border-border grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <input
                 type="text"
                 value={attachmentTitle}
                 onChange={(e) => setAttachmentTitle(e.target.value)}
                 placeholder="Tiêu đề tài liệu/ảnh chứng từ..."
-                className="px-2.5 py-1.5 rounded-md border border-plum-300 dark:border-white/10 bg-white dark:bg-[#3a3b3c] text-xs"
+                className="px-2.5 py-1.5 rounded-md border border-border-strong bg-surface text-xs"
               />
               <input
                 type="url"
                 value={attachmentUrl}
                 onChange={(e) => setAttachmentUrl(e.target.value)}
                 placeholder="https://... (URL ảnh chụp màn hình hoặc file)"
-                className="px-2.5 py-1.5 rounded-md border border-plum-300 dark:border-white/10 bg-white dark:bg-[#3a3b3c] text-xs"
+                className="px-2.5 py-1.5 rounded-md border border-border-strong bg-surface text-xs"
               />
             </div>
           )}
@@ -514,12 +514,12 @@ export function MentoringTicketDiscussionThread({
                   ? 'Nêu rõ thông tin hoặc bằng chứng cần các bên bổ sung trước thời hạn...'
                   : 'Nhập nội dung trao đổi, làm rõ hoặc giải trình...'
               }
-              className="flex-1 px-3 py-2 text-xs rounded-xl border border-plum-300 dark:border-white/10 bg-white dark:bg-[#3a3b3c] focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              className="flex-1 px-3 py-2 text-xs rounded-xl border border-border-strong bg-surface focus:outline-none focus:ring-2 focus:ring-info resize-none"
             />
             <Button
               type="submit"
               disabled={isSending || !content.trim()}
-              className="h-10 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shrink-0 shadow-sm flex items-center gap-1.5 text-xs"
+              className="h-10 px-4 bg-primary-solid hover:bg-primary-hover text-on-primary font-semibold rounded-xl shrink-0 shadow-sm flex items-center gap-1.5 text-xs"
             >
               {isSending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

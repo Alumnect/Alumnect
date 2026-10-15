@@ -79,8 +79,8 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
   return (
     <div className="space-y-4 lg:space-y-6">
       <Reveal direction="down">
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-100 sm:p-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 sm:h-12 sm:w-12">
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-surface p-2 shadow-sm ring-1 ring-border sm:p-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-solid sm:h-12 sm:w-12">
             <Filter size={20} />
           </div>
           <div className="flex flex-1 gap-1 overflow-x-auto pb-1 scrollbar-hide sm:gap-2 sm:pb-0">
@@ -90,8 +90,8 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
                 onClick={() => setFilter(tab.id)}
                 className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold transition-all sm:px-4 ${
                   filter === tab.id
-                    ? 'bg-brand-600 text-white shadow-md'
-                    : 'bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-primary-solid text-on-primary shadow-md'
+                    : 'bg-transparent text-text-subtle hover:bg-surface-2 hover:text-text'
                 }`}
               >
                 {tab.label}
@@ -105,8 +105,8 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
       <div className="space-y-4 lg:space-y-6">
         {isLoading ? (
           <div className="space-y-4">
-            <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
-            <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
+            <div className="h-64 animate-pulse rounded-2xl bg-surface-2" />
+            <div className="h-64 animate-pulse rounded-2xl bg-surface-2" />
           </div>
         ) : isError ? (
           <EmptyState
@@ -156,13 +156,13 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
             {/* Vùng tự động tải thêm bài viết (Infinite scroll sentinel) */}
             <div ref={loadMoreRef} className="py-4 text-center">
               {isFetchingNextPage && (
-                <div className="flex items-center justify-center gap-2 text-sm text-plum-500">
-                  <Loader2 size={18} className="animate-spin text-brand-600" />
+                <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
+                  <Loader2 size={18} className="animate-spin text-primary-solid" />
                   <span>Đang tải thêm bài viết…</span>
                 </div>
               )}
               {!hasNextPage && posts.length > 0 && (
-                <p className="text-sm text-plum-400">Đã hiển thị tất cả bài viết 🎉</p>
+                <p className="text-sm text-text-subtle">Đã hiển thị tất cả bài viết 🎉</p>
               )}
             </div>
           </>

@@ -93,7 +93,7 @@ export function getSocialPlatform(url: string): SocialPlatform {
   // Mặc định là website cá nhân
   return {
     name: 'Website',
-    color: 'hover:text-brand-600 hover:bg-brand-50 hover:border-brand-200',
+    color: 'hover:text-primary-solid hover:bg-primary-soft hover:border-primary-soft-border',
     icon: (
       <svg className="h-4 w-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"/>

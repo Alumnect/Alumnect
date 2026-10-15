@@ -2,7 +2,7 @@
 
 /** Ô nhập chuẩn của module Mentoring (input, textarea, select). */
 export const MENTORING_INPUT =
-  'w-full rounded-xl border border-cream-300 bg-white px-3.5 py-2.5 text-sm text-plum-900 outline-none transition placeholder:text-plum-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 disabled:bg-cream-100 dark:border-white/10 dark:bg-[#18191a] dark:text-white'
+  'w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-text outline-none transition placeholder:text-text-subtle focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-surface-2'
 
 /** Lấy thông báo lỗi từ phản hồi API (axios interceptor trả Error có message). */
 export function apiErrorMessage(err: unknown, fallback: string) {

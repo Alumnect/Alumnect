@@ -12,18 +12,18 @@ export function GroupSidebarInfo({ group: _group }: GroupSidebarInfoProps) {
     <aside className="sticky top-20">
       <Card
         hover={false}
-        className="rounded-3xl border border-plum-900/[0.08] bg-white p-5 shadow-sm dark:border-[#393a3b] dark:bg-[#242526]"
+        className="rounded-3xl border border-border bg-surface p-5 shadow-sm"
       >
         <div className="flex items-center gap-2.5">
-          <div className="grid h-8 w-8 place-items-center rounded-xl bg-brand-500/10 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
+          <div className="grid h-8 w-8 place-items-center rounded-xl bg-primary-soft text-primary-solid">
             <PenSquare size={16} />
           </div>
-          <h3 className="font-bold text-sm text-plum-900 dark:text-white">
+          <h3 className="font-bold text-sm text-text">
             Đóng góp cho cộng đồng
           </h3>
         </div>
 
-        <p className="mt-2.5 text-xs leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
+        <p className="mt-2.5 text-xs leading-relaxed text-text-muted">
           Cảm ơn bạn đã đồng hành. Mỗi chia sẻ và thảo luận của bạn đều giúp cộng đồng ngày càng phát triển.
         </p>
       </Card>

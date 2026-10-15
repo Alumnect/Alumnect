@@ -66,7 +66,7 @@ function MyMentoringRequestsContent() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-3 rounded-2xl border border-plum-900/[0.08] bg-white p-5 dark:border-white/10 dark:bg-[#242526]">
+            <div key={i} className="space-y-3 rounded-2xl border border-border bg-surface p-5">
               <Skeleton className="h-5 w-40 rounded-full" />
               <Skeleton className="h-5 w-3/4 rounded-md" />
               <Skeleton className="h-4 w-full rounded-md" />
@@ -101,7 +101,7 @@ function MyMentoringRequestsContent() {
         />
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">{totalElements} yêu cầu</p>
+          <p className="text-xs text-text-subtle">{totalElements} yêu cầu</p>
           {filteredRequests.map((req) => (
             <MyRequestCard key={req.id} request={req} />
           ))}

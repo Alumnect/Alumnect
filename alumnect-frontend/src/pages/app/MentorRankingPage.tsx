@@ -64,10 +64,10 @@ export function MentorRankingPage() {
       {/* Category Selector theo lĩnh vực */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3 px-1">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             Chọn Lĩnh Vực Chuyên Môn
           </h2>
-          <span className="text-xs text-plum-400">
+          <span className="text-xs text-text-subtle">
             {industries.length} lĩnh vực
           </span>
         </div>

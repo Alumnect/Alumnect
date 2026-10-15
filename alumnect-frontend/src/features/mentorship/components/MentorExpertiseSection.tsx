@@ -33,13 +33,13 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
   return (
     <Card
       hover={false}
-      className="border border-plum-900/[0.08] bg-white p-6 sm:p-7 text-left space-y-6 dark:bg-[#242526] dark:border-[#393a3b]"
+      className="border border-border bg-surface p-6 sm:p-7 text-left space-y-6"
     >
-      <div className="flex items-center gap-2.5 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/5 text-violet-600 dark:bg-violet-600/40 dark:text-violet-400">
+      <div className="flex items-center gap-2.5 border-b border-border pb-3.5">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-info-soft text-info">
           <Sparkles className="h-4 w-4" />
         </span>
-        <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-lg font-bold text-text">
           Lĩnh vực hỗ trợ & Kỹ năng chuyên môn
         </h2>
       </div>
@@ -47,8 +47,8 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
       {/* 1. Lĩnh vực hỗ trợ chuẩn (Supported Fields) */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Briefcase className="h-4 w-4 text-brand-600" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+          <Briefcase className="h-4 w-4 text-primary-solid" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             Lĩnh vực cố vấn
           </h3>
         </div>
@@ -66,7 +66,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
             ))}
           </div>
         ) : (
-          <p className="text-xs text-plum-400 italic">
+          <p className="text-xs text-text-subtle italic">
             Mentor chưa chọn lĩnh vực cố vấn cụ thể.
           </p>
         )}
@@ -74,10 +74,10 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
 
       {/* 2. Chủ đề cố vấn chuyên sâu (Topics) */}
       {hasTopics && (
-        <div className="space-y-3 border-t border-plum-900/[0.05] pt-4 dark:border-[#393a3b]">
+        <div className="space-y-3 border-t border-border pt-4">
           <div className="flex items-center gap-2">
-            <Hash className="h-4 w-4 text-coral-500" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+            <Hash className="h-4 w-4 text-danger" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
               Chủ đề cố vấn chuyên sâu
             </h3>
           </div>
@@ -86,7 +86,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
             {mentor.topics.map((topic, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 rounded-xl bg-cream-100 px-3 py-1.5 text-xs font-semibold text-plum-800 border border-plum-900/5 dark:bg-white/5 dark:text-[#e4e6eb]"
+                className="inline-flex items-center gap-1 rounded-xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text border border-border"
               >
                 <span>#{topic}</span>
               </span>
@@ -96,10 +96,10 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
       )}
 
       {/* 3. Kỹ năng chuyên môn phân theo nhóm (Skills Grouped) */}
-      <div className="space-y-4 border-t border-plum-900/[0.05] pt-4 dark:border-[#393a3b]">
+      <div className="space-y-4 border-t border-border pt-4">
         <div className="flex items-center gap-2">
-          <Layers className="h-4 w-4 text-mint-600" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-[#8f9399]">
+          <Layers className="h-4 w-4 text-success" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             Kỹ năng chuyên môn
           </h3>
         </div>
@@ -108,14 +108,14 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
           <div className="space-y-3.5">
             {Object.entries(groupedSkills).map(([groupName, skills]) => (
               <div key={groupName} className="space-y-2">
-                <p className="text-[11px] font-bold text-plum-500 dark:text-[#8f9399]">
+                <p className="text-xs font-bold text-text-subtle">
                   {groupName}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {skills.map((skill) => (
                     <span
                       key={skill.id}
-                      className="inline-flex items-center rounded-xl bg-white px-3 py-1 text-xs font-semibold text-plum-700 border border-plum-900/10 shadow-2xs hover:border-brand-300 transition-colors dark:bg-[#18191a] dark:text-[#e4e6eb] dark:border-[#393a3b]"
+                      className="inline-flex items-center rounded-xl bg-surface px-3 py-1 text-xs font-semibold text-text-muted border border-border shadow-2xs hover:border-primary-soft-border transition-colors"
                     >
                       {skill.skillName}
                     </span>
@@ -125,7 +125,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
             ))}
           </div>
         ) : (
-          <p className="text-xs text-plum-400 italic">
+          <p className="text-xs text-text-subtle italic">
             Mentor chưa cập nhật danh sách kỹ năng chuyên môn.
           </p>
         )}

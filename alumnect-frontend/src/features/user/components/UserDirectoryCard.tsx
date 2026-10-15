@@ -71,7 +71,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
 
   return (
     <TiltCard className="group h-full" max={5}>
-      <Card hover={false} className="relative flex h-full flex-col justify-between p-6 text-center transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/10 border border-plum-900/10 bg-white/80 backdrop-blur-sm">
+      <Card hover={false} className="relative flex h-full flex-col justify-between p-6 text-center transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/10 border border-border bg-surface/80 backdrop-blur-sm">
         <div>
           {/* Avatar Section */}
           <div className="mx-auto mt-2 mb-4 inline-block">
@@ -93,40 +93,40 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
           <div>
             <Link
               to={`/app/profile?userId=${user.userId}`}
-              className="text-base font-extrabold text-plum-900 transition-colors hover:text-brand-600 line-clamp-1"
+              className="text-base font-extrabold text-text transition-colors hover:text-primary-solid line-clamp-1"
             >
               {user.fullName}
             </Link>
-            <p className="mt-1 text-xs text-plum-500 line-clamp-2 min-h-[34px] leading-relaxed">
+            <p className="mt-1 text-xs text-text-subtle line-clamp-2 min-h-[34px] leading-relaxed">
               {user.headline || (user.role === 'ALUMNI' ? 'Cựu sinh viên FPT University' : 'Sinh viên FPT University')}
             </p>
           </div>
 
           {/* Major, Cohort & City Tags */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs">
             {user.major && (
               <span
                 title={user.major.name}
-                className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2.5 py-1 font-semibold text-brand-700 whitespace-nowrap border border-brand-200/50"
+                className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2.5 py-1 font-semibold text-primary-solid whitespace-nowrap border border-brand-200/50"
               >
-                <GraduationCap size={13} className="shrink-0 text-brand-500" />
+                <GraduationCap size={13} className="shrink-0 text-primary-solid" />
                 {user.major.code}
               </span>
             )}
             {user.cohort && (
-              <span className="rounded-lg bg-plum-900/[0.04] px-2.5 py-1 font-semibold text-plum-700 whitespace-nowrap border border-plum-900/5">
+              <span className="rounded-lg bg-surface-2 px-2.5 py-1 font-semibold text-text-muted whitespace-nowrap border border-border">
                 Khóa K{user.cohort}
               </span>
             )}
             {user.city && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-plum-900/[0.04] px-2.5 py-1 text-plum-600 whitespace-nowrap border border-plum-900/5">
-                <MapPin size={11} className="text-plum-400" />
+              <span className="inline-flex items-center gap-1 rounded-lg bg-surface-2 px-2.5 py-1 text-text-muted whitespace-nowrap border border-border">
+                <MapPin size={11} className="text-text-subtle" />
                 {user.city}
               </span>
             )}
             {user.mutualFollowsCount && user.mutualFollowsCount > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700 whitespace-nowrap border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40">
-                <Users size={11} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span className="inline-flex items-center gap-1 rounded-lg bg-success-soft px-2.5 py-1 font-semibold text-success whitespace-nowrap border border-success-border">
+                <Users size={11} className="shrink-0 text-success" />
                 {user.mutualFollowsCount} bạn chung
               </span>
             ) : null}
@@ -134,10 +134,10 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
 
           {/* Primary Experience / Company */}
           {user.primaryExperience && (
-            <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-plum-600 font-medium line-clamp-1 bg-plum-900/[0.02] py-1 px-2 rounded-lg">
-              <Briefcase size={12} className="shrink-0 text-plum-400" />
+            <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted font-medium line-clamp-1 bg-surface-2 py-1 px-2 rounded-lg">
+              <Briefcase size={12} className="shrink-0 text-text-subtle" />
               <span>
-                {user.primaryExperience.title} tại <strong className="text-plum-900">{user.primaryExperience.company}</strong>
+                {user.primaryExperience.title} tại <strong className="text-text">{user.primaryExperience.company}</strong>
               </span>
             </div>
           )}
@@ -148,13 +148,13 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
               {user.skills.slice(0, 3).map((s) => (
                 <span
                   key={s.id}
-                  className="rounded-md bg-plum-900/[0.04] px-2 py-0.5 text-[10.5px] font-medium text-plum-600 whitespace-nowrap"
+                  className="rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-text-muted whitespace-nowrap"
                 >
                   {s.skillName}
                 </span>
               ))}
               {user.skills.length > 3 && (
-                <span className="rounded-md bg-plum-900/[0.04] px-1.5 py-0.5 text-[10px] font-semibold text-plum-400">
+                <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-xs font-semibold text-text-subtle">
                   +{user.skills.length - 3}
                 </span>
               )}
@@ -163,7 +163,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-5 border-t border-plum-900/[0.08] pt-4">
+        <div className="mt-5 border-t border-border pt-4">
           <div className="flex items-center gap-2">
             {isOwn ? (
               <Button
@@ -181,14 +181,14 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                   variant={isFollowingLocal ? 'secondary' : 'outline'}
                   className={cn(
                     'flex-1 text-xs font-semibold transition-all duration-200',
-                    !isFollowingLocal && 'text-[#F27024] border-[#F27024]/40 bg-[#F27024]/5 hover:bg-[#F27024] hover:text-white shadow-xs'
+                    !isFollowingLocal && 'text-primary-solid border-primary-soft-border bg-primary-soft hover:bg-primary-solid hover:text-white shadow-xs'
                   )}
                   disabled={isPending}
                   leftIcon={
                     isPending ? (
                       <Loader2 size={13} className="animate-spin" />
                     ) : isFollowingLocal ? (
-                      <UserCheck size={13} className="text-emerald-600" />
+                      <UserCheck size={13} className="text-success" />
                     ) : (
                       <UserPlus size={13} />
                     )
@@ -201,7 +201,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="border border-slate-200/90 text-slate-600 text-xs px-2.5 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 transition-colors"
+                  className="border border-border text-text-muted text-xs px-2.5 hover:bg-primary-soft hover:text-primary-solid hover:border-primary-soft-border transition-colors"
                   onClick={handleMessage}
                   title="Nhắn tin"
                 >
@@ -211,7 +211,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
             )}
           </div>
 
-          <p className="mt-2.5 text-[11px] text-plum-400 font-medium">
+          <p className="mt-2.5 text-xs text-text-subtle font-medium">
             <strong>{compact(followersCountLocal)}</strong> người theo dõi
           </p>
         </div>

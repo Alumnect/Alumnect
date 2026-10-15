@@ -26,20 +26,20 @@ export function MentoringTaskHistoryTimeline({ history }: MentoringTaskHistoryTi
     switch (eventType) {
       case 'TASK_ACTIVATED':
       case 'PAYMENT_SUCCESS':
-        return <Sparkles className="h-4 w-4 text-mint-600" />
+        return <Sparkles className="h-4 w-4 text-success" />
       case 'WORK_LOG_SUBMITTED':
-        return <FileEdit className="h-4 w-4 text-violet-600" />
+        return <FileEdit className="h-4 w-4 text-info" />
       case 'WORK_LOG_UPDATED':
-        return <Clock className="h-4 w-4 text-amber-600" />
+        return <Clock className="h-4 w-4 text-warning" />
       case 'WORK_LOG_CONFIRMED':
       case 'TASK_COMPLETED':
-        return <CheckCircle2 className="h-4 w-4 text-mint-600" />
+        return <CheckCircle2 className="h-4 w-4 text-success" />
       case 'TASK_CANCELLED':
-        return <XCircle className="h-4 w-4 text-coral-600" />
+        return <XCircle className="h-4 w-4 text-danger" />
       case 'TASK_DISPUTED':
-        return <AlertTriangle className="h-4 w-4 text-amber-600" />
+        return <AlertTriangle className="h-4 w-4 text-warning" />
       default:
-        return <Clock className="h-4 w-4 text-brand-600" />
+        return <Clock className="h-4 w-4 text-primary-solid" />
     }
   }
 
@@ -47,18 +47,18 @@ export function MentoringTaskHistoryTimeline({ history }: MentoringTaskHistoryTi
     switch (eventType) {
       case 'TASK_ACTIVATED':
       case 'PAYMENT_SUCCESS':
-        return 'bg-mint-100 ring-mint-300 dark:bg-mint-950/60 dark:ring-mint-700'
+        return 'bg-success-soft ring-success-border'
       case 'WORK_LOG_SUBMITTED':
-        return 'bg-violet-500/10 ring-violet-300 dark:bg-violet-600/60 dark:ring-violet-500'
+        return 'bg-info-soft ring-info-border'
       case 'WORK_LOG_UPDATED':
-        return 'bg-amber-100 ring-amber-300 dark:bg-amber-950/60 dark:ring-amber-700'
+        return 'bg-warning-soft ring-warning-border'
       case 'WORK_LOG_CONFIRMED':
       case 'TASK_COMPLETED':
-        return 'bg-mint-100 ring-mint-300 dark:bg-mint-950/60 dark:ring-mint-700'
+        return 'bg-success-soft ring-success-border'
       case 'TASK_CANCELLED':
-        return 'bg-coral-100 ring-coral-300 dark:bg-coral-950/60 dark:ring-coral-700'
+        return 'bg-danger-soft ring-danger-border'
       case 'TASK_DISPUTED':
-        return 'bg-amber-100 ring-amber-300 dark:bg-amber-950/60 dark:ring-amber-700'
+        return 'bg-warning-soft ring-warning-border'
       default:
         return 'bg-brand-600/10 ring-brand-600/30'
     }
@@ -67,7 +67,7 @@ export function MentoringTaskHistoryTimeline({ history }: MentoringTaskHistoryTi
   return (
     <div className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-6">
-        <Clock className="h-5 w-5 text-brand-600" />
+        <Clock className="h-5 w-5 text-primary-solid" />
         <h3 className="text-base font-bold text-foreground">Nhật ký tiến trình & Lịch sử nhiệm vụ (Audit Trail)</h3>
       </div>
 
@@ -101,7 +101,7 @@ export function MentoringTaskHistoryTimeline({ history }: MentoringTaskHistoryTi
                   {event.description}
                 </p>
 
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground/80">{event.actorName}</span>
                   <span>•</span>
                   <span className="rounded-md bg-muted px-2 py-0.5 font-medium">{event.actorRole}</span>

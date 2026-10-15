@@ -78,22 +78,22 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
       <div className="w-full max-w-lg animate-in fade-in zoom-in-95 duration-150">
-        <Card hover={false} className="border border-plum-900/15 p-6 shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
+        <Card hover={false} className="border border-border-strong p-6 shadow-2xl dark:bg-surface">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-plum-900/10 pb-4 dark:border-white/10">
+          <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-primary-solid">
                 <UserPlus size={20} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-plum-900 dark:text-white">Mời thành viên vào nhóm</h2>
-                <p className="text-xs text-plum-500 dark:text-plum-400 truncate max-w-[280px]">{effectiveGroupName}</p>
+                <h2 className="text-base font-bold text-text">Mời thành viên vào nhóm</h2>
+                <p className="text-xs text-text-subtle truncate max-w-[280px]">{effectiveGroupName}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-plum-400 hover:bg-plum-900/5 hover:text-plum-700 dark:text-plum-400 dark:hover:bg-white/10 dark:hover:text-white"
+              className="rounded-lg p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
             >
               <X size={18} />
             </button>
@@ -102,20 +102,20 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
           {/* Search Box */}
           <div className="mt-4">
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-plum-400" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm sinh viên hoặc cựu sinh viên theo tên hoặc email..."
-                className="w-full rounded-xl border border-plum-900/15 py-2.5 pl-10 pr-3.5 text-xs text-plum-900 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-[#3a3b3c] dark:bg-[#18191a] dark:text-white"
+                className="w-full rounded-xl border border-border-strong py-2.5 pl-10 pr-3.5 text-xs text-text outline-none transition focus:border-primary focus:ring-1 focus:ring-primary dark:bg-bg"
                 autoFocus
               />
               {isSearching && (
-                <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-brand-500" />
+                <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary-solid" />
               )}
             </div>
-            <p className="mt-1.5 text-[11px] text-plum-400 dark:text-plum-400">
+            <p className="mt-1.5 text-xs text-text-subtle">
               Nhập tối thiểu 2 ký tự để tìm kiếm người dùng trong hệ thống
             </p>
           </div>
@@ -123,13 +123,13 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
           {/* Results list */}
           <div className="mt-4 max-h-72 overflow-y-auto space-y-2 pr-1">
             {debouncedSearch.length < 2 ? (
-              <div className="py-8 text-center text-xs text-plum-400 dark:text-plum-500">
+              <div className="py-8 text-center text-xs text-text-subtle">
                 Hãy nhập tên hoặc email người bạn muốn mời
               </div>
             ) : isSearching && candidates.length === 0 ? (
-              <div className="py-8 text-center text-xs text-plum-400">Đang tìm kiếm...</div>
+              <div className="py-8 text-center text-xs text-text-subtle">Đang tìm kiếm...</div>
             ) : candidates.length === 0 ? (
-              <div className="py-8 text-center text-xs text-plum-400">Không tìm thấy người dùng phù hợp</div>
+              <div className="py-8 text-center text-xs text-text-subtle">Không tìm thấy người dùng phù hợp</div>
             ) : (
               candidates.map((candidate) => {
                 const status = getMemberStatus(candidate.userId)
@@ -138,7 +138,7 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
                 return (
                   <div
                     key={candidate.userId}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-plum-900/10 p-3 transition-colors hover:bg-plum-900/[0.02] dark:border-[#393a3b] dark:hover:bg-white/[0.03]"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border p-3 transition-colors hover:bg-surface-2 dark:hover:bg-white/[0.03]"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar
@@ -147,14 +147,14 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
                         size={38}
                       />
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-plum-900 dark:text-white">
+                        <p className="truncate text-xs font-bold text-text">
                           {candidate.fullName}
                         </p>
-                        <p className="truncate text-[11px] text-plum-500 dark:text-plum-400">
+                        <p className="truncate text-xs text-text-subtle">
                           {candidate.email}
                         </p>
                         {candidate.major && (
-                          <span className="inline-block rounded-md bg-cream-200 px-1.5 py-0.5 text-[11px] font-medium text-plum-600 dark:bg-white/10 dark:text-[#b0b3b8] mt-0.5">
+                          <span className="inline-block rounded-md bg-surface-3 px-1.5 py-0.5 text-xs font-medium text-text-muted mt-0.5">
                             {typeof candidate.major === 'object' && candidate.major !== null
                               ? (candidate.major as { name?: string }).name || ''
                               : String(candidate.major)}
@@ -165,15 +165,15 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
 
                     <div className="shrink-0">
                       {status === 'LEADER' ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary-solid">
                           Trưởng nhóm
                         </span>
                       ) : status === 'JOINED' || status === 'ACTIVE' ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-mint-50 px-2.5 py-1 text-[11px] font-bold text-mint-700 dark:bg-mint-500/15 dark:text-mint-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-xs font-bold text-success">
                           <CheckCircle2 size={13} /> Đã tham gia
                         </span>
                       ) : status === 'PENDING' || status === 'INVITED' ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-1 text-xs font-bold text-warning">
                           <Clock size={13} /> Đang chờ
                         </span>
                       ) : status === 'DECLINED' || status === 'REMOVED' || status === 'CANCELLED' ? (
@@ -205,8 +205,8 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="mt-5 flex items-center justify-between border-t border-plum-900/10 pt-3 dark:border-white/10">
-            <span className="text-[11px] text-plum-500 dark:text-plum-400">
+          <div className="mt-5 flex items-center justify-between border-t border-border pt-3">
+            <span className="text-xs text-text-subtle">
               Đang có {effectiveMembers.filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length}/{group?.maxMembers || 10} thành viên
             </span>
             <Button variant="ghost" size="sm" onClick={onClose}>

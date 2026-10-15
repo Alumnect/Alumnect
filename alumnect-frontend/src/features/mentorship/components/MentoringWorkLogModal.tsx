@@ -182,18 +182,18 @@ export function MentoringWorkLogModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-plum-900/[0.08] bg-white shadow-2xl dark:border-[#393a3b] dark:bg-[#242526]">
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-border bg-surface shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-plum-900/[0.06] p-5 dark:border-white/[0.06]">
+        <div className="flex items-center justify-between border-b border-border p-5 dark:border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-plum-900 dark:text-white">
+              <h3 className="text-base font-bold text-text">
                 {isEditing ? 'Chỉnh sửa nhật ký công việc' : 'Thêm nhật ký công việc (Work Log)'}
               </h3>
-              <p className="text-xs text-plum-400 dark:text-[#8f9399]">
+              <p className="text-xs text-text-subtle">
                 Ghi nhận tiến độ công việc để học viên xác nhận nghiệm thu
               </p>
             </div>
@@ -203,7 +203,7 @@ export function MentoringWorkLogModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="rounded-xl p-2 text-plum-400 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-700 dark:hover:bg-white/10 dark:hover:text-white"
+            className="rounded-xl p-2 text-text-subtle transition-colors hover:bg-surface-2 hover:text-text-muted"
           >
             <X className="h-5 w-5" />
           </button>
@@ -212,81 +212,81 @@ export function MentoringWorkLogModal({
         {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 space-y-4">
           {submitError && (
-            <div className="rounded-2xl border border-coral-200 bg-coral-50 p-3.5 text-xs font-bold text-coral-700 dark:border-coral-800/40 dark:bg-coral-950/40 dark:text-coral-300">
+            <div className="rounded-2xl border border-danger-border bg-danger-soft p-3.5 text-xs font-bold text-danger">
               {submitError}
             </div>
           )}
 
           {/* Ngày thực hiện */}
           <div>
-            <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
-              Ngày thực hiện công việc <span className="text-coral-500">*</span>
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
+              Ngày thực hiện công việc <span className="text-danger">*</span>
             </label>
             <input
               type="date"
               {...register('logDate')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-plum-900/[0.1] bg-white px-4 py-2.5 text-sm font-semibold text-plum-800 outline-hidden transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-[#18191a] dark:text-[#e4e6eb]"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.logDate && (
-              <p className="mt-1 text-xs font-bold text-coral-500">{errors.logDate.message}</p>
+              <p className="mt-1 text-xs font-bold text-danger">{errors.logDate.message}</p>
             )}
           </div>
 
           {/* Mô tả tóm tắt */}
           <div>
-            <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
-              Mô tả tóm tắt nội dung <span className="text-coral-500">*</span>
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
+              Mô tả tóm tắt nội dung <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               placeholder="VD: Buổi hướng dẫn thiết kế Database & cài đặt Spring Boot"
               {...register('description')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-plum-900/[0.1] bg-white px-4 py-2.5 text-sm font-semibold text-plum-800 outline-hidden transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-[#18191a] dark:text-[#e4e6eb]"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.description && (
-              <p className="mt-1 text-xs font-bold text-coral-500">{errors.description.message}</p>
+              <p className="mt-1 text-xs font-bold text-danger">{errors.description.message}</p>
             )}
           </div>
 
           {/* Nội dung công việc hoàn thành */}
           <div>
-            <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
-              Nội dung công việc hoàn thành <span className="text-coral-500">*</span>
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
+              Nội dung công việc hoàn thành <span className="text-danger">*</span>
             </label>
             <textarea
               rows={3}
               placeholder="Chi tiết các hạng mục đã hoàn thành trong buổi làm việc..."
               {...register('workCompleted')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-plum-900/[0.1] bg-white px-4 py-2.5 text-sm font-normal text-plum-800 outline-hidden transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-[#18191a] dark:text-[#e4e6eb]"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-normal text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.workCompleted && (
-              <p className="mt-1 text-xs font-bold text-coral-500">{errors.workCompleted.message}</p>
+              <p className="mt-1 text-xs font-bold text-danger">{errors.workCompleted.message}</p>
             )}
           </div>
 
           {/* Kết quả đạt được */}
           <div>
-            <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
-              Kết quả & Sản phẩm đạt được <span className="text-coral-500">*</span>
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
+              Kết quả & Sản phẩm đạt được <span className="text-danger">*</span>
             </label>
             <textarea
               rows={3}
               placeholder="Sản phẩm bàn giao, code demo, tài liệu hướng dẫn đã hoàn thiện..."
               {...register('result')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-plum-900/[0.1] bg-white px-4 py-2.5 text-sm font-normal text-plum-800 outline-hidden transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-[#18191a] dark:text-[#e4e6eb]"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-normal text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.result && (
-              <p className="mt-1 text-xs font-bold text-coral-500">{errors.result.message}</p>
+              <p className="mt-1 text-xs font-bold text-danger">{errors.result.message}</p>
             )}
           </div>
 
           {/* Hành động tiếp theo */}
           <div>
-            <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
               Kế hoạch / Hành động tiếp theo (tùy chọn)
             </label>
             <input
@@ -294,33 +294,33 @@ export function MentoringWorkLogModal({
               placeholder="VD: Học viên làm bài tập thực hành phần JPA Repository"
               {...register('nextAction')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-plum-900/[0.1] bg-white px-4 py-2.5 text-sm font-semibold text-plum-800 outline-hidden transition-all focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-[#18191a] dark:text-[#e4e6eb]"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.nextAction && (
-              <p className="mt-1 text-xs font-bold text-coral-500">{errors.nextAction.message}</p>
+              <p className="mt-1 text-xs font-bold text-danger">{errors.nextAction.message}</p>
             )}
           </div>
 
           {/* Attachments Upload */}
           <div>
-            <label className="block text-xs font-bold text-plum-700 dark:text-[#e4e6eb] mb-1.5">
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
               Tài liệu minh chứng đính kèm (Hình ảnh, Tài liệu, Deliverables)
             </label>
 
             {uploadError && (
-              <p className="mb-2 text-xs font-bold text-coral-500">{uploadError}</p>
+              <p className="mb-2 text-xs font-bold text-danger">{uploadError}</p>
             )}
 
             <div className="flex items-center gap-3">
               <label
-                className={`inline-flex items-center gap-2 rounded-2xl border border-dashed border-plum-900/20 bg-cream-100/70 px-4 py-2.5 text-xs font-bold text-plum-600 transition-colors hover:border-brand-500 hover:text-brand-700 cursor-pointer dark:border-white/20 dark:bg-[#18191a] dark:text-[#b0b3b8] ${
+                className={`inline-flex items-center gap-2 rounded-2xl border border-dashed border-plum-900/20 bg-cream-100/70 px-4 py-2.5 text-xs font-bold text-plum-600 transition-colors hover:border-brand-500 hover:text-brand-700 cursor-pointer dark:border-white/20 dark:bg-bg dark:text-text-muted ${
                   isUploading ? 'opacity-50 pointer-events-none' : ''
                 }`}
               >
                 {isUploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-brand-600" />
+                  <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
                 ) : (
-                  <Upload className="h-4 w-4 text-brand-600" />
+                  <Upload className="h-4 w-4 text-primary-solid" />
                 )}
                 <span>{isUploading ? 'Đang tải lên...' : 'Chọn tệp tải lên'}</span>
                 <input
@@ -331,7 +331,7 @@ export function MentoringWorkLogModal({
                   className="hidden"
                 />
               </label>
-              <span className="text-[11px] text-plum-400 dark:text-[#8f9399]">
+              <span className="text-xs text-text-subtle">
                 Tối đa 20MB / tệp
               </span>
             </div>
@@ -342,11 +342,11 @@ export function MentoringWorkLogModal({
                 {attachments.map((att, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-plum-900/[0.06] bg-cream-100/80 p-2.5 text-xs dark:border-white/10 dark:bg-[#18191a]"
+                    className="flex items-center justify-between gap-2 rounded-xl border border-border bg-cream-100/80 p-2.5 text-xs dark:bg-bg"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <Paperclip className="h-3.5 w-3.5 text-brand-500 shrink-0" />
-                      <span className="truncate font-semibold text-plum-800 dark:text-[#e4e6eb]">
+                      <Paperclip className="h-3.5 w-3.5 text-primary-solid shrink-0" />
+                      <span className="truncate font-semibold text-text">
                         {att.fileName}
                       </span>
                     </div>
@@ -354,7 +354,7 @@ export function MentoringWorkLogModal({
                       type="button"
                       onClick={() => handleRemoveAttachment(i)}
                       disabled={isSubmitting}
-                      className="rounded-lg p-1 text-plum-400 hover:text-coral-600 dark:hover:text-coral-400 transition-colors"
+                      className="rounded-lg p-1 text-text-subtle hover:text-danger transition-colors"
                       title="Gỡ tệp"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -366,7 +366,7 @@ export function MentoringWorkLogModal({
           </div>
 
           {/* Footer Submit Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-plum-900/[0.06] dark:border-white/[0.06]">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border dark:border-white/[0.06]">
             <Button
               type="button"
               variant="secondary"

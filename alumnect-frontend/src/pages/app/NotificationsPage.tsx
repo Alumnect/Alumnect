@@ -50,18 +50,18 @@ const ICONS: Record<NotificationType, LucideIcon> = {
 }
 
 const TONES: Record<NotificationType, string> = {
-  POST_LIKE: 'bg-rose-500 text-white shadow-md shadow-rose-500/30',
-  POST_COMMENT: 'bg-sky-500 text-white shadow-md shadow-sky-500/30',
-  USER_FOLLOW: 'bg-brand-500 text-white shadow-md shadow-brand-500/30',
-  FORUM_ANSWER: 'bg-violet-600 text-white shadow-md shadow-violet-500/30',
-  REPORT_RESOLVED: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
-  WELCOME: 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30',
+  POST_LIKE: 'bg-danger text-text-inverse shadow-md shadow-rose-500/30',
+  POST_COMMENT: 'bg-info text-text-inverse shadow-md shadow-sky-500/30',
+  USER_FOLLOW: 'bg-primary-solid text-on-primary shadow-md shadow-brand-500/30',
+  FORUM_ANSWER: 'bg-info text-text-inverse shadow-md shadow-violet-500/30',
+  REPORT_RESOLVED: 'bg-warning text-text-inverse shadow-md shadow-amber-500/30',
+  WELCOME: 'bg-success text-text-inverse shadow-md shadow-emerald-500/30',
   SYSTEM_BROADCAST: 'bg-gradient-to-r from-amber-500 to-brand-600 text-white shadow-md shadow-brand-500/30',
   MENTORING_REQUEST: 'bg-indigo-500 text-white shadow-md shadow-indigo-500/30',
   MENTORING_TASK: 'bg-teal-600 text-white shadow-md shadow-teal-600/30',
-  MENTORING_WORK_LOG: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30',
-  MENTORING_GROUP: 'bg-violet-600 text-white shadow-md shadow-violet-600/30',
-  MENTORING_ACCOUNT: 'bg-sky-600 text-white shadow-md shadow-sky-600/30',
+  MENTORING_WORK_LOG: 'bg-success text-text-inverse shadow-md shadow-emerald-600/30',
+  MENTORING_GROUP: 'bg-info text-text-inverse shadow-md shadow-violet-600/30',
+  MENTORING_ACCOUNT: 'bg-info text-text-inverse shadow-md shadow-sky-600/30',
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -216,7 +216,7 @@ export function NotificationsPage() {
       ) : notifications.length === 0 ? (
         <Card className="py-12">
           <EmptyState
-            icon={<Bell size={40} className="text-plum-400" />}
+            icon={<Bell size={40} className="text-text-subtle" />}
             title="Chưa có thông báo nào"
             description="Bạn sẽ nhận được thông báo khi có người thích, bình luận bài viết, theo dõi hoặc trả lời câu hỏi của bạn."
           />
@@ -225,7 +225,7 @@ export function NotificationsPage() {
         <div className="space-y-3">
           {notifications.map((n, idx) => {
             const Icon = ICONS[n.type] || Bell
-            const toneClass = TONES[n.type] || 'bg-brand-500/15 text-brand-600'
+            const toneClass = TONES[n.type] || 'bg-brand-500/15 text-primary-solid'
             const avatarName = n.senderName || 'Hệ thống AlumNect'
             const isSystemBroadcast = n.type === 'SYSTEM_BROADCAST'
             const isReportResolved = n.type === 'REPORT_RESOLVED'
@@ -241,20 +241,20 @@ export function NotificationsPage() {
                   hover
                   onClick={() => handleNotificationClick(n)}
                   className={cn(
-                    'group flex cursor-pointer items-center gap-4 p-4 transition-all duration-200 hover:shadow-md dark:border-[#393a3b]',
+                    'group flex cursor-pointer items-center gap-4 p-4 transition-all duration-200 hover:shadow-md dark:border-border',
                     !n.isRead
-                      ? 'bg-brand-500/[0.05] ring-1 ring-inset ring-brand-400/30 dark:bg-[#3a3b3c]/60 dark:ring-brand-500/40'
-                      : 'bg-white/95 dark:bg-[#242526] opacity-90 hover:opacity-100'
+                      ? 'bg-brand-500/[0.05] ring-1 ring-inset ring-brand-400/30 dark:bg-surface-2/60 dark:ring-brand-500/40'
+                      : 'bg-surface opacity-90 hover:opacity-100'
                   )}
                 >
                   {/* Logo / Avatar: Thông báo hệ thống và Vi phạm tiêu chuẩn có logo riêng biệt */}
                   {isSystemBroadcast ? (
                     <div className="relative shrink-0">
-                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-amber-500 via-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/30 ring-2 ring-white dark:ring-[#242526] dark:from-amber-500 dark:via-brand-500 dark:to-brand-600">
+                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-amber-500 via-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/30 ring-2 ring-surface dark:from-amber-500 dark:via-brand-500 dark:to-brand-600">
                         <Megaphone size={22} className="text-white drop-shadow-sm" />
                       </div>
                       <span
-                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white dark:ring-[#242526] shadow-xs"
+                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-success text-text-inverse ring-2 ring-surface shadow-xs"
                         title="Thông báo chính thức từ hệ thống"
                       >
                         <ShieldCheck size={12} strokeWidth={3} className="text-white" />
@@ -262,11 +262,11 @@ export function NotificationsPage() {
                     </div>
                   ) : isReportResolved ? (
                     <div className="relative shrink-0">
-                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-amber-500 text-white shadow-lg shadow-rose-500/30 ring-2 ring-white dark:ring-[#242526] dark:from-rose-500 dark:via-red-500 dark:to-orange-500">
+                      <div className="grid h-[46px] w-[46px] place-items-center rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-amber-500 text-white shadow-lg shadow-rose-500/30 ring-2 ring-surface dark:from-rose-500 dark:via-red-500 dark:to-orange-500">
                         <ShieldAlert size={22} className="text-white drop-shadow-sm" />
                       </div>
                       <span
-                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-amber-500 text-white ring-2 ring-white dark:ring-[#242526] shadow-xs"
+                        className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-warning text-text-inverse ring-2 ring-surface shadow-xs"
                         title="Vi phạm tiêu chuẩn cộng đồng"
                       >
                         <AlertTriangle size={11} strokeWidth={3} className="text-white" />
@@ -277,7 +277,7 @@ export function NotificationsPage() {
                       <Avatar src={n.senderAvatarUrl || undefined} name={avatarName} size={46} />
                       <span
                         className={cn(
-                          'absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full ring-2 ring-white dark:ring-[#242526]',
+                          'absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full ring-2 ring-surface',
                           toneClass
                         )}
                       >
@@ -292,17 +292,17 @@ export function NotificationsPage() {
 
                   <div className="min-w-0 flex-1">
                     {n.title && (
-                      <p className="text-sm font-bold text-slate-900 dark:text-[#f0f2f5] mb-0.5">{n.title}</p>
+                      <p className="text-sm font-bold text-text mb-0.5">{n.title}</p>
                     )}
-                    <p className="text-sm leading-snug text-slate-800 dark:text-[#e4e6eb]">
+                    <p className="text-sm leading-snug text-text">
                       {n.senderName && !n.title && (
-                        <span className="font-bold text-slate-900 dark:text-[#f0f2f5] mr-1.5">
+                        <span className="font-bold text-text mr-1.5">
                           {n.senderName}
                         </span>
                       )}
-                      <span className="text-slate-700 dark:text-[#b0b3b8]">{n.content}</span>
+                      <span className="text-text-muted">{n.content}</span>
                     </p>
-                    <span className="mt-1 block text-xs text-slate-400 dark:text-[#8a8d91]">
+                    <span className="mt-1 block text-xs text-text-subtle dark:text-text-subtle">
                       {formatRelativeTime(n.createdAt)}
                     </span>
 
@@ -335,7 +335,7 @@ export function NotificationsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 text-xs font-bold px-2.5 rounded-lg text-coral-600 hover:bg-coral-50"
+                            className="h-7 text-xs font-bold px-2.5 rounded-lg text-danger hover:bg-danger-soft"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleDeclineInvitation(n, groupId)
@@ -347,7 +347,7 @@ export function NotificationsPage() {
                           </Button>
                           <button
                             type="button"
-                            className="h-7 inline-flex items-center text-xs font-semibold px-2 text-plum-500 hover:text-brand-600 hover:underline dark:text-[#8f9399]"
+                            className="h-7 inline-flex items-center text-xs font-semibold px-2 text-text-subtle hover:text-primary-solid hover:underline"
                             onClick={(e) => {
                               e.stopPropagation()
                               navigate(`/app/mentoring/groups/${groupId}`)
@@ -363,7 +363,7 @@ export function NotificationsPage() {
                   {!n.isRead && (
                     <span
                       title="Chưa đọc"
-                      className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-500 shadow-sm"
+                      className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary-solid shadow-sm"
                     />
                   )}
                 </Card>

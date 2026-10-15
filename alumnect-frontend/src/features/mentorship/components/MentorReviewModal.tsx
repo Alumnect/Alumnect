@@ -18,13 +18,13 @@ export function MentorReviewModal({ mentorName, isSubmitting, onClose, onSubmit 
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 shadow-2xl dark:bg-[#242526]">
+      <div className="w-full max-w-md space-y-4 rounded-3xl bg-surface p-6 shadow-2xl">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-bold text-plum-900 dark:text-white">Đánh giá Mentor</h3>
-            <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Chia sẻ trải nghiệm làm việc với {mentorName}</p>
+            <h3 className="text-lg font-bold text-text">Đánh giá Mentor</h3>
+            <p className="text-xs text-text-subtle">Chia sẻ trải nghiệm làm việc với {mentorName}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-plum-400 hover:bg-cream-100 dark:hover:bg-white/5">
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-text-subtle hover:bg-surface-2">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -41,7 +41,7 @@ export function MentorReviewModal({ mentorName, isSubmitting, onClose, onSubmit 
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Nhận xét (không bắt buộc)"
-          className="w-full rounded-2xl border border-plum-900/10 bg-white p-3 text-sm text-plum-900 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-[#18191a] dark:text-white"
+          className="w-full rounded-2xl border border-border bg-surface p-3 text-sm text-text outline-none focus:border-primary"
         />
         <div className="flex justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>Để sau</Button>

@@ -60,7 +60,7 @@ export function GroupDetailHeader({
   }
 
   return (
-    <Card hover={false} className="overflow-hidden rounded-3xl border border-plum-900/[0.08] p-0 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+    <Card hover={false} className="overflow-hidden rounded-3xl border border-border p-0 shadow-card dark:bg-surface">
       <GroupCover
         url={group.coverImageUrl}
         name={group.name}
@@ -72,31 +72,31 @@ export function GroupDetailHeader({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
-                <Badge tone="violet" className="rounded-full px-2.5 py-0.5 text-[11px] font-bold">
+                <Badge tone="violet" className="rounded-full px-2.5 py-0.5 text-xs font-bold">
                   {categoryLabel(group.category)}
                 </Badge>
                 <Badge
                   tone={isPrivate ? 'gold' : 'aqua'}
                   icon={isPrivate ? <Lock size={10} /> : <Globe size={10} />}
-                  className="rounded-full px-2.5 py-0.5 text-[11px] font-bold"
+                  className="rounded-full px-2.5 py-0.5 text-xs font-bold"
                 >
                   {isPrivate ? 'Riêng tư' : 'Công khai'}
                 </Badge>
                 {group.status === 'INACTIVE' && (
-                  <Badge tone="neutral" className="rounded-full px-2.5 py-0.5 text-[11px] font-bold">
+                  <Badge tone="neutral" className="rounded-full px-2.5 py-0.5 text-xs font-bold">
                     Tạm ngừng
                   </Badge>
                 )}
               </div>
 
-              <h1 className="mt-1.5 break-words text-2xl font-black leading-tight tracking-tight text-plum-900 sm:text-3xl dark:text-white">
+              <h1 className="mt-1.5 break-words text-2xl font-black leading-tight tracking-tight text-text sm:text-3xl">
                 {group.name}
               </h1>
 
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-plum-500 dark:text-[#b0b3b8]">
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-text-subtle">
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <Users size={16} className="text-brand-500" />
-                  <strong className="text-plum-900 dark:text-white">{group.memberCount}</strong> thành viên
+                  <Users size={16} className="text-primary-solid" />
+                  <strong className="text-text">{group.memberCount}</strong> thành viên
                 </span>
 
                 {createdDate && (
@@ -108,12 +108,12 @@ export function GroupDetailHeader({
                 {group.owner && (
                   <Link
                     to={`/app/profile?userId=${group.owner.userId}`}
-                    className="inline-flex min-w-0 items-center gap-1.5 font-medium text-plum-700 transition-colors hover:text-brand-600 dark:text-plum-300 dark:hover:text-brand-400"
+                    className="inline-flex min-w-0 items-center gap-1.5 font-medium text-text-muted transition-colors hover:text-primary-solid"
                   >
-                    <Crown size={15} className="shrink-0 text-amber-500" />
+                    <Crown size={15} className="shrink-0 text-warning" />
                     <Avatar src={group.owner.avatarUrl ?? ''} name={group.owner.fullName} size={20} />
                     <span className="truncate">{group.owner.fullName}</span>
-                    <span className="hidden shrink-0 text-xs text-plum-400 sm:inline dark:text-[#b0b3b8]">(Người sáng lập)</span>
+                    <span className="hidden shrink-0 text-xs text-text-subtle sm:inline">(Người sáng lập)</span>
                   </Link>
                 )}
               </div>
@@ -153,7 +153,7 @@ export function GroupDetailHeader({
                     leftIcon={<MessagesSquare size={16} />}
                     onClick={handleCreateChat}
                     disabled={createChatMut.isPending}
-                    className="rounded-xl border border-brand-500/20 bg-brand-50/70 text-brand-600 hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400"
+                    className="rounded-xl border border-primary-soft-border bg-brand-50/70 text-primary-solid hover:bg-primary-soft dark:bg-brand-500/10"
                   >
                     {createChatMut.isPending ? 'Đang khởi tạo...' : 'Tạo nhóm chat'}
                   </Button>
@@ -166,7 +166,7 @@ export function GroupDetailHeader({
               size="sm"
               leftIcon={<Share2 size={16} />}
               onClick={() => setShareModalOpen(true)}
-              className="rounded-xl border border-plum-900/10 bg-plum-900/[0.03] dark:border-[#393a3b] dark:bg-[#3a3b3c]"
+              className="rounded-xl border border-border bg-surface-2"
             >
               Chia sẻ
             </Button>

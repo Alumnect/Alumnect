@@ -13,40 +13,40 @@ export type MentoringTone = 'brand' | 'navy' | 'mint' | 'coral' | 'gold' | 'neut
 
 const TONES: Record<MentoringTone, { card: string; icon: string; badge: string; strip: string }> = {
   brand: {
-    card: 'border-brand-200 bg-brand-50/70 dark:border-brand-700/30 dark:bg-brand-700/10',
-    icon: 'bg-brand-600 text-white',
-    badge: 'bg-brand-100 text-brand-700 dark:bg-brand-700/30 dark:text-brand-200',
-    strip: 'border-brand-200/70 bg-brand-50/70 text-brand-700 dark:border-brand-700/30 dark:bg-brand-700/10 dark:text-brand-200',
+    card: 'border-primary-soft-border bg-brand-50/70 dark:bg-brand-700/10',
+    icon: 'bg-primary-solid text-on-primary',
+    badge: 'bg-primary-soft text-primary-solid',
+    strip: 'border-brand-200/70 bg-brand-50/70 text-primary-solid dark:border-brand-700/30 dark:bg-brand-700/10',
   },
   navy: {
-    card: 'border-violet-500/20 bg-violet-500/5 dark:border-violet-400/20 dark:bg-violet-500/10',
-    icon: 'bg-violet-500 text-white',
-    badge: 'bg-violet-500/10 text-violet-500 dark:bg-violet-400/20 dark:text-violet-300',
-    strip: 'border-violet-500/15 bg-violet-500/5 text-violet-500 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-300',
+    card: 'border-info bg-info-soft',
+    icon: 'bg-info text-text-inverse',
+    badge: 'bg-info-soft text-info',
+    strip: 'border-info bg-info-soft text-info',
   },
   mint: {
-    card: 'border-mint-200 bg-mint-50 dark:border-mint-700/30 dark:bg-mint-900/20',
-    icon: 'bg-mint-600 text-white',
-    badge: 'bg-mint-100 text-mint-700 dark:bg-mint-900/40 dark:text-mint-300',
-    strip: 'border-mint-200 bg-mint-50 text-mint-800 dark:border-mint-700/30 dark:bg-mint-900/20 dark:text-mint-300',
+    card: 'border-success-border bg-success-soft',
+    icon: 'bg-success text-text-inverse',
+    badge: 'bg-success-soft text-success',
+    strip: 'border-success-border bg-success-soft text-success',
   },
   coral: {
-    card: 'border-coral-200 bg-coral-50 dark:border-coral-700/30 dark:bg-coral-900/20',
-    icon: 'bg-coral-600 text-white',
-    badge: 'bg-coral-100 text-coral-700 dark:bg-coral-900/40 dark:text-coral-300',
-    strip: 'border-coral-200 bg-coral-50 text-coral-700 dark:border-coral-700/30 dark:bg-coral-900/20 dark:text-coral-300',
+    card: 'border-danger-border bg-danger-soft',
+    icon: 'bg-danger text-text-inverse',
+    badge: 'bg-danger-soft text-danger',
+    strip: 'border-danger-border bg-danger-soft text-danger',
   },
   gold: {
-    card: 'border-amber-200 bg-amber-50 dark:border-amber-700/30 dark:bg-amber-900/20',
-    icon: 'bg-gold-500 text-white',
-    badge: 'bg-amber-100 text-gold-700 dark:bg-amber-900/40 dark:text-gold-300',
-    strip: 'border-amber-200 bg-amber-50 text-gold-700 dark:border-amber-700/30 dark:bg-amber-900/20 dark:text-gold-300',
+    card: 'border-warning-border bg-warning-soft',
+    icon: 'bg-warning text-text-inverse',
+    badge: 'bg-warning-soft text-warning',
+    strip: 'border-warning-border bg-warning-soft text-warning',
   },
   neutral: {
-    card: 'border-cream-300 bg-cream-100 dark:border-white/10 dark:bg-white/[0.03]',
+    card: 'border-border bg-surface-2 dark:bg-white/[0.03]',
     icon: 'bg-plum-700 text-white dark:bg-white/15',
-    badge: 'bg-cream-200 text-plum-700 dark:bg-white/10 dark:text-[#b0b3b8]',
-    strip: 'border-cream-300 bg-cream-100 text-plum-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-[#b0b3b8]',
+    badge: 'bg-surface-3 text-text-muted',
+    strip: 'border-border bg-surface-2 text-text-muted dark:bg-white/[0.04]',
   },
 }
 
@@ -99,10 +99,10 @@ export function MentoringActionCard({
         <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl [&>svg]:h-4.5 [&>svg]:w-4.5', t.icon)}>{icon}</span>
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-display text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">{title}</p>
-            {badge && <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', t.badge)}>{badge}</span>}
+            <p className="font-display text-sm font-bold text-text">{title}</p>
+            {badge && <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold', t.badge)}>{badge}</span>}
           </div>
-          {children && <div className="space-y-1 text-xs leading-relaxed text-plum-600 dark:text-[#b0b3b8]">{children}</div>}
+          {children && <div className="space-y-1 text-xs leading-relaxed text-text-muted">{children}</div>}
         </div>
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">{actions}</div>}
@@ -139,7 +139,7 @@ const INTENT_CLASS: Record<ActionIntent, string> = {
   primary: '',
   secondary: '',
   danger:
-    'border border-coral-200 bg-white text-coral-600 hover:border-coral-500 hover:bg-coral-50 hover:text-coral-700 dark:border-coral-700/40 dark:bg-transparent dark:text-coral-300 dark:hover:bg-coral-900/30',
+    'border border-danger-border bg-surface text-danger hover:border-danger hover:bg-danger-soft hover:text-danger dark:bg-transparent',
   ghost: '',
 }
 
@@ -192,12 +192,12 @@ export function MentoringField({
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="block text-sm font-semibold text-plum-800 dark:text-[#e4e6eb]">
+      <span className="block text-sm font-semibold text-text">
         {label}
-        {required && <span className="text-coral-500"> *</span>}
+        {required && <span className="text-danger"> *</span>}
       </span>
       {children}
-      {hint && <span className="block text-xs text-plum-500 dark:text-plum-400">{hint}</span>}
+      {hint && <span className="block text-xs text-text-subtle">{hint}</span>}
     </label>
   )
 }
@@ -238,8 +238,8 @@ export function MentoringFilterTabs<T extends string>({
             className={cn(
               'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors [&>svg]:h-3.5 [&>svg]:w-3.5',
               active
-                ? 'bg-white text-brand-700 shadow-xs dark:bg-[#3a3b3c] dark:text-white'
-                : 'text-plum-600 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
+                ? 'bg-surface text-primary-solid shadow-xs'
+                : 'text-text-muted hover:text-text',
             )}
           >
             {opt.icon}
@@ -272,19 +272,19 @@ export function MentoringStatTile({
   return (
     <Link
       to={to}
-      className="group flex items-center gap-3 rounded-2xl border border-plum-900/[0.08] bg-white p-4 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:border-white/10 dark:bg-[#242526] dark:hover:border-brand-500/40"
+      className="group flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:hover:border-brand-500/40"
     >
       <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl [&>svg]:h-5 [&>svg]:w-5', TONES[tone].badge)}>{icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-xs font-medium text-plum-500 dark:text-[#b0b3b8]">{label}</span>
+        <span className="block text-xs font-medium text-text-subtle">{label}</span>
         {loading ? (
-          <span className="mt-1 block h-5 w-16 animate-pulse rounded bg-cream-200 dark:bg-white/10" />
+          <span className="mt-1 block h-5 w-16 animate-pulse rounded bg-surface-3" />
         ) : (
-          <span className="block font-display text-lg font-bold leading-tight text-plum-900 dark:text-white">{value}</span>
+          <span className="block font-display text-lg font-bold leading-tight text-text">{value}</span>
         )}
-        {hint && <span className="mt-0.5 block truncate text-[11px] text-plum-500 dark:text-[#8f9399]">{hint}</span>}
+        {hint && <span className="mt-0.5 block truncate text-xs text-text-subtle">{hint}</span>}
       </span>
-      <ArrowRight className="h-4 w-4 shrink-0 text-plum-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600" />
+      <ArrowRight className="h-4 w-4 shrink-0 text-plum-300 transition group-hover:translate-x-0.5 group-hover:text-primary-solid" />
     </Link>
   )
 }
@@ -293,7 +293,7 @@ export function MentoringStatTile({
 export function MentoringFormError({ message }: { message?: string | null }) {
   if (!message) return null
   return (
-    <div className="rounded-xl border border-coral-200 bg-coral-50 px-3.5 py-2.5 text-sm text-coral-700 dark:border-coral-700/40 dark:bg-coral-900/20 dark:text-coral-300">
+    <div className="rounded-xl border border-danger-border bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
       {message}
     </div>
   )

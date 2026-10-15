@@ -12,14 +12,14 @@ export function GroupCard({ group }: { group: GroupCardData }) {
   const detailPath = `/app/groups/${group.id}`
 
   return (
-    <Card hover className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-plum-900/[0.08] p-0 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+    <Card hover className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border p-0 shadow-card dark:bg-surface">
       {/* Khung ảnh bìa với huy hiệu nổi trên ảnh */}
       <Link to={detailPath} className="relative block overflow-hidden" aria-label={`Xem hội nhóm ${group.name}`}>
         <GroupCover url={group.coverImageUrl} name={group.name} aspect="aspect-[16/9]" />
 
         {/* Badges kính mờ nổi trên góc ảnh bìa */}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
-          <span className="inline-flex items-center rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-bold text-plum-900 shadow-sm backdrop-blur-md dark:bg-black/60 dark:text-white">
+          <span className="inline-flex items-center rounded-full bg-white/85 px-2.5 py-0.5 text-xs font-bold text-text shadow-sm backdrop-blur-md dark:bg-black/60">
             {categoryLabel(group.category)}
           </span>
         </div>
@@ -28,8 +28,8 @@ export function GroupCard({ group }: { group: GroupCardData }) {
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
               isPrivate
-                ? 'bg-amber-500/85 text-white dark:bg-amber-600/80'
-                : 'bg-emerald-600/85 text-white dark:bg-emerald-700/80'
+                ? 'bg-warning-soft text-white'
+                : 'bg-success-soft text-white'
             }`}
           >
             {isPrivate ? <Lock size={10} /> : <Globe size={10} />}
@@ -41,7 +41,7 @@ export function GroupCard({ group }: { group: GroupCardData }) {
       <div className="flex flex-1 flex-col p-5 pt-4">
         {group.status === 'INACTIVE' && (
           <div className="mb-2">
-            <Badge tone="neutral" className="px-2 py-0.5 text-[10px]">
+            <Badge tone="neutral" className="px-2 py-0.5 text-xs">
               Tạm ngừng
             </Badge>
           </div>
@@ -49,21 +49,21 @@ export function GroupCard({ group }: { group: GroupCardData }) {
 
         {/* Tiêu đề & Mô tả */}
         <Link to={detailPath} className="group/title block">
-          <h3 className="line-clamp-1 text-base font-extrabold leading-snug text-plum-900 transition-colors group-hover/title:text-brand-600 dark:text-white dark:group-hover/title:text-brand-400">
+          <h3 className="line-clamp-1 text-base font-extrabold leading-snug text-text transition-colors group-hover/title:text-brand-600 dark:group-hover/title:text-brand-400">
             {group.name}
           </h3>
         </Link>
-        <p className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+        <p className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm leading-relaxed text-text-subtle">
           {group.shortDescription}
         </p>
 
         {/* Phần minh chứng xã hội (Social Proof) & Nút tham gia */}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-plum-900/[0.06] pt-4 dark:border-[#393a3b]">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <div className="flex items-center gap-2">
-            <span className="inline-grid h-6 w-6 place-items-center rounded-full bg-brand-50 text-brand-600 ring-1 ring-brand-200/60 dark:bg-brand-950/40 dark:text-brand-300 dark:ring-brand-800/40">
+            <span className="inline-grid h-6 w-6 place-items-center rounded-full bg-primary-soft text-primary-solid ring-1 ring-brand-200/60 dark:ring-brand-800/40">
               <Users size={12} />
             </span>
-            <span className="text-xs font-semibold text-plum-600 dark:text-[#b0b3b8]">
+            <span className="text-xs font-semibold text-text-muted">
               {group.memberCount} thành viên
             </span>
           </div>

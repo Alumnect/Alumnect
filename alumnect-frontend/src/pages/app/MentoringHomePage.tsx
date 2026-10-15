@@ -104,7 +104,7 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
 
   return (
     <motion.section variants={itemVariants} className="space-y-3">
-      <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">Việc của bạn</h2>
+      <h2 className="font-display text-lg font-bold text-text">Việc của bạn</h2>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {isMentorActive ? (
@@ -219,17 +219,17 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
       {/* 1. Hero Banner: Tối giản, thanh lịch, gọn gàng */}
       <motion.div
         variants={itemVariants}
-        className="mentor-page-header relative overflow-hidden rounded-2xl border border-plum-900/[0.08] bg-white p-5 shadow-xs sm:p-6 dark:border-white/10 dark:bg-[#242526]"
+        className="mentor-page-header relative overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6"
       >
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-500/5" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
 
         <div className="relative z-10 max-w-2xl space-y-2.5">
-          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-plum-900 dark:text-[#e4e6eb]">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-text">
             Kết nối cùng Mentor
           </h1>
 
-          <p className="text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">
+          <p className="text-sm leading-relaxed text-text-muted">
             {isExpired
               ? 'Gói dịch vụ Mentor của bạn đã hết hạn. Hãy gia hạn để tiếp tục nhận yêu cầu kết nối mới từ các thành viên.'
               : 'Tìm người đồng hành phù hợp để định hướng nghề nghiệp, phát triển kỹ năng và hoàn thành mục tiêu của bạn.'}
@@ -290,7 +290,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
                 to="/app/mentoring/requests/create"
                 variant="outline"
                 size="sm"
-                leftIcon={<Sparkles className="h-4 w-4 text-brand-600" />}
+                leftIcon={<Sparkles className="h-4 w-4 text-primary-solid" />}
               >
                 Tạo yêu cầu
               </ButtonLink>
@@ -306,14 +306,14 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
       <motion.div variants={itemVariants} className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h2 className="font-display text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h2 className="font-display text-lg font-bold text-text">
               Mentor tiêu biểu
             </h2>
-            <p className="text-xs text-plum-500">Các Mentor uy tín và tích cực nhất đang đồng hành cùng sinh viên</p>
+            <p className="text-xs text-text-subtle">Các Mentor uy tín và tích cực nhất đang đồng hành cùng sinh viên</p>
           </div>
           <Link
             to="/app/mentoring/discover"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors"
           >
             <span>Xem tất cả</span>
             <ArrowRight className="h-3.5 w-3.5" />
@@ -325,7 +325,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
             {Array.from({ length: 3 }).map((_, idx) => (
               <div
                 key={idx}
-                className="rounded-3xl border border-plum-900/[0.08] bg-white p-5 space-y-4 dark:border-[#393a3b] dark:bg-[#242526]"
+                className="rounded-3xl border border-border bg-surface p-5 space-y-4"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-14 w-14 rounded-full shimmer" />
@@ -345,8 +345,8 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
             ))}
           </div>
         ) : (
-          <Card className="p-8 text-center border border-plum-900/[0.08] bg-white/60 dark:border-[#393a3b] dark:bg-[#242526]">
-            <p className="text-xs text-plum-500">Chưa có Mentor nào trong danh sách tiêu biểu.</p>
+          <Card className="p-8 text-center border border-border bg-surface/60">
+            <p className="text-xs text-text-subtle">Chưa có Mentor nào trong danh sách tiêu biểu.</p>
           </Card>
         )}
       </motion.div>

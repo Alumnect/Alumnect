@@ -35,50 +35,50 @@ export function MentoringDealCard({ deal, onViewDetail, onOpenChat, isActive = f
   return (
     <article
       className={cn(
-        'flex flex-col rounded-2xl border bg-white p-5 shadow-xs transition hover:shadow-sm dark:bg-[#242526]',
+        'flex flex-col rounded-2xl border bg-surface p-5 shadow-xs transition hover:shadow-sm',
         isActive
-          ? 'border-brand-500 ring-2 ring-brand-500/20'
-          : 'border-plum-900/[0.08] hover:border-brand-500/40 dark:border-white/10 dark:hover:border-brand-500/40',
+          ? 'border-primary ring-2 ring-primary/20'
+          : 'border-border hover:border-brand-500/40 dark:hover:border-brand-500/40',
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} isPaid={deal.isPaid} />
-        <span className="shrink-0 text-xs text-plum-400 dark:text-[#8f9399]">
+        <span className="shrink-0 text-xs text-text-subtle">
           Deal #{deal.id} · v{deal.version}
         </span>
       </div>
 
-      <h3 className="mt-3 line-clamp-2 font-display text-base font-bold text-plum-900 dark:text-white">
+      <h3 className="mt-3 line-clamp-2 font-display text-base font-bold text-text">
         {deal.requestTitle || `Thỏa thuận #${deal.id}`}
       </h3>
-      <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-plum-600 dark:text-[#b0b3b8]">{deal.taskScope}</p>
+      <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-text-muted">{deal.taskScope}</p>
 
       <div className="mt-4 flex items-center gap-2.5">
         <Avatar src={counterpart.avatar || undefined} name={counterpart.name} size={32} />
         <div className="min-w-0">
-          <p className="text-[11px] text-plum-400 dark:text-[#8f9399]">{counterpart.role}</p>
-          <p className="truncate text-sm font-semibold text-plum-800 dark:text-[#e4e6eb]">{counterpart.name}</p>
+          <p className="text-xs text-text-subtle">{counterpart.role}</p>
+          <p className="truncate text-sm font-semibold text-text">{counterpart.name}</p>
         </div>
       </div>
 
       <dl className="my-4 grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-xl bg-cream-100 px-3 py-2 dark:bg-white/[0.04]">
-          <dt className="flex items-center gap-1 text-plum-500 dark:text-[#b0b3b8]">
+        <div className="rounded-xl bg-surface-2 px-3 py-2 dark:bg-white/[0.04]">
+          <dt className="flex items-center gap-1 text-text-subtle">
             <Wallet className="h-3.5 w-3.5" />
             Giá
           </dt>
-          <dd className="mt-0.5 font-semibold text-plum-900 dark:text-white">{formatVnd(deal.agreedPrice)}</dd>
+          <dd className="mt-0.5 font-semibold text-text">{formatVnd(deal.agreedPrice)}</dd>
         </div>
-        <div className="rounded-xl bg-cream-100 px-3 py-2 dark:bg-white/[0.04]">
-          <dt className="flex items-center gap-1 text-plum-500 dark:text-[#b0b3b8]">
+        <div className="rounded-xl bg-surface-2 px-3 py-2 dark:bg-white/[0.04]">
+          <dt className="flex items-center gap-1 text-text-subtle">
             <CalendarClock className="h-3.5 w-3.5" />
             Hạn chót
           </dt>
-          <dd className="mt-0.5 font-semibold text-plum-900 dark:text-white">{formatDateTime(deal.deadline)}</dd>
+          <dd className="mt-0.5 font-semibold text-text">{formatDateTime(deal.deadline)}</dd>
         </div>
       </dl>
 
-      <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t border-plum-900/[0.06] pt-4 dark:border-white/10">
+      <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
         {openChat && !deal.canPay && (
           <MentoringActionButton icon={<MessagesSquare className="h-3.5 w-3.5" />} onClick={openChat}>
             Trao đổi

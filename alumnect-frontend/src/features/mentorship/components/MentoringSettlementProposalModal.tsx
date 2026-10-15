@@ -89,10 +89,10 @@ export function MentoringSettlementProposalModal({
       <div className="space-y-4">
         <MentoringFormError message={errorMsg} />
 
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cream-300 bg-cream-100 px-3.5 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 px-3.5 py-3 dark:bg-white/[0.04]">
           <div>
-            <p className="text-xs text-plum-500 dark:text-plum-400">Quỹ đang giữ của Task</p>
-            <p className="font-display text-xl font-bold text-plum-900 dark:text-white">{formatVnd(total)}</p>
+            <p className="text-xs text-text-subtle">Quỹ đang giữ của Task</p>
+            <p className="font-display text-xl font-bold text-text">{formatVnd(total)}</p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {PRESETS.map((p) => (
@@ -102,8 +102,8 @@ export function MentoringSettlementProposalModal({
                 onClick={() => setMentor((total * p) / 100)}
                 className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                   mentorPercent === p
-                    ? 'bg-brand-600 text-white'
-                    : 'border border-cream-300 bg-white text-plum-700 hover:border-brand-500 dark:border-white/10 dark:bg-transparent dark:text-[#e4e6eb]'
+                    ? 'bg-primary-solid text-on-primary'
+                    : 'border border-border bg-surface text-text-muted hover:border-primary dark:bg-transparent'
                 }`}
               >
                 {p}%
@@ -113,13 +113,13 @@ export function MentoringSettlementProposalModal({
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-cream-200 dark:bg-white/10">
-            <div className="h-full bg-brand-600 transition-all" style={{ width: `${mentorPercent}%` }} />
-            <div className="h-full bg-violet-500 transition-all" style={{ width: `${100 - mentorPercent}%` }} />
+          <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-surface-3">
+            <div className="h-full bg-primary-solid transition-all" style={{ width: `${mentorPercent}%` }} />
+            <div className="h-full bg-info transition-all" style={{ width: `${100 - mentorPercent}%` }} />
           </div>
           <div className="flex justify-between text-xs font-semibold">
-            <span className="text-brand-600">Mentor {mentorPercent}%</span>
-            <span className="text-violet-500 dark:text-violet-300">Học viên {100 - mentorPercent}%</span>
+            <span className="text-primary-solid">Mentor {mentorPercent}%</span>
+            <span className="text-info">Học viên {100 - mentorPercent}%</span>
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export function MentoringSettlementProposalModal({
         </div>
 
         {blockedByRefundAccount && (
-          <div className="rounded-xl border border-coral-200 bg-coral-50 px-3.5 py-2.5 text-sm text-coral-700 dark:border-coral-700/40 dark:bg-coral-900/20 dark:text-coral-300">
+          <div className="rounded-xl border border-danger-border bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
             Bạn cần khai báo tài khoản nhận hoàn tiền trước khi đề xuất có hoàn tiền.{' '}
             <Link to="/app/mentoring/refunds" className="font-semibold underline">Khai báo ngay</Link>
           </div>

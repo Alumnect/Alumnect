@@ -22,16 +22,16 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
 
   return (
     <div className="py-8 sm:py-12 flex justify-center">
-      <Card hover={false} className="max-w-lg w-full border border-plum-900/[0.08] bg-white p-8 text-center shadow-soft dark:bg-[#242526] dark:border-[#393a3b] space-y-6">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-coral-50 text-coral-600 dark:bg-coral-950/40 dark:text-coral-400">
+      <Card hover={false} className="max-w-lg w-full border border-border bg-surface p-8 text-center shadow-soft space-y-6">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-danger-soft text-danger">
           <AlertCircle className="h-8 w-8" />
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-display font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="text-xl font-display font-bold text-text">
             {isNotFound ? 'Không tìm thấy Mentor' : 'Đã xảy ra lỗi kết nối'}
           </h2>
-          <p className="text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
+          <p className="text-sm text-text-muted leading-relaxed">
             {errorMessage}
           </p>
         </div>
@@ -54,7 +54,7 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
             size="md"
             leftIcon={<Search className="h-4 w-4" />}
             onClick={() => navigate('/app/mentoring/discover')}
-            className="w-full sm:w-auto rounded-xl font-bold bg-brand-600 hover:bg-brand-700"
+            className="w-full sm:w-auto rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
             Khám phá Mentor
           </Button>
@@ -62,9 +62,9 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
           <Button
             variant="ghost"
             size="md"
-            leftIcon={<Trophy className="h-4 w-4 text-gold-500" />}
+            leftIcon={<Trophy className="h-4 w-4 text-warning" />}
             onClick={() => navigate('/app/mentoring/ranking')}
-            className="w-full sm:w-auto rounded-xl font-bold text-plum-700 dark:text-[#e4e6eb]"
+            className="w-full sm:w-auto rounded-xl font-bold text-text-muted"
           >
             Bảng xếp hạng
           </Button>

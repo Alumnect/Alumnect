@@ -49,7 +49,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
 
   if (loading) {
     return (
-      <div className="mt-2 w-64 sm:w-72 animate-pulse rounded-xl border border-plum-900/10 bg-plum-900/5 p-3 dark:border-white/10 dark:bg-white/5">
+      <div className="mt-2 w-64 sm:w-72 animate-pulse rounded-xl border border-border bg-surface-2 p-3">
         <div className="h-28 w-full rounded-lg bg-slate-300 dark:bg-slate-700" />
         <div className="mt-2.5 space-y-1.5">
           <div className="h-3 w-36 rounded bg-slate-300 dark:bg-slate-700" />
@@ -64,7 +64,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
       <div className="mt-1">
         <Link
           to={`/app/groups/${groupId}`}
-          className="inline-flex items-center gap-1.5 text-xs underline font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+          className="inline-flex items-center gap-1.5 text-xs underline font-medium text-primary-solid hover:text-primary-solid"
         >
           <span>Xem hội nhóm #{groupId}</span>
           <ExternalLink size={12} />
@@ -78,12 +78,12 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
       to={`/app/groups/${groupId}`}
       className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition-all hover:shadow-md ${
         isMe
-          ? 'border-brand-400/40 bg-white/95 text-plum-900 shadow-2xs hover:bg-white dark:border-brand-500/30 dark:bg-[#242526] dark:text-[#f0f2f5]'
-          : 'border-plum-900/10 bg-slate-50/80 text-plum-900 hover:bg-white dark:border-[#3a3b3c] dark:bg-[#242526] dark:text-[#f0f2f5]'
+          ? 'border-brand-400/40 bg-surface text-text shadow-2xs hover:bg-surface dark:border-brand-500/30'
+          : 'border-border bg-surface-2 text-text hover:bg-surface'
       }`}
     >
       {/* Ảnh bìa nhóm */}
-      <div className="relative aspect-video w-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+      <div className="relative aspect-video w-full overflow-hidden bg-surface-3">
         {group.coverImageUrl ? (
           <img
             src={group.coverImageUrl}
@@ -97,7 +97,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
           </div>
         )}
         <div className="absolute top-2 right-2">
-          <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur-xs">
             {(group.privacy ?? (group as any).visibility) === 'PUBLIC' ? (
               <>
                 <Globe size={10} />
@@ -114,12 +114,12 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
       </div>
 
       <div className="p-3">
-        <h4 className="font-bold text-sm text-plum-900 truncate leading-snug dark:text-[#f0f2f5]">
+        <h4 className="font-bold text-sm text-text truncate leading-snug">
           {group.name}
         </h4>
 
-        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-plum-500 dark:text-[#b0b3b8]">
-          <Users size={12} className="text-brand-500 shrink-0" />
+        <div className="mt-1 flex items-center gap-1.5 text-xs text-text-subtle">
+          <Users size={12} className="text-primary-solid shrink-0" />
           <span>{group.memberCount} thành viên</span>
           {group.category && (
             <>
@@ -130,12 +130,12 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
         </div>
 
         {group.description && (
-          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-plum-700 dark:text-[#e4e6eb]">
+          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-text-muted">
             {group.description}
           </p>
         )}
 
-        <div className="mt-2.5 flex items-center justify-between border-t border-plum-900/5 pt-2 text-[11px] font-medium text-brand-600 dark:border-white/10 dark:text-brand-400">
+        <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs font-medium text-primary-solid">
           <span className="inline-flex items-center gap-1">
             <Users size={12} />
             Xem hội nhóm

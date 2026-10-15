@@ -391,8 +391,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6 text-left">
       {/* Alert Banner hiển thị lỗi nghiệp vụ từ Server */}
       {serverError && (
-        <div className="rounded-2xl border border-coral-200/80 bg-coral-50/80 p-4 flex items-start gap-3 text-coral-900 text-sm dark:bg-coral-950/40 dark:border-coral-800/40 dark:text-coral-200 animate-fade-in">
-          <AlertTriangle className="h-5 w-5 text-coral-600 shrink-0 mt-0.5" />
+        <div className="rounded-2xl border border-danger-border bg-danger-soft p-4 flex items-start gap-3 text-danger text-sm animate-fade-in">
+          <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
           <div className="flex-1">
             <span className="font-bold">Không thể tạo yêu cầu: </span>
             <span>{serverError}</span>
@@ -400,7 +400,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           <button
             type="button"
             onClick={() => setServerError(null)}
-            className="text-coral-500 hover:text-coral-700 dark:hover:text-coral-300"
+            className="text-danger hover:text-danger"
           >
             <X className="h-4 w-4" />
           </button>
@@ -408,16 +408,16 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       )}
 
       {/* SECTION A — Request Overview (Tiêu đề & Nội dung) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-plum-900/[0.08] bg-white space-y-5 dark:bg-[#242526] dark:border-[#393a3b]">
-        <div className="flex items-center gap-3 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-700/40 dark:text-brand-400">
+      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-5">
+        <div className="flex items-center gap-3 border-b border-border pb-3.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-text">
               1. Thông tin yêu cầu hỗ trợ
             </h3>
-            <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+            <p className="text-xs text-text-subtle">
               {isDirectRequest && targetMentor
                 ? `Mô tả rõ ràng vấn đề và kỳ vọng để gửi trực tiếp tới Mentor ${targetMentor.fullName}`
                 : 'Mô tả rõ ràng vấn đề và kỳ vọng để hệ thống matching Mentor chuẩn xác nhất'}
@@ -427,18 +427,18 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
         {/* Tiêu đề (Title) */}
         <div className="space-y-1.5">
-          <label htmlFor="title" className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
-            Tiêu đề yêu cầu <span className="text-coral-500">*</span>
+          <label htmlFor="title" className="block text-xs font-bold text-text">
+            Tiêu đề yêu cầu <span className="text-danger">*</span>
           </label>
           <input
             id="title"
             type="text"
             placeholder="Ví dụ: Cần cố vấn định hướng đề tài Capstone Project Spring Boot & Microservices"
             {...register('title')}
-            className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb] dark:placeholder:text-[#8a8d91]"
+            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
           />
           {errors.title && (
-            <p className="text-xs font-semibold text-coral-600 dark:text-coral-400 pt-0.5">
+            <p className="text-xs font-semibold text-danger pt-0.5">
               {errors.title.message}
             </p>
           )}
@@ -446,22 +446,22 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
         {/* Nội dung chi tiết (Description) */}
         <div className="space-y-1.5">
-          <label htmlFor="description" className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
-            Mô tả chi tiết nhu cầu <span className="text-coral-500">*</span>
+          <label htmlFor="description" className="block text-xs font-bold text-text">
+            Mô tả chi tiết nhu cầu <span className="text-danger">*</span>
           </label>
           <textarea
             id="description"
             rows={5}
             placeholder="Mô tả bối cảnh hiện tại, mục tiêu bạn muốn đạt được, những khó khăn bạn đang gặp phải và mong đợi cụ thể từ Mentor..."
             {...register('description')}
-            className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb] dark:placeholder:text-[#8a8d91]"
+            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
           />
-          <div className="flex justify-between items-center text-[11px] text-plum-400 dark:text-[#8f9399]">
+          <div className="flex justify-between items-center text-xs text-text-subtle">
             <span>Tối thiểu 20 ký tự, tối đa 3000 ký tự</span>
             <span>{descriptionValue?.length || 0}/3000</span>
           </div>
           {errors.description && (
-            <p className="text-xs font-semibold text-coral-600 dark:text-coral-400 pt-0.5">
+            <p className="text-xs font-semibold text-danger pt-0.5">
               {errors.description.message}
             </p>
           )}
@@ -469,16 +469,16 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       </Card>
 
       {/* SECTION B — Mentoring Field (Lĩnh vực ngành nghề) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-plum-900/[0.08] bg-white space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-        <div className="flex items-center gap-3 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-gold-700 dark:bg-amber-950/40 dark:text-gold-300">
+      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
+        <div className="flex items-center gap-3 border-b border-border pb-3.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning-soft text-warning">
             <Briefcase className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-text">
               2. Lĩnh vực / Chuyên môn hỗ trợ
             </h3>
-            <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+            <p className="text-xs text-text-subtle">
               {isDirectRequest && targetMentor
                 ? `Chỉ hiển thị các lĩnh vực chuyên môn mà Mentor ${targetMentor.fullName} hỗ trợ tiếp nhận`
                 : 'Hệ thống sẽ matching và phân phối tới các Mentor có chuyên môn trong lĩnh vực này'}
@@ -487,14 +487,14 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="industryId" className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
-            Lĩnh vực ngành nghề <span className="text-coral-500">*</span>
+          <label htmlFor="industryId" className="block text-xs font-bold text-text">
+            Lĩnh vực ngành nghề <span className="text-danger">*</span>
           </label>
           <select
             id="industryId"
             disabled={loadingIndustries}
             {...register('industryId')}
-            className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 text-sm font-semibold text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 disabled:opacity-60 disabled:cursor-not-allowed dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb]"
+            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-text focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <option value="" disabled>
               {loadingIndustries ? '-- Đang tải danh mục lĩnh vực... --' : '-- Chọn lĩnh vực cần hỗ trợ --'}
@@ -506,7 +506,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             ))}
           </select>
           {errors.industryId && (
-            <p className="text-xs font-semibold text-coral-600 dark:text-coral-400 pt-0.5">
+            <p className="text-xs font-semibold text-danger pt-0.5">
               {errors.industryId.message}
             </p>
           )}
@@ -514,23 +514,23 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       </Card>
 
       {/* SECTION C — Ngân sách dự kiến */}
-      <Card hover={false} className="p-6 sm:p-7 border border-plum-900/[0.08] bg-white space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-        <div className="flex items-center gap-3 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-mint-100 text-mint-700 dark:bg-mint-950/40 dark:text-mint-300">
+      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
+        <div className="flex items-center gap-3 border-b border-border pb-3.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success-soft text-success">
             <DollarSign className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-text">
               3. Ngân sách dự kiến (VNĐ)
             </h3>
-            <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+            <p className="text-xs text-text-subtle">
               Không bắt buộc — để trống nếu bạn muốn trao đổi mức phí linh hoạt cùng Mentor
             </p>
           </div>
         </div>
 
         <div className="max-w-xl space-y-1.5">
-          <label htmlFor="budgetMin" className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
+          <label htmlFor="budgetMin" className="block text-xs font-bold text-text">
             Mức ngân sách (VNĐ)
           </label>
           <div className="relative">
@@ -541,34 +541,34 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               step="any"
               placeholder="Ví dụ: 300000 (nhập 0 nếu mong muốn miễn phí)"
               {...register('budgetMin')}
-              className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 pr-12 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb]"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-3 pr-12 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
             />
-            <span className="absolute right-4 top-3.5 text-xs font-bold text-plum-400 dark:text-[#8f9399]">
+            <span className="absolute right-4 top-3.5 text-xs font-bold text-text-subtle">
               VNĐ
             </span>
           </div>
           {errors.budgetMin && (
-            <p className="text-xs font-semibold text-coral-600 dark:text-coral-400 pt-0.5">
+            <p className="text-xs font-semibold text-danger pt-0.5">
               {errors.budgetMin.message}
             </p>
           )}
-          <p className="text-[11px] text-plum-500 dark:text-[#8f9399]">
+          <p className="text-xs text-text-subtle">
             Hỗ trợ từ 0 VNĐ (miễn phí) đến không giới hạn. Để trống nếu bạn muốn thương lượng linh hoạt cùng Mentor.
           </p>
         </div>
       </Card>
 
       {/* SECTION D — Working Preferences (Hình thức & Loại nhiệm vụ) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-plum-900/[0.08] bg-white space-y-6 dark:bg-[#242526] dark:border-[#393a3b]">
-        <div className="flex items-center gap-3 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500 dark:bg-violet-600/40 dark:text-violet-300">
+      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-6">
+        <div className="flex items-center gap-3 border-b border-border pb-3.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info-soft text-info">
             <Laptop className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-text">
               4. Phương thức làm việc & Nhiệm vụ
             </h3>
-            <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+            <p className="text-xs text-text-subtle">
               Chọn cách thức kết nối và loại hình hỗ trợ bạn mong đợi
             </p>
           </div>
@@ -576,8 +576,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
         {/* 4.1 Phương thức làm việc (Working Mode) */}
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
-            Phương thức làm việc <span className="text-coral-500">*</span>
+          <label className="block text-xs font-bold text-text">
+            Phương thức làm việc <span className="text-danger">*</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {(['ONLINE', 'OFFLINE', 'BOTH'] as MentoringWorkingMode[]).map((mode) => (
@@ -587,8 +587,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                 onClick={() => setValue('workingMode', mode)}
                 className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all ${
                   selectedWorkingMode === mode
-                    ? 'border-brand-500 bg-brand-50/80 text-brand-700 shadow-xs dark:bg-brand-700/40 dark:text-brand-300 dark:border-brand-500'
-                    : 'border-plum-900/[0.1] bg-white text-plum-600 hover:border-plum-900/20 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#b0b3b8]'
+                    ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
+                    : 'border-border bg-surface text-text-muted hover:border-border-strong'
                 }`}
               >
                 <span>{WORKING_MODE_LABELS[mode]}</span>
@@ -599,8 +599,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
         {/* 4.2 Hình thức tham gia (Participation Type) */}
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
-            Hình thức tham gia <span className="text-coral-500">*</span>
+          <label className="block text-xs font-bold text-text">
+            Hình thức tham gia <span className="text-danger">*</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {(['INDIVIDUAL', 'GROUP'] as const).map((type) => (
@@ -612,8 +612,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                 title={type === 'GROUP' && groupUnsupportedByTargetMentor ? 'Mentor này hiện chỉ nhận mentoring cá nhân' : undefined}
                 className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-45 ${
                   selectedParticipationType === type
-                    ? 'border-brand-500 bg-brand-50/80 text-brand-700 shadow-xs dark:bg-brand-700/40 dark:text-brand-300 dark:border-brand-500'
-                    : 'border-plum-900/[0.1] bg-white text-plum-600 hover:border-plum-900/20 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#b0b3b8]'
+                    ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
+                    : 'border-border bg-surface text-text-muted hover:border-border-strong'
                 }`}
               >
                 <span>{PARTICIPATION_TYPE_LABELS[type]}</span>
@@ -621,23 +621,23 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             ))}
           </div>
           {groupUnsupportedByTargetMentor && (
-            <p className="text-[11px] text-plum-500">Mentor này hiện chỉ nhận mentoring cá nhân.</p>
+            <p className="text-xs text-text-subtle">Mentor này hiện chỉ nhận mentoring cá nhân.</p>
           )}
         </div>
 
         {/* 4.2.1 Chọn Nhóm Cố Vấn (Mô hình GROUP-FIRST) */}
         {selectedParticipationType === 'GROUP' && (
-          <div className="space-y-4 rounded-2xl border border-brand-200 bg-brand-50/40 p-5 dark:border-brand-700/50 dark:bg-brand-700/20">
+          <div className="space-y-4 rounded-2xl border border-primary-soft-border bg-brand-50/40 p-5 dark:bg-brand-700/20">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-700 shadow-xs dark:bg-[#242526] dark:text-brand-300">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-primary-solid shadow-xs">
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-plum-900 dark:text-[#e4e6eb]">
+                  <p className="text-sm font-bold text-text">
                     Chọn nhóm cố vấn tham gia (Group-First)
                   </p>
-                  <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+                  <p className="text-xs text-text-subtle">
                     Yêu cầu phải được liên kết với một nhóm bạn làm Trưởng nhóm. Thành viên đã JOINED sẽ được chốt tham gia.
                   </p>
                 </div>
@@ -647,7 +647,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                 variant="outline"
                 size="sm"
                 onClick={() => setIsCreateGroupModalOpen(true)}
-                className="self-start sm:self-auto gap-1.5 rounded-xl border-brand-300 text-brand-700 hover:bg-brand-100/60 dark:border-brand-700 dark:text-brand-300 text-xs"
+                className="self-start sm:self-auto gap-1.5 rounded-xl border-primary-soft-border text-primary-solid hover:bg-brand-100/60 text-xs"
               >
                 <Plus className="h-4 w-4" />
                 Tạo nhóm mới
@@ -655,17 +655,17 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             </div>
 
             {loadingManagedGroups ? (
-              <div className="flex items-center justify-center gap-2 py-6 text-xs text-plum-500">
-                <Loader2 className="h-4 w-4 animate-spin text-brand-600" />
+              <div className="flex items-center justify-center gap-2 py-6 text-xs text-text-subtle">
+                <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
                 Đang tải danh sách nhóm của bạn...
               </div>
             ) : managedGroups.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-brand-300 bg-white/70 p-6 text-center dark:bg-[#18191a]/70 dark:border-brand-700/50">
+              <div className="rounded-xl border border-dashed border-primary-soft-border bg-surface/70 p-6 text-center">
                 <Users className="mx-auto h-8 w-8 text-brand-400 mb-2 opacity-70" />
-                <p className="text-sm font-bold text-plum-900 dark:text-white">
+                <p className="text-sm font-bold text-text">
                   Bạn chưa có nhóm cố vấn nào đang hoạt động
                 </p>
-                <p className="text-xs text-plum-500 max-w-md mx-auto mt-1 mb-4 dark:text-[#b0b3b8]">
+                <p className="text-xs text-text-subtle max-w-md mx-auto mt-1 mb-4">
                   Quy trình mới yêu cầu tạo nhóm và mời thành viên trước khi gửi Mentoring Request dạng nhóm.
                 </p>
                 <Button
@@ -681,8 +681,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               </div>
             ) : (
               <div className="space-y-3">
-                <label htmlFor="group-select" className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
-                  Nhóm đại diện <span className="text-coral-500">*</span>
+                <label htmlFor="group-select" className="block text-xs font-bold text-text">
+                  Nhóm đại diện <span className="text-danger">*</span>
                 </label>
                 <select
                   id="group-select"
@@ -691,7 +691,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                     const val = e.target.value ? Number(e.target.value) : null
                     setValue('groupId', val, { shouldValidate: true })
                   }}
-                  className="w-full rounded-xl border border-plum-900/15 bg-white px-4 py-2.5 text-sm font-semibold text-plum-900 shadow-xs focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb]"
+                  className="w-full rounded-xl border border-border-strong bg-surface px-4 py-2.5 text-sm font-semibold text-text shadow-xs focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
                 >
                   <option value="">-- Chọn nhóm cố vấn của bạn --</option>
                   {managedGroups.map((group) => (
@@ -701,7 +701,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   ))}
                 </select>
                 {errors.groupId && (
-                  <p className="text-xs font-semibold text-coral-600 dark:text-coral-400">
+                  <p className="text-xs font-semibold text-danger">
                     {errors.groupId.message}
                   </p>
                 )}
@@ -712,13 +712,13 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             {selectedGroupId && currentGroupDetail ? (
               <div className="space-y-4 pt-2">
                 {/* Snapshot thành viên chính thức (JOINED) */}
-                <div className="rounded-xl border border-plum-900/10 bg-white p-4 dark:border-[#3a3b3c] dark:bg-[#242526]">
-                  <div className="flex items-center justify-between border-b border-plum-900/5 pb-2.5 mb-3">
-                    <span className="text-xs font-bold text-plum-900 dark:text-white flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-mint-600 dark:text-mint-400" />
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <div className="flex items-center justify-between border-b border-border pb-2.5 mb-3">
+                    <span className="text-xs font-bold text-text flex items-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                       Danh sách thành viên chính thức tham gia Request (Snapshot)
                     </span>
-                    <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                    <span className="text-xs font-bold text-primary-solid">
                       {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length} thành viên
                     </span>
                   </div>
@@ -729,7 +729,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                       .map((member: MentoringGroupMemberData) => (
                         <div
                           key={member.id}
-                          className="flex items-center gap-3 rounded-lg border border-plum-900/5 bg-cream-100/60 p-2.5 dark:border-white/5 dark:bg-white/5"
+                          className="flex items-center gap-3 rounded-lg border border-border bg-cream-100/60 p-2.5 dark:bg-white/5"
                         >
                           <img
                             src={member.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.fullName)}`}
@@ -738,16 +738,16 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                           />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
-                              <span className="truncate text-xs font-bold text-plum-900 dark:text-white">
+                              <span className="truncate text-xs font-bold text-text">
                                 {member.fullName}
                               </span>
                               {member.leader && (
-                                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+                                <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-bold text-warning">
                                   Trưởng nhóm
                                 </span>
                               )}
                             </div>
-                            <span className="block truncate text-[11px] text-plum-500 dark:text-[#8f9399]">
+                            <span className="block truncate text-xs text-text-subtle">
                               {member.major || member.email}
                             </span>
                           </div>
@@ -756,7 +756,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   </div>
 
                   {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length === 1 && (
-                    <p className="mt-3 text-[11px] text-plum-500 italic dark:text-[#8f9399]">
+                    <p className="mt-3 text-xs text-text-subtle italic">
                       * Nhóm hiện chỉ có Trưởng nhóm. Bạn có thể tiếp tục tạo yêu cầu theo diện nhóm một thành viên hoặc mời thêm bạn bè tham gia.
                     </p>
                   )}
@@ -770,26 +770,26 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   if (pendingMembers.length === 0) return null
 
                   return (
-                    <div className="rounded-xl border border-amber-300/80 bg-amber-50/90 p-4 text-sm dark:border-amber-700/60 dark:bg-amber-950/40">
+                    <div className="rounded-xl border border-warning-border bg-warning-soft p-4 text-sm">
                       <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5 dark:text-amber-400" />
+                        <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
                         <div className="space-y-1.5 flex-1">
-                          <p className="font-bold text-amber-900 dark:text-amber-200">
+                          <p className="font-bold text-warning">
                             Một số thành viên được mời chưa phản hồi ({pendingMembers.length} lời mời đang chờ)
                           </p>
-                          <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                          <p className="text-xs text-warning leading-relaxed">
                             Chỉ những thành viên đã chấp nhận (JOINED) mới chính thức tham gia vào Mentoring Request này. Các thành viên đang ở trạng thái PENDING sẽ bị loại khỏi snapshot.
                           </p>
                           <div className="flex flex-wrap items-center gap-2 pt-2">
                             <button
                               type="button"
                               onClick={() => navigate(`/app/mentoring/groups/${selectedGroupId}`)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 shadow-2xs hover:bg-amber-100 transition-colors dark:bg-[#18191a] dark:border-amber-700 dark:text-amber-200"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-warning-border bg-surface px-3 py-1.5 text-xs font-bold text-warning shadow-2xs hover:bg-warning-soft transition-colors"
                             >
                               <ExternalLink className="h-3.5 w-3.5" />
                               Quay lại nhóm để quản lý lời mời
                             </button>
-                            <span className="text-xs text-amber-700 dark:text-amber-300 italic">
+                            <span className="text-xs text-warning italic">
                               (Nhấn &quot;Gửi yêu cầu&quot; phía dưới để tiếp tục với thành viên đã xác nhận)
                             </span>
                           </div>
@@ -805,8 +805,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
         {/* 4.3 Loại nhiệm vụ (Task Type) */}
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
-            Loại nhiệm vụ cố vấn <span className="text-coral-500">*</span>
+          <label className="block text-xs font-bold text-text">
+            Loại nhiệm vụ cố vấn <span className="text-danger">*</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {TASK_TYPE_OPTIONS.map((opt) => (
@@ -816,16 +816,16 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                 onClick={() => setValue('taskType', opt.value)}
                 className={`flex flex-col text-left rounded-2xl border p-3.5 transition-all ${
                   selectedTaskType === opt.value
-                    ? 'border-brand-500 bg-brand-50/70 shadow-xs dark:bg-brand-700/40 dark:border-brand-500'
-                    : 'border-plum-900/[0.1] bg-white hover:border-plum-900/20 dark:bg-[#18191a] dark:border-[#3a3b3c]'
+                    ? 'border-primary bg-brand-50/70 shadow-xs dark:bg-brand-700/40'
+                    : 'border-border bg-surface hover:border-border-strong'
                 }`}
               >
                 <span className={`text-xs font-bold ${
-                  selectedTaskType === opt.value ? 'text-brand-700 dark:text-brand-200' : 'text-plum-900 dark:text-[#e4e6eb]'
+                  selectedTaskType === opt.value ? 'text-primary-solid' : 'text-text'
                 }`}>
                   {opt.label}
                 </span>
-                <span className="text-[11px] text-plum-500 leading-relaxed mt-1 dark:text-[#8f9399]">
+                <span className="text-xs text-text-subtle leading-relaxed mt-1">
                   {opt.description}
                 </span>
               </button>
@@ -835,23 +835,23 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       </Card>
 
       {/* SECTION E — Timeline (Thời hạn mong muốn) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-plum-900/[0.08] bg-white space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-        <div className="flex items-center gap-3 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral-100 text-coral-700 dark:bg-coral-950/40 dark:text-coral-300">
+      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
+        <div className="flex items-center gap-3 border-b border-border pb-3.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger-soft text-danger">
             <Calendar className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-text">
               5. Thời hạn mong muốn hoàn thành
             </h3>
-            <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+            <p className="text-xs text-text-subtle">
               Đặt mốc thời gian bạn mong muốn nhận hỗ trợ xong để Mentor sắp xếp lịch trình
             </p>
           </div>
         </div>
 
         <div className="space-y-1.5 max-w-sm">
-          <label htmlFor="expectedDeadline" className="block text-xs font-bold text-plum-800 dark:text-[#e4e6eb]">
+          <label htmlFor="expectedDeadline" className="block text-xs font-bold text-text">
             Hạn chót hoàn thành (Expected Deadline)
           </label>
           <input
@@ -859,10 +859,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             type="date"
             min={minimumDeadline}
             {...register('expectedDeadline')}
-            className="w-full rounded-2xl border border-plum-900/[0.12] bg-white px-4 py-3 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:bg-[#18191a] dark:border-[#3a3b3c] dark:text-[#e4e6eb]"
+            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
           />
           {errors.expectedDeadline && (
-            <p className="text-xs font-semibold text-coral-600 dark:text-coral-400 pt-0.5">
+            <p className="text-xs font-semibold text-danger pt-0.5">
               {errors.expectedDeadline.message}
             </p>
           )}
@@ -870,28 +870,28 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       </Card>
 
       {/* SECTION F — Attachments (Tệp đính kèm) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-plum-900/[0.08] bg-white space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-        <div className="flex items-center gap-3 border-b border-plum-900/[0.06] pb-3.5 dark:border-[#393a3b]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
+        <div className="flex items-center gap-3 border-b border-border pb-3.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
             <Paperclip className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+            <h3 className="font-display text-base font-bold text-text">
               6. Tài liệu / Tệp tin đính kèm
             </h3>
-            <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+            <p className="text-xs text-text-subtle">
               Tải lên đề cương đồ án, slide tóm tắt, mô tả bài toán... (Tối đa 5 file, mỗi file &lt; 10 MB)
             </p>
           </div>
         </div>
 
         {/* Upload dropzone */}
-        <div className="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-plum-900/[0.15] bg-cream-50/50 p-6 text-center transition-colors hover:border-brand-400 dark:bg-white/[0.02] dark:border-[#3a3b3c]">
-          <UploadCloud className="h-8 w-8 text-brand-500 mb-2" />
-          <p className="text-xs font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <div className="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border-strong bg-cream-50/50 p-6 text-center transition-colors hover:border-primary dark:bg-white/[0.02]">
+          <UploadCloud className="h-8 w-8 text-primary-solid mb-2" />
+          <p className="text-xs font-bold text-text">
             Kéo thả hoặc nhấp để chọn tệp tin
           </p>
-          <p className="text-[11px] text-plum-500 mt-1 dark:text-[#8f9399]">
+          <p className="text-xs text-text-subtle mt-1">
             Hỗ trợ PDF, DOCX, PNG, JPG, ZIP (mỗi file nhỏ hơn 10 MB)
           </p>
           <input
@@ -908,15 +908,15 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             {attachedFiles.map((item, idx) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between rounded-xl border border-plum-900/[0.08] bg-white p-3 text-xs dark:bg-[#18191a] dark:border-[#3a3b3c]"
+                className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-xs"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-700/40 dark:text-brand-400">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-solid">
                     <FileCheck className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 truncate">
-                    <p className="font-bold text-plum-900 truncate dark:text-[#e4e6eb]">{item.file.name}</p>
-                    <p className="text-[11px] text-plum-400 dark:text-[#8f9399]">
+                    <p className="font-bold text-text truncate">{item.file.name}</p>
+                    <p className="text-xs text-text-subtle">
                       {(item.file.size / 1024).toFixed(1)} KB
                       {item.uploading && ' • Đang tải lên...'}
                       {item.error && ` • Lỗi: ${item.error}`}
@@ -926,12 +926,12 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
                 <div className="flex items-center gap-2">
                   {item.uploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
+                    <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleRemoveFile(idx)}
-                      className="p-1 rounded-lg text-plum-400 hover:text-coral-600 hover:bg-coral-50 transition-colors dark:hover:bg-coral-950/40"
+                      className="p-1 rounded-lg text-text-subtle hover:text-danger hover:bg-danger-soft transition-colors"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -952,7 +952,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             size="lg"
             onClick={onCancel}
             disabled={createMutation.isPending}
-            className="w-full sm:w-auto rounded-2xl font-bold text-plum-600 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white"
+            className="w-full sm:w-auto rounded-2xl font-bold text-text-muted hover:text-text"
           >
             Hủy bỏ
           </Button>

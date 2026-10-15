@@ -62,24 +62,24 @@ export function MentoringDealSnapshotCard({
   return (
     <Card
       hover={false}
-      className={`border border-plum-900/[0.08] bg-white p-6 shadow-sm dark:bg-[#242526] dark:border-[#393a3b] space-y-6 ${className}`}
+      className={`border border-border bg-surface p-6 shadow-sm space-y-6 ${className}`}
     >
       {/* Header Snapshot & Trạng thái */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.06] pb-4 dark:border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 shadow-xs dark:bg-brand-700/40 dark:text-brand-400">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft text-primary-solid shadow-xs">
             <FileText className="h-5 w-5" />
           </span>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#f0f2f5]">
+              <h3 className="font-display text-lg font-bold text-text">
                 Deal Snapshot #{deal.id}
               </h3>
-              <span className="rounded-full bg-cream-200 px-2.5 py-0.5 text-[11px] font-bold text-plum-700 dark:bg-white/10 dark:text-[#b0b3b8]">
+              <span className="rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-bold text-text-muted">
                 Phiên bản {deal.version}
               </span>
             </div>
-            <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+            <p className="text-xs text-text-subtle">
               Cập nhật gần nhất:{' '}
               {format(new Date(deal.updatedAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
             </p>
@@ -91,15 +91,15 @@ export function MentoringDealSnapshotCard({
 
       {/* Banner khóa bất biến khi cả hai cùng confirm */}
       {deal.isLocked && (
-        <div className="flex items-center gap-3 rounded-2xl bg-mint-50/80 p-4 border border-mint-200/60 dark:bg-mint-950/30 dark:border-mint-800/40 text-mint-900 dark:text-mint-200">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-mint-600 text-white shadow-xs">
+        <div className="flex items-center gap-3 rounded-2xl bg-success-soft p-4 border border-success-border text-success">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success text-text-inverse shadow-xs">
             <Lock className="h-4 w-4" />
           </span>
           <div className="text-xs space-y-0.5">
-            <p className="font-bold text-mint-950 dark:text-mint-100">
+            <p className="font-bold text-success">
               Snapshot đã được cả hai bên xác nhận và khóa an toàn
             </p>
-            <p className="text-mint-800/80 dark:text-mint-300/80">
+            <p className="text-success">
               Không bên nào được tự ý sửa điều khoản. Thỏa thuận đã sẵn sàng tiến hành thanh toán.
             </p>
           </div>
@@ -112,8 +112,8 @@ export function MentoringDealSnapshotCard({
         <div
           className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
             deal.studentConfirmed
-              ? 'bg-mint-50/50 border-mint-200 dark:bg-mint-950/20 dark:border-mint-800/30'
-              : 'bg-cream-100/40 border-plum-900/10 dark:bg-white/5 dark:border-white/10'
+              ? 'bg-success-soft border-success-border'
+              : 'bg-cream-100/40 border-border dark:bg-white/5'
           }`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
@@ -123,27 +123,27 @@ export function MentoringDealSnapshotCard({
               size={36}
             />
             <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">
+              <p className="truncate text-xs font-bold text-text">
                 {deal.studentName || 'Học viên'}
               </p>
-              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">Sinh viên (Student)</p>
+              <p className="text-xs text-text-subtle">Sinh viên (Student)</p>
             </div>
           </div>
 
           <div className="text-right shrink-0">
             {deal.studentConfirmed ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-mint-700 dark:text-mint-400">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-success">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Đã xác nhận</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-warning">
                 <Clock className="h-3.5 w-3.5" />
                 <span>Chưa xác nhận</span>
               </span>
             )}
             {deal.studentConfirmedAt && (
-              <p className="text-[11px] text-plum-400 dark:text-[#8a8d91]">
+              <p className="text-xs text-text-subtle dark:text-text-subtle">
                 {format(new Date(deal.studentConfirmedAt), 'HH:mm dd/MM', { locale: vi })}
               </p>
             )}
@@ -154,8 +154,8 @@ export function MentoringDealSnapshotCard({
         <div
           className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
             deal.mentorConfirmed
-              ? 'bg-mint-50/50 border-mint-200 dark:bg-mint-950/20 dark:border-mint-800/30'
-              : 'bg-cream-100/40 border-plum-900/10 dark:bg-white/5 dark:border-white/10'
+              ? 'bg-success-soft border-success-border'
+              : 'bg-cream-100/40 border-border dark:bg-white/5'
           }`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
@@ -165,27 +165,27 @@ export function MentoringDealSnapshotCard({
               size={36}
             />
             <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">
+              <p className="truncate text-xs font-bold text-text">
                 {deal.mentorName || 'Cố vấn'}
               </p>
-              <p className="text-[11px] text-plum-500 dark:text-[#b0b3b8]">Cố vấn (Mentor)</p>
+              <p className="text-xs text-text-subtle">Cố vấn (Mentor)</p>
             </div>
           </div>
 
           <div className="text-right shrink-0">
             {deal.mentorConfirmed ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-mint-700 dark:text-mint-400">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-success">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Đã xác nhận</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-warning">
                 <Clock className="h-3.5 w-3.5" />
                 <span>Chưa xác nhận</span>
               </span>
             )}
             {deal.mentorConfirmedAt && (
-              <p className="text-[11px] text-plum-400 dark:text-[#8a8d91]">
+              <p className="text-xs text-text-subtle dark:text-text-subtle">
                 {format(new Date(deal.mentorConfirmedAt), 'HH:mm dd/MM', { locale: vi })}
               </p>
             )}
@@ -197,22 +197,22 @@ export function MentoringDealSnapshotCard({
       <div className="space-y-4 text-xs">
         {/* Mức giá & Thời hạn */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-mint-50/40 p-3.5 border border-mint-200/40 dark:bg-mint-950/15 dark:border-mint-800/20 space-y-1">
-            <div className="flex items-center gap-1.5 text-mint-800 dark:text-mint-300 font-semibold">
-              <DollarSign className="h-4 w-4 text-mint-600" />
+          <div className="rounded-2xl bg-success-soft p-3.5 border border-success-border space-y-1">
+            <div className="flex items-center gap-1.5 text-success font-semibold">
+              <DollarSign className="h-4 w-4 text-success" />
               <span>Mức giá thỏa thuận</span>
             </div>
-            <p className="text-lg font-bold text-mint-700 dark:text-mint-400">
+            <p className="text-lg font-bold text-success">
               {formattedPrice}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-cream-100/50 p-3.5 border border-plum-900/10 dark:bg-white/5 dark:border-white/10 space-y-1">
-            <div className="flex items-center gap-1.5 text-plum-600 dark:text-[#b0b3b8] font-semibold">
-              <Calendar className="h-4 w-4 text-brand-500" />
+          <div className="rounded-2xl bg-cream-100/50 p-3.5 border border-border dark:bg-white/5 space-y-1">
+            <div className="flex items-center gap-1.5 text-text-muted font-semibold">
+              <Calendar className="h-4 w-4 text-primary-solid" />
               <span>Hạn chót hoàn thành (Deadline)</span>
             </div>
-            <p className="text-base font-bold text-plum-900 dark:text-[#f0f2f5]">
+            <p className="text-base font-bold text-text">
               {formattedDeadline}
             </p>
           </div>
@@ -220,55 +220,55 @@ export function MentoringDealSnapshotCard({
 
         {/* Phương thức & Hình thức tham gia */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="rounded-2xl bg-cream-100/40 p-3 border border-plum-900/10 dark:bg-white/5 dark:border-white/10 space-y-1">
-            <div className="flex items-center gap-1.5 text-plum-500 dark:text-[#8a8d91]">
-              <Laptop className="h-3.5 w-3.5 text-brand-500" />
+          <div className="rounded-2xl bg-cream-100/40 p-3 border border-border dark:bg-white/5 space-y-1">
+            <div className="flex items-center gap-1.5 text-text-subtle dark:text-text-subtle">
+              <Laptop className="h-3.5 w-3.5 text-primary-solid" />
               <span className="font-semibold">Hình thức làm việc</span>
             </div>
-            <p className="font-bold text-plum-900 dark:text-[#f0f2f5]">
+            <p className="font-bold text-text">
               {WORKING_MODE_LABELS[deal.workingMode] || deal.workingMode}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-cream-100/40 p-3 border border-plum-900/10 dark:bg-white/5 dark:border-white/10 space-y-1">
-            <div className="flex items-center gap-1.5 text-plum-500 dark:text-[#8a8d91]">
-              <Users className="h-3.5 w-3.5 text-brand-500" />
+          <div className="rounded-2xl bg-cream-100/40 p-3 border border-border dark:bg-white/5 space-y-1">
+            <div className="flex items-center gap-1.5 text-text-subtle dark:text-text-subtle">
+              <Users className="h-3.5 w-3.5 text-primary-solid" />
               <span className="font-semibold">Hình thức tham gia</span>
             </div>
-            <p className="font-bold text-plum-900 dark:text-[#f0f2f5]">
+            <p className="font-bold text-text">
               {PARTICIPATION_LABELS[deal.participationType] || deal.participationType}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-cream-100/40 p-3 border border-plum-900/10 dark:bg-white/5 dark:border-white/10 space-y-1">
-            <div className="flex items-center gap-1.5 text-plum-500 dark:text-[#8a8d91]">
-              <Target className="h-3.5 w-3.5 text-brand-500" />
+          <div className="rounded-2xl bg-cream-100/40 p-3 border border-border dark:bg-white/5 space-y-1">
+            <div className="flex items-center gap-1.5 text-text-subtle dark:text-text-subtle">
+              <Target className="h-3.5 w-3.5 text-primary-solid" />
               <span className="font-semibold">Loại nhiệm vụ</span>
             </div>
-            <p className="font-bold text-plum-900 dark:text-[#f0f2f5]">
+            <p className="font-bold text-text">
               {TASK_TYPE_LABELS[deal.taskType] || deal.taskType}
             </p>
           </div>
         </div>
 
         {/* Phạm vi công việc (Task Scope) */}
-        <div className="space-y-1.5 rounded-2xl bg-cream-100/50 p-4 border border-plum-900/10 dark:bg-white/5 dark:border-white/10">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">
-            <FileText className="h-4 w-4 text-brand-500" />
+        <div className="space-y-1.5 rounded-2xl bg-cream-100/50 p-4 border border-border dark:bg-white/5">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-text">
+            <FileText className="h-4 w-4 text-primary-solid" />
             <span>Phạm vi công việc (Task Scope)</span>
           </div>
-          <p className="whitespace-pre-wrap text-plum-700 dark:text-[#b0b3b8] leading-relaxed">
+          <p className="whitespace-pre-wrap text-text-muted leading-relaxed">
             {deal.taskScope}
           </p>
         </div>
 
         {/* Kết quả kỳ vọng (Expected Result) */}
         <div className="space-y-1.5 rounded-2xl bg-brand-50/40 p-4 border border-brand-200/40 dark:bg-brand-700/20 dark:border-brand-700/30">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-brand-700 dark:text-brand-300">
-            <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+          <div className="flex items-center gap-1.5 text-xs font-bold text-primary-solid">
+            <Sparkles className="h-4 w-4 text-primary-solid" />
             <span>Kết quả kỳ vọng đầu ra (Expected Result)</span>
           </div>
-          <p className="whitespace-pre-wrap text-brand-700/85 dark:text-brand-200/90 leading-relaxed">
+          <p className="whitespace-pre-wrap text-brand-700/85 dark:text-brand-300/90 leading-relaxed">
             {deal.expectedResult}
           </p>
         </div>

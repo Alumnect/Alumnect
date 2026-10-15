@@ -17,13 +17,13 @@ export function MentorStatusDashboard() {
   if (isLoading) {
     return (
       <div className="space-y-5 py-2 sm:py-3">
-        <div className="rounded-3xl border border-plum-900/10 bg-white p-6 sm:p-8 dark:bg-[#242526] dark:border-[#393a3b] space-y-4">
+        <div className="rounded-3xl border border-border bg-surface p-6 sm:p-8 space-y-4">
           <Skeleton className="h-6 w-48 rounded-full" />
           <Skeleton className="h-10 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
         </div>
 
-        <div className="rounded-3xl border border-plum-900/10 bg-white p-6 sm:p-8 dark:bg-[#242526] dark:border-[#393a3b] space-y-5">
+        <div className="rounded-3xl border border-border bg-surface p-6 sm:p-8 space-y-5">
           <Skeleton className="h-8 w-64" />
           <div className="space-y-3">
             <Skeleton className="h-16 rounded-2xl" />
@@ -39,14 +39,14 @@ export function MentorStatusDashboard() {
   if (isError || !status) {
     return (
       <div className="py-8">
-        <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-coral-200 bg-white dark:bg-[#242526] dark:border-coral-800/60">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-950/60 dark:text-coral-300">
+        <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-danger-border bg-surface">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
             <AlertCircle className="h-7 w-7" />
           </div>
-          <h2 className="font-display text-xl font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-xl font-bold text-text">
             Không thể tải trạng thái Mentor
           </h2>
-          <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8] leading-relaxed">
+          <p className="mt-2 text-sm text-text-muted leading-relaxed">
             {error?.message || 'Đã có lỗi xảy ra khi kết nối tới máy chủ. Vui lòng thử lại sau.'}
           </p>
           <div className="mt-6 flex justify-center">

@@ -12,36 +12,36 @@ export function MentoringTaskParticipantsCard({
   mentor,
 }: MentoringTaskParticipantsCardProps) {
   return (
-    <div className="rounded-3xl border border-plum-900/[0.08] bg-white p-6 shadow-xs dark:border-[#393a3b] dark:bg-[#242526]">
-      <h4 className="text-base font-bold text-plum-900 dark:text-white mb-4">
+    <div className="rounded-3xl border border-border bg-surface p-6 shadow-xs">
+      <h4 className="text-base font-bold text-text mb-4">
         Thành viên tham gia nhiệm vụ
       </h4>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-3">
         {/* Student Box */}
-        <div className="flex items-start gap-3.5 rounded-2xl border border-plum-900/[0.06] bg-plum-900/[0.02] p-4 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="flex items-start gap-3.5 rounded-2xl border border-border bg-surface-2 p-4">
           <Avatar
             src={student?.avatarUrl || undefined}
             name={student?.fullName || 'Học viên'}
-            className="h-12 w-12 shrink-0 rounded-2xl ring-2 ring-brand-500/20"
+            className="h-12 w-12 shrink-0 rounded-2xl ring-2 ring-primary/20"
           />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="rounded-md bg-brand-100 px-2 py-0.5 text-[11px] font-bold uppercase text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="whitespace-nowrap rounded-md bg-primary-soft px-2 py-0.5 text-xs font-bold uppercase text-primary-solid">
                 Học viên (Student)
               </span>
             </div>
-            <p className="mt-1 truncate text-sm font-bold text-plum-900 dark:text-white">
+            <p className="mt-1 truncate text-sm font-bold text-text">
               {student?.fullName || 'Học viên'}
             </p>
             {student?.headline && (
-              <p className="flex items-center gap-1 text-xs text-plum-500 dark:text-[#b0b3b8] mt-0.5">
-                <GraduationCap className="h-3 w-3 shrink-0 text-brand-500" />
+              <p className="flex items-center gap-1 text-xs text-text-subtle mt-0.5">
+                <GraduationCap className="h-3 w-3 shrink-0 text-primary-solid" />
                 <span className="truncate">{student.headline}</span>
               </p>
             )}
             {student?.email && (
-              <p className="flex items-center gap-1 text-xs text-plum-400 dark:text-[#8f9399] mt-1">
+              <p className="flex items-center gap-1 text-xs text-text-subtle mt-1">
                 <Mail className="h-3 w-3 shrink-0" />
                 <span className="truncate">{student.email}</span>
               </p>
@@ -50,29 +50,29 @@ export function MentoringTaskParticipantsCard({
         </div>
 
         {/* Mentor Box */}
-        <div className="flex items-start gap-3.5 rounded-2xl border border-plum-900/[0.06] bg-plum-900/[0.02] p-4 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="flex items-start gap-3.5 rounded-2xl border border-border bg-surface-2 p-4">
           <Avatar
             src={mentor?.avatarUrl || undefined}
             name={mentor?.fullName || 'Mentor'}
-            className="h-12 w-12 shrink-0 rounded-2xl ring-2 ring-mint-500/20"
+            className="h-12 w-12 shrink-0 rounded-2xl ring-2 ring-success"
           />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="rounded-md bg-mint-100 px-2 py-0.5 text-[11px] font-bold uppercase text-mint-700 dark:bg-mint-950/40 dark:text-mint-300">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="whitespace-nowrap rounded-md bg-success-soft px-2 py-0.5 text-xs font-bold uppercase text-success">
                 Cố vấn (Mentor)
               </span>
             </div>
-            <p className="mt-1 truncate text-sm font-bold text-plum-900 dark:text-white">
+            <p className="mt-1 truncate text-sm font-bold text-text">
               {mentor?.fullName || 'Mentor'}
             </p>
             {mentor?.headline && (
-              <p className="flex items-center gap-1 text-xs text-plum-500 dark:text-[#b0b3b8] mt-0.5">
-                <Award className="h-3 w-3 shrink-0 text-mint-500" />
+              <p className="flex items-center gap-1 text-xs text-text-subtle mt-0.5">
+                <Award className="h-3 w-3 shrink-0 text-success" />
                 <span className="truncate">{mentor.headline}</span>
               </p>
             )}
             {mentor?.email && (
-              <p className="flex items-center gap-1 text-xs text-plum-400 dark:text-[#8f9399] mt-1">
+              <p className="flex items-center gap-1 text-xs text-text-subtle mt-1">
                 <Mail className="h-3 w-3 shrink-0" />
                 <span className="truncate">{mentor.email}</span>
               </p>

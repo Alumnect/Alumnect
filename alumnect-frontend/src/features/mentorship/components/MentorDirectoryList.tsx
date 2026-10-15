@@ -35,7 +35,7 @@ export function MentorDirectoryList({
         {Array.from({ length: 6 }).map((_, idx) => (
           <div
             key={idx}
-            className="rounded-3xl border border-plum-900/[0.08] bg-white p-5 space-y-4 dark:border-[#393a3b] dark:bg-[#242526]"
+            className="rounded-3xl border border-border bg-surface p-5 space-y-4"
           >
             <div className="flex items-center gap-3">
               <Skeleton className="h-14 w-14 rounded-full" />
@@ -49,7 +49,7 @@ export function MentorDirectoryList({
               <Skeleton className="h-6 w-16 rounded-full" />
               <Skeleton className="h-6 w-20 rounded-full" />
             </div>
-            <div className="pt-2 border-t border-plum-900/[0.06] flex justify-between">
+            <div className="pt-2 border-t border-border flex justify-between">
               <Skeleton className="h-8 w-24 rounded-xl" />
               <Skeleton className="h-8 w-24 rounded-xl" />
             </div>
@@ -62,20 +62,20 @@ export function MentorDirectoryList({
   // 2. Error State: Hiển thị trực tiếp error.message từ Backend
   if (isError) {
     return (
-      <div className="rounded-3xl border border-coral-300/60 bg-coral-50/70 p-6 text-center dark:border-coral-900/60 dark:bg-coral-950/20">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-900/50 dark:text-coral-300">
+      <div className="rounded-3xl border border-danger-border bg-danger-soft p-6 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-danger-soft text-danger">
           <AlertCircle className="h-6 w-6" />
         </div>
-        <h3 className="mt-3 font-display text-base font-bold text-plum-900 dark:text-[#e4e6eb]">
+        <h3 className="mt-3 font-display text-base font-bold text-text">
           Không thể tải danh sách Mentor
         </h3>
-        <p className="mt-1 text-xs text-plum-600 dark:text-[#b0b3b8]">
+        <p className="mt-1 text-xs text-text-muted">
           {error?.message || 'Đã có lỗi xảy ra trong quá trình truy vấn hệ thống.'}
         </p>
         <button
           type="button"
           onClick={onRetry}
-          className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-coral-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-coral-700 active:scale-95"
+          className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-danger px-4 py-2 text-xs font-bold text-text-inverse shadow-xs transition-colors hover:opacity-90 active:scale-95"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           <span>Thử lại</span>
@@ -87,17 +87,17 @@ export function MentorDirectoryList({
   // 3. Empty State: Không tìm thấy kết quả nào phù hợp
   if (!data || data.content.length === 0) {
     return (
-      <div className="rounded-3xl border border-plum-900/[0.08] bg-white/60 p-6 text-center backdrop-blur-sm dark:border-[#393a3b] dark:bg-[#242526]/60">
+      <div className="rounded-3xl border border-border bg-surface/60 p-6 text-center backdrop-blur-sm">
         <EmptyState
           className="border-0 bg-transparent py-6"
-          icon={<SearchX className="h-9 w-9 text-brand-500" />}
+          icon={<SearchX className="h-9 w-9 text-primary-solid" />}
           title="Không tìm thấy Mentor"
           description="Thử đổi từ khóa hoặc xóa bộ lọc."
           action={
             <button
               type="button"
               onClick={onClearFilters}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:bg-brand-700 active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-semibold text-on-primary shadow-xs transition-all hover:bg-primary-hover active:scale-95 cursor-pointer"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               <span>Xóa bộ lọc</span>

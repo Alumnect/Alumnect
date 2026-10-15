@@ -146,11 +146,11 @@ export function MentoringGroupDetailPage() {
   if (isError || !group) {
     return (
       <Container className="py-12 text-center space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-50 text-coral-600 dark:bg-coral-950/40">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
           <AlertTriangle className="h-7 w-7" />
         </div>
-        <h2 className="text-xl font-bold text-plum-900 dark:text-white">Không tìm thấy nhóm</h2>
-        <p className="text-sm text-plum-500 max-w-md mx-auto dark:text-[#8f9399]">
+        <h2 className="text-xl font-bold text-text">Không tìm thấy nhóm</h2>
+        <p className="text-sm text-text-subtle max-w-md mx-auto">
           {(error as Error)?.message || 'Nhóm này không tồn tại hoặc bạn không có quyền truy cập.'}
         </p>
         <Button variant="primary" onClick={() => navigate('/app/mentoring/groups')}>
@@ -185,32 +185,32 @@ export function MentoringGroupDetailPage() {
       case 'JOINED':
       case 'ACTIVE':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-mint-50 px-2.5 py-0.5 text-xs font-bold text-mint-700 dark:bg-mint-950/40 dark:text-mint-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-bold text-success">
             <CheckCircle2 className="h-3 w-3" /> Đã tham gia
           </span>
         )
       case 'PENDING':
       case 'INVITED':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning">
             <Clock className="h-3 w-3" /> Đang chờ phản hồi
           </span>
         )
       case 'DECLINED':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-coral-50 px-2.5 py-0.5 text-xs font-bold text-coral-700 dark:bg-coral-950/40 dark:text-coral-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-bold text-danger">
             <XCircle className="h-3 w-3" /> Đã từ chối
           </span>
         )
       case 'CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-cream-200 px-2.5 py-0.5 text-xs font-bold text-plum-600 dark:bg-[#3a3b3c] dark:text-plum-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-bold text-text-muted dark:bg-surface-2">
             <Ban className="h-3 w-3" /> Đã thu hồi
           </span>
         )
       case 'REMOVED':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-coral-50 px-2.5 py-0.5 text-xs font-bold text-coral-700 dark:bg-coral-950/40 dark:text-coral-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-bold text-danger">
             <Trash2 className="h-3 w-3" /> Đã rời / bị xóa
           </span>
         )
@@ -226,7 +226,7 @@ export function MentoringGroupDetailPage() {
         <div className="flex items-center justify-between">
           <Link
             to="/app/mentoring/groups"
-            className="inline-flex items-center gap-2 text-xs font-bold text-plum-600 hover:text-brand-600 transition-colors dark:text-[#b0b3b8]"
+            className="inline-flex items-center gap-2 text-xs font-bold text-text-muted hover:text-primary-solid transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Danh sách nhóm Mentoring
@@ -248,7 +248,7 @@ export function MentoringGroupDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsDeleteConfirmOpen(true)}
-                className="gap-1.5 rounded-xl border-coral-200 text-coral-600 hover:bg-coral-50 text-xs font-bold"
+                className="gap-1.5 rounded-xl border-danger-border text-danger hover:bg-danger-soft text-xs font-bold"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Giải tán nhóm
@@ -259,7 +259,7 @@ export function MentoringGroupDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsLeaveConfirmOpen(true)}
-                className="gap-1.5 rounded-xl border-coral-200 text-coral-600 hover:bg-coral-50 text-xs font-bold"
+                className="gap-1.5 rounded-xl border-danger-border text-danger hover:bg-danger-soft text-xs font-bold"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 Rời nhóm
@@ -269,48 +269,48 @@ export function MentoringGroupDetailPage() {
         </div>
 
         {/* Hero Card */}
-        <Card hover={false} className="border border-plum-900/[0.08] bg-white p-6 sm:p-7 dark:bg-[#242526] dark:border-[#393a3b]">
+        <Card hover={false} className="border border-border bg-surface p-6 sm:p-7">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 font-display text-2xl font-bold shadow-inner dark:bg-brand-700/50 dark:text-brand-300">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary-solid font-display text-2xl font-bold shadow-inner">
                 {group.name.slice(0, 2).toUpperCase()}
               </div>
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-xl sm:text-2xl font-bold text-plum-900 dark:text-white">
+                  <h1 className="text-xl sm:text-2xl font-bold text-text">
                     {group.name}
                   </h1>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
                       group.status === 'ACTIVE'
-                        ? 'bg-mint-50 text-mint-700 dark:bg-mint-950/40 dark:text-mint-300'
-                        : 'bg-cream-200 text-plum-600 dark:bg-[#3a3b3c] dark:text-plum-400'
+                        ? 'bg-success-soft text-success'
+                        : 'bg-surface-3 text-text-muted dark:bg-surface-2'
                     }`}
                   >
                     {group.status === 'ACTIVE' ? 'Đang hoạt động' : group.status}
                   </span>
                   {isLeader && (
-                    <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+                    <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid">
                       Bạn là Trưởng nhóm
                     </span>
                   )}
                 </div>
                 {group.description && (
-                  <p className="text-sm text-plum-600 leading-relaxed max-w-2xl dark:text-[#b0b3b8]">
+                  <p className="text-sm text-text-muted leading-relaxed max-w-2xl">
                     {group.description}
                   </p>
                 )}
-                <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-plum-500 dark:text-[#8f9399]">
+                <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-text-subtle">
                   <span className="flex items-center gap-1.5">
-                    <Shield className="h-4 w-4 text-brand-500" />
+                    <Shield className="h-4 w-4 text-primary-solid" />
                     Trưởng nhóm: <strong>{group.leaderName || 'Trưởng nhóm'}</strong>
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Users className="h-4 w-4 text-mint-500" />
+                    <Users className="h-4 w-4 text-success" />
                     <strong>{joinedMembers.length}</strong> thành viên chính thức
                   </span>
                   {pendingMembers.length > 0 && (
-                    <span className="flex items-center gap-1.5 text-amber-600 font-bold">
+                    <span className="flex items-center gap-1.5 text-warning font-bold">
                       <Clock className="h-4 w-4" />
                       {pendingMembers.length} lời mời đang chờ
                     </span>
@@ -332,7 +332,7 @@ export function MentoringGroupDetailPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsInviteModalOpen(true)}
-                  className="gap-1.5 rounded-xl border-brand-200 text-brand-700 hover:bg-brand-50 text-xs font-bold"
+                  className="gap-1.5 rounded-xl border-primary-soft-border text-primary-solid hover:bg-primary-soft text-xs font-bold"
                 >
                   <UserPlus className="h-4 w-4" />
                   Mời thành viên
@@ -342,7 +342,7 @@ export function MentoringGroupDetailPage() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="mt-6 border-t border-plum-900/[0.06] pt-4 dark:border-white/10">
+          <div className="mt-6 border-t border-border pt-4">
             <MentoringFilterTabs
               ariaLabel="Mục của nhóm"
               value={activeTab}
@@ -367,10 +367,10 @@ export function MentoringGroupDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
               {/* Snapshot Active Members Preview */}
-              <Card hover={false} className="border border-plum-900/[0.08] p-5 space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-                <div className="flex items-center justify-between border-b border-plum-900/5 pb-3">
-                  <h3 className="font-display text-sm font-bold text-plum-900 dark:text-white flex items-center gap-2">
-                    <Users className="h-4 w-4 text-brand-600" />
+              <Card hover={false} className="border border-border p-5 space-y-4 dark:bg-surface">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary-solid" />
                     Thành viên chính thức ({joinedMembers.length})
                   </h3>
                   {isLeader && (
@@ -378,7 +378,7 @@ export function MentoringGroupDetailPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsInviteModalOpen(true)}
-                      className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                      className="text-xs font-bold text-primary-solid hover:text-primary-solid"
                     >
                       + Mời thêm
                     </Button>
@@ -389,7 +389,7 @@ export function MentoringGroupDetailPage() {
                   {joinedMembers.map((member: MentoringGroupMemberData) => (
                     <div
                       key={member.id}
-                      className="flex items-center gap-3 rounded-xl border border-plum-900/5 bg-cream-100/50 p-3 dark:border-white/5 dark:bg-white/5"
+                      className="flex items-center gap-3 rounded-xl border border-border bg-cream-100/50 p-3 dark:bg-white/5"
                     >
                       <img
                         src={
@@ -401,16 +401,16 @@ export function MentoringGroupDetailPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="truncate text-xs font-bold text-plum-900 dark:text-white">
+                          <span className="truncate text-xs font-bold text-text">
                             {member.fullName}
                           </span>
                           {member.leader && (
-                            <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+                            <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-bold text-warning">
                               Trưởng nhóm
                             </span>
                           )}
                         </div>
-                        <span className="block truncate text-[11px] text-plum-500 dark:text-[#8f9399]">
+                        <span className="block truncate text-xs text-text-subtle">
                           {member.major || member.email}
                         </span>
                       </div>
@@ -420,10 +420,10 @@ export function MentoringGroupDetailPage() {
               </Card>
 
               {/* Mentoring Request Status Overview */}
-              <Card hover={false} className="border border-plum-900/[0.08] p-5 space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-                <div className="flex items-center justify-between border-b border-plum-900/5 pb-3">
-                  <h3 className="font-display text-sm font-bold text-plum-900 dark:text-white flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-mint-600" />
+              <Card hover={false} className="border border-border p-5 space-y-4 dark:bg-surface">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-success" />
                     Mentoring Requests liên kết ({requests.length})
                   </h3>
                   {isLeader && (
@@ -431,7 +431,7 @@ export function MentoringGroupDetailPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
-                      className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                      className="text-xs font-bold text-primary-solid hover:text-primary-solid"
                     >
                       + Tạo yêu cầu mới
                     </Button>
@@ -439,13 +439,13 @@ export function MentoringGroupDetailPage() {
                 </div>
 
                 {loadingRequests ? (
-                  <div className="py-8 text-center text-xs text-plum-500">
-                    <Loader2 className="mx-auto h-5 w-5 animate-spin text-brand-600 mb-2" />
+                  <div className="py-8 text-center text-xs text-text-subtle">
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary-solid mb-2" />
                     Đang tải danh sách yêu cầu...
                   </div>
                 ) : requests.length === 0 ? (
                   <div className="py-8 text-center space-y-3">
-                    <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+                    <p className="text-xs text-text-subtle">
                       Nhóm này chưa gửi Mentoring Request nào.
                     </p>
                     {isLeader && (
@@ -464,28 +464,28 @@ export function MentoringGroupDetailPage() {
                     {requests.slice(0, 3).map((req) => (
                       <div
                         key={req.id}
-                        className="flex items-center justify-between gap-4 rounded-xl border border-plum-900/5 p-3 hover:bg-cream-100/70 transition-colors dark:border-white/5 dark:hover:bg-white/5"
+                        className="flex items-center justify-between gap-4 rounded-xl border border-border p-3 hover:bg-cream-100/70 transition-colors dark:hover:bg-white/5"
                       >
                         <div className="min-w-0 space-y-1">
                           <Link
                             to={`/app/mentoring/requests/${req.id}`}
-                            className="font-bold text-xs text-plum-900 hover:text-brand-600 truncate block dark:text-white"
+                            className="font-bold text-xs text-text hover:text-primary-solid truncate block"
                           >
                             {req.title}
                           </Link>
-                          <div className="flex items-center gap-3 text-[11px] text-plum-500 dark:text-[#8f9399]">
+                          <div className="flex items-center gap-3 text-xs text-text-subtle">
                             <span>Loại: {req.requestType === 'DIRECT' ? 'Trực tiếp' : 'Mở (Matching)'}</span>
                             <span>•</span>
                             <span>{new Date(req.createdAt).toLocaleDateString('vi-VN')}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+                          <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid">
                             {req.status}
                           </span>
                           <Link
                             to={`/app/mentoring/requests/${req.id}`}
-                            className="rounded-lg p-1.5 text-plum-400 hover:text-plum-900 hover:bg-cream-200 dark:hover:bg-white/10"
+                            className="rounded-lg p-1.5 text-text-subtle hover:text-text hover:bg-surface-3"
                           >
                             <ChevronRight className="h-4 w-4" />
                           </Link>
@@ -499,29 +499,29 @@ export function MentoringGroupDetailPage() {
 
             {/* Right Column: Group Rules & Stats */}
             <div className="space-y-6">
-              <Card hover={false} className="border border-brand-200/60 bg-brand-50/30 p-5 space-y-3 dark:border-brand-700/40 dark:bg-brand-700/20">
-                <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider dark:text-brand-300">
+              <Card hover={false} className="border border-primary-soft-border bg-brand-50/30 p-5 space-y-3 dark:bg-brand-700/20">
+                <h4 className="text-xs font-bold text-primary-solid uppercase tracking-wider">
                   Quy trình Group-First
                 </h4>
-                <ul className="text-xs text-brand-700 space-y-2 leading-relaxed dark:text-brand-200">
+                <ul className="text-xs text-primary-solid space-y-2 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-brand-600">•</span>
+                    <span className="font-bold text-primary-solid">•</span>
                     Nhóm hoạt động độc lập và có thể gửi nhiều Mentoring Requests khác nhau.
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-brand-600">•</span>
+                    <span className="font-bold text-primary-solid">•</span>
                     Chỉ những thành viên có trạng thái <strong>Đã tham gia</strong> mới được đưa vào danh sách của Yêu cầu cố vấn.
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-brand-600">•</span>
+                    <span className="font-bold text-primary-solid">•</span>
                     Thành viên là Mentor chủ động sẽ không thể tự nhận Request của nhóm mình (tránh xung đột lợi ích).
                   </li>
                 </ul>
               </Card>
 
               {/* Quick Actions */}
-              <Card hover={false} className="border border-plum-900/[0.08] p-5 space-y-3 dark:bg-[#242526] dark:border-[#393a3b]">
-                <h4 className="text-xs font-bold text-plum-900 dark:text-white uppercase tracking-wider">
+              <Card hover={false} className="border border-border p-5 space-y-3 dark:bg-surface">
+                <h4 className="text-xs font-bold text-text uppercase tracking-wider">
                   Thao tác nhanh
                 </h4>
                 <div className="space-y-2">
@@ -537,7 +537,7 @@ export function MentoringGroupDetailPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-xs font-bold rounded-xl gap-2 border-plum-900/10"
+                        className="w-full justify-start text-xs font-bold rounded-xl gap-2 border-border"
                         onClick={() => setIsInviteModalOpen(true)}
                       >
                         <UserPlus className="h-4 w-4" />
@@ -548,7 +548,7 @@ export function MentoringGroupDetailPage() {
                   {!isLeader && isCurrentUserJoined && (
                     <Button
                       variant="outline"
-                      className="w-full justify-start text-xs font-bold rounded-xl gap-2 border-coral-200 text-coral-600 hover:bg-coral-50"
+                      className="w-full justify-start text-xs font-bold rounded-xl gap-2 border-danger-border text-danger hover:bg-danger-soft"
                       onClick={() => setIsLeaveConfirmOpen(true)}
                     >
                       <LogOut className="h-4 w-4" />
@@ -565,13 +565,13 @@ export function MentoringGroupDetailPage() {
         {activeTab === 'MEMBERS' && (
           <div className="space-y-6">
             {/* Active Members Table */}
-            <Card hover={false} className="border border-plum-900/[0.08] p-5 space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-plum-900/5 pb-3">
+            <Card hover={false} className="border border-border p-5 space-y-4 dark:bg-surface">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
                 <div>
-                  <h3 className="font-display text-sm font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-sm font-bold text-text">
                     Thành viên đang tham gia ({joinedMembers.length})
                   </h3>
-                  <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle">
                     Những thành viên này sẽ tự động có mặt trong snapshot khi bạn tạo Mentoring Request.
                   </p>
                 </div>
@@ -590,7 +590,7 @@ export function MentoringGroupDetailPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-plum-900/5 text-plum-400 font-bold dark:border-white/5">
+                    <tr className="border-b border-border text-text-subtle font-bold">
                       <th className="py-2.5 px-3">Thành viên</th>
                       <th className="py-2.5 px-3">Chuyên ngành / Email</th>
                       <th className="py-2.5 px-3">Trạng thái</th>
@@ -598,7 +598,7 @@ export function MentoringGroupDetailPage() {
                       {isLeader && <th className="py-2.5 px-3 text-right">Thao tác</th>}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-plum-900/5 dark:divide-white/5">
+                  <tbody className="divide-y divide-border">
                     {joinedMembers.map((member: MentoringGroupMemberData) => (
                       <tr key={member.id} className="hover:bg-cream-100/50 dark:hover:bg-white/5">
                         <td className="py-3 px-3">
@@ -612,10 +612,10 @@ export function MentoringGroupDetailPage() {
                               className="h-8 w-8 rounded-full object-cover"
                             />
                             <div>
-                              <div className="flex items-center gap-1.5 font-bold text-plum-900 dark:text-white">
+                              <div className="flex items-center gap-1.5 font-bold text-text">
                                 {member.fullName}
                                 {member.leader && (
-                                  <span className="rounded-md bg-amber-100 px-1.5 py-0.2 text-[11px] font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+                                  <span className="rounded-md bg-warning-soft px-1.5 py-0.2 text-xs font-bold text-warning">
                                     Trưởng nhóm
                                   </span>
                                 )}
@@ -623,12 +623,12 @@ export function MentoringGroupDetailPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-3 text-plum-600 dark:text-[#b0b3b8]">
+                        <td className="py-3 px-3 text-text-muted">
                           <div>{member.major || 'Chưa cập nhật'}</div>
-                          <div className="text-[11px] text-plum-400">{member.email}</div>
+                          <div className="text-xs text-text-subtle">{member.email}</div>
                         </td>
                         <td className="py-3 px-3">{getStatusBadge(member.status)}</td>
-                        <td className="py-3 px-3 text-plum-500 dark:text-[#8f9399]">
+                        <td className="py-3 px-3 text-text-subtle">
                           {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString('vi-VN') : '—'}
                         </td>
                         {isLeader && (
@@ -637,7 +637,7 @@ export function MentoringGroupDetailPage() {
                               <button
                                 type="button"
                                 onClick={() => setMemberToRemove(member)}
-                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold text-coral-600 hover:bg-coral-50 transition-colors"
+                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold text-danger hover:bg-danger-soft transition-colors"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                                 Xóa
@@ -654,13 +654,13 @@ export function MentoringGroupDetailPage() {
 
             {/* Pending Invitations Table */}
             {pendingMembers.length > 0 && (
-              <Card hover={false} className="border border-amber-300/80 bg-amber-50/30 p-5 space-y-4 dark:border-amber-700/50 dark:bg-amber-950/20">
-                <div className="border-b border-amber-200/60 pb-3 dark:border-amber-800/40">
-                  <h3 className="font-display text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-amber-600" />
+              <Card hover={false} className="border border-warning-border bg-warning-soft p-5 space-y-4">
+                <div className="border-b border-warning-border pb-3">
+                  <h3 className="font-display text-sm font-bold text-warning flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-warning" />
                     Lời mời đang chờ chấp nhận ({pendingMembers.length})
                   </h3>
-                  <p className="text-xs text-amber-800 dark:text-amber-300">
+                  <p className="text-xs text-warning">
                     Người được mời chưa xác nhận tham gia. Họ sẽ không có mặt trong Mentoring Request cho đến khi Accept.
                   </p>
                 </div>
@@ -668,7 +668,7 @@ export function MentoringGroupDetailPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-amber-200/40 text-amber-800 font-bold dark:text-amber-300">
+                      <tr className="border-b border-warning-border text-warning font-bold">
                         <th className="py-2 px-3">Người được mời</th>
                         <th className="py-2 px-3">Email</th>
                         <th className="py-2 px-3">Thời gian mời</th>
@@ -676,14 +676,14 @@ export function MentoringGroupDetailPage() {
                         {isLeader && <th className="py-2 px-3 text-right">Thao tác</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-amber-200/40 dark:divide-amber-800/30">
+                    <tbody className="divide-y divide-warning-border">
                       {pendingMembers.map((member: MentoringGroupMemberData) => (
-                        <tr key={member.id} className="hover:bg-amber-100/30">
-                          <td className="py-2.5 px-3 font-bold text-plum-900 dark:text-white">
+                        <tr key={member.id} className="hover:bg-warning-soft">
+                          <td className="py-2.5 px-3 font-bold text-text">
                             {member.fullName}
                           </td>
-                          <td className="py-2.5 px-3 text-plum-600 dark:text-[#b0b3b8]">{member.email}</td>
-                          <td className="py-2.5 px-3 text-plum-500">
+                          <td className="py-2.5 px-3 text-text-muted">{member.email}</td>
+                          <td className="py-2.5 px-3 text-text-subtle">
                             {new Date(member.invitedAt).toLocaleDateString('vi-VN')}
                           </td>
                           <td className="py-2.5 px-3">{getStatusBadge(member.status)}</td>
@@ -692,7 +692,7 @@ export function MentoringGroupDetailPage() {
                               <button
                                 type="button"
                                 onClick={() => setInvitationToCancel(member)}
-                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold text-amber-800 hover:bg-amber-200/50 transition-colors dark:text-amber-200"
+                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold text-warning hover:bg-amber-200/50 transition-colors"
                               >
                                 <Ban className="h-3.5 w-3.5" />
                                 Thu hồi
@@ -709,12 +709,12 @@ export function MentoringGroupDetailPage() {
 
             {/* History Table (DECLINED, REMOVED, CANCELLED) */}
             {isLeader && historyMembers.length > 0 && (
-              <Card hover={false} className="border border-plum-900/[0.08] p-5 space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-                <div className="border-b border-plum-900/5 pb-3">
-                  <h3 className="font-display text-sm font-bold text-plum-900 dark:text-white">
+              <Card hover={false} className="border border-border p-5 space-y-4 dark:bg-surface">
+                <div className="border-b border-border pb-3">
+                  <h3 className="font-display text-sm font-bold text-text">
                     Lịch sử lời mời ({historyMembers.length})
                   </h3>
-                  <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle">
                     Danh sách những người đã từ chối, bị thu hồi lời mời hoặc bị xóa khỏi nhóm. Bạn có thể gửi lại lời mời bất kỳ lúc nào.
                   </p>
                 </div>
@@ -722,20 +722,20 @@ export function MentoringGroupDetailPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-plum-900/5 text-plum-400 font-bold">
+                      <tr className="border-b border-border text-text-subtle font-bold">
                         <th className="py-2 px-3">Thành viên</th>
                         <th className="py-2 px-3">Email</th>
                         <th className="py-2 px-3">Trạng thái</th>
                         <th className="py-2 px-3 text-right">Thao tác</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-plum-900/5 dark:divide-white/5">
+                    <tbody className="divide-y divide-border">
                       {historyMembers.map((member: MentoringGroupMemberData) => (
                         <tr key={member.id} className="hover:bg-cream-100/50 dark:hover:bg-white/5">
-                          <td className="py-2.5 px-3 font-bold text-plum-900 dark:text-white">
+                          <td className="py-2.5 px-3 font-bold text-text">
                             {member.fullName}
                           </td>
-                          <td className="py-2.5 px-3 text-plum-600 dark:text-[#b0b3b8]">{member.email}</td>
+                          <td className="py-2.5 px-3 text-text-muted">{member.email}</td>
                           <td className="py-2.5 px-3">{getStatusBadge(member.status)}</td>
                           <td className="py-2.5 px-3 text-right">
                             <Button
@@ -762,13 +762,13 @@ export function MentoringGroupDetailPage() {
         {/* TAB 3: REQUESTS LIST */}
         {activeTab === 'REQUESTS' && (
           <div className="space-y-6">
-            <Card hover={false} className="border border-plum-900/[0.08] p-5 space-y-4 dark:bg-[#242526] dark:border-[#393a3b]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-plum-900/5 pb-3">
+            <Card hover={false} className="border border-border p-5 space-y-4 dark:bg-surface">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
                 <div>
-                  <h3 className="font-display text-sm font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-sm font-bold text-text">
                     Tất cả Mentoring Requests của nhóm ({requests.length})
                   </h3>
-                  <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle">
                     Một nhóm có thể tái sử dụng để tạo nhiều yêu cầu mentoring theo nhu cầu học tập.
                   </p>
                 </div>
@@ -785,13 +785,13 @@ export function MentoringGroupDetailPage() {
               </div>
 
               {loadingRequests ? (
-                <div className="py-12 text-center text-xs text-plum-500">
-                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-brand-600 mb-2" />
+                <div className="py-12 text-center text-xs text-text-subtle">
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary-solid mb-2" />
                   Đang tải danh sách Mentoring Requests...
                 </div>
               ) : requests.length === 0 ? (
                 <div className="py-12 text-center space-y-3">
-                  <p className="text-xs text-plum-500 dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle">
                     Chưa có Mentoring Request nào được tạo cho nhóm này.
                   </p>
                   {isLeader && (
@@ -810,17 +810,17 @@ export function MentoringGroupDetailPage() {
                   {requests.map((req) => (
                     <div
                       key={req.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-plum-900/10 p-4 hover:border-brand-500/30 transition-all dark:border-white/10"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border p-4 hover:border-primary-soft-border transition-all"
                     >
                       <div className="space-y-1">
                         <Link
                           to={`/app/mentoring/requests/${req.id}`}
-                          className="font-bold text-sm text-plum-900 hover:text-brand-600 dark:text-white flex items-center gap-1.5"
+                          className="font-bold text-sm text-text hover:text-primary-solid flex items-center gap-1.5"
                         >
                           {req.title}
-                          <ExternalLink className="h-3.5 w-3.5 text-plum-400" />
+                          <ExternalLink className="h-3.5 w-3.5 text-text-subtle" />
                         </Link>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-plum-500 dark:text-[#8f9399]">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-text-subtle">
                           <span>
                             Hình thức: <strong>{req.requestType === 'DIRECT' ? 'Chỉ định Mentor' : 'Matching tự động'}</strong>
                           </span>
@@ -836,13 +836,13 @@ export function MentoringGroupDetailPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700 dark:bg-brand-700/40 dark:text-brand-300">
+                        <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid">
                           {req.status}
                         </span>
                         {req.confirmedDealId && (
                           <Link
                             to={`/app/mentoring/deals`}
-                            className="rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-bold text-plum-700 hover:bg-cream-100 dark:text-white"
+                            className="rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-text-muted hover:bg-surface-2"
                           >
                             Xem Deal
                           </Link>
@@ -850,7 +850,7 @@ export function MentoringGroupDetailPage() {
                         {req.taskId && (
                           <Link
                             to={`/app/mentoring/tasks/${req.taskId}`}
-                            className="rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-bold text-plum-700 hover:bg-cream-100 dark:text-white"
+                            className="rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-text-muted hover:bg-surface-2"
                           >
                             Xem Task
                           </Link>
@@ -881,16 +881,16 @@ export function MentoringGroupDetailPage() {
         {/* DIALOG: Confirmation to Remove Member */}
         {memberToRemove && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-coral-200">
+            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral-100 text-coral-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display text-base font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-base font-bold text-text">
                     Xác nhận xóa thành viên?
                   </h3>
-                  <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle leading-relaxed">
                     Bạn có chắc chắn muốn loại <strong>{memberToRemove.fullName}</strong> khỏi nhóm mentoring này không?
                   </p>
                 </div>
@@ -909,7 +909,7 @@ export function MentoringGroupDetailPage() {
                   size="sm"
                   onClick={() => removeMemberMutation.mutate(memberToRemove.userId)}
                   disabled={removeMemberMutation.isPending}
-                  className="bg-coral-600 hover:bg-coral-700 text-white"
+                  className="bg-danger hover:opacity-90 text-text-inverse"
                 >
                   {removeMemberMutation.isPending ? 'Đang xóa...' : 'Xóa khỏi nhóm'}
                 </Button>
@@ -921,16 +921,16 @@ export function MentoringGroupDetailPage() {
         {/* DIALOG: Confirmation to Cancel Invitation */}
         {invitationToCancel && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-amber-200">
+            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-warning-border">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning">
                   <Ban className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display text-base font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-base font-bold text-text">
                     Thu hồi lời mời tham gia?
                   </h3>
-                  <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle leading-relaxed">
                     Sau khi thu hồi lời mời, <strong>{invitationToCancel.fullName}</strong> sẽ không thể chấp nhận để vào nhóm này nữa.
                   </p>
                 </div>
@@ -949,7 +949,7 @@ export function MentoringGroupDetailPage() {
                   size="sm"
                   onClick={() => cancelInvitationMutation.mutate(invitationToCancel.id)}
                   disabled={cancelInvitationMutation.isPending}
-                  className="bg-brand-600 hover:bg-brand-700 text-white"
+                  className="bg-primary-solid hover:bg-primary-hover text-on-primary"
                 >
                   {cancelInvitationMutation.isPending ? 'Đang thu hồi...' : 'Thu hồi lời mời'}
                 </Button>
@@ -961,16 +961,16 @@ export function MentoringGroupDetailPage() {
         {/* DIALOG: Confirmation to Leave Group */}
         {isLeaveConfirmOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-coral-200">
+            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral-100 text-coral-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <LogOut className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display text-base font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-base font-bold text-text">
                     Rời khỏi nhóm Mentoring?
                   </h3>
-                  <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle leading-relaxed">
                     Bạn sẽ không còn là thành viên của nhóm <strong>{group.name}</strong> và không thể tham gia vào các Mentoring Request mới của nhóm.
                   </p>
                 </div>
@@ -989,7 +989,7 @@ export function MentoringGroupDetailPage() {
                   size="sm"
                   onClick={() => leaveGroupMutation.mutate()}
                   disabled={leaveGroupMutation.isPending}
-                  className="bg-coral-600 hover:bg-coral-700 text-white"
+                  className="bg-danger hover:opacity-90 text-text-inverse"
                 >
                   {leaveGroupMutation.isPending ? 'Đang xử lý...' : 'Xác nhận rời nhóm'}
                 </Button>
@@ -1000,16 +1000,16 @@ export function MentoringGroupDetailPage() {
         {/* DIALOG: Confirmation to Delete Group */}
         {isDeleteConfirmOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-coral-200">
+            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral-100 text-coral-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <Trash2 className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display text-base font-bold text-plum-900 dark:text-white">
+                  <h3 className="font-display text-base font-bold text-text">
                     Giải tán nhóm Mentoring?
                   </h3>
-                  <p className="text-xs text-plum-500 leading-relaxed dark:text-[#8f9399]">
+                  <p className="text-xs text-text-subtle leading-relaxed">
                     Nhóm <strong>{group.name}</strong> sẽ bị giải tán, các lời mời đang chờ bị hủy và thành viên sẽ nhận được thông báo. Không thể giải tán khi nhóm còn Mentoring Request hoặc nhiệm vụ chưa kết thúc.
                   </p>
                 </div>
@@ -1028,7 +1028,7 @@ export function MentoringGroupDetailPage() {
                   size="sm"
                   onClick={() => deleteGroupMutation.mutate()}
                   disabled={deleteGroupMutation.isPending}
-                  className="bg-coral-600 hover:bg-coral-700 text-white"
+                  className="bg-danger hover:opacity-90 text-text-inverse"
                 >
                   {deleteGroupMutation.isPending ? 'Đang xử lý...' : 'Xác nhận giải tán'}
                 </Button>

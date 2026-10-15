@@ -101,8 +101,8 @@ function IncomingMentoringRequestsContent() {
         />
       </div>
 
-      <p className="flex items-start gap-2 text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500" />
+      <p className="flex items-start gap-2 text-xs leading-relaxed text-text-subtle">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-info" />
         <span>
           "Đồng ý trao đổi" chỉ mở kênh trò chuyện với người học. Thỏa thuận và thanh toán được tạo sau khi hai bên thống
           nhất phạm vi công việc.
@@ -112,7 +112,7 @@ function IncomingMentoringRequestsContent() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="space-y-3 rounded-2xl border border-plum-900/[0.08] bg-white p-5 dark:border-white/10 dark:bg-[#242526]">
+            <div key={i} className="space-y-3 rounded-2xl border border-border bg-surface p-5">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <Skeleton className="h-4 w-40 rounded-md" />
@@ -145,7 +145,7 @@ function IncomingMentoringRequestsContent() {
         />
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">{totalElements} yêu cầu</p>
+          <p className="text-xs text-text-subtle">{totalElements} yêu cầu</p>
           {requests.map((item) => (
             <IncomingRequestCard key={item.distributionId ?? `request-${item.id}`} request={item} />
           ))}

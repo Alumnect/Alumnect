@@ -34,26 +34,26 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-3xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[92vh] overflow-y-auto chat-scrollbar dark:bg-[#242526] dark:border-[#393a3b]">
+      <div className="relative w-full max-w-3xl bg-surface rounded-3xl border border-border shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[92vh] overflow-y-auto chat-scrollbar">
         <button
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="absolute right-5 top-5 p-2 text-plum-400 hover:text-plum-700 rounded-full hover:bg-cream-100 transition-colors dark:hover:bg-white/5"
+          className="absolute right-5 top-5 p-2 text-text-subtle hover:text-text-muted rounded-full hover:bg-surface-2 transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
 
         {/* Header & Tabs */}
-        <div className="space-y-4 border-b border-plum-900/[0.06] pb-4 dark:border-white/10">
+        <div className="space-y-4 border-b border-border pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-              <h3 className="font-display text-lg font-bold text-plum-900 dark:text-[#f0f2f5]">
+              <ShieldCheck className="h-5 w-5 text-primary-solid" />
+              <h3 className="font-display text-lg font-bold text-text">
                 Mentoring Deal #{dealId}
               </h3>
             </div>
-            <p className="text-xs text-plum-500 dark:text-[#b0b3b8] mt-0.5">
+            <p className="text-xs text-text-subtle mt-0.5">
               {deal?.requestTitle ? `Request: ${deal.requestTitle}` : 'Điều khoản và lịch sử các phiên bản Deal Ticket.'}
             </p>
           </div>
@@ -64,8 +64,8 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
               onClick={() => setActiveTab('snapshot')}
               className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 activeTab === 'snapshot'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-cream-100 text-plum-600 hover:bg-cream-200 dark:bg-white/5 dark:text-[#b0b3b8] dark:hover:bg-white/10'
+                  ? 'bg-primary-solid text-on-primary shadow-xs'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               }`}
             >
               Phiên bản mới nhất
@@ -75,8 +75,8 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
               onClick={() => setActiveTab('history')}
               className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 activeTab === 'history'
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-cream-100 text-plum-600 hover:bg-cream-200 dark:bg-white/5 dark:text-[#b0b3b8] dark:hover:bg-white/10'
+                  ? 'bg-primary-solid text-on-primary shadow-xs'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               }`}
             >
               <History className="h-3.5 w-3.5" />
@@ -86,12 +86,12 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 space-y-3 text-plum-400">
-            <Loader2 className="h-7 w-7 animate-spin text-brand-500" />
+          <div className="flex flex-col items-center justify-center py-16 space-y-3 text-text-subtle">
+            <Loader2 className="h-7 w-7 animate-spin text-primary-solid" />
             <p className="text-xs font-medium">Đang tải chi tiết Deal...</p>
           </div>
         ) : !deal ? (
-          <div className="py-12 text-center text-xs text-plum-400">Không tìm thấy thông tin thỏa thuận Deal.</div>
+          <div className="py-12 text-center text-xs text-text-subtle">Không tìm thấy thông tin thỏa thuận Deal.</div>
         ) : (
           <div className="space-y-6">
             {activeTab === 'snapshot' ? (
@@ -101,20 +101,20 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
             )}
 
             {deal.readOnlyReason && (
-              <div className="flex items-start gap-2 rounded-2xl bg-amber-500/10 p-3 text-xs font-semibold text-amber-800 dark:text-amber-300">
+              <div className="flex items-start gap-2 rounded-2xl bg-warning-soft p-3 text-xs font-semibold text-warning">
                 <Info className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>{deal.readOnlyReason}</span>
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-plum-900/[0.06] dark:border-white/10">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border">
               {deal.isPaid ? (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-mint-50 text-mint-700 border border-mint-200 text-xs font-bold dark:bg-mint-950/40 dark:text-mint-300 dark:border-mint-800/40">
-                  <CheckCircle2 className="h-4 w-4 text-mint-600" />
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success-soft text-success border border-success-border text-xs font-bold">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
                   <span>Đã thanh toán • Task #{deal.taskId || ''}</span>
                 </div>
               ) : (
-                <span className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+                <span className="text-xs text-text-subtle">
                   Xác nhận, điều chỉnh và thanh toán được thực hiện trong phần Nhắn tin.
                 </span>
               )}
