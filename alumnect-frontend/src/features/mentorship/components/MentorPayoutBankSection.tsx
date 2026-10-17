@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import { Building, User, Hash } from 'lucide-react'
+import { SelectDropdown, type SelectOption } from '@/components/ui'
 import { usePayoutBanks } from '../hooks/usePayoutBanks'
 
 interface Props {
@@ -27,6 +29,35 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
   // Giữ lựa chọn đã lưu trước đó dù ngân hàng không còn trong danh sách hiện tại.
   const missingSavedBank = bankBin && !selectedBank
 
+  const bankOptions = useMemo<SelectOption<string>[]>(() => {
+    const list: SelectOption<string>[] = banks.map((bank) => ({
+      value: bank.bin,
+      label: bank.name,
+      sublabel: bank.fullName ? `— ${bank.fullName}` : undefined,
+      icon: bank.logo ? (
+        <img
+          src={bank.logo}
+          alt=""
+          className="h-4.5 w-7 shrink-0 rounded object-contain bg-white p-0.5 border border-border/50"
+          loading="lazy"
+        />
+      ) : (
+        <Building className="h-4 w-4 text-text-subtle shrink-0" />
+      ),
+    }))
+
+    if (missingSavedBank) {
+      list.unshift({
+        value: bankBin,
+        label: bankName || 'Ngân hàng đã lưu',
+        sublabel: `BIN ${bankBin}`,
+        icon: <Building className="h-4 w-4 text-text-subtle shrink-0" />,
+      })
+    }
+
+    return list
+  }, [banks, bankBin, bankName, missingSavedBank])
+
   return (
     <div className="bg-surface rounded-2xl border border-cream-300/80 dark:border-border p-6 shadow-sm">
       <div className="flex items-center justify-between pb-4 border-b border-border dark:border-border mb-6">
@@ -49,24 +80,21 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
             <label className="block text-xs font-semibold text-text-muted mb-1.5 flex items-center gap-1.5">
               <Building className="w-3.5 h-3.5 text-primary-solid" /> Ngân hàng <span className="text-danger">*</span>
             </label>
-            <select
+            <SelectDropdown
               value={bankBin}
               disabled={isLoading}
-              onChange={(event) => {
-                const selected = banks.find((bank) => bank.bin === event.target.value)
-                onBankBinChange(event.target.value)
+              placeholder={isLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng nhận tiền'}
+              searchPlaceholder="Tìm ngân hàng theo tên viết tắt, tên đầy đủ hoặc mã BIN..."
+              options={bankOptions}
+              onChange={(selectedVal) => {
+                const selected = banks.find((bank) => bank.bin === selectedVal)
+                onBankBinChange(String(selectedVal))
                 onBankNameChange(selected?.name ?? '')
               }}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition-all placeholder:text-text-subtle dark:placeholder:text-text-subtle"
-            >
-              <option value="">{isLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng nhận tiền'}</option>
-              {missingSavedBank && <option value={bankBin}>{bankName || 'Ngân hàng đã lưu'} · {bankBin}</option>}
-              {banks.map((bank) => (
-                <option key={bank.bin} value={bank.bin}>
-                  {bank.name}{bank.fullName ? ` — ${bank.fullName}` : ''}
-                </option>
-              ))}
-            </select>
+              panelClassName="w-full sm:max-w-none"
+              buttonClassName="h-10.5 rounded-xl text-sm"
+              icon={<Building className="h-4 w-4" />}
+            />
             {isError && (
               <p className="mt-1 text-xs text-danger">
                 Không tải được danh sách ngân hàng từ VietQR.{' '}

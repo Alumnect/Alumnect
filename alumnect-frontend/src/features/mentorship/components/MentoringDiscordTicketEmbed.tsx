@@ -239,7 +239,7 @@ export function MentoringDiscordTicketEmbed({
                 </div>
               </div>
 
-              {/* Loại nhiệm vụ & nguồn đề xuất */}
+              {/* Loại công việc & nguồn đề xuất */}
               <div className="flex items-start gap-2.5">
                 <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                 <div className="flex flex-wrap gap-1.5">

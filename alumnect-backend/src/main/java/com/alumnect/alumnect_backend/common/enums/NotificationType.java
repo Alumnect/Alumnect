@@ -39,6 +39,9 @@ public enum NotificationType {
      */
     SYSTEM_BROADCAST,
 
+    /** Yêu cầu thuê Mentor mới và phản hồi nhận/bỏ qua yêu cầu. */
+    MENTORING_REQUEST,
+
     /**
      * Mentor nộp/cập nhật Work Log cho Mentoring Task chờ học viên xác nhận.
      */

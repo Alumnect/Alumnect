@@ -503,18 +503,24 @@ export function MentoringGroupDetailPage() {
                 <h4 className="text-xs font-bold text-primary-solid uppercase tracking-wider">
                   Quy trình Group-First
                 </h4>
-                <ul className="text-xs text-primary-solid space-y-2 leading-relaxed">
+                <ul className="text-xs text-primary-solid space-y-2.5 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-primary-solid">•</span>
-                    Nhóm hoạt động độc lập và có thể gửi nhiều Mentoring Requests khác nhau.
+                    <span className="font-bold text-primary-solid shrink-0 mt-0.5">•</span>
+                    <span className="flex-1">
+                      Nhóm hoạt động độc lập và có thể gửi nhiều Mentoring Requests khác nhau.
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-primary-solid">•</span>
-                    Chỉ những thành viên có trạng thái <strong>Đã tham gia</strong> mới được đưa vào danh sách của Yêu cầu cố vấn.
+                    <span className="font-bold text-primary-solid shrink-0 mt-0.5">•</span>
+                    <span className="flex-1">
+                      Chỉ những thành viên có trạng thái <strong className="font-bold text-primary-solid underline decoration-primary-solid/40 underline-offset-2">Đã tham gia</strong> mới được đưa vào danh sách của Yêu cầu cố vấn.
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-primary-solid">•</span>
-                    Thành viên là Mentor chủ động sẽ không thể tự nhận Request của nhóm mình (tránh xung đột lợi ích).
+                    <span className="font-bold text-primary-solid shrink-0 mt-0.5">•</span>
+                    <span className="flex-1">
+                      Thành viên là Mentor chủ động sẽ không thể tự nhận Request của nhóm mình (tránh xung đột lợi ích).
+                    </span>
                   </li>
                 </ul>
               </Card>

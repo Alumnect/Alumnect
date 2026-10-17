@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
   Heart,
@@ -20,12 +20,15 @@ import {
   FileText,
   Send,
   Users,
+  ChevronRight,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PageHeader, Avatar, Card, EmptyState, Skeleton, Pagination, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/authStore'
 import { mentoringGroupApi } from '@/features/mentorship/api/mentoringGroupApi'
+import { useAcceptIncomingRequest, useDeclineIncomingRequest } from '@/features/mentorship'
 import {
   useNotifications,
   useMarkNotificationAsRead,
@@ -86,13 +89,29 @@ function parseGroupId(targetId?: string | null): number {
 export function NotificationsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const currentUser = useAuthStore((s) => s.user)
   const [page, setPage] = useState(0)
   const [respondingId, setRespondingId] = useState<number | null>(null)
+  const [respondedInvitations, setRespondedInvitations] = useState<Record<number, 'ACCEPTED' | 'DECLINED'>>({})
   const pageSize = 15
 
   const { data, isLoading } = useNotifications(page, pageSize)
   const markAsReadMutation = useMarkNotificationAsRead()
   const markAllMutation = useMarkAllNotificationsAsRead()
+  const acceptIncomingMutation = useAcceptIncomingRequest()
+  const declineIncomingMutation = useDeclineIncomingRequest()
+
+  const { data: myGroups = [] } = useQuery({
+    queryKey: ['mentoring-groups'],
+    queryFn: () => mentoringGroupApi.getAll(),
+    staleTime: 30_000,
+  })
+
+  const { data: pendingInvitations = [], isLoading: loadingInvitations } = useQuery({
+    queryKey: ['mentoring-groups', 'invitations'],
+    queryFn: () => mentoringGroupApi.getInvitations(),
+    staleTime: 30_000,
+  })
 
   const notifications = data?.content || []
   const totalPages = data?.totalPages || 1
@@ -102,16 +121,37 @@ export function NotificationsPage() {
     try {
       setRespondingId(notification.id)
       await mentoringGroupApi.accept(groupId)
+      setRespondedInvitations((prev) => ({
+        ...prev,
+        [notification.id]: 'ACCEPTED',
+        [groupId]: 'ACCEPTED',
+      }))
       toast.success('Bạn đã chấp nhận tham gia nhóm mentoring!')
       if (!notification.isRead) {
         markAsReadMutation.mutate(notification.id)
       }
       queryClient.invalidateQueries({ queryKey: ['mentoring-groups'] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-groups', 'invitations'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Không thể chấp nhận lời mời'
-      toast.error(errMsg)
+      if (
+        errMsg.toLowerCase().includes('đã là thành viên') ||
+        errMsg.toLowerCase().includes('đã tham gia')
+      ) {
+        setRespondedInvitations((prev) => ({
+          ...prev,
+          [notification.id]: 'ACCEPTED',
+          [groupId]: 'ACCEPTED',
+        }))
+        toast.info('Bạn đã là thành viên của nhóm này')
+        if (!notification.isRead) {
+          markAsReadMutation.mutate(notification.id)
+        }
+      } else {
+        toast.error(errMsg)
+      }
     } finally {
       setRespondingId(null)
     }
@@ -121,16 +161,41 @@ export function NotificationsPage() {
     try {
       setRespondingId(notification.id)
       await mentoringGroupApi.decline(groupId)
+      setRespondedInvitations((prev) => ({
+        ...prev,
+        [notification.id]: 'DECLINED',
+        [groupId]: 'DECLINED',
+      }))
       toast.success('Đã từ chối lời mời tham gia nhóm')
       if (!notification.isRead) {
         markAsReadMutation.mutate(notification.id)
       }
       queryClient.invalidateQueries({ queryKey: ['mentoring-groups'] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-groups', 'invitations'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Không thể từ chối lời mời'
       toast.error(errMsg)
+    } finally {
+      setRespondingId(null)
+    }
+  }
+
+  const handleIncomingRequest = async (notification: NotificationItem, requestId: number, accepted: boolean) => {
+    try {
+      setRespondingId(notification.id)
+      if (accepted) {
+        await acceptIncomingMutation.mutateAsync({ requestId })
+        toast.success('Đã nhận yêu cầu Mentoring. Kênh trao đổi đã được mở.')
+      } else {
+        await declineIncomingMutation.mutateAsync({ requestId })
+        toast.success('Đã bỏ qua yêu cầu Mentoring.')
+      }
+      if (!notification.isRead) markAsReadMutation.mutate(notification.id)
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Không thể xử lý yêu cầu Mentoring')
     } finally {
       setRespondingId(null)
     }
@@ -167,7 +232,9 @@ export function NotificationsPage() {
       navigate(`/app/mentoring/tasks/${item.targetId.split(':')[0]}`)
     } else if (item.type === 'MENTORING_WORK_LOG' && item.targetId) {
       navigate(`/app/mentoring/tasks/${item.targetId}`)
-    } else if (item.targetType === 'MENTORING_REQUEST' && item.targetId) {
+    } else if (item.targetType === 'MENTORING_INCOMING_REQUEST' && item.targetId) {
+      navigate(`/app/mentoring/incoming-requests/${item.targetId}`)
+    } else if (item.targetType?.startsWith('MENTORING_REQUEST') && item.targetId) {
       navigate(`/app/mentoring/requests/${item.targetId}`)
     } else if (item.targetType === 'POST' && item.targetId) {
       navigate(`/app/posts/${item.targetId}`)
@@ -313,6 +380,77 @@ export function NotificationsPage() {
 
                       if (!isGroupInvitation || !groupId) return null
 
+                      const sessionStatus = respondedInvitations[n.id] || respondedInvitations[groupId]
+                      const group = myGroups.find((g) => g.id === groupId)
+                      const myMember = group?.members?.find((m) => Number(m.userId) === Number(currentUser?.id))
+                      const isMemberJoined = Boolean(
+                        group && (
+                          (currentUser && Number(group.leaderId) === Number(currentUser.id)) ||
+                          myMember?.status === 'JOINED' ||
+                          myMember?.status === 'ACTIVE'
+                        )
+                      )
+                      const isMemberDeclined = myMember?.status === 'DECLINED'
+                      const isPendingInApi = pendingInvitations.some((inv) => inv.id === groupId)
+
+                      const isJoined = sessionStatus === 'ACCEPTED' || isMemberJoined
+                      const isDeclined = sessionStatus === 'DECLINED' || isMemberDeclined
+
+                      if (isJoined) {
+                        return (
+                          <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/40">
+                              <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                              Đã tham gia nhóm
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs font-semibold px-2 text-text-subtle hover:text-primary-solid hover:bg-surface-soft rounded-lg gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                navigate(`/app/mentoring/groups/${groupId}`)
+                              }}
+                            >
+                              Xem nhóm
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )
+                      }
+
+                      if (isDeclined) {
+                        return (
+                          <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-muted bg-surface-soft px-2.5 py-1 rounded-lg border border-border">
+                              <X className="h-3.5 w-3.5 text-text-muted" />
+                              Đã từ chối lời mời
+                            </span>
+                          </div>
+                        )
+                      }
+
+                      // Nếu lời mời không còn trong danh sách chờ của API và đã tải xong
+                      if (!loadingInvitations && !isPendingInApi) {
+                        return (
+                          <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
+                            <span className="text-xs text-text-subtle">
+                              Lời mời đã đóng hoặc đã được phản hồi
+                            </span>
+                            <button
+                              type="button"
+                              className="h-7 inline-flex items-center text-xs font-semibold px-2 text-text-subtle hover:text-primary-solid hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                navigate(`/app/mentoring/groups/${groupId}`)
+                              }}
+                            >
+                              Xem nhóm
+                            </button>
+                          </div>
+                        )
+                      }
+
                       return (
                         <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
                           <Button
@@ -354,6 +492,52 @@ export function NotificationsPage() {
                             }}
                           >
                             Xem nhóm
+                          </button>
+                        </div>
+                      )
+                    })()}
+
+                    {(() => {
+                      const requestId = Number(n.targetId)
+                      if (n.isRead || n.targetType !== 'MENTORING_INCOMING_REQUEST' || !Number.isInteger(requestId) || requestId <= 0) {
+                        return null
+                      }
+                      return (
+                        <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
+                          <Button
+                            size="sm"
+                            className="h-7 rounded-lg px-3 text-xs font-bold"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              void handleIncomingRequest(n, requestId, true)
+                            }}
+                            disabled={respondingId === n.id}
+                          >
+                            {respondingId === n.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                            Nhận
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 rounded-lg px-2.5 text-xs font-bold text-danger hover:bg-danger-soft"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              void handleIncomingRequest(n, requestId, false)
+                            }}
+                            disabled={respondingId === n.id}
+                          >
+                            <X className="mr-1 h-3 w-3" />
+                            Bỏ qua
+                          </Button>
+                          <button
+                            type="button"
+                            className="inline-flex h-7 items-center px-2 text-xs font-semibold text-text-subtle hover:text-primary-solid hover:underline"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/app/mentoring/incoming-requests/${requestId}`)
+                            }}
+                          >
+                            Xem chi tiết
                           </button>
                         </div>
                       )

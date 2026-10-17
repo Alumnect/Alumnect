@@ -308,7 +308,7 @@ export function AdminMentoringTicketsPage() {
                 <thead>
                   <tr className="border-b border-border text-xs font-semibold uppercase tracking-wider text-text-subtle bg-surface-2">
                     <th className="px-4 py-3.5">Mã Ticket & Loại</th>
-                    <th className="px-4 py-3.5 w-[26%]">Nhiệm vụ & Tiêu đề</th>
+                    <th className="px-4 py-3.5 w-[26%]">Công việc & Tiêu đề</th>
                     <th className="px-4 py-3.5">Học viên / Cố vấn</th>
                     <th className="px-3 py-3.5 text-right">Ngân sách</th>
                     <th className="px-3 py-3.5 text-center">Trạng thái</th>

@@ -55,7 +55,7 @@ function MyMentoringTasksContent() {
       <MentorPageHeader
         icon={<Briefcase className="h-4 w-4" />}
         eyebrow="Không gian làm việc"
-        title="Nhiệm vụ của tôi"
+        title="Công việc của tôi"
         description="Theo dõi tiến độ, nhật ký làm việc và kết quả các Task bạn đang tham gia."
         actions={
           <>

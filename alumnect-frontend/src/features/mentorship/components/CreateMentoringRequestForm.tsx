@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm, useWatch, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -21,7 +21,7 @@ import {
   ExternalLink,
   CheckCircle2,
 } from 'lucide-react'
-import { Card, toast } from '@/components/ui'
+import { Card, toast, SelectDropdown, type SelectOption } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import {
@@ -129,7 +129,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
   const selectedWorkingMode = useWatch({ control, name: 'workingMode' })
   const selectedParticipationType = useWatch({ control, name: 'participationType' })
   const selectedTaskType = useWatch({ control, name: 'taskType' })
-  const selectedGroupId = useWatch({ control, name: 'groupId' })
+  const selectedGroupId = useWatch({ control, name: 'groupId' }) as number | null | undefined
+  const selectedIndustryId = useWatch({ control, name: 'industryId' }) as number | undefined
   const descriptionValue = useWatch({ control, name: 'description' })
 
   // Tải danh sách nhóm do user quản lý khi chọn loại hình GROUP
@@ -138,6 +139,31 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     queryFn: () => mentoringGroupApi.getMine('MANAGED'),
     enabled: selectedParticipationType === 'GROUP',
   })
+
+  const industryOptions: SelectOption<number>[] = useMemo(() => {
+    return industries.map((ind) => ({
+      value: ind.id,
+      label: ind.name,
+      icon: <Briefcase className="h-4 w-4 text-text-subtle" />,
+    }))
+  }, [industries])
+
+  const groupOptions: SelectOption<number>[] = useMemo(() => {
+    return managedGroups.map((group) => {
+      const memberCount =
+        group.joinedMemberCount ||
+        group.members?.filter(
+          (m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE'
+        ).length ||
+        1
+      return {
+        value: group.id,
+        label: group.name,
+        sublabel: `${memberCount} thành viên đã tham gia`,
+        icon: <Users className="h-4 w-4 text-text-subtle" />,
+      }
+    })
+  }, [managedGroups])
 
   // Tải chi tiết nhóm đang chọn để lấy danh sách snapshot thành viên JOINED & PENDING
   const { data: currentGroupDetail } = useQuery({
@@ -346,14 +372,14 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
         clientRequestKey,
         budgetMin:
           formData.budgetMin !== null &&
-          formData.budgetMin !== undefined &&
-          (formData.budgetMin as unknown) !== ''
+            formData.budgetMin !== undefined &&
+            (formData.budgetMin as unknown) !== ''
             ? Number(formData.budgetMin)
             : null,
         budgetMax:
           formData.budgetMin !== null &&
-          formData.budgetMin !== undefined &&
-          (formData.budgetMin as unknown) !== ''
+            formData.budgetMin !== undefined &&
+            (formData.budgetMin as unknown) !== ''
             ? Number(formData.budgetMin)
             : null,
         workingMode: formData.workingMode,
@@ -389,604 +415,591 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6 text-left">
-      {/* Alert Banner hiển thị lỗi nghiệp vụ từ Server */}
-      {serverError && (
-        <div className="rounded-2xl border border-danger-border bg-danger-soft p-4 flex items-start gap-3 text-danger text-sm animate-fade-in">
-          <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <span className="font-bold">Không thể tạo yêu cầu: </span>
-            <span>{serverError}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setServerError(null)}
-            className="text-danger hover:text-danger"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
-      {/* SECTION A — Request Overview (Tiêu đề & Nội dung) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-5">
-        <div className="flex items-center gap-3 border-b border-border pb-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
-            <FileText className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-text">
-              1. Thông tin yêu cầu hỗ trợ
-            </h3>
-            <p className="text-xs text-text-subtle">
-              {isDirectRequest && targetMentor
-                ? `Mô tả rõ ràng vấn đề và kỳ vọng để gửi trực tiếp tới Mentor ${targetMentor.fullName}`
-                : 'Mô tả rõ ràng vấn đề và kỳ vọng để hệ thống matching Mentor chuẩn xác nhất'}
-            </p>
-          </div>
-        </div>
-
-        {/* Tiêu đề (Title) */}
-        <div className="space-y-1.5">
-          <label htmlFor="title" className="block text-xs font-bold text-text">
-            Tiêu đề yêu cầu <span className="text-danger">*</span>
-          </label>
-          <input
-            id="title"
-            type="text"
-            placeholder="Ví dụ: Cần cố vấn định hướng đề tài Capstone Project Spring Boot & Microservices"
-            {...register('title')}
-            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
-          />
-          {errors.title && (
-            <p className="text-xs font-semibold text-danger pt-0.5">
-              {errors.title.message}
-            </p>
-          )}
-        </div>
-
-        {/* Nội dung chi tiết (Description) */}
-        <div className="space-y-1.5">
-          <label htmlFor="description" className="block text-xs font-bold text-text">
-            Mô tả chi tiết nhu cầu <span className="text-danger">*</span>
-          </label>
-          <textarea
-            id="description"
-            rows={5}
-            placeholder="Mô tả bối cảnh hiện tại, mục tiêu bạn muốn đạt được, những khó khăn bạn đang gặp phải và mong đợi cụ thể từ Mentor..."
-            {...register('description')}
-            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
-          />
-          <div className="flex justify-between items-center text-xs text-text-subtle">
-            <span>Tối thiểu 20 ký tự, tối đa 3000 ký tự</span>
-            <span>{descriptionValue?.length || 0}/3000</span>
-          </div>
-          {errors.description && (
-            <p className="text-xs font-semibold text-danger pt-0.5">
-              {errors.description.message}
-            </p>
-          )}
-        </div>
-      </Card>
-
-      {/* SECTION B — Mentoring Field (Lĩnh vực ngành nghề) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
-        <div className="flex items-center gap-3 border-b border-border pb-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning-soft text-warning">
-            <Briefcase className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-text">
-              2. Lĩnh vực / Chuyên môn hỗ trợ
-            </h3>
-            <p className="text-xs text-text-subtle">
-              {isDirectRequest && targetMentor
-                ? `Chỉ hiển thị các lĩnh vực chuyên môn mà Mentor ${targetMentor.fullName} hỗ trợ tiếp nhận`
-                : 'Hệ thống sẽ matching và phân phối tới các Mentor có chuyên môn trong lĩnh vực này'}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <label htmlFor="industryId" className="block text-xs font-bold text-text">
-            Lĩnh vực ngành nghề <span className="text-danger">*</span>
-          </label>
-          <select
-            id="industryId"
-            disabled={loadingIndustries}
-            {...register('industryId')}
-            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-text focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <option value="" disabled>
-              {loadingIndustries ? '-- Đang tải danh mục lĩnh vực... --' : '-- Chọn lĩnh vực cần hỗ trợ --'}
-            </option>
-            {industries.map((ind) => (
-              <option key={ind.id} value={ind.id}>
-                {ind.name}
-              </option>
-            ))}
-          </select>
-          {errors.industryId && (
-            <p className="text-xs font-semibold text-danger pt-0.5">
-              {errors.industryId.message}
-            </p>
-          )}
-        </div>
-      </Card>
-
-      {/* SECTION C — Ngân sách dự kiến */}
-      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
-        <div className="flex items-center gap-3 border-b border-border pb-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success-soft text-success">
-            <DollarSign className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-text">
-              3. Ngân sách dự kiến (VNĐ)
-            </h3>
-            <p className="text-xs text-text-subtle">
-              Không bắt buộc — để trống nếu bạn muốn trao đổi mức phí linh hoạt cùng Mentor
-            </p>
-          </div>
-        </div>
-
-        <div className="max-w-xl space-y-1.5">
-          <label htmlFor="budgetMin" className="block text-xs font-bold text-text">
-            Mức ngân sách (VNĐ)
-          </label>
-          <div className="relative">
-            <input
-              id="budgetMin"
-              type="number"
-              min="0"
-              step="any"
-              placeholder="Ví dụ: 300000 (nhập 0 nếu mong muốn miễn phí)"
-              {...register('budgetMin')}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-3 pr-12 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
-            />
-            <span className="absolute right-4 top-3.5 text-xs font-bold text-text-subtle">
-              VNĐ
-            </span>
-          </div>
-          {errors.budgetMin && (
-            <p className="text-xs font-semibold text-danger pt-0.5">
-              {errors.budgetMin.message}
-            </p>
-          )}
-          <p className="text-xs text-text-subtle">
-            Hỗ trợ từ 0 VNĐ (miễn phí) đến không giới hạn. Để trống nếu bạn muốn thương lượng linh hoạt cùng Mentor.
-          </p>
-        </div>
-      </Card>
-
-      {/* SECTION D — Working Preferences (Hình thức & Loại nhiệm vụ) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-6">
-        <div className="flex items-center gap-3 border-b border-border pb-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info-soft text-info">
-            <Laptop className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-text">
-              4. Phương thức làm việc & Nhiệm vụ
-            </h3>
-            <p className="text-xs text-text-subtle">
-              Chọn cách thức kết nối và loại hình hỗ trợ bạn mong đợi
-            </p>
-          </div>
-        </div>
-
-        {/* 4.1 Phương thức làm việc (Working Mode) */}
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-text">
-            Phương thức làm việc <span className="text-danger">*</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {(['ONLINE', 'OFFLINE', 'BOTH'] as MentoringWorkingMode[]).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setValue('workingMode', mode)}
-                className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all ${
-                  selectedWorkingMode === mode
-                    ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
-                    : 'border-border bg-surface text-text-muted hover:border-border-strong'
-                }`}
-              >
-                <span>{WORKING_MODE_LABELS[mode]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 4.2 Hình thức tham gia (Participation Type) */}
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-text">
-            Hình thức tham gia <span className="text-danger">*</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {(['INDIVIDUAL', 'GROUP'] as const).map((type) => (
-              <button
-                key={type}
-                type="button"
-                disabled={type === 'GROUP' && groupUnsupportedByTargetMentor}
-                onClick={() => setValue('participationType', type)}
-                title={type === 'GROUP' && groupUnsupportedByTargetMentor ? 'Mentor này hiện chỉ nhận mentoring cá nhân' : undefined}
-                className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-45 ${
-                  selectedParticipationType === type
-                    ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
-                    : 'border-border bg-surface text-text-muted hover:border-border-strong'
-                }`}
-              >
-                <span>{PARTICIPATION_TYPE_LABELS[type]}</span>
-              </button>
-            ))}
-          </div>
-          {groupUnsupportedByTargetMentor && (
-            <p className="text-xs text-text-subtle">Mentor này hiện chỉ nhận mentoring cá nhân.</p>
-          )}
-        </div>
-
-        {/* 4.2.1 Chọn Nhóm Cố Vấn (Mô hình GROUP-FIRST) */}
-        {selectedParticipationType === 'GROUP' && (
-          <div className="space-y-4 rounded-2xl border border-primary-soft-border bg-brand-50/40 p-5 dark:bg-brand-700/20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-primary-solid shadow-xs">
-                  <Users className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-text">
-                    Chọn nhóm cố vấn tham gia (Group-First)
-                  </p>
-                  <p className="text-xs text-text-subtle">
-                    Yêu cầu phải được liên kết với một nhóm bạn làm Trưởng nhóm. Thành viên đã JOINED sẽ được chốt tham gia.
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsCreateGroupModalOpen(true)}
-                className="self-start sm:self-auto gap-1.5 rounded-xl border-primary-soft-border text-primary-solid hover:bg-brand-100/60 text-xs"
-              >
-                <Plus className="h-4 w-4" />
-                Tạo nhóm mới
-              </Button>
+        {/* Alert Banner hiển thị lỗi nghiệp vụ từ Server */}
+        {serverError && (
+          <div className="rounded-2xl border border-danger-border bg-danger-soft p-4 flex items-start gap-3 text-danger text-sm animate-fade-in">
+            <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-bold">Không thể tạo yêu cầu: </span>
+              <span>{serverError}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setServerError(null)}
+              className="text-danger hover:text-danger"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
-            {loadingManagedGroups ? (
-              <div className="flex items-center justify-center gap-2 py-6 text-xs text-text-subtle">
-                <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
-                Đang tải danh sách nhóm của bạn...
-              </div>
-            ) : managedGroups.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-primary-soft-border bg-surface/70 p-6 text-center">
-                <Users className="mx-auto h-8 w-8 text-brand-400 mb-2 opacity-70" />
-                <p className="text-sm font-bold text-text">
-                  Bạn chưa có nhóm cố vấn nào đang hoạt động
-                </p>
-                <p className="text-xs text-text-subtle max-w-md mx-auto mt-1 mb-4">
-                  Quy trình mới yêu cầu tạo nhóm và mời thành viên trước khi gửi Mentoring Request dạng nhóm.
-                </p>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setIsCreateGroupModalOpen(true)}
-                  className="rounded-xl gap-1.5"
-                >
-                  <Plus className="h-4 w-4" />
-                  Tạo nhóm đầu tiên ngay
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <label htmlFor="group-select" className="block text-xs font-bold text-text">
-                  Nhóm đại diện <span className="text-danger">*</span>
-                </label>
-                <select
-                  id="group-select"
-                  value={typeof selectedGroupId === 'number' ? selectedGroupId : ''}
-                  onChange={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : null
-                    setValue('groupId', val, { shouldValidate: true })
-                  }}
-                  className="w-full rounded-xl border border-border-strong bg-surface px-4 py-2.5 text-sm font-semibold text-text shadow-xs focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
-                >
-                  <option value="">-- Chọn nhóm cố vấn của bạn --</option>
-                  {managedGroups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name} ({group.joinedMemberCount || group.members?.filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length || 1} thành viên đã tham gia)
-                    </option>
-                  ))}
-                </select>
-                {errors.groupId && (
-                  <p className="text-xs font-semibold text-danger">
-                    {errors.groupId.message}
-                  </p>
-                )}
-              </div>
+        {/* SECTION A — Request Overview (Tiêu đề & Nội dung) */}
+        <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-5">
+          <div className="flex items-center gap-3 border-b border-border pb-3.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-text">
+                1. Thông tin yêu cầu hỗ trợ
+              </h3>
+              <p className="text-xs text-text-subtle">
+                {isDirectRequest && targetMentor
+                  ? `Mô tả rõ ràng vấn đề và kỳ vọng để gửi trực tiếp tới Mentor ${targetMentor.fullName}`
+                  : 'Mô tả rõ ràng vấn đề và kỳ vọng để hệ thống matching Mentor chuẩn xác nhất'}
+              </p>
+            </div>
+          </div>
+
+          {/* Tiêu đề (Title) */}
+          <div className="space-y-1.5">
+            <label htmlFor="title" className="block text-xs font-bold text-text">
+              Tiêu đề yêu cầu <span className="text-danger">*</span>
+            </label>
+            <input
+              id="title"
+              type="text"
+              placeholder="Ví dụ: Cần cố vấn định hướng đề tài Capstone Project Spring Boot & Microservices"
+              {...register('title')}
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
+            />
+            {errors.title && (
+              <p className="text-xs font-semibold text-danger pt-0.5">
+                {errors.title.message}
+              </p>
+            )}
+          </div>
+
+          {/* Nội dung chi tiết (Description) */}
+          <div className="space-y-1.5">
+            <label htmlFor="description" className="block text-xs font-bold text-text">
+              Mô tả chi tiết nhu cầu <span className="text-danger">*</span>
+            </label>
+            <textarea
+              id="description"
+              rows={5}
+              placeholder="Mô tả bối cảnh hiện tại, mục tiêu bạn muốn đạt được, những khó khăn bạn đang gặp phải và mong đợi cụ thể từ Mentor..."
+              {...register('description')}
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
+            />
+            <div className="flex justify-between items-center text-xs text-text-subtle">
+              <span>Tối thiểu 20 ký tự, tối đa 3000 ký tự</span>
+              <span>{descriptionValue?.length || 0}/3000</span>
+            </div>
+            {errors.description && (
+              <p className="text-xs font-semibold text-danger pt-0.5">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
+        </Card>
+
+        {/* SECTION B — Mentoring Field (Lĩnh vực ngành nghề) */}
+        <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4 overflow-visible">
+          <div className="flex items-center gap-3 border-b border-border pb-3.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning-soft text-warning">
+              <Briefcase className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-text">
+                2. Lĩnh vực / Chuyên môn hỗ trợ
+              </h3>
+              <p className="text-xs text-text-subtle">
+                {isDirectRequest && targetMentor
+                  ? `Chỉ hiển thị các lĩnh vực chuyên môn mà Mentor ${targetMentor.fullName} hỗ trợ tiếp nhận`
+                  : 'Hệ thống sẽ matching và phân phối tới các Mentor có chuyên môn trong lĩnh vực này'}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="industryId" className="block text-xs font-bold text-text">
+              Lĩnh vực ngành nghề <span className="text-danger">*</span>
+            </label>
+            <SelectDropdown
+              value={Number(selectedIndustryId) || ''}
+              onChange={(val) => setValue('industryId', Number(val), { shouldValidate: true })}
+              options={industryOptions}
+              placeholder={loadingIndustries ? 'Đang tải danh mục lĩnh vực...' : 'Chọn lĩnh vực cần hỗ trợ'}
+              searchPlaceholder="Tìm kiếm lĩnh vực..."
+              disabled={loadingIndustries}
+              buttonClassName="h-11 rounded-2xl text-sm"
+              panelClassName="w-full sm:max-w-none"
+              icon={<Briefcase className="h-4 w-4" />}
+            />
+            {errors.industryId && (
+              <p className="text-xs font-semibold text-danger pt-0.5">
+                {errors.industryId.message}
+              </p>
+            )}
+          </div>
+        </Card>
+
+        {/* SECTION C — Ngân sách dự kiến */}
+        <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
+          <div className="flex items-center gap-3 border-b border-border pb-3.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success-soft text-success">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-text">
+                3. Ngân sách dự kiến (VNĐ)
+              </h3>
+              <p className="text-xs text-text-subtle">
+                Không bắt buộc — để trống nếu bạn muốn trao đổi mức phí linh hoạt cùng Mentor
+              </p>
+            </div>
+          </div>
+
+          <div className="max-w-xl space-y-1.5">
+            <label htmlFor="budgetMin" className="block text-xs font-bold text-text">
+              Mức ngân sách (VNĐ)
+            </label>
+            <div className="relative">
+              <input
+                id="budgetMin"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="Ví dụ: 300000 (nhập 0 nếu mong muốn miễn phí)"
+                {...register('budgetMin')}
+                className="w-full rounded-2xl border border-border bg-surface px-4 py-3 pr-12 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
+              />
+              <span className="absolute right-4 top-3.5 text-xs font-bold text-text-subtle">
+                VNĐ
+              </span>
+            </div>
+            {errors.budgetMin && (
+              <p className="text-xs font-semibold text-danger pt-0.5">
+                {errors.budgetMin.message}
+              </p>
             )}
 
-            {/* Chi tiết nhóm được chọn & Snapshot thành viên */}
-            {selectedGroupId && currentGroupDetail ? (
-              <div className="space-y-4 pt-2">
-                {/* Snapshot thành viên chính thức (JOINED) */}
-                <div className="rounded-xl border border-border bg-surface p-4">
-                  <div className="flex items-center justify-between border-b border-border pb-2.5 mb-3">
-                    <span className="text-xs font-bold text-text flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-success" />
-                      Danh sách thành viên chính thức tham gia Request (Snapshot)
-                    </span>
-                    <span className="text-xs font-bold text-primary-solid">
-                      {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length} thành viên
-                    </span>
-                  </div>
+          </div>
+        </Card>
 
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {(currentGroupDetail.members || [])
-                      .filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE')
-                      .map((member: MentoringGroupMemberData) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center gap-3 rounded-lg border border-border bg-cream-100/60 p-2.5 dark:bg-white/5"
-                        >
-                          <img
-                            src={member.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.fullName)}`}
-                            alt=""
-                            className="h-8 w-8 rounded-full object-cover shrink-0"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="truncate text-xs font-bold text-text">
-                                {member.fullName}
-                              </span>
-                              {member.leader && (
-                                <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-bold text-warning">
-                                  Trưởng nhóm
-                                </span>
-                              )}
-                            </div>
-                            <span className="block truncate text-xs text-text-subtle">
-                              {member.major || member.email}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
+        {/* SECTION D — Working Preferences (Hình thức & Loại nhiệm vụ) */}
+        <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-6 overflow-visible">
+          <div className="flex items-center gap-3 border-b border-border pb-3.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info-soft text-info">
+              <Laptop className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-text">
+                4. Phương thức làm việc & Nhiệm vụ
+              </h3>
+              <p className="text-xs text-text-subtle">
+                Chọn cách thức kết nối và loại hình hỗ trợ bạn mong đợi
+              </p>
+            </div>
+          </div>
 
-                  {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length === 1 && (
-                    <p className="mt-3 text-xs text-text-subtle italic">
-                      * Nhóm hiện chỉ có Trưởng nhóm. Bạn có thể tiếp tục tạo yêu cầu theo diện nhóm một thành viên hoặc mời thêm bạn bè tham gia.
+          {/* 4.1 Phương thức làm việc (Working Mode) */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-text">
+              Phương thức làm việc <span className="text-danger">*</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {(['ONLINE', 'OFFLINE', 'BOTH'] as MentoringWorkingMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setValue('workingMode', mode)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all ${selectedWorkingMode === mode
+                      ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
+                      : 'border-border bg-surface text-text-muted hover:border-border-strong'
+                    }`}
+                >
+                  <span>{WORKING_MODE_LABELS[mode]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 4.2 Hình thức tham gia (Participation Type) */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-text">
+              Hình thức tham gia <span className="text-danger">*</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {(['INDIVIDUAL', 'GROUP'] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  disabled={type === 'GROUP' && groupUnsupportedByTargetMentor}
+                  onClick={() => setValue('participationType', type)}
+                  title={type === 'GROUP' && groupUnsupportedByTargetMentor ? 'Mentor này hiện chỉ nhận mentoring cá nhân' : undefined}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-45 ${selectedParticipationType === type
+                      ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
+                      : 'border-border bg-surface text-text-muted hover:border-border-strong'
+                    }`}
+                >
+                  <span>{PARTICIPATION_TYPE_LABELS[type]}</span>
+                </button>
+              ))}
+            </div>
+            {groupUnsupportedByTargetMentor && (
+              <p className="text-xs text-text-subtle">Mentor này hiện chỉ nhận mentoring cá nhân.</p>
+            )}
+          </div>
+
+          {/* 4.2.1 Chọn Nhóm Cố Vấn (Mô hình GROUP-FIRST) */}
+          {selectedParticipationType === 'GROUP' && (
+            <div className="space-y-4 rounded-2xl border border-primary-soft-border bg-brand-50/40 p-5 dark:bg-brand-700/20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-primary-solid shadow-xs">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-text">
+                      Chọn nhóm cố vấn tham gia (Group-First)
+                    </p>
+                    <p className="text-xs text-text-subtle">
+                      Yêu cầu phải được liên kết với một nhóm bạn làm Trưởng nhóm. Thành viên đã JOINED sẽ được chốt tham gia.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreateGroupModalOpen(true)}
+                  className="self-start sm:self-auto gap-1.5 rounded-xl border-primary-soft-border text-primary-solid hover:bg-brand-100/60 text-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  Tạo nhóm mới
+                </Button>
+              </div>
+
+              {loadingManagedGroups ? (
+                <div className="flex items-center justify-center gap-2 py-6 text-xs text-text-subtle">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
+                  Đang tải danh sách nhóm của bạn...
+                </div>
+              ) : managedGroups.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-primary-soft-border bg-surface/70 p-6 text-center">
+                  <Users className="mx-auto h-8 w-8 text-brand-400 mb-2 opacity-70" />
+                  <p className="text-sm font-bold text-text">
+                    Bạn chưa có nhóm cố vấn nào đang hoạt động
+                  </p>
+                  <p className="text-xs text-text-subtle max-w-md mx-auto mt-1 mb-4">
+                    Quy trình mới yêu cầu tạo nhóm và mời thành viên trước khi gửi Mentoring Request dạng nhóm.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setIsCreateGroupModalOpen(true)}
+                    className="rounded-xl gap-1.5"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Tạo nhóm đầu tiên ngay
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <label htmlFor="group-select" className="block text-xs font-bold text-text">
+                    Nhóm đại diện <span className="text-danger">*</span>
+                  </label>
+                  <SelectDropdown
+                    value={Number(selectedGroupId) || ''}
+                    onChange={(val) => {
+                      const numVal = val ? Number(val) : null
+                      setValue('groupId', numVal, { shouldValidate: true })
+                    }}
+                    options={groupOptions}
+                    placeholder="Chọn nhóm cố vấn của bạn"
+                    searchPlaceholder="Tìm kiếm nhóm..."
+                    buttonClassName="h-11 rounded-xl text-sm"
+                    panelClassName="w-full sm:max-w-none"
+                    icon={<Users className="h-4 w-4" />}
+                  />
+                  {errors.groupId && (
+                    <p className="text-xs font-semibold text-danger">
+                      {errors.groupId.message}
                     </p>
                   )}
                 </div>
+              )}
 
-                {/* Cảnh báo PENDING INVITATIONS (Yêu cầu nghiệp vụ bắt buộc 8.1) */}
-                {(() => {
-                  const pendingMembers = (currentGroupDetail.members || []).filter(
-                    (m: MentoringGroupMemberData) => m.status === 'PENDING' || m.status === 'INVITED'
-                  )
-                  if (pendingMembers.length === 0) return null
+              {/* Chi tiết nhóm được chọn & Snapshot thành viên */}
+              {selectedGroupId && currentGroupDetail ? (
+                <div className="space-y-4 pt-2">
+                  {/* Snapshot thành viên chính thức (JOINED) */}
+                  <div className="rounded-xl border border-border bg-surface p-4">
+                    <div className="flex items-center justify-between border-b border-border pb-2.5 mb-3">
+                      <span className="text-xs font-bold text-text flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                        Danh sách thành viên chính thức tham gia Request (Snapshot)
+                      </span>
+                      <span className="text-xs font-bold text-primary-solid">
+                        {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length} thành viên
+                      </span>
+                    </div>
 
-                  return (
-                    <div className="rounded-xl border border-warning-border bg-warning-soft p-4 text-sm">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
-                        <div className="space-y-1.5 flex-1">
-                          <p className="font-bold text-warning">
-                            Một số thành viên được mời chưa phản hồi ({pendingMembers.length} lời mời đang chờ)
-                          </p>
-                          <p className="text-xs text-warning leading-relaxed">
-                            Chỉ những thành viên đã chấp nhận (JOINED) mới chính thức tham gia vào Mentoring Request này. Các thành viên đang ở trạng thái PENDING sẽ bị loại khỏi snapshot.
-                          </p>
-                          <div className="flex flex-wrap items-center gap-2 pt-2">
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/app/mentoring/groups/${selectedGroupId}`)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-warning-border bg-surface px-3 py-1.5 text-xs font-bold text-warning shadow-2xs hover:bg-warning-soft transition-colors"
-                            >
-                              <ExternalLink className="h-3.5 w-3.5" />
-                              Quay lại nhóm để quản lý lời mời
-                            </button>
-                            <span className="text-xs text-warning italic">
-                              (Nhấn &quot;Gửi yêu cầu&quot; phía dưới để tiếp tục với thành viên đã xác nhận)
-                            </span>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {(currentGroupDetail.members || [])
+                        .filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE')
+                        .map((member: MentoringGroupMemberData) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center gap-3 rounded-lg border border-border bg-cream-100/60 p-2.5 dark:bg-white/5"
+                          >
+                            <img
+                              src={member.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.fullName)}`}
+                              alt=""
+                              className="h-8 w-8 rounded-full object-cover shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="truncate text-xs font-bold text-text">
+                                  {member.fullName}
+                                </span>
+                                {member.leader && (
+                                  <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-bold text-warning">
+                                    Trưởng nhóm
+                                  </span>
+                                )}
+                              </div>
+                              <span className="block truncate text-xs text-text-subtle">
+                                {member.major || member.email}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+
+                    {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length === 1 && (
+                      <p className="mt-3 text-xs text-text-subtle italic">
+                        * Nhóm hiện chỉ có Trưởng nhóm. Bạn có thể tiếp tục tạo yêu cầu theo diện nhóm một thành viên hoặc mời thêm bạn bè tham gia.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Cảnh báo PENDING INVITATIONS (Yêu cầu nghiệp vụ bắt buộc 8.1) */}
+                  {(() => {
+                    const pendingMembers = (currentGroupDetail.members || []).filter(
+                      (m: MentoringGroupMemberData) => m.status === 'PENDING' || m.status === 'INVITED'
+                    )
+                    if (pendingMembers.length === 0) return null
+
+                    return (
+                      <div className="rounded-xl border border-warning-border bg-warning-soft p-4 text-sm">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+                          <div className="space-y-1.5 flex-1">
+                            <p className="font-bold text-warning">
+                              Một số thành viên được mời chưa phản hồi ({pendingMembers.length} lời mời đang chờ)
+                            </p>
+                            <p className="text-xs text-warning leading-relaxed">
+                              Chỉ những thành viên đã chấp nhận (JOINED) mới chính thức tham gia vào Mentoring Request này. Các thành viên đang ở trạng thái PENDING sẽ bị loại khỏi snapshot.
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/app/mentoring/groups/${selectedGroupId}`)}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-warning-border bg-surface px-3 py-1.5 text-xs font-bold text-warning shadow-2xs hover:bg-warning-soft transition-colors"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                Quay lại nhóm để quản lý lời mời
+                              </button>
+                              <span className="text-xs text-warning italic">
+                                (Nhấn &quot;Gửi yêu cầu&quot; phía dưới để tiếp tục với thành viên đã xác nhận)
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {/* 4.3 Loại nhiệm vụ (Task Type) */}
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-text">
-            Loại nhiệm vụ cố vấn <span className="text-danger">*</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {TASK_TYPE_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setValue('taskType', opt.value)}
-                className={`flex flex-col text-left rounded-2xl border p-3.5 transition-all ${
-                  selectedTaskType === opt.value
-                    ? 'border-primary bg-brand-50/70 shadow-xs dark:bg-brand-700/40'
-                    : 'border-border bg-surface hover:border-border-strong'
-                }`}
-              >
-                <span className={`text-xs font-bold ${
-                  selectedTaskType === opt.value ? 'text-primary-solid' : 'text-text'
-                }`}>
-                  {opt.label}
-                </span>
-                <span className="text-xs text-text-subtle leading-relaxed mt-1">
-                  {opt.description}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      {/* SECTION E — Timeline (Thời hạn mong muốn) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
-        <div className="flex items-center gap-3 border-b border-border pb-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger-soft text-danger">
-            <Calendar className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-text">
-              5. Thời hạn mong muốn hoàn thành
-            </h3>
-            <p className="text-xs text-text-subtle">
-              Đặt mốc thời gian bạn mong muốn nhận hỗ trợ xong để Mentor sắp xếp lịch trình
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-1.5 max-w-sm">
-          <label htmlFor="expectedDeadline" className="block text-xs font-bold text-text">
-            Hạn chót hoàn thành (Expected Deadline)
-          </label>
-          <input
-            id="expectedDeadline"
-            type="date"
-            min={minimumDeadline}
-            {...register('expectedDeadline')}
-            className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
-          />
-          {errors.expectedDeadline && (
-            <p className="text-xs font-semibold text-danger pt-0.5">
-              {errors.expectedDeadline.message}
-            </p>
+                    )
+                  })()}
+                </div>
+              ) : null}
+            </div>
           )}
-        </div>
-      </Card>
 
-      {/* SECTION F — Attachments (Tệp đính kèm) */}
-      <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
-        <div className="flex items-center gap-3 border-b border-border pb-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
-            <Paperclip className="h-5 w-5" />
+          {/* 4.3 Loại nhiệm vụ (Task Type) */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-text">
+              Loại nhiệm vụ cố vấn <span className="text-danger">*</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {TASK_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setValue('taskType', opt.value)}
+                  className={`flex flex-col text-left rounded-2xl border p-3.5 transition-all ${selectedTaskType === opt.value
+                      ? 'border-primary bg-brand-50/70 shadow-xs dark:bg-brand-700/40'
+                      : 'border-border bg-surface hover:border-border-strong'
+                    }`}
+                >
+                  <span className={`text-xs font-bold ${selectedTaskType === opt.value ? 'text-primary-solid' : 'text-text'
+                    }`}>
+                    {opt.label}
+                  </span>
+                  <span className="text-xs text-text-subtle leading-relaxed mt-1">
+                    {opt.description}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-text">
-              6. Tài liệu / Tệp tin đính kèm
-            </h3>
-            <p className="text-xs text-text-subtle">
-              Tải lên đề cương đồ án, slide tóm tắt, mô tả bài toán... (Tối đa 5 file, mỗi file &lt; 10 MB)
+        </Card>
+
+        {/* SECTION E — Timeline (Thời hạn mong muốn) */}
+        <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
+          <div className="flex items-center gap-3 border-b border-border pb-3.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger-soft text-danger">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-text">
+                5. Thời hạn mong muốn hoàn thành
+              </h3>
+              <p className="text-xs text-text-subtle">
+                Đặt mốc thời gian bạn mong muốn nhận hỗ trợ xong để Mentor sắp xếp lịch trình
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 max-w-sm">
+            <label htmlFor="expectedDeadline" className="block text-xs font-bold text-text">
+              Hạn chót hoàn thành (Expected Deadline)
+            </label>
+            <input
+              id="expectedDeadline"
+              type="date"
+              min={minimumDeadline}
+              {...register('expectedDeadline')}
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
+            />
+            {errors.expectedDeadline && (
+              <p className="text-xs font-semibold text-danger pt-0.5">
+                {errors.expectedDeadline.message}
+              </p>
+            )}
+          </div>
+        </Card>
+
+        {/* SECTION F — Attachments (Tệp đính kèm) */}
+        <Card hover={false} className="p-6 sm:p-7 border border-border bg-surface space-y-4">
+          <div className="flex items-center gap-3 border-b border-border pb-3.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
+              <Paperclip className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-text">
+                6. Tài liệu / Tệp tin đính kèm
+              </h3>
+              <p className="text-xs text-text-subtle">
+                Tải lên đề cương đồ án, slide tóm tắt, mô tả bài toán... (Tối đa 5 file, mỗi file &lt; 10 MB)
+              </p>
+            </div>
+          </div>
+
+          {/* Upload dropzone */}
+          <div className="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border-strong bg-cream-50/50 p-6 text-center transition-colors hover:border-primary dark:bg-white/[0.02]">
+            <UploadCloud className="h-8 w-8 text-primary-solid mb-2" />
+            <p className="text-xs font-bold text-text">
+              Kéo thả hoặc nhấp để chọn tệp tin
             </p>
+            <p className="text-xs text-text-subtle mt-1">
+              Hỗ trợ PDF, DOCX, PNG, JPG, ZIP (mỗi file nhỏ hơn 10 MB)
+            </p>
+            <input
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
           </div>
-        </div>
 
-        {/* Upload dropzone */}
-        <div className="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border-strong bg-cream-50/50 p-6 text-center transition-colors hover:border-primary dark:bg-white/[0.02]">
-          <UploadCloud className="h-8 w-8 text-primary-solid mb-2" />
-          <p className="text-xs font-bold text-text">
-            Kéo thả hoặc nhấp để chọn tệp tin
-          </p>
-          <p className="text-xs text-text-subtle mt-1">
-            Hỗ trợ PDF, DOCX, PNG, JPG, ZIP (mỗi file nhỏ hơn 10 MB)
-          </p>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileSelect}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          />
-        </div>
-
-        {/* Danh sách tệp tin đính kèm */}
-        {attachedFiles.length > 0 && (
-          <div className="space-y-2 pt-2">
-            {attachedFiles.map((item, idx) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-xs"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-solid">
-                    <FileCheck className="h-4 w-4" />
+          {/* Danh sách tệp tin đính kèm */}
+          {attachedFiles.length > 0 && (
+            <div className="space-y-2 pt-2">
+              {attachedFiles.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-solid">
+                      <FileCheck className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 truncate">
+                      <p className="font-bold text-text truncate">{item.file.name}</p>
+                      <p className="text-xs text-text-subtle">
+                        {(item.file.size / 1024).toFixed(1)} KB
+                        {item.uploading && ' • Đang tải lên...'}
+                        {item.error && ` • Lỗi: ${item.error}`}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0 truncate">
-                    <p className="font-bold text-text truncate">{item.file.name}</p>
-                    <p className="text-xs text-text-subtle">
-                      {(item.file.size / 1024).toFixed(1)} KB
-                      {item.uploading && ' • Đang tải lên...'}
-                      {item.error && ` • Lỗi: ${item.error}`}
-                    </p>
+
+                  <div className="flex items-center gap-2">
+                    {item.uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(idx)}
+                        className="p-1 rounded-lg text-text-subtle hover:text-danger hover:bg-danger-soft transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
-                <div className="flex items-center gap-2">
-                  {item.uploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile(idx)}
-                      className="p-1 rounded-lg text-text-subtle hover:text-danger hover:bg-danger-soft transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+        {/* SECTION G — Action CTA Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-3">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              onClick={onCancel}
+              disabled={createMutation.isPending}
+              className="w-full sm:w-auto rounded-2xl font-bold text-text-muted hover:text-text"
+            >
+              Hủy bỏ
+            </Button>
+          )}
 
-      {/* SECTION G — Action CTA Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-3">
-        {onCancel && (
           <Button
-            type="button"
-            variant="ghost"
+            type="submit"
+            variant="primary"
             size="lg"
-            onClick={onCancel}
-            disabled={createMutation.isPending}
-            className="w-full sm:w-auto rounded-2xl font-bold text-text-muted hover:text-text"
+            disabled={createMutation.isPending || isSelfMentor}
+            leftIcon={
+              <span key={createMutation.isPending ? 'loading-icon' : 'idle-icon'} className="inline-flex items-center">
+                {createMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </span>
+            }
+            className="w-full sm:w-auto rounded-2xl font-bold px-8 shadow-sm"
           >
-            Hủy bỏ
-          </Button>
-        )}
-
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          disabled={createMutation.isPending || isSelfMentor}
-          leftIcon={
-            <span key={createMutation.isPending ? 'loading-icon' : 'idle-icon'} className="inline-flex items-center">
-              {createMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+            <span>
+              {isSelfMentor
+                ? 'Không thể gửi cho chính mình'
+                : createMutation.isPending
+                  ? isDirectRequest
+                    ? 'Đang gửi yêu cầu trực tiếp...'
+                    : 'Đang tạo & Matching...'
+                  : isDirectRequest
+                    ? 'Gửi yêu cầu tới Mentor'
+                    : 'Đăng yêu cầu Mentoring'}
             </span>
-          }
-          className="w-full sm:w-auto rounded-2xl font-bold px-8 shadow-sm"
-        >
-          <span>
-            {isSelfMentor
-              ? 'Không thể gửi cho chính mình'
-              : createMutation.isPending
-              ? isDirectRequest
-                ? 'Đang gửi yêu cầu trực tiếp...'
-                : 'Đang tạo & Matching...'
-              : isDirectRequest
-              ? 'Gửi yêu cầu tới Mentor'
-              : 'Đăng yêu cầu Mentoring'}
-          </span>
-        </Button>
-      </div>
+          </Button>
+        </div>
       </form>
 
       <CreateMentoringGroupModal

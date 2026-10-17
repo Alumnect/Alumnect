@@ -421,6 +421,7 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                     .build();
 
             mentoringRequestDistributionRepository.save(distribution);
+            notificationService.sendMentoringRequestNotification(student, targetMentor.getUser(), savedRequest);
             matchedCount = 1;
 
             UserProfile mentorUserProfile = userProfileRepository.findById(targetMentor.getUser().getId()).orElse(null);
@@ -440,6 +441,10 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             );
 
             matchedCount = mentorMatchingService.distributeRequestToMentors(savedRequest, matchingMentors);
+            matchingMentors.stream()
+                    .filter(mentor -> mentor.getUser() != null)
+                    .forEach(mentor -> notificationService.sendMentoringRequestNotification(
+                            student, mentor.getUser(), savedRequest));
             savedRequest.setMatchedCount(matchedCount);
             mentoringRequestRepository.save(savedRequest);
 
@@ -1326,6 +1331,8 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         Conversation conversation = mentoringConversationService.getOrCreateConversation(mentoringRequest, mentorUser);
         mentoringConversationService.postSystemMessage(conversation, mentorUser,
                 mentoringConversationService.displayName(mentorUser) + " đã đồng ý trao đổi về Request của bạn.");
+        notificationService.sendMentoringRequestResponseNotification(
+                mentorUser, mentoringRequest.getStudent(), mentoringRequest, true);
 
         log.info("Mentor ID={} đã ACCEPT yêu cầu ID={} — Chat for Task id={} (chưa có Deal/Task)",
                 mentorProfile.getId(), requestId, conversation.getId());
@@ -1406,6 +1413,8 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         }
 
         MentoringRequestDistribution savedDist = mentoringRequestDistributionRepository.save(distribution);
+        notificationService.sendMentoringRequestResponseNotification(
+                mentorUser, mentoringRequest.getStudent(), mentoringRequest, false);
         log.info("Mentor ID={} đã DECLINE thành công yêu cầu ID={}", mentorProfile.getId(), requestId);
 
         return mapToIncomingDetailResponse(savedDist, mentorProfile, true, true);

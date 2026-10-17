@@ -145,11 +145,11 @@ export function MentoringTaskPaymentModal({
       checkoutData.qrCodeUrl.startsWith('http')
       ? checkoutData.qrCodeUrl
       : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-          checkoutData.qrCodeUrl
-        )}`
-    : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-        checkoutData?.checkoutUrl || ''
+        checkoutData.qrCodeUrl
       )}`
+    : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+      checkoutData?.checkoutUrl || ''
+    )}`
 
   if (typeof document === 'undefined') return null
 
@@ -205,7 +205,7 @@ export function MentoringTaskPaymentModal({
                 ) : (
                   <>
                     Mentoring Task #{paidResult.taskId || deal.taskId || ''} đã chính thức bắt đầu ở giai đoạn{' '}
-                    <span className="font-bold text-primary-solid">CHUẨN BỊ (PREPARATION)</span>.
+                    <span className="font-bold text-primary-solid">CHUẨN BỊ </span>.
                   </>
                 )}
               </p>
@@ -287,11 +287,10 @@ export function MentoringTaskPaymentModal({
                 <Clock className="w-4 h-4 text-primary-solid" />
                 <span>Thời gian thanh toán còn lại:</span>
                 <span
-                  className={`px-2 py-0.5 rounded-full font-mono text-xs ${
-                    timeLeft < 180
+                  className={`px-2 py-0.5 rounded-full font-mono text-xs ${timeLeft < 180
                       ? 'bg-danger-soft text-danger'
                       : 'bg-primary-soft text-primary-solid'
-                  }`}
+                    }`}
                 >
                   {formatTimer(timeLeft)}
                 </span>

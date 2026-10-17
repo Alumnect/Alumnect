@@ -10,20 +10,27 @@ export interface ToastItem {
   type: ToastType
   message: string
   duration?: number
+  actions?: ToastAction[]
+}
+
+export interface ToastAction {
+  label: string
+  onClick: () => void | Promise<void>
+  variant?: 'primary' | 'secondary'
 }
 
 interface ToastStore {
   toasts: ToastItem[]
-  addToast: (type: ToastType, message: string, duration?: number) => void
+  addToast: (type: ToastType, message: string, duration?: number, actions?: ToastAction[]) => void
   removeToast: (id: string) => void
 }
 
 export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
-  addToast: (type, message, duration = 4000) => {
+  addToast: (type, message, duration = 4000, actions) => {
     const id = Math.random().toString(36).substring(2, 9)
     set((state) => ({
-      toasts: [...state.toasts, { id, type, message, duration }],
+      toasts: [...state.toasts, { id, type, message, duration, actions }],
     }))
 
     if (duration > 0) {
@@ -50,8 +57,8 @@ export const toast = {
     useToastStore.getState().addToast('info', message, duration),
   warning: (message: string, duration?: number) =>
     useToastStore.getState().addToast('warning', message, duration),
-  notification: (message: string, duration?: number) =>
-    useToastStore.getState().addToast('notification', message, duration),
+  notification: (message: string, duration?: number, actions?: ToastAction[]) =>
+    useToastStore.getState().addToast('notification', message, duration, actions),
 }
 
 export function ToastContainer() {
@@ -89,6 +96,25 @@ export function ToastContainer() {
               </div>
               <div className="flex-1 pt-0.5">
                 <p className="break-words text-sm font-semibold leading-relaxed text-text">{item.message}</p>
+                {item.actions && item.actions.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {item.actions.map((action) => (
+                      <button
+                        key={action.label}
+                        type="button"
+                        onClick={() => {
+                          removeToast(item.id)
+                          void action.onClick()
+                        }}
+                        className={action.variant === 'secondary'
+                          ? 'rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-bold text-text-muted hover:bg-surface-2'
+                          : 'rounded-lg bg-primary-solid px-3 py-1.5 text-xs font-bold text-on-primary hover:brightness-95'}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <button
                 type="button"

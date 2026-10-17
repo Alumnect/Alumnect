@@ -18,6 +18,7 @@ interface SelectDropdownProps<T = string | number> {
   placeholder: string
   icon?: ReactNode
   className?: string
+  buttonClassName?: string
   panelClassName?: string
   searchable?: boolean
   searchPlaceholder?: string
@@ -33,6 +34,7 @@ export function SelectDropdown<T extends string | number = string | number>({
   placeholder,
   icon,
   className,
+  buttonClassName,
   panelClassName,
   searchable = false,
   searchPlaceholder = 'Tìm kiếm…',
@@ -63,7 +65,7 @@ export function SelectDropdown<T extends string | number = string | number>({
       const rect = containerRef.current.getBoundingClientRect()
       const spaceBelow = window.innerHeight - rect.bottom
       const spaceAbove = rect.top
-      if (spaceBelow < 260 && spaceAbove > spaceBelow) {
+      if (spaceBelow < 320 && spaceAbove > spaceBelow) {
         setActualDirection('top')
       } else {
         setActualDirection('bottom')
@@ -89,7 +91,12 @@ export function SelectDropdown<T extends string | number = string | number>({
 
   const cleanQuery = query.trim().toLowerCase()
   const filteredOptions = cleanQuery
-    ? options.filter((opt) => opt.label.toLowerCase().includes(cleanQuery) || opt.sublabel?.toLowerCase().includes(cleanQuery))
+    ? options.filter(
+        (opt) =>
+          opt.label.toLowerCase().includes(cleanQuery) ||
+          opt.sublabel?.toLowerCase().includes(cleanQuery) ||
+          String(opt.value).toLowerCase().includes(cleanQuery)
+      )
     : options
 
   const handleSelect = (val: T) => {
@@ -102,7 +109,7 @@ export function SelectDropdown<T extends string | number = string | number>({
   const shouldSearch = searchable || options.length > 8
 
   return (
-    <div className={cn('relative w-full', open ? 'z-30' : 'z-auto', className)} ref={containerRef}>
+    <div className={cn('relative w-full', open ? 'z-50' : 'z-auto', className)} ref={containerRef}>
       {/* Trigger Button */}
       <button
         type="button"
@@ -117,17 +124,25 @@ export function SelectDropdown<T extends string | number = string | number>({
             ? 'border-primary ring-2 ring-primary/20 text-primary-solid'
             : selectedOption && selectedOption.value !== ''
             ? 'border-border-strong text-text hover:border-primary'
-            : 'border-border text-text-muted hover:border-border-strong'
+            : 'border-border text-text-muted hover:border-border-strong',
+          buttonClassName
         )}
       >
-        {icon && (
-          <span className="shrink-0 text-text-subtle transition-colors group-hover:text-primary-solid">
-            {icon}
+        {(selectedOption?.icon ?? icon) && (
+          <span className="shrink-0 flex items-center text-text-subtle transition-colors group-hover:text-primary-solid">
+            {selectedOption?.icon ?? icon}
           </span>
         )}
 
-        <span className="flex-1 truncate text-left">
-          {selectedOption ? selectedOption.label : placeholder}
+        <span className="flex-1 truncate text-left flex items-center gap-2">
+          <span className={selectedOption && selectedOption.value !== '' ? 'text-text font-semibold truncate' : 'text-text-muted font-normal truncate'}>
+            {selectedOption && selectedOption.value !== '' ? selectedOption.label : placeholder}
+          </span>
+          {selectedOption && selectedOption.value !== '' && selectedOption.sublabel && (
+            <span className="text-text-subtle font-normal truncate hidden sm:inline text-xs">
+              {selectedOption.sublabel}
+            </span>
+          )}
         </span>
 
         <ChevronDown
@@ -148,7 +163,7 @@ export function SelectDropdown<T extends string | number = string | number>({
             exit={{ opacity: 0, scale: 0.96, y: actualDirection === 'top' ? 4 : -4 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
             className={cn(
-              'absolute z-30 min-w-full w-max max-w-[calc(100vw-2rem)] sm:max-w-xs overflow-hidden rounded-2xl border border-border bg-surface p-1.5 shadow-2xl shadow-plum-950/20 dark:shadow-black/70',
+              'absolute z-50 min-w-full w-max max-w-[calc(100vw-2rem)] sm:max-w-xs overflow-hidden rounded-2xl border border-border bg-surface p-1.5 shadow-2xl shadow-plum-950/20 dark:shadow-black/70',
               actualAlign === 'right' ? 'right-0 left-auto' : 'left-0',
               actualDirection === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5',
               panelClassName
@@ -179,7 +194,7 @@ export function SelectDropdown<T extends string | number = string | number>({
             )}
 
             {/* Danh sách Options */}
-            <div className="max-h-56 overflow-y-auto space-y-0.5 [scrollbar-width:thin] pr-0.5">
+            <div className="max-h-60 overflow-y-auto space-y-0.5 [scrollbar-width:thin] pr-0.5">
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-4 text-center text-xs text-text-subtle">
                   Không tìm thấy lựa chọn nào
@@ -200,18 +215,18 @@ export function SelectDropdown<T extends string | number = string | number>({
                           : 'font-medium text-text-muted hover:bg-surface-2 hover:text-text'
                       )}
                     >
-                      <span className="flex items-center gap-2 truncate">
-                        {opt.icon && <span className="shrink-0">{opt.icon}</span>}
-                        <span className="truncate">{opt.label}</span>
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1 truncate">
+                        {opt.icon && <span className="shrink-0 flex items-center">{opt.icon}</span>}
+                        <span className="truncate font-semibold">{opt.label}</span>
                         {opt.sublabel && (
-                          <span className="text-xs text-text-subtle">
+                          <span className="text-xs text-text-subtle truncate">
                             {opt.sublabel}
                           </span>
                         )}
                       </span>
 
                       {isSelected && (
-                        <Check size={14} className="shrink-0 text-primary-solid" />
+                        <Check size={14} className="shrink-0 text-primary-solid ml-2" />
                       )}
                     </button>
                   )

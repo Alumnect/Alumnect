@@ -35,7 +35,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-border dark:border-white/[0.06]">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid border border-brand-500/25">
           <Target className="h-3.5 w-3.5 text-primary-solid" />
-          <span>Yêu cầu cố vấn trực tiếp (Direct Request)</span>
+          <span>Yêu cầu cố vấn trực tiếp</span>
         </div>
 
         <Link

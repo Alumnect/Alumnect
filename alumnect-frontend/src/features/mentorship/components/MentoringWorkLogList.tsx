@@ -100,7 +100,7 @@ export function MentoringWorkLogList({
         return (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-0.5 text-xs font-bold text-success ring-1 ring-success">
             <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-            <span>Đã xác nhận nghiệm thu</span>
+            <span>Đã xác nhận</span>
           </span>
         )
       case 'REJECTED':
@@ -124,7 +124,7 @@ export function MentoringWorkLogList({
       },
       {
         onSuccess: () => {
-          toast.success('Đã xác nhận nghiệm thu Work Log thành công!')
+          toast.success('Đã xác nhận Work Log thành công!')
           setConfirmingLog(null)
           setFeedbackText('')
         },
@@ -247,8 +247,8 @@ export function MentoringWorkLogList({
                   log.status === 'PENDING_CONFIRMATION'
                     ? 'border-warning bg-warning-soft'
                     : log.status === 'CONFIRMED'
-                    ? 'border-success-border bg-success-soft'
-                    : 'border-danger-border bg-danger-soft'
+                      ? 'border-success-border bg-success-soft'
+                      : 'border-danger-border bg-danger-soft'
                 )}
               >
                 {/* Log Header */}

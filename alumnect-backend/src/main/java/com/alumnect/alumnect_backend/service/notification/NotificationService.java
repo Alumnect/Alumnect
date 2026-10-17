@@ -103,6 +103,21 @@ public interface NotificationService {
      */
     void sendWelcomeNotification(User user);
 
+    /** Gửi yêu cầu thuê/cố vấn mới tới Mentor để hiển thị và xử lý theo thời gian thực. */
+    void sendMentoringRequestNotification(
+            User student,
+            User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest request
+    );
+
+    /** Thông báo lại cho học viên khi Mentor nhận hoặc bỏ qua yêu cầu. */
+    void sendMentoringRequestResponseNotification(
+            User mentor,
+            User student,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest request,
+            boolean accepted
+    );
+
     /**
      * Gửi một thông báo cần thiết cho mỗi bên khi thanh toán hoàn tất và Task
      * được kích hoạt lần đầu.

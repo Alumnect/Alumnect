@@ -127,7 +127,7 @@ function MentoringTaskDetailContent() {
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted transition hover:text-primary-solid"
         >
           <ArrowLeft className="h-4 w-4" />
-          Nhiệm vụ của tôi
+          Công việc của tôi
         </button>
         <div className="flex items-center gap-2">
           <Button

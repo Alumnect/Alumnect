@@ -23,7 +23,7 @@ function formatDate(value: string) {
     : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-/** Thẻ Task trong "Nhiệm vụ của tôi": trạng thái, người cùng làm, tiến độ, giá và hạn chót. */
+/** Thẻ Task trong "Công việc của tôi": trạng thái, người cùng làm, tiến độ, giá và hạn chót. */
 export function MentoringTaskCard({ task, onSelect }: MentoringTaskCardProps) {
   const currentUserId = Number(useAuthStore((s) => s.user?.id)) || 0
   // Mốc thời gian tại lần hiển thị đầu (không gọi Date.now() trong lúc render)

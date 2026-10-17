@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, RotateCcw, Save, ShieldAlert } from 'lucide-react'
-import { Container, toast } from '@/components/ui'
+import { Building, CheckCircle2, RotateCcw, Save, ShieldAlert } from 'lucide-react'
+import { Container, toast, SelectDropdown, type SelectOption } from '@/components/ui'
 import { MentorPageHeader, MentoringTermsGate, TASK_QUERY_KEYS } from '@/features/mentorship'
 import { mentoringWalletApi } from '@/features/mentorship/api/mentoringWalletApi'
 import { MentoringWalletTable } from '@/features/mentorship/components/MentoringWalletTable'
@@ -34,6 +34,37 @@ function MentoringRefundsContent() {
   const form: RefundAccount = draft ?? saved ?? EMPTY
   const dirty = draft !== null
 
+  const selectedBank = banks.find((b) => b.bin === form.bankBin)
+
+  const bankOptions = useMemo<SelectOption<string>[]>(() => {
+    const list: SelectOption<string>[] = banks.map((b) => ({
+      value: b.bin,
+      label: b.name,
+      sublabel: b.fullName ? `— ${b.fullName}` : undefined,
+      icon: b.logo ? (
+        <img
+          src={b.logo}
+          alt=""
+          className="h-4.5 w-7 shrink-0 rounded object-contain bg-white p-0.5 border border-border/50"
+          loading="lazy"
+        />
+      ) : (
+        <Building className="h-4 w-4 text-text-subtle shrink-0" />
+      ),
+    }))
+
+    if (form.bankBin && !banks.some((b) => b.bin === form.bankBin)) {
+      list.unshift({
+        value: form.bankBin,
+        label: form.bankName || 'Ngân hàng đã lưu',
+        sublabel: `BIN ${form.bankBin}`,
+        icon: <Building className="h-4 w-4 text-text-subtle shrink-0" />,
+      })
+    }
+
+    return list
+  }, [banks, form.bankBin, form.bankName])
+
   const save = useMutation({
     mutationFn: () => mentoringWalletApi.saveRefundAccount(form),
     onSuccess: () => {
@@ -64,14 +95,14 @@ function MentoringRefundsContent() {
         </MentoringActionCard>
       )}
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-xs">
+      <section className="rounded-2xl border border-border bg-surface shadow-xs">
         {account.isSuccess &&
           (saved ? (
-            <MentoringStatusStrip tone="mint" icon={<CheckCircle2 />}>
+            <MentoringStatusStrip tone="mint" icon={<CheckCircle2 />} className="rounded-t-2xl">
               Đã khai báo: {saved.bankName} ••• {saved.bankAccountNumber.slice(-4)} · {saved.bankAccountHolder}
             </MentoringStatusStrip>
           ) : (
-            <MentoringStatusStrip tone="gold" icon={<ShieldAlert />}>
+            <MentoringStatusStrip tone="gold" icon={<ShieldAlert />} className="rounded-t-2xl">
               Chưa khai báo — bắt buộc trước khi gửi hoặc đồng ý thỏa thuận dừng Task.
             </MentoringStatusStrip>
           ))}
@@ -81,27 +112,41 @@ function MentoringRefundsContent() {
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <MentoringField label="Ngân hàng" required>
-                <select
-                  className={MENTORING_INPUT}
+                <SelectDropdown
                   value={form.bankBin}
                   disabled={banksLoading}
-                  onChange={(e) => {
-                    const bank = banks.find((b) => b.bin === e.target.value)
-                    setDraft({ ...form, bankBin: e.target.value, bankName: bank?.name ?? '' })
+                  placeholder={banksLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng'}
+                  searchPlaceholder="Tìm ngân hàng theo tên viết tắt, tên đầy đủ hoặc mã BIN..."
+                  options={bankOptions}
+                  onChange={(selectedBin) => {
+                    const bank = banks.find((b) => b.bin === selectedBin)
+                    setDraft({
+                      ...form,
+                      bankBin: String(selectedBin),
+                      bankName: bank?.name ?? form.bankName ?? '',
+                    })
                   }}
-                >
-                  <option value="">{banksLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng'}</option>
-                  {form.bankBin && !banks.some((b) => b.bin === form.bankBin) && (
-                    <option value={form.bankBin}>{form.bankName || form.bankBin}</option>
-                  )}
-                  {banks.map((b) => (
-                    <option key={b.bin} value={b.bin}>
-                      {b.name}
-                      {b.fullName ? ` — ${b.fullName}` : ''}
-                    </option>
-                  ))}
-                </select>
+                  panelClassName="w-full sm:max-w-none"
+                  buttonClassName="h-10.5 rounded-xl text-sm"
+                  icon={<Building className="h-4 w-4" />}
+                />
               </MentoringField>
+              {selectedBank && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-text-subtle">
+                  {selectedBank.logo && (
+                    <img
+                      src={selectedBank.logo}
+                      alt=""
+                      className="h-5 w-auto rounded bg-surface px-1 border border-border/40"
+                      loading="lazy"
+                    />
+                  )}
+                  <span className="font-medium text-text">{selectedBank.fullName || selectedBank.name}</span>
+                  <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-mono font-semibold text-text-subtle">
+                    BIN {selectedBank.bin}
+                  </span>
+                </div>
+              )}
             </div>
             <MentoringField
               label="Số tài khoản"

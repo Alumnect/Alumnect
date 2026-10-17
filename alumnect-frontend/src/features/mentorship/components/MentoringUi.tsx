@@ -116,14 +116,16 @@ export function MentoringStatusStrip({
   icon,
   children,
   action,
+  className,
 }: {
   tone?: MentoringTone
   icon?: ReactNode
   children: ReactNode
   action?: ReactNode
+  className?: string
 }) {
   return (
-    <div className={cn('flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5 text-xs font-semibold sm:px-6', TONES[tone].strip)}>
+    <div className={cn('flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5 text-xs font-semibold sm:px-6', TONES[tone].strip, className)}>
       <span className="flex min-w-0 items-center gap-2 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:shrink-0">
         {icon}
         <span className="min-w-0">{children}</span>

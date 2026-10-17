@@ -23,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.List;
@@ -184,6 +186,75 @@ public class NotificationServiceImpl implements NotificationService {
                 notificationRepository.save(notif);
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringRequestNotification(
+            User student,
+            User mentor,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest request
+    ) {
+        if (student == null || mentor == null || request == null || request.getId() == null) {
+            return;
+        }
+        String targetType = "MENTORING_INCOMING_REQUEST";
+        String targetId = String.valueOf(request.getId());
+        if (notificationRepository.existsByRecipientIdAndTypeAndTargetTypeAndTargetId(
+                mentor.getId(), NotificationType.MENTORING_REQUEST, targetType, targetId)) {
+            return;
+        }
+
+        String studentName = resolveFullName(student);
+        String title = request.getTitle() == null || request.getTitle().isBlank()
+                ? "Yêu cầu Mentoring mới"
+                : request.getTitle().trim();
+        Notification notification = notificationRepository.save(Notification.builder()
+                .recipient(mentor)
+                .sender(student)
+                .type(NotificationType.MENTORING_REQUEST)
+                .title("Có người muốn thuê bạn làm Mentor")
+                .content(studentName + " đã gửi yêu cầu “" + title + "”. Bạn có thể nhận hoặc bỏ qua yêu cầu này.")
+                .targetType(targetType)
+                .targetId(targetId)
+                .senderCount(1)
+                .isRead(false)
+                .build());
+        pushRealtimeNotification(mentor, notification);
+    }
+
+    @Override
+    @Transactional
+    public void sendMentoringRequestResponseNotification(
+            User mentor,
+            User student,
+            com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest request,
+            boolean accepted
+    ) {
+        if (mentor == null || student == null || request == null || request.getId() == null) {
+            return;
+        }
+        String targetType = accepted ? "MENTORING_REQUEST_ACCEPTED" : "MENTORING_REQUEST_DECLINED";
+        String targetId = String.valueOf(request.getId());
+        if (notificationRepository.existsByRecipientIdAndTypeAndTargetTypeAndTargetId(
+                student.getId(), NotificationType.MENTORING_REQUEST, targetType, targetId)) {
+            return;
+        }
+        String mentorName = resolveFullName(mentor);
+        Notification notification = notificationRepository.save(Notification.builder()
+                .recipient(student)
+                .sender(mentor)
+                .type(NotificationType.MENTORING_REQUEST)
+                .title(accepted ? "Mentor đã nhận yêu cầu" : "Mentor đã bỏ qua yêu cầu")
+                .content(mentorName + (accepted
+                        ? " đã đồng ý trao đổi về yêu cầu Mentoring của bạn."
+                        : " đã từ chối yêu cầu Mentoring của bạn."))
+                .targetType(targetType)
+                .targetId(targetId)
+                .senderCount(1)
+                .isRead(false)
+                .build());
+        pushRealtimeNotification(student, notification);
     }
 
     @Override
@@ -767,14 +838,33 @@ public class NotificationServiceImpl implements NotificationService {
         }
         try {
             NotificationResponse responseDto = notificationMapper.toDto(notification);
-            messagingTemplate.convertAndSendToUser(
-                    recipient.getId().toString(),
-                    WebSocketDestinations.USER_QUEUE_NOTIFICATIONS,
-                    responseDto
-            );
-            log.info("Đã đẩy thông báo WebSocket thành công tới User ID: {}", recipient.getId());
+            Runnable push = () -> {
+                try {
+                    messagingTemplate.convertAndSendToUser(
+                            recipient.getId().toString(),
+                            WebSocketDestinations.USER_QUEUE_NOTIFICATIONS,
+                            responseDto
+                    );
+                    log.info("Đã đẩy thông báo WebSocket thành công tới User ID: {}", recipient.getId());
+                } catch (Exception e) {
+                    log.error("Lỗi khi đẩy thông báo WebSocket tới User ID {}: {}", recipient.getId(), e.getMessage());
+                }
+            };
+
+            // Chỉ báo client sau khi dữ liệu nghiệp vụ đã commit để lần refetch đầu tiên luôn thấy trạng thái mới.
+            if (TransactionSynchronizationManager.isActualTransactionActive()
+                    && TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        push.run();
+                    }
+                });
+            } else {
+                push.run();
+            }
         } catch (Exception e) {
-            log.error("Lỗi khi đẩy thông báo WebSocket tới User ID {}: {}", recipient.getId(), e.getMessage());
+            log.error("Lỗi khi chuẩn bị thông báo WebSocket tới User ID {}: {}", recipient.getId(), e.getMessage());
         }
     }
 

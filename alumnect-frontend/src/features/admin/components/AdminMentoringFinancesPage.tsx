@@ -237,13 +237,13 @@ export function AdminMentoringFinancesPage() {
                 className="bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
               >
                 <option value="ALL">Tất cả trạng thái</option>
-                <option value="PREPARATION">Chuẩn bị (PREPARATION)</option>
-                <option value="IN_PROGRESS">Đang làm (IN_PROGRESS)</option>
-                <option value="SUBMITTED">Chờ duyệt (SUBMITTED)</option>
-                <option value="COMPLETED">Hoàn thành (COMPLETED)</option>
-                <option value="DISPUTED">Tranh chấp (DISPUTED)</option>
-                <option value="RESOLVED">Đã phán quyết (RESOLVED)</option>
-                <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                <option value="PREPARATION">Chuẩn bị </option>
+                <option value="IN_PROGRESS">Đang làm </option>
+                <option value="SUBMITTED">Chờ duyệt </option>
+                <option value="COMPLETED">Hoàn thành</option>
+                <option value="DISPUTED">Tranh chấp</option>
+                <option value="RESOLVED">Đã phán quyết</option>
+                <option value="CANCELLED">Đã hủy </option>
               </select>
             </div>
 
