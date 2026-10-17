@@ -58,8 +58,8 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
   ]
 
   return (
-    <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-      <div className="mb-6 flex gap-1.5 rounded-2xl bg-plum-900/[0.04] p-1.5 dark:bg-[#3a3b3c]">
+    <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
+      <div className="mb-6 flex gap-1.5 rounded-2xl bg-surface-2 p-1.5">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -67,13 +67,13 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
             className={cn(
               'inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
               tab === t.key
-                ? 'bg-white text-plum-900 shadow-sm dark:bg-[#242526] dark:text-white'
-                : 'text-plum-500 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
+                ? 'bg-surface text-text shadow-sm'
+                : 'text-text-subtle hover:text-text',
             )}
           >
             <t.icon size={16} /> {t.label}
             {!!t.badge && (
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand-500 px-1 text-[11px] font-black text-white">
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary-solid px-1 text-xs font-black text-on-primary">
                 {t.badge}
               </span>
             )}
@@ -188,15 +188,15 @@ function SettingRow({
       className={cn(
         'flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4.5 transition-all',
         danger
-          ? 'border-rose-500/30 bg-rose-500/5 dark:border-rose-900/40 dark:bg-rose-950/20'
-          : 'border-plum-900/[0.07] bg-white dark:border-[#393a3b] dark:bg-[#242526]',
+          ? 'border-danger bg-danger-soft'
+          : 'border-border bg-surface',
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className={cn('text-sm font-extrabold', danger ? 'text-rose-600 dark:text-rose-400' : 'text-plum-900 dark:text-white')}>
+        <p className={cn('text-sm font-extrabold', danger ? 'text-danger' : 'text-text')}>
           {title}
         </p>
-        <p className="mt-1 text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">{description}</p>
+        <p className="mt-1 text-xs leading-relaxed text-text-subtle">{description}</p>
       </div>
       <div className="shrink-0">{children}</div>
     </div>

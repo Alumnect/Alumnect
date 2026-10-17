@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui'
 import {
@@ -10,11 +10,13 @@ import {
   useSendMessage,
   useMarkAsRead,
   chatApi,
+  isMentoringConversation,
   type Conversation,
   type SendMessagePayload,
 } from '@/features/message'
 
 export function MessagesPage() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const targetUserIdParam = searchParams.get('userId')
   const targetUserId = targetUserIdParam ? Number(targetUserIdParam) : null
@@ -22,10 +24,27 @@ export function MessagesPage() {
 
   const [currentTab, setCurrentTab] = useState<'primary' | 'requests'>('primary')
 
-  const { data: conversations = [], isLoading: isLoadingConversations } = useConversations(currentTab)
-  const { data: requestsData = [] } = useConversations('requests')
+  const { data: fetchedConversations = [], isLoading: isLoadingConversations } = useConversations(
+    currentTab,
+    'GENERAL'
+  )
+  const { data: fetchedRequestsData = [] } = useConversations('requests', 'GENERAL')
+
+  // Defense in depth: the general inbox must never expose Mentoring conversations,
+  // even while an older backend response is still cached in the browser.
+  const conversations = useMemo(
+    () => fetchedConversations.filter((conversation) => !isMentoringConversation(conversation)),
+    [fetchedConversations]
+  )
+  const requestsData = useMemo(
+    () => fetchedRequestsData.filter((conversation) => !isMentoringConversation(conversation)),
+    [fetchedRequestsData]
+  )
 
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
+  const activeGeneralConversation = isMentoringConversation(activeConversation)
+    ? null
+    : activeConversation
 
   const sendMessageMutation = useSendMessage()
   const markAsReadMutation = useMarkAsRead()
@@ -95,16 +114,19 @@ export function MessagesPage() {
   useEffect(() => {
     if (activeConversation?.id) {
       const updated = conversations.find((c) => c.id === activeConversation.id)
+      if (!updated) {
+        setActiveConversation(null)
+        return
+      }
       if (
-        updated &&
-        (updated.title !== activeConversation.title ||
+        updated.title !== activeConversation.title ||
           updated.avatarUrl !== activeConversation.avatarUrl ||
           updated.recipientName !== activeConversation.recipientName ||
           updated.recipientAvatar !== activeConversation.recipientAvatar ||
           updated.memberCount !== activeConversation.memberCount ||
           updated.unreadCount !== activeConversation.unreadCount ||
           updated.lastMessage !== activeConversation.lastMessage ||
-          updated.isAccepted !== activeConversation.isAccepted)
+          updated.isAccepted !== activeConversation.isAccepted
       ) {
         setActiveConversation(updated)
       }
@@ -131,22 +153,26 @@ export function MessagesPage() {
 
   // Tự động đánh dấu đã đọc khi mở một cuộc trò chuyện hoặc khi có tin nhắn mới đến trong hội thoại đang xem
   useEffect(() => {
-    if (activeConversation && activeConversation.id && activeConversation.unreadCount > 0) {
-      markAsReadMutation.mutate(activeConversation.id)
+    if (
+      activeGeneralConversation &&
+      activeGeneralConversation.id &&
+      activeGeneralConversation.unreadCount > 0
+    ) {
+      markAsReadMutation.mutate(activeGeneralConversation.id)
     }
-  }, [activeConversation?.id, activeConversation?.unreadCount])
+  }, [activeGeneralConversation?.id, activeGeneralConversation?.unreadCount])
 
   // Nếu activeConversation là Draft (id = null), đưa lên đầu danh sách hiển thị để người dùng nhận biết
   const displayedConversations = useMemo(() => {
     if (
-      activeConversation &&
-      !activeConversation.id &&
-      !conversations.some((c) => c.recipientId === activeConversation.recipientId)
+      activeGeneralConversation &&
+      !activeGeneralConversation.id &&
+      !conversations.some((c) => c.recipientId === activeGeneralConversation.recipientId)
     ) {
-      return [activeConversation, ...conversations]
+      return [activeGeneralConversation, ...conversations]
     }
     return conversations
-  }, [conversations, activeConversation])
+  }, [conversations, activeGeneralConversation])
 
   // Lấy lịch sử tin nhắn của cuộc trò chuyện hiện tại (cuộn vô hạn)
   const {
@@ -155,7 +181,7 @@ export function MessagesPage() {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useMessages(activeConversation?.id ?? null)
+  } = useMessages(activeGeneralConversation?.id ?? null)
 
   // Ghép các trang và đảo thứ tự để hiển thị: từ cũ nhất (trên) tới mới nhất (dưới)
   const messages = useMemo(() => {
@@ -166,6 +192,11 @@ export function MessagesPage() {
 
   // Đánh dấu đã đọc khi người dùng bấm chọn cuộc trò chuyện
   const handleSelectConversation = (conv: Conversation) => {
+    // Chat for Task của Mentoring Request mở ở màn hình riêng (hiển thị Request, Deal Ticket, thanh toán, Task)
+    if (isMentoringConversation(conv) && conv.id) {
+      navigate(`/app/mentoring/chats/${conv.id}`)
+      return
+    }
     setActiveConversation(conv)
     if (conv.id && conv.unreadCount > 0) {
       markAsReadMutation.mutate(conv.id)
@@ -181,25 +212,25 @@ export function MessagesPage() {
     content: string,
     attachments: NonNullable<SendMessagePayload['attachments']>
   ) => {
-    if (!activeConversation) return
+    if (!activeGeneralConversation) return
 
     const res = await sendMessageMutation.mutateAsync({
-      conversationId: activeConversation.id ?? undefined,
-      recipientId: activeConversation.recipientId ?? undefined,
+      conversationId: activeGeneralConversation.id ?? undefined,
+      recipientId: activeGeneralConversation.recipientId ?? undefined,
       content,
       attachments,
     })
 
     // Nếu gửi tin nhắn trong một cuộc hội thoại đang ở Tin nhắn chờ (isAccepted = false):
     // Tự động chuyển sang Hộp thư chính (primary) và cập nhật isAccepted = true
-    if (activeConversation.isAccepted === false) {
+    if (activeGeneralConversation.isAccepted === false) {
       setActiveConversation((prev) => (prev ? { ...prev, isAccepted: true } : null))
       setCurrentTab('primary')
     }
 
     // Nếu vừa gửi tin nhắn đầu tiên cho một cuộc hội thoại Draft (id = null):
     // Cập nhật activeConversation với ID hội thoại thực tế được backend khởi tạo
-    if (!activeConversation.id && res.data.conversationId) {
+    if (!activeGeneralConversation.id && res.data.conversationId) {
       setActiveConversation((prev) =>
         prev ? { ...prev, id: res.data.conversationId, isAccepted: true } : null
       )
@@ -213,14 +244,14 @@ export function MessagesPage() {
     <div className="mx-auto h-full max-w-6xl">
       <Card
         hover={false}
-        className="grid h-full grid-cols-1 overflow-hidden border border-plum-900/10 bg-white/70 shadow-sm backdrop-blur-xl md:grid-cols-[340px_1fr]"
+        className="grid h-full grid-cols-1 overflow-hidden border border-border bg-surface/70 shadow-sm backdrop-blur-xl md:grid-cols-[340px_1fr]"
       >
         {/* Danh sách các cuộc trò chuyện bên trái */}
-        <div className={`${activeConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>
+        <div className={`${activeGeneralConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>
           <ConversationList
             conversations={displayedConversations}
-            activeId={activeConversation?.id}
-            activeRecipientId={!activeConversation?.id ? activeConversation?.recipientId : undefined}
+            activeId={activeGeneralConversation?.id}
+            activeRecipientId={!activeGeneralConversation?.id ? activeGeneralConversation?.recipientId : undefined}
             onSelect={handleSelectConversation}
             isLoading={isLoadingConversations}
             currentTab={currentTab}
@@ -239,10 +270,10 @@ export function MessagesPage() {
         </div>
 
         {/* Khung chat chính bên phải */}
-        <div className={`${!activeConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>
+        <div className={`${!activeGeneralConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>
           <ChatWindow
-            conversation={activeConversation}
-            messages={messages}
+            conversation={activeGeneralConversation}
+            messages={activeGeneralConversation ? messages : []}
             isLoading={isLoadingDirect}
             isLoadingMessages={isLoadingMessages}
             hasNextPage={hasNextPage}

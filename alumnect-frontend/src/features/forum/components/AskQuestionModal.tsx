@@ -29,7 +29,7 @@ import { TopicIcon } from '../lib/topicIcons'
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
 const FIELD_CLASS =
-  'w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+  'w-full rounded-xl border border-border bg-surface-2 px-4 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-primary/30'
 
 export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => void; editQuestion?: QuestionDetail }) {
   const isEdit = !!editQuestion
@@ -149,15 +149,15 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
       >
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-plum-900">{isEdit ? 'Chỉnh sửa câu hỏi' : 'Đặt câu hỏi'}</h2>
-          <button onClick={onClose} aria-label="Đóng" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900">
+          <h2 className="text-xl font-extrabold text-text">{isEdit ? 'Chỉnh sửa câu hỏi' : 'Đặt câu hỏi'}</h2>
+          <button onClick={onClose} aria-label="Đóng" className="grid h-9 w-9 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-text">
             <X size={18} />
           </button>
         </div>
 
         {/* Lỗi nghiệp vụ từ backend (VD 403 không phải tác giả) */}
         {error && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
             <AlertTriangle size={16} className="shrink-0" /> {(error as Error).message}
           </div>
         )}
@@ -165,26 +165,26 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Tiêu đề */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-plum-900">Tiêu đề</label>
+            <label className="mb-1 block text-sm font-semibold text-text">Tiêu đề</label>
             <input {...register('title')} placeholder="Câu hỏi của bạn là gì?" className={`h-11 ${FIELD_CLASS}`} />
-            {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title.message}</p>}
+            {errors.title && <p className="mt-1 text-xs text-danger">{errors.title.message}</p>}
           </div>
 
           {/* Thể loại + Ngành (đều tùy chọn) — 2 field tách biệt, mỗi câu hỏi gắn tối đa 1 mỗi loại */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-semibold text-plum-900">Thể loại (tùy chọn)</label>
+              <label className="mb-1 block text-sm font-semibold text-text">Thể loại (tùy chọn)</label>
               <EntitySelectField
                 items={topics}
                 value={topicId ?? null}
                 onChange={(id) => setValue('topicId', id, { shouldDirty: true })}
                 placeholder="— Chưa chọn thể loại —"
-                buttonIcon={<LayoutGrid size={16} className="shrink-0 text-plum-400" />}
-                itemIcon={(name) => <TopicIcon name={name} size={16} className="shrink-0 text-brand-600" />}
+                buttonIcon={<LayoutGrid size={16} className="shrink-0 text-text-subtle" />}
+                itemIcon={(name) => <TopicIcon name={name} size={16} className="shrink-0 text-primary-solid" />}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold text-plum-900">Ngành (tùy chọn)</label>
+              <label className="mb-1 block text-sm font-semibold text-text">Ngành (tùy chọn)</label>
               <EntitySelectField
                 items={majors}
                 value={majorId ?? null}
@@ -192,33 +192,33 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
                 placeholder="— Chưa chọn ngành —"
                 searchPlaceholder="Tìm ngành…"
                 searchable
-                buttonIcon={<GraduationCap size={16} className="shrink-0 text-plum-400" />}
-                itemIcon={() => <GraduationCap size={16} className="shrink-0 text-brand-600" />}
+                buttonIcon={<GraduationCap size={16} className="shrink-0 text-text-subtle" />}
+                itemIcon={() => <GraduationCap size={16} className="shrink-0 text-primary-solid" />}
               />
             </div>
           </div>
 
           {/* Nội dung */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-plum-900">Nội dung</label>
+            <label className="mb-1 block text-sm font-semibold text-text">Nội dung</label>
             <textarea {...register('body')} rows={6} placeholder="Mô tả chi tiết câu hỏi của bạn…" className={`py-3 ${FIELD_CLASS}`} />
-            {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body.message}</p>}
+            {errors.body && <p className="mt-1 text-xs text-danger">{errors.body.message}</p>}
           </div>
 
           {/* Ảnh đính kèm (tùy chọn) */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-plum-900">
-              Ảnh đính kèm (tùy chọn) <span className="font-normal text-plum-400">· {imageUrls.length}/{MAX_QUESTION_IMAGES}</span>
+            <label className="mb-1 block text-sm font-semibold text-text">
+              Ảnh đính kèm (tùy chọn) <span className="font-normal text-text-subtle">· {imageUrls.length}/{MAX_QUESTION_IMAGES}</span>
             </label>
             <div className="flex flex-wrap gap-2.5">
               {imageUrls.map((url, idx) => (
-                <div key={url + idx} className="group relative h-20 w-20 overflow-hidden rounded-xl ring-1 ring-inset ring-plum-900/10">
+                <div key={url + idx} className="group relative h-20 w-20 overflow-hidden rounded-xl ring-1 ring-inset ring-border">
                   <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeImage(idx)}
                     aria-label="Xóa ảnh"
-                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-plum-900/60 text-white shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:bg-rose-500"
+                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-plum-900/60 text-white shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:opacity-90"
                   >
                     <X size={13} />
                   </button>
@@ -227,24 +227,24 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
 
               {/* Ô upload — hiển thị spinner khi đang tải, ẩn khi đủ số ảnh tối đa */}
               {uploadingCount > 0 && (
-                <div className="grid h-20 w-20 place-items-center rounded-xl bg-plum-900/[0.04] ring-1 ring-plum-900/10">
-                  <Loader2 size={20} className="animate-spin text-plum-400" />
+                <div className="grid h-20 w-20 place-items-center rounded-xl bg-surface-2 ring-1 ring-border">
+                  <Loader2 size={20} className="animate-spin text-text-subtle" />
                 </div>
               )}
               {canAddMore && (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="grid h-20 w-20 place-items-center gap-1 rounded-xl border border-dashed border-plum-900/20 text-plum-400 transition-colors hover:border-brand-400/60 hover:text-brand-600"
+                  className="grid h-20 w-20 place-items-center gap-1 rounded-xl border border-dashed border-border-strong text-text-subtle transition-colors hover:border-brand-400/60 hover:text-primary-solid"
                 >
                   <ImagePlus size={20} />
-                  <span className="text-[10px] font-semibold">Thêm ảnh</span>
+                  <span className="text-xs font-semibold">Thêm ảnh</span>
                 </button>
               )}
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} />
             {(uploadError || errors.imageUrls) && (
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600">
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-danger-soft px-2.5 py-1.5 text-xs font-medium text-danger">
                 <AlertTriangle size={13} className="shrink-0" /> {uploadError ?? (errors.imageUrls?.message as string)}
               </p>
             )}

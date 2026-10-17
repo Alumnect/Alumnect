@@ -28,6 +28,10 @@ public interface MentorReviewRepository extends JpaRepository<MentorReview, Long
      */
     List<MentorReview> findTop5ByMentorProfileIdOrderByCreatedAtDesc(Long mentorProfileId);
 
+    Optional<MentorReview> findByTaskId(Long taskId);
+
+    boolean existsByTaskId(Long taskId);
+
     /**
      * Phân trang danh sách đánh giá của Mentor.
      */

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Search, X, ArrowUpDown, Trophy, ArrowLeft } from 'lucide-react'
+import { Search, X, ArrowUpDown } from 'lucide-react'
 import { SelectDropdown } from '@/components/ui'
+import { MentorPageHeader } from './MentorPageHeader'
 
 interface MentorSearchHeaderProps {
   keyword: string
@@ -51,44 +51,24 @@ export function MentorSearchHeader({
 
   return (
     <div className="space-y-3">
-      {/* Tiêu đề & Điều hướng nhanh tối giản trên 1 hàng */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="font-heading text-xl sm:text-2xl font-black tracking-tight text-plum-900 dark:text-[#e4e6eb]">
-            Khám Phá Mentor
-          </h1>
-          {!isLoading && totalElements !== undefined && (
-            <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-600 ring-1 ring-inset ring-brand-200 dark:bg-brand-900/30 dark:text-brand-300 dark:ring-brand-800">
-              {totalElements} mentor
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 text-xs font-bold">
-          <Link
-            to="/app/mentoring/ranking"
-            className="inline-flex items-center gap-1.5 text-gold-600 transition-colors hover:text-gold-700 dark:text-gold-400"
-          >
-            <Trophy className="h-3.5 w-3.5" />
-            <span>Bảng xếp hạng</span>
-          </Link>
-          <span className="text-plum-200 dark:text-plum-700">|</span>
-          <Link
-            to="/app/mentoring"
-            className="inline-flex items-center gap-1 text-plum-500 hover:text-brand-600 dark:text-[#b0b3b8]"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Không gian Cố vấn</span>
-          </Link>
-        </div>
-      </div>
+      <MentorPageHeader
+        icon={<Search className="h-4 w-4" />}
+        eyebrow="Mạng lưới cố vấn"
+        title="Khám phá Mentor"
+        description="Tìm Mentor phù hợp theo chuyên môn, kinh nghiệm và hình thức hỗ trợ."
+        actions={!isLoading ? (
+          <span className="rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary-solid ring-1 ring-inset ring-brand-200 dark:ring-brand-300/20">
+            {totalElements} Mentor
+          </span>
+        ) : undefined}
+      />
 
       {/* Thanh Search Bar & Sort Dropdown gọn gàng */}
       <div className="relative z-20 flex flex-col gap-2.5 sm:flex-row sm:items-center">
         {/* Input ô tìm kiếm */}
         <div className="relative flex-1">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-plum-400 dark:text-[#8f9399]">
-            <Search className="h-4 w-4 text-brand-500" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-text-subtle">
+            <Search className="h-4 w-4 text-primary-solid" aria-hidden="true" />
           </div>
 
           <input
@@ -97,7 +77,7 @@ export function MentorSearchHeader({
             onChange={(e) => setLocalKeyword(e.target.value)}
             placeholder="Tìm theo tên mentor, từ khóa, lĩnh vực, chuyên ngành..."
             aria-label="Tìm kiếm Mentor"
-            className="h-10 w-full rounded-xl border border-plum-900/10 bg-white pl-10 pr-9 text-xs sm:text-sm font-medium text-plum-900 shadow-2xs transition-all placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400/20 dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#e4e6eb] dark:placeholder:text-[#8f9399]"
+            className="h-11 w-full rounded-xl border border-border bg-surface pl-10 pr-9 text-sm font-medium text-text shadow-2xs transition-all placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-brand-400/20"
           />
 
           {localKeyword && (
@@ -105,7 +85,7 @@ export function MentorSearchHeader({
               type="button"
               onClick={handleClear}
               aria-label="Xóa từ khóa tìm kiếm"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-plum-400 transition-colors hover:text-plum-700 dark:hover:text-white"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-subtle transition-colors hover:text-text-muted"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -128,7 +108,7 @@ export function MentorSearchHeader({
             ]}
             placeholder="Sắp xếp kết quả"
             align="right"
-            icon={<ArrowUpDown className="h-3.5 w-3.5 text-brand-500" />}
+            icon={<ArrowUpDown className="h-3.5 w-3.5 text-primary-solid" />}
           />
         </div>
       </div>

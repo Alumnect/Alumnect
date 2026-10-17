@@ -41,7 +41,7 @@ import { EntitySelectField, type SelectOption } from '@/features/forum/component
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
 const FIELD_CLASS =
-  'w-full rounded-xl border border-plum-900/10 bg-white text-sm text-plum-900 placeholder:text-plum-400/80 transition-all focus:border-brand-400/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 hover:border-plum-900/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5] dark:placeholder-[#b0b3b8] dark:hover:border-[#4e4f50] dark:focus:bg-[#3a3b3c]'
+  'w-full rounded-xl border border-border bg-surface text-sm text-text placeholder:text-plum-400/80 transition-all focus:border-brand-400/70 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border-strong [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:placeholder-[#b0b3b8]'
 
 /** Hàm hỗ trợ hiển thị mức lương thành chữ dễ đọc (triệu/tỷ). */
 function formatVndText(num: number): string {
@@ -227,12 +227,12 @@ export function ContributeSalaryModal({
       isOpen
       onClose={isPending ? () => {} : onClose}
       title={isEdit ? 'Chỉnh sửa dữ liệu lương' : 'Đóng góp dữ liệu lương'}
-      icon={<Coins size={18} className="text-brand-600" />}
+      icon={<Coins size={18} className="text-primary-solid" />}
       maxWidthClassName="max-w-lg"
       footer={footer}
     >
       {error && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-rose-500/10 px-3.5 py-2.5 text-sm font-medium text-rose-600">
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">
           <AlertTriangle size={16} className="shrink-0" /> {(error as Error).message}
         </div>
       )}
@@ -240,8 +240,8 @@ export function ContributeSalaryModal({
       <form id="contribute-salary-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* 1. Ngành nghề */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">
-            Ngành nghề <span className="text-rose-500">*</span>
+          <label className="mb-1.5 block text-xs font-semibold text-text-muted">
+            Ngành nghề <span className="text-danger">*</span>
           </label>
           <EntitySelectField
             items={industries}
@@ -252,16 +252,16 @@ export function ContributeSalaryModal({
             searchable
             itemIcon={(name) => {
               const Icon = getIndustryIcon(name)
-              return <Icon size={15} className="text-brand-600 shrink-0" />
+              return <Icon size={15} className="text-primary-solid shrink-0" />
             }}
-            buttonIcon={<LayoutGrid size={15} className="text-brand-600" />}
+            buttonIcon={<LayoutGrid size={15} className="text-primary-solid" />}
           />
         </div>
 
         {/* 2. Chức danh công việc */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">
-            Chức danh công việc <span className="text-rose-500">*</span>
+          <label className="mb-1.5 block text-xs font-semibold text-text-muted">
+            Chức danh công việc <span className="text-danger">*</span>
           </label>
           <EntitySelectField<string>
             items={industryId ? jobTitleOptions : []}
@@ -271,13 +271,13 @@ export function ContributeSalaryModal({
             placeholder={industryId ? 'Chọn chức danh công việc' : 'Vui lòng chọn ngành nghề trước…'}
             searchPlaceholder="Tìm kiếm chức danh…"
             searchable
-            buttonIcon={<Briefcase size={15} className="text-brand-600" />}
+            buttonIcon={<Briefcase size={15} className="text-primary-solid" />}
           />
 
           {/* Ô nhập tay khi chọn "Chức danh khác" */}
           {industryId && selectedTitleId === OTHER_JOB_TITLE_ID && (
             <div className="mt-2 relative">
-              <Briefcase size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+              <Briefcase size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
                 value={customJobTitle}
                 onChange={(e) => handleCustomJobTitleChange(e.target.value)}
@@ -288,19 +288,19 @@ export function ContributeSalaryModal({
             </div>
           )}
 
-          {errors.jobTitle && <p className="mt-1.5 text-xs text-rose-500">{errors.jobTitle.message}</p>}
+          {errors.jobTitle && <p className="mt-1.5 text-xs text-danger">{errors.jobTitle.message}</p>}
         </div>
 
         {/* 3. Mức lương / tháng */}
         <div>
-          <label className="mb-1.5 flex items-center justify-between text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">
+          <label className="mb-1.5 flex items-center justify-between text-xs font-semibold text-text-muted">
             <span>
-              Mức lương / tháng <span className="text-rose-500">*</span>
+              Mức lương / tháng <span className="text-danger">*</span>
             </span>
-            <span className="text-[11px] font-normal text-plum-400 dark:text-[#b0b3b8]">VNĐ / tháng</span>
+            <span className="text-xs font-normal text-text-subtle">VNĐ / tháng</span>
           </label>
           <div className="relative">
-            <Coins size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+            <Coins size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
               type="number"
               step="1"
@@ -310,7 +310,7 @@ export function ContributeSalaryModal({
               placeholder="VD: 25000000"
               className={`${FIELD_CLASS} h-11 pl-10 pr-20`}
             />
-            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-plum-400">
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-text-subtle">
               ₫ / tháng
             </span>
           </div>
@@ -318,36 +318,36 @@ export function ContributeSalaryModal({
           {/* Badge xem trước mức lương quy đổi ra chữ */}
           {typeof grossAmount === 'number' && !Number.isNaN(grossAmount) && grossAmount > 0 && (
             <div className="mt-2 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50/90 border border-brand-200/50 rounded-xl px-3 py-1.5 w-fit">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-primary-solid bg-brand-50/90 border border-brand-200/50 rounded-xl px-3 py-1.5 w-fit">
                 <span>≈ {grossAmount.toLocaleString('vi-VN')} ₫</span>
                 <span className="text-brand-300 font-normal">·</span>
-                <span className="text-brand-600 font-medium">~{formatVndText(grossAmount)} / tháng</span>
+                <span className="text-primary-solid font-medium">~{formatVndText(grossAmount)} / tháng</span>
               </div>
               {grossAmount > 150_000_000 && (
-                <p className="flex items-center gap-1 text-[11px] text-amber-700 font-medium">
-                  <Info size={13} className="shrink-0 text-amber-600" />
+                <p className="flex items-center gap-1 text-xs text-warning font-medium">
+                  <Info size={13} className="shrink-0 text-warning" />
                   Mẹo: Vui lòng nhập mức thu nhập 1 tháng, không phải tổng cả năm.
                 </p>
               )}
             </div>
           )}
 
-          {errors.grossAmount && <p className="mt-1.5 text-xs text-rose-500">{errors.grossAmount.message}</p>}
+          {errors.grossAmount && <p className="mt-1.5 text-xs text-danger">{errors.grossAmount.message}</p>}
         </div>
 
         {/* 4. Phân cách nhẹ cho nhóm thông tin bổ sung */}
-        <div className="pt-2 border-t border-plum-900/5">
+        <div className="pt-2 border-t border-border">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-plum-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
               Thông tin bổ sung
             </span>
-            <span className="text-[11px] text-plum-400 font-normal">Tùy chọn</span>
+            <span className="text-xs text-text-subtle font-normal">Tùy chọn</span>
           </div>
 
           <div className="space-y-3.5">
             {/* Địa điểm làm việc */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">Địa điểm làm việc</label>
+              <label className="mb-1.5 block text-xs font-semibold text-text-muted">Địa điểm làm việc</label>
               <EntitySelectField<string>
                 items={cityOptions}
                 value={selectedCityId}
@@ -356,31 +356,31 @@ export function ContributeSalaryModal({
                 searchPlaceholder="Tìm kiếm tỉnh, thành phố…"
                 searchable
                 direction="top"
-                buttonIcon={<MapPin size={15} className="text-brand-600" />}
+                buttonIcon={<MapPin size={15} className="text-primary-solid" />}
               />
 
-              {errors.region && <p className="mt-1.5 text-xs text-rose-500">{errors.region.message}</p>}
+              {errors.region && <p className="mt-1.5 text-xs text-danger">{errors.region.message}</p>}
             </div>
 
             {/* 2 Cột: Công ty & Kinh nghiệm */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">Công ty</label>
+                <label className="mb-1.5 block text-xs font-semibold text-text-muted">Công ty</label>
                 <div className="relative">
-                  <Building2 size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400 dark:text-[#b0b3b8]" />
+                  <Building2 size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
                   <input
                     {...register('company')}
                     placeholder="VD: FPT Software..."
                     className={`${FIELD_CLASS} h-11 pl-10 pr-3`}
                   />
                 </div>
-                {errors.company && <p className="mt-1.5 text-xs text-rose-500">{errors.company.message}</p>}
+                {errors.company && <p className="mt-1.5 text-xs text-danger">{errors.company.message}</p>}
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-plum-700 dark:text-[#f0f2f5]">Kinh nghiệm</label>
+                <label className="mb-1.5 block text-xs font-semibold text-text-muted">Kinh nghiệm</label>
                 <div className="relative">
-                  <Clock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400 dark:text-[#b0b3b8]" />
+                  <Clock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
                   <input
                     type="number"
                     step="1"
@@ -390,11 +390,11 @@ export function ContributeSalaryModal({
                     placeholder="VD: 2"
                     className={`${FIELD_CLASS} h-11 pl-10 pr-12`}
                   />
-                  <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-plum-400">
+                  <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-text-subtle">
                     năm
                   </span>
                 </div>
-                {errors.yearsExperience && <p className="mt-1.5 text-xs text-rose-500">{errors.yearsExperience.message}</p>}
+                {errors.yearsExperience && <p className="mt-1.5 text-xs text-danger">{errors.yearsExperience.message}</p>}
               </div>
             </div>
           </div>

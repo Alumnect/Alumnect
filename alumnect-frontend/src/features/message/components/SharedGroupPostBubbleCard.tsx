@@ -58,7 +58,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
 
   if (loading) {
     return (
-      <div className="mt-2 w-64 sm:w-72 animate-pulse rounded-xl border border-plum-900/10 bg-plum-900/5 p-3 dark:border-white/10 dark:bg-white/5">
+      <div className="mt-2 w-64 sm:w-72 animate-pulse rounded-xl border border-border bg-surface-2 p-3">
         <div className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-full bg-slate-300 dark:bg-slate-700" />
           <div className="space-y-1.5 flex-1">
@@ -80,28 +80,28 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
       <div
         className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-2xl border text-left p-4 transition-all shadow-xs ${
           isMe
-            ? 'border-brand-400/40 bg-white/95 text-plum-900 dark:border-brand-500/30 dark:bg-[#242526] dark:text-[#f0f2f5]'
-            : 'border-plum-900/10 bg-slate-50/90 text-plum-900 dark:border-[#3a3b3c] dark:bg-[#242526] dark:text-[#f0f2f5]'
+            ? 'border-brand-400/40 bg-surface text-text dark:border-brand-500/30'
+            : 'border-border bg-slate-50/90 text-text dark:bg-surface'
         }`}
       >
         <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warning-soft text-warning">
             <Lock size={20} />
           </div>
           <div className="min-w-0 flex-1">
-            <h5 className="text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">
+            <h5 className="text-xs font-bold text-text">
               Bài viết trong nhóm riêng tư
             </h5>
-            <p className="mt-1 text-[11px] leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+            <p className="mt-1 text-xs leading-relaxed text-text-subtle">
               Nội dung này thuộc nhóm riêng tư. Chỉ thành viên được duyệt mới có quyền xem bài viết.
             </p>
           </div>
         </div>
 
-        <div className="mt-3 border-t border-plum-900/5 pt-2.5 dark:border-white/10">
+        <div className="mt-3 border-t border-border pt-2.5">
           <Link
             to={`/app/groups/${groupId}`}
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-50 py-1.5 text-xs font-semibold text-brand-600 transition-colors hover:bg-brand-100 dark:bg-brand-950/60 dark:text-brand-300 dark:hover:bg-brand-900/50"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary-soft py-1.5 text-xs font-semibold text-primary-solid transition-colors hover:bg-primary-soft"
           >
             <Users size={13} />
             <span>Đi tới hội nhóm</span>
@@ -118,28 +118,28 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
       <div
         className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-2xl border text-left p-4 transition-all shadow-xs ${
           isMe
-            ? 'border-brand-400/40 bg-white/95 text-plum-900 dark:border-brand-500/30 dark:bg-[#242526] dark:text-[#f0f2f5]'
-            : 'border-plum-900/10 bg-slate-50/90 text-plum-900 dark:border-[#3a3b3c] dark:bg-[#242526] dark:text-[#f0f2f5]'
+            ? 'border-brand-400/40 bg-surface text-text dark:border-brand-500/30'
+            : 'border-border bg-slate-50/90 text-text dark:bg-surface'
         }`}
       >
         <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-500/10 text-slate-500 dark:bg-slate-500/20 dark:text-slate-400">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-500/10 text-text-subtle dark:bg-slate-500/20">
             <AlertCircle size={20} />
           </div>
           <div className="min-w-0 flex-1">
-            <h5 className="text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">
+            <h5 className="text-xs font-bold text-text">
               Nội dung không khả dụng
             </h5>
-            <p className="mt-1 text-[11px] leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+            <p className="mt-1 text-xs leading-relaxed text-text-subtle">
               Bài viết này có thể đã bị xóa hoặc không còn khả dụng trên hệ thống.
             </p>
           </div>
         </div>
 
-        <div className="mt-3 border-t border-plum-900/5 pt-2.5 dark:border-white/10">
+        <div className="mt-3 border-t border-border pt-2.5">
           <Link
             to={`/app/groups/${groupId}`}
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-100 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-white/10 dark:text-[#f0f2f5] dark:hover:bg-white/15"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface-3"
           >
             <Users size={13} />
             <span>Xem hội nhóm</span>
@@ -155,7 +155,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
       <div className="mt-1">
         <Link
           to={`/app/groups/${groupId}/posts/${postId}`}
-          className="inline-flex items-center gap-1.5 text-xs underline font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+          className="inline-flex items-center gap-1.5 text-xs underline font-medium text-primary-solid hover:text-primary-solid"
         >
           <span>Xem bài viết nhóm #{postId}</span>
           <ExternalLink size={12} />
@@ -171,13 +171,13 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
       to={`/app/groups/${groupId}/posts/${postId}`}
       className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition-all hover:shadow-md ${
         isMe
-          ? 'border-brand-400/40 bg-white/95 text-plum-900 shadow-2xs hover:bg-white dark:border-brand-500/30 dark:bg-[#242526] dark:text-[#f0f2f5]'
-          : 'border-plum-900/10 bg-slate-50/80 text-plum-900 hover:bg-white dark:border-[#3a3b3c] dark:bg-[#242526] dark:text-[#f0f2f5]'
+          ? 'border-brand-400/40 bg-surface text-text shadow-2xs hover:bg-surface dark:border-brand-500/30'
+          : 'border-border bg-surface-2 text-text hover:bg-surface'
       }`}
     >
       {/* Thumbnail nếu bài viết có hình */}
       {thumbnail && (
-        <div className="relative aspect-video w-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+        <div className="relative aspect-video w-full overflow-hidden bg-surface-3">
           <img
             src={thumbnail}
             alt="Group post preview"
@@ -186,7 +186,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
           />
           {post.topic && (
             <div className="absolute top-2 right-2">
-              <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+              <span className="inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur-xs">
                 <Tag size={10} />
                 {post.topic}
               </span>
@@ -201,16 +201,16 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
           <div className="flex items-center gap-2 min-w-0">
             <Avatar src={post.author.avatarUrl || undefined} name={post.author.fullName} size={24} />
             <div className="min-w-0">
-              <p className="truncate text-xs font-semibold leading-tight text-plum-900 dark:text-[#f0f2f5]">
+              <p className="truncate text-xs font-semibold leading-tight text-text">
                 {post.author.fullName}
               </p>
-              <p className="truncate text-[10px] text-plum-500 dark:text-[#b0b3b8]">
+              <p className="truncate text-xs text-text-subtle">
                 {post.author.headline || 'Bài viết hội nhóm'}
               </p>
             </div>
           </div>
           {!thumbnail && post.topic && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-950/60 dark:text-brand-300">
+            <span className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-semibold text-primary-solid">
               #{post.topic}
             </span>
           )}
@@ -218,13 +218,13 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
 
         {/* Nội dung tóm tắt bài viết */}
         {post.content && (
-          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-plum-700 dark:text-[#e4e6eb]">
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-text-muted">
             {post.content}
           </p>
         )}
 
         {/* Footer xem bài viết */}
-        <div className="mt-2.5 flex items-center justify-between border-t border-plum-900/5 pt-2 text-[11px] font-medium text-brand-600 dark:border-white/10 dark:text-brand-400">
+        <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs font-medium text-primary-solid">
           <span className="inline-flex items-center gap-1">
             <FileText size={12} />
             Xem bài viết nhóm

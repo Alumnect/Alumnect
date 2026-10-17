@@ -66,9 +66,9 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
           actions={<Button variant="gold" size="sm">{s.primaryAction}</Button>}
         />
         <Reveal>
-          <Card hover={false} className="overflow-hidden border border-plum-900/10">
-            <div className="flex items-center justify-between border-b border-plum-900/8 p-5">
-              <h2 className="flex items-center gap-2 font-bold text-plum-900">
+          <Card hover={false} className="overflow-hidden border border-border">
+            <div className="flex items-center justify-between border-b border-border p-5">
+              <h2 className="flex items-center gap-2 font-bold text-text">
                 <Icon size={18} className="text-gold-600" /> Hàng đợi
               </h2>
               <Badge tone="neutral">{s.rows.length} mục</Badge>
@@ -105,8 +105,8 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
               className={cn(
                 'rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                 statusFilter === tab.key
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-xs'
-                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                  ? 'bg-primary-solid text-on-primary shadow-xs'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               )}
             >
               {tab.label}
@@ -114,8 +114,8 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
           ))}
         </div>
 
-        <div className="text-xs text-plum-500 font-semibold">
-          Tổng số: <strong className="text-plum-900 font-bold">{totalElements}</strong> hồ sơ
+        <div className="text-xs text-text-subtle font-semibold">
+          Tổng số: <strong className="text-text font-bold">{totalElements}</strong> hồ sơ
         </div>
       </div>
 
@@ -153,18 +153,18 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
             <Card hover={false} className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-sm text-left">
                 <thead>
-                  <tr className="border-b border-plum-900/8 text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
+                  <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2">
                     <th className="px-5 py-3.5 font-bold">Cựu sinh viên</th>
                     <th className="px-5 py-3.5 font-bold">Chuyên ngành</th>
                     <th className="px-5 py-3.5 font-bold text-center">Minh chứng</th>
                     <th className="px-5 py-3.5 font-bold text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-plum-900/5">
+                <tbody className="divide-y divide-border">
                   {requests.map((r) => (
                     <tr
                       key={r.id}
-                      className="transition-colors hover:bg-plum-900/[0.015] group"
+                      className="transition-colors hover:bg-surface-2 group"
                     >
                       {/* Cột 1: Cựu sinh viên (Avatar + Tên + Email) */}
                       <td className="px-5 py-4">
@@ -179,17 +179,17 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                             className="border border-gold-300 shrink-0"
                           />
                           <div className="min-w-0">
-                            <p className="font-bold text-plum-950 group-hover/user:text-gold-600 transition-colors truncate">
+                            <p className="font-bold text-text group-hover/user:text-gold-600 transition-colors truncate">
                               {r.fullName}
                             </p>
-                            <p className="text-xs text-plum-400 truncate">{r.email || 'Chưa có email'}</p>
+                            <p className="text-xs text-text-subtle truncate">{r.email || 'Chưa có email'}</p>
                           </div>
                         </div>
                       </td>
 
                       {/* Cột 2: Chuyên ngành */}
                       <td className="px-5 py-4">
-                        <span className="text-xs font-semibold text-plum-900">
+                        <span className="text-xs font-semibold text-text">
                           {r.majorName ? `${r.majorCode} - ${r.majorName}` : r.majorCode}
                         </span>
                       </td>
@@ -199,7 +199,7 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                         <button
                           type="button"
                           onClick={() => setDetailReq(r)}
-                          className="group/btn inline-flex items-center gap-1.5 rounded-xl border border-plum-900/10 bg-cream-50 px-3 py-1.5 text-xs font-bold text-plum-700 transition-all hover:border-gold-400 hover:bg-gold-50 hover:text-gold-700 shadow-2xs cursor-pointer"
+                          className="group/btn inline-flex items-center gap-1.5 rounded-xl border border-border bg-bg px-3 py-1.5 text-xs font-bold text-text-muted transition-all hover:border-gold-400 hover:bg-gold-50 hover:text-gold-700 shadow-2xs cursor-pointer"
                           title="Xem chi tiết tài liệu minh chứng"
                         >
                           <FileImage size={14} className="text-gold-600 transition-transform group-hover/btn:scale-110" />
@@ -214,7 +214,7 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                             variant="secondary"
                             size="sm"
                             onClick={() => setDetailReq(r)}
-                            className="h-8 px-3 text-xs font-bold bg-plum-900/[0.04] text-plum-700 hover:bg-plum-900/[0.08] cursor-pointer flex items-center gap-1"
+                            className="h-8 px-3 text-xs font-bold bg-surface-2 text-text-muted hover:bg-surface-3 cursor-pointer flex items-center gap-1"
                             title="Xem chi tiết hồ sơ xác minh"
                           >
                             <Eye size={13} />
@@ -226,7 +226,7 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                               <Button
                                 size="sm"
                                 onClick={() => setDetailReq(r)}
-                                className="h-8 px-3 text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs cursor-pointer"
+                                className="h-8 px-3 text-xs font-bold bg-success text-text-inverse hover:opacity-90 shadow-xs cursor-pointer"
                                 title="Mở hồ sơ để phê duyệt"
                               >
                                 Duyệt
@@ -235,7 +235,7 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                                 size="sm"
                                 variant="secondary"
                                 onClick={() => setDetailReq(r)}
-                                className="h-8 px-3 text-xs font-bold border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"
+                                className="h-8 px-3 text-xs font-bold border border-danger-border bg-danger-soft text-danger hover:bg-danger-border/60 cursor-pointer"
                                 title="Mở hồ sơ để từ chối"
                               >
                                 Từ chối

@@ -116,16 +116,16 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center justify-between rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm font-semibold cursor-pointer transition-all shadow-sm',
+          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-3 px-4 text-sm font-semibold cursor-pointer transition-all shadow-sm',
           isOpen
-            ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/10'
+            ? 'border-primary ring-2 ring-primary/20 bg-brand-50/10'
             : 'hover:border-brand-500/50 hover:bg-plum-50/30',
-          disabled && 'opacity-60 cursor-not-allowed bg-plum-50/50',
-          value ? 'text-plum-900 font-bold' : 'text-plum-400 font-normal'
+          disabled && 'opacity-60 cursor-not-allowed bg-surface-2',
+          value ? 'text-text font-bold' : 'text-text-subtle font-normal'
         )}
       >
         <span className="flex items-center gap-2 truncate">
-          <MapPin size={16} className={value ? 'text-brand-500' : 'text-plum-400'} />
+          <MapPin size={16} className={value ? 'text-primary-solid' : 'text-text-subtle'} />
           <span>{value || '-- Chọn Tỉnh / Thành phố hiện tại --'}</span>
         </span>
         <div className="flex items-center gap-1">
@@ -133,7 +133,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.05] transition-colors"
+              className="p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
             >
               <X size={14} />
             </button>
@@ -141,8 +141,8 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
           <ChevronDown
             size={16}
             className={cn(
-              'text-plum-400 transition-transform duration-200 shrink-0',
-              isOpen && 'rotate-180 text-brand-500'
+              'text-text-subtle transition-transform duration-200 shrink-0',
+              isOpen && 'rotate-180 text-primary-solid'
             )}
           />
         </div>
@@ -150,18 +150,18 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
 
       {/* Floating Searchable Dropdown */}
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 z-50 w-full bg-white rounded-3xl border border-plum-900/10 shadow-2xl overflow-hidden animate-scale-up">
+        <div className="absolute bottom-full left-0 mb-2 z-50 w-full bg-surface rounded-3xl border border-border shadow-2xl overflow-hidden animate-scale-up">
           {/* Search Bar */}
-          <div className="p-3 border-b border-plum-900/5 bg-plum-50/30">
+          <div className="p-3 border-b border-border bg-plum-50/30">
             <div className="relative flex items-center">
-              <Search size={15} className="absolute left-3 text-plum-400" />
+              <Search size={15} className="absolute left-3 text-text-subtle" />
               <input
                 type="text"
                 autoFocus
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm tên Tỉnh / Thành phố..."
-                className="w-full rounded-xl border border-plum-900/10 bg-white py-2 pl-9 pr-3 text-xs text-plum-900 placeholder-plum-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-3 text-xs text-text placeholder-plum-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
@@ -179,17 +179,17 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all',
                       isSelected
-                        ? 'bg-brand-50 text-brand-700 font-extrabold'
-                        : 'text-plum-800 hover:bg-plum-50/70 hover:text-plum-900'
+                        ? 'bg-primary-soft text-primary-solid font-extrabold'
+                        : 'text-text hover:bg-plum-50/70 hover:text-text'
                     )}
                   >
                     <span>{prov}</span>
-                    {isSelected && <Check size={14} className="text-brand-600 shrink-0" />}
+                    {isSelected && <Check size={14} className="text-primary-solid shrink-0" />}
                   </button>
                 )
               })
             ) : (
-              <div className="p-4 text-center text-xs text-plum-400 font-medium">
+              <div className="p-4 text-center text-xs text-text-subtle font-medium">
                 Không tìm thấy Tỉnh / Thành phố phù hợp
               </div>
             )}

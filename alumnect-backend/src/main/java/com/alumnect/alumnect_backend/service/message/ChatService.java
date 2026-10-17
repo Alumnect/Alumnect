@@ -20,7 +20,7 @@ public interface ChatService {
     /**
      * Lấy danh sách cuộc hội thoại của người dùng theo tab (primary: Hộp thư chính, requests: Tin nhắn chờ).
      */
-    List<ConversationResponse> getConversations(String currentUserEmail, String tab);
+    List<ConversationResponse> getConversations(String currentUserEmail, String tab, String scope);
 
     /**
      * Lấy hoặc chuẩn bị cuộc trò chuyện trực tiếp 1-1 giữa người dùng hiện tại và đối phương (cơ chế Draft).

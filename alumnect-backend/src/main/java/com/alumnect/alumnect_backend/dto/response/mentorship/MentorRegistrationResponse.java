@@ -119,6 +119,7 @@ public class MentorRegistrationResponse {
     @AllArgsConstructor
     public static class PayoutAccountInfo {
         private String bankName;
+        private String bankBin;
         private String bankAccountNumber;
         private String bankAccountHolder;
     }

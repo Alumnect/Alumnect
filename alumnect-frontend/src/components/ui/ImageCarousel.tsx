@@ -314,8 +314,8 @@ export function ImageCarousel({
                 className={cn(
                   'h-1.5 rounded-full transition-all duration-200',
                   idx === current
-                    ? 'w-5 bg-white shadow-sm'
-                    : 'w-1.5 bg-white/60 hover:bg-white/85',
+                    ? 'w-5 bg-surface shadow-sm'
+                    : 'w-1.5 bg-surface/60 hover:bg-white/85',
                 )}
               />
             ))}

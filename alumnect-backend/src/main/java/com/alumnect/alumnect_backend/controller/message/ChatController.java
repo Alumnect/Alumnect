@@ -48,9 +48,10 @@ public class ChatController {
     @Operation(summary = "Lấy danh sách các cuộc trò chuyện của người dùng")
     @GetMapping("/conversations")
     public ResponseEntity<ApiResponse<List<ConversationResponse>>> getConversations(
-            @RequestParam(required = false, defaultValue = "primary") String tab) {
+            @RequestParam(required = false, defaultValue = "primary") String tab,
+            @RequestParam(required = false, defaultValue = "GENERAL") String scope) {
         String email = getAuthenticatedUserEmail();
-        List<ConversationResponse> conversations = chatService.getConversations(email, tab);
+        List<ConversationResponse> conversations = chatService.getConversations(email, tab, scope);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách hội thoại thành công.", conversations));
     }
 

@@ -35,15 +35,15 @@ export function SubscriptionPage() {
                   Phổ biến nhất
                 </Badge>
               )}
-              <h2 className="text-lg font-bold text-plum-900">{p.name}</h2>
+              <h2 className="text-lg font-bold text-text">{p.name}</h2>
               <p className="mt-3">
-                <span className="text-3xl font-extrabold text-plum-900">{p.price === 0 ? 'Miễn phí' : vnd(p.price)}</span>
-                {p.price !== 0 && <span className="text-sm text-plum-400"> {p.period}</span>}
+                <span className="text-3xl font-extrabold text-text">{p.price === 0 ? 'Miễn phí' : vnd(p.price)}</span>
+                {p.price !== 0 && <span className="text-sm text-text-subtle"> {p.period}</span>}
               </p>
               <ul className="mt-6 space-y-3">
                 {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-plum-600">
-                    <Check size={16} className="mt-0.5 shrink-0 text-brand-600" /> {f}
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-text-muted">
+                    <Check size={16} className="mt-0.5 shrink-0 text-primary-solid" /> {f}
                   </li>
                 ))}
               </ul>
@@ -62,13 +62,13 @@ export function SubscriptionPage() {
 
       <Reveal>
         <Card hover={false} className="mt-8 overflow-hidden">
-          <div className="border-b border-plum-900/8 p-5">
-            <h2 className="font-bold text-plum-900">Lịch sử giao dịch</h2>
+          <div className="border-b border-border p-5">
+            <h2 className="font-bold text-text">Lịch sử giao dịch</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-plum-900/8 text-left text-xs uppercase tracking-wide text-plum-400">
+                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-text-subtle">
                   <th className="px-5 py-3 font-semibold">Mã GD</th>
                   <th className="px-5 py-3 font-semibold">Gói dịch vụ</th>
                   <th className="px-5 py-3 font-semibold">Số tiền</th>
@@ -78,11 +78,11 @@ export function SubscriptionPage() {
               </thead>
               <tbody>
                 {HISTORY.map((h) => (
-                  <tr key={h.id} className="border-b border-plum-900/5 last:border-0">
-                    <td className="px-5 py-3.5 font-mono text-plum-600">{h.id}</td>
-                    <td className="px-5 py-3.5 text-plum-700">{h.pkg}</td>
-                    <td className="px-5 py-3.5 font-semibold text-plum-900">{h.amount === 0 ? '—' : vnd(h.amount)}</td>
-                    <td className="px-5 py-3.5 text-plum-500">{h.date}</td>
+                  <tr key={h.id} className="border-b border-border last:border-0">
+                    <td className="px-5 py-3.5 font-mono text-text-muted">{h.id}</td>
+                    <td className="px-5 py-3.5 text-text-muted">{h.pkg}</td>
+                    <td className="px-5 py-3.5 font-semibold text-text">{h.amount === 0 ? '—' : vnd(h.amount)}</td>
+                    <td className="px-5 py-3.5 text-text-subtle">{h.date}</td>
                     <td className="px-5 py-3.5">
                       <Badge tone={h.status === 'Thành công' ? 'success' : 'neutral'} className="px-2.5 py-0.5">{h.status}</Badge>
                     </td>

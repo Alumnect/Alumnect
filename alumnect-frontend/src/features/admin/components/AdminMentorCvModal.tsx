@@ -222,26 +222,26 @@ export function AdminMentorCvModal({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-[1200px] w-[92vw] h-[90vh] max-h-[90vh] bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col overflow-hidden text-slate-800"
+        className="relative z-10 w-full max-w-[1200px] w-[92vw] h-[90vh] max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <header className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between gap-4 shrink-0">
+        <header className="px-6 py-4 bg-surface border-b border-border flex items-center justify-between gap-4 shrink-0">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
-              <h2 className="text-[20px] font-semibold text-slate-900 leading-tight">
+              <h2 className="text-[20px] font-semibold text-text leading-tight">
                 CV Cố vấn
               </h2>
               {cvData?.mentorStatus && (
                 <Badge
                   tone={cvData.mentorStatus === 'ACTIVE' ? 'success' : 'gold'}
-                  className="text-[11px] font-medium px-2 py-0.5"
+                  className="text-xs font-medium px-2 py-0.5"
                 >
                   {cvData.mentorStatus === 'ACTIVE' ? 'Đang hoạt động' : cvData.mentorStatus}
                 </Badge>
               )}
             </div>
-            <p className="text-[13px] text-slate-500 mt-0.5 truncate">
+            <p className="text-[13px] text-text-subtle mt-0.5 truncate">
               {cvData?.mentorName || mentorNameFallback || 'Cố vấn'}
               {cvData?.mentorEmail && ` · ${cvData.mentorEmail}`}
               {cvData?.currentPosition && ` · ${cvData.currentPosition}`}
@@ -251,7 +251,7 @@ export function AdminMentorCvModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-text-subtle hover:text-text-muted hover:bg-surface-2 rounded-lg transition-colors cursor-pointer"
             aria-label="Đóng"
           >
             <X size={18} />
@@ -259,20 +259,20 @@ export function AdminMentorCvModal({
         </header>
 
         {/* Action Toolbar */}
-        <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-6 py-2.5 bg-surface-2 border-b border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
           {/* File format indicator & name */}
           <div className="flex items-center gap-2 min-w-0">
             {cvFormat === 'PDF' ? (
-              <FileText className="h-4 w-4 text-red-500 shrink-0" />
+              <FileText className="h-4 w-4 text-danger shrink-0" />
             ) : cvFormat === 'DOCX' ? (
-              <FileCode className="h-4 w-4 text-blue-500 shrink-0" />
+              <FileCode className="h-4 w-4 text-info shrink-0" />
             ) : (
               <FileSpreadsheet className="h-4 w-4 text-indigo-500 shrink-0" />
             )}
-            <span className="font-medium text-xs text-slate-800 truncate max-w-[240px] sm:max-w-md">
+            <span className="font-medium text-xs text-text truncate max-w-[240px] sm:max-w-md">
               {fileName}
             </span>
-            <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold uppercase bg-slate-200 text-slate-700">
+            <span className="px-1.5 py-0.2 rounded text-xs font-semibold uppercase bg-surface-3 text-text-muted">
               {cvFormat}
             </span>
           </div>
@@ -280,18 +280,18 @@ export function AdminMentorCvModal({
           {/* Controls: Zoom, View Switcher & Actions */}
           <div className="flex items-center gap-2">
             {/* Zoom Controls */}
-            <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
+            <div className="flex items-center bg-surface rounded-lg border border-border p-0.5 shadow-2xs">
               <button
                 type="button"
                 onClick={handleZoomOut}
                 disabled={zoom <= 60 || !cvUrl}
-                className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded disabled:opacity-30 transition-colors"
+                className="p-1 text-text-subtle hover:text-text hover:bg-surface-2 rounded disabled:opacity-30 transition-colors"
                 title="Thu nhỏ"
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </button>
 
-              <span className="px-2 text-[11px] font-mono font-medium text-slate-700 min-w-[42px] text-center select-none">
+              <span className="px-2 text-xs font-mono font-medium text-text-muted min-w-[42px] text-center select-none">
                 {zoom}%
               </span>
 
@@ -299,7 +299,7 @@ export function AdminMentorCvModal({
                 type="button"
                 onClick={handleZoomIn}
                 disabled={zoom >= 200 || !cvUrl}
-                className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded disabled:opacity-30 transition-colors"
+                className="p-1 text-text-subtle hover:text-text hover:bg-surface-2 rounded disabled:opacity-30 transition-colors"
                 title="Phóng to"
               >
                 <ZoomIn className="h-3.5 w-3.5" />
@@ -309,7 +309,7 @@ export function AdminMentorCvModal({
                 type="button"
                 onClick={handleResetZoom}
                 disabled={zoom === 100 || !cvUrl}
-                className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded disabled:opacity-30 transition-colors border-l border-slate-100"
+                className="p-1 text-text-subtle hover:text-text-muted hover:bg-surface-2 rounded disabled:opacity-30 transition-colors border-l border-border"
                 title="Đặt lại 100%"
               >
                 <RotateCcw className="h-3 w-3" />
@@ -318,7 +318,7 @@ export function AdminMentorCvModal({
 
             {/* Switcher cho DOCX */}
             {(cvFormat === 'DOCX' || cvFormat === 'DOC') && (
-              <div className="hidden sm:flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-0.5 text-[11px]">
+              <div className="hidden sm:flex items-center gap-1 bg-surface rounded-lg border border-border p-0.5 text-xs">
                 {cvFormat === 'DOCX' && (
                   <button
                     type="button"
@@ -326,7 +326,7 @@ export function AdminMentorCvModal({
                     className={`px-2 py-1 rounded transition-colors cursor-pointer ${
                       docViewerMode === 'CLIENT_DOCX'
                         ? 'bg-slate-900 text-white font-medium'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        : 'text-text-muted hover:bg-surface-2'
                     }`}
                   >
                     Xem trực tiếp
@@ -338,7 +338,7 @@ export function AdminMentorCvModal({
                   className={`px-2 py-1 rounded transition-colors cursor-pointer ${
                     docViewerMode === 'OFFICE_ONLINE'
                       ? 'bg-slate-900 text-white font-medium'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      : 'text-text-muted hover:bg-surface-2'
                   }`}
                 >
                   Office Online
@@ -349,7 +349,7 @@ export function AdminMentorCvModal({
                   className={`px-2 py-1 rounded transition-colors cursor-pointer ${
                     docViewerMode === 'GOOGLE_DOCS'
                       ? 'bg-slate-900 text-white font-medium'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      : 'text-text-muted hover:bg-surface-2'
                   }`}
                 >
                   Google Viewer
@@ -363,7 +363,7 @@ export function AdminMentorCvModal({
                 href={cvUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors inline-flex items-center"
+                className="p-1.5 text-text-muted hover:text-text hover:bg-surface-2 rounded-lg border border-border transition-colors inline-flex items-center"
                 title="Mở tab mới"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -375,7 +375,7 @@ export function AdminMentorCvModal({
               type="button"
               disabled={!cvUrl || isLoading || isDownloading}
               onClick={handleDownloadCv}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#F27024] hover:bg-[#d95d16] rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-on-primary bg-primary-solid hover:bg-[#d95d16] rounded-lg transition-colors cursor-pointer disabled:opacity-50"
             >
               {isDownloading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -388,12 +388,12 @@ export function AdminMentorCvModal({
         </div>
 
         {/* Document Viewer Canvas */}
-        <div className="flex-1 overflow-auto bg-slate-100 p-4 relative flex flex-col items-center">
+        <div className="flex-1 overflow-auto bg-surface-2 p-4 relative flex flex-col items-center">
           {/* Loading State */}
           {isLoading && (
-            <div className="w-full max-w-md my-auto p-6 bg-white rounded-xl border border-slate-200 shadow-sm text-center space-y-3">
-              <Loader2 className="h-7 w-7 text-[#F27024] animate-spin mx-auto" />
-              <h4 className="font-semibold text-sm text-slate-800">
+            <div className="w-full max-w-md my-auto p-6 bg-surface rounded-xl border border-border shadow-sm text-center space-y-3">
+              <Loader2 className="h-7 w-7 text-primary-solid animate-spin mx-auto" />
+              <h4 className="font-semibold text-sm text-text">
                 Đang tải hồ sơ CV Cố vấn...
               </h4>
               <div className="space-y-1.5 pt-1">
@@ -405,12 +405,12 @@ export function AdminMentorCvModal({
 
           {/* Error State */}
           {(isError || (!isLoading && !cvUrl)) && (
-            <div className="w-full max-w-md my-auto p-6 text-center bg-white rounded-xl border border-slate-200 shadow-sm space-y-3">
-              <AlertCircle className="h-8 w-8 text-amber-500 mx-auto" />
-              <h4 className="font-semibold text-sm text-slate-900">
+            <div className="w-full max-w-md my-auto p-6 text-center bg-surface rounded-xl border border-border shadow-sm space-y-3">
+              <AlertCircle className="h-8 w-8 text-warning mx-auto" />
+              <h4 className="font-semibold text-sm text-text">
                 Không thể tải tệp CV của Cố vấn
               </h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-text-subtle leading-relaxed">
                 {(error as any)?.message ||
                   'Cố vấn này hiện chưa cập nhật hoặc chưa có tệp CV trong hệ thống.'}
               </p>
@@ -418,14 +418,14 @@ export function AdminMentorCvModal({
                 <button
                   type="button"
                   onClick={() => refetch()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-muted bg-surface border border-border-strong hover:bg-surface-2 rounded-lg cursor-pointer"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Thử lại
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg cursor-pointer"
+                  className="px-3 py-1.5 text-xs font-medium text-text-muted bg-surface border border-border-strong hover:bg-surface-2 rounded-lg cursor-pointer"
                 >
                   Đóng
                 </button>
@@ -448,7 +448,7 @@ export function AdminMentorCvModal({
                   <iframe
                     src={`${cvUrl}#toolbar=1&navpanes=1&scrollbar=1&zoom=${zoom}`}
                     title="Xem trước CV PDF"
-                    className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                    className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-border-strong bg-surface"
                     onLoad={() => setPreviewLoading(false)}
                     onError={() => {
                       setPreviewLoading(false)
@@ -465,8 +465,8 @@ export function AdminMentorCvModal({
                     <div className="w-full h-full overflow-auto flex flex-col items-center">
                       {previewLoading && (
                         <div className="my-12 flex flex-col items-center gap-2">
-                          <Loader2 className="h-7 w-7 text-[#F27024] animate-spin" />
-                          <span className="text-xs font-medium text-slate-600">
+                          <Loader2 className="h-7 w-7 text-primary-solid animate-spin" />
+                          <span className="text-xs font-medium text-text-muted">
                             Đang xử lý nội dung Word (.DOCX)...
                           </span>
                         </div>
@@ -491,7 +491,7 @@ export function AdminMentorCvModal({
                       <iframe
                         src={officeOnlineUrl}
                         title="Office Online Viewer DOCX"
-                        className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                        className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-border-strong bg-surface"
                       />
                     </div>
                   ) : (
@@ -505,7 +505,7 @@ export function AdminMentorCvModal({
                       <iframe
                         src={googleDocsUrl}
                         title="Google Docs Viewer DOCX"
-                        className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                        className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-border-strong bg-surface"
                       />
                     </div>
                   )}
@@ -524,16 +524,16 @@ export function AdminMentorCvModal({
                   <iframe
                     src={docViewerMode === 'GOOGLE_DOCS' ? googleDocsUrl : officeOnlineUrl}
                     title="Xem trước tài liệu Word DOC"
-                    className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-slate-300 bg-white"
+                    className="w-full h-full min-h-[560px] rounded-lg shadow-sm border border-border-strong bg-surface"
                   />
                 </div>
               )}
 
               {/* Preview error fallback notice */}
               {previewError && (
-                <div className="absolute inset-x-4 top-4 mx-auto max-w-lg p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm text-xs text-amber-900 flex items-center justify-between gap-3">
+                <div className="absolute inset-x-4 top-4 mx-auto max-w-lg p-3 bg-warning-soft border border-warning-border rounded-lg shadow-sm text-xs text-warning flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <AlertCircle className="h-4 w-4 text-warning shrink-0" />
                     <span>{previewError} Hãy nhấn nút "Tải CV" để xem tệp gốc.</span>
                   </div>
                   <button
@@ -542,7 +542,7 @@ export function AdminMentorCvModal({
                       setPreviewError(null)
                       if (cvFormat === 'DOCX') renderDocxFile()
                     }}
-                    className="px-2 py-1 rounded bg-white border border-amber-300 text-xs font-medium cursor-pointer"
+                    className="px-2 py-1 rounded bg-surface border border-warning-border text-xs font-medium cursor-pointer"
                   >
                     Thử lại
                   </button>
@@ -553,14 +553,14 @@ export function AdminMentorCvModal({
         </div>
 
         {/* Footer */}
-        <footer className="px-6 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 shrink-0">
+        <footer className="px-6 py-3 bg-surface border-t border-border flex items-center justify-between text-xs text-text-subtle shrink-0">
           <div>
             Bản xem trước tệp tài liệu phục vụ quản trị và kiểm duyệt hồ sơ.
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm font-medium text-text-muted bg-surface border border-border-strong hover:bg-surface-2 rounded-lg transition-colors cursor-pointer"
           >
             Đóng
           </button>

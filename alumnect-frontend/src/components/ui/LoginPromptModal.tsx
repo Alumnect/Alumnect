@@ -40,29 +40,29 @@ export function LoginPromptModal() {
             <button
               onClick={close}
               aria-label="Đóng"
-              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-plum-400 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
+              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
             >
               <X size={18} />
             </button>
 
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500/15 to-violet-500/15 text-brand-600">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500/15 to-violet-500/15 text-primary-solid">
               <LogIn size={26} />
             </span>
-            <h3 className="mt-4 text-lg font-extrabold text-plum-900">Đăng nhập để tiếp tục</h3>
-            <p className="mt-1.5 text-sm text-plum-500">{message}</p>
+            <h3 className="mt-4 text-lg font-extrabold text-text">Đăng nhập để tiếp tục</h3>
+            <p className="mt-1.5 text-sm text-text-subtle">{message}</p>
 
             <div className="mt-5 flex flex-col gap-2.5">
               <Link
                 to="/login"
                 onClick={close}
-                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary-solid text-sm font-semibold text-on-primary shadow-sm transition-transform hover:bg-primary-hover hover:-translate-y-0.5"
               >
                 Đăng nhập <ArrowRight size={16} />
               </Link>
               <Link
                 to="/register"
                 onClick={close}
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-plum-900/10 text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-900/[0.04]"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2"
               >
                 Tạo tài khoản mới
               </Link>

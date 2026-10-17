@@ -9,6 +9,11 @@ export type NotificationType =
   | 'REPORT_RESOLVED'
   | 'WELCOME'
   | 'SYSTEM_BROADCAST'
+  | 'MENTORING_REQUEST'
+  | 'MENTORING_TASK'
+  | 'MENTORING_WORK_LOG'
+  | 'MENTORING_GROUP'
+  | 'MENTORING_ACCOUNT'
 
 /**
  * Interface cấu trúc dữ liệu của một thông báo trả về từ máy chủ.

@@ -40,7 +40,7 @@ export function DeletePostModal({
         onClick={handleDelete}
         disabled={deletePost.isPending}
         leftIcon={deletePost.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
-        className="bg-rose-500 hover:bg-rose-600 border-rose-500 text-white"
+        className="bg-danger hover:opacity-90 border-danger text-text-inverse"
       >
         {deletePost.isPending ? 'Đang xóa...' : 'Xóa'}
       </Button>
@@ -52,10 +52,10 @@ export function DeletePostModal({
       isOpen={open}
       onClose={deletePost.isPending ? () => {} : onClose}
       title="Xóa bài viết"
-      icon={<AlertTriangle size={18} className="text-rose-500" />}
+      icon={<AlertTriangle size={18} className="text-danger" />}
       footer={footer}
     >
-      <p className="text-sm text-plum-600 dark:text-[#e4e6eb]">
+      <p className="text-sm text-text-muted">
         Bạn có chắc muốn xóa bài viết này không?
       </p>
     </Modal>

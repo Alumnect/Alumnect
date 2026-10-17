@@ -88,4 +88,16 @@ public class AdminMentorCvResponse {
 
     /** Thời điểm cập nhật hồ sơ gần nhất */
     private Instant updatedAt;
+
+    /** Điểm uy tín tổng hợp của Mentor */
+    private Integer reputationScore;
+
+    /** Tổng số nhiệm vụ / phiên cố vấn đã hoàn thành */
+    private Integer completedTasks;
+
+    /** Điểm đánh giá trung bình */
+    private java.math.BigDecimal rating;
+
+    /** Tổng số lượt đánh giá */
+    private Integer reviewCount;
 }

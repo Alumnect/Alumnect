@@ -28,6 +28,11 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
      */
     Optional<PaymentTransaction> findByOrderCode(Long orderCode);
 
+    boolean existsByOrderCode(Long orderCode);
+
+    @Query("SELECT t.orderCode FROM PaymentTransaction t WHERE t.paymentStatus = com.alumnect.alumnect_backend.common.enums.PaymentStatus.PENDING")
+    List<Long> findPendingOrderCodes();
+
     /**
      * Tìm giao dịch theo mã đơn hàng và ID người dùng (kiểm tra phân quyền sở hữu).
      *
@@ -72,4 +77,11 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
      * @return Danh sách các giao dịch
      */
     List<PaymentTransaction> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    /** Các khoản thanh toán gói đã hoàn tất là doanh thu thuộc sở hữu nền tảng. */
+    @Query("SELECT pt FROM PaymentTransaction pt " +
+           "JOIN FETCH pt.user u LEFT JOIN FETCH u.profile " +
+           "WHERE pt.paymentStatus = com.alumnect.alumnect_backend.common.enums.PaymentStatus.PAID " +
+           "AND pt.paidAt IS NOT NULL ORDER BY pt.paidAt DESC")
+    List<PaymentTransaction> findAllPaidRevenueTransactions();
 }

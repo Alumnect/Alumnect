@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST Controller tiếp nhận đánh giá từ học viên và cập nhật điểm uy tín Mentor.
  */
 @RestController
-@RequestMapping("/api/v1/mentoring/reviews")
+@RequestMapping("/mentoring/reviews")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Mentor Reviews & Reputation", description = "API đánh giá và tính điểm uy tín Mentor (UC97)")
@@ -42,5 +44,13 @@ public class MentorReviewController {
 
         MentorReviewResponse response = mentorReputationService.submitMentorReview(userDetails.getUsername(), request);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "Đánh giá của Học viên cho một Task đã hoàn thành (null nếu chưa đánh giá)")
+    @GetMapping("/tasks/{taskId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<MentorReviewResponse>> getTaskReview(
+            @AuthenticationPrincipal UserDetails userDetails, @PathVariable Long taskId) {
+        return ResponseEntity.ok(ApiResponse.success(mentorReputationService.getTaskReview(userDetails.getUsername(), taskId)));
     }
 }

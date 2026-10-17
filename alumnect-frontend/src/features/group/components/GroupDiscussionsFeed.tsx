@@ -49,13 +49,13 @@ export function GroupDiscussionsFeed({
   return (
     <div className="space-y-5">
       {sharedPostId && sharedPostError && (
-        <Card hover={false} className="rounded-2xl border border-plum-900/10 p-4 text-sm text-plum-500 dark:border-[#393a3b] dark:bg-[#242526]">
+        <Card hover={false} className="rounded-2xl border border-border p-4 text-sm text-text-subtle dark:bg-surface">
           Bài viết được chia sẻ không còn khả dụng.
         </Card>
       )}
       {sharedPost && !sharedPostError && (
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-600">Bài viết được chia sẻ</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-primary-solid">Bài viết được chia sẻ</p>
           <GroupPostCard post={sharedPost} groupId={groupId} isActiveMember={isActiveMember} isGroupActive={isGroupActive} topics={topics} />
         </div>
       )}
@@ -67,13 +67,13 @@ export function GroupDiscussionsFeed({
           topics={topics}
         />
       ) : !isGroupActive ? null : (
-        <Card hover={false} className="rounded-3xl border border-brand-500/20 bg-gradient-to-r from-brand-50/50 to-coral-50/30 p-5 shadow-card dark:border-brand-500/30 dark:from-brand-950/20 dark:to-[#242526]">
+        <Card hover={false} className="rounded-3xl border border-primary-soft-border bg-gradient-to-r from-brand-50/50 to-coral-50/30 p-5 shadow-card dark:from-brand-950/20 dark:to-surface">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <h4 className="text-sm font-extrabold text-plum-900 dark:text-white">
+              <h4 className="text-sm font-extrabold text-text">
                 Tham gia {groupName} để cùng thảo luận
               </h4>
-              <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">
+              <p className="text-xs text-text-subtle">
                 Trở thành thành viên để đăng bài viết, bình luận và kết nối với các cựu sinh viên khác.
               </p>
             </div>
@@ -91,7 +91,7 @@ export function GroupDiscussionsFeed({
               'rounded-full px-3.5 py-1 text-xs font-bold transition-colors',
               visibleTopic === 'all'
                 ? 'bg-plum-900 text-white dark:bg-white dark:text-plum-900'
-                : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#b0b3b8]',
+                : 'bg-surface-2 text-text-muted hover:bg-surface-3',
             )}
           >
             Tất cả
@@ -104,8 +104,8 @@ export function GroupDiscussionsFeed({
               className={cn(
                 'rounded-full px-3.5 py-1 text-xs font-bold transition-colors',
                 visibleTopic === t
-                  ? 'bg-brand-500 text-white'
-                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08] dark:bg-[#3a3b3c] dark:text-[#b0b3b8]',
+                  ? 'bg-primary-solid text-on-primary'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3',
               )}
             >
               #{t}
@@ -151,22 +151,22 @@ export function GroupDiscussionsFeed({
 
           {/* Trạng thái tinh gọn cuối dòng feed */}
           {!hasNextPage && (
-            <div className="flex items-center justify-center gap-2.5 py-6 text-xs text-plum-400 dark:text-[#b0b3b8]">
-              <span className="h-px w-12 bg-plum-900/10 dark:bg-[#393a3b]" />
+            <div className="flex items-center justify-center gap-2.5 py-6 text-xs text-text-subtle">
+              <span className="h-px w-12 bg-surface-3" />
               <span className="font-medium">Đã xem hết thảo luận gần đây</span>
-              <span className="h-px w-12 bg-plum-900/10 dark:bg-[#393a3b]" />
+              <span className="h-px w-12 bg-surface-3" />
             </div>
           )}
         </div>
       ) : (
-        <div className="rounded-3xl border border-dashed border-plum-900/10 bg-plum-900/[0.01] p-10 text-center dark:border-[#393a3b]">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-500/10 text-brand-600 dark:bg-brand-500/20">
+        <div className="rounded-3xl border border-dashed border-border bg-surface-2 p-10 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary-soft text-primary-solid">
             <MessageSquare size={22} />
           </div>
-          <h4 className="mt-3 text-sm font-bold text-plum-900 dark:text-white">
+          <h4 className="mt-3 text-sm font-bold text-text">
             {visibleTopic === 'all' ? 'Chưa có bài thảo luận nào' : `Chưa có bài thảo luận về ${visibleTopic}`}
           </h4>
-          <p className="mt-1 text-xs text-plum-500 dark:text-[#b0b3b8]">
+          <p className="mt-1 text-xs text-text-subtle">
             {isActiveMember
               ? 'Hãy là người đầu tiên đăng bài viết khởi động các cuộc thảo luận sôi nổi trong nhóm!'
               : 'Hãy tham gia nhóm để bắt đầu chia sẻ và trao đổi cùng mọi người.'}

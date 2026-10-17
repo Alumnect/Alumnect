@@ -73,4 +73,10 @@ public class ConversationResponse {
 
     /** Tên Hội nhóm cộng đồng liên kết (nếu có) */
     private String communityGroupName;
+
+    /** ID Mentoring Request của Chat for Task (chỉ có khi type = MENTORING) */
+    private Long mentoringRequestId;
+
+    /** ID Mentoring Task đã kích hoạt của Chat for Task (null trước khi thanh toán) */
+    private Long mentoringTaskId;
 }

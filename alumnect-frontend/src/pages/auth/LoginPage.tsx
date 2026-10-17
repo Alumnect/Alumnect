@@ -24,8 +24,8 @@ export function LoginPage() {
 
   return (
     <AuthScaffold>
-      <h2 className="text-3xl font-extrabold text-plum-900">Chào mừng trở lại</h2>
-      <p className="mt-2 text-sm text-plum-500">Đăng nhập để kết nối cùng mạng lưới cựu sinh viên FPTU.</p>
+      <h2 className="text-3xl font-extrabold text-text">Chào mừng trở lại</h2>
+      <p className="mt-2 text-sm text-text-subtle">Đăng nhập để kết nối cùng mạng lưới cựu sinh viên FPTU.</p>
 
       {successMessage && (
         <div className="mt-4 rounded-xl bg-teal-50 border border-teal-200/50 p-3 text-xs text-teal-700 flex items-start gap-2 animate-pop">
@@ -55,7 +55,7 @@ export function LoginPage() {
             <button
               type="button"
               onClick={() => setShow((v) => !v)}
-              className="flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-700 dark:text-[#b0b3b8] dark:hover:text-white transition-colors cursor-pointer"
+              className="flex h-6 w-6 items-center justify-center text-text-subtle hover:text-text-muted transition-colors cursor-pointer"
               aria-label="Ẩn hiện mật khẩu"
             >
               {show ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -65,11 +65,11 @@ export function LoginPage() {
         />
 
         <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2 text-plum-500">
-            <input type="checkbox" className="h-4 w-4 rounded border-plum-900/20 accent-brand-500" {...register('remember')} />
+          <label className="flex items-center gap-2 text-text-subtle">
+            <input type="checkbox" className="h-4 w-4 rounded border-border-strong accent-brand-500" {...register('remember')} />
             Ghi nhớ đăng nhập
           </label>
-          <Link to="/forgot-password" className="font-semibold text-brand-600 hover:text-brand-700">
+          <Link to="/forgot-password" className="font-semibold text-primary-solid hover:text-primary-solid">
             Quên mật khẩu?
           </Link>
         </div>
@@ -77,10 +77,10 @@ export function LoginPage() {
         {loginM.isError && (
           <div
             role="alert"
-            className="flex items-center gap-2.5 rounded-xl border border-rose-200/60 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200 animate-pop"
+            className="flex items-center gap-2.5 rounded-xl border border-danger-border bg-danger-soft p-3 text-xs font-semibold text-danger animate-pop"
           >
-            <AlertCircle size={16} className="shrink-0 text-rose-500 dark:text-rose-400" />
-            <span className="text-rose-700 dark:text-rose-200 font-medium">{(loginM.error as Error).message}</span>
+            <AlertCircle size={16} className="shrink-0 text-danger" />
+            <span className="text-danger font-medium">{(loginM.error as Error).message}</span>
           </div>
         )}
 
@@ -97,16 +97,16 @@ export function LoginPage() {
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <span className="h-px flex-1 bg-plum-900/10" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-plum-400">hoặc</span>
-        <span className="h-px flex-1 bg-plum-900/10" />
+        <span className="h-px flex-1 bg-surface-3" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">hoặc</span>
+        <span className="h-px flex-1 bg-surface-3" />
       </div>
 
       <GoogleButton label="Tiếp tục với Google FPT" />
 
-      <p className="mt-8 text-center text-sm text-plum-500">
+      <p className="mt-8 text-center text-sm text-text-subtle">
         Chưa có tài khoản AlumNect?{' '}
-        <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700">
+        <Link to="/register" className="font-bold text-primary-solid hover:text-primary-solid">
           Đăng ký ngay
         </Link>
       </p>

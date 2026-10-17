@@ -18,6 +18,7 @@ interface SelectDropdownProps<T = string | number> {
   placeholder: string
   icon?: ReactNode
   className?: string
+  buttonClassName?: string
   panelClassName?: string
   searchable?: boolean
   searchPlaceholder?: string
@@ -33,6 +34,7 @@ export function SelectDropdown<T extends string | number = string | number>({
   placeholder,
   icon,
   className,
+  buttonClassName,
   panelClassName,
   searchable = false,
   searchPlaceholder = 'Tìm kiếm…',
@@ -63,7 +65,7 @@ export function SelectDropdown<T extends string | number = string | number>({
       const rect = containerRef.current.getBoundingClientRect()
       const spaceBelow = window.innerHeight - rect.bottom
       const spaceAbove = rect.top
-      if (spaceBelow < 260 && spaceAbove > spaceBelow) {
+      if (spaceBelow < 320 && spaceAbove > spaceBelow) {
         setActualDirection('top')
       } else {
         setActualDirection('bottom')
@@ -89,7 +91,12 @@ export function SelectDropdown<T extends string | number = string | number>({
 
   const cleanQuery = query.trim().toLowerCase()
   const filteredOptions = cleanQuery
-    ? options.filter((opt) => opt.label.toLowerCase().includes(cleanQuery) || opt.sublabel?.toLowerCase().includes(cleanQuery))
+    ? options.filter(
+        (opt) =>
+          opt.label.toLowerCase().includes(cleanQuery) ||
+          opt.sublabel?.toLowerCase().includes(cleanQuery) ||
+          String(opt.value).toLowerCase().includes(cleanQuery)
+      )
     : options
 
   const handleSelect = (val: T) => {
@@ -102,7 +109,7 @@ export function SelectDropdown<T extends string | number = string | number>({
   const shouldSearch = searchable || options.length > 8
 
   return (
-    <div className={cn('relative w-full', open ? 'z-30' : 'z-auto', className)} ref={containerRef}>
+    <div className={cn('relative w-full', open ? 'z-50' : 'z-auto', className)} ref={containerRef}>
       {/* Trigger Button */}
       <button
         type="button"
@@ -111,30 +118,38 @@ export function SelectDropdown<T extends string | number = string | number>({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          'group flex h-10 w-full items-center gap-2 rounded-2xl border bg-white px-3.5 text-xs font-semibold shadow-2xs transition-all duration-200 cursor-pointer dark:bg-[#2b2c2d]',
+          'group flex h-10 w-full items-center gap-2 rounded-2xl border bg-surface px-3.5 text-xs font-semibold shadow-2xs transition-all duration-200 cursor-pointer',
           disabled && 'opacity-60 cursor-not-allowed pointer-events-none',
           open
-            ? 'border-brand-500 ring-2 ring-brand-500/20 text-brand-700 dark:border-brand-500 dark:text-brand-300'
+            ? 'border-primary ring-2 ring-primary/20 text-primary-solid'
             : selectedOption && selectedOption.value !== ''
-            ? 'border-plum-900/15 text-plum-900 hover:border-brand-400 dark:border-[#393a3b] dark:text-[#e4e6eb] dark:hover:border-brand-500/50'
-            : 'border-plum-900/10 text-plum-600 hover:border-plum-900/25 dark:border-[#393a3b] dark:text-[#b0b3b8] dark:hover:border-[#4e4f50]'
+            ? 'border-border-strong text-text hover:border-primary'
+            : 'border-border text-text-muted hover:border-border-strong',
+          buttonClassName
         )}
       >
-        {icon && (
-          <span className="shrink-0 text-plum-400 transition-colors group-hover:text-brand-500 dark:text-[#8f9399]">
-            {icon}
+        {(selectedOption?.icon ?? icon) && (
+          <span className="shrink-0 flex items-center text-text-subtle transition-colors group-hover:text-primary-solid">
+            {selectedOption?.icon ?? icon}
           </span>
         )}
 
-        <span className="flex-1 truncate text-left">
-          {selectedOption ? selectedOption.label : placeholder}
+        <span className="flex-1 truncate text-left flex items-center gap-2">
+          <span className={selectedOption && selectedOption.value !== '' ? 'text-text font-semibold truncate' : 'text-text-muted font-normal truncate'}>
+            {selectedOption && selectedOption.value !== '' ? selectedOption.label : placeholder}
+          </span>
+          {selectedOption && selectedOption.value !== '' && selectedOption.sublabel && (
+            <span className="text-text-subtle font-normal truncate hidden sm:inline text-xs">
+              {selectedOption.sublabel}
+            </span>
+          )}
         </span>
 
         <ChevronDown
           size={14}
           className={cn(
-            'shrink-0 text-plum-400 transition-transform duration-200 dark:text-[#8f9399]',
-            open && 'rotate-180 text-brand-600 dark:text-brand-400'
+            'shrink-0 text-text-subtle transition-transform duration-200',
+            open && 'rotate-180 text-primary-solid'
           )}
         />
       </button>
@@ -148,7 +163,7 @@ export function SelectDropdown<T extends string | number = string | number>({
             exit={{ opacity: 0, scale: 0.96, y: actualDirection === 'top' ? 4 : -4 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
             className={cn(
-              'absolute z-30 min-w-full w-max max-w-[calc(100vw-2rem)] sm:max-w-xs overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-2xl shadow-plum-950/20 dark:border-[#393a3b] dark:bg-[#242526] dark:shadow-black/70',
+              'absolute z-50 min-w-full w-max max-w-[calc(100vw-2rem)] sm:max-w-xs overflow-hidden rounded-2xl border border-border bg-surface p-1.5 shadow-2xl shadow-plum-950/20 dark:shadow-black/70',
               actualAlign === 'right' ? 'right-0 left-auto' : 'left-0',
               actualDirection === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5',
               panelClassName
@@ -156,21 +171,21 @@ export function SelectDropdown<T extends string | number = string | number>({
           >
             {/* Thanh tìm kiếm bên trong nếu nhiều items */}
             {shouldSearch && (
-              <div className="mb-1.5 flex items-center gap-2 rounded-xl border border-plum-900/10 bg-slate-50/80 px-2.5 py-1.5 dark:border-[#393a3b] dark:bg-[#3a3b3c]/60">
-                <Search size={13} className="shrink-0 text-plum-400 dark:text-[#8f9399]" />
+              <div className="mb-1.5 flex items-center gap-2 rounded-xl border border-border bg-surface-2 px-2.5 py-1.5">
+                <Search size={13} className="shrink-0 text-text-subtle" />
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={searchPlaceholder}
                   autoFocus
-                  className="w-full bg-transparent text-xs text-plum-900 placeholder:text-plum-400 focus:outline-none dark:text-[#e4e6eb] dark:placeholder:text-[#8f9399]"
+                  className="w-full bg-transparent text-xs text-text placeholder:text-text-subtle focus:outline-none"
                 />
                 {query && (
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="shrink-0 text-plum-400 hover:text-plum-700 dark:hover:text-white"
+                    className="shrink-0 text-text-subtle hover:text-text-muted"
                   >
                     <X size={12} />
                   </button>
@@ -179,9 +194,9 @@ export function SelectDropdown<T extends string | number = string | number>({
             )}
 
             {/* Danh sách Options */}
-            <div className="max-h-56 overflow-y-auto space-y-0.5 [scrollbar-width:thin] pr-0.5">
+            <div className="max-h-60 overflow-y-auto space-y-0.5 [scrollbar-width:thin] pr-0.5">
               {filteredOptions.length === 0 ? (
-                <div className="px-3 py-4 text-center text-xs text-plum-400 dark:text-[#8f9399]">
+                <div className="px-3 py-4 text-center text-xs text-text-subtle">
                   Không tìm thấy lựa chọn nào
                 </div>
               ) : (
@@ -196,22 +211,22 @@ export function SelectDropdown<T extends string | number = string | number>({
                       className={cn(
                         'flex w-full items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-colors cursor-pointer',
                         isSelected
-                          ? 'bg-brand-500/10 font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300'
-                          : 'font-medium text-plum-700 hover:bg-plum-900/[0.05] hover:text-plum-900 dark:text-[#e4e6eb] dark:hover:bg-[#3a3b3c] dark:hover:text-white'
+                          ? 'bg-primary-soft font-bold text-primary-solid'
+                          : 'font-medium text-text-muted hover:bg-surface-2 hover:text-text'
                       )}
                     >
-                      <span className="flex items-center gap-2 truncate">
-                        {opt.icon && <span className="shrink-0">{opt.icon}</span>}
-                        <span className="truncate">{opt.label}</span>
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1 truncate">
+                        {opt.icon && <span className="shrink-0 flex items-center">{opt.icon}</span>}
+                        <span className="truncate font-semibold">{opt.label}</span>
                         {opt.sublabel && (
-                          <span className="text-[10px] text-plum-400 dark:text-[#8f9399]">
+                          <span className="text-xs text-text-subtle truncate">
                             {opt.sublabel}
                           </span>
                         )}
                       </span>
 
                       {isSelected && (
-                        <Check size={14} className="shrink-0 text-brand-600 dark:text-brand-400" />
+                        <Check size={14} className="shrink-0 text-primary-solid ml-2" />
                       )}
                     </button>
                   )

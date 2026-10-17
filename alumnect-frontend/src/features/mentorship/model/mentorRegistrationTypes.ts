@@ -62,6 +62,7 @@ export interface CvInfo {
 
 export interface PayoutAccountInfo {
   bankName?: string | null
+  bankBin?: string | null
   bankAccountNumber?: string | null
   bankAccountHolder?: string | null
 }
@@ -91,6 +92,7 @@ export interface MentorRegistrationRequest {
   mentoringTopics?: string[]
   cvFileKey?: string | null
   bankName?: string | null
+  bankBin?: string | null
   bankAccountNumber?: string | null
   bankAccountHolder?: string | null
 }

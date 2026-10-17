@@ -44,26 +44,26 @@ export function ConfirmModal({
 
   const variantStyles = {
     danger: {
-      iconBg: 'bg-rose-50 text-rose-600 ring-8 ring-rose-500/10 dark:bg-rose-500/20 dark:text-rose-400 dark:ring-rose-500/10',
-      confirmBtn: 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/25',
+      iconBg: 'bg-danger-soft text-danger ring-8 ring-danger-soft/50',
+      confirmBtn: 'bg-danger text-text-inverse hover:opacity-90',
     },
     warning: {
-      iconBg: 'bg-amber-50 text-amber-600 ring-8 ring-amber-500/10 dark:bg-amber-500/20 dark:text-amber-400 dark:ring-amber-500/10',
-      confirmBtn: 'bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/25',
+      iconBg: 'bg-warning-soft text-warning ring-8 ring-warning-soft/50',
+      confirmBtn: 'bg-warning text-text-inverse hover:opacity-90',
     },
     primary: {
-      iconBg: 'bg-brand-50 text-brand-600 ring-8 ring-brand-500/10 dark:bg-brand-500/20 dark:text-brand-400 dark:ring-brand-500/10',
-      confirmBtn: 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-600/25',
+      iconBg: 'bg-primary-soft text-primary-solid ring-8 ring-primary-soft/50',
+      confirmBtn: 'bg-primary-solid text-on-primary hover:bg-primary-hover',
     },
   }[variant]
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className={cn('fixed inset-0 flex items-center justify-center p-4', zIndexClassName)}>
+        <div className={cn('fixed inset-0 flex items-end justify-center sm:items-center sm:p-4', zIndexClassName)}>
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs dark:bg-black/70"
+            className="absolute inset-0 bg-overlay backdrop-blur-xs"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -74,7 +74,7 @@ export function ConfirmModal({
           <motion.div
             role="alertdialog"
             aria-modal="true"
-            className="relative flex w-full max-w-sm flex-col items-center rounded-3xl border border-plum-900/10 bg-white p-6 text-center shadow-2xl dark:border-[#393a3b] dark:bg-[#242526] dark:text-[#f0f2f5]"
+            className="relative flex w-full flex-col items-center rounded-t-2xl border border-border bg-surface p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center text-text shadow-overlay sm:max-w-sm sm:rounded-2xl sm:pb-6"
             initial={{ opacity: 0, scale: 0.92, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -85,7 +85,8 @@ export function ConfirmModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute right-4 top-4 rounded-full p-1.5 text-plum-400 transition-colors hover:bg-plum-900/5 hover:text-plum-700 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
+                aria-label="Đóng"
+                className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
               >
                 <X size={16} />
               </button>
@@ -97,12 +98,12 @@ export function ConfirmModal({
             </div>
 
             {/* Title */}
-            <h3 className="text-base font-bold text-plum-900 dark:text-[#f0f2f5]">
+            <h3 className="text-lg font-bold text-text">
               {title}
             </h3>
 
             {/* Message */}
-            <div className="mt-2 text-xs leading-relaxed text-plum-500 dark:text-[#b0b3b8]">
+            <div className="mt-2 text-sm leading-relaxed text-text-muted">
               {message}
             </div>
 
@@ -112,7 +113,7 @@ export function ConfirmModal({
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 rounded-xl bg-plum-900/5 py-2.5 text-xs font-semibold text-plum-700 transition-colors hover:bg-plum-900/10 disabled:opacity-50 dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50]"
+                className="h-11 flex-1 rounded-xl bg-surface-2 text-sm font-semibold text-text transition-colors hover:bg-surface-3 disabled:opacity-50"
               >
                 {cancelText}
               </button>
@@ -121,7 +122,7 @@ export function ConfirmModal({
                 onClick={onConfirm}
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-semibold transition-all active:scale-[0.98] disabled:opacity-50',
+                  'inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50',
                   variantStyles.confirmBtn
                 )}
               >

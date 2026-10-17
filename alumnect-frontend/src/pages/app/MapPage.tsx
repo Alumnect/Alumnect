@@ -236,7 +236,7 @@ export function MapPage() {
   const renderTopHubs = () => (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-plum-900 text-sm">Khu vực nổi bật</h3>
+        <h3 className="font-bold text-text text-sm">Khu vực nổi bật</h3>
         <Badge tone="aqua">Trực tiếp</Badge>
       </div>
       {topHubs.length === 0 ? (
@@ -248,12 +248,12 @@ export function MapPage() {
             return (
               <li key={h.city} className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-plum-900/[0.04] text-[10px] font-bold text-plum-500">{i + 1}</span>
-                  <span className="flex-1 text-xs font-semibold text-plum-900 truncate">{h.city}</span>
-                  <span className="text-xs font-bold text-brand-600 shrink-0">{h.count} người</span>
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-surface-2 text-xs font-bold text-text-subtle">{i + 1}</span>
+                  <span className="flex-1 text-xs font-semibold text-text truncate">{h.city}</span>
+                  <span className="text-xs font-bold text-primary-solid shrink-0">{h.count} người</span>
                 </div>
                 <div className="h-1.5 w-full bg-plum-950/[0.04] rounded-full overflow-hidden">
-                  <div className="h-full bg-brand-500 rounded-full" style={{ width: `${pct}%` }} />
+                  <div className="h-full bg-primary-solid rounded-full" style={{ width: `${pct}%` }} />
                 </div>
               </li>
             )
@@ -280,22 +280,22 @@ export function MapPage() {
 
         {/* Cột 1: Danh sách Alumni */}
         <Reveal direction="left" className="min-h-0 xl:col-span-1 xl:h-full">
-          <Card hover={false} className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-plum-900/10 bg-white p-5 shadow-soft">
+          <Card hover={false} className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-surface p-5 shadow-soft">
             <div className="mb-4 shrink-0">
-              <h3 className="font-bold text-plum-900 text-sm flex items-center justify-between">
+              <h3 className="font-bold text-text text-sm flex items-center justify-between">
                 <span>Danh sách Alumni</span>
-                <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-semibold">
+                <span className="text-xs bg-primary-soft text-primary-solid px-2 py-0.5 rounded-full font-semibold">
                   {searchedAlumni.length} kết quả
                 </span>
               </h3>
               <div className="relative mt-3">
-                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
                 <input
                   type="text"
                   placeholder="Tìm theo tên, công ty, vị trí..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-9 rounded-xl border border-plum-900/10 bg-plum-900/[0.01] pl-9 pr-3 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/30 transition-all"
+                  className="w-full h-9 rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-brand-500/50 focus:bg-surface focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
                 />
               </div>
             </div>
@@ -312,7 +312,7 @@ export function MapPage() {
                   ))
                 : searchedAlumni.length === 0
                   ? (
-                    <div className="h-40 flex items-center justify-center text-xs text-plum-400 text-center">
+                    <div className="h-40 flex items-center justify-center text-xs text-text-subtle text-center">
                       Không tìm thấy alumni nào khớp với từ khóa.
                     </div>
                   )
@@ -325,18 +325,18 @@ export function MapPage() {
                           className={cn(
                             'w-full flex items-start gap-3 p-2.5 rounded-2xl text-left transition-all border border-transparent',
                             isSelected
-                              ? 'bg-brand-50/70 border-brand-500/20 shadow-sm'
-                              : 'hover:bg-plum-900/[0.02]'
+                              ? 'bg-brand-50/70 border-primary-soft-border shadow-sm'
+                              : 'hover:bg-surface-2'
                           )}
                         >
                           <Avatar src={alumni.avatarUrl} name={alumni.displayName} size={38} className="shrink-0" ring={isSelected} />
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-bold text-plum-900 truncate leading-tight">{alumni.displayName}</p>
-                            <p className="text-[10px] text-plum-500 truncate mt-0.5 leading-snug">
+                            <p className="text-xs font-bold text-text truncate leading-tight">{alumni.displayName}</p>
+                            <p className="text-xs text-text-subtle truncate mt-0.5 leading-snug">
                               {alumni.currentTitle} @ {alumni.companyName}
                             </p>
-                            <div className="flex items-center gap-1 mt-1 text-[9px] text-plum-400 font-semibold">
-                              <MapPin size={10} className="text-brand-500 shrink-0" />
+                            <div className="flex items-center gap-1 mt-1 text-xs text-text-subtle font-semibold">
+                              <MapPin size={10} className="text-primary-solid shrink-0" />
                               <span className="truncate">{alumni.city || 'Chưa xác định'}</span>
                               {alumni.cohort && (
                                 <>
@@ -356,13 +356,13 @@ export function MapPage() {
 
         {/* Cột 2–4: Bản đồ */}
         <Reveal className="min-h-0 xl:col-span-3 xl:h-full">
-          <div className="relative h-[min(72vh,46rem)] min-h-[32rem] w-full overflow-hidden rounded-3xl border border-plum-900/10 bg-white shadow-soft xl:h-full xl:min-h-0">
+          <div className="relative h-[min(72vh,46rem)] min-h-[32rem] w-full overflow-hidden rounded-3xl border border-border bg-surface shadow-soft xl:h-full xl:min-h-0">
 
             {/* Bộ lọc ngành – compact popover để giữ canvas bản đồ thoáng */}
             <div ref={majorMenuRef} className="absolute top-4 left-4 z-10">
-              <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-white/90 p-1.5 shadow-soft backdrop-blur-xl">
-                <div className="hidden items-center gap-1.5 px-2 text-[10px] font-extrabold uppercase tracking-[0.12em] text-plum-400 sm:flex">
-                  <SlidersHorizontal size={13} className="text-brand-500" />
+              <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-surface p-1.5 shadow-soft backdrop-blur-xl">
+                <div className="hidden items-center gap-1.5 px-2 text-xs font-extrabold uppercase tracking-[0.12em] text-text-subtle sm:flex">
+                  <SlidersHorizontal size={13} className="text-primary-solid" />
                   <span>Khám phá</span>
                 </div>
                 <button
@@ -373,23 +373,23 @@ export function MapPage() {
                   className={cn(
                     'inline-flex h-8 max-w-[210px] items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all',
                     selectedMajorId
-                      ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white shadow-sm'
-                      : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]',
+                      ? 'bg-primary-solid text-on-primary shadow-sm'
+                      : 'bg-surface-2 text-text-muted hover:bg-surface-3',
                   )}
                 >
                   <GraduationCap size={14} className="shrink-0" />
                   <span className="truncate">{selectedMajor ? selectedMajor.name : 'Tất cả ngành'}</span>
                   <ChevronDown size={14} className={cn('shrink-0 transition-transform', isMajorMenuOpen && 'rotate-180')} />
                 </button>
-                <span className="hidden min-w-7 rounded-lg bg-plum-900/[0.05] px-1.5 py-1 text-center text-[10px] font-extrabold text-plum-500 sm:inline-block">
+                <span className="hidden min-w-7 rounded-lg bg-surface-2 px-1.5 py-1 text-center text-xs font-extrabold text-text-subtle sm:inline-block">
                   {searchedAlumni.length}
                 </span>
               </div>
 
               {isMajorMenuOpen && (
-                <div className="absolute left-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-plum-900/10 bg-white/95 dark:border-[#393a3b] dark:bg-[#242526] p-2 shadow-xl backdrop-blur-xl z-20">
-                  <div className="border-b border-plum-900/[0.07] dark:border-[#393a3b] px-2 pb-2 pt-1">
-                    <p className="text-xs font-extrabold text-plum-900 dark:text-[#f0f2f5]">Lọc theo ngành</p>
+                <div className="absolute left-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface p-2 shadow-xl backdrop-blur-xl z-20">
+                  <div className="border-b border-border px-2 pb-2 pt-1">
+                    <p className="text-xs font-extrabold text-text">Lọc theo ngành</p>
                   </div>
                   <div className="mt-1 max-h-64 overflow-y-auto pr-0.5">
                     <button
@@ -399,14 +399,14 @@ export function MapPage() {
                       onClick={() => handleMajorChange(null)}
                       className={cn(
                         'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-colors cursor-pointer',
-                        selectedMajorId === null ? 'bg-brand-50 dark:bg-brand-500/20 text-brand-700 dark:text-brand-400' : 'text-plum-600 dark:text-[#b0b3b8] hover:bg-plum-900/[0.04] dark:hover:bg-[#3a3b3c] hover:text-plum-900 dark:hover:text-[#f0f2f5]',
+                        selectedMajorId === null ? 'bg-primary-soft text-primary-solid' : 'text-text-muted hover:bg-surface-2 hover:text-text',
                       )}
                     >
-                      <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-brand-100 px-1.5 text-[10px] font-extrabold text-brand-600">
+                      <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-primary-soft px-1.5 text-xs font-extrabold text-primary-solid">
                         {rawCountData.length}
                       </span>
                       <span className="flex-1 font-bold">Tất cả ngành</span>
-                      {selectedMajorId === null && <Check size={14} className="text-brand-600" />}
+                      {selectedMajorId === null && <Check size={14} className="text-primary-solid" />}
                     </button>
                     {sortedMajors.map((major) => {
                       const active = selectedMajorId === major.id
@@ -420,15 +420,15 @@ export function MapPage() {
                           className={cn(
                             'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition-colors cursor-pointer',
                             active
-                              ? 'bg-brand-50 dark:bg-brand-500/20 text-brand-700 dark:text-brand-400'
-                              : 'text-plum-600 dark:text-[#b0b3b8] hover:bg-plum-900/[0.04] dark:hover:bg-[#3a3b3c] hover:text-plum-900 dark:hover:text-[#f0f2f5]',
+                              ? 'bg-primary-soft text-primary-solid'
+                              : 'text-text-muted hover:bg-surface-2 hover:text-text',
                           )}
                         >
-                          <span className={cn('grid h-7 min-w-7 place-items-center rounded-lg px-1.5 text-[10px] font-extrabold', active ? 'bg-brand-100 dark:bg-brand-500/30 text-brand-600 dark:text-brand-400' : 'bg-plum-900/[0.05] dark:bg-[#3a3b3c] text-plum-400 dark:text-[#b0b3b8]')}>
+                          <span className={cn('grid h-7 min-w-7 place-items-center rounded-lg px-1.5 text-xs font-extrabold', active ? 'bg-primary-soft text-primary-solid' : 'bg-surface-2 text-text-subtle')}>
                             {majorCounts[major.id] ?? 0}
                           </span>
                           <span className="flex-1 truncate text-xs font-semibold">{major.name}</span>
-                          {active && <Check size={14} className="shrink-0 text-brand-600 dark:text-brand-400" />}
+                          {active && <Check size={14} className="shrink-0 text-primary-solid" />}
                         </button>
                       )
                     })}
@@ -439,9 +439,9 @@ export function MapPage() {
 
             {/* Loading overlay khi đổi style */}
             {switchingState === 'switching' && (
-              <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl border border-plum-900/10 shadow-soft">
-                <Loader2 size={13} className="animate-spin text-brand-500" />
-                <span className="text-xs font-semibold text-plum-600">Đang tải bản đồ...</span>
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-surface backdrop-blur-md px-3 py-2 rounded-xl border border-border shadow-soft">
+                <Loader2 size={13} className="animate-spin text-primary-solid" />
+                <span className="text-xs font-semibold text-text-muted">Đang tải bản đồ...</span>
               </div>
             )}
 
@@ -463,19 +463,19 @@ export function MapPage() {
             )}
 
             {/* Bộ chuyển đổi chủ đề – floating bottom-left */}
-            <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-1.5 bg-white/95 backdrop-blur-md px-3 py-2 rounded-2xl border border-plum-900/10 shadow-soft">
+            <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-1.5 bg-surface backdrop-blur-md px-3 py-2 rounded-2xl border border-border shadow-soft">
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-extrabold text-plum-400 uppercase tracking-wider pr-1">Chủ đề:</span>
+                <span className="text-xs font-extrabold text-text-subtle uppercase tracking-wider pr-1">Chủ đề:</span>
                 {AVAILABLE_THEMES.map((entry) => (
                   <button
                     key={entry.theme}
                     onClick={() => handleThemeChange(entry.theme)}
                     disabled={switchingState === 'switching'}
                     className={cn(
-                      'rounded-xl px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer',
+                      'rounded-xl px-2.5 py-1 text-xs font-bold transition-all cursor-pointer',
                       mapTheme === entry.theme
                         ? 'bg-plum-900 text-white shadow-sm'
-                        : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.06]',
+                        : 'bg-surface-2 text-text-muted hover:bg-border',
                       switchingState === 'switching' && 'opacity-60 pointer-events-none'
                     )}
                   >
@@ -491,7 +491,7 @@ export function MapPage() {
         {/* Cột 5: Thống kê */}
         <Reveal direction="right" className="min-h-0 xl:col-span-1 xl:h-full xl:self-start xl:sticky xl:top-20">
           <div className="flex min-h-0 flex-col gap-4 overflow-hidden xl:h-full">
-            <Card hover={false} className="min-h-0 flex-1 overflow-hidden rounded-3xl border border-plum-900/10 bg-white p-5 shadow-soft xl:max-h-[calc(100dvh-6rem)]">
+            <Card hover={false} className="min-h-0 flex-1 overflow-hidden rounded-3xl border border-border bg-surface p-5 shadow-soft xl:max-h-[calc(100dvh-6rem)]">
               {isLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((n) => (

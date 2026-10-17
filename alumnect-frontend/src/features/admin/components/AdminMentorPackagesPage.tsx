@@ -18,39 +18,6 @@ import { useAdminMentorPackages, useUpdateMentorPackage } from '../hooks/useAdmi
 import type { AdminMentorPackageDto } from '../api/adminApi'
 import { AdminMentorListSection } from './AdminMentorListSection'
 
-const DEFAULT_FALLBACK_PACKAGES: AdminMentorPackageDto[] = [
-  {
-    id: 1,
-    code: '1 Tháng',
-    name: 'Gói Tiêu Chuẩn 1 Tháng',
-    description: 'Gói trải nghiệm kết nối cố vấn trong vòng 1 tháng dành cho cựu sinh viên mới gia nhập.',
-    durationMonths: 1,
-    price: 100000,
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    code: '3 Tháng',
-    name: 'Gói Phổ Biến 3 Tháng',
-    description: 'Gói cố vấn 3 tháng tối ưu chi phí, được khuyên dùng nhất cho các Cố vấn chính thức.',
-    durationMonths: 3,
-    price: 250000,
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 3,
-    code: '6 Tháng',
-    name: 'Gói Cao Cấp 6 Tháng',
-    description: 'Gói đồng hành cố vấn dài hạn 6 tháng với mức tiết kiệm cao nhất.',
-    durationMonths: 6,
-    price: 500000,
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString(),
-  },
-]
-
 /**
  * Trang quản lý giá và trạng thái các gói dịch vụ cố vấn dành cho Quản trị viên.
  */
@@ -59,8 +26,7 @@ export function AdminMentorPackagesPage() {
   const { data: rawPackages, isLoading, isError, error, refetch } = useAdminMentorPackages()
   const updateMutation = useUpdateMentorPackage()
 
-  // Sử dụng dữ liệu thực tế từ hệ thống hoặc danh sách mặc định khi mất kết nối
-  const displayPackages = rawPackages && rawPackages.length > 0 ? rawPackages : DEFAULT_FALLBACK_PACKAGES
+  const displayPackages = rawPackages ?? []
 
   // State quản lý Modal chỉnh sửa gói dịch vụ
   const [selectedPkg, setSelectedPkg] = useState<AdminMentorPackageDto | null>(null)
@@ -147,30 +113,30 @@ export function AdminMentorPackagesPage() {
       {/* 1. Header & Subtitle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[24px] font-semibold text-slate-900 leading-tight">
+          <h1 className="text-[24px] font-semibold text-text leading-tight">
             Quản lý Cố vấn & Gói dịch vụ
           </h1>
-          <p className="text-sm text-slate-500 mt-1.5">
+          <p className="text-sm text-text-subtle mt-1.5">
             Quản lý hồ sơ cố vấn, thông tin gói dịch vụ và trạng thái cung cấp.
           </p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-2xs">
-            <Compass className="h-4 w-4 text-[#F27024]" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-medium text-text-muted shadow-2xs">
+            <Compass className="h-4 w-4 text-primary-solid" />
             <span>Phân hệ Cố vấn</span>
           </div>
         </div>
       </div>
 
       {/* 2. Navigation Tab Bar */}
-      <div className="flex items-center gap-6 border-b border-slate-200">
+      <div className="flex items-center gap-6 border-b border-border">
         <button
           type="button"
           onClick={() => setActiveTab('PACKAGES')}
           className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors cursor-pointer border-b-2 ${
             activeTab === 'PACKAGES'
-              ? 'border-[#F27024] text-[#F27024] font-semibold'
-              : 'border-transparent text-slate-600 hover:text-slate-900'
+              ? 'border-primary text-primary-solid font-semibold'
+              : 'border-transparent text-text-muted hover:text-text'
           }`}
         >
           <Package className="h-4 w-4" />
@@ -182,8 +148,8 @@ export function AdminMentorPackagesPage() {
           onClick={() => setActiveTab('MENTORS')}
           className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors cursor-pointer border-b-2 ${
             activeTab === 'MENTORS'
-              ? 'border-[#F27024] text-[#F27024] font-semibold'
-              : 'border-transparent text-slate-600 hover:text-slate-900'
+              ? 'border-primary text-primary-solid font-semibold'
+              : 'border-transparent text-text-muted hover:text-text'
           }`}
         >
           <Users className="h-4 w-4" />
@@ -199,14 +165,14 @@ export function AdminMentorPackagesPage() {
         <div className="space-y-4">
           {/* Cảnh báo khi mất kết nối */}
           {isError && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50/60 p-4 text-slate-800">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-lg border border-danger-border bg-danger-soft p-4 text-text">
               <div className="flex items-start gap-3">
-                <WifiOff className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+                <WifiOff className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
                 <div className="text-xs leading-relaxed">
-                  <span className="font-semibold text-sm text-red-900 block">
+                  <span className="font-semibold text-sm text-danger block">
                     Không thể tải dữ liệu gói dịch vụ
                   </span>
-                  <span className="text-slate-600">
+                  <span className="text-text-muted">
                     {(error as any)?.message ||
                       'Hệ thống tạm thời không thể kết nối tới máy chủ. Vui lòng thử lại.'}
                   </span>
@@ -216,7 +182,7 @@ export function AdminMentorPackagesPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => refetch()}
-                className="gap-1.5 bg-white text-slate-700 border-slate-300 hover:bg-slate-50 text-xs shrink-0"
+                className="gap-1.5 bg-surface text-text-muted border-border-strong hover:bg-surface-2 text-xs shrink-0"
               >
                 <RotateCcw className="h-3.5 w-3.5" /> Thử lại kết nối
               </Button>
@@ -241,12 +207,18 @@ export function AdminMentorPackagesPage() {
           )}
 
           {/* Bảng Quản trị Danh sách Gói dịch vụ */}
-          {!isLoading && displayPackages && (
-            <Card hover={false} className="p-0 border border-slate-200 overflow-hidden shadow-xs">
+          {!isLoading && !isError && displayPackages.length === 0 && (
+            <Card hover={false} className="p-6 text-center text-sm text-text-subtle">
+              Chưa có gói dịch vụ cố vấn nào trong hệ thống.
+            </Card>
+          )}
+
+          {!isLoading && displayPackages.length > 0 && (
+            <Card hover={false} className="p-0 border border-border overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
+                <table className="w-full min-w-[760px] text-sm text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50">
+                    <tr className="border-b border-border text-xs font-semibold uppercase tracking-wider text-text-subtle bg-surface-2">
                       <th className="px-5 py-3.5 w-[35%]">Thông tin gói dịch vụ</th>
                       <th className="px-4 py-3.5 w-[15%]">Thời lượng</th>
                       <th className="px-5 py-3.5 text-right w-[20%]">Giá niêm yết</th>
@@ -254,39 +226,39 @@ export function AdminMentorPackagesPage() {
                       <th className="px-5 py-3.5 text-right w-[15%]">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-border">
                     {displayPackages.map((pkg) => {
                       const isActive = pkg.status === 'ACTIVE'
                       return (
-                        <tr key={pkg.id} className="transition-colors hover:bg-slate-50/70">
+                        <tr key={pkg.id} className="transition-colors hover:bg-surface-2">
                           {/* Tên & Mô tả */}
                           <td className="px-5 py-4">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold text-slate-900 text-sm">
+                                <span className="font-semibold text-text text-sm">
                                   {pkg.name}
                                 </span>
-                                <span className="text-[11px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                <span className="text-xs font-mono text-text-subtle bg-surface-2 px-1.5 py-0.5 rounded">
                                   {pkg.code}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                              <p className="text-xs text-text-subtle mt-1 line-clamp-2 leading-relaxed">
                                 {pkg.description || 'Chưa có mô tả chi tiết.'}
                               </p>
                             </div>
                           </td>
 
                           {/* Thời lượng */}
-                          <td className="px-4 py-4 text-xs font-medium text-slate-700">
+                          <td className="px-4 py-4 text-xs font-medium text-text-muted">
                             <span>{pkg.durationMonths} Tháng</span>
                           </td>
 
                           {/* Giá niêm yết */}
                           <td className="px-5 py-4 text-right">
-                            <span className="font-semibold text-slate-900 text-sm">
+                            <span className="font-semibold text-text text-sm">
                               {formatVND(pkg.price)}
                             </span>
-                            <span className="text-[11px] text-slate-400 block mt-0.5">
+                            <span className="text-xs text-text-subtle block mt-0.5">
                               / {pkg.durationMonths} tháng
                             </span>
                           </td>
@@ -314,9 +286,9 @@ export function AdminMentorPackagesPage() {
                             <button
                               type="button"
                               onClick={() => handleOpenEdit(pkg)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-medium text-text-muted hover:bg-surface-2 hover:border-border-strong transition-colors cursor-pointer"
                             >
-                              <Edit3 className="h-3.5 w-3.5 text-slate-500" />
+                              <Edit3 className="h-3.5 w-3.5 text-text-subtle" />
                               <span>Chỉnh sửa</span>
                             </button>
                           </td>
@@ -339,21 +311,21 @@ export function AdminMentorPackagesPage() {
               />
 
               {/* Modal Box */}
-              <div className="relative z-10 w-full max-w-xl max-h-[90vh] bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col overflow-hidden text-slate-800">
+              <div className="relative z-10 w-full max-w-xl max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
                   <div>
-                    <h2 className="text-[20px] font-semibold text-slate-900 leading-tight">
+                    <h2 className="text-[20px] font-semibold text-text leading-tight">
                       Chỉnh sửa gói dịch vụ
                     </h2>
-                    <p className="text-[13px] text-slate-500 mt-0.5">
+                    <p className="text-[13px] text-text-subtle mt-0.5">
                       Cập nhật thông tin giá, mô tả và trạng thái mở bán của gói.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                    className="p-1.5 text-text-subtle hover:text-text-muted hover:bg-surface-2 rounded-lg transition-colors cursor-pointer"
                     aria-label="Đóng"
                   >
                     <X size={18} />
@@ -369,39 +341,39 @@ export function AdminMentorPackagesPage() {
                   {/* Tên gói & Mã gói */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="block text-[13px] font-medium text-slate-700">
-                        Tên gói dịch vụ <span className="text-red-500">*</span>
+                      <label className="block text-[13px] font-medium text-text-muted">
+                        Tên gói dịch vụ <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={nameInput}
                         onChange={(e) => setNameInput(e.target.value)}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                        className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                         placeholder="Nhập tên gói dịch vụ..."
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-[13px] font-medium text-slate-700">
+                      <label className="block text-[13px] font-medium text-text-muted">
                         Mã gói & Thời lượng
                       </label>
                       <input
                         type="text"
                         disabled
                         value={`${selectedPkg.code} (${selectedPkg.durationMonths} Tháng)`}
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 cursor-not-allowed"
+                        className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text-subtle cursor-not-allowed"
                       />
                     </div>
                   </div>
 
                   {/* Giá niêm yết */}
                   <div className="space-y-1.5">
-                    <label className="block text-[13px] font-medium text-slate-700">
-                      Giá niêm yết (VNĐ) <span className="text-red-500">*</span>
+                    <label className="block text-[13px] font-medium text-text-muted">
+                      Giá niêm yết (VNĐ) <span className="text-danger">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-medium">
+                      <span className="absolute left-3 top-2.5 text-sm text-text-subtle font-medium">
                         ₫
                       </span>
                       <input
@@ -412,15 +384,15 @@ export function AdminMentorPackagesPage() {
                         value={priceInput}
                         onChange={(e) => setPriceInput(e.target.value)}
                         placeholder="Nhập số tiền..."
-                        className="w-full rounded-lg border border-slate-300 bg-white pl-8 pr-12 py-2 text-sm text-slate-800 font-medium focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                        className="w-full rounded-lg border border-border-strong bg-surface pl-8 pr-12 py-2 text-sm text-text font-medium focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
-                      <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-medium">
+                      <span className="absolute right-3 top-2.5 text-xs text-text-subtle font-medium">
                         VNĐ
                       </span>
                     </div>
-                    <p className="text-[12px] text-slate-500">
+                    <p className="text-[12px] text-text-subtle">
                       Định dạng hiển thị:{' '}
-                      <span className="font-semibold text-slate-800">
+                      <span className="font-semibold text-text">
                         {formatVND(parseFloat(priceInput) || 0)}
                       </span>{' '}
                       / {selectedPkg.durationMonths} tháng
@@ -429,15 +401,15 @@ export function AdminMentorPackagesPage() {
 
                   {/* Trạng thái hoạt động */}
                   <div className="space-y-2">
-                    <label className="block text-[13px] font-medium text-slate-700">
-                      Trạng thái hoạt động <span className="text-red-500">*</span>
+                    <label className="block text-[13px] font-medium text-text-muted">
+                      Trạng thái hoạt động <span className="text-danger">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <label
                         className={`flex items-center gap-2 p-3 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
                           statusInput === 'ACTIVE'
-                            ? 'border-[#F27024] bg-orange-50/50 text-[#F27024]'
-                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                            ? 'border-primary bg-orange-50/50 text-primary-solid'
+                            : 'border-border bg-surface text-text-muted hover:bg-surface-2'
                         }`}
                       >
                         <input
@@ -446,17 +418,17 @@ export function AdminMentorPackagesPage() {
                           value="ACTIVE"
                           checked={statusInput === 'ACTIVE'}
                           onChange={() => setStatusInput('ACTIVE')}
-                          className="text-[#F27024] focus:ring-[#F27024]"
+                          className="text-primary-solid focus:ring-primary"
                         />
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <CheckCircle2 className="h-4 w-4 text-success" />
                         <span>Đang mở bán</span>
                       </label>
 
                       <label
                         className={`flex items-center gap-2 p-3 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
                           statusInput === 'INACTIVE'
-                            ? 'border-[#F27024] bg-orange-50/50 text-[#F27024]'
-                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                            ? 'border-primary bg-orange-50/50 text-primary-solid'
+                            : 'border-border bg-surface text-text-muted hover:bg-surface-2'
                         }`}
                       >
                         <input
@@ -465,9 +437,9 @@ export function AdminMentorPackagesPage() {
                           value="INACTIVE"
                           checked={statusInput === 'INACTIVE'}
                           onChange={() => setStatusInput('INACTIVE')}
-                          className="text-[#F27024] focus:ring-[#F27024]"
+                          className="text-primary-solid focus:ring-primary"
                         />
-                        <XCircle className="h-4 w-4 text-slate-400" />
+                        <XCircle className="h-4 w-4 text-text-subtle" />
                         <span>Tạm ngưng áp dụng</span>
                       </label>
                     </div>
@@ -475,7 +447,7 @@ export function AdminMentorPackagesPage() {
 
                   {/* Mô tả chi tiết */}
                   <div className="space-y-1.5">
-                    <label className="block text-[13px] font-medium text-slate-700">
+                    <label className="block text-[13px] font-medium text-text-muted">
                       Mô tả chi tiết quyền lợi gói
                     </label>
                     <textarea
@@ -483,26 +455,26 @@ export function AdminMentorPackagesPage() {
                       value={descInput}
                       onChange={(e) => setDescInput(e.target.value)}
                       placeholder="Nhập mô tả quyền lợi dành cho cố vấn..."
-                      className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-800 leading-relaxed focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                      className="w-full rounded-lg border border-border-strong bg-surface p-3 text-sm text-text leading-relaxed focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
 
                   {/* Validation error box */}
                   {validationError && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600 font-medium flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                    <div className="rounded-lg border border-danger-border bg-danger-soft p-3 text-xs text-danger font-medium flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-danger" />
                       <span>{validationError}</span>
                     </div>
                   )}
                 </form>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-slate-200 bg-white shrink-0">
+                <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-border bg-surface shrink-0">
                   <button
                     type="button"
                     onClick={handleCloseModal}
                     disabled={updateMutation.isPending}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-text-muted bg-surface border border-border-strong hover:bg-surface-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                   >
                     Hủy
                   </button>
@@ -510,7 +482,7 @@ export function AdminMentorPackagesPage() {
                     type="submit"
                     form="edit-package-form"
                     disabled={updateMutation.isPending}
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#F27024] hover:bg-[#d95d16] rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
+                    className="px-4 py-2 text-sm font-medium text-on-primary bg-primary-solid hover:bg-[#d95d16] rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
                   >
                     {updateMutation.isPending && (
                       <Loader2 size={15} className="animate-spin" />

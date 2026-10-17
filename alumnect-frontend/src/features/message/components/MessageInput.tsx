@@ -15,14 +15,16 @@ interface PendingAttachment {
 interface MessageInputProps {
   onSendMessage: (content: string, attachments: PendingAttachment[]) => Promise<void>
   disabled?: boolean
+  leftActions?: React.ReactNode
 }
 
-export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
+export function MessageInput({ onSendMessage, disabled, leftActions }: MessageInputProps) {
   const [content, setContent] = useState('')
   const [attachments, setAttachments] = useState<PendingAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const messageInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -35,8 +37,8 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
         const uploaded = await chatApi.uploadAttachment(file)
         setAttachments((prev) => [...prev, uploaded])
       }
-    } catch (err: any) {
-      toast.error(err?.message || 'Tải tệp lên thất bại. Vui lòng thử lại.')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Tải tệp lên thất bại. Vui lòng thử lại.')
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
@@ -59,10 +61,11 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
       await onSendMessage(trimmed, attachments)
       setContent('')
       setAttachments([])
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể gửi tin nhắn. Vui lòng thử lại.')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Không thể gửi tin nhắn. Vui lòng thử lại.')
     } finally {
       setIsSending(false)
+      window.setTimeout(() => messageInputRef.current?.focus(), 0)
     }
   }
 
@@ -74,25 +77,25 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
   }
 
   return (
-    <div className="border-t border-plum-900/10 bg-white/80 p-3 backdrop-blur-md">
+    <div className="border-t border-border bg-surface/80 p-3 backdrop-blur-md">
       {/* Danh sách tệp đính kèm chờ gửi */}
       {attachments.length > 0 && (
         <div className="mb-2.5 flex flex-wrap gap-2">
           {attachments.map((att, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-1.5 rounded-xl border border-brand-200 bg-brand-50/80 px-2.5 py-1 text-xs text-brand-700 shadow-xs"
+              className="flex items-center gap-1.5 rounded-xl border border-primary-soft-border bg-primary-soft px-2.5 py-1 text-xs text-primary-solid shadow-xs"
             >
               {att.mediaType === 'IMAGE' ? (
-                <ImageIcon size={14} className="text-brand-500" />
+                <ImageIcon size={14} className="text-primary-solid" />
               ) : (
-                <Paperclip size={14} className="text-brand-500" />
+                <Paperclip size={14} className="text-primary-solid" />
               )}
               <span className="max-w-[140px] truncate font-medium">{att.fileName}</span>
               <button
                 type="button"
                 onClick={() => handleRemoveAttachment(idx)}
-                className="ml-1 rounded-full p-0.5 hover:bg-brand-200 text-brand-500 transition-colors"
+                className="ml-1 rounded-full p-0.5 hover:bg-brand-200 text-primary-solid transition-colors"
               >
                 <X size={12} />
               </button>
@@ -118,23 +121,27 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isSending || disabled}
           aria-label="Đính kèm tệp"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-plum-900/10 bg-plum-900/[0.03] text-plum-500 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 disabled:opacity-50"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-surface-2 text-text-subtle transition-colors hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid disabled:opacity-50"
         >
           {isUploading ? (
-            <Loader2 size={18} className="animate-spin text-brand-500" />
+            <Loader2 size={18} className="animate-spin text-primary-solid" />
           ) : (
             <Paperclip size={18} />
           )}
         </button>
 
+        {/* Tiện ích mở rộng nghiệp vụ (ví dụ: Deal lại, tạo Deal Ticket) */}
+        {leftActions}
+
         {/* Khung nhập văn bản */}
         <input
+          ref={messageInputRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Nhập tin nhắn..."
           disabled={isSending || disabled}
-          className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 text-sm text-plum-900 placeholder:text-plum-400 transition-colors focus:border-brand-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-400/20 disabled:opacity-50"
+          className="h-11 flex-1 rounded-xl border border-border bg-surface-2 px-4 text-sm text-text placeholder:text-text-subtle transition-colors focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-400/20 disabled:opacity-50"
         />
 
         {/* Nút gửi */}
@@ -143,7 +150,7 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           onClick={handleSend}
           disabled={(!content.trim() && attachments.length === 0) || isSending || isUploading || disabled}
           aria-label="Gửi tin nhắn"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white shadow-sm transition-all duration-200 hover:scale-105 hover:bg-brand-700 disabled:opacity-40 disabled:hover:scale-100"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-solid text-on-primary shadow-sm transition-all duration-200 hover:scale-105 hover:bg-primary-hover disabled:opacity-40 disabled:hover:scale-100"
         >
           {isSending ? (
             <Loader2 size={18} className="animate-spin" />

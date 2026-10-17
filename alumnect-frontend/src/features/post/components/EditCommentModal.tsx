@@ -114,11 +114,11 @@ export function EditCommentModal({
     >
       <form id="edit-comment-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         {isError && (
-          <div role="alert" className="mb-3 flex items-center gap-2 rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">
+          <div role="alert" className="mb-3 flex items-center gap-2 rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
             <AlertTriangle size={16} className="shrink-0" /> {(error as Error).message}
           </div>
         )}
-        <label htmlFor="edit-comment-content" className="mb-1.5 block text-sm font-bold text-plum-800">
+        <label htmlFor="edit-comment-content" className="mb-1.5 block text-sm font-bold text-text">
           Nội dung bình luận
         </label>
         <textarea
@@ -129,10 +129,10 @@ export function EditCommentModal({
           maxLength={COMMENT_MAX}
           aria-invalid={!!errors.content}
           aria-describedby="edit-comment-content-error"
-          className="w-full resize-y rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 py-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="w-full resize-y rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
-        {errors.content && <p id="edit-comment-content-error" className="mt-1 text-xs font-medium text-rose-600">{errors.content.message}</p>}
-        <p className="mt-2 text-right text-xs text-plum-400">
+        {errors.content && <p id="edit-comment-content-error" className="mt-1 text-xs font-medium text-danger">{errors.content.message}</p>}
+        <p className="mt-2 text-right text-xs text-text-subtle">
           {content.length.toLocaleString('vi-VN')}/{COMMENT_MAX.toLocaleString('vi-VN')}
         </p>
       </form>

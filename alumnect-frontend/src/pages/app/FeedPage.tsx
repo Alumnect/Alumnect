@@ -75,48 +75,48 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
 function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostType) => void }) {
   const firstName = viewer.name ? viewer.name.trim().split(' ').slice(-1)[0] : 'bạn'
   return (
-    <Card hover={false} className="p-4 border border-slate-200/80 shadow-xs bg-white rounded-2xl dark:bg-[#242526] dark:border-[#393a3b]">
+    <Card hover={false} className="p-4 border border-border shadow-xs bg-surface rounded-2xl">
       <div className="flex items-center gap-3">
         <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={42} verified={viewer.verified} />
         <button
           type="button"
           onClick={() => onOpen()}
-          className="h-11 flex-1 rounded-full border border-slate-200/80 bg-slate-50 px-4 text-left text-sm text-slate-400 transition-all hover:bg-slate-100 hover:border-slate-300 dark:bg-[#3a3b3c] dark:border-[#393a3b] dark:text-[#b0b3b8] dark:hover:bg-[#4e4f50]"
+          className="h-11 flex-1 rounded-full border border-border bg-surface-2 px-4 text-left text-sm text-text-subtle transition-all hover:bg-surface-2 hover:border-border-strong"
         >
           {firstName} ơi, bạn đang nghĩ gì thế?
         </button>
       </div>
-      <div className="mt-3 flex items-center justify-around border-t border-slate-100 pt-2.5 sm:justify-start sm:gap-2 dark:border-[#393a3b]">
+      <div className="mt-3 flex items-center gap-1 border-t border-border pt-2 sm:justify-start">
         <button
           type="button"
           onClick={() => onOpen('normal')}
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-600 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-1 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:flex-none sm:px-3"
         >
-          <ImageIcon size={18} className="text-sky-500" />
+          <ImageIcon size={18} className="shrink-0 text-info" />
           <span>Ảnh / Video</span>
         </button>
         <button
           type="button"
           onClick={() => onOpen('recruitment')}
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-orange-50 hover:text-[#F27024] dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-[#f27024]"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-1 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:flex-none sm:px-3"
         >
-          <Briefcase size={18} className="text-[#F27024]" />
+          <Briefcase size={18} className="shrink-0 text-primary-solid" />
           <span>Tuyển dụng</span>
         </button>
         <button
           type="button"
           onClick={() => onOpen('event')}
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-1 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:flex-none sm:px-3"
         >
-          <CalendarPlus size={18} className="text-indigo-500" />
+          <CalendarPlus size={18} className="shrink-0 text-info" />
           <span>Sự kiện</span>
         </button>
         <button
           type="button"
           onClick={() => onOpen('achievement')}
-          className="hidden sm:inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-600 transition-colors hover:bg-amber-50 hover:text-amber-600 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
+          className="hidden min-h-11 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:inline-flex"
         >
-          <Award size={18} className="text-amber-500" />
+          <Award size={18} className="shrink-0 text-warning" />
           <span>Thành tựu</span>
         </button>
       </div>
@@ -248,13 +248,13 @@ export function PostCard({
       hover={false}
       onClick={handleCardClick}
       className={cn(
-        "overflow-hidden relative transition-all duration-200 cursor-pointer border border-slate-200/80 shadow-xs hover:shadow-md bg-white rounded-2xl dark:bg-[#242526] dark:border-[#393a3b]",
-        post.type === 'achievement' && "border-amber-300/80 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/40 via-white to-white dark:from-[#242526] dark:via-[#242526] dark:to-[#242526] dark:border-amber-500/40"
+        "overflow-hidden relative transition-shadow duration-200 cursor-pointer border border-border shadow-raised hover:shadow-overlay bg-surface rounded-2xl",
+        post.type === 'achievement' && "border-warning-border"
       )}
     >
       {post.type === 'achievement' && (
         <div className="absolute -top-4 -right-4 p-6 opacity-[0.04] pointer-events-none -rotate-12">
-          <Trophy size={160} className="text-amber-600" />
+          <Trophy size={160} className="text-warning" />
         </div>
       )}
       <div className="p-5 relative z-10">
@@ -271,22 +271,22 @@ export function PostCard({
             <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-                className="truncate font-bold text-slate-900 hover:underline hover:text-[#F27024] transition-colors text-sm sm:text-base"
+                className="truncate font-bold text-text hover:underline hover:text-primary-solid transition-colors text-sm sm:text-base"
                 title={`Xem hồ sơ của ${post.author}`}
               >
                 {post.author}
               </Link>
               <Link to={`/app/posts/${post.id}`}>
                 {post.type === 'achievement' ? (
-                  <Badge tone={meta.tone} className="px-2.5 py-0.5 text-[10px] cursor-pointer hover:opacity-85 shadow-sm shadow-amber-200/50 border border-amber-300/50 flex items-center gap-1 font-extrabold uppercase tracking-wide">
-                    <Award size={11} className="text-amber-600" /> {meta.label}
+                  <Badge tone={meta.tone} className="flex cursor-pointer items-center gap-1 border border-warning-border px-2.5 py-0.5 text-xs hover:opacity-85">
+                    <Award size={12} /> {meta.label}
                   </Badge>
                 ) : post.type !== 'normal' ? (
-                  <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
+                  <Badge tone={meta.tone} className="px-2 py-0.5 text-xs cursor-pointer hover:opacity-85">{meta.label}</Badge>
                 ) : null}
               </Link>
             </div>
-            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-slate-400 hover:text-slate-600 transition-colors mt-0.5">
+            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-text-subtle hover:text-text-muted transition-colors mt-0.5">
               {post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}
             </Link>
           </div>
@@ -303,7 +303,7 @@ export function PostCard({
 
         {/* --- Phần 2: Nội dung văn bản bài viết --- */}
         {post.text && (
-          <p className="mt-3.5 whitespace-pre-line text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+          <p className="mt-3.5 whitespace-pre-line text-base leading-relaxed text-text">
             {post.text}
           </p>
         )}
@@ -311,16 +311,16 @@ export function PostCard({
 
       {/* --- Phần 3: Khối thông tin Tuyển dụng (nếu là bài recruitment) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-5 mb-4 rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50/50 to-amber-50/20 p-4 transition-all hover:border-orange-300 dark:border-[#393a3b] dark:bg-none dark:bg-[#3a3b3c] dark:hover:border-[#4e4f50]">
+        <div className="mx-5 mb-4 rounded-xl border border-border bg-surface-2 p-4 transition-colors hover:border-primary-soft-border">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-[#F27024]/10 px-2 py-0.5 text-[11px] font-bold text-[#F27024]">
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
                   <Briefcase size={12} /> Tuyển dụng
                 </span>
-                <span className="text-xs text-slate-600 dark:text-[#b0b3b8] font-semibold truncate">{post.job.company}</span>
+                <span className="text-xs text-text-muted font-semibold truncate">{post.job.company}</span>
               </div>
-              <h4 className="mt-1.5 text-base font-bold text-slate-900 dark:text-[#f0f2f5] truncate">
+              <h4 className="mt-1.5 text-base font-bold text-text truncate">
                 {post.job.title}
               </h4>
             </div>
@@ -329,7 +329,7 @@ export function PostCard({
                 href={post.job.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#F27024] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#d96010] transition-all"
+                className="shrink-0 inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-primary-solid px-3.5 text-sm font-bold text-on-primary shadow-raised hover:bg-primary-hover transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 Ứng tuyển <ExternalLink size={12} />
@@ -337,14 +337,14 @@ export function PostCard({
             )}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-orange-200/50 dark:border-[#4e4f50] pt-2.5 text-xs text-slate-600 dark:text-[#b0b3b8]">
+          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-border pt-2.5 text-sm text-text-muted">
             {post.job.location && (
               <span className="inline-flex items-center gap-1">
-                <MapPin size={13} className="text-[#F27024]" /> {post.job.location}
+                <MapPin size={13} className="text-primary-solid" /> {post.job.location}
               </span>
             )}
             {(post.job.salaryMin || post.job.salaryMax) ? (
-              <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="inline-flex items-center gap-1 font-semibold text-success">
                 <Coins size={13} />
                 {post.job.salaryMin && post.job.salaryMax
                   ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
@@ -353,11 +353,11 @@ export function PostCard({
                   : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
               </span>
             ) : (
-              <span className="text-slate-400 dark:text-[#b0b3b8]">Lương thỏa thuận</span>
+              <span className="text-text-subtle">Lương thỏa thuận</span>
             )}
             {post.job.contactEmail && (
-              <span className="inline-flex items-center gap-1 text-slate-500 dark:text-[#b0b3b8]">
-                <Inbox size={13} className="text-slate-400 dark:text-[#b0b3b8]" /> {post.job.contactEmail}
+              <span className="inline-flex items-center gap-1 text-text-subtle">
+                <Inbox size={13} className="text-text-subtle" /> {post.job.contactEmail}
               </span>
             )}
           </div>
@@ -366,20 +366,20 @@ export function PostCard({
 
       {/* --- Phần 3b: Khối thông tin Sự kiện (nếu là bài event) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-5 mb-4 rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/40 to-violet-50/20 p-4 transition-all hover:border-indigo-300 dark:border-[#393a3b] dark:bg-none dark:bg-[#3a3b3c] dark:hover:border-[#4e4f50]">
+        <div className="mx-5 mb-4 rounded-xl border border-border bg-surface-2 p-4 transition-colors hover:border-info-border">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100 px-2 py-0.5 text-[11px] font-bold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
+                <span className="inline-flex items-center gap-1 rounded-md bg-info-soft px-2 py-0.5 text-xs font-bold text-info">
                   <CalendarPlus size={12} /> Sự kiện
                 </span>
                 {post.event.status === 'CANCELLED' && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-500/20 dark:text-rose-400">
-                    <Ban size={10} /> Đã hủy
+                  <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger">
+                    <Ban size={12} /> Đã hủy
                   </span>
                 )}
               </div>
-              <h4 className="mt-1.5 text-base font-bold text-slate-900 dark:text-[#f0f2f5] truncate">
+              <h4 className="mt-1.5 text-base font-bold text-text truncate">
                 {post.event.title}
               </h4>
             </div>
@@ -401,22 +401,22 @@ export function PostCard({
             )}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-indigo-200/40 dark:border-[#4e4f50] pt-2.5 text-xs text-slate-600 dark:text-[#b0b3b8]">
+          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-border pt-2.5 text-sm text-text-muted">
             {post.event.startTime && (
-              <span className="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-[#f0f2f5]">
-                <Clock size={13} className="text-indigo-500 dark:text-indigo-400" />
+              <span className="inline-flex items-center gap-1 font-medium text-text-muted">
+                <Clock size={14} className="text-info" />
                 {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'short' })}{' '}
                 · {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
             {post.event.location && (
-              <span className="inline-flex items-center gap-1 dark:text-[#b0b3b8]">
-                <MapPin size={13} className="text-indigo-500 dark:text-indigo-400" /> {post.event.location}
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={14} className="text-info" /> {post.event.location}
               </span>
             )}
             {post.event.capacity && (
-              <span className="inline-flex items-center gap-1 text-slate-500 dark:text-[#b0b3b8]">
-                <Users size={13} className="text-slate-400 dark:text-[#b0b3b8]" /> Tối đa {post.event.capacity} người
+              <span className="inline-flex items-center gap-1 text-text-subtle">
+                <Users size={13} className="text-text-subtle" /> Tối đa {post.event.capacity} người
               </span>
             )}
           </div>
@@ -431,7 +431,7 @@ export function PostCard({
         if (imgs.length === 0) return null
         return (
           <div className="px-5 pb-2">
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#393a3b]">
+            <div className="overflow-hidden rounded-2xl border border-border">
               {imgs.length === 1 && (
                 <img
                   src={imgs[0]}
@@ -539,8 +539,8 @@ export function PostCard({
       })()}
 
       {/* --- Phần 5: Thanh hành động — Thích / Bình luận / Chia sẻ / Lưu / Báo cáo --- */}
-      <div className="flex items-center justify-between border-t border-slate-100 dark:border-[#393a3b] px-5 py-3 text-xs font-bold text-slate-500 dark:text-[#b0b3b8]">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1 border-t border-border px-2 py-1 text-sm font-semibold text-text-muted sm:px-3">
+        <div className="grid min-w-0 flex-1 grid-cols-3 gap-1">
           {/* Nút Thích */}
           <button
             type="button"
@@ -550,10 +550,10 @@ export function PostCard({
             }}
             aria-pressed={liked}
             className={cn(
-              'inline-flex items-center gap-1.5 transition-colors cursor-pointer',
+              'inline-flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1 transition-colors cursor-pointer hover:bg-surface-2',
               liked
-                ? 'text-rose-500 font-extrabold'
-                : 'hover:text-rose-500',
+                ? 'text-danger font-bold'
+                : 'hover:text-danger',
             )}
           >
             <AnimatePresence initial={false}>
@@ -564,10 +564,10 @@ export function PostCard({
                 animate={{ scale: 1, opacity: 1 }}
                 transition={TRANSITION.bounce}
               >
-                <Heart size={16} className={cn(liked && 'fill-rose-500 text-rose-500')} />
+                <Heart size={18} className={cn(liked && 'fill-current')} />
               </motion.span>
             </AnimatePresence>
-            <span>{compact(likeCount)} thích</span>
+            <span className="truncate">{compact(likeCount)}<span className="sr-only sm:not-sr-only"> thích</span></span>
           </button>
 
           {/* Nút Bình luận */}
@@ -582,14 +582,14 @@ export function PostCard({
               setShowComments((prev) => !prev)
             }}
             className={cn(
-              'inline-flex items-center gap-1.5 transition-colors cursor-pointer',
+              'inline-flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1 transition-colors cursor-pointer hover:bg-surface-2',
               showComments
-                ? 'text-[#F27024] dark:text-[#FF8C38]'
-                : 'hover:text-brand-500 dark:hover:text-brand-400',
+                ? 'text-primary-solid bg-primary-soft'
+                : 'hover:text-primary-solid',
             )}
           >
-            <MessageCircle size={16} />
-            <span>{compact(commentCount)} bình luận</span>
+            <MessageCircle size={18} />
+            <span className="truncate">{compact(commentCount)}<span className="sr-only sm:not-sr-only"> bình luận</span></span>
           </button>
 
           {/* Nút Chia sẻ */}
@@ -605,15 +605,15 @@ export function PostCard({
               }
             }}
             aria-label="Chia sẻ bài viết"
-            className="inline-flex items-center gap-1.5 transition-colors hover:text-violet-500 dark:hover:text-violet-400 cursor-pointer"
+            className="inline-flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1 transition-colors cursor-pointer hover:bg-surface-2 hover:text-text"
           >
-            <Repeat size={16} />
-            <span>Chia sẻ</span>
+            <Repeat size={18} />
+            <span className="sr-only sm:not-sr-only">Chia sẻ</span>
           </button>
         </div>
 
         {/* Các nút phụ bên phải: Lưu & Báo cáo */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center">
           <button
             type="button"
             aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
@@ -622,13 +622,13 @@ export function PostCard({
               handleSave()
             }}
             className={cn(
-              'inline-flex items-center justify-center rounded-lg p-1.5 transition-colors cursor-pointer',
+              'inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors cursor-pointer',
               saved
-                ? 'text-[#F27024] dark:text-[#FF8C38] hover:bg-[#F27024]/10'
-                : 'text-slate-400 hover:text-[#F27024] dark:text-[#8a8d91] dark:hover:text-[#FF8C38] hover:bg-slate-100 dark:hover:bg-[#3a3b3c]',
+                ? 'text-primary-solid hover:bg-primary-soft'
+                : 'text-text-subtle hover:text-primary-solid hover:bg-surface-2',
             )}
           >
-            <Bookmark size={16} className={cn(saved && 'fill-[#F27024] text-[#F27024] dark:fill-[#FF8C38] dark:text-[#FF8C38]')} />
+            <Bookmark size={18} className={cn(saved && 'fill-current')} />
           </button>
 
           {!isAuthor && (canReport ? (
@@ -639,9 +639,9 @@ export function PostCard({
                 onReport?.(post)
               }}
               aria-label="Báo cáo bài viết"
-              className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 dark:text-[#8a8d91] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors cursor-pointer text-text-subtle hover:bg-danger-soft hover:text-danger"
             >
-              <Flag size={16} />
+              <Flag size={18} />
             </button>
           ) : !canInteract ? (
             <button
@@ -651,9 +651,9 @@ export function PostCard({
                 promptLogin('Đăng nhập để báo cáo bài viết.')
               }}
               aria-label="Báo cáo bài viết"
-              className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 dark:text-[#8a8d91] hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors cursor-pointer text-text-subtle hover:bg-danger-soft hover:text-danger"
             >
-              <Flag size={16} />
+              <Flag size={18} />
             </button>
           ) : null)}
         </div>
@@ -703,22 +703,22 @@ function PostSkeleton() {
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-10 w-10 border-4 border-brand-200 border-t-brand-600 rounded-full"
+          className="h-10 w-10 border-4 border-primary-soft-border border-t-brand-600 rounded-full"
         />
       </div>
       <div className="flex items-center gap-3 opacity-30">
-        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-plum-900/[0.07]" />
+        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-border" />
         <div className="flex-1 space-y-2">
-          <div className="h-3.5 w-40 animate-pulse rounded bg-plum-900/[0.07]" />
-          <div className="h-3 w-24 animate-pulse rounded bg-plum-900/[0.06]" />
+          <div className="h-3.5 w-40 animate-pulse rounded bg-border" />
+          <div className="h-3 w-24 animate-pulse rounded bg-border" />
         </div>
       </div>
       <div className="mt-4 space-y-2">
-        <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.06]" />
-        <div className="h-3.5 w-11/12 animate-pulse rounded bg-plum-900/[0.06]" />
-        <div className="h-3.5 w-2/3 animate-pulse rounded bg-plum-900/[0.06]" />
+        <div className="h-3.5 w-full animate-pulse rounded bg-border" />
+        <div className="h-3.5 w-11/12 animate-pulse rounded bg-border" />
+        <div className="h-3.5 w-2/3 animate-pulse rounded bg-border" />
       </div>
-      <div className="mt-4 h-40 w-full animate-pulse rounded-xl bg-plum-900/[0.05]" />
+      <div className="mt-4 h-40 w-full animate-pulse rounded-xl bg-surface-2" />
     </Card>
   )
 }
@@ -731,12 +731,12 @@ function PostSkeleton() {
 function FeedError({ message, onRetry }: { message?: string; onRetry: () => void }) {
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tải được bảng tin</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">Không tải được bảng tin</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
       </div>
       <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
     </Card>
@@ -746,7 +746,7 @@ function FeedError({ message, onRetry }: { message?: string; onRetry: () => void
 /** Trạng thái rỗng khi cộng đồng chưa có bài viết nào ("No posts yet"). */
 function FeedEmpty() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-plum-900/10 bg-white/50 p-12 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/50 p-12 text-center">
       <motion.div
         initial={{ y: 0 }}
         animate={{ y: [-5, 5, -5] }}
@@ -755,8 +755,8 @@ function FeedEmpty() {
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
       </motion.div>
-      <h3 className="mb-1 text-lg font-bold text-plum-900">Chưa có bài viết nào</h3>
-      <p className="text-sm text-plum-500">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
+      <h3 className="mb-1 text-lg font-bold text-text">Chưa có bài viết nào</h3>
+      <p className="text-sm text-text-subtle">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
     </div>
   )
 }
@@ -898,7 +898,7 @@ export function FeedPage() {
         )}
 
         {/* Khối B: Bộ lọc danh mục bài viết (phong cách Facebook / Instagram - 1 dòng duy nhất) */}
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/50 backdrop-blur-xs w-fit dark:bg-[#242526] dark:border dark:border-[#393a3b]">
+        <div className="no-scrollbar flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-surface-2 p-1 w-fit">
           {FILTERS.map((f) => {
             const isActive = filter === f.key
             return (
@@ -907,10 +907,10 @@ export function FeedPage() {
                 type="button"
                 onClick={() => setFilter(f.key)}
                 className={cn(
-                  'rounded-xl px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer',
+                  'shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-sm sm:px-4 font-semibold transition-colors duration-200 cursor-pointer',
                   isActive
-                    ? 'bg-white text-[#F27024] shadow-xs font-bold dark:bg-[#3a3b3c] dark:text-[#f27024]'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50 dark:text-[#b0b3b8] dark:hover:text-white dark:hover:bg-[#3a3b3c]'
+                    ? 'bg-surface text-primary-solid shadow-raised font-bold'
+                    : 'text-text-muted hover:text-text hover:bg-surface/50'
                 )}
               >
                 {f.label}
@@ -937,10 +937,10 @@ export function FeedPage() {
         ) : posts.length === 0 ? (
           // (3) Không có bài viết nào
           debouncedKeyword ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-plum-900/10 bg-white/50 p-12 text-center">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/50 p-12 text-center">
               <Search size={48} className="mb-4 text-brand-300 drop-shadow-sm" />
-              <h3 className="mb-1 text-lg font-bold text-plum-900">Không tìm thấy kết quả</h3>
-              <p className="text-sm text-plum-500">
+              <h3 className="mb-1 text-lg font-bold text-text">Không tìm thấy kết quả</h3>
+              <p className="text-sm text-text-subtle">
                 Không có bài viết nào khớp với từ khóa "<span className="font-semibold">{debouncedKeyword}</span>"
               </p>
             </div>
@@ -972,13 +972,13 @@ export function FeedPage() {
             {/* Vùng tự động tải thêm trang (Infinite scroll sentinel kiểu Facebook) */}
             <div ref={loadMoreRef} className="py-4 text-center">
               {isFetchingNextPage && (
-                <div className="flex items-center justify-center gap-2 text-sm text-plum-500">
-                  <Loader2 size={18} className="animate-spin text-brand-600" />
+                <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
+                  <Loader2 size={18} className="animate-spin text-primary-solid" />
                   <span>Đang tải thêm bài viết…</span>
                 </div>
               )}
               {!hasNextPage && posts.length > 0 && (
-                <p className="text-sm text-plum-400">Bạn đã xem hết bảng tin 🎉</p>
+                <p className="text-sm text-text-subtle">Bạn đã xem hết bảng tin 🎉</p>
               )}
             </div>
 

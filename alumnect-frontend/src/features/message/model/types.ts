@@ -1,5 +1,5 @@
 export type MediaType = 'IMAGE' | 'VIDEO' | 'FILE'
-export type ConversationType = 'DIRECT' | 'GROUP'
+export type ConversationType = 'DIRECT' | 'GROUP' | 'MENTORING'
 export type ParticipantRole = 'ADMIN' | 'MEMBER'
 export type MessageType = 'TEXT' | 'SYSTEM' | 'IMAGE' | 'FILE'
 export type MessageSendStatus = 'sending' | 'sent' | 'error'
@@ -46,6 +46,20 @@ export interface Conversation {
   unreadCount: number
   communityGroupId?: number | null
   communityGroupName?: string | null
+  /** Chat for Task (type = MENTORING): Request sở hữu cuộc hội thoại */
+  mentoringRequestId?: number | null
+  /** Chat for Task: Task đã kích hoạt sau khi thanh toán (null trước thanh toán) */
+  mentoringTaskId?: number | null
+}
+
+/** Kiểm tra cuộc hội thoại có phải Chat for Task của Mentoring Request hay không */
+export function isMentoringConversation(conv?: Partial<Conversation> | null): boolean {
+  return Boolean(
+    conv &&
+      (conv.type === 'MENTORING' ||
+        conv.mentoringRequestId != null ||
+        conv.mentoringTaskId != null)
+  )
 }
 
 /** Kiểm tra cuộc hội thoại có phải là nhóm hay không */
@@ -98,4 +112,3 @@ export interface ChatCandidateUser {
   major?: string | null
   isFollowing: boolean
 }
-

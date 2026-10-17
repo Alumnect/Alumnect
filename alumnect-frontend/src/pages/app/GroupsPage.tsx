@@ -29,18 +29,18 @@ type Tab = 'discover' | 'mine'
 /** Khung xương thẻ hội nhóm trong lúc tải danh sách lần đầu. */
 function GroupCardSkeleton() {
   return (
-    <Card hover={false} className="overflow-hidden rounded-3xl border border-plum-900/[0.08] p-0 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-      <div className="aspect-[16/9] w-full animate-pulse bg-plum-900/[0.06] dark:bg-white/5" />
+    <Card hover={false} className="overflow-hidden rounded-3xl border border-border p-0 shadow-card dark:bg-surface">
+      <div className="aspect-[16/9] w-full animate-pulse bg-border" />
       <div className="space-y-3 p-5">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-20 animate-pulse rounded-full bg-plum-900/[0.06] dark:bg-white/5" />
-          <div className="h-4 w-16 animate-pulse rounded-full bg-plum-900/[0.06] dark:bg-white/5" />
+          <div className="h-4 w-20 animate-pulse rounded-full bg-border" />
+          <div className="h-4 w-16 animate-pulse rounded-full bg-border" />
         </div>
-        <div className="h-5 w-4/5 animate-pulse rounded-xl bg-plum-900/[0.08] dark:bg-white/10" />
-        <div className="h-4 w-full animate-pulse rounded-lg bg-plum-900/[0.05] dark:bg-white/5" />
+        <div className="h-5 w-4/5 animate-pulse rounded-xl bg-surface-3" />
+        <div className="h-4 w-full animate-pulse rounded-lg bg-surface-2" />
         <div className="flex items-center justify-between pt-3">
-          <div className="h-4 w-24 animate-pulse rounded-lg bg-plum-900/[0.06] dark:bg-white/5" />
-          <div className="h-8 w-24 animate-pulse rounded-xl bg-plum-900/[0.07] dark:bg-white/10" />
+          <div className="h-4 w-24 animate-pulse rounded-lg bg-border" />
+          <div className="h-8 w-24 animate-pulse rounded-xl bg-border" />
         </div>
       </div>
     </Card>
@@ -99,7 +99,7 @@ export function GroupsPage() {
       />
 
       {/* Tabs chuyển đổi: Khám phá vs Nhóm của tôi */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-plum-900/[0.08] pb-3 dark:border-[#393a3b]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <div className="flex gap-2">
           {(
             [
@@ -116,7 +116,7 @@ export function GroupsPage() {
                   'relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all',
                   isActive
                     ? 'bg-plum-900 text-white shadow-sm dark:bg-white dark:text-plum-900'
-                    : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.07] dark:bg-[#3a3b3c] dark:text-[#b0b3b8] dark:hover:text-white',
+                    : 'bg-surface-2 text-text-muted hover:bg-border dark:hover:text-white',
                 )}
               >
                 <t.icon size={15} />
@@ -127,7 +127,7 @@ export function GroupsPage() {
         </div>
 
         {tab === 'mine' && !user && (
-          <p className="text-xs text-plum-500">Đăng nhập để xem danh sách các nhóm bạn đã tham gia.</p>
+          <p className="text-xs text-text-subtle">Đăng nhập để xem danh sách các nhóm bạn đã tham gia.</p>
         )}
       </div>
 
@@ -135,19 +135,19 @@ export function GroupsPage() {
         <div className="space-y-4">
           {/* Ô tìm kiếm từ khóa với debounce */}
           <div className="relative">
-            <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-plum-400" />
+            <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Tìm kiếm hội nhóm theo tên, từ khóa hoặc chủ đề…"
               maxLength={GROUP_SEARCH_MAX}
-              className="h-12 w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] pl-11 pr-10 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-500/40 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#242526] dark:text-white"
+              className="h-12 w-full rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:border-brand-500/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
             {searchInput && (
               <button
                 onClick={() => setSearchInput('')}
                 aria-label="Xóa tìm kiếm"
-                className="absolute right-3.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700"
+                className="absolute right-3.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
               >
                 <X size={14} />
               </button>
@@ -164,28 +164,28 @@ export function GroupsPage() {
           ))}
         </div>
       ) : query.isError ? (
-        <Card hover={false} className="flex flex-col items-center gap-3 rounded-3xl border border-rose-500/20 p-10 text-center shadow-card dark:border-rose-900/30 dark:bg-[#242526]">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+        <Card hover={false} className="flex flex-col items-center gap-3 rounded-3xl border border-danger p-10 text-center shadow-card dark:bg-surface">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
             <AlertTriangle size={24} />
           </span>
           <div>
-            <p className="font-bold text-plum-900 dark:text-white">Không tải được danh sách hội nhóm</p>
-            <p className="mt-1 text-sm text-plum-500 dark:text-[#b0b3b8]">{(query.error as Error)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+            <p className="font-bold text-text">Không tải được danh sách hội nhóm</p>
+            <p className="mt-1 text-sm text-text-subtle">{(query.error as Error)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
           </div>
           <Button variant="secondary" size="sm" onClick={() => query.refetch()}>
             Thử lại
           </Button>
         </Card>
       ) : groups.length === 0 ? (
-        <Card hover={false} className="flex flex-col items-center gap-3 rounded-3xl border border-plum-900/[0.08] p-12 text-center shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-plum-900/[0.04] text-plum-400 dark:bg-white/5">
+        <Card hover={false} className="flex flex-col items-center gap-3 rounded-3xl border border-border p-12 text-center shadow-card dark:bg-surface">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
             <Inbox size={26} />
           </span>
           <div>
-            <p className="text-base font-extrabold text-plum-900 dark:text-white">
+            <p className="text-base font-extrabold text-text">
               {tab === 'mine' ? 'Bạn chưa tham gia hội nhóm nào' : filtering ? 'Không tìm thấy hội nhóm phù hợp' : 'Chưa có hội nhóm nào'}
             </p>
-            <p className="mt-1 text-sm text-plum-500 dark:text-[#b0b3b8]">
+            <p className="mt-1 text-sm text-text-subtle">
               {tab === 'mine'
                 ? 'Khám phá và tham gia các hội nhóm để kết nối với cựu sinh viên FPTU.'
                 : filtering

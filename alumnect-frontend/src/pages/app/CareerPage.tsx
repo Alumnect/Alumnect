@@ -136,23 +136,23 @@ export function CareerPage() {
 
       {/* Search & Filter */}
       <Reveal>
-        <Card hover={false} className="mb-6 p-4 sm:p-5 border border-plum-900/10 shadow-soft bg-white rounded-3xl">
+        <Card hover={false} className="mb-6 p-4 sm:p-5 border border-border shadow-soft bg-surface rounded-3xl">
           {/* Main search bar + Filter toggle button */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
-              <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-plum-400" />
+              <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
                 type="text"
                 placeholder="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-12 rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] pl-11 pr-10 text-sm text-plum-900 placeholder:text-plum-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                className="w-full h-12 rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle transition-all focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-plum-400 hover:bg-plum-900/10 hover:text-plum-700 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-subtle hover:bg-surface-3 hover:text-text-muted transition-colors"
                   title="Xóa từ khóa tìm kiếm"
                 >
                   <X size={15} />
@@ -170,7 +170,7 @@ export function CareerPage() {
             >
               <span>Bộ lọc nâng cao</span>
               {activeFilterCount > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-bold text-brand-600 shadow-sm">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-solid shadow-sm">
                   {activeFilterCount}
                 </span>
               )}
@@ -187,16 +187,16 @@ export function CareerPage() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="mt-4 pt-4 border-t border-plum-900/10">
+                <div className="mt-4 pt-4 border-t border-border">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
-                        <BookOpen size={12} className="text-blue-500" /> Chuyên ngành
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <BookOpen size={12} className="text-info" /> Chuyên ngành
                       </label>
                       <select
                         value={majorId}
                         onChange={(e) => setMajorId(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-2.5 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-2.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       >
                         <option value="">Tất cả chuyên ngành</option>
                         {majors.map((m) => (
@@ -207,64 +207,64 @@ export function CareerPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
-                        <Briefcase size={12} className="text-brand-500" /> Chức danh
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <Briefcase size={12} className="text-primary-solid" /> Chức danh
                       </label>
                       <input
                         type="text"
                         placeholder="VD: Frontend Developer..."
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
-                        <Building2 size={12} className="text-violet-500" /> Công ty
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <Building2 size={12} className="text-info" /> Công ty
                       </label>
                       <input
                         type="text"
                         placeholder="VD: FPT Software, VNG..."
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
-                        <MapPin size={12} className="text-emerald-500" /> Địa điểm
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <MapPin size={12} className="text-success" /> Địa điểm
                       </label>
                       <input
                         type="text"
                         placeholder="VD: Hà Nội, TP.HCM..."
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-plum-500 mb-1.5 flex items-center gap-1">
-                        <GraduationCap size={12} className="text-amber-500" /> Khóa học
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <GraduationCap size={12} className="text-warning" /> Khóa học
                       </label>
                       <input
                         type="number"
                         placeholder="VD: 14, 15, 16..."
                         value={cohort}
                         onChange={(e) => setCohort(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                   </div>
 
                   <div className="mt-3 flex items-center justify-between">
-                    <p className="text-xs text-plum-400">
+                    <p className="text-xs text-text-subtle">
                       Kết hợp các tiêu chí để lọc lộ trình chính xác nhất.
                     </p>
                     {!!(search || title || company || location || cohort || majorId) && (
                       <button
                         type="button"
                         onClick={handleClearFilters}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger transition-colors"
                       >
                         <RotateCcw size={12} /> Xóa tất cả bộ lọc
                       </button>
@@ -305,8 +305,8 @@ export function CareerPage() {
                     transition={{ type: 'spring', stiffness: 420, damping: 30 }}
                     className={`cursor-pointer rounded-2xl border bg-white transition-shadow duration-200 select-none group ${
                       isActive
-                        ? 'border-brand-300 shadow-[0_0_0_2px_rgb(124_134_238/0.15),0_8px_32px_-12px_rgb(124_134_238/0.35)]'
-                        : 'border-plum-900/6 shadow-sm hover:border-brand-200/80 hover:shadow-[0_6px_28px_-10px_rgb(120_100_140/0.3)]'
+                        ? 'border-primary-soft-border shadow-[0_0_0_2px_rgb(124_134_238/0.15),0_8px_32px_-12px_rgb(124_134_238/0.35)]'
+                        : 'border-border shadow-sm hover:border-brand-200/80 hover:shadow-[0_6px_28px_-10px_rgb(120_100_140/0.3)]'
                     }`}
                   >
                     <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -320,18 +320,18 @@ export function CareerPage() {
                           className="rounded-xl shrink-0"
                         />
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-bold text-plum-900 truncate">{alumni.fullName}</h3>
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-plum-400 mt-0.5">
-                            <span className="font-medium text-plum-500">{alumni.major || 'Đại học FPT'}</span>
+                          <h3 className="text-sm font-bold text-text truncate">{alumni.fullName}</h3>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-subtle mt-0.5">
+                            <span className="font-medium text-text-subtle">{alumni.major || 'Đại học FPT'}</span>
                             {alumni.cohort && (<><span className="opacity-40">·</span><span>K{alumni.cohort}</span></>)}
                           </div>
                           {(alumni.currentTitle || alumni.currentCompany) && (
-                            <p className="text-[11px] text-plum-500 mt-1.5 flex items-center gap-1.5 min-w-0">
+                            <p className="text-xs text-text-subtle mt-1.5 flex items-center gap-1.5 min-w-0">
                               <Briefcase size={11} className="text-brand-400 shrink-0" />
                               <span className="truncate">
-                                <span className="font-semibold text-plum-700">{alumni.currentTitle}</span>
-                                {alumni.currentCompany && <> tại <span className="font-semibold text-plum-800">{alumni.currentCompany}</span></>}
-                                {alumni.currentLocation && <span className="text-plum-400 font-normal"> · {formatLocationCityOnly(alumni.currentLocation)}</span>}
+                                <span className="font-semibold text-text-muted">{alumni.currentTitle}</span>
+                                {alumni.currentCompany && <> tại <span className="font-semibold text-text">{alumni.currentCompany}</span></>}
+                                {alumni.currentLocation && <span className="text-text-subtle font-normal"> · {formatLocationCityOnly(alumni.currentLocation)}</span>}
                               </span>
                             </p>
                           )}
@@ -346,7 +346,7 @@ export function CareerPage() {
                               <React.Fragment key={step.experienceId}>
                                 <span
                                   className={`px-2 py-0.5 rounded-md text-[10px] font-medium truncate max-w-[85px] ${
-                                    step.isCurrent ? 'bg-brand-100 text-brand-700 font-semibold' : 'bg-plum-50 text-plum-500'
+                                    step.isCurrent ? 'bg-primary-soft text-primary-solid font-semibold' : 'bg-surface-2 text-text-subtle'
                                   }`}
                                   title={`${step.title} @ ${step.company}`}
                                 >
@@ -358,12 +358,12 @@ export function CareerPage() {
                               </React.Fragment>
                             ))}
                             {alumni.careerPreview.length > 3 && (
-                              <span className="text-[10px] text-plum-400 font-medium">+{alumni.careerPreview.length - 3}</span>
+                              <span className="text-xs text-text-subtle font-medium">+{alumni.careerPreview.length - 3}</span>
                             )}
                           </div>
                         )}
                         <div className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide transition-colors ${
-                          isActive ? 'text-brand-600' : 'text-plum-400'
+                          isActive ? 'text-primary-solid' : 'text-text-subtle'
                         }`}>
                           <span>{alumni.totalExperiences} vai trò</span>
                           <ChevronRight size={13} className={`transition-transform duration-200 ${isActive ? 'rotate-90 text-brand-500' : 'group-hover:translate-x-0.5'}`} />
@@ -408,7 +408,7 @@ export function CareerPage() {
                 animate={{ x: 0, y: 0 }}
                 exit={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
                 transition={{ type: 'spring', stiffness: 360, damping: 40, mass: 0.85 }}
-                className={`fixed z-[110] flex flex-col bg-white dark:bg-[#242526] dark:border-[#393a3b] ${
+                className={`fixed z-[110] flex flex-col bg-white dark:bg-surface dark:border-border ${
                   isMobile
                     ? 'bottom-0 left-0 right-0 top-auto h-[85vh] w-full rounded-t-3xl border-t'
                     : 'top-0 right-0 bottom-0 h-full w-full max-w-[460px] rounded-l-3xl border-l'
@@ -420,13 +420,13 @@ export function CareerPage() {
                 }}
               >
                 {isMobile && (
-                  <div className="shrink-0 flex justify-center py-2 bg-gradient-to-b from-[#f2f3ff] to-transparent dark:from-[#242526]">
+                  <div className="shrink-0 flex justify-center py-2 bg-gradient-to-b from-[#f2f3ff] to-transparent dark:from-surface">
                     <div className="w-10 h-1 rounded-full bg-plum-300/40 dark:bg-slate-600" />
                   </div>
                 )}
                 {/* ── Gradient Header ── */}
                 <div
-                  className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden border-b border-plum-900/[0.06] bg-gradient-to-r from-[#f2f3ff] via-[#faf4ec] to-[#fff0f8] dark:bg-none dark:bg-[#242526] dark:border-[#393a3b]"
+                  className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden border-b border-border bg-gradient-to-r from-[#f2f3ff] via-[#faf4ec] to-[#fff0f8] dark:bg-none dark:bg-surface"
                 >
                   {/* Decorative glow blobs (light mode only) */}
                   <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full opacity-25 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #bcc0fb, transparent 70%)' }} />
@@ -435,7 +435,7 @@ export function CareerPage() {
                   {/* Close */}
                   <button
                     onClick={() => setSelectedAlumni(null)}
-                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-plum-400 hover:text-plum-900 hover:bg-white/80 dark:text-[#b0b3b8] dark:hover:text-white dark:hover:bg-[#3a3b3c] active:scale-90 transition-all duration-150 cursor-pointer"
+                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition-all duration-150 cursor-pointer"
                   >
                     <X size={16} strokeWidth={2.5} />
                   </button>
@@ -451,22 +451,22 @@ export function CareerPage() {
                       ring
                     />
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <h2 className="text-lg font-extrabold text-plum-900 dark:text-[#f0f2f5] leading-tight">{selectedAlumni.fullName}</h2>
+                      <h2 className="text-lg font-extrabold text-text leading-tight">{selectedAlumni.fullName}</h2>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
-                        <span className="inline-block text-[11px] font-bold text-brand-700 bg-brand-100 border border-brand-200/50 px-2.5 py-0.5 rounded-full dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500/30">
+                        <span className="inline-block text-xs font-bold text-primary-solid bg-primary-soft border border-brand-200/50 px-2.5 py-0.5 rounded-full dark:border-brand-500/30">
                           {selectedAlumni.major || 'Đại học FPT'}
                         </span>
                         {selectedAlumni.cohort && (
-                          <span className="text-[11px] text-plum-500 dark:text-[#b0b3b8] font-semibold">Khóa K{selectedAlumni.cohort}</span>
+                          <span className="text-xs text-text-subtle font-semibold">Khóa K{selectedAlumni.cohort}</span>
                         )}
                       </div>
                       {(selectedAlumni.currentTitle || selectedAlumni.currentCompany) && (
                         <div className="mt-2 flex items-start gap-1.5">
-                          <Briefcase size={11} className="text-brand-500 mt-0.5 shrink-0" />
-                          <p className="text-[11px] text-plum-600 dark:text-[#b0b3b8] leading-snug">
-                            <span className="font-bold text-plum-800 dark:text-[#f0f2f5]">{selectedAlumni.currentTitle}</span>
+                          <Briefcase size={11} className="text-primary-solid mt-0.5 shrink-0" />
+                          <p className="text-xs text-text-muted leading-snug">
+                            <span className="font-bold text-text">{selectedAlumni.currentTitle}</span>
                             {selectedAlumni.currentCompany && <> · <span className="font-medium">{selectedAlumni.currentCompany}</span></>}
-                            {selectedAlumni.currentLocation && <span className="text-plum-400 dark:text-[#b0b3b8]"> · {selectedAlumni.currentLocation}</span>}
+                            {selectedAlumni.currentLocation && <span className="text-text-subtle"> · {selectedAlumni.currentLocation}</span>}
                           </p>
                         </div>
                       )}
@@ -475,14 +475,14 @@ export function CareerPage() {
 
                   {/* Stat chips */}
                   <div className="flex items-center gap-2 mt-4">
-                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm dark:bg-[#3a3b3c] dark:border-[#393a3b]">
-                      <Star size={11} className="text-gold-500" />
-                      <span className="text-[11px] font-bold text-plum-700 dark:text-[#f0f2f5]">{selectedAlumni.totalExperiences} vai trò</span>
+                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-border px-3 py-1.5 shadow-sm dark:bg-surface-2">
+                      <Star size={11} className="text-warning" />
+                      <span className="text-xs font-bold text-text-muted">{selectedAlumni.totalExperiences} vai trò</span>
                     </div>
                     {selectedAlumni.cohort && (
-                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm dark:bg-[#3a3b3c] dark:border-[#393a3b]">
+                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-border px-3 py-1.5 shadow-sm dark:bg-surface-2">
                         <Calendar size={11} className="text-brand-400" />
-                        <span className="text-[11px] font-bold text-plum-700 dark:text-[#f0f2f5]">Khóa K{selectedAlumni.cohort}</span>
+                        <span className="text-xs font-bold text-text-muted">Khóa K{selectedAlumni.cohort}</span>
                       </div>
                     )}
                   </div>
@@ -495,9 +495,9 @@ export function CareerPage() {
 
                 {/* ── Footer CTA ── */}
                 <div
-                  className="shrink-0 px-6 py-4 flex items-center justify-between gap-3 border-t border-plum-900/[0.06] bg-white dark:bg-[#242526] dark:border-[#393a3b]"
+                  className="shrink-0 px-6 py-4 flex items-center justify-between gap-3 border-t border-border bg-surface"
                 >
-                  <p className="text-[10px] text-plum-400 dark:text-[#b0b3b8] font-medium">Nhấn Esc để đóng</p>
+                  <p className="text-xs text-text-subtle font-medium">Nhấn Esc để đóng</p>
                   <ViewProfileButton userId={selectedAlumni.userId} />
                 </div>
               </motion.aside>
@@ -536,7 +536,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
         {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-2xl w-full" />)}
         <div className="flex items-center justify-center gap-2 py-6">
           <Loader2 size={15} className="animate-spin text-brand-400" />
-          <span className="text-xs text-plum-400 font-medium">Đang tải lộ trình...</span>
+          <span className="text-xs text-text-subtle font-medium">Đang tải lộ trình...</span>
         </div>
       </div>
     )
@@ -545,11 +545,11 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
   if (error || !detail) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-coral-50 flex items-center justify-center mb-3">
-          <RouteIcon size={20} className="text-coral-400" />
+        <div className="w-12 h-12 rounded-2xl bg-danger-soft flex items-center justify-center mb-3">
+          <RouteIcon size={20} className="text-danger" />
         </div>
-        <p className="text-sm font-semibold text-plum-700">Không thể tải dữ liệu</p>
-        <p className="text-xs text-plum-400 mt-1">Lỗi khi tải chi tiết lộ trình.</p>
+        <p className="text-sm font-semibold text-text-muted">Không thể tải dữ liệu</p>
+        <p className="text-xs text-text-subtle mt-1">Lỗi khi tải chi tiết lộ trình.</p>
       </div>
     )
   }
@@ -577,12 +577,12 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
     <div className="text-left">
       {/* Label divider */}
       <div className="flex items-center gap-3 my-5">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-[#393a3b]" />
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 px-3 py-1 rounded-full bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 shadow-xs">
+        <div className="h-px flex-1 bg-surface-3" />
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary-solid px-3 py-1 rounded-full bg-primary-soft border border-primary-soft-border shadow-xs">
           <RouteIcon size={13} />
           Lộ trình sự nghiệp
         </span>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-[#393a3b]" />
+        <div className="h-px flex-1 bg-surface-3" />
       </div>
 
       {/* Timeline */}
@@ -597,15 +597,15 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
               )}
 
               {/* Company node icon */}
-              <div className="absolute left-0 top-1 w-7 h-7 rounded-xl flex items-center justify-center shadow-sm border border-brand-200/60 bg-gradient-to-br from-[#e8e9ff] to-[#f2f3ff] dark:from-[#3a3b3c] dark:to-[#242526] dark:border-[#393a3b]">
-                <Building2 size={13} className="text-brand-500" />
+              <div className="absolute left-0 top-1 w-7 h-7 rounded-xl flex items-center justify-center shadow-sm border border-primary-soft-border bg-gradient-to-br from-[#e8e9ff] to-[#f2f3ff] dark:from-surface-2 dark:to-surface">
+                <Building2 size={13} className="text-primary-solid" />
               </div>
 
               <div className="mb-5">
                 {/* Company header */}
-                <p className="font-bold text-sm text-plum-900 dark:text-[#f0f2f5] leading-snug">{group.company}</p>
+                <p className="font-bold text-sm text-text leading-snug">{group.company}</p>
                 {group.location && (
-                  <span className="flex items-center gap-1 text-[10px] text-plum-400 dark:text-[#b0b3b8] mt-0.5">
+                  <span className="flex items-center gap-1 text-xs text-text-subtle mt-0.5">
                     <MapPin size={9} />{group.location}
                   </span>
                 )}
@@ -620,34 +620,34 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
                       transition={{ delay: gIdx * 0.05 + rIdx * 0.03, duration: 0.3 }}
                       className={`relative rounded-xl px-3.5 py-2.5 border transition-colors ${
                         role.isCurrent
-                          ? 'bg-gradient-to-br from-brand-50/80 to-white border-brand-200/60 dark:from-[#3a3b3c] dark:to-[#242526] dark:border-brand-500/40'
-                          : 'bg-plum-50/25 border-plum-900/[0.05] dark:bg-[#3a3b3c]/40 dark:border-[#393a3b]'
+                          ? 'bg-gradient-to-br from-brand-50/80 to-white border-primary-soft-border dark:from-surface-2 dark:to-surface'
+                          : 'bg-plum-50/25 border-border dark:bg-surface-2/40'
                       }`}
                     >
                       {/* Pulsing dot for current role */}
                       {role.isCurrent && (
                         <span className="absolute top-3 right-3 flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-50" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-solid" />
                         </span>
                       )}
 
                       <div className="flex items-start justify-between gap-2 pr-5">
-                        <p className="text-xs font-bold text-plum-800 dark:text-[#f0f2f5] leading-snug">{role.title}</p>
+                        <p className="text-xs font-bold text-text leading-snug">{role.title}</p>
                         {role.isPrimary && (
-                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-gold-700 border border-gold-300/50">
-                            <Star size={7} className="fill-gold-600 text-gold-600" />
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-gold-700 border border-gold-300/50">
+                            <Star size={7} className="fill-warning text-warning" />
                             Chính
                           </span>
                         )}
                       </div>
 
-                      <p className="flex items-center gap-1 text-[10px] text-plum-400 mt-1">
+                      <p className="flex items-center gap-1 text-xs text-text-subtle mt-1">
                         <Calendar size={9} />{role.period}
                       </p>
 
                       {role.description && (
-                        <p className="mt-2 text-[11px] leading-relaxed text-plum-500 border-t border-plum-900/[0.05] pt-2 whitespace-pre-line">
+                        <p className="mt-2 text-xs leading-relaxed text-text-subtle border-t border-border pt-2 whitespace-pre-line">
                           {role.description}
                         </p>
                       )}
@@ -661,7 +661,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
       </ol>
 
       {groupedTimeline.length === 0 && (
-        <p className="text-xs text-plum-400 text-center py-10">Chưa có dữ liệu lộ trình.</p>
+        <p className="text-xs text-text-subtle text-center py-10">Chưa có dữ liệu lộ trình.</p>
       )}
     </div>
   )

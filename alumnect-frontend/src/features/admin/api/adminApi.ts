@@ -1,4 +1,11 @@
 import http from '@/lib/http'
+import type {
+  MentoringDisputeTicket,
+  MentoringDisputeContext,
+  MentoringTicketMessage,
+  CreateTicketMessagePayload,
+  AdminResolveTicketPayload,
+} from '@/features/mentorship'
 
 export interface DayRegistrationStatDto {
   date: string
@@ -264,16 +271,212 @@ export const adminApi = {
     http.put<any, ApiResponse<void>>(`/admin/notifications/${id}/archive`),
 
   /**
-   * Lấy danh sách Mentor kèm thông tin CV và gói đăng ký (UC96)
+   * Lấy danh sách Mentor kèm thông tin CV và gói đăng ký (UC96, UC115)
    */
-  getAdminMentors: (params: { keyword?: string; page?: number; size?: number }) =>
+  getAdminMentors: (params: {
+    keyword?: string
+    status?: string
+    subscriptionStatus?: string
+    page?: number
+    size?: number
+  }) =>
     http.get<any, ApiResponse<PageResponse<AdminMentorCvDto>>>('/admin/mentors', { params }),
+
+  /**
+   * Lấy thông tin chi tiết hồ sơ quản lý của Mentor theo ID (UC115 Bước 35)
+   */
+  getAdminMentorDetail: (mentorId: number) =>
+    http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}`),
 
   /**
    * Lấy thông tin chi tiết CV và gói của Mentor theo ID (UC96)
    */
   getMentorCv: (mentorId: number) =>
     http.get<any, ApiResponse<AdminMentorCvDto>>(`/admin/mentors/${mentorId}/cv`),
+
+  /**
+   * Lấy danh sách Ticket tranh chấp & hòa giải cho Admin (UC116)
+   */
+  getAdminTickets: (params: {
+    keyword?: string
+    type?: string
+    status?: string
+    handledById?: number
+    page?: number
+    size?: number
+  }) =>
+    http.get<any, ApiResponse<PageResponse<MentoringDisputeTicket>>>('/admin/mentoring/tickets', { params }),
+
+  /**
+   * Xem chi tiết một Ticket cho Admin (UC116, UC118)
+   */
+  getAdminTicketDetail: (ticketId: number) =>
+    http.get<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}`),
+
+  /**
+   * Quản trị viên tiếp nhận xử lý Ticket tranh chấp / hòa giải (UC117)
+   */
+  acceptAdminTicket: (ticketId: number) =>
+    http.post<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}/accept`),
+
+  /**
+   * Xem toàn bộ bằng chứng và bối cảnh Task của Ticket cho Admin (UC118)
+   */
+  getAdminDisputeContext: (ticketId: number) =>
+    http.get<any, ApiResponse<MentoringDisputeContext>>(`/admin/mentoring/tickets/${ticketId}/context`),
+
+  /**
+   * Lấy danh sách tin nhắn trao đổi trong Ticket cho Admin (UC119)
+   */
+  getAdminTicketMessages: (ticketId: number) =>
+    http.get<any, ApiResponse<MentoringTicketMessage[]>>(`/admin/mentoring/tickets/${ticketId}/messages`),
+
+  /**
+   * Admin gửi tin nhắn / hướng dẫn hòa giải / yêu cầu bổ sung thông tin trong Ticket (UC119)
+   */
+  sendAdminTicketMessage: (ticketId: number, payload: CreateTicketMessagePayload) =>
+    http.post<any, ApiResponse<MentoringTicketMessage>>(`/admin/mentoring/tickets/${ticketId}/messages`, payload),
+
+  /**
+   * Quản trị viên ra phán quyết quyết định phương án giải quyết Ticket (UC120)
+   */
+  resolveAdminTicket: (ticketId: number, payload: AdminResolveTicketPayload) =>
+    http.post<any, ApiResponse<MentoringDisputeTicket>>(`/admin/mentoring/tickets/${ticketId}/resolve`, payload),
+
+  /**
+   * Xem danh sách Quỹ và dòng tiền theo Task cho Quản trị viên (UC121)
+   */
+  getAdminTaskFunds: (params: {
+    keyword?: string
+    status?: string
+    settlementStatus?: string
+    page?: number
+    size?: number
+  }) =>
+    http.get<any, ApiResponse<PageResponse<AdminTaskFundSummaryDto>>>('/admin/mentoring/finances/tasks', { params }),
+
+  /**
+   * Xem chi tiết Sổ quỹ và lịch sử tài chính của Task (UC121)
+   */
+  getAdminTaskFundDetail: (taskId: number) =>
+    http.get<any, ApiResponse<AdminTaskFundDetailDto>>(`/admin/mentoring/finances/tasks/${taskId}`),
+
+  /**
+   * Chi lại thù lao Mentor cho lệnh chi PayOS đã thất bại
+   */
+  retryAdminPayout: (ledgerId: number, note?: string) =>
+    http.post<any, ApiResponse<MentoringPaymentLedgerDto>>(
+      `/admin/mentoring/finances/ledgers/${ledgerId}/retry-payout`,
+      { note }
+    ),
+
+  /**
+   * Số dư tài khoản Kênh chi PayOS
+   */
+  getAdminPayoutBalance: () =>
+    http.get<any, ApiResponse<number>>('/admin/mentoring/finances/payout-balance'),
+
+  getRevenueOverview: (params?: { from?: string; to?: string }) =>
+    http.get<any, ApiResponse<AdminRevenueOverviewDto>>('/admin/revenue/overview', { params }),
+}
+
+export interface AdminMonthlyRevenueDto {
+  month: string
+  label: string
+  subscriptionRevenue: number
+  disputeFeeRevenue: number
+  totalRevenue: number
+}
+
+export interface AdminRevenueTransactionDto {
+  id: string
+  sourceType: 'MENTOR_SUBSCRIPTION' | 'DISPUTE_FEE'
+  referenceCode: string
+  payerName: string
+  payerEmail: string
+  description: string
+  paymentMethod: string
+  amount: number
+  occurredAt: string
+  status: string
+}
+
+export interface AdminRevenueOverviewDto {
+  totalOwnedRevenue: number
+  subscriptionRevenue: number
+  disputeFeeRevenue: number
+  currentMonthRevenue: number
+  previousMonthRevenue: number
+  monthGrowthPercent: number
+  successfulTransactionCount: number
+  escrowHolding: number
+  pendingMentorPayout: number
+  pendingStudentRefund: number
+  from?: string
+  to?: string
+  monthlyRevenue: AdminMonthlyRevenueDto[]
+  transactions: AdminRevenueTransactionDto[]
+}
+
+export interface AdminTaskParticipantDto {
+  id: number
+  fullName: string
+  email: string
+  avatarUrl?: string
+  role?: string
+}
+
+export interface AdminTaskFundSummaryDto {
+  taskId: number
+  taskTitle: string
+  taskStatus: string
+  requestId?: number
+  student: AdminTaskParticipantDto
+  mentor: AdminTaskParticipantDto
+  initialPrice: number
+  totalTopUpAmount: number
+  totalCollected: number
+  escrowHoldingAmount: number
+  lockedAmount: number
+  platformFee: number
+  totalPayout: number
+  totalRefund: number
+  currentDeadline?: string
+  settlementStatus: 'HOLDING_ESCROW' | 'SETTLED' | 'PARTIALLY_SETTLED' | 'UNSETTLED' | string
+  activeTicketId?: number
+  activeTicketCode?: string
+  activeTicketStatus?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MentoringPaymentLedgerDto {
+  id: number
+  paymentId?: number
+  taskId?: number
+  requestId?: number
+  dealId?: number
+  student?: AdminTaskParticipantDto
+  mentor?: AdminTaskParticipantDto
+  amount: number
+  transactionType: 'ESCROW_COLLECTION' | 'PAYOUT' | 'REFUND' | 'TOP_UP' | string
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | string
+  providerReference?: string
+  providerStatus?: string
+  failureCode?: string
+  transactedAt?: string
+  deadlineSnapshot?: string
+  note?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AdminTaskFundDetailDto {
+  summary: AdminTaskFundSummaryDto
+  ledgers: MentoringPaymentLedgerDto[]
+  extensionHistory: any[]
+  amendmentHistory: any[]
+  disputeTickets: any[]
 }
 
 
@@ -374,6 +577,10 @@ export interface AdminMentorCvDto {
   subscriptionStartDate?: string
   subscriptionEndDate?: string
   updatedAt: string
+  reputationScore?: number
+  completedTasks?: number
+  rating?: number
+  reviewCount?: number
 }
 
 

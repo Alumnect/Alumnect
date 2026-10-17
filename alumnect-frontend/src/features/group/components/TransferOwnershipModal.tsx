@@ -52,23 +52,23 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
         </div>
       }
     >
-      <p className="mb-3 text-sm text-plum-500">Bạn là chủ sở hữu. Hãy chọn một thành viên để chuyển quyền sở hữu trước khi rời hội nhóm.</p>
+      <p className="mb-3 text-sm text-text-subtle">Bạn là chủ sở hữu. Hãy chọn một thành viên để chuyển quyền sở hữu trước khi rời hội nhóm.</p>
       <div className="relative mb-3">
-        <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+        <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Tìm thành viên theo tên…"
-          className="h-10 w-full rounded-xl bg-plum-900/[0.04] pl-10 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="h-10 w-full rounded-xl bg-surface-2 pl-10 pr-3 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
 
       {isLoading ? (
-        <div className="grid place-items-center py-8 text-plum-400">
+        <div className="grid place-items-center py-8 text-text-subtle">
           <Loader2 size={20} className="animate-spin" />
         </div>
       ) : candidates.length === 0 ? (
-        <p className="py-6 text-center text-sm text-plum-500">Không có thành viên nào phù hợp.</p>
+        <p className="py-6 text-center text-sm text-text-subtle">Không có thành viên nào phù hợp.</p>
       ) : (
         <ul className="space-y-1.5">
           {candidates.map((m) => (
@@ -79,15 +79,15 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
                 aria-pressed={selected === m.userId}
                 className={cn(
                   'flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition-colors',
-                  selected === m.userId ? 'border-brand-400/70 bg-brand-500/10' : 'border-plum-900/10 hover:bg-plum-900/[0.03]',
+                  selected === m.userId ? 'border-brand-400/70 bg-primary-soft' : 'border-border hover:bg-surface-2',
                 )}
               >
                 <Avatar src={m.avatarUrl ?? ''} name={m.fullName} size={36} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-plum-900">{m.fullName}</span>
-                  {m.headline && <span className="block truncate text-xs text-plum-500">{m.headline}</span>}
+                  <span className="block truncate text-sm font-semibold text-text">{m.fullName}</span>
+                  {m.headline && <span className="block truncate text-xs text-text-subtle">{m.headline}</span>}
                 </span>
-                {m.role === 'ADMIN' && <span className="text-[11px] font-semibold text-brand-600">Quản trị viên</span>}
+                {m.role === 'ADMIN' && <span className="text-xs font-semibold text-primary-solid">Quản trị viên</span>}
               </button>
             </li>
           ))}

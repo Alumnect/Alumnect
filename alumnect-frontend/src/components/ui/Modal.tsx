@@ -50,10 +50,10 @@ export function Modal({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className={cn("fixed inset-0 flex items-center justify-center p-4", zIndexClassName)}>
+        <div className={cn("fixed inset-0 flex items-end justify-center sm:items-center sm:p-4", zIndexClassName)}>
           {/* Lớp nền mờ (Backdrop) phủ toàn màn hình */}
           <motion.div
-            className="absolute inset-0 bg-plum-950/40 dark:bg-black/70 backdrop-blur-xs"
+            className="absolute inset-0 bg-overlay backdrop-blur-xs"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: TRANSITION.exit }}
@@ -66,41 +66,44 @@ export function Modal({
             role="dialog"
             aria-modal="true"
             className={cn(
-              "relative w-full rounded-3xl bg-white border border-plum-900/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] dark:bg-[#242526] dark:border-[#393a3b]",
+              "relative flex w-full flex-col overflow-hidden rounded-t-2xl border border-border bg-surface text-text shadow-overlay max-h-[90vh] pb-[env(safe-area-inset-bottom)] sm:rounded-2xl sm:max-h-[85vh] sm:pb-0",
               maxWidthClassName,
               className
             )}
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            initial={{ opacity: 0, scale: 0.98, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: 6, transition: TRANSITION.exit }}
             transition={TRANSITION.pop}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4.5 bg-white border-b border-plum-900/5 shrink-0 dark:bg-[#242526] dark:border-[#393a3b]">
-              <div className="flex items-center gap-2">
+            <div className="relative flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-5 py-3 sm:px-6">
+              <span aria-hidden className="absolute left-1/2 top-1.5 h-1 w-10 -translate-x-1/2 rounded-full bg-surface-3 sm:hidden" />
+              <div className="flex min-w-0 items-center gap-2">
                 {icon && (
-                  <span className="p-1.5 rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400 shrink-0">
+                  <span className="shrink-0 rounded-xl bg-primary-soft p-1.5 text-primary-solid">
                     {icon}
                   </span>
                 )}
-                <h3 className="text-base font-extrabold text-plum-900 dark:text-[#f0f2f5] line-clamp-1">{title}</h3>
+                <h3 className="line-clamp-1 text-base font-extrabold text-text">{title}</h3>
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04] dark:text-[#b0b3b8] dark:hover:text-[#f0f2f5] dark:hover:bg-[#3a3b3c] transition-all"
+                type="button"
+                aria-label="Đóng"
+                className="-mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-focus"
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Body */}
-            <div className={cn("flex-1 overflow-y-auto p-5 text-plum-700 dark:text-[#e4e6eb]", bodyClassName)}>
+            <div className={cn("flex-1 overflow-y-auto p-5 text-text-muted", bodyClassName)}>
               {children}
             </div>
 
             {/* Footer */}
             {footer && (
-              <div className="px-6 py-4 bg-white border-t border-plum-900/5 shrink-0 dark:bg-[#242526] dark:border-[#393a3b]">
+              <div className="shrink-0 border-t border-border bg-surface px-5 py-3 sm:px-6 sm:py-4">
                 {footer}
               </div>
             )}

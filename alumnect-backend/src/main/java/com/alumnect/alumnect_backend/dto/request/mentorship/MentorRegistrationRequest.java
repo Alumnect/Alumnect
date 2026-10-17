@@ -63,6 +63,10 @@ public class MentorRegistrationRequest {
     @Size(max = 100, message = "Tên ngân hàng tối đa 100 ký tự")
     private String bankName;
 
+    /** Mã BIN/NAPAS 6 chữ số của ngân hàng nhận tiền. */
+    @Size(min = 6, max = 6, message = "Mã BIN ngân hàng phải gồm 6 chữ số")
+    private String bankBin;
+
     /** Số tài khoản ngân hàng thụ hưởng */
     @Size(max = 50, message = "Số tài khoản ngân hàng tối đa 50 ký tự")
     private String bankAccountNumber;

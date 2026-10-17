@@ -52,7 +52,7 @@ export function DeleteCommentModal({
       isOpen={isOpen}
       onClose={close}
       title="Xóa bình luận"
-      icon={<Trash2 size={18} className="text-rose-500" />}
+      icon={<Trash2 size={18} className="text-danger" />}
       maxWidthClassName="max-w-md"
       footer={
         <div className="flex justify-end gap-2">
@@ -66,7 +66,7 @@ export function DeleteCommentModal({
             onClick={confirmDelete}
             disabled={deleteComment.isPending || !comment}
             leftIcon={deleteComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-            className="border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
+            className="border-danger bg-danger text-text-inverse hover:opacity-90"
           >
             {deleteComment.isPending ? 'Đang xóa…' : 'Xóa'}
           </Button>
@@ -74,11 +74,11 @@ export function DeleteCommentModal({
       }
     >
       {deleteComment.isError && (
-        <div role="alert" className="mb-3 flex items-center gap-2 rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">
+        <div role="alert" className="mb-3 flex items-center gap-2 rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
           <AlertTriangle size={16} className="shrink-0" /> {(deleteComment.error as Error).message}
         </div>
       )}
-      <p className="text-sm leading-relaxed text-plum-600">
+      <p className="text-sm leading-relaxed text-text-muted">
         Bạn có chắc muốn xóa bình luận này không?
       </p>
     </Modal>

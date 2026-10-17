@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { useMentoringTermsStatus } from '../hooks/useMentoringTerms'
-import { MentoringTerms } from './MentoringTerms'
+import { MentoringTermsConsentModal } from './MentoringTermsConsentModal'
 import type { MentoringEntrySource } from '../model/mentoringTermsTypes'
-import { Card, Skeleton, Container } from '@/components/ui/primitives'
+import { Card, Skeleton } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 
@@ -17,7 +17,7 @@ interface MentoringTermsGateProps {
  * 1. Gọi GET /mentoring/terms/status để kiểm tra trạng thái điều khoản từ Backend.
  * 2. Hiển thị Shimmer Skeleton trong khi đang tải (tránh flash UI).
  * 3. Nếu accepted = true: cho phép kết xuất nội dung bên trong ({children}).
- * 4. Nếu accepted = false: hiển thị giao diện Điều khoản MentoringTerms (UC90).
+ * 4. Nếu accepted = false: khóa nội dung và hiển thị popup xác nhận bắt buộc (UC90).
  * 5. Nếu xảy ra lỗi: hiển thị thông báo lỗi và nút Thử lại, không tự động cho vào.
  */
 export function MentoringTermsGate({
@@ -29,14 +29,14 @@ export function MentoringTermsGate({
   // 1. Trạng thái Loading: Hiển thị Shimmer Skeleton chuẩn Pastel
   if (isLoading) {
     return (
-      <Container className="py-10">
-        <Card hover={false} className="mx-auto max-w-4xl space-y-6 border border-plum-900/[0.08] bg-white p-8 dark:bg-[#242526] dark:border-[#393a3b]">
+      <div className="w-full py-4">
+        <Card hover={false} className="mx-auto max-w-4xl space-y-6 border border-border bg-surface p-8">
           <div className="space-y-3">
             <Skeleton className="h-6 w-48 rounded-full" />
             <Skeleton className="h-9 w-80 rounded-xl" />
             <Skeleton className="h-4 w-96 rounded-lg" />
           </div>
-          <div className="space-y-4 rounded-2xl border border-plum-900/[0.05] p-6">
+          <div className="space-y-4 rounded-2xl border border-border p-6">
             <Skeleton className="h-5 w-full rounded-md" />
             <Skeleton className="h-4 w-5/6 rounded-md" />
             <Skeleton className="h-4 w-4/6 rounded-md" />
@@ -47,22 +47,22 @@ export function MentoringTermsGate({
             <Skeleton className="h-10 w-44 rounded-xl" />
           </div>
         </Card>
-      </Container>
+      </div>
     )
   }
 
   // 2. Trạng thái Lỗi kết nối / Server Error: Không tự ý mở gate
   if (isError) {
     return (
-      <Container className="py-12">
-        <Card hover={false} className="mx-auto max-w-md border border-coral-200 bg-white p-8 text-center shadow-soft dark:bg-[#242526] dark:border-coral-900/50">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-100 text-coral-600 dark:bg-coral-950/50 dark:text-coral-400">
+      <div className="w-full py-8">
+        <Card hover={false} className="mx-auto max-w-md border border-danger-border bg-surface p-8 text-center shadow-soft">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
             <AlertTriangle className="h-7 w-7" />
           </div>
-          <h2 className="font-heading text-lg font-bold text-plum-900 dark:text-[#e4e6eb]">
+          <h2 className="font-display text-lg font-bold text-text">
             Không thể kiểm tra trạng thái điều khoản
           </h2>
-          <p className="mt-2 text-sm text-plum-600 dark:text-[#b0b3b8]">
+          <p className="mt-2 text-sm text-text-muted">
             {error?.message || 'Đã có lỗi xảy ra khi xác thực trạng thái điều khoản. Vui lòng thử lại.'}
           </p>
           <div className="mt-6 flex justify-center">
@@ -77,19 +77,21 @@ export function MentoringTermsGate({
             </Button>
           </div>
         </Card>
-      </Container>
+      </div>
     )
   }
 
   // 3. Nếu người dùng ĐÃ chấp nhận phiên bản điều khoản hiện tại: Cho phép truy cập
   if (data?.accepted) {
-    return <>{children}</>
+    return <div className="h-full min-h-0 w-full">{children}</div>
   }
 
-  // 4. Nếu người dùng CHƯA chấp nhận phiên bản điều khoản hiện tại: Hiển thị UC90
+  // 4. Chưa chấp nhận: khóa chức năng và yêu cầu xác nhận bằng popup bắt buộc.
   return (
     <div className="w-full">
-      <MentoringTerms source={source} />
+      <MentoringTermsConsentModal
+        source={source}
+      />
     </div>
   )
 }

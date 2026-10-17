@@ -55,15 +55,15 @@ export const MentorCvSection: React.FC<Props> = ({
   }
 
   return (
-    <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200/80 dark:border-[#393a3b] p-6 shadow-sm">
-      <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#393a3b] mb-6">
+    <div className="bg-surface rounded-2xl border border-cream-300/80 dark:border-border p-6 shadow-sm">
+      <div className="flex items-center justify-between pb-4 border-b border-border dark:border-border mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#f27024] dark:text-orange-400 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary-solid flex items-center justify-center font-bold">
             4
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800 dark:text-[#f0f2f5] text-lg">
-              CV của bạn <span className="text-rose-500">*</span>
+            <h3 className="font-semibold text-text text-lg">
+              CV của bạn <span className="text-danger">*</span>
             </h3>
           </div>
         </div>
@@ -82,56 +82,56 @@ export const MentorCvSection: React.FC<Props> = ({
           onClick={() => !isUploading && fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
             cvFileKey
-              ? 'border-emerald-400/80 dark:border-emerald-600/50 bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30'
-              : 'border-slate-200 dark:border-[#393a3b] hover:border-[#f27024] dark:hover:border-[#f27024] bg-slate-50/60 dark:bg-[#18191a]/60 hover:bg-orange-50/30 dark:hover:bg-[#1f2022]'
+              ? 'border-success bg-success-soft hover:bg-success-border/60'
+              : 'border-border dark:border-border hover:border-primary bg-cream-100/60 dark:bg-bg/60 hover:bg-brand-50/30 dark:hover:bg-[#1f2022]'
           }`}
         >
           {isUploading ? (
             <div className="py-4 flex flex-col items-center gap-3">
-              <Loader2 className="w-10 h-10 text-[#f27024] animate-spin" />
+              <Loader2 className="w-10 h-10 text-primary-solid animate-spin" />
               <div>
-                <span className="text-sm font-semibold text-slate-700 dark:text-[#f0f2f5] block">Đang tải lên...</span>
-                <span className="text-xs text-slate-400 dark:text-[#8a8d91] block mt-0.5">Vui lòng đợi trong giây lát</span>
+                <span className="text-sm font-semibold text-text-muted block">Đang tải lên...</span>
+                <span className="text-xs text-text-subtle dark:text-text-subtle block mt-0.5">Vui lòng đợi trong giây lát</span>
               </div>
             </div>
           ) : cvFileKey ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-success-soft text-success flex items-center justify-center shadow-inner">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <span className="text-sm font-bold text-emerald-900 dark:text-emerald-300 block">
+                <span className="text-sm font-bold text-success block">
                   {selectedFileName || 'Đã đính kèm CV'}
                 </span>
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 block mt-1">
+                <span className="text-xs text-success block mt-1">
                   Nhấp để thay tệp khác
                 </span>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-[#f27024] flex items-center justify-center shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-primary-soft text-primary-solid flex items-center justify-center shadow-inner">
                 <UploadCloud className="w-8 h-8" />
               </div>
               <div>
-                <span className="text-base font-semibold text-slate-700 dark:text-[#f0f2f5] block">Chọn tệp CV</span>
-                <span className="text-xs text-slate-400 dark:text-[#8a8d91] block mt-1">PDF, DOC, DOCX (tối đa 15MB)</span>
+                <span className="text-base font-semibold text-text-muted block">Chọn tệp CV</span>
+                <span className="text-xs text-text-subtle dark:text-text-subtle block mt-1">PDF, DOC, DOCX (tối đa 15MB)</span>
               </div>
             </div>
           )}
         </div>
 
         {(cvDownloadUrl || cvFileKey) && (
-          <div className="mt-4 flex items-center justify-between p-3 bg-slate-50 dark:bg-[#18191a]/60 rounded-xl border border-slate-200/80 dark:border-[#393a3b] text-xs">
-            <span className="text-slate-700 dark:text-[#f0f2f5] font-medium truncate flex items-center gap-2">
-              <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div className="mt-4 flex items-center justify-between p-3 bg-surface-2 rounded-xl border border-cream-300/80 dark:border-border text-xs">
+            <span className="text-text-muted font-medium truncate flex items-center gap-2">
+              <FileCheck className="w-4 h-4 text-success shrink-0" />
               <span>CV hiện tại</span>
             </span>
             <a
               href={cvDownloadUrl || cvFileKey}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-[#f27024] hover:text-[#d45105] font-semibold bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/50 px-3 py-1 rounded-lg transition-colors"
+              className="inline-flex items-center gap-1.5 text-primary-solid hover:text-primary-solid font-semibold bg-primary-soft hover:bg-primary-soft px-3 py-1 rounded-lg transition-colors"
             >
               <span>Xem</span>
               <ExternalLink className="w-3.5 h-3.5" />

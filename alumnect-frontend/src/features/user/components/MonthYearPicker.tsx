@@ -100,8 +100,8 @@ export function MonthYearPicker({
   return (
     <div className="relative text-left" ref={containerRef}>
       {label && (
-        <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-          {label} {required && <span className="text-coral-500">*</span>}
+        <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+          {label} {required && <span className="text-danger">*</span>}
         </label>
       )}
 
@@ -111,49 +111,49 @@ export function MonthYearPicker({
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center justify-between rounded-2xl border border-plum-900/10 bg-white py-2.5 px-3.5 text-xs font-semibold transition-all shadow-sm',
+          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-2.5 px-3.5 text-xs font-semibold transition-all shadow-sm',
           isOpen
-            ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/10'
+            ? 'border-primary ring-2 ring-primary/20 bg-brand-50/10'
             : 'hover:border-brand-500/50 hover:bg-plum-50/30',
-          disabled && 'opacity-60 cursor-not-allowed bg-plum-50/50',
-          monthValue && yearValue ? 'text-plum-900 font-bold' : 'text-plum-400 font-normal'
+          disabled && 'opacity-60 cursor-not-allowed bg-surface-2',
+          monthValue && yearValue ? 'text-text font-bold' : 'text-text-subtle font-normal'
         )}
       >
         <span className="flex items-center gap-2 truncate">
-          <Calendar size={14} className={monthValue ? 'text-brand-500' : 'text-plum-400'} />
+          <Calendar size={14} className={monthValue ? 'text-primary-solid' : 'text-text-subtle'} />
           <span>{displayFormatted()}</span>
         </span>
         <ChevronDown
           size={14}
           className={cn(
-            'text-plum-400 transition-transform duration-200 shrink-0 ml-1',
-            isOpen && 'rotate-180 text-brand-500'
+            'text-text-subtle transition-transform duration-200 shrink-0 ml-1',
+            isOpen && 'rotate-180 text-primary-solid'
           )}
         />
       </button>
 
       {/* Floating Month/Year Selector Popover */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-white rounded-3xl border border-plum-900/10 shadow-2xl p-4 animate-scale-up">
+        <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-surface rounded-3xl border border-border shadow-2xl p-4 animate-scale-up">
           {/* Year Switcher Header */}
-          <div className="flex items-center justify-between mb-3 px-1 pb-2 border-b border-plum-900/5">
+          <div className="flex items-center justify-between mb-3 px-1 pb-2 border-b border-border">
             <button
               type="button"
               onClick={handlePrevYear}
-              className="p-1.5 rounded-xl text-plum-500 hover:text-plum-900 hover:bg-plum-900/[0.05] transition-colors"
+              className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-surface-2 transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="font-extrabold text-sm text-plum-900">Năm {viewYear}</span>
+            <span className="font-extrabold text-sm text-text">Năm {viewYear}</span>
             <button
               type="button"
               onClick={handleNextYear}
               disabled={viewYear >= maxYear}
               className={cn(
-                'p-1.5 rounded-xl text-plum-500 transition-colors',
+                'p-1.5 rounded-xl text-text-subtle transition-colors',
                 viewYear >= maxYear
                   ? 'opacity-30 cursor-not-allowed'
-                  : 'hover:text-plum-900 hover:bg-plum-900/[0.05]'
+                  : 'hover:text-text hover:bg-surface-2'
               )}
             >
               <ChevronRight size={16} />
@@ -178,10 +178,10 @@ export function MonthYearPicker({
                   className={cn(
                     'py-2 px-2 rounded-xl text-xs transition-all text-center select-none font-semibold',
                     isSelected
-                      ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white font-extrabold shadow-md shadow-brand-500/20 scale-[1.03]'
+                      ? 'bg-primary-solid text-on-primary font-extrabold shadow-raised scale-[1.03]'
                       : disabled
                       ? 'opacity-30 cursor-not-allowed text-plum-300 bg-plum-50/20'
-                      : 'bg-plum-50/50 text-plum-700 hover:bg-brand-50 hover:text-brand-600 hover:scale-[1.02]'
+                      : 'bg-surface-2 text-text-muted hover:bg-primary-soft hover:text-primary-solid hover:scale-[1.02]'
                   )}
                 >
                   {name}

@@ -388,7 +388,7 @@ export function PlaceAutocomplete({
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative flex items-center">
-        <span className="absolute left-3.5 text-plum-400">
+        <span className="absolute left-3.5 text-text-subtle">
           <Search size={16} />
         </span>
         <input
@@ -400,18 +400,18 @@ export function PlaceAutocomplete({
             if (suggestions.length > 0) setOpen(true)
           }}
           placeholder={placeholder}
-          className={cn("w-full rounded-2xl border border-plum-900/10 bg-white py-3 pl-10 pr-10 text-sm text-plum-900 placeholder-plum-400 shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500", inputClassName)}
+          className={cn("w-full rounded-2xl border border-border bg-surface py-3 pl-10 pr-10 text-sm text-text placeholder-plum-400 shadow-sm transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary", inputClassName)}
         />
         {loading && (
-          <span className="absolute right-10 text-plum-400">
-            <Loader2 size={16} className="animate-spin text-brand-500" />
+          <span className="absolute right-10 text-text-subtle">
+            <Loader2 size={16} className="animate-spin text-primary-solid" />
           </span>
         )}
         {value && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 p-1 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04]"
+            className="absolute right-3 p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2"
           >
             <X size={15} />
           </button>
@@ -419,19 +419,19 @@ export function PlaceAutocomplete({
       </div>
 
       {open && suggestions.length > 0 && (
-        <ul className="absolute z-50 mt-1.5 w-full max-h-72 overflow-y-auto rounded-2xl border border-plum-900/5 bg-white p-2.5 shadow-xl list-none text-left">
+        <ul className="absolute z-50 mt-1.5 w-full max-h-72 overflow-y-auto rounded-2xl border border-border bg-surface p-2.5 shadow-xl list-none text-left">
           {suggestions.map((s) => (
             <li
               key={s.id}
               onClick={() => handleSelectSuggestion(s)}
               className="flex items-start gap-3 cursor-pointer rounded-xl px-3 py-2.5 hover:bg-plum-50/70 transition-colors"
             >
-              <span className="mt-0.5 text-brand-500 shrink-0">
+              <span className="mt-0.5 text-primary-solid shrink-0">
                 <MapPin size={16} />
               </span>
               <div className="text-left flex-1 min-w-0">
-                <p className="text-sm font-bold text-plum-900 break-words">{s.title}</p>
-                <p className="text-xs text-plum-500 mt-0.5 leading-relaxed break-words">
+                <p className="text-sm font-bold text-text break-words">{s.title}</p>
+                <p className="text-xs text-text-subtle mt-0.5 leading-relaxed break-words">
                   {s.subtitle}
                 </p>
               </div>

@@ -624,15 +624,15 @@ function AlumniClusterMarker({ map, alumni, count, onExpand }: AlumniClusterMark
         event.stopPropagation()
         onExpand()
       }}
-      className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-white shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-500"
+      className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-surface shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary"
     >
-      <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-violet-100 text-brand-600">
+      <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-violet-100 text-primary-solid">
         <Users size={23} strokeWidth={2.2} />
       </span>
-      <span className="absolute -right-2 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-brand-500 px-1.5 text-[11px] font-extrabold text-white shadow-sm ring-2 ring-white">
+      <span className="absolute -right-2 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-primary-solid px-1.5 text-xs font-extrabold text-on-primary shadow-sm ring-2 ring-surface">
         {count}
       </span>
-      <span className="absolute -bottom-1.5 h-3 w-3 rotate-45 border-b border-r border-white bg-white" />
+      <span className="absolute -bottom-1.5 h-3 w-3 rotate-45 border-b border-r border-white bg-surface" />
     </button>,
     elementRef.current,
   )
@@ -710,8 +710,8 @@ function AlumniMarker({
           flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-soft
           transition-all duration-300 transform group-hover:scale-110
           ${isSelected
-            ? 'ring-4 ring-brand-500 scale-110 shadow-glow'
-            : 'border border-plum-900/10 hover:border-brand-300'
+            ? 'ring-4 ring-primary scale-110 shadow-glow'
+            : 'border border-border hover:border-primary-soft-border'
           }
         `}
       >
@@ -723,7 +723,7 @@ function AlumniMarker({
         />
       </div>
       {isGroupLead && groupSize > 1 && (
-        <span className="absolute -right-3 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-brand-500 px-1 text-[10px] font-extrabold text-white shadow-sm ring-2 ring-white">
+        <span className="absolute -right-3 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-primary-solid px-1 text-xs font-extrabold text-on-primary shadow-sm ring-2 ring-surface">
           {groupSize}
         </span>
       )}
@@ -731,7 +731,7 @@ function AlumniMarker({
       <div
         className={`
           h-2.5 w-2.5 rotate-45 -mt-1.5 transition-all duration-300
-          ${isSelected ? 'bg-brand-500' : 'bg-white border-r border-b border-plum-900/10'}
+          ${isSelected ? 'bg-primary-solid' : 'bg-surface border-r border-b border-border'}
         `}
       />
     </div>,

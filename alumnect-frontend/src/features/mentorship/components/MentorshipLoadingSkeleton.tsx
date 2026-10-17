@@ -7,7 +7,7 @@ type MentorshipLoadingSkeletonProps = {
 
 function HeroSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 shadow-xs dark:bg-[#242526] dark:border-[#393a3b] dark:from-brand-950/20">
+    <div className="relative overflow-hidden rounded-3xl border border-primary-soft-border bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 shadow-xs dark:bg-surface dark:from-brand-700/20">
       {/* Hiệu ứng hào quang nền mờ */}
       <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-500/5" />
       <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
@@ -48,7 +48,7 @@ function HomeSkeleton() {
       {/* 3 Thẻ Lợi ích cốt lõi */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
         {[1, 2, 3].map((item) => (
-          <Card key={item} hover={false} className="space-y-3 p-5 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b]">
+          <Card key={item} hover={false} className="space-y-3 p-5 border border-border bg-surface">
             <Skeleton className="h-10 w-10 rounded-xl" />
             <Skeleton className="h-5 w-44 rounded-lg" />
             <div className="space-y-1.5">
@@ -68,7 +68,7 @@ function HomeSkeleton() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
           {[1, 2, 3].map((item) => (
-            <Card key={item} hover={false} className="space-y-2.5 p-4 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b]">
+            <Card key={item} hover={false} className="space-y-2.5 p-4 border border-border bg-surface">
               <div className="flex items-start justify-between">
                 <div className="space-y-1.5 flex-1">
                   <Skeleton className="h-4 w-36 rounded-md" />
@@ -95,8 +95,8 @@ function RegistrationSkeleton() {
     <div className="mx-auto max-w-4xl space-y-8 pb-16">
       <HeroSkeleton />
       {[1, 2, 3].map((item) => (
-        <Card key={item} hover={false} className="space-y-5 p-5 sm:p-6 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b]">
-          <div className="flex items-center gap-3 border-b border-plum-900/[0.07] pb-4 dark:border-[#393a3b]">
+        <Card key={item} hover={false} className="space-y-5 p-5 sm:p-6 border border-border bg-surface">
+          <div className="flex items-center gap-3 border-b border-border pb-4">
             <Skeleton className="h-10 w-10 rounded-2xl" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-44 rounded-lg" />
@@ -115,7 +115,7 @@ function RegistrationSkeleton() {
 function TermsSkeleton() {
   return (
     <div className="grid w-full grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-[minmax(18rem,25.625rem)_minmax(0,1fr)]">
-      <Card hover={false} className="space-y-5 p-5 sm:p-6 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b]">
+      <Card hover={false} className="space-y-5 p-5 sm:p-6 border border-border bg-surface">
         <div className="space-y-3">
           <Skeleton className="h-6 w-44 rounded-full" />
           <Skeleton className="h-8 w-4/5 rounded-xl" />
@@ -125,7 +125,7 @@ function TermsSkeleton() {
         {[1, 2, 3].map((item) => <Skeleton key={item} className="h-20 rounded-2xl" />)}
         <Skeleton className="h-11 w-full rounded-xl" />
       </Card>
-      <Card hover={false} className="space-y-5 p-4 sm:p-5 border border-plum-900/[0.08] bg-white dark:bg-[#242526] dark:border-[#393a3b]">
+      <Card hover={false} className="space-y-5 p-4 sm:p-5 border border-border bg-surface">
         <Skeleton className="h-12 w-full rounded-2xl" />
         {[1, 2, 3, 4, 5].map((item) => (
           <div key={item} className="space-y-3">

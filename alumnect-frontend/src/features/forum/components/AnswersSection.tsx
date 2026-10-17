@@ -128,7 +128,7 @@ function InlineAnswerForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-2">
       {error && (
-        <div className="flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
+        <div className="flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-1.5 text-xs font-medium text-danger">
           <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
         </div>
       )}
@@ -138,22 +138,22 @@ function InlineAnswerForm({
         rows={mode === 'edit' ? 3 : 2}
         maxLength={MAX_BODY}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-plum-900/10 bg-white p-2.5 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white"
+        className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
       />
-      {errors.body && <p className="text-xs text-rose-500">{errors.body.message}</p>}
+      {errors.body && <p className="text-xs text-danger">{errors.body.message}</p>}
       <div className="flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={onDone}
           disabled={isPending}
-          className="rounded-xl px-3 py-1.5 text-xs font-medium text-plum-500 hover:bg-plum-900/5 transition-colors cursor-pointer dark:text-[#b0b3b8]"
+          className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
         >
           Hủy
         </button>
         <button
           type="submit"
           disabled={isPending || bodyLength === 0}
-          className="rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-brand-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+          className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
         >
           {isPending ? (
             <Loader2 size={13} className="animate-spin" />
@@ -233,31 +233,31 @@ function AnswerBubble({
       className={cn(
         'group flex items-start gap-2.5 transition-all duration-300',
         isReply &&
-          'relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
+          'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
       )}
     >
       <Link to={profileLink} className="shrink-0 hover:opacity-85 transition-opacity">
         <Avatar src={a.avatar} name={a.author} size={isReply ? 28 : 32} verified={a.verified} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+        <div className="rounded-2xl bg-surface-2 p-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <Link to={profileLink} className="text-xs font-bold text-plum-900 hover:underline dark:text-white transition-colors">
+              <Link to={profileLink} className="text-xs font-bold text-text hover:underline transition-colors">
                 {a.author}
               </Link>
               {a.authorHeadline && (
-                <span className="text-[10px] font-medium text-brand-600 bg-brand-500/10 px-1.5 py-0.5 rounded-md dark:text-brand-300">
+                <span className="text-xs font-medium text-primary-solid bg-primary-soft px-1.5 py-0.5 rounded-md">
                   {a.authorHeadline}
                 </span>
               )}
               {(a.createdAt || a.time) && (
-                <span className="shrink-0 text-[10px] text-plum-400 dark:text-[#8a8d91]" title={absoluteTime(a.createdAt)}>
+                <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle" title={absoluteTime(a.createdAt)}>
                   • {relativeTime(a.createdAt) || a.time}
                 </span>
               )}
               {a.edited && (
-                <span className="text-[10px] text-plum-400 dark:text-[#8a8d91]">• Đã chỉnh sửa</span>
+                <span className="text-xs text-text-subtle dark:text-text-subtle">• Đã chỉnh sửa</span>
               )}
             </div>
 
@@ -266,7 +266,7 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="text-plum-400 hover:text-brand-600 transition-colors cursor-pointer"
+                  className="text-text-subtle hover:text-primary-solid transition-colors cursor-pointer"
                   aria-label="Chỉnh sửa câu trả lời"
                 >
                   <Pencil size={13} />
@@ -276,7 +276,7 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setDeleting(true)}
-                  className="text-plum-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  className="text-text-subtle hover:text-danger transition-colors cursor-pointer"
                   aria-label="Xóa câu trả lời"
                 >
                   <Trash2 size={13} />
@@ -297,9 +297,9 @@ function AnswerBubble({
             (() => {
               const { mention, cleanText } = cleanAnswerBody(a.body, parentAuthor)
               return (
-                <div className="mt-1 text-xs text-plum-800 dark:text-plum-200 leading-relaxed">
+                <div className="mt-1 text-xs text-text leading-relaxed">
                   {mention && (
-                    <span className="mr-1.5 font-semibold text-brand-600 dark:text-brand-400">
+                    <span className="mr-1.5 font-semibold text-primary-solid">
                       @{mention}
                     </span>
                   )}
@@ -322,8 +322,8 @@ function AnswerBubble({
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold transition-all cursor-pointer',
                   voted
-                    ? 'bg-brand-500/10 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400'
-                    : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.08] hover:text-brand-600 dark:bg-[#242526] dark:text-[#b0b3b8] dark:hover:text-white'
+                    ? 'bg-primary-soft text-primary-solid'
+                    : 'bg-surface-2 text-text-subtle hover:bg-surface-3 hover:text-primary-solid'
                 )}
               >
                 <ChevronUp size={13} strokeWidth={2.5} />
@@ -334,7 +334,7 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setReplying((v) => !v)}
-                  className="text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400 cursor-pointer"
+                  className="text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
                 >
                   Trả lời
                 </button>
@@ -345,13 +345,13 @@ function AnswerBubble({
 
         {/* Form reply lồng */}
         {replying && (
-          <div className="relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
-            <div className="rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
-              <div className="flex items-center justify-between text-[11px] text-plum-500 dark:text-[#b0b3b8] mb-1">
+          <div className="relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
+            <div className="rounded-2xl bg-surface-2 p-3">
+              <div className="flex items-center justify-between text-xs text-text-subtle mb-1">
                 <span>
-                  Trả lời <strong className="text-brand-600 dark:text-brand-400">@{a.author}</strong>
+                  Trả lời <strong className="text-primary-solid">@{a.author}</strong>
                 </span>
-                <button type="button" onClick={() => setReplying(false)} className="hover:text-plum-800 dark:hover:text-white cursor-pointer">
+                <button type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
                   <X size={13} />
                 </button>
               </div>
@@ -377,9 +377,9 @@ function AnswerBubble({
               <button
                 type="button"
                 onClick={() => setShowReplies(true)}
-                className="ml-1 flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400 cursor-pointer"
+                className="ml-1 flex items-center gap-1.5 text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
               >
-                <span className="h-3 w-3.5 shrink-0 rounded-bl-lg border-b-2 border-l-2 border-brand-500/30" />
+                <span className="h-3 w-3.5 shrink-0 rounded-bl-lg border-b-2 border-l-2 border-primary-soft-border" />
                 Xem {replyCount} phản hồi
               </button>
             ) : (
@@ -397,7 +397,7 @@ function AnswerBubble({
                   <button
                     type="button"
                     onClick={() => setShowReplies(false)}
-                    className="ml-8 text-[11px] font-semibold text-plum-400 hover:text-plum-600 dark:text-[#8a8d91] dark:hover:text-[#b0b3b8] cursor-pointer"
+                    className="ml-8 text-xs font-semibold text-text-subtle hover:text-text-muted dark:text-text-subtle cursor-pointer"
                   >
                     Ẩn phản hồi
                   </button>
@@ -443,7 +443,7 @@ function AnswerForm({ questionId }: { questionId: string }) {
   return (
     <div className="mb-4">
       {error && (
-        <div className="mb-2 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600">
+        <div className="mb-2 flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-1.5 text-xs font-medium text-danger">
           <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
         </div>
       )}
@@ -456,13 +456,13 @@ function AnswerForm({ questionId }: { questionId: string }) {
             onChange={(e) => setBody(e.target.value)}
             maxLength={MAX_BODY}
             placeholder="Chia sẻ câu trả lời hoặc thảo luận..."
-            className="w-full rounded-2xl border border-plum-900/10 bg-white py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] transition-all shadow-2xs"
+            className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition-all shadow-2xs"
           />
           <button
             type="submit"
             disabled={!body.trim() || isPending}
             aria-label="Gửi câu trả lời"
-            className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400 cursor-pointer"
+            className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
           >
             {isPending ? (
               <Loader2 size={13} className="animate-spin" />
@@ -494,21 +494,21 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
     <section id="answers" className="scroll-mt-24">
       {/* Tiêu đề khu vực + huy hiệu số câu trả lời */}
       <div className="mb-4 flex items-center gap-2.5">
-        <MessageSquare size={18} className="text-brand-600" />
-        <h2 className="text-lg font-extrabold text-plum-900">Câu trả lời</h2>
-        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">{total}</span>
+        <MessageSquare size={18} className="text-primary-solid" />
+        <h2 className="text-lg font-extrabold text-text">Câu trả lời</h2>
+        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-primary-soft px-2 text-xs font-bold text-primary-solid">{total}</span>
       </div>
 
       {/* Form gửi câu trả lời (chỉ Student/Alumni); khách được mời đăng nhập */}
       {canAnswer ? (
         <AnswerForm questionId={questionId} />
       ) : !user ? (
-        <div className="mb-4 flex items-center justify-between rounded-xl bg-white p-3 border border-plum-900/10 shadow-2xs dark:border-[#393a3b] dark:bg-[#242526]">
-          <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Đăng nhập để tham gia trả lời câu hỏi này.</p>
+        <div className="mb-4 flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
+          <p className="text-xs text-text-subtle">Đăng nhập để tham gia trả lời câu hỏi này.</p>
           <button
             type="button"
             onClick={() => promptLogin('Đăng nhập để tham gia trả lời câu hỏi này.')}
-            className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 dark:text-brand-400 cursor-pointer"
+            className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
           >
             Đăng nhập <ArrowRight size={12} />
           </button>
@@ -519,34 +519,34 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
       {isLoading ? (
         <div className="space-y-3 py-1">
           <div className="flex items-start gap-2.5">
-            <div className="h-8 w-8 rounded-full bg-plum-900/[0.06] animate-pulse shrink-0" />
+            <div className="h-8 w-8 rounded-full bg-border animate-pulse shrink-0" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-14 w-full rounded-2xl bg-plum-900/[0.04] animate-pulse" />
+              <div className="h-14 w-full rounded-2xl bg-surface-2 animate-pulse" />
             </div>
           </div>
           <div className="flex items-start gap-2.5">
-            <div className="h-8 w-8 rounded-full bg-plum-900/[0.06] animate-pulse shrink-0" />
+            <div className="h-8 w-8 rounded-full bg-border animate-pulse shrink-0" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-14 w-full rounded-2xl bg-plum-900/[0.04] animate-pulse" />
+              <div className="h-14 w-full rounded-2xl bg-surface-2 animate-pulse" />
             </div>
           </div>
         </div>
       ) : isError ? (
         <Card hover={false} className="flex flex-col items-center gap-3 p-8 text-center">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-danger-soft text-danger">
             <AlertTriangle size={22} />
           </span>
-          <p className="text-sm text-plum-500">{(error as Error)?.message ?? 'Không tải được câu trả lời.'}</p>
+          <p className="text-sm text-text-subtle">{(error as Error)?.message ?? 'Không tải được câu trả lời.'}</p>
           <Button variant="secondary" size="sm" onClick={() => refetch()}>
             Thử lại
           </Button>
         </Card>
       ) : answers.length === 0 ? (
         <Card hover={false} className="flex flex-col items-center gap-2 p-8 text-center">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
             <Inbox size={22} />
           </span>
-          <p className="text-sm text-plum-500">Chưa có câu trả lời nào. Hãy là người đầu tiên trả lời!</p>
+          <p className="text-sm text-text-subtle">Chưa có câu trả lời nào. Hãy là người đầu tiên trả lời!</p>
         </Card>
       ) : (
         <>

@@ -208,7 +208,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
   return (
     <>
-      <Card hover={false} id={`group-post-${post.id}`} onClick={handleCardClick} className={cn('rounded-3xl border border-plum-900/[0.08] p-5 shadow-card dark:border-[#393a3b] dark:bg-[#242526]', !detailMode && 'cursor-pointer')}>
+      <Card hover={false} id={`group-post-${post.id}`} onClick={handleCardClick} className={cn('rounded-3xl border border-border p-5 shadow-card dark:bg-surface', !detailMode && 'cursor-pointer')}>
         {/* Header: Author + Role + Time + Pinned status + Menu */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -225,25 +225,25 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               <div className="flex items-center gap-2">
                 <Link
                   to={`/app/profile?userId=${post.author.userId}`}
-                  className="text-sm font-extrabold text-plum-900 hover:underline dark:text-white"
+                  className="text-sm font-extrabold text-text hover:underline"
                 >
                   {post.author.fullName}
                 </Link>
 
                 {post.author.groupRole === 'OWNER' && (
-                  <Badge tone="gold" icon={<Crown size={11} />} className="px-1.5 py-0.5 text-[10px]">
+                  <Badge tone="gold" icon={<Crown size={11} />} className="px-1.5 py-0.5 text-xs">
                     Sáng lập
                   </Badge>
                 )}
 
                 {post.author.groupRole === 'ADMIN' && (
-                  <Badge tone="brand" icon={<ShieldCheck size={11} />} className="px-1.5 py-0.5 text-[10px]">
+                  <Badge tone="brand" icon={<ShieldCheck size={11} />} className="px-1.5 py-0.5 text-xs">
                     Quản trị viên
                   </Badge>
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-plum-400">
+              <div className="flex items-center gap-2 text-xs text-text-subtle">
                 {detailMode ? (
                   <span>{formatTime(post.createdAt)}</span>
                 ) : (
@@ -257,7 +257,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                 {post.isPinned && (
                   <>
                     <span>•</span>
-                    <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
+                    <span className="inline-flex items-center gap-1 font-bold text-warning">
                       <Pin size={11} /> Đã ghim
                     </span>
                   </>
@@ -274,7 +274,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label="Tùy chọn bài viết"
                 aria-expanded={menuOpen}
-                className="grid h-8 w-8 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900 dark:hover:bg-[#3a3b3c] dark:hover:text-white"
+                className="grid h-8 w-8 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
               >
                 <MoreHorizontal size={18} />
               </button>
@@ -288,7 +288,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98, y: -4, transition: TRANSITION.exit }}
                     transition={TRANSITION.pop}
-                    className="absolute right-0 top-9 z-30 min-w-[170px] origin-top-right overflow-hidden rounded-2xl border border-plum-900/10 bg-white p-1.5 shadow-xl dark:border-[#393a3b] dark:bg-[#242526]"
+                    className="absolute right-0 top-9 z-30 min-w-[170px] origin-top-right overflow-hidden rounded-2xl border border-border bg-surface p-1.5 shadow-xl"
                   >
                     {post.canEdit && (
                       <button
@@ -297,7 +297,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                           setMenuOpen(false)
                           setEditingPost(true)
                         }}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-plum-700 transition-colors hover:bg-plum-900/[0.05] dark:text-plum-200 dark:hover:bg-[#3a3b3c]"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-text-muted transition-colors hover:bg-surface-2"
                       >
                         <Pencil size={14} /> Chỉnh sửa bài viết
                       </button>
@@ -306,9 +306,9 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                       <button
                         type="button"
                         onClick={handleTogglePin}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-plum-700 transition-colors hover:bg-plum-900/[0.05] dark:text-plum-200 dark:hover:bg-[#3a3b3c]"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-text-muted transition-colors hover:bg-surface-2"
                       >
-                        <Pin size={14} className={post.isPinned ? 'text-amber-500' : ''} />
+                        <Pin size={14} className={post.isPinned ? 'text-warning' : ''} />
                         <span>{post.isPinned ? 'Bỏ ghim bài viết' : 'Ghim bài viết'}</span>
                       </button>
                     )}
@@ -320,7 +320,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                           setMenuOpen(false)
                           setConfirmDelete(true)
                         }}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/20"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-danger transition-colors hover:bg-danger-soft"
                       >
                         <Trash2 size={14} />
                         <span>Xóa bài viết</span>
@@ -334,19 +334,19 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
         </div>
 
         {post.topic && (
-          <span className="mt-3 inline-flex rounded-full bg-brand-500/10 px-2.5 py-1 text-xs font-semibold text-brand-700 dark:text-brand-300">
+          <span className="mt-3 inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-solid">
             #{post.topic}
           </span>
         )}
 
         {/* Nội dung bài viết */}
-        <p className="mt-3.5 whitespace-pre-line text-sm leading-relaxed text-plum-800 dark:text-plum-200">
+        <p className="mt-3.5 whitespace-pre-line text-sm leading-relaxed text-text">
           {post.content}
         </p>
 
         {/* Ảnh đính kèm: băng chuyền có nút Trước/Sau, kéo/vuốt để chuyển ảnh, bấm ảnh để xem phóng to (giống bài viết thường) */}
         {post.imageUrls && post.imageUrls.length > 0 && (
-          <div data-interactive className="mt-3.5 overflow-hidden rounded-2xl border border-plum-900/10 dark:border-[#393a3b]">
+          <div data-interactive className="mt-3.5 overflow-hidden rounded-2xl border border-border">
             <ImageCarousel
               images={post.imageUrls}
               height={detailMode ? 520 : 420}
@@ -367,7 +367,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
         )}
 
         {/* Thanh tương tác: Like, Bình luận, Chia sẻ */}
-        <div className="mt-4 flex items-center justify-between border-t border-plum-900/[0.06] pt-3 text-xs font-bold text-plum-500 dark:border-[#393a3b] dark:text-[#b0b3b8]">
+        <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs font-bold text-text-subtle">
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -377,8 +377,8 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               className={cn(
                 'inline-flex items-center gap-1.5 transition-colors',
                 post.likedByViewer
-                  ? 'text-rose-500 font-extrabold'
-                  : 'hover:text-rose-500',
+                  ? 'text-danger font-extrabold'
+                  : 'hover:text-danger',
               )}
             >
               {/* Tim nảy nhẹ mỗi khi đổi trạng thái thích (không animate ở lần hiển thị đầu tiên) */}
@@ -390,7 +390,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                   animate={{ scale: 1, opacity: 1 }}
                   transition={TRANSITION.bounce}
                 >
-                  <Heart size={16} className={cn(post.likedByViewer && 'fill-rose-500 text-rose-500')} />
+                  <Heart size={16} className={cn(post.likedByViewer && 'fill-danger text-danger')} />
                 </motion.span>
               </AnimatePresence>
               <span>{post.likeCount} thích</span>
@@ -399,7 +399,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
             <button
               type="button"
               onClick={() => setShowComments(!showComments)}
-              className="inline-flex items-center gap-1.5 hover:text-brand-500"
+              className="inline-flex items-center gap-1.5 hover:text-primary-solid"
             >
               <MessageCircle size={16} />
               <span>{post.commentCount} bình luận</span>
@@ -408,7 +408,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex items-center gap-1.5 hover:text-violet-500"
+              className="inline-flex items-center gap-1.5 hover:text-info"
             >
               <Repeat size={16} />
               <span>Chia sẻ</span>
@@ -428,7 +428,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               data-interactive
               className="-mx-1 overflow-hidden px-1"
             >
-              <div className="mt-4 space-y-3.5 border-t border-plum-900/[0.06] pt-3.5 dark:border-[#393a3b]">
+              <div className="mt-4 space-y-3.5 border-t border-border pt-3.5">
                 {/* Input gửi bình luận mới (chỉ thành viên) */}
                 {isActiveMember && isGroupActive ? (
                   <form onSubmit={handleSendComment} className="flex items-center gap-2.5">
@@ -445,12 +445,12 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                         onChange={(e) => setCommentText(e.target.value)}
                         maxLength={1000}
                         placeholder="Viết phản hồi của bạn..."
-                        className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.02] py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91]"
+                        className="w-full rounded-2xl border border-border bg-surface-2 py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
                       />
                       <button
                         type="submit"
                         disabled={!commentText.trim() || createCommentMutation.isPending}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40"
                       >
                         {createCommentMutation.isPending ? (
                           <Loader2 size={13} className="animate-spin" />
@@ -461,7 +461,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                     </div>
                   </form>
                 ) : (
-                  <p className="text-center text-xs text-plum-400 dark:text-[#8a8d91]">
+                  <p className="text-center text-xs text-text-subtle dark:text-text-subtle">
                     {isGroupActive ? 'Vui lòng tham gia hội nhóm để tham gia bình luận.' : 'Hội nhóm đang tạm ngừng tương tác.'}
                   </p>
                 )}
@@ -469,14 +469,14 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                 {/* Danh sách bình luận */}
                 {commentsLoading ? (
                   <div className="flex justify-center py-3">
-                    <Loader2 size={18} className="animate-spin text-brand-500" />
+                    <Loader2 size={18} className="animate-spin text-primary-solid" />
                   </div>
                 ) : loadedComments.length > 0 ? (
                   <div className="space-y-2.5 pt-1">
                     {orderedComments.map((c) => {
                       const parentComment = c.parentId ? loadedComments.find((comment) => comment.id === c.parentId) : undefined
                       return (
-                      <div key={c.id} className={cn('group flex items-start gap-2.5', c.parentId && 'relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20')}>
+                      <div key={c.id} className={cn('group flex items-start gap-2.5', c.parentId && 'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20')}>
                         <Link to={`/app/profile?userId=${c.author.userId}`}>
                           <Avatar
                             src={c.author.avatarUrl}
@@ -486,28 +486,28 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                           />
                         </Link>
 
-                        <div className="flex-1 rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+                        <div className="flex-1 rounded-2xl bg-surface-2 p-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
                               <Link
                                 to={`/app/profile?userId=${c.author.userId}`}
-                                className="text-xs font-bold text-plum-900 hover:underline dark:text-white"
+                                className="text-xs font-bold text-text hover:underline"
                               >
                                 {c.author.fullName}
                               </Link>
 
                               {c.author.groupRole === 'OWNER' && (
-                                <span className="text-[9px] font-black text-amber-500">👑 Sáng lập</span>
+                                <span className="text-xs font-black text-warning">👑 Sáng lập</span>
                               )}
                               {c.author.groupRole === 'ADMIN' && (
-                                <span className="text-[9px] font-black text-brand-500">🛡️ Quản trị</span>
+                                <span className="text-xs font-black text-primary-solid">🛡️ Quản trị</span>
                               )}
 
-                              <span className="text-[10px] text-plum-400">
+                              <span className="text-xs text-text-subtle">
                                 • {formatTime(c.createdAt)}
                               </span>
                               {c.updatedAt && new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime() > 10000 && (
-                                <span className="text-[10px] text-plum-400">• Đã chỉnh sửa</span>
+                                <span className="text-xs text-text-subtle">• Đã chỉnh sửa</span>
                               )}
                             </div>
 
@@ -519,7 +519,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                                     setEditingCommentId(c.id)
                                     setEditingCommentText(c.content)
                                   }}
-                                  className="text-plum-400 hover:text-brand-600"
+                                  className="text-text-subtle hover:text-primary-solid"
                                   aria-label="Chỉnh sửa bình luận"
                                 ><Pencil size={13} /></button>
                               )}
@@ -527,7 +527,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                                 <button
                                   type="button"
                                   onClick={() => setDeletingCommentId(c.id)}
-                                  className="text-plum-400 hover:text-rose-500"
+                                  className="text-text-subtle hover:text-danger"
                                   aria-label="Xóa bình luận"
                                 ><Trash2 size={13} /></button>
                               )}
@@ -548,11 +548,11 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                                 maxLength={1000}
                                 rows={3}
                                 autoFocus
-                                className="w-full rounded-xl border border-plum-900/10 bg-white p-2 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-[#393a3b] dark:bg-[#242526] dark:text-white"
+                                className="w-full rounded-xl border border-border bg-surface p-2 text-xs text-text focus:border-primary focus:outline-none"
                               />
                               <div className="flex justify-end gap-2">
-                                <button type="button" onClick={() => setEditingCommentId(null)} disabled={updateCommentMutation.isPending} className="text-xs text-plum-500">Hủy</button>
-                                <button type="submit" disabled={!editingCommentText.trim() || updateCommentMutation.isPending} className="text-xs font-bold text-brand-600 disabled:opacity-50">
+                                <button type="button" onClick={() => setEditingCommentId(null)} disabled={updateCommentMutation.isPending} className="text-xs text-text-subtle">Hủy</button>
+                                <button type="submit" disabled={!editingCommentText.trim() || updateCommentMutation.isPending} className="text-xs font-bold text-primary-solid disabled:opacity-50">
                                   {updateCommentMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
                                 </button>
                               </div>
@@ -560,31 +560,31 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                           ) : (
                             <div className="mt-1">
                               {parentComment && (
-                                <span className="mr-1 text-[11px] font-semibold text-brand-600 dark:text-brand-400">
+                                <span className="mr-1 text-xs font-semibold text-primary-solid">
                                   @{parentComment.author.fullName}
                                 </span>
                               )}
-                              <span className="whitespace-pre-wrap text-xs text-plum-800 dark:text-plum-200">{c.content}</span>
+                              <span className="whitespace-pre-wrap text-xs text-text">{c.content}</span>
                             </div>
                           )}
                           {isActiveMember && isGroupActive && editingCommentId !== c.id && (
                             <button type="button" onClick={() => {
                               setReplyingTo(c.id)
                               setReplyText('')
-                            }} className="mt-1.5 text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400">
+                            }} className="mt-1.5 text-xs font-semibold text-primary-solid hover:underline">
                               Trả lời
                             </button>
                           )}
                           {replyingTo === c.id && (
                             <form onSubmit={(event) => handleSendReply(event, c.id)} className="mt-2 space-y-2">
-                              <label className="block text-[11px] text-plum-500">Trả lời {c.author.fullName}</label>
+                              <label className="block text-xs text-text-subtle">Trả lời {c.author.fullName}</label>
                               <textarea value={replyText} onChange={(event) => setReplyText(event.target.value)}
                                 maxLength={1000} rows={2} autoFocus
-                                className="w-full rounded-xl border border-plum-900/10 bg-white p-2 text-xs text-plum-900 focus:border-brand-500 focus:outline-none dark:border-[#393a3b] dark:bg-[#242526] dark:text-white" />
+                                className="w-full rounded-xl border border-border bg-surface p-2 text-xs text-text focus:border-primary focus:outline-none" />
                               <div className="flex justify-end gap-2">
-                                <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-plum-500">Hủy</button>
+                                <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-text-subtle">Hủy</button>
                                 <button type="submit" disabled={!replyText.trim() || createCommentMutation.isPending}
-                                  className="text-xs font-bold text-brand-600 disabled:opacity-50">Gửi trả lời</button>
+                                  className="text-xs font-bold text-primary-solid disabled:opacity-50">Gửi trả lời</button>
                               </div>
                             </form>
                           )}
@@ -594,13 +594,13 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                     })}
                     {hasMoreComments && (
                       <button type="button" onClick={() => fetchMoreComments()} disabled={isFetchingNextPage}
-                        className="block w-full py-2 text-center text-xs font-semibold text-brand-600 hover:underline">
+                        className="block w-full py-2 text-center text-xs font-semibold text-primary-solid hover:underline">
                         {isFetchingNextPage ? 'Đang tải...' : 'Xem thêm bình luận'}
                       </button>
                     )}
                   </div>
                 ) : (
-                  <p className="py-2 text-center text-xs text-plum-400 dark:text-[#8a8d91]">
+                  <p className="py-2 text-center text-xs text-text-subtle dark:text-text-subtle">
                     Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nghĩ!
                   </p>
                 )}
