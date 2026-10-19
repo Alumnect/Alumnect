@@ -18,11 +18,29 @@ public interface AdminMentorCvService {
     AdminMentorCvResponse getMentorCv(Long mentorProfileId);
 
     /**
-     * Lấy danh sách hồ sơ các Mentor phân trang kèm thông tin tệp CV cho Quản trị viên.
+     * Lấy chi tiết thông tin hồ sơ Mentor phục vụ công tác quản lý (UC115).
+     * Không bắt buộc phải có tệp CV.
      *
-     * @param keyword Từ khóa tìm kiếm theo tên hoặc email
+     * @param mentorProfileId ID hồ sơ Mentor
+     * @return DTO chứa thông tin hồ sơ quản lý của Mentor
+     */
+    AdminMentorCvResponse getMentorDetail(Long mentorProfileId);
+
+    /**
+     * Lấy danh sách hồ sơ các Mentor phân trang kèm bộ lọc đa tiêu chí cho Quản trị viên (UC115).
+     *
+     * @param keyword Từ khóa tìm kiếm theo tên, email, vị trí hoặc công ty
+     * @param status Trạng thái hồ sơ Mentor (ACTIVE, INCOMPLETE, PAYMENT_PENDING, EXPIRED)
+     * @param subscriptionStatus Trạng thái gói dịch vụ
      * @param pageable Cấu hình phân trang
      * @return Danh sách phân trang AdminMentorCvResponse
      */
-    PageResponse<AdminMentorCvResponse> getMentorList(String keyword, Pageable pageable);
+    PageResponse<AdminMentorCvResponse> getMentorList(String keyword, com.alumnect.alumnect_backend.common.enums.MentorStatus status, String subscriptionStatus, Pageable pageable);
+
+    /**
+     * Tương thích ngược: Lấy danh sách Mentor theo từ khóa.
+     */
+    default PageResponse<AdminMentorCvResponse> getMentorList(String keyword, Pageable pageable) {
+        return getMentorList(keyword, null, null, pageable);
+    }
 }

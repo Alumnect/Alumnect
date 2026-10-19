@@ -127,13 +127,13 @@ export function SalaryContributionsFeed({
           <button
             type="button"
             onClick={handleOpen}
-            className="group flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3.5 py-2 text-xs font-semibold text-brand-700 shadow-md transition-all duration-200 hover:scale-105 hover:border-brand-400 hover:bg-brand-50 hover:shadow-lg hover:shadow-brand-500/10 cursor-pointer"
+            className="group flex items-center gap-2 rounded-full border border-primary-soft-border bg-surface px-3.5 py-2 text-xs font-semibold text-primary-solid shadow-md transition-all duration-200 hover:scale-105 hover:border-primary hover:bg-primary-soft hover:shadow-lg hover:shadow-brand-500/10 cursor-pointer"
             title="Xem các lượt đóng góp lương gần đây"
           >
-            <History size={15} className="text-brand-600 transition-transform group-hover:-rotate-45" />
+            <History size={15} className="text-primary-solid transition-transform group-hover:-rotate-45" />
             <span>Đóng góp gần đây</span>
             {totalElements > 0 && (
-              <span className="rounded-full bg-brand-100 px-1.5 py-0.2 text-[10px] font-bold text-brand-800">
+              <span className="rounded-full bg-primary-soft px-1.5 py-0.2 text-xs font-bold text-brand-800">
                 {totalElements}
               </span>
             )}
@@ -147,27 +147,27 @@ export function SalaryContributionsFeed({
           isOpen
           onClose={handleClose}
           title="Đóng góp gần đây"
-          icon={<History size={18} className="text-brand-600" />}
+          icon={<History size={18} className="text-primary-solid" />}
           maxWidthClassName="max-w-2xl"
         >
           {/* Thanh bộ lọc tinh gọn */}
-          <div className="mb-4 space-y-2.5 rounded-xl border border-plum-900/8 bg-brand-50/40 p-3">
+          <div className="mb-4 space-y-2.5 rounded-xl border border-border bg-brand-50/40 p-3">
             {/* Hàng 1: Tìm kiếm + Chọn ngành + Chọn khu vực */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {/* Tìm kiếm */}
               <div className="relative">
-                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-plum-400" />
+                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm chức danh, công ty…"
-                  className="h-9 w-full rounded-lg border border-plum-900/10 bg-white pl-9 pr-7 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30 transition-all"
+                  className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-7 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-plum-400 hover:text-plum-700"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
                   >
                     <X size={13} />
                   </button>
@@ -178,7 +178,7 @@ export function SalaryContributionsFeed({
               <select
                 value={selectedIndustry}
                 onChange={(e) => setSelectedIndustry(e.target.value)}
-                className="h-9 w-full truncate rounded-lg border border-plum-900/10 bg-white px-2.5 text-xs text-plum-800 font-medium focus:border-brand-500 focus:outline-none cursor-pointer dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                className="h-9 w-full truncate rounded-lg border border-border bg-surface px-2.5 text-xs text-text font-medium focus:border-primary focus:outline-none cursor-pointer"
               >
                 <option value="">Tất cả ngành nghề</option>
                 {industryList.map((ind) => (
@@ -192,7 +192,7 @@ export function SalaryContributionsFeed({
               <select
                 value={selectedRegion}
                 onChange={(e) => setSelectedRegion(e.target.value)}
-                className="h-9 w-full truncate rounded-lg border border-plum-900/10 bg-white px-2.5 text-xs text-plum-800 font-medium focus:border-brand-500 focus:outline-none cursor-pointer dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                className="h-9 w-full truncate rounded-lg border border-border bg-surface px-2.5 text-xs text-text font-medium focus:border-primary focus:outline-none cursor-pointer"
               >
                 <option value="">Tất cả khu vực</option>
                 {regionList.map((city) => (
@@ -205,13 +205,13 @@ export function SalaryContributionsFeed({
 
             {/* Hàng 2: Sắp xếp & Nút xóa lọc */}
             <div className="flex items-center justify-between text-xs pt-0.5">
-              <div className="flex items-center gap-1.5 text-plum-500 dark:text-[#b0b3b8]">
-                <ArrowUpDown size={12} className="text-plum-400 dark:text-[#b0b3b8]" />
-                <span className="text-[11px] text-plum-400 dark:text-[#b0b3b8]">Sắp xếp:</span>
+              <div className="flex items-center gap-1.5 text-text-subtle">
+                <ArrowUpDown size={12} className="text-text-subtle" />
+                <span className="text-xs text-text-subtle">Sắp xếp:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="bg-transparent font-semibold text-plum-800 focus:outline-none cursor-pointer text-xs dark:text-[#f0f2f5] dark:bg-[#242526]"
+                  className="bg-transparent font-semibold text-text focus:outline-none cursor-pointer text-xs dark:bg-surface"
                 >
                   <option value="latest">Mới nhất</option>
                   <option value="salaryDesc">Lương: Cao → Thấp</option>
@@ -223,7 +223,7 @@ export function SalaryContributionsFeed({
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger transition-colors cursor-pointer"
                 >
                   <X size={12} /> Xóa bộ lọc
                 </button>
@@ -236,15 +236,15 @@ export function SalaryContributionsFeed({
             {isLoading ? (
               <div className="space-y-2.5">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-20 animate-pulse rounded-xl bg-plum-900/[0.04]" />
+                  <div key={i} className="h-20 animate-pulse rounded-xl bg-surface-2" />
                 ))}
               </div>
             ) : isError ? (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-500/10 text-rose-500">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-danger-soft text-danger">
                   <AlertTriangle size={18} />
                 </span>
-                <p className="text-xs text-plum-500">
+                <p className="text-xs text-text-subtle">
                   {(error as Error)?.message ?? 'Không tải được danh sách đóng góp.'}
                 </p>
                 <Button size="sm" variant="secondary" leftIcon={<RefreshCw size={12} />} onClick={() => refetch()}>
@@ -281,16 +281,16 @@ export function SalaryContributionsFeed({
                     return (
                       <div
                         key={c.id}
-                        className="flex flex-col justify-between rounded-xl border border-plum-900/8 bg-white p-3 shadow-xs transition-all hover:border-brand-300 hover:shadow-sm"
+                        className="flex flex-col justify-between rounded-xl border border-border bg-surface p-3 shadow-xs transition-all hover:border-primary-soft-border hover:shadow-sm"
                       >
                         <div>
                           {/* Chức danh & thời gian */}
                           <div className="flex items-start justify-between gap-1.5">
-                            <h4 className="text-xs font-bold text-plum-900 line-clamp-1">
+                            <h4 className="text-xs font-bold text-text line-clamp-1">
                               {c.jobTitle}
                             </h4>
                             {timeAgo && (
-                              <span className="shrink-0 text-[10px] text-plum-400 whitespace-nowrap">
+                              <span className="shrink-0 text-xs text-text-subtle whitespace-nowrap">
                                 {timeAgo}
                               </span>
                             )}
@@ -299,13 +299,13 @@ export function SalaryContributionsFeed({
                           {/* Tags: Ngành nghề & Công ty */}
                           <div className="mt-1.5 flex flex-wrap items-center gap-1">
                             {c.industry && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 border border-brand-200/50">
-                                <IndIcon size={10} className="shrink-0 text-brand-600" />
+                              <span className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-semibold text-primary-solid border border-brand-200/50">
+                                <IndIcon size={10} className="shrink-0 text-primary-solid" />
                                 <span className="line-clamp-1">{c.industry}</span>
                               </span>
                             )}
                             {c.company && (
-                              <span className="rounded-md bg-plum-900/[0.03] px-1.5 py-0.5 text-[10px] font-medium text-plum-600 border border-plum-900/5 line-clamp-1">
+                              <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-xs font-medium text-text-muted border border-border line-clamp-1">
                                 {c.company}
                               </span>
                             )}
@@ -313,7 +313,7 @@ export function SalaryContributionsFeed({
 
                           {/* Địa điểm */}
                           {c.region && (
-                            <p className="mt-1 flex items-center gap-1 text-[10px] text-plum-400">
+                            <p className="mt-1 flex items-center gap-1 text-xs text-text-subtle">
                               <MapPin size={10} className="shrink-0" />
                               <span>{c.region}</span>
                             </p>
@@ -321,13 +321,13 @@ export function SalaryContributionsFeed({
                         </div>
 
                         {/* Mức lương + Kinh nghiệm */}
-                        <div className="mt-2.5 flex items-center justify-between border-t border-plum-900/5 pt-2">
-                          <span className="text-xs font-extrabold text-brand-600">
+                        <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2">
+                          <span className="text-xs font-extrabold text-primary-solid">
                             {c.grossAmount.toLocaleString('vi-VN')} {c.currency}
-                            <span className="text-[10px] font-normal text-plum-400"> / tháng</span>
+                            <span className="text-xs font-normal text-text-subtle"> / tháng</span>
                           </span>
                           {c.yearsExperience != null && (
-                            <span className="rounded bg-brand-100/60 px-1.5 py-0.5 text-[9px] font-semibold text-brand-700">
+                            <span className="rounded bg-brand-100/60 px-1.5 py-0.5 text-xs font-semibold text-primary-solid">
                               {c.yearsExperience} năm KN
                             </span>
                           )}
@@ -339,7 +339,7 @@ export function SalaryContributionsFeed({
 
                 {/* Thanh phân trang trong popup */}
                 {totalFeedPages > 1 && (
-                  <div className="pt-3 border-t border-plum-900/5 flex items-center justify-center">
+                  <div className="pt-3 border-t border-border flex items-center justify-center">
                     <Pagination
                       page={feedPage}
                       totalPages={totalFeedPages}

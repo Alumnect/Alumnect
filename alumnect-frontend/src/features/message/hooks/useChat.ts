@@ -2,6 +2,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tansta
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/components/ui'
 import { chatApi } from '../api/chatApi'
+import type { ConversationScope } from '../api/chatApi'
 import type {
   SendMessagePayload,
   Message,
@@ -14,13 +15,16 @@ import type {
 /**
  * Hook lấy danh sách cuộc hội thoại theo tab: 'primary' hoặc 'requests'.
  */
-export function useConversations(tab: 'primary' | 'requests' = 'primary') {
+export function useConversations(
+  tab: 'primary' | 'requests' = 'primary',
+  scope: ConversationScope = 'GENERAL'
+) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   return useQuery({
-    queryKey: ['conversations', tab],
+    queryKey: ['conversations', tab, scope],
     queryFn: async () => {
-      const res = await chatApi.getConversations(tab)
+      const res = await chatApi.getConversations(tab, scope)
       return res.data
     },
     enabled: isAuthenticated,

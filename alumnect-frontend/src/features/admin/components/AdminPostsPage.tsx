@@ -56,14 +56,14 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
     shortLabel: 'Tất cả loại',
     icon: Layers,
     colorHex: '#4A1525',
-    pillActiveBg: 'bg-plum-900 text-gold-300 border-plum-800 shadow-md shadow-plum-900/20 ring-2 ring-gold-400/40 font-bold',
-    pillInactiveBg: 'bg-plum-900/[0.05] text-plum-800 border-plum-900/15 hover:bg-plum-900/10 hover:border-plum-900/25',
-    dropdownHoverBg: 'hover:bg-plum-900/10 hover:text-plum-950',
-    badgeBg: 'bg-plum-900/10',
-    badgeText: 'text-plum-800',
-    badgeBorder: 'border-plum-900/20',
+    pillActiveBg: 'bg-primary-solid text-on-primary border-primary shadow-raised font-bold',
+    pillInactiveBg: 'bg-surface-2 text-text border-border-strong hover:bg-surface-3 hover:border-border-strong',
+    dropdownHoverBg: 'hover:bg-surface-3 hover:text-text',
+    badgeBg: 'bg-surface-3',
+    badgeText: 'text-text',
+    badgeBorder: 'border-border-strong',
     rowBorderLeft: 'border-l-plum-600',
-    bgHoverRow: 'hover:bg-plum-900/[0.02]',
+    bgHoverRow: 'hover:bg-surface-2',
   },
   GENERAL: {
     value: 'GENERAL',
@@ -71,14 +71,14 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
     shortLabel: 'Bình thường',
     icon: Newspaper,
     colorHex: '#475569',
-    pillActiveBg: 'bg-slate-700 text-white border-slate-600 shadow-md shadow-slate-700/25 ring-2 ring-slate-400 font-bold',
-    pillInactiveBg: 'bg-slate-100 text-slate-700 border-slate-200/90 hover:bg-slate-200/70 hover:border-slate-300',
-    dropdownHoverBg: 'hover:bg-slate-100 hover:text-slate-900',
-    badgeBg: 'bg-slate-100 text-slate-800',
-    badgeText: 'text-slate-800',
-    badgeBorder: 'border-slate-300',
+    pillActiveBg: 'bg-text text-bg border-text shadow-raised font-bold',
+    pillInactiveBg: 'bg-surface-2 text-text-muted border-border hover:bg-surface-3 hover:border-border-strong',
+    dropdownHoverBg: 'hover:bg-surface-2 hover:text-text',
+    badgeBg: 'bg-surface-2 text-text',
+    badgeText: 'text-text',
+    badgeBorder: 'border-border-strong',
     rowBorderLeft: 'border-l-slate-400',
-    bgHoverRow: 'hover:bg-slate-500/[0.03]',
+    bgHoverRow: 'hover:bg-surface-2',
   },
   ACHIEVEMENT: {
     value: 'ACHIEVEMENT',
@@ -86,14 +86,14 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
     shortLabel: 'Thành tựu',
     icon: Trophy,
     colorHex: '#D97706',
-    pillActiveBg: 'bg-gradient-to-r from-amber-500 to-yellow-500 text-plum-950 border-amber-400 shadow-md shadow-amber-500/30 ring-2 ring-amber-300 font-bold',
-    pillInactiveBg: 'bg-amber-50 text-amber-900 border-amber-200/90 hover:bg-amber-100 hover:border-amber-300',
-    dropdownHoverBg: 'hover:bg-amber-50 hover:text-amber-950',
-    badgeBg: 'bg-amber-100 text-amber-900',
-    badgeText: 'text-amber-900',
-    badgeBorder: 'border-amber-300/80',
+    pillActiveBg: 'bg-warning text-text-inverse border-warning shadow-raised font-bold',
+    pillInactiveBg: 'bg-warning-soft text-warning border-warning-border hover:bg-warning-border/60 hover:border-warning-border',
+    dropdownHoverBg: 'hover:bg-warning-soft hover:text-warning',
+    badgeBg: 'bg-warning-soft text-warning',
+    badgeText: 'text-warning',
+    badgeBorder: 'border-warning-border',
     rowBorderLeft: 'border-l-amber-500',
-    bgHoverRow: 'hover:bg-amber-500/[0.05]',
+    bgHoverRow: 'hover:bg-warning-soft',
   },
   RECRUITMENT: {
     value: 'RECRUITMENT',
@@ -101,14 +101,14 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
     shortLabel: 'Tuyển dụng',
     icon: Briefcase,
     colorHex: '#0284C7',
-    pillActiveBg: 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white border-sky-400 shadow-md shadow-sky-600/30 ring-2 ring-sky-300 font-bold',
-    pillInactiveBg: 'bg-sky-50 text-sky-900 border-sky-200/90 hover:bg-sky-100 hover:border-sky-300',
-    dropdownHoverBg: 'hover:bg-sky-50 hover:text-sky-950',
-    badgeBg: 'bg-sky-100 text-sky-900',
-    badgeText: 'text-sky-900',
-    badgeBorder: 'border-sky-300/80',
+    pillActiveBg: 'bg-info text-text-inverse border-info shadow-raised font-bold',
+    pillInactiveBg: 'bg-info-soft text-info border-info-border hover:bg-info-border/60 hover:border-info-border',
+    dropdownHoverBg: 'hover:bg-info-soft hover:text-info',
+    badgeBg: 'bg-info-soft text-info',
+    badgeText: 'text-info',
+    badgeBorder: 'border-info-border',
     rowBorderLeft: 'border-l-sky-500',
-    bgHoverRow: 'hover:bg-sky-500/[0.05]',
+    bgHoverRow: 'hover:bg-info-soft',
   },
   EVENT: {
     value: 'EVENT',
@@ -116,14 +116,14 @@ export const CATEGORY_MAP: Record<CategoryKey, PostCategoryConfig> = {
     shortLabel: 'Sự kiện',
     icon: Calendar,
     colorHex: '#7C3AED',
-    pillActiveBg: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-600/30 ring-2 ring-purple-300 font-bold',
-    pillInactiveBg: 'bg-purple-50 text-purple-900 border-purple-200/90 hover:bg-purple-100 hover:border-purple-300',
-    dropdownHoverBg: 'hover:bg-purple-50 hover:text-purple-950',
-    badgeBg: 'bg-purple-100 text-purple-900',
-    badgeText: 'text-purple-900',
-    badgeBorder: 'border-purple-300/80',
+    pillActiveBg: 'bg-purple-600 text-white border-purple-600 shadow-raised font-bold',
+    pillInactiveBg: 'bg-purple-500/10 text-purple-700 border-purple-500/30 hover:bg-purple-500/20 dark:text-purple-300',
+    dropdownHoverBg: 'hover:bg-purple-500/10 hover:text-purple-700 dark:hover:text-purple-300',
+    badgeBg: 'bg-purple-500/10 text-purple-700 dark:text-purple-300',
+    badgeText: 'text-purple-700 dark:text-purple-300',
+    badgeBorder: 'border-purple-500/30',
     rowBorderLeft: 'border-l-purple-500',
-    bgHoverRow: 'hover:bg-purple-500/[0.05]',
+    bgHoverRow: 'hover:bg-purple-500/5',
   },
 }
 
@@ -162,8 +162,8 @@ function CustomCategoryDropdown({ value, onChange }: CustomCategoryDropdownProps
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex h-10 items-center justify-between gap-2.5 rounded-xl border bg-white px-3.5 text-xs font-bold text-plum-900 shadow-sm transition-all duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[200px]',
-          isOpen ? 'ring-2 ring-gold-400/40 border-gold-400 bg-plum-900/[0.02]' : 'border-plum-900/15 hover:bg-plum-900/[0.02]'
+          'flex h-10 items-center justify-between gap-2.5 rounded-xl border bg-surface px-3.5 text-xs font-bold text-text shadow-sm transition-all duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[200px]',
+          isOpen ? 'ring-2 ring-gold-400/40 border-gold-400 bg-surface-2' : 'border-border-strong hover:bg-surface-2'
         )}
       >
         <div className="flex items-center gap-2 truncate">
@@ -177,13 +177,13 @@ function CustomCategoryDropdown({ value, onChange }: CustomCategoryDropdownProps
         </div>
         <ChevronRight
           size={14}
-          className={cn('text-plum-400 transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-gold-500' : 'rotate-0')}
+          className={cn('text-text-subtle transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-gold-500' : 'rotate-0')}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-1.5 w-64 origin-top-right rounded-2xl border border-plum-900/15 bg-white/95 backdrop-blur-xl p-1.5 shadow-2xl shadow-plum-950/20 animate-in fade-in-80 zoom-in-95">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-plum-400 border-b border-plum-900/5 mb-1 flex items-center justify-between">
+        <div className="absolute right-0 z-50 mt-1.5 w-64 origin-top-right rounded-2xl border border-border-strong bg-surface backdrop-blur-xl p-1.5 shadow-2xl shadow-plum-950/20 animate-in fade-in-80 zoom-in-95">
+          <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border mb-1 flex items-center justify-between">
             <span>Lọc loại bài viết</span>
             <Sparkles size={11} className="text-gold-400" />
           </div>
@@ -205,7 +205,7 @@ function CustomCategoryDropdown({ value, onChange }: CustomCategoryDropdownProps
                     'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 text-left cursor-pointer',
                     isSelected
                       ? 'bg-plum-900 text-gold-300 shadow-md font-bold'
-                      : cn('text-plum-800', cfg.dropdownHoverBg)
+                      : cn('text-text', cfg.dropdownHoverBg)
                   )}
                 >
                   <div className="flex items-center gap-2.5">
@@ -280,16 +280,16 @@ export function AdminPostsPage() {
       />
 
       {/* --- Bộ lọc theo Loại bài viết (Color-coded Category Bar) --- */}
-      <Card hover={false} className="p-4 bg-white/80 backdrop-blur border border-plum-900/10 shadow-sm !overflow-visible relative z-20">
+      <Card hover={false} className="p-4 bg-surface/80 backdrop-blur border border-border shadow-sm !overflow-visible relative z-20">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-plum-900">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text">
               <Filter size={14} className="text-gold-500" />
               <span>Phân loại bài viết</span>
             </div>
             {totalElements > 0 && (
-              <span className="text-xs font-semibold text-plum-500">
-                Hiển thị <strong className="text-plum-900">{posts.length}</strong> / <strong>{totalElements}</strong> bài viết
+              <span className="text-xs font-semibold text-text-subtle">
+                Hiển thị <strong className="text-text">{posts.length}</strong> / <strong>{totalElements}</strong> bài viết
               </span>
             )}
           </div>
@@ -345,8 +345,8 @@ export function AdminPostsPage() {
               className={cn(
                 'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
                 status === t.value
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-xs'
-                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                  ? 'bg-primary-solid text-on-primary shadow-xs'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               )}
             >
               {t.name}
@@ -365,7 +365,7 @@ export function AdminPostsPage() {
           />
 
           <div className="relative flex items-center sm:w-48">
-            <Search size={15} className="pointer-events-none absolute left-3 text-plum-400" />
+            <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
               value={query}
               onChange={(e) => {
@@ -373,12 +373,12 @@ export function AdminPostsPage() {
                 setPage(0)
               }}
               placeholder="Tìm nội dung..."
-              className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] pl-9 pr-3 text-xs text-plum-900 placeholder:text-plum-400 focus:border-gold-400 focus:bg-white focus:outline-none transition-all"
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all"
             />
           </div>
 
           <div className="relative flex items-center sm:w-48">
-            <User size={15} className="pointer-events-none absolute left-3 text-plum-400" />
+            <User size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
               value={author}
               onChange={(e) => {
@@ -386,7 +386,7 @@ export function AdminPostsPage() {
                 setPage(0)
               }}
               placeholder="Tìm tác giả, email..."
-              className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] pl-9 pr-3 text-xs text-plum-900 placeholder:text-plum-400 focus:border-gold-400 focus:bg-white focus:outline-none transition-all"
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all"
             />
           </div>
         </div>
@@ -410,13 +410,13 @@ export function AdminPostsPage() {
           </Card>
         ) : error ? (
           <EmptyState
-            icon={<Newspaper size={28} className="text-red-500" />}
+            icon={<Newspaper size={28} className="text-danger" />}
             title="Lỗi tải danh sách bài viết"
             description={error instanceof Error ? error.message : 'Lỗi kết nối máy chủ.'}
           />
         ) : posts.length === 0 ? (
           <EmptyState
-            icon={<Newspaper size={28} className="text-plum-400" />}
+            icon={<Newspaper size={28} className="text-text-subtle" />}
             title="Không tìm thấy bài viết"
             description={
               type !== 'ALL'
@@ -426,11 +426,11 @@ export function AdminPostsPage() {
           />
         ) : (
           <div className="space-y-4">
-            <Card hover={false} className="overflow-hidden border border-plum-900/10 shadow-sm bg-white">
+            <Card hover={false} className="overflow-hidden border border-border shadow-sm bg-surface">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-xs">
                   <thead>
-                    <tr className="border-b border-plum-900/10 bg-plum-900/[0.03] text-left text-[11px] font-bold uppercase tracking-wider text-plum-500">
+                    <tr className="border-b border-border bg-surface-2 text-left text-xs font-bold uppercase tracking-wider text-text-subtle">
                       <th className="px-4 py-3.5">Loại bài viết</th>
                       <th className="px-4 py-3.5">Tác giả</th>
                       <th className="px-4 py-3.5">Nội dung & Thông tin</th>
@@ -439,7 +439,7 @@ export function AdminPostsPage() {
                       <th className="px-4 py-3.5 text-right">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-plum-900/5">
+                  <tbody className="divide-y divide-border">
                     {posts.map((p) => {
                       const catCfg = getCategoryConfig(p.type)
                       const IconComponent = catCfg.icon
@@ -459,7 +459,7 @@ export function AdminPostsPage() {
                             <div className="flex flex-col gap-1.5 items-start">
                               <span
                                 className={cn(
-                                  'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border shadow-2xs',
+                                  'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold border shadow-2xs',
                                   catCfg.badgeBg,
                                   catCfg.badgeText,
                                   catCfg.badgeBorder
@@ -471,7 +471,7 @@ export function AdminPostsPage() {
 
                               <Badge
                                 tone={p.visibility === 'PUBLIC' ? 'success' : 'neutral'}
-                                className="text-[10px] px-2 py-0.2"
+                                className="text-xs px-2 py-0.2"
                               >
                                 {p.visibility === 'PUBLIC' ? 'Công khai' : 'Thành viên'}
                               </Badge>
@@ -483,8 +483,8 @@ export function AdminPostsPage() {
                             <div className="flex items-center gap-3">
                               <Avatar src={p.authorAvatarUrl} name={p.authorName || 'U'} size={36} />
                               <div className="min-w-0">
-                                <p className="font-bold text-plum-950 truncate max-w-[140px]">{p.authorName || 'Ẩn danh'}</p>
-                                <p className="text-[11px] text-plum-400 truncate max-w-[140px]">{p.authorEmail}</p>
+                                <p className="font-bold text-text truncate max-w-[140px]">{p.authorName || 'Ẩn danh'}</p>
+                                <p className="text-xs text-text-subtle truncate max-w-[140px]">{p.authorEmail}</p>
                               </div>
                             </div>
                           </td>
@@ -493,43 +493,43 @@ export function AdminPostsPage() {
                           <td className="px-4 py-4 align-top max-w-sm">
                             {/* Special headers for Event / Job / Achievement */}
                             {p.type === 'EVENT' && p.event?.title && (
-                              <div className="mb-1 rounded-md bg-purple-50 px-2 py-1 border border-purple-200 text-purple-900 font-bold text-[11px] flex items-center gap-1">
+                              <div className="mb-1 rounded-md bg-purple-50 px-2 py-1 border border-purple-200 text-purple-900 font-bold text-xs flex items-center gap-1">
                                 <Calendar size={12} className="text-purple-600 shrink-0" />
                                 <span className="truncate">Sự kiện: {p.event.title}</span>
                               </div>
                             )}
 
                             {p.type === 'RECRUITMENT' && p.job?.title && (
-                              <div className="mb-1 rounded-md bg-sky-50 px-2 py-1 border border-sky-200 text-sky-900 font-bold text-[11px] flex items-center gap-1">
-                                <Briefcase size={12} className="text-sky-600 shrink-0" />
+                              <div className="mb-1 rounded-md bg-info-soft px-2 py-1 border border-info-border text-info font-bold text-xs flex items-center gap-1">
+                                <Briefcase size={12} className="text-info shrink-0" />
                                 <span className="truncate">Tên vị trí: {p.job.title} {p.job.company ? `(${p.job.company})` : ''}</span>
                               </div>
                             )}
 
                             {p.type === 'ACHIEVEMENT' && (
-                              <div className="mb-1 inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 border border-amber-200 text-amber-900 font-bold text-[10px]">
-                                <Trophy size={11} className="text-amber-600" />
+                              <div className="mb-1 inline-flex items-center gap-1 rounded-md bg-warning-soft px-2 py-0.5 border border-warning-border text-warning font-bold text-xs">
+                                <Trophy size={11} className="text-warning" />
                                 <span>Chia sẻ thành tựu</span>
                               </div>
                             )}
 
-                            <p className="line-clamp-2 text-plum-900 font-medium leading-relaxed">
-                              {p.content || <span className="italic text-plum-400">(Không có nội dung mô tả)</span>}
+                            <p className="line-clamp-2 text-text font-medium leading-relaxed">
+                              {p.content || <span className="italic text-text-subtle">(Không có nội dung mô tả)</span>}
                             </p>
-                            <p className="text-[11px] text-plum-400 mt-1 flex items-center gap-1">
+                            <p className="text-xs text-text-subtle mt-1 flex items-center gap-1">
                               <Clock size={11} />
                               {new Date(p.createdAt).toLocaleString('vi-VN')}
                             </p>
                           </td>
 
                           {/* 4. Interactions Column */}
-                          <td className="px-4 py-4 align-top whitespace-nowrap text-plum-600">
-                            <div className="flex flex-col gap-1 text-[11px]">
+                          <td className="px-4 py-4 align-top whitespace-nowrap text-text-muted">
+                            <div className="flex flex-col gap-1 text-xs">
                               <span className="flex items-center gap-1.5">
                                 <ThumbsUp size={12} className="text-gold-500" /> <strong>{p.likeCount}</strong> thích
                               </span>
                               <span className="flex items-center gap-1.5">
-                                <MessageSquare size={12} className="text-plum-400" /> <strong>{p.commentCount}</strong> bình luận
+                                <MessageSquare size={12} className="text-text-subtle" /> <strong>{p.commentCount}</strong> bình luận
                               </span>
                             </div>
                           </td>
@@ -555,10 +555,10 @@ export function AdminPostsPage() {
                                   onClick={(e) => handleToggleHidden(e, p.id, p.hidden)}
                                   disabled={toggleMutation.isPending}
                                   className={cn(
-                                    'h-7 px-2 text-[11px] font-bold border transition-colors',
+                                    'h-7 px-2 text-xs font-bold border transition-colors',
                                     p.hidden
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                      : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                                      ? 'bg-success-soft text-success border-success-border hover:bg-success-border/60'
+                                      : 'bg-danger-soft text-danger border-danger-border hover:bg-danger-border/60'
                                   )}
                                   title={p.hidden ? 'Mở hiển thị bài viết' : 'Ẩn bài viết vi phạm'}
                                 >
@@ -574,7 +574,7 @@ export function AdminPostsPage() {
                                   e.stopPropagation()
                                   navigate(`/admin/posts/${p.id}`)
                                 }}
-                                className="h-7 px-2.5 text-[11px] font-bold bg-plum-900/[0.05] text-plum-800 hover:bg-plum-900/[0.1] border border-plum-900/10"
+                                className="h-7 px-2.5 text-xs font-bold bg-surface-2 text-text hover:bg-surface-3 border border-border"
                               >
                                 <span>Chi tiết</span>
                                 <ChevronRight size={12} />
@@ -605,7 +605,7 @@ export function AdminPostsPage() {
           isOpen={!!confirmPost}
           onClose={() => setConfirmPost(null)}
           title={confirmPost.hidden ? 'Mở ẩn bài viết' : 'Ẩn bài viết'}
-          icon={confirmPost.hidden ? <Eye size={18} className="text-emerald-500" /> : <EyeOff size={18} className="text-rose-500" />}
+          icon={confirmPost.hidden ? <Eye size={18} className="text-success" /> : <EyeOff size={18} className="text-danger" />}
           footer={
             <div className="flex justify-end gap-3">
               <Button variant="secondary" onClick={() => setConfirmPost(null)} disabled={toggleMutation.isPending}>
@@ -615,14 +615,14 @@ export function AdminPostsPage() {
                 variant="primary"
                 onClick={handleConfirmToggle}
                 disabled={toggleMutation.isPending}
-                className={confirmPost.hidden ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-rose-500 hover:bg-rose-600 text-white'}
+                className={confirmPost.hidden ? 'bg-success hover:opacity-90 text-text-inverse' : 'bg-danger hover:opacity-90 text-text-inverse'}
               >
                 {toggleMutation.isPending ? 'Đang xử lý...' : confirmPost.hidden ? 'Mở ẩn' : 'Ẩn bài viết'}
               </Button>
             </div>
           }
         >
-          <p className="text-sm text-plum-600">
+          <p className="text-sm text-text-muted">
             Bạn có chắc muốn {confirmPost.hidden ? 'mở ẩn lại' : 'ẩn'} bài viết #{confirmPost.id} không?
           </p>
         </Modal>

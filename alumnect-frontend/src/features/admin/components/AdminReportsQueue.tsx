@@ -40,35 +40,35 @@ export const REASON_CONFIG: Record<ReasonKey, ReasonConfig> = {
     label: 'Tất cả lý do',
     icon: Filter,
     colorHex: '#4A1525',
-    hoverBg: 'hover:bg-plum-900/10 hover:text-plum-950',
+    hoverBg: 'hover:bg-surface-3 hover:text-text',
   },
   SPAM: {
     value: 'SPAM',
     label: 'Spam / Rác',
     icon: Trash2,
     colorHex: '#64748B',
-    hoverBg: 'hover:bg-slate-50 hover:text-slate-900',
+    hoverBg: 'hover:bg-surface-2 hover:text-text',
   },
   INAPPROPRIATE: {
     value: 'INAPPROPRIATE',
     label: 'Nội dung không phù hợp',
     icon: Ban,
     colorHex: '#EF4444',
-    hoverBg: 'hover:bg-red-50 hover:text-red-900',
+    hoverBg: 'hover:bg-danger-soft hover:text-danger',
   },
   MISINFORMATION: {
     value: 'MISINFORMATION',
     label: 'Sai lệch thông tin',
     icon: Info,
     colorHex: '#F59E0B',
-    hoverBg: 'hover:bg-amber-50 hover:text-amber-900',
+    hoverBg: 'hover:bg-warning-soft hover:text-warning',
   },
   SCAM_OR_FRAUD: {
     value: 'SCAM_OR_FRAUD',
     label: 'Lừa đảo & Giả mạo',
     icon: UserX,
     colorHex: '#DC2626',
-    hoverBg: 'hover:bg-rose-50 hover:text-rose-900',
+    hoverBg: 'hover:bg-danger-soft hover:text-danger',
   },
   OTHER: {
     value: 'OTHER',
@@ -107,8 +107,8 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex h-10 items-center justify-between gap-2.5 rounded-2xl border bg-white px-3.5 text-xs font-bold text-plum-900 shadow-2xs transition-all duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[190px]',
-          isOpen ? 'ring-2 ring-gold-400/40 border-gold-400 bg-plum-900/[0.02]' : 'border-plum-900/15 hover:bg-plum-900/[0.02]'
+          'flex h-10 items-center justify-between gap-2.5 rounded-2xl border bg-surface px-3.5 text-xs font-bold text-text shadow-2xs transition-all duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[190px]',
+          isOpen ? 'ring-2 ring-gold-400/40 border-gold-400 bg-surface-2' : 'border-border-strong hover:bg-surface-2'
         )}
       >
         <div className="flex items-center gap-2 truncate">
@@ -122,13 +122,13 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
         </div>
         <ChevronRight
           size={14}
-          className={cn('text-plum-400 transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-plum-600' : 'rotate-0')}
+          className={cn('text-text-subtle transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-text-muted' : 'rotate-0')}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-1.5 w-60 origin-top-right rounded-2xl border border-plum-900/15 bg-white/95 backdrop-blur-xl p-1.5 shadow-2xl shadow-plum-950/20 animate-in fade-in-80 zoom-in-95">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-plum-400 border-b border-plum-900/5 mb-1 flex items-center justify-between">
+        <div className="absolute right-0 z-50 mt-1.5 w-60 origin-top-right rounded-2xl border border-border-strong bg-surface backdrop-blur-xl p-1.5 shadow-2xl shadow-plum-950/20 animate-in fade-in-80 zoom-in-95">
+          <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border mb-1 flex items-center justify-between">
             <span>Lọc theo lý do</span>
             <Sparkles size={11} className="text-brand-400" />
           </div>
@@ -149,15 +149,15 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
                   className={cn(
                     'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 text-left cursor-pointer',
                     isSelected
-                      ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-sm font-bold'
-                      : cn('text-plum-800', cfg.hoverBg)
+                      ? 'bg-primary-solid text-on-primary shadow-sm font-bold'
+                      : cn('text-text', cfg.hoverBg)
                   )}
                 >
                   <div className="flex items-center gap-2.5">
                     <span
                       className={cn(
                         'flex h-5.5 w-5.5 items-center justify-center rounded-lg text-white shadow-2xs shrink-0 transition-transform',
-                        isSelected ? 'scale-105 bg-plum-950/20 text-plum-950' : 'opacity-90'
+                        isSelected ? 'scale-105 bg-plum-950/20 text-text' : 'opacity-90'
                       )}
                       style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
                     >
@@ -165,7 +165,7 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
                     </span>
                     <span>{cfg.label}</span>
                   </div>
-                  {isSelected && <CheckCircle2 size={14} className="text-plum-950 shrink-0 ml-2" />}
+                  {isSelected && <CheckCircle2 size={14} className="text-text shrink-0 ml-2" />}
                 </button>
               )
             })}
@@ -308,16 +308,16 @@ export function AdminReportsQueue() {
       />
 
       {/* --- Bộ lọc theo Loại bài viết (Color-coded Category Bar) --- */}
-      <Card hover={false} className="mb-4 p-4 bg-white/80 backdrop-blur border border-plum-900/10 shadow-sm !overflow-visible relative z-20">
+      <Card hover={false} className="mb-4 p-4 bg-surface/80 backdrop-blur border border-border shadow-sm !overflow-visible relative z-20">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-plum-900">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text">
               <Filter size={14} className="text-gold-500" />
               <span>Phân loại bài viết</span>
             </div>
             {totalElements > 0 && (
-              <span className="text-xs font-semibold text-plum-500">
-                Hiển thị <strong className="text-plum-900">{reports.length}</strong> / <strong>{totalElements}</strong> báo cáo
+              <span className="text-xs font-semibold text-text-subtle">
+                Hiển thị <strong className="text-text">{reports.length}</strong> / <strong>{totalElements}</strong> báo cáo
               </span>
             )}
           </div>
@@ -377,8 +377,8 @@ export function AdminReportsQueue() {
               className={cn(
                 'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
                 statusFilter === tab.key
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-950 shadow-xs'
-                  : 'bg-plum-900/[0.04] text-plum-600 hover:bg-plum-900/[0.08]'
+                  ? 'bg-primary-solid text-on-primary shadow-xs'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               )}
             >
               {tab.label}
@@ -397,7 +397,7 @@ export function AdminReportsQueue() {
           />
 
           <div className="relative flex items-center sm:w-48">
-            <Search size={15} className="pointer-events-none absolute left-3 text-plum-400" />
+            <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
               value={searchQuery}
               onChange={(e) => {
@@ -405,12 +405,12 @@ export function AdminReportsQueue() {
                 setPage(0)
               }}
               placeholder="Tìm nội dung..."
-              className="h-10 w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] pl-9 pr-3 text-xs text-plum-900 placeholder:text-plum-400 focus:border-gold-400 focus:bg-white focus:outline-none transition-all shadow-2xs"
+              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all shadow-2xs"
             />
           </div>
 
           <div className="relative flex items-center sm:w-48">
-            <User size={15} className="pointer-events-none absolute left-3 text-plum-400" />
+            <User size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
               value={authorQuery}
               onChange={(e) => {
@@ -418,7 +418,7 @@ export function AdminReportsQueue() {
                 setPage(0)
               }}
               placeholder="Tìm tác giả, email..."
-              className="h-10 w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] pl-9 pr-3 text-xs text-plum-900 placeholder:text-plum-400 focus:border-gold-400 focus:bg-white focus:outline-none transition-all shadow-2xs"
+              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all shadow-2xs"
             />
           </div>
         </div>
@@ -430,10 +430,10 @@ export function AdminReportsQueue() {
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-full bg-brand-50" />
+                  <Skeleton className="h-10 w-10 rounded-full bg-primary-soft" />
                   <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-1/4 bg-brand-50" />
-                    <Skeleton className="h-3 w-1/3 bg-brand-50" />
+                    <Skeleton className="h-4 w-1/4 bg-primary-soft" />
+                    <Skeleton className="h-3 w-1/3 bg-primary-soft" />
                   </div>
                 </div>
               ))}
@@ -459,10 +459,10 @@ export function AdminReportsQueue() {
           />
         ) : (
           <div className="space-y-4">
-            <Card hover={false} className="overflow-x-auto border border-plum-900/10 bg-white rounded-3xl">
+            <Card hover={false} className="overflow-x-auto border border-border bg-surface rounded-3xl">
               <table className="w-full min-w-[760px] text-sm text-left">
                 <thead>
-                  <tr className="border-b border-plum-900/8 text-xs uppercase tracking-wider text-plum-400 bg-plum-900/[0.02]">
+                  <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2">
                     <th className="px-5 py-3.5 font-bold">Người gửi báo cáo</th>
                     <th className="px-5 py-3.5 font-bold">Lý do</th>
                     <th className="px-5 py-3.5 font-bold">Loại bài</th>
@@ -471,7 +471,7 @@ export function AdminReportsQueue() {
                     <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-plum-900/5">
+                <tbody className="divide-y divide-border">
                   {reports.map((r) => {
                     const reasonInfo = REASON_LABELS[r.reason] || { label: r.reason, tone: 'neutral' }
                     const catCfg = getCategoryConfig(r.postType)
@@ -484,7 +484,7 @@ export function AdminReportsQueue() {
                       : r.postStatus
 
                     return (
-                      <tr key={r.id} className={cn('transition-colors hover:bg-plum-900/[0.015] border-l-4', catCfg.rowBorderLeft, catCfg.bgHoverRow)}>
+                      <tr key={r.id} className={cn('transition-colors hover:bg-surface-2 border-l-4', catCfg.rowBorderLeft, catCfg.bgHoverRow)}>
                         {/* Người báo cáo */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
@@ -492,11 +492,11 @@ export function AdminReportsQueue() {
                               src={r.reporterAvatarUrl}
                               name={r.reporterName}
                               size={36}
-                              className="border border-brand-200 shrink-0 animate-breathe"
+                              className="border border-primary-soft-border shrink-0 animate-breathe"
                             />
                             <div className="min-w-0">
-                              <p className="font-bold text-plum-950 truncate">{r.reporterName}</p>
-                              <p className="text-xs text-plum-400 truncate">{r.reporterEmail}</p>
+                              <p className="font-bold text-text truncate">{r.reporterName}</p>
+                              <p className="text-xs text-text-subtle truncate">{r.reporterEmail}</p>
                             </div>
                           </div>
                         </td>
@@ -506,7 +506,7 @@ export function AdminReportsQueue() {
                           <div className="space-y-1">
                             <Badge tone={reasonInfo.tone}>{reasonInfo.label}</Badge>
                             {r.description && (
-                              <p className="text-xs text-plum-500 font-medium truncate max-w-[180px]" title={r.description}>
+                              <p className="text-xs text-text-subtle font-medium truncate max-w-[180px]" title={r.description}>
                                 {r.description}
                               </p>
                             )}
@@ -517,7 +517,7 @@ export function AdminReportsQueue() {
                         <td className="px-5 py-4 whitespace-nowrap">
                           <span
                             className={cn(
-                              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border shadow-2xs',
+                              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold border shadow-2xs',
                               catCfg.badgeBg,
                               catCfg.badgeText,
                               catCfg.badgeBorder
@@ -532,10 +532,10 @@ export function AdminReportsQueue() {
                         <td className="px-5 py-4">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-plum-400 font-medium">Bởi:</span>
-                              <span className="text-xs font-bold text-plum-900 truncate">{r.postAuthorName}</span>
+                              <span className="text-xs text-text-subtle font-medium">Bởi:</span>
+                              <span className="text-xs font-bold text-text truncate">{r.postAuthorName}</span>
                             </div>
-                            <p className="text-xs text-plum-600 truncate mt-1 max-w-[240px] font-medium bg-brand-50/50 p-1.5 rounded-lg border border-brand-100/50">
+                            <p className="text-xs text-text-muted truncate mt-1 max-w-[240px] font-medium bg-primary-soft p-1.5 rounded-lg border border-brand-100/50">
                               {r.postContent}
                             </p>
                           </div>
@@ -557,7 +557,7 @@ export function AdminReportsQueue() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => setSelectedReport(r)}
-                              className="inline-flex items-center gap-1 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-xs rounded-full px-3 py-1.5 border border-brand-100 transition-colors shadow-2xs hover:shadow-xs cursor-pointer hover-sheen"
+                              className="inline-flex items-center gap-1 bg-primary-soft hover:bg-primary-soft text-primary-solid font-bold text-xs rounded-full px-3 py-1.5 border border-primary-soft-border transition-colors shadow-2xs hover:shadow-xs cursor-pointer hover-sheen"
                             >
                               <Eye size={12} /> Chi tiết
                             </button>
@@ -591,22 +591,22 @@ export function AdminReportsQueue() {
           />
 
           {/* Card Modal */}
-          <Card hover={false} className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-white max-h-[90vh] flex flex-col pop">
+          <Card hover={false} className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface max-h-[90vh] flex flex-col pop">
             
             {/* Header Modal */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white rounded-t-3xl shrink-0">
+            <div className="flex items-center justify-between p-6 border-b border-border bg-surface rounded-t-3xl shrink-0">
               <div className="flex items-center gap-3">
-                <div className="rounded-xl bg-red-50 p-2.5 border border-red-100 text-red-600">
+                <div className="rounded-xl bg-danger-soft p-2.5 border border-danger-border text-danger">
                   <Flag size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-plum-900 leading-none">Chi tiết báo cáo vi phạm</h3>
-                  <p className="text-xs text-slate-500 mt-1 font-medium">Báo cáo #{selectedReport.id}</p>
+                  <h3 className="text-lg font-bold text-text leading-none">Chi tiết báo cáo vi phạm</h3>
+                  <p className="text-xs text-text-subtle mt-1 font-medium">Báo cáo #{selectedReport.id}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedReport(null)}
-                className="grid h-9 w-9 place-items-center rounded-xl text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900 transition-colors cursor-pointer"
+                className="grid h-9 w-9 place-items-center rounded-xl text-text-subtle hover:bg-surface-2 hover:text-text transition-colors cursor-pointer"
                 title="Đóng cửa sổ"
               >
                 <X size={18} />
@@ -617,8 +617,8 @@ export function AdminReportsQueue() {
             <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-140px)]">
               
               {/* Thông tin người báo cáo */}
-              <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600 flex items-center gap-1.5">
+              <div className="p-4 rounded-2xl bg-brand-50/40 border border-primary-soft-border space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-primary-solid flex items-center gap-1.5">
                   <ShieldAlert size={14} /> Thông tin báo cáo
                 </h4>
                 <div className="flex items-center gap-3">
@@ -626,31 +626,31 @@ export function AdminReportsQueue() {
                     src={selectedReport.reporterAvatarUrl}
                     name={selectedReport.reporterName}
                     size={40}
-                    className="border border-brand-200"
+                    className="border border-primary-soft-border"
                   />
                   <div>
-                    <span className="text-xs text-plum-400 block font-medium">Người gửi báo cáo</span>
-                    <span className="font-bold text-plum-900 text-sm">{selectedReport.reporterName} ({selectedReport.reporterEmail})</span>
+                    <span className="text-xs text-text-subtle block font-medium">Người gửi báo cáo</span>
+                    <span className="font-bold text-text text-sm">{selectedReport.reporterName} ({selectedReport.reporterEmail})</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-xs mt-2 border-t border-brand-100/50 pt-2 font-medium">
                   <div>
-                    <span className="text-plum-400 block">Lý do vi phạm</span>
-                    <span className="font-bold text-plum-900 text-sm">
+                    <span className="text-text-subtle block">Lý do vi phạm</span>
+                    <span className="font-bold text-text text-sm">
                       {REASON_LABELS[selectedReport.reason]?.label || selectedReport.reason}
                     </span>
                   </div>
                   <div>
-                    <span className="text-plum-400 block">Thời điểm gửi</span>
-                    <span className="font-bold text-plum-900 text-sm">
+                    <span className="text-text-subtle block">Thời điểm gửi</span>
+                    <span className="font-bold text-text text-sm">
                       {new Date(selectedReport.createdAt).toLocaleString('vi-VN')}
                     </span>
                   </div>
                 </div>
                 {selectedReport.description && (
-                  <div className="bg-white p-3 rounded-xl border border-brand-100 mt-2">
-                    <span className="text-xs text-plum-400 block font-medium mb-1">Mô tả chi tiết từ người gửi:</span>
-                    <p className="text-xs text-plum-800 italic font-medium leading-relaxed">
+                  <div className="bg-surface p-3 rounded-xl border border-primary-soft-border mt-2">
+                    <span className="text-xs text-text-subtle block font-medium mb-1">Mô tả chi tiết từ người gửi:</span>
+                    <p className="text-xs text-text italic font-medium leading-relaxed">
                       "{selectedReport.description}"
                     </p>
                   </div>
@@ -658,10 +658,10 @@ export function AdminReportsQueue() {
               </div>
 
               {/* Thông tin bài viết bị báo cáo */}
-              <div className="p-4 rounded-2xl bg-brand-50/40 border border-brand-100 space-y-3">
+              <div className="p-4 rounded-2xl bg-brand-50/40 border border-primary-soft-border space-y-3">
                 <div className="flex justify-between items-center gap-2 flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-600">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-primary-solid">
                       Bài viết bị báo cáo
                     </h4>
                     {(() => {
@@ -670,7 +670,7 @@ export function AdminReportsQueue() {
                       return (
                         <span
                           className={cn(
-                            'inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[11px] font-bold border shadow-2xs',
+                            'inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-bold border shadow-2xs',
                             selCatCfg.badgeBg,
                             selCatCfg.badgeText,
                             selCatCfg.badgeBorder
@@ -686,31 +686,31 @@ export function AdminReportsQueue() {
                     href={`/admin/posts/${selectedReport.postId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-bold text-brand-500 hover:text-brand-600 inline-flex items-center gap-0.5 hover:underline"
+                    className="text-xs font-bold text-primary-solid hover:text-primary-solid inline-flex items-center gap-0.5 hover:underline"
                   >
                     Xem bài đầy đủ <ArrowRight size={10} />
                   </a>
                 </div>
                 
-                <div className="bg-white p-4 rounded-xl border border-brand-100 space-y-2 max-h-48 overflow-y-auto">
-                  <p className="text-xs text-plum-800 font-medium whitespace-pre-wrap leading-relaxed">
+                <div className="bg-surface p-4 rounded-xl border border-primary-soft-border space-y-2 max-h-48 overflow-y-auto">
+                  <p className="text-xs text-text font-medium whitespace-pre-wrap leading-relaxed">
                     {selectedReport.postContent}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium border-t border-brand-100/50 pt-2">
                   <div>
-                    <span className="text-plum-400 block">Tác giả bài viết</span>
-                    <span className="font-bold text-plum-900 truncate block">{selectedReport.postAuthorName}</span>
-                    <span className="text-[11px] text-plum-500 truncate block">{selectedReport.postAuthorEmail}</span>
+                    <span className="text-text-subtle block">Tác giả bài viết</span>
+                    <span className="font-bold text-text truncate block">{selectedReport.postAuthorName}</span>
+                    <span className="text-xs text-text-subtle truncate block">{selectedReport.postAuthorEmail}</span>
                   </div>
                   <div>
-                    <span className="text-plum-400 block">Phân loại bài viết</span>
+                    <span className="text-text-subtle block">Phân loại bài viết</span>
                     {(() => {
                       const selCatCfg = getCategoryConfig(selectedReport.postType)
                       const SelCatIcon = selCatCfg.icon
                       return (
-                        <span className="inline-flex items-center gap-1.5 font-bold text-plum-900 mt-0.5">
+                        <span className="inline-flex items-center gap-1.5 font-bold text-text mt-0.5">
                           <SelCatIcon size={13} style={{ color: selCatCfg.colorHex }} />
                           {selCatCfg.shortLabel}
                         </span>
@@ -718,7 +718,7 @@ export function AdminReportsQueue() {
                     })()}
                   </div>
                   <div>
-                    <span className="text-plum-400 block">Trạng thái bài viết gốc</span>
+                    <span className="text-text-subtle block">Trạng thái bài viết gốc</span>
                     <div className="mt-0.5">
                       {selectedReport.postStatus === 'HIDDEN' ? (
                         <Badge tone="danger">Đang bị ẩn</Badge>
@@ -733,7 +733,7 @@ export function AdminReportsQueue() {
               </div>
 
               {/* Nút thao tác xử lý báo cáo */}
-              <div className="pt-4 border-t border-plum-900/8 flex flex-col sm:flex-row gap-2 justify-between items-center">
+              <div className="pt-4 border-t border-border flex flex-col sm:flex-row gap-2 justify-between items-center">
                 
                 {/* Thiết lập trạng thái Ẩn / Mở ẩn cho bài viết (Chỉ thay đổi local state map) */}
                 {selectedReport.postStatus !== 'DELETED' && selectedReport.status === 'PENDING' && (
@@ -743,8 +743,8 @@ export function AdminReportsQueue() {
                     className={cn(
                       "w-full sm:w-auto font-bold text-xs rounded-full cursor-pointer transition-all",
                       activeWillHide 
-                        ? "border border-green-200 text-green-600 hover:bg-green-50" 
-                        : "border border-red-200 text-red-600 hover:bg-red-50"
+                        ? "border border-success-border text-success hover:bg-success-soft" 
+                        : "border border-danger-border text-danger hover:bg-danger-soft"
                     )}
                   >
                     {activeWillHide ? (
@@ -761,21 +761,21 @@ export function AdminReportsQueue() {
                     <Button
                       variant="secondary"
                       onClick={() => triggerDismissConfirm(selectedReport.id)}
-                      className="w-full sm:w-auto font-bold text-xs rounded-full border border-plum-200 hover:bg-plum-50 cursor-pointer"
+                      className="w-full sm:w-auto font-bold text-xs rounded-full border border-border hover:bg-surface-2 cursor-pointer"
                     >
                       <span className="inline-flex items-center gap-1"><Ban size={12} /> Bỏ qua báo cáo</span>
                     </Button>
                     <Button
                       onClick={() => triggerResolveConfirm(selectedReport.id)}
-                      className="w-full sm:w-auto font-bold text-xs rounded-full bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 shadow-sm cursor-pointer hover-sheen"
+                      className="w-full sm:w-auto font-bold text-xs rounded-full bg-primary-solid text-on-primary hover:bg-primary-hover shadow-raised cursor-pointer"
                     >
                       <span className="inline-flex items-center gap-1"><Check size={12} /> Đã giải quyết</span>
                     </Button>
                   </div>
                 ) : (
-                  <div className="text-xs font-bold text-plum-400">
+                  <div className="text-xs font-bold text-text-subtle">
                     Báo cáo này đã ở trạng thái:{' '}
-                    <span className="text-plum-900 font-extrabold">
+                    <span className="text-text font-extrabold">
                       {selectedReport.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đã bỏ qua'}
                     </span>
                   </div>
@@ -799,17 +799,17 @@ export function AdminReportsQueue() {
           />
 
           {/* Dialog Container */}
-          <Card hover={false} className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-white p-6 pop">
+          <Card hover={false} className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface p-6 pop">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="rounded-full bg-brand-50 p-3 border border-brand-100 text-brand-500 animate-breathe">
+              <div className="rounded-full bg-primary-soft p-3 border border-primary-soft-border text-primary-solid animate-breathe">
                 <ShieldAlert size={28} />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-plum-950">
+                <h3 className="text-base font-bold text-text">
                   {confirmAction.type === 'RESOLVE' && 'Giải quyết báo cáo'}
                   {confirmAction.type === 'DISMISS' && 'Bỏ qua báo cáo'}
                 </h3>
-                <p className="text-xs text-plum-500 font-semibold leading-relaxed">
+                <p className="text-xs text-text-subtle font-semibold leading-relaxed">
                   {confirmAction.type === 'RESOLVE' && (
                     activeWillHide 
                       ? 'Bạn có chắc muốn ẩn bài viết vi phạm này không?' 
@@ -822,13 +822,13 @@ export function AdminReportsQueue() {
                 <Button
                   variant="secondary"
                   onClick={() => setConfirmAction(null)}
-                  className="flex-1 font-bold text-xs rounded-full border border-plum-200 hover:bg-plum-50 cursor-pointer"
+                  className="flex-1 font-bold text-xs rounded-full border border-border hover:bg-surface-2 cursor-pointer"
                 >
                   Hủy bỏ
                 </Button>
                 <Button
                   onClick={executeConfirmAction}
-                  className="flex-1 font-bold text-xs rounded-full bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 shadow-sm cursor-pointer hover-sheen"
+                  className="flex-1 font-bold text-xs rounded-full bg-primary-solid text-on-primary hover:bg-primary-hover shadow-raised cursor-pointer"
                 >
                   Xác nhận
                 </Button>

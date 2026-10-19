@@ -108,13 +108,13 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-extrabold text-plum-900">Số lượng đăng ký mới</h2>
+            <h2 className="text-base font-extrabold text-text">Số lượng đăng ký mới</h2>
             <Badge tone="mint" size="sm" className="gap-1 font-bold">
               <Activity className="h-3 w-3 text-mint-600" />
               {period === 'WEEK' ? 'Theo ngày' : period === 'MONTH' ? 'Theo tháng' : 'Theo năm'}
             </Badge>
           </div>
-          <p className="mt-0.5 text-xs text-plum-400">
+          <p className="mt-0.5 text-xs text-text-subtle">
             {period === 'WEEK'
               ? 'Thống kê tài khoản mới đăng ký theo ngày'
               : period === 'MONTH'
@@ -124,7 +124,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
         </div>
 
         {/* Period Switcher Tabs */}
-        <div className="flex items-center gap-1.5 rounded-2xl bg-cream-100 p-1 border border-plum-900/5">
+        <div className="flex items-center gap-1.5 rounded-2xl bg-surface-2 p-1 border border-border">
           {(
             [
               { key: 'WEEK', label: 'Tuần' },
@@ -139,14 +139,14 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
               className={cn(
                 'relative rounded-xl px-3 py-1.5 text-xs font-bold transition-all',
                 period === t.key
-                  ? 'text-plum-900 shadow-sm'
-                  : 'text-plum-500 hover:text-plum-900'
+                  ? 'text-text shadow-sm'
+                  : 'text-text-subtle hover:text-text'
               )}
             >
               {period === t.key && (
                 <motion.span
                   layoutId="activePeriodTab"
-                  className="absolute inset-0 rounded-xl bg-white shadow-md shadow-plum-900/10 ring-1 ring-plum-900/5"
+                  className="absolute inset-0 rounded-xl bg-surface shadow-md shadow-plum-900/10 ring-1 ring-border"
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
@@ -157,27 +157,27 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
       </div>
 
       {/* Chart Legend */}
-      <div className="mb-5 flex flex-wrap items-center justify-between border-b border-plum-900/5 pb-4 text-xs">
+      <div className="mb-5 flex flex-wrap items-center justify-between border-b border-border pb-4 text-xs">
         <div className="flex items-center gap-5">
           {/* Bar Legend */}
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-md bg-gradient-to-t from-brand-600 to-brand-400 shadow-sm" />
-            <span className="font-semibold text-plum-700">Tài khoản đăng ký</span>
+            <span className="font-semibold text-text-muted">Tài khoản đăng ký</span>
           </div>
 
           {/* Line Legend */}
           <div className="flex items-center gap-2">
             <span className="h-0.5 w-4 rounded bg-gradient-to-r from-amber-500 to-coral-500" />
             <span className="h-2.5 w-2.5 rounded-full bg-coral-500 ring-2 ring-coral-200" />
-            <span className="font-semibold text-plum-700">Xu hướng tăng trưởng</span>
+            <span className="font-semibold text-text-muted">Xu hướng tăng trưởng</span>
           </div>
         </div>
 
         {/* Total Summary */}
-        <div className="flex items-center gap-1.5 text-plum-500 font-semibold">
-          <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+        <div className="flex items-center gap-1.5 text-text-subtle font-semibold">
+          <TrendingUp className="h-3.5 w-3.5 text-success" />
           <span>Tổng đăng ký: </span>
-          <span className="font-black text-plum-900">
+          <span className="font-black text-text">
             {activeData.reduce((acc, d) => acc + d.count, 0).toLocaleString('vi-VN')}
           </span>
         </div>
@@ -188,7 +188,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
         {/* Background Grid Lines */}
         <div className="absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none opacity-40">
           {[1, 2, 3, 4].map((_, i) => (
-            <div key={i} className="w-full border-b border-dashed border-plum-900/15" />
+            <div key={i} className="w-full border-b border-dashed border-border-strong" />
           ))}
         </div>
 
@@ -274,7 +274,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       className="absolute -top-14 z-30 flex flex-col items-center pointer-events-none"
                     >
-                      <div className="rounded-xl bg-plum-900 px-3 py-1.5 text-[11px] font-bold text-white shadow-xl shadow-plum-900/30 ring-1 ring-white/10 whitespace-nowrap">
+                      <div className="rounded-xl bg-plum-900 px-3 py-1.5 text-xs font-bold text-white shadow-xl shadow-plum-900/30 ring-1 ring-white/10 whitespace-nowrap">
                         <span className="block text-gold-300 font-extrabold">{d.label}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span>Đăng ký: <strong className="text-white">{d.count}</strong></span>
@@ -304,8 +304,8 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                   {/* X-Axis Label */}
                   <span
                     className={cn(
-                      'mt-2 text-[11px] font-bold transition-colors whitespace-nowrap',
-                      isHovered ? 'text-plum-900 scale-105' : 'text-plum-500'
+                      'mt-2 text-xs font-bold transition-colors whitespace-nowrap',
+                      isHovered ? 'text-text scale-105' : 'text-text-subtle'
                     )}
                   >
                     {d.label}

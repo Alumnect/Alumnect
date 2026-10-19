@@ -38,9 +38,11 @@ export function useWebSocketChat(onMessageReceived?: (message: Message) => void)
           try {
             const newMsg: Message = JSON.parse(stompMessage.body)
 
+            const convId = Number(newMsg.conversationId)
+
             // 1. Cập nhật trực tiếp cache tin nhắn vào useInfiniteQuery mà không cần gọi HTTP
             queryClient.setQueryData<InfiniteData<{ content?: Message[]; totalElements?: number }>>(
-              ['messages', newMsg.conversationId],
+              ['messages', convId],
               (oldData) => {
                 if (!oldData || !oldData.pages || oldData.pages.length === 0) {
                   return oldData
@@ -64,6 +66,14 @@ export function useWebSocketChat(onMessageReceived?: (message: Message) => void)
                 }
               }
             )
+
+            // Kích hoạt làm mới truy vấn messages để đảm bảo đồng bộ hoàn chỉnh
+            queryClient.invalidateQueries({ queryKey: ['messages', convId] })
+
+            // Nếu là thông báo liên quan đến Deal, làm mới cache danh sách Deal ngay lập tức
+            if (newMsg.type === 'SYSTEM' || (newMsg.content && newMsg.content.includes('Deal'))) {
+              queryClient.invalidateQueries({ queryKey: ['mentoring-deals'] })
+            }
 
             // 2. Cập nhật trực tiếp danh sách cuộc hội thoại (snippet, lastMessageAt, unreadCount)
             let isExistingConv = false

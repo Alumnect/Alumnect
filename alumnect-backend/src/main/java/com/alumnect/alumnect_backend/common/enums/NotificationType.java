@@ -37,5 +37,23 @@ public enum NotificationType {
     /**
      * Thông báo hệ thống / Thông báo phát thanh từ Admin.
      */
-    SYSTEM_BROADCAST
+    SYSTEM_BROADCAST,
+
+    /** Yêu cầu thuê Mentor mới và phản hồi nhận/bỏ qua yêu cầu. */
+    MENTORING_REQUEST,
+
+    /**
+     * Mentor nộp/cập nhật Work Log cho Mentoring Task chờ học viên xác nhận.
+     */
+    MENTORING_WORK_LOG,
+
+    /**
+     * Thông báo liên quan đến tiến trình Mentoring Task.
+     */
+    MENTORING_TASK,
+
+    /** Lời mời và thay đổi thành viên của nhóm mentoring. */
+    MENTORING_GROUP,
+    /** Thông báo tài khoản Mentoring: request đóng, gói Mentor, chi trả và hoàn tiền */
+    MENTORING_ACCOUNT
 }

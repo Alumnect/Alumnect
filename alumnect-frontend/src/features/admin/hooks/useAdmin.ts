@@ -315,15 +315,36 @@ export function useUpdateMentorPackage() {
 }
 
 /**
- * Hook lấy danh sách phân trang các Mentor cho Quản trị viên (UC96)
+ * Hook lấy danh sách phân trang các Mentor cho Quản trị viên hỗ trợ lọc đa tiêu chí (UC96, UC115)
  */
-export function useAdminMentors(params: { keyword?: string; page?: number; size?: number }) {
+export function useAdminMentors(params: {
+  keyword?: string
+  status?: string
+  subscriptionStatus?: string
+  page?: number
+  size?: number
+}) {
   return useQuery({
     queryKey: ['admin', 'mentors', params],
     queryFn: async () => {
       const response = await adminApi.getAdminMentors(params)
       return response.data
     },
+  })
+}
+
+/**
+ * Hook lấy thông tin chi tiết hồ sơ quản lý của Mentor (UC115 Bước 35)
+ */
+export function useAdminMentorDetail(mentorId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentor-detail', mentorId],
+    queryFn: async () => {
+      if (!mentorId) return null
+      const response = await adminApi.getAdminMentorDetail(mentorId)
+      return response.data
+    },
+    enabled: !!mentorId,
   })
 }
 
@@ -342,8 +363,202 @@ export function useAdminMentorCv(mentorId: number | null) {
   })
 }
 
+/**
+ * Hook lấy danh sách Ticket tranh chấp & hòa giải cho Quản trị viên (UC116)
+ */
+export function useAdminTickets(params: {
+  keyword?: string
+  type?: string
+  status?: string
+  handledById?: number
+  page?: number
+  size?: number
+}) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-tickets', params],
+    queryFn: async () => {
+      const response = await adminApi.getAdminTickets(params)
+      return response.data
+    },
+  })
+}
 
+/**
+ * Hook xem chi tiết Ticket cho Quản trị viên (UC116, UC118)
+ */
+export function useAdminTicketDetail(ticketId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-ticket-detail', ticketId],
+    queryFn: async () => {
+      if (!ticketId) return null
+      const response = await adminApi.getAdminTicketDetail(ticketId)
+      return response.data
+    },
+    enabled: !!ticketId,
+  })
+}
 
+/**
+ * Hook Quản trị viên tiếp nhận xử lý Ticket tranh chấp / hòa giải (UC117)
+ */
+export function useAcceptAdminTicket() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (ticketId: number) => {
+      const response = await adminApi.acceptAdminTicket(ticketId)
+      return response.data
+    },
+    onSuccess: (_, ticketId) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-tickets'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-detail', ticketId] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-context', ticketId] })
+    },
+  })
+}
 
+/**
+ * Hook lấy toàn bộ bằng chứng tranh chấp và bối cảnh toàn diện Task cho Admin (UC118)
+ */
+export function useAdminDisputeContext(ticketId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-ticket-context', ticketId],
+    queryFn: async () => {
+      if (!ticketId) return null
+      const response = await adminApi.getAdminDisputeContext(ticketId)
+      return response.data
+    },
+    enabled: !!ticketId,
+  })
+}
 
+/**
+ * Hook lấy danh sách tin nhắn trao đổi trong Ticket cho Admin (UC119)
+ */
+export function useAdminTicketMessages(ticketId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-ticket-messages', ticketId],
+    queryFn: async () => {
+      if (!ticketId) return []
+      const response = await adminApi.getAdminTicketMessages(ticketId)
+      return response.data
+    },
+    enabled: !!ticketId,
+    refetchInterval: 4000, // Polling định kỳ 4s làm mới tin nhắn mới
+  })
+}
 
+/**
+ * Hook Admin gửi tin nhắn / hướng dẫn hòa giải / yêu cầu bổ sung thông tin (UC119)
+ */
+export function useSendAdminTicketMessage(ticketId: number | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: Parameters<typeof adminApi.sendAdminTicketMessage>[1]) => {
+      if (!ticketId) throw new Error('Ticket ID không hợp lệ')
+      const response = await adminApi.sendAdminTicketMessage(ticketId, payload)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-messages', ticketId] })
+    },
+  })
+}
+
+/**
+ * Hook Quản trị viên ra phán quyết quyết định phương án giải quyết Ticket (UC120)
+ */
+export function useResolveAdminTicket() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ticketId, payload }: { ticketId: number; payload: Parameters<typeof adminApi.resolveAdminTicket>[1] }) => {
+      const response = await adminApi.resolveAdminTicket(ticketId, payload)
+      return response.data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-tickets'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-detail', variables.ticketId] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-context', variables.ticketId] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-ticket-messages', variables.ticketId] })
+    },
+  })
+}
+
+/**
+ * Hook Admin xem danh sách Quỹ và dòng tiền theo Task (UC121)
+ */
+export function useAdminTaskFunds(filters: {
+  keyword?: string
+  status?: string
+  settlementStatus?: string
+  page: number
+  size: number
+}) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-finances-tasks', filters],
+    queryFn: async () => {
+      const response = await adminApi.getAdminTaskFunds(filters)
+      return response.data
+    },
+    refetchInterval: 10000, // Tự động cập nhật số liệu quỹ định kỳ 10s
+  })
+}
+
+/**
+ * Hook Admin xem chi tiết Sổ quỹ và toàn bộ lịch sử tài chính của Task (UC121)
+ */
+export function useAdminTaskFundDetail(taskId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'mentoring-task-fund-detail', taskId],
+    queryFn: async () => {
+      if (!taskId) return null
+      const response = await adminApi.getAdminTaskFundDetail(taskId)
+      return response.data
+    },
+    enabled: !!taskId,
+  })
+}
+
+/**
+ * Hook chi lại thù lao Mentor cho lệnh chi PayOS đã thất bại
+ */
+export function useRetryAdminPayout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ledgerId, note }: { ledgerId: number; note?: string }) => {
+      const response = await adminApi.retryAdminPayout(ledgerId, note)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-task-fund-detail'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'mentoring-finances-tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'payout-balance'] })
+    },
+  })
+}
+
+/**
+ * Hook lấy số dư tài khoản Kênh chi PayOS
+ */
+export function useAdminPayoutBalance() {
+  return useQuery({
+    queryKey: ['admin', 'payout-balance'],
+    queryFn: async () => {
+      const response = await adminApi.getAdminPayoutBalance()
+      return response.data
+    },
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useAdminRevenueOverview(filters?: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ['admin', 'revenue', filters],
+    queryFn: async () => {
+      const response = await adminApi.getRevenueOverview(filters)
+      return response.data
+    },
+    staleTime: 30 * 1000,
+  })
+}

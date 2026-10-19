@@ -299,11 +299,11 @@ export function ExperienceFormModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-plum-950/50 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl overflow-hidden flex flex-col min-h-[580px] max-h-[90vh] animate-scale-up">
+      <div className="relative w-full max-w-2xl bg-surface rounded-3xl border border-border shadow-2xl overflow-hidden flex flex-col min-h-[580px] max-h-[90vh] animate-scale-up">
         {/* Header (Fixed) */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-plum-900/5 bg-plum-50/50 shrink-0">
-          <h2 className="text-base font-extrabold text-plum-900 flex items-center gap-2">
-            <Briefcase size={18} className="text-brand-500" />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-2 shrink-0">
+          <h2 className="text-base font-extrabold text-text flex items-center gap-2">
+            <Briefcase size={18} className="text-primary-solid" />
             {mode === 'create' && 'Thêm kinh nghiệm làm việc'}
             {mode === 'edit' && 'Chỉnh sửa kinh nghiệm'}
             {mode === 'promote' && 'Thăng chức / Vai trò mới'}
@@ -311,7 +311,7 @@ export function ExperienceFormModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="p-1.5 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04] transition-colors"
+            className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
           >
             <X size={18} />
           </button>
@@ -322,15 +322,15 @@ export function ExperienceFormModal({
           {/* Form Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4 text-left">
             {validationError && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-coral-50 border border-coral-200/40 p-3.5 text-xs text-coral-700 font-semibold">
+              <div className="flex items-start gap-2.5 rounded-2xl bg-danger-soft border border-danger-border p-3.5 text-xs text-danger font-semibold">
                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                 <span>{validationError}</span>
               </div>
             )}
 
             {mode === 'promote' && experience && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
-                <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
+              <div className="flex items-start gap-2.5 rounded-2xl bg-primary-soft border border-brand-200/20 p-3.5 text-xs text-primary-solid">
+                <Info size={16} className="shrink-0 mt-0.5 text-primary-solid" />
                 <span>
                   Thăng chức tại <strong>{experience.company}</strong>. Vai trò cũ{' '}
                   <strong>{experience.title}</strong> sẽ được kết thúc vào ngày trước tháng bắt đầu vai trò mới.
@@ -339,8 +339,8 @@ export function ExperienceFormModal({
             )}
 
             {mode === 'rejoin' && experience && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
-                <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
+              <div className="flex items-start gap-2.5 rounded-2xl bg-primary-soft border border-brand-200/20 p-3.5 text-xs text-primary-solid">
+                <Info size={16} className="shrink-0 mt-0.5 text-primary-solid" />
                 <div className="space-y-1">
                   <p>Đang thêm một vị trí khác tại <strong>{experience.company}</strong>.</p>
                   <ul className="list-disc pl-4 space-y-0.5 text-brand-700/90">
@@ -355,8 +355,8 @@ export function ExperienceFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Title */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Chức danh / Vai trò <span className="text-coral-500">*</span>
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  Chức danh / Vai trò <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -365,14 +365,14 @@ export function ExperienceFormModal({
                   placeholder="VD: Senior Frontend Developer..."
                   required
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-2.5 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-surface py-2.5 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               {/* Company */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Công ty / Tổ chức / CLB <span className="text-coral-500">*</span>
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  Công ty / Tổ chức / CLB <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -381,14 +381,14 @@ export function ExperienceFormModal({
                   placeholder="VD: FPT Software..."
                   required
                   disabled={loading || mode === 'promote' || mode === 'rejoin'}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-plum-50/30 disabled:bg-plum-900/[0.03] disabled:text-plum-400 py-2.5 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-plum-50/30 disabled:bg-surface-2 disabled:text-text-subtle py-2.5 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
 
             {/* Row 2: Location Autocomplete */}
             <div>
-              <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                 Vị trí / Địa điểm
               </label>
               {mode === 'promote' || mode === 'rejoin' ? (
@@ -396,7 +396,7 @@ export function ExperienceFormModal({
                   type="text"
                   value={location}
                   disabled
-                  className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] py-2.5 px-4 text-sm text-plum-400"
+                  className="w-full rounded-2xl border border-border bg-surface-2 py-2.5 px-4 text-sm text-text-subtle"
                 />
               ) : (
                 <PlaceAutocomplete
@@ -453,9 +453,9 @@ export function ExperienceFormModal({
                       }
                     }}
                     disabled={loading}
-                    className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+                    className="h-4.5 w-4.5 rounded border-border text-primary-solid focus:ring-primary"
                   />
-                  <span className="text-sm font-semibold text-plum-700">Công việc hiện tại</span>
+                  <span className="text-sm font-semibold text-text-muted">Công việc hiện tại</span>
                 </label>
               )}
 
@@ -466,16 +466,16 @@ export function ExperienceFormModal({
                     checked={isPrimary}
                     onChange={(e) => setIsPrimary(e.target.checked)}
                     disabled={loading}
-                    className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+                    className="h-4.5 w-4.5 rounded border-border text-primary-solid focus:ring-primary"
                   />
-                  <span className="text-sm font-semibold text-plum-700">Công việc chính</span>
+                  <span className="text-sm font-semibold text-text-muted">Công việc chính</span>
                 </label>
               )}
             </div>
 
             {/* Row 5: Description */}
             <div>
-              <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
                 Mô tả chi tiết
               </label>
               <textarea
@@ -484,21 +484,21 @@ export function ExperienceFormModal({
                 placeholder="Mô tả công việc, dự án đã tham gia..."
                 rows={5}
                 disabled={loading}
-                className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 min-h-[120px]"
+                className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
               />
             </div>
           </div>
 
 
           {/* Footer Actions (Fixed at bottom) */}
-          <div className="px-6 py-4 border-t border-plum-900/5 bg-plum-50/30 flex items-center justify-end gap-3 shrink-0">
+          <div className="px-6 py-4 border-t border-border bg-plum-50/30 flex items-center justify-end gap-3 shrink-0">
             <Button
               type="button"
               variant="secondary"
               size="md"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl border border-plum-900/10 text-plum-700 font-semibold"
+              className="rounded-xl border border-border text-text-muted font-semibold"
             >
               Hủy
             </Button>
@@ -507,7 +507,7 @@ export function ExperienceFormModal({
               variant="primary"
               size="md"
               disabled={loading}
-              className="rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold px-6 flex items-center gap-1.5"
+              className="rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary shadow-sm font-semibold px-6 flex items-center gap-1.5"
             >
               {loading && <Loader2 size={14} className="animate-spin" />}
               <span>Lưu lại</span>

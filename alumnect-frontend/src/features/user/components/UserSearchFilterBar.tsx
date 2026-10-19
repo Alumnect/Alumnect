@@ -120,13 +120,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
       {/* Search Input Bar & Advanced Filter Toggle */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label className="relative flex flex-1 items-center">
-          <Search size={18} className="pointer-events-none absolute left-3.5 text-plum-400" />
+          <Search size={18} className="pointer-events-none absolute left-3.5 text-text-subtle" />
           <input
             type="text"
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             placeholder="Tìm theo tên, chức danh, kỹ năng, công ty hoặc mã SV..."
-            className="h-12 w-full rounded-2xl border border-plum-900/10 bg-white/70 pl-10 pr-10 text-sm text-plum-900 placeholder:text-plum-400 shadow-sm backdrop-blur-sm transition-all focus:border-brand-400/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className="h-12 w-full rounded-2xl border border-border bg-surface/70 pl-10 pr-10 text-sm text-text placeholder:text-text-subtle shadow-sm backdrop-blur-sm transition-all focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {localQuery && (
             <button
@@ -135,7 +135,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                 setLocalQuery('')
                 onChange({ ...filters, query: '' })
               }}
-              className="absolute right-3.5 rounded-full p-1 text-plum-400 hover:bg-plum-900/10 hover:text-plum-700"
+              className="absolute right-3.5 rounded-full p-1 text-text-subtle hover:bg-surface-3 hover:text-text-muted"
             >
               <X size={15} />
             </button>
@@ -151,7 +151,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
         >
           <span>Bộ lọc</span>
           {activeAdvancedFilterCount > 0 && (
-            <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-bold text-brand-600 shadow-sm">
+            <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-solid shadow-sm">
               {activeAdvancedFilterCount}
             </span>
           )}
@@ -160,8 +160,8 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
 
       {/* Quick Category Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-plum-400 mr-1">
-          <Compass size={13} className="text-brand-500" /> Ngành:
+        <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-text-subtle mr-1">
+          <Compass size={13} className="text-primary-solid" /> Ngành:
         </span>
         {quickCategories.map((cat) => {
           const isSelected = filters.category === cat.value
@@ -174,8 +174,8 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
               className={cn(
                 'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all shadow-xs',
                 isSelected
-                  ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white shadow-brand-500/20 ring-2 ring-brand-400/40'
-                  : 'bg-white/80 text-plum-600 border border-plum-900/10 hover:bg-white hover:border-brand-300',
+                  ? 'bg-primary-solid text-on-primary shadow-raised ring-2 ring-brand-400/40'
+                  : 'bg-surface/80 text-text-muted border border-border hover:bg-surface hover:border-primary-soft-border',
               )}
             >
               {cat.label}
@@ -192,13 +192,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
         title="Bộ lọc danh bạ chi tiết"
         maxWidthClassName="max-w-lg"
       >
-        <p className="mb-4 text-xs text-plum-500">
+        <p className="mb-4 text-xs text-text-subtle">
           Tùy chỉnh các tiêu chí để tìm kiếm cựu sinh viên & sinh viên chính xác nhất.
         </p>
         <div className="space-y-5 py-2">
           {/* Vai trò */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
               Vai trò thành viên
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -214,11 +214,11 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                   className={cn(
                     'flex items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-semibold transition-all',
                     filters.role === r.value
-                      ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500'
-                      : 'border-plum-900/10 bg-white text-plum-600 hover:border-plum-900/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:border-[#4e4f50]',
+                      ? 'border-primary bg-primary-soft text-primary-solid shadow-sm'
+                      : 'border-border bg-surface text-text-muted hover:border-border-strong',
                   )}
                 >
-                  {filters.role === r.value && <Check size={13} className="text-brand-500 dark:text-brand-400" />}
+                  {filters.role === r.value && <Check size={13} className="text-primary-solid" />}
                   {r.label}
                 </button>
               ))}
@@ -227,7 +227,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
 
           {/* Chuyên ngành FPTU */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
               Chuyên ngành học
             </label>
             <select
@@ -236,7 +236,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                 const val = e.target.value ? Number(e.target.value) : null
                 onChange({ ...filters, majorId: val, category: 'ALL' })
               }}
-              className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+              className="h-10 w-full rounded-xl border border-border-strong bg-surface px-3 text-xs font-medium text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="">Tất cả chuyên ngành</option>
               {majors.map((m) => (
@@ -250,13 +250,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           {/* Niên khóa & Tỉnh thành */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
                 Khóa nhập học
               </label>
               <select
                 value={filters.cohort || ''}
                 onChange={(e) => onChange({ ...filters, cohort: e.target.value ? Number(e.target.value) : null })}
-                className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                className="h-10 w-full rounded-xl border border-border-strong bg-surface px-3 text-xs font-medium text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">Tất cả các khóa</option>
                 {cohorts.map((c) => (
@@ -268,13 +268,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500 dark:text-[#b0b3b8]">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
                 Tỉnh / Thành phố
               </label>
               <select
                 value={filters.city}
                 onChange={(e) => onChange({ ...filters, city: e.target.value })}
-                className="h-10 w-full rounded-xl border border-plum-900/15 bg-white px-3 text-xs font-medium text-plum-900 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                className="h-10 w-full rounded-xl border border-border-strong bg-surface px-3 text-xs font-medium text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">Tất cả địa điểm</option>
                 {cities.map((c) => (
@@ -289,7 +289,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
 
           {/* Sắp xếp kết quả */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-plum-500">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
               Sắp xếp theo
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -307,8 +307,8 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                     className={cn(
                       'rounded-xl border p-2.5 text-center text-xs font-semibold transition-all',
                       isSelected
-                        ? 'border-brand-500 bg-brand-50 text-brand-700'
-                        : 'border-plum-900/10 bg-white text-plum-600 hover:border-plum-900/20',
+                        ? 'border-primary bg-primary-soft text-primary-solid'
+                        : 'border-border bg-surface text-text-muted hover:border-border-strong',
                     )}
                   >
                     {s.label}
@@ -320,7 +320,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
         </div>
 
         {/* Modal Actions */}
-        <div className="mt-6 flex items-center justify-between border-t border-plum-900/10 pt-4">
+        <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
           <Button
             variant="ghost"
             size="sm"

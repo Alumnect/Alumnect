@@ -135,19 +135,19 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#242526] dark:text-[#f0f2f5]">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-surface shadow-2xl dark:text-text">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-plum-900/10 px-6 py-4 dark:border-[#393a3b]">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary-soft text-primary-solid">
               <Users size={18} />
             </div>
-            <h3 className="text-base font-bold text-plum-900 dark:text-[#f0f2f5]">Tạo nhóm trò chuyện</h3>
+            <h3 className="text-base font-bold text-text">Tạo nhóm trò chuyện</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-1.5 text-plum-400 hover:bg-plum-900/5 hover:text-plum-700 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] dark:hover:text-white"
+            className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
           >
             <X size={18} />
           </button>
@@ -158,7 +158,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
           <div className="mb-4 flex items-center gap-3">
             {/* Avatar uploader */}
             <div className="relative shrink-0 group">
-              <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-brand-50 text-brand-600 shadow-inner ring-1 ring-brand-500/20 dark:bg-brand-500/20 dark:text-brand-400">
+              <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-primary-soft text-primary-solid shadow-inner ring-1 ring-primary/20">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Group" className="h-full w-full object-cover" />
                 ) : (
@@ -188,8 +188,8 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
             </div>
 
             <div className="flex-1">
-              <label className="mb-1 block text-xs font-bold text-plum-700 dark:text-[#b0b3b8]">
-                Tên nhóm <span className="text-red-500">*</span>
+              <label className="mb-1 block text-xs font-bold text-text-muted">
+                Tên nhóm <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -197,37 +197,37 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
                 placeholder="Nhập tên nhóm trò chuyện..."
-                className="h-10 w-full rounded-2xl border border-plum-900/15 bg-white px-3.5 text-sm text-plum-900 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                className="h-10 w-full rounded-2xl border border-border-strong bg-surface px-3.5 text-sm text-text transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </div>
 
           <div className="mb-2">
             <div className="flex items-center justify-between">
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-plum-600 dark:text-[#b0b3b8]">
-                Chọn thành viên ({selectedUserIds.length}) <span className="text-red-500">*</span>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-text-muted">
+                Chọn thành viên ({selectedUserIds.length}) <span className="text-danger">*</span>
               </label>
             </div>
             <div className="relative flex items-center">
-              <Search size={15} className="pointer-events-none absolute left-3 text-plum-400 dark:text-[#b0b3b8]" />
+              <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm kiếm theo tên thành viên..."
-                className="h-9 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.03] pl-9 pr-3 text-xs text-plum-900 focus:border-brand-400 focus:bg-white focus:outline-none dark:border-[#393a3b] dark:bg-[#3a3b3c] dark:text-[#f0f2f5]"
+                className="h-9 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text focus:border-primary focus:bg-surface focus:outline-none"
               />
             </div>
           </div>
 
           {/* List candidates */}
-          <div className="no-scrollbar mt-3 max-h-56 space-y-1.5 overflow-y-auto rounded-2xl border border-plum-900/10 bg-plum-900/[0.01] p-2 dark:border-[#393a3b]">
+          <div className="no-scrollbar mt-3 max-h-56 space-y-1.5 overflow-y-auto rounded-2xl border border-border bg-surface-2 p-2">
             {isSearching ? (
               <div className="flex h-32 items-center justify-center">
-                <Loader2 size={20} className="animate-spin text-brand-500" />
+                <Loader2 size={20} className="animate-spin text-primary-solid" />
               </div>
             ) : candidates.length === 0 ? (
-              <div className="py-8 text-center text-xs text-plum-400 dark:text-[#b0b3b8]">
+              <div className="py-8 text-center text-xs text-text-subtle">
                 Không tìm thấy thành viên nào.
               </div>
             ) : (
@@ -240,15 +240,15 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
                     onClick={() => toggleSelect(user.id)}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${
                       isSelected
-                        ? 'bg-brand-50 dark:bg-brand-500/20'
-                        : 'hover:bg-plum-900/[0.04] dark:hover:bg-[#3a3b3c]'
+                        ? 'bg-primary-soft'
+                        : 'hover:bg-surface-2'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <Avatar src={user.avatarUrl || undefined} name={user.fullName} size={34} />
                       <div>
-                        <p className="text-xs font-bold text-plum-900 dark:text-[#f0f2f5]">{user.fullName}</p>
-                        <p className="max-w-[200px] truncate text-[11px] text-plum-400 dark:text-[#b0b3b8]">
+                        <p className="text-xs font-bold text-text">{user.fullName}</p>
+                        <p className="max-w-[200px] truncate text-xs text-text-subtle">
                           {user.email || user.headline}
                         </p>
                       </div>
@@ -256,8 +256,8 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
                     <div
                       className={`grid h-5 w-5 place-items-center rounded-full border transition-all ${
                         isSelected
-                          ? 'border-brand-600 bg-brand-600 text-white'
-                          : 'border-plum-900/25 bg-white dark:border-[#555] dark:bg-[#2b2c2d]'
+                          ? 'border-primary bg-primary-solid text-on-primary'
+                          : 'border-border-strong bg-surface dark:border-[#555]'
                       }`}
                     >
                       {isSelected && <Check size={11} strokeWidth={3} />}
@@ -276,7 +276,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
             <Button
               type="submit"
               disabled={!groupName.trim() || selectedUserIds.length === 0 || createGroupMutation.isPending}
-              className="rounded-xl bg-brand-600 px-5 text-xs font-bold text-white hover:bg-brand-700"
+              className="rounded-xl bg-primary-solid px-5 text-xs font-bold text-on-primary hover:bg-primary-hover"
             >
               {createGroupMutation.isPending ? 'Đang tạo...' : 'Tạo nhóm'}
             </Button>

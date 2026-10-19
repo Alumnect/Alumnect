@@ -47,4 +47,10 @@ public interface MentorPaymentService {
      * @param webhook Đối tượng Webhook chứa data và signature từ PayOS
      */
     void handlePayOSWebhook(Webhook webhook);
+
+    /** Xử lý dữ liệu Webhook PayOS đã được xác thực chữ ký (định tuyến từ PayOSWebhookRouter). */
+    void handleVerifiedWebhook(vn.payos.model.webhooks.WebhookData data);
+
+    /** Đối soát một giao dịch PENDING với PayOS (job định kỳ, không phụ thuộc người dùng mở trang thanh toán). */
+    void reconcilePendingPayment(Long orderCode);
 }

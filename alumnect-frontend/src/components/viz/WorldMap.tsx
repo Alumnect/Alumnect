@@ -13,7 +13,7 @@ export function WorldMap({ className, markers = [] }: { className?: string; mark
 
   return (
     <div className={className}>
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-ink-850 to-ink-950 ring-1 ring-inset ring-plum-900/10">
+      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-ink-850 to-ink-950 ring-1 ring-inset ring-border">
         {/* dotted grid as a faux landmass texture */}
         <div className="absolute inset-0 bg-dots opacity-30 mask-radial" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-brand-700/10 via-transparent to-violet-700/10" />
@@ -75,7 +75,7 @@ export function WorldMap({ className, markers = [] }: { className?: string; mark
               <motion.span
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg glass-strong px-3 py-1.5 text-xs font-semibold text-plum-900 shadow-glow"
+                className="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg glass-strong px-3 py-1.5 text-xs font-semibold text-text shadow-glow"
               >
                 {m.city} · {compact(m.count)} alumni
               </motion.span>

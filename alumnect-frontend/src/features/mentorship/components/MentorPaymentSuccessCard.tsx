@@ -39,10 +39,10 @@ export function MentorPaymentSuccessCard({
   return (
     <Card
       hover={false}
-      className="mx-auto max-w-xl p-8 rounded-3xl border border-mint-200 bg-white dark:bg-[#242526] text-center shadow-glow space-y-6"
+      className="mx-auto max-w-xl p-8 rounded-3xl border border-success-border bg-surface text-center shadow-glow space-y-6"
     >
       {/* Icon chúc mừng tinh gọn */}
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-success-soft text-success">
         <CheckCircle2 className="h-9 w-9" />
       </div>
 
@@ -52,32 +52,32 @@ export function MentorPaymentSuccessCard({
             Thanh toán thành công
           </Badge>
         </div>
-        <h2 className="font-heading text-2xl font-extrabold text-plum-900 dark:text-[#e4e6eb]">
+        <h2 className="font-display text-2xl font-bold text-text">
           Chúc Mừng Bạn Đã Trở Thành Mentor!
         </h2>
       </div>
 
       {/* Thông tin gói và hiệu lực mới */}
-      <div className="rounded-2xl bg-cream-50 dark:bg-[#18191a] p-5 text-left border border-plum-900/5 space-y-3">
-        <div className="flex items-center justify-between text-xs border-b border-plum-900/5 pb-2.5">
-          <span className="text-plum-500">Gói dịch vụ kích hoạt</span>
-          <span className="font-bold text-plum-900 dark:text-[#e4e6eb]">{packageName}</span>
+      <div className="rounded-2xl bg-bg p-5 text-left border border-border space-y-3">
+        <div className="flex items-center justify-between text-xs border-b border-border pb-2.5">
+          <span className="text-text-subtle">Gói dịch vụ kích hoạt</span>
+          <span className="font-bold text-text">{packageName}</span>
         </div>
 
-        <div className="flex items-center justify-between text-xs border-b border-plum-900/5 pb-2.5">
-          <span className="text-plum-500">Thời hạn sử dụng</span>
-          <span className="font-semibold text-plum-900 dark:text-[#e4e6eb]">{durationMonths} tháng</span>
+        <div className="flex items-center justify-between text-xs border-b border-border pb-2.5">
+          <span className="text-text-subtle">Thời hạn sử dụng</span>
+          <span className="font-semibold text-text">{durationMonths} tháng</span>
         </div>
 
-        <div className="flex items-center justify-between text-xs border-b border-plum-900/5 pb-2.5">
-          <span className="text-plum-500">Ngày hết hạn</span>
-          <span className="font-bold text-brand-600 dark:text-brand-400">
+        <div className="flex items-center justify-between text-xs border-b border-border pb-2.5">
+          <span className="text-text-subtle">Ngày hết hạn</span>
+          <span className="font-bold text-primary-solid">
             {formatDate(status.subscriptionEndDate)}
           </span>
         </div>
 
         <div className="flex items-center justify-between text-xs pt-1">
-          <span className="text-plum-500">Trạng thái Mentor</span>
+          <span className="text-text-subtle">Trạng thái Mentor</span>
           <Badge tone={status.mentorStatus === 'ACTIVE' || !status.mentorStatus ? 'success' : 'gold'}>
             {getStatusText(status.mentorStatus)}
           </Badge>

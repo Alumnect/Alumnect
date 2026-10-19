@@ -26,6 +26,8 @@ import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
 import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
 import { MentoringHomePage } from '@/pages/app/MentoringHomePage'
+import { MentorEarningsPage } from '@/pages/app/MentorEarningsPage'
+import { MentoringRefundsPage } from '@/pages/app/MentoringRefundsPage'
 import { MentoringTermsPage } from '@/pages/app/MentoringTermsPage'
 import { BecomeMentorPage } from '@/pages/app/BecomeMentorPage'
 import { MentorSubscriptionPage } from '@/pages/app/MentorSubscriptionPage'
@@ -33,7 +35,20 @@ import { MentorStatusPage } from '@/pages/app/MentorStatusPage'
 import { MentorRankingPage } from '@/pages/app/MentorRankingPage'
 import { MentorDiscoverPage } from '@/pages/app/MentorDiscoverPage'
 import { MentorDetailPage } from '@/pages/app/MentorDetailPage'
-import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage } from '@/features/admin'
+import { CreateMentoringRequestPage } from '@/pages/app/CreateMentoringRequestPage'
+import { CreateDirectMentoringRequestPage } from '@/pages/app/CreateDirectMentoringRequestPage'
+import { MyMentoringRequestsPage } from '@/pages/app/MyMentoringRequestsPage'
+import { MentoringRequestDetailPage } from '@/pages/app/MentoringRequestDetailPage'
+import IncomingMentoringRequestsPage from '@/pages/app/IncomingMentoringRequestsPage'
+import IncomingMentoringRequestDetailPage from '@/pages/app/IncomingMentoringRequestDetailPage'
+import { MentoringDealsPage } from '@/pages/app/MentoringDealsPage'
+import { MentoringChatPage } from '@/pages/app/MentoringChatPage'
+import { MentoringMessagesPage } from '@/pages/app/MentoringMessagesPage'
+import { MyMentoringTasksPage } from '@/pages/app/MyMentoringTasksPage'
+import { MentoringTaskDetailPage } from '@/pages/app/MentoringTaskDetailPage'
+import { MentoringGroupsPage } from '@/pages/app/MentoringGroupsPage'
+import { MentoringGroupDetailPage } from '@/pages/app/MentoringGroupDetailPage'
+import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage, AdminMentoringTicketsPage, AdminMentoringFinancesPage, AdminRevenuePage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
 
 function App() {
@@ -80,10 +95,19 @@ function App() {
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
             <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
             <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />
+            <Route path="mentoring/deals" element={<ProtectedRoute><MentoringDealsPage /></ProtectedRoute>} />
+            <Route path="mentoring/tasks" element={<ProtectedRoute><MyMentoringTasksPage /></ProtectedRoute>} />
+            <Route path="mentoring/tasks/:id" element={<ProtectedRoute><MentoringTaskDetailPage /></ProtectedRoute>} />
+            <Route path="mentoring/chats/:conversationId" element={<ProtectedRoute><MentoringChatPage /></ProtectedRoute>} />
+            <Route path="mentoring/messages" element={<ProtectedRoute><MentoringMessagesPage /></ProtectedRoute>} />
+            <Route path="mentoring/groups" element={<ProtectedRoute><MentoringGroupsPage /></ProtectedRoute>} />
+            <Route path="mentoring/groups/:id" element={<ProtectedRoute><MentoringGroupDetailPage /></ProtectedRoute>} />
             <Route path="mentoring/become-mentor" element={<ProtectedRoute><BecomeMentorPage /></ProtectedRoute>} />
             <Route path="mentoring/packages" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
             <Route path="mentoring/subscription" element={<ProtectedRoute><MentorSubscriptionPage /></ProtectedRoute>} />
             <Route path="mentoring/status" element={<ProtectedRoute><MentorStatusPage /></ProtectedRoute>} />
+            <Route path="mentoring/earnings" element={<ProtectedRoute><MentorEarningsPage /></ProtectedRoute>} />
+            <Route path="mentoring/refunds" element={<ProtectedRoute><MentoringRefundsPage /></ProtectedRoute>} />
             <Route path="mentoring/my-status" element={<Navigate to="/app/mentoring/status" replace />} />
             <Route path="mentoring/ranking" element={<ProtectedRoute><MentorRankingPage /></ProtectedRoute>} />
             <Route path="mentoring/discover" element={<ProtectedRoute><MentorDiscoverPage /></ProtectedRoute>} />
@@ -91,6 +115,16 @@ function App() {
             <Route path="mentoring/mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
             <Route path="mentors/:id" element={<ProtectedRoute><MentorDetailPage /></ProtectedRoute>} />
             <Route path="mentors" element={<Navigate to="/app/mentoring/discover" replace />} />
+            <Route path="mentoring/requests" element={<ProtectedRoute><MyMentoringRequestsPage /></ProtectedRoute>} />
+            <Route path="mentoring/requests/:id" element={<ProtectedRoute><MentoringRequestDetailPage /></ProtectedRoute>} />
+            <Route path="mentoring/requests/create" element={<ProtectedRoute><CreateMentoringRequestPage /></ProtectedRoute>} />
+            <Route path="mentoring/mentors/:mentorId/request" element={<ProtectedRoute><CreateDirectMentoringRequestPage /></ProtectedRoute>} />
+            <Route path="mentors/:mentorId/request" element={<ProtectedRoute><CreateDirectMentoringRequestPage /></ProtectedRoute>} />
+            <Route path="mentoring/incoming-requests" element={<ProtectedRoute><IncomingMentoringRequestsPage /></ProtectedRoute>} />
+            <Route path="mentoring/incoming-requests/:id" element={<ProtectedRoute><IncomingMentoringRequestDetailPage /></ProtectedRoute>} />
+            <Route path="mentoring/requests/incoming" element={<Navigate to="/app/mentoring/incoming-requests" replace />} />
+            <Route path="mentoring/requests/incoming/:id" element={<ProtectedRoute><IncomingMentoringRequestDetailPage /></ProtectedRoute>} />
+            <Route path="mentoring/requests/manage" element={<Navigate to="/app/mentoring/incoming-requests" replace />} />
           </Route>
 
           {/* Direct redirect for /mentoring */}
@@ -108,11 +142,13 @@ function App() {
             <Route index element={<AdminOverviewPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="mentor-packages" element={<AdminMentorPackagesPage />} />
+            <Route path="mentoring-tickets" element={<AdminMentoringTicketsPage />} />
+            <Route path="mentoring-finances" element={<AdminMentoringFinancesPage />} />
             <Route path="posts" element={<AdminPostsPage />} />
             <Route path="posts/:id" element={<AdminPostDetailPage />} />
             <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />
             <Route path="reports" element={<AdminSectionPage sectionKey="reports" />} />
-            <Route path="revenue" element={<AdminSectionPage sectionKey="revenue" />} />
+            <Route path="revenue" element={<AdminRevenuePage />} />
             <Route path="broadcast" element={<AdminBroadcastPage />} />
           </Route>
 

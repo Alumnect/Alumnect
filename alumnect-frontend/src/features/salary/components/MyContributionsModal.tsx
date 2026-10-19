@@ -19,20 +19,20 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
   const [deleting, setDeleting] = useState<SalaryContribution | null>(null)
 
   return (
-    <Modal isOpen onClose={onClose} title="Đóng góp của tôi" icon={<ShieldCheck size={18} className="text-brand-600" />} maxWidthClassName="max-w-lg">
+    <Modal isOpen onClose={onClose} title="Đóng góp của tôi" icon={<ShieldCheck size={18} className="text-primary-solid" />} maxWidthClassName="max-w-lg">
 
       {isLoading ? (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-plum-900/[0.04]" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-surface-2" />
           ))}
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-danger-soft text-danger">
             <AlertTriangle size={20} />
           </span>
-          <p className="text-sm text-plum-500">{(error as Error)?.message ?? 'Không tải được danh sách đóng góp của bạn.'}</p>
+          <p className="text-sm text-text-subtle">{(error as Error)?.message ?? 'Không tải được danh sách đóng góp của bạn.'}</p>
           <Button size="sm" variant="secondary" leftIcon={<RefreshCw size={14} />} onClick={() => refetch()}>
             Thử lại
           </Button>
@@ -46,24 +46,24 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
       ) : (
         <div className="space-y-2.5">
           {contributions.map((c) => (
-            <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-plum-900/8 bg-white p-3.5">
+            <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3.5">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-plum-900">{c.jobTitle}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-plum-500">
+                <p className="truncate text-sm font-semibold text-text">{c.jobTitle}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-text-subtle">
                   {c.industry && (() => {
                     const IndIcon = getIndustryIcon(c.industry)
                     return (
-                      <span className="inline-flex items-center gap-1 font-medium text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded">
+                      <span className="inline-flex items-center gap-1 font-medium text-primary-solid bg-primary-soft px-1.5 py-0.5 rounded">
                         <IndIcon size={11} className="shrink-0" />
                         <span>{c.industry}</span>
                       </span>
                     )
                   })()}
                   {[c.company, c.region].filter(Boolean).map((text, i) => (
-                    <span key={i} className="text-plum-400">· {text}</span>
+                    <span key={i} className="text-text-subtle">· {text}</span>
                   ))}
                 </div>
-                <p className="mt-1 text-xs font-semibold text-brand-600">
+                <p className="mt-1 text-xs font-semibold text-primary-solid">
                   {c.grossAmount.toLocaleString('vi-VN')} {c.currency} / tháng
                 </p>
               </div>
@@ -74,7 +74,7 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
                 <button
                   onClick={() => setDeleting(c)}
                   aria-label="Xóa"
-                  className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500"
+                  className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
                 >
                   <Trash2 size={15} />
                 </button>

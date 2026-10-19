@@ -32,6 +32,7 @@ import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
+import com.alumnect.alumnect_backend.service.mentorship.MentoringConversationService;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.message.MessageMapper;
 import lombok.RequiredArgsConstructor;
@@ -63,12 +64,20 @@ public class ChatServiceImpl implements ChatService {
     private final FollowRepository followRepository;
     private final MessageMapper messageMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final MentoringConversationService mentoringConversationService;
 
     @Override
     @Transactional(readOnly = true)
-    public List<ConversationResponse> getConversations(String currentUserEmail, String tab) {
+    public List<ConversationResponse> getConversations(String currentUserEmail, String tab, String scope) {
         User currentUser = getUserByEmail(currentUserEmail);
         List<Conversation> conversations = conversationRepository.findConversationsByUserId(currentUser.getId());
+
+        boolean mentoringScope = "MENTORING".equalsIgnoreCase(scope);
+        conversations = conversations.stream()
+                .filter(conversation -> mentoringScope
+                        ? conversation.getType() == ConversationType.MENTORING
+                        : conversation.getType() != ConversationType.MENTORING)
+                .toList();
 
         if (conversations.isEmpty()) {
             return Collections.emptyList();
@@ -87,7 +96,14 @@ public class ChatServiceImpl implements ChatService {
         Set<Long> recipientUserIds = new HashSet<>();
         for (Conversation conv : conversations) {
             List<ConversationParticipant> parts = participantsByConv.getOrDefault(conv.getId(), Collections.emptyList());
-            if (conv.getType() == ConversationType.DIRECT) {
+            // Hội thoại 1-1 (DIRECT hoặc Chat for Task MENTORING): xác định đối phương
+            if (conv.getType() == ConversationType.MENTORING && conv.getMentoringMentor() != null && conv.getMentoringStudent() != null) {
+                // Chat for Task có thể có thêm thành viên nhóm: đối phương luôn là Mentor (hoặc Học viên nếu mình là Mentor)
+                User counterpart = conv.getMentoringMentor().getId().equals(currentUser.getId())
+                        ? conv.getMentoringStudent() : conv.getMentoringMentor();
+                recipientByConv.put(conv.getId(), counterpart);
+                recipientUserIds.add(counterpart.getId());
+            } else if (conv.getType() != ConversationType.GROUP) {
                 for (ConversationParticipant p : parts) {
                     if (!p.getUser().getId().equals(currentUser.getId())) {
                         recipientByConv.put(conv.getId(), p.getUser());
@@ -103,7 +119,7 @@ public class ChatServiceImpl implements ChatService {
                 .collect(Collectors.toMap(UserProfile::getUserId, p -> p));
 
         // 3. Nạp tin nhắn mới nhất kèm tệp đính kèm của toàn bộ cuộc trò chuyện trong batch queries
-        List<Long> latestMessageIds = messageRepository.findLatestMessageIdsByConversationIds(conversationIds);
+        List<Long> latestMessageIds = messageRepository.findLatestMessageIdsByConversationIds(conversationIds, currentUser.getId());
         Map<Long, Message> latestMessageByConv = new HashMap<>();
         if (!latestMessageIds.isEmpty()) {
             List<Message> latestMessages = messageRepository.findMessagesWithAttachmentsByIdIn(latestMessageIds);
@@ -277,12 +293,12 @@ public class ChatServiceImpl implements ChatService {
     public PageResponse<MessageResponse> getMessages(String currentUserEmail, Long conversationId, Pageable pageable) {
         User currentUser = getUserByEmail(currentUserEmail);
 
-        // Kiểm tra quyền: Người dùng phải là thành viên trong hội thoại
-        if (!conversationParticipantRepository.existsByConversationIdAndUserId(conversationId, currentUser.getId())) {
-            throw new ForbiddenException("Bạn không có quyền xem tin nhắn trong cuộc hội thoại này.");
-        }
-
-        Page<Message> messagePage = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
+        ConversationParticipant participant = conversationParticipantRepository
+                .findByConversationIdAndUserId(conversationId, currentUser.getId())
+                .orElseThrow(() -> new ForbiddenException("Bạn không có quyền xem tin nhắn trong cuộc hội thoại này."));
+        Page<Message> messagePage = messageRepository
+                .findByConversationIdAndCreatedAtGreaterThanEqualOrderByCreatedAtDesc(
+                        conversationId, participant.getJoinedAt(), pageable);
 
         Set<Long> senderIds = messagePage.getContent().stream()
                 .map(m -> m.getSender().getId())
@@ -323,6 +339,11 @@ public class ChatServiceImpl implements ChatService {
 
             if (!conversationParticipantRepository.existsByConversationIdAndUserId(conversation.getId(), sender.getId())) {
                 throw new ForbiddenException("Bạn không phải là thành viên của cuộc hội thoại này.");
+            }
+
+            // Chat for Task: không cho gửi tin khi Request đã chọn Mentor khác / đã hủy (giữ nguyên lịch sử, chỉ đọc)
+            if (conversation.getType() == ConversationType.MENTORING) {
+                mentoringConversationService.assertWritable(conversation);
             }
         } else if (request.getRecipientId() != null) {
             Long recipientId = request.getRecipientId();
@@ -490,6 +511,11 @@ public class ChatServiceImpl implements ChatService {
 
         if (!conversationParticipantRepository.existsByConversationIdAndUserId(conversationId, currentUser.getId())) {
             throw new ForbiddenException("Bạn không có quyền xóa cuộc hội thoại này.");
+        }
+
+        if (conversation.getType() == ConversationType.MENTORING) {
+            // Chat for Task là một phần của chuỗi nghiệp vụ Request → Deal → Payment → Task: không được xóa lịch sử
+            throw new BadRequestException("Không thể xóa cuộc trò chuyện vì đây là lịch sử thỏa thuận Mentoring.");
         }
 
         if (conversation.getType() == ConversationType.DIRECT) {

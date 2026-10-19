@@ -24,6 +24,7 @@ import com.alumnect.alumnect_backend.entity.user.UserSkill;
 import com.alumnect.alumnect_backend.entity.salary.Industry;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -134,6 +135,7 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
 
         MentorRegistrationResponse.PayoutAccountInfo payoutAccountInfo = MentorRegistrationResponse.PayoutAccountInfo.builder()
                 .bankName(payoutAccount != null ? payoutAccount.getBankName() : null)
+                .bankBin(payoutAccount != null ? payoutAccount.getBankBin() : null)
                 .bankAccountNumber(payoutAccount != null ? payoutAccount.getBankAccountNumber() : null)
                 .bankAccountHolder(payoutAccount != null ? payoutAccount.getBankAccountHolder() : null)
                 .build();
@@ -262,6 +264,14 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         boolean hasBankInput = false;
         if (request.getBankName() != null && !request.getBankName().trim().isEmpty()) {
             payoutAccount.setBankName(request.getBankName().trim());
+            hasBankInput = true;
+        }
+        if (request.getBankBin() != null && !request.getBankBin().trim().isEmpty()) {
+            String bankBin = request.getBankBin().trim();
+            if (!bankBin.matches("\\d{6}")) {
+                throw new BadRequestException("Mã BIN ngân hàng phải gồm đúng 6 chữ số.");
+            }
+            payoutAccount.setBankBin(bankBin);
             hasBankInput = true;
         }
         if (request.getBankAccountNumber() != null && !request.getBankAccountNumber().trim().isEmpty()) {
@@ -409,6 +419,7 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         }
         if (payoutAccount == null ||
                 payoutAccount.getBankName() == null || payoutAccount.getBankName().trim().isEmpty() ||
+                payoutAccount.getBankBin() == null || !payoutAccount.getBankBin().matches("\\d{6}") ||
                 payoutAccount.getBankAccountNumber() == null || payoutAccount.getBankAccountNumber().trim().isEmpty() ||
                 payoutAccount.getBankAccountHolder() == null || payoutAccount.getBankAccountHolder().trim().isEmpty()) {
             missing.add("payoutAccount");
@@ -431,4 +442,3 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         return response != null && response.isComplete();
     }
 }
-

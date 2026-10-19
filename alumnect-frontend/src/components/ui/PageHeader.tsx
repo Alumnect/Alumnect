@@ -41,8 +41,8 @@ export function PageHeader({
           className={cn(
             'group grid h-7 w-7 place-items-center rounded-full border transition-all duration-200 cursor-pointer shadow-2xs',
             showInfo
-              ? 'border-[#F27024] bg-[#F27024] text-white scale-105 shadow-xs'
-              : 'border-slate-200/90 bg-white/90 text-slate-400 hover:border-[#F27024]/50 hover:bg-orange-50 hover:text-[#F27024] dark:border-[#393a3b] dark:bg-[#242526]/90 dark:text-[#b0b3b8] dark:hover:text-[#F27024]'
+              ? 'border-primary bg-primary-solid text-on-primary scale-105 shadow-xs'
+              : 'border-border bg-surface text-text-subtle hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid dark:hover:text-primary-solid'
           )}
         >
           <Info size={14} strokeWidth={2.4} />
@@ -56,24 +56,24 @@ export function PageHeader({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.95 }}
               transition={TRANSITION.pop}
-              className="absolute left-0 top-full z-50 mt-2 w-72 sm:w-80 rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-xl backdrop-blur-md dark:border-[#393a3b] dark:bg-[#242526]/95 dark:shadow-black/40"
+              className="absolute left-0 top-full z-50 mt-2 w-72 sm:w-80 rounded-2xl border border-border bg-surface p-4 shadow-xl backdrop-blur-md dark:shadow-black/40"
             >
               {/* Header của popover: Icon + Tên trang + Nút đóng X */}
-              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 dark:border-[#393a3b]">
+              <div className="flex items-center justify-between gap-2 border-b border-border pb-2.5">
                 <div className="flex items-center gap-2 min-w-0">
                   {icon && (
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-orange-50 text-[#F27024] dark:bg-orange-500/20 dark:text-orange-400">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary-solid dark:bg-orange-500/20 dark:text-orange-400">
                       {icon}
                     </span>
                   )}
-                  <h3 className="text-sm font-bold text-slate-900 truncate dark:text-white">
+                  <h3 className="text-sm font-bold text-text truncate">
                     {title}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowInfo(false)}
-                  className="grid h-5 w-5 shrink-0 place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#3a3b3c] dark:hover:text-white transition-colors cursor-pointer"
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded-md text-text-subtle hover:bg-surface-2 hover:text-text-muted transition-colors cursor-pointer"
                 >
                   <X size={13} />
                 </button>
@@ -81,7 +81,7 @@ export function PageHeader({
 
               {/* Nội dung thông tin & hướng dẫn */}
               {subtitle && (
-                <div className="mt-2.5 text-xs leading-relaxed text-slate-600 dark:text-[#e4e6eb]">
+                <div className="mt-2.5 text-xs leading-relaxed text-text-muted">
                   {subtitle}
                 </div>
               )}

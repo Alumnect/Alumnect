@@ -173,9 +173,9 @@ export function EventRsvpButton({
 
   const sizeClasses =
     size === 'sm'
-      ? 'h-8 px-3 text-xs gap-1.5 rounded-xl font-semibold'
-      : 'h-9 px-4 text-sm gap-2 rounded-xl font-semibold'
-  const iconSize = size === 'sm' ? 13 : 14
+      ? 'inline-flex h-9 items-center whitespace-nowrap px-3 text-sm gap-1.5 rounded-xl font-semibold'
+      : 'inline-flex h-10 items-center whitespace-nowrap px-4 text-sm gap-2 rounded-xl font-semibold'
+  const iconSize = size === 'sm' ? 14 : 16
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
@@ -187,10 +187,10 @@ export function EventRsvpButton({
             e.stopPropagation()
             if (eventId) setIsAttendeesOpen(true)
           }}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-brand-600 transition-colors"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-text-subtle hover:bg-surface-2 hover:text-primary-solid transition-colors"
           title="Bấm để xem danh sách người tham gia"
         >
-          <Users size={13} className="text-slate-400" />
+          <Users size={13} className="text-text-subtle" />
           <span>
             {attendeeCount}
             {capacity ? ` / ${compact(capacity)}` : ''} người tham gia
@@ -201,7 +201,7 @@ export function EventRsvpButton({
       {status === 'CANCELLED' ? (
         <span
           className={cn(
-            'inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600',
+            'inline-flex items-center justify-center rounded-xl border border-danger-border bg-danger-soft text-danger',
             sizeClasses
           )}
         >
@@ -210,7 +210,7 @@ export function EventRsvpButton({
       ) : isPast ? (
         <span
           className={cn(
-            'inline-flex items-center justify-center rounded-xl bg-plum-900/[0.06] text-plum-600 font-semibold border border-plum-900/10 select-none',
+            'inline-flex items-center justify-center rounded-xl bg-border text-text-muted font-semibold border border-border select-none',
             sizeClasses
           )}
         >
@@ -223,17 +223,17 @@ export function EventRsvpButton({
             variant="secondary"
             disabled
             className={cn(
-              'cursor-not-allowed border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold',
+              'cursor-not-allowed border-success-border bg-success-soft text-success font-semibold',
               sizeClasses
             )}
           >
-            <Check size={iconSize} className="text-emerald-600" />
+            <Check size={iconSize} />
             <span>Đã đăng ký</span>
           </Button>
         ) : (
           <span
             className={cn(
-              'inline-flex items-center justify-center rounded-xl bg-plum-900/[0.06] text-plum-600 font-semibold border border-plum-900/10 select-none',
+              'inline-flex items-center justify-center rounded-xl bg-border text-text-muted font-semibold border border-border select-none',
               sizeClasses
             )}
           >
@@ -252,8 +252,8 @@ export function EventRsvpButton({
             'transition-all',
             sizeClasses,
             isHovered
-              ? 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:border-rose-300'
-              : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300'
+              ? 'border-danger-border bg-danger-soft text-danger hover:border-danger'
+              : 'border-success-border bg-success-soft text-success hover:border-success'
           )}
         >
           {toggleRsvp.isPending ? (
@@ -265,7 +265,7 @@ export function EventRsvpButton({
             <span>Hủy đăng ký</span>
           ) : (
             <>
-              <Check size={iconSize} className="text-emerald-600" />
+              <Check size={iconSize} />
               <span>Đã đăng ký</span>
             </>
           )}
@@ -276,7 +276,7 @@ export function EventRsvpButton({
           variant="secondary"
           disabled
           className={cn(
-            'cursor-not-allowed opacity-80 bg-amber-50 text-amber-700 border-amber-200',
+            'cursor-not-allowed opacity-80 bg-warning-soft text-warning border-warning-border',
             sizeClasses
           )}
         >
@@ -288,7 +288,7 @@ export function EventRsvpButton({
           variant="primary"
           onClick={handleRsvpClick}
           disabled={toggleRsvp.isPending}
-          className={cn('shadow-sm transition-all hover:scale-105 active:scale-95', sizeClasses)}
+          className={cn('transition-all active:scale-95', sizeClasses)}
         >
           {toggleRsvp.isPending ? (
             <>

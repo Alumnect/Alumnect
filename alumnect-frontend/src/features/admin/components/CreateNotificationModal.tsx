@@ -196,17 +196,17 @@ function CustomSelect<T extends string = string>({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={cn(
-          'h-10 w-full rounded-lg border bg-white px-3 text-sm text-left flex items-center justify-between gap-2 transition-colors cursor-pointer select-none',
+          'h-10 w-full rounded-lg border bg-surface px-3 text-sm text-left flex items-center justify-between gap-2 transition-colors cursor-pointer select-none',
           error
-            ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-            : 'border-slate-300 hover:border-slate-400 focus:border-[#F27024] focus:ring-1 focus:ring-[#F27024] focus:outline-none',
-          disabled && 'opacity-60 cursor-not-allowed bg-slate-50 hover:border-slate-300'
+            ? 'border-danger focus:border-danger focus:ring-1 focus:ring-danger'
+            : 'border-border-strong hover:border-slate-400 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none',
+          disabled && 'opacity-60 cursor-not-allowed bg-surface-2 hover:border-border-strong'
         )}
       >
         <span
           className={cn(
             'truncate min-w-0 flex-1 leading-normal',
-            selectedOption ? 'text-slate-800 font-normal' : 'text-slate-400'
+            selectedOption ? 'text-text font-normal' : 'text-text-subtle'
           )}
         >
           {selectedOption ? selectedOption.label : placeholder}
@@ -214,8 +214,8 @@ function CustomSelect<T extends string = string>({
         <ChevronDown
           size={16}
           className={cn(
-            'text-slate-400 shrink-0 transition-transform duration-150',
-            isOpen && 'rotate-180 text-slate-600'
+            'text-text-subtle shrink-0 transition-transform duration-150',
+            isOpen && 'rotate-180 text-text-muted'
           )}
         />
       </button>
@@ -227,7 +227,7 @@ function CustomSelect<T extends string = string>({
           role="listbox"
           tabIndex={-1}
           className={cn(
-            'absolute left-0 right-0 z-50 min-w-full bg-white border border-slate-200 rounded-lg shadow-lg p-1.5 max-h-[280px] overflow-y-auto focus:outline-none select-none',
+            'absolute left-0 right-0 z-50 min-w-full bg-surface border border-border rounded-lg shadow-lg p-1.5 max-h-[280px] overflow-y-auto focus:outline-none select-none',
             openUpwards ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           )}
         >
@@ -251,15 +251,15 @@ function CustomSelect<T extends string = string>({
                 className={cn(
                   'min-h-[36px] px-3 py-2 text-sm rounded-md flex items-center justify-between cursor-pointer transition-colors leading-snug',
                   isSelected
-                    ? 'bg-orange-50/70 text-[#F27024] font-medium'
+                    ? 'bg-orange-50/70 text-primary-solid font-medium'
                     : isHighlighted
-                    ? 'bg-slate-50 text-slate-900'
-                    : 'text-slate-700 hover:bg-slate-50',
+                    ? 'bg-surface-2 text-text'
+                    : 'text-text-muted hover:bg-surface-2',
                   opt.disabled && 'opacity-40 cursor-not-allowed hover:bg-transparent'
                 )}
               >
                 <span className="truncate flex-1">{opt.label}</span>
-                {isSelected && <Check size={16} className="text-[#F27024] shrink-0 ml-2" />}
+                {isSelected && <Check size={16} className="text-primary-solid shrink-0 ml-2" />}
               </div>
             )
           })}
@@ -493,21 +493,21 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
       />
 
       {/* Modal Box */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col overflow-hidden text-slate-800">
+      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
           <div>
-            <h2 className="text-[20px] font-semibold text-slate-900 leading-tight">
+            <h2 className="text-[20px] font-semibold text-text leading-tight">
               Gửi thông báo
             </h2>
-            <p className="text-[13px] text-slate-500 mt-0.5">
+            <p className="text-[13px] text-text-subtle mt-0.5">
               Soạn thông báo gửi đến nhóm người nhận.
             </p>
           </div>
           <button
             type="button"
             onClick={handleSafeClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-text-subtle hover:text-text-muted hover:bg-surface-2 rounded-lg transition-colors cursor-pointer"
             aria-label="Đóng"
           >
             <X size={18} />
@@ -518,8 +518,8 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
         <form id="broadcast-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* 1. Người nhận */}
           <div className="space-y-2">
-            <label className="block text-[13px] font-medium text-slate-700">
-              Người nhận <span className="text-red-500">*</span>
+            <label className="block text-[13px] font-medium text-text-muted">
+              Người nhận <span className="text-danger">*</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {RECIPIENT_OPTIONS.map((opt) => {
@@ -536,8 +536,8 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                     className={cn(
                       'px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors border cursor-pointer',
                       isSelected
-                        ? 'border-[#F27024] bg-orange-50/60 text-[#F27024]'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-primary bg-orange-50/60 text-primary-solid'
+                        : 'border-border bg-surface text-text-muted hover:border-border-strong hover:bg-surface-2'
                     )}
                   >
                     {opt.label}
@@ -550,16 +550,16 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
             {recipientChoice === 'SPECIFIC_USER' && (
               <div className="pt-2 space-y-2">
                 {selectedUser ? (
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border">
                     <Avatar src={selectedUser.avatarUrl} name={selectedUser.fullName} size={24} />
-                    <span className="text-[13px] font-medium text-slate-800">
+                    <span className="text-[13px] font-medium text-text">
                       {selectedUser.fullName}
                     </span>
-                    <span className="text-[12px] text-slate-400">({selectedUser.email})</span>
+                    <span className="text-[12px] text-text-subtle">({selectedUser.email})</span>
                     <button
                       type="button"
                       onClick={() => setSelectedUser(null)}
-                      className="ml-1 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                      className="ml-1 text-text-subtle hover:text-text-muted p-0.5 rounded cursor-pointer"
                       title="Xóa người nhận"
                     >
                       <X size={14} />
@@ -569,23 +569,23 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                   <div className="relative max-w-md">
                     <Search
                       size={15}
-                      className="pointer-events-none absolute left-3 top-2.5 text-slate-400"
+                      className="pointer-events-none absolute left-3 top-2.5 text-text-subtle"
                     />
                     <input
                       type="text"
                       placeholder="Tìm theo tên hoặc email người nhận..."
                       value={userQuery}
                       onChange={(e) => setUserQuery(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-8 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                      className="w-full rounded-lg border border-border-strong bg-surface pl-9 pr-8 py-2 text-[13px] text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                     {isSearchingUser && (
                       <Loader2
                         size={15}
-                        className="absolute right-3 top-2.5 animate-spin text-slate-400"
+                        className="absolute right-3 top-2.5 animate-spin text-text-subtle"
                       />
                     )}
                     {searchResults.length > 0 && (
-                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-surface border border-border rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto divide-y divide-border">
                         {searchResults.map((u) => (
                           <div
                             key={u.id}
@@ -595,14 +595,14 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                               setSearchResults([])
                               setErrors((prev) => ({ ...prev, recipient: undefined }))
                             }}
-                            className="flex items-center gap-2.5 p-2.5 hover:bg-slate-50 cursor-pointer transition-colors"
+                            className="flex items-center gap-2.5 p-2.5 hover:bg-surface-2 cursor-pointer transition-colors"
                           >
                             <Avatar src={u.avatarUrl} name={u.fullName} size={28} />
                             <div className="min-w-0">
-                              <p className="text-[13px] font-medium text-slate-800 truncate">
+                              <p className="text-[13px] font-medium text-text truncate">
                                 {u.fullName}
                               </p>
-                              <p className="text-[11px] text-slate-400 truncate">{u.email}</p>
+                              <p className="text-xs text-text-subtle truncate">{u.email}</p>
                             </div>
                           </div>
                         ))}
@@ -611,7 +611,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                   </div>
                 )}
                 {errors.recipient && (
-                  <p className="text-[12px] text-red-500 font-medium">{errors.recipient}</p>
+                  <p className="text-[12px] text-danger font-medium">{errors.recipient}</p>
                 )}
               </div>
             )}
@@ -619,8 +619,8 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
 
           {/* 2. Tiêu đề */}
           <div className="space-y-1.5">
-            <label htmlFor="broadcast-title" className="block text-[13px] font-medium text-slate-700">
-              Tiêu đề <span className="text-red-500">*</span>
+            <label htmlFor="broadcast-title" className="block text-[13px] font-medium text-text-muted">
+              Tiêu đề <span className="text-danger">*</span>
             </label>
             <input
               id="broadcast-title"
@@ -633,21 +633,21 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
               }}
               placeholder="Nhập tiêu đề thông báo..."
               className={cn(
-                'w-full rounded-lg border bg-white px-3.5 py-2 text-sm text-slate-800 placeholder:text-slate-400 transition-colors',
+                'w-full rounded-lg border bg-surface px-3.5 py-2 text-sm text-text placeholder:text-text-subtle transition-colors',
                 errors.title
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none'
-                  : 'border-slate-300 focus:border-[#F27024] focus:ring-1 focus:ring-[#F27024] focus:outline-none'
+                  ? 'border-danger focus:border-danger focus:ring-1 focus:ring-danger focus:outline-none'
+                  : 'border-border-strong focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none'
               )}
             />
             {errors.title && (
-              <p className="text-[12px] text-red-500 font-medium">{errors.title}</p>
+              <p className="text-[12px] text-danger font-medium">{errors.title}</p>
             )}
           </div>
 
           {/* 3. Nội dung */}
           <div className="space-y-1.5">
-            <label htmlFor="broadcast-content" className="block text-[13px] font-medium text-slate-700">
-              Nội dung <span className="text-red-500">*</span>
+            <label htmlFor="broadcast-content" className="block text-[13px] font-medium text-text-muted">
+              Nội dung <span className="text-danger">*</span>
             </label>
             <textarea
               id="broadcast-content"
@@ -660,26 +660,26 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
               }}
               placeholder="Nhập nội dung thông báo..."
               className={cn(
-                'w-full rounded-lg border bg-white p-3.5 text-sm text-slate-800 placeholder:text-slate-400 transition-colors leading-relaxed',
+                'w-full rounded-lg border bg-surface p-3.5 text-sm text-text placeholder:text-text-subtle transition-colors leading-relaxed',
                 errors.content
-                  ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none'
-                  : 'border-slate-300 focus:border-[#F27024] focus:ring-1 focus:ring-[#F27024] focus:outline-none'
+                  ? 'border-danger focus:border-danger focus:ring-1 focus:ring-danger focus:outline-none'
+                  : 'border-border-strong focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none'
               )}
             />
             {errors.content && (
-              <p className="text-[12px] text-red-500 font-medium">{errors.content}</p>
+              <p className="text-[12px] text-danger font-medium">{errors.content}</p>
             )}
           </div>
 
           {/* 4. Tùy chọn gửi & thời hạn */}
-          <div className="pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="pt-2 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Thời điểm gửi */}
             <div className="space-y-2">
-              <label className="block text-[13px] font-medium text-slate-700">
+              <label className="block text-[13px] font-medium text-text-muted">
                 Thời điểm gửi
               </label>
               <div className="flex gap-4">
-                <label className="inline-flex items-center gap-2 text-[13px] text-slate-700 cursor-pointer">
+                <label className="inline-flex items-center gap-2 text-[13px] text-text-muted cursor-pointer">
                   <input
                     type="radio"
                     name="sendOption"
@@ -688,17 +688,17 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                       setSendType('NOW')
                       setErrors((prev) => ({ ...prev, schedule: undefined }))
                     }}
-                    className="text-[#F27024] focus:ring-[#F27024]"
+                    className="text-primary-solid focus:ring-primary"
                   />
                   <span>Gửi ngay</span>
                 </label>
-                <label className="inline-flex items-center gap-2 text-[13px] text-slate-700 cursor-pointer">
+                <label className="inline-flex items-center gap-2 text-[13px] text-text-muted cursor-pointer">
                   <input
                     type="radio"
                     name="sendOption"
                     checked={sendType === 'SCHEDULE'}
                     onChange={() => setSendType('SCHEDULE')}
-                    className="text-[#F27024] focus:ring-[#F27024]"
+                    className="text-primary-solid focus:ring-primary"
                   />
                   <span>Hẹn giờ gửi</span>
                 </label>
@@ -716,7 +716,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                           setScheduleDate(e.target.value)
                           setErrors((prev) => ({ ...prev, schedule: undefined }))
                         }}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                     <div>
@@ -728,12 +728,12 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                           setScheduleTime(e.target.value)
                           setErrors((prev) => ({ ...prev, schedule: undefined }))
                         }}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                   </div>
                   {errors.schedule && (
-                    <p className="text-[12px] text-red-500 font-medium">{errors.schedule}</p>
+                    <p className="text-[12px] text-danger font-medium">{errors.schedule}</p>
                   )}
                 </div>
               )}
@@ -741,7 +741,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
 
             {/* Thời hạn hiệu lực (Custom Select) */}
             <div className="space-y-2">
-              <label htmlFor="expiration-type-select" className="block text-[13px] font-medium text-slate-700">
+              <label htmlFor="expiration-type-select" className="block text-[13px] font-medium text-text-muted">
                 Thời hạn hiệu lực
               </label>
 
@@ -768,7 +768,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                           setExpireDate(e.target.value)
                           setErrors((prev) => ({ ...prev, expiration: undefined }))
                         }}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                     <div>
@@ -780,12 +780,12 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                           setExpireTime(e.target.value)
                           setErrors((prev) => ({ ...prev, expiration: undefined }))
                         }}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-[#F27024] focus:outline-none focus:ring-1 focus:ring-[#F27024]"
+                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                   </div>
                   {errors.expiration && (
-                    <p className="text-[12px] text-red-500 font-medium">{errors.expiration}</p>
+                    <p className="text-[12px] text-danger font-medium">{errors.expiration}</p>
                   )}
                 </div>
               )}
@@ -794,8 +794,8 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white shrink-0">
-          <div className="text-[13px] text-slate-500 font-normal">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-surface shrink-0">
+          <div className="text-[13px] text-text-subtle font-normal">
             {getRecipientSummary()}
           </div>
           <div className="flex items-center gap-2.5">
@@ -803,7 +803,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
               type="button"
               onClick={handleSafeClose}
               disabled={createMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-text-muted bg-surface border border-border-strong hover:bg-surface-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
             >
               Hủy
             </button>
@@ -811,7 +811,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
               type="submit"
               form="broadcast-form"
               disabled={createMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#F27024] hover:bg-[#d95d16] rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
+              className="px-4 py-2 text-sm font-medium text-on-primary bg-primary-solid hover:bg-[#d95d16] rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
             >
               {createMutation.isPending && (
                 <Loader2 size={15} className="animate-spin" />

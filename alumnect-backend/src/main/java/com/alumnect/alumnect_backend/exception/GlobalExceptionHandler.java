@@ -65,6 +65,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Xử lý lỗi từ cổng chi PayOS (sai key, IP chưa whitelist, lỗi kết nối) → HTTP 503.
+     */
+    @ExceptionHandler(com.alumnect.alumnect_backend.integration.disbursement.DisbursementException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDisbursementException(
+            com.alumnect.alumnect_backend.integration.disbursement.DisbursementException ex) {
+        String hint = ex.getErrorCode() != null && ex.getErrorCode().equals("403")
+                ? " Hãy thêm IP của server vào danh sách cho phép của Kênh chi trên my.payos.vn."
+                : "";
+        return new ResponseEntity<>(
+                ApiResponse.error(503, "Không kết nối được Kênh chi PayOS: " + ex.getMessage() + hint),
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+
+    /**
      * Xử lý ngoại lệ BadRequestException khi dữ liệu truyền lên không hợp lệ.
      * Trả về HTTP Status 400 (Bad Request).
      */

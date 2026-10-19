@@ -11,6 +11,7 @@
 **/.gradle/
 .idea/
 .vscode/
+.claude/
 *.iml
 *.class
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Award, AlertCircle, ArrowRight } from 'lucide-react'
 import { Card, Skeleton, Badge, Button } from '@/components/ui'
@@ -10,6 +11,7 @@ import {
   useSelectMentorPackage,
 } from '../hooks/useMentorSubscription'
 import { MentorSubscriptionCard } from './MentorSubscriptionCard'
+import { MentorPageHeader } from './MentorPageHeader'
 
 /**
  * Component hiển thị danh sách gói Mentor và quản lý thao tác lựa chọn gói (UC92).
@@ -23,10 +25,11 @@ export function MentorSubscriptionList() {
   const { data: packages, isLoading: isLoadingPackages, isError: isErrorPackages, error: errorPackages } = useMentorPackages()
   const { data: mySubscription, isLoading: isLoadingSub } = useMyMentorSubscription()
   const selectMutation = useSelectMentorPackage()
+  const [renderedAt] = useState(() => Date.now())
 
   const isCurrentlyActive =
     (mySubscription?.status === 'ACTIVE' || mySubscription?.status === 'PAID') &&
-    (!mySubscription.endDate || new Date(mySubscription.endDate).getTime() > Date.now())
+    (!mySubscription.endDate || new Date(mySubscription.endDate).getTime() > renderedAt)
 
   const handleSelectPackage = async (packageId: number) => {
     if (isCurrentlyActive) {
@@ -70,10 +73,10 @@ export function MentorSubscriptionList() {
 
   if (isErrorPackages) {
     return (
-      <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-rose-200 bg-rose-50/50">
-        <AlertCircle className="w-10 h-10 text-rose-500 mx-auto mb-3" />
-        <h3 className="font-bold text-rose-900 text-lg">Không thể tải danh sách gói Mentor</h3>
-        <p className="mt-1 text-xs text-rose-700">{errorPackages?.message || 'Đã xảy ra lỗi hệ thống.'}</p>
+      <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-danger-border bg-danger-soft">
+        <AlertCircle className="w-10 h-10 text-danger mx-auto mb-3" />
+        <h3 className="font-bold text-danger text-lg">Không thể tải danh sách gói Mentor</h3>
+        <p className="mt-1 text-xs text-danger">{errorPackages?.message || 'Đã xảy ra lỗi hệ thống.'}</p>
         <Button
           variant="secondary"
           size="sm"
@@ -88,36 +91,43 @@ export function MentorSubscriptionList() {
 
   return (
     <div className="space-y-3.5">
+      <MentorPageHeader
+        icon={<Award className="h-4 w-4" />}
+        eyebrow="Dành cho Mentor"
+        title="Gói dịch vụ Mentor"
+        description="Chọn thời hạn phù hợp để duy trì hồ sơ và tiếp nhận yêu cầu Mentor."
+      />
+
       {/* 1. Thông báo gói Mentor hiện tại nếu đã kích hoạt hoặc đang chờ thanh toán (không hiển thị đơn đã hủy) */}
       {mySubscription && mySubscription.status !== 'CANCELLED' && (
         <Reveal>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-xs">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white shrink-0 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl border border-success bg-success-soft shadow-xs">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-success text-text-inverse shrink-0 shadow-xs">
                 <Award className="h-4 w-4" />
               </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                <h3 className="font-bold text-sm text-slate-800 dark:text-[#f0f2f5]">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                <h3 className="font-bold text-sm text-text">
                   {mySubscription.packageName}
                 </h3>
                 {isCurrentlyActive ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-success-soft text-success">
                     Đang hoạt động
                   </span>
                 ) : mySubscription.status === 'PENDING_PAYMENT' ? (
-                  <Badge tone="gold" className="text-[10px] px-2 py-0.5">
+                  <Badge tone="gold" className="text-xs px-2 py-0.5">
                     Chờ thanh toán
                   </Badge>
                 ) : mySubscription.status === 'EXPIRED' ? (
-                  <Badge tone="danger" className="text-[10px] px-2 py-0.5">
+                  <Badge tone="danger" className="text-xs px-2 py-0.5">
                     Đã hết hạn
                   </Badge>
                 ) : null}
-                <span className="text-xs text-slate-500 dark:text-[#b0b3b8]">
+                <span className="text-xs text-text-subtle">
                   {vnd(mySubscription.priceAtPurchase)} / {mySubscription.durationMonths} tháng
                 </span>
                 {mySubscription.endDate && (
-                  <span className="text-xs text-slate-500 dark:text-[#b0b3b8]">
+                  <span className="text-xs text-text-subtle">
                     • Hạn dùng: {formatExpiry(mySubscription.endDate)}
                   </span>
                 )}
@@ -125,7 +135,7 @@ export function MentorSubscriptionList() {
             </div>
 
             {/* Cụm nút hành động */}
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            <div className="flex w-full shrink-0 items-center gap-2 self-end sm:w-auto sm:self-center">
               {mySubscription.status === 'PENDING_PAYMENT' && (
                 <Button
                   variant="primary"
@@ -141,11 +151,11 @@ export function MentorSubscriptionList() {
                 <Button
                   variant="primary"
                   size="sm"
-                  className="rounded-lg px-3.5 py-1.5 font-semibold text-xs flex items-center gap-1.5 shadow-xs"
+                  className="w-full rounded-lg px-3.5 py-1.5 text-xs font-semibold shadow-xs sm:w-auto"
                   onClick={() => navigate('/app/mentoring')}
+                  rightIcon={<ArrowRight size={13} />}
                 >
-                  <span>Bảng tin Mentor</span>
-                  <ArrowRight size={13} />
+                  Về tổng quan
                 </Button>
               )}
             </div>
@@ -155,15 +165,9 @@ export function MentorSubscriptionList() {
 
       {/* 2. Danh sách các gói Mentor */}
       <div>
-        <div className="text-center max-w-xl mx-auto mb-2.5">
-          <h2 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-[#f0f2f5] tracking-tight">
-            Gói dịch vụ Mentor
-          </h2>
-        </div>
-
-        <Stagger className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto" gap={0.1}>
+        <Stagger className="mx-auto grid max-w-5xl items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3" gap={0.1}>
           {packages?.map((pkg) => (
-            <StaggerItem key={pkg.id}>
+            <StaggerItem key={pkg.id} className="h-full min-w-0">
               <MentorSubscriptionCard
                 pkg={pkg}
                 isSelected={mySubscription?.status === 'PENDING_PAYMENT' && mySubscription?.packageId === pkg.id}

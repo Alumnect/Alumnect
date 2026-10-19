@@ -78,37 +78,37 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
             aria-label={voted ? 'Bỏ bình chọn câu hỏi' : 'Bình chọn câu hỏi'}
             className={cn(
               'grid h-10 w-10 place-items-center rounded-xl ring-1 ring-inset transition-colors',
-              voted ? 'bg-brand-500/10 text-brand-600 ring-brand-500/30' : 'bg-plum-900/[0.04] text-plum-500 ring-plum-900/10 hover:bg-plum-900/[0.08]',
+              voted ? 'bg-primary-soft text-primary-solid ring-primary/30' : 'bg-surface-2 text-text-subtle ring-border hover:bg-surface-3',
             )}
           >
             <ChevronUp size={18} />
           </button>
-          <span className="text-sm font-bold text-plum-900">{votes}</span>
+          <span className="text-sm font-bold text-text">{votes}</span>
         </div>
 
         <div className="min-w-0 flex-1">
           {(q.topic || q.major) && (
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
               {q.topic && (
-                <Badge tone="violet" className="px-2 py-0.5 text-[10px]">
+                <Badge tone="violet" className="px-2 py-0.5 text-xs">
                   {q.topic}
                 </Badge>
               )}
               {q.major && (
-                <Badge tone="aqua" className="px-2 py-0.5 text-[10px]">
+                <Badge tone="aqua" className="px-2 py-0.5 text-xs">
                   {q.major}
                 </Badge>
               )}
             </div>
           )}
           <Link to={`/app/forum/${q.id}`}>
-            <h2 className="text-lg font-bold leading-snug text-plum-900 transition-colors hover:text-brand-600">{q.title}</h2>
+            <h2 className="text-lg font-bold leading-snug text-text transition-colors hover:text-primary-solid">{q.title}</h2>
           </Link>
-          {q.excerpt && <p className="mt-1.5 line-clamp-2 text-sm text-plum-500">{q.excerpt}</p>}
+          {q.excerpt && <p className="mt-1.5 line-clamp-2 text-sm text-text-subtle">{q.excerpt}</p>}
           {q.images.length > 0 && (
             <div className="mt-3 flex gap-2">
               {q.images.slice(0, 3).map((url, idx) => (
-                <div key={url + idx} className="relative h-16 w-16 overflow-hidden rounded-lg ring-1 ring-plum-900/10">
+                <div key={url + idx} className="relative h-16 w-16 overflow-hidden rounded-lg ring-1 ring-border">
                   <img src={url} alt="" className="h-full w-full object-cover" />
                   {/* Nhãn "+N" trên ảnh cuối nếu còn ảnh chưa hiển thị */}
                   {idx === 2 && q.images.length > 3 && (
@@ -118,19 +118,19 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
               ))}
             </div>
           )}
-          <div className="mt-4 flex items-center justify-between border-t border-plum-900/8 pt-3">
-            <div className="flex items-center gap-2 text-sm text-plum-500">
+          <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+            <div className="flex items-center gap-2 text-sm text-text-subtle">
               <Link
                 to={q.authorId ? `/app/profile?userId=${q.authorId}` : '/app/profile'}
-                className="inline-flex items-center gap-2 text-sm text-plum-600 hover:text-brand-600 hover:underline transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-primary-solid hover:underline transition-colors"
               >
                 <Avatar src={q.avatar} name={q.author} size={24} verified={q.verified} />
-                <span className="truncate font-medium text-slate-800 hover:text-brand-600">{q.author}</span>
+                <span className="truncate font-medium text-text hover:text-primary-solid">{q.author}</span>
               </Link>
               <span className="text-plum-300">·</span>
               <span>{q.time}</span>
             </div>
-            <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-brand-600">
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary-solid">
               <MessageSquare size={15} /> {q.answers} câu trả lời
             </span>
           </div>
@@ -146,14 +146,14 @@ function QuestionSkeleton() {
     <Card hover={false} className="p-5">
       <div className="flex gap-4">
         <div className="flex flex-col items-center gap-1">
-          <div className="h-10 w-10 animate-pulse rounded-xl bg-plum-900/[0.07]" />
-          <div className="h-3 w-6 animate-pulse rounded bg-plum-900/[0.06]" />
+          <div className="h-10 w-10 animate-pulse rounded-xl bg-border" />
+          <div className="h-3 w-6 animate-pulse rounded bg-border" />
         </div>
         <div className="flex-1 space-y-2.5">
-          <div className="h-3 w-20 animate-pulse rounded bg-plum-900/[0.06]" />
-          <div className="h-4 w-4/5 animate-pulse rounded bg-plum-900/[0.07]" />
-          <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.05]" />
-          <div className="mt-3 h-3.5 w-1/3 animate-pulse rounded bg-plum-900/[0.06]" />
+          <div className="h-3 w-20 animate-pulse rounded bg-border" />
+          <div className="h-4 w-4/5 animate-pulse rounded bg-border" />
+          <div className="h-3.5 w-full animate-pulse rounded bg-surface-2" />
+          <div className="mt-3 h-3.5 w-1/3 animate-pulse rounded bg-border" />
         </div>
       </div>
     </Card>
@@ -164,12 +164,12 @@ function QuestionSkeleton() {
 function QuestionsError({ message, onRetry }: { message?: string; onRetry: () => void }) {
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tải được danh sách câu hỏi</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">Không tải được danh sách câu hỏi</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
       </div>
       <Button variant="secondary" size="sm" onClick={onRetry}>
         Thử lại
@@ -183,12 +183,12 @@ function QuestionsEmpty({ keyword, onClear }: { keyword: string; onClear: () => 
   const searching = keyword.trim().length > 0
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
         <Inbox size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">{searching ? `Không tìm thấy câu hỏi khớp "${keyword.trim()}"` : 'Chưa có câu hỏi nào'}</p>
-        <p className="mt-1 text-sm text-plum-500">
+        <p className="font-bold text-text">{searching ? `Không tìm thấy câu hỏi khớp "${keyword.trim()}"` : 'Chưa có câu hỏi nào'}</p>
+        <p className="mt-1 text-sm text-text-subtle">
           {searching ? 'Thử từ khóa khác, hoặc xóa tìm kiếm để xem toàn bộ câu hỏi.' : 'Thử đổi chủ đề khác, hoặc là người đầu tiên đặt câu hỏi.'}
         </p>
       </div>
@@ -259,19 +259,19 @@ export function ForumPage() {
 
       {/* Ô tìm kiếm câu hỏi theo tiêu đề/nội dung (UC44), debounce trước khi gọi API */}
       <div className="relative mb-4">
-        <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-plum-400" />
+        <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
         <input
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
           maxLength={SEARCH_KEYWORD_MAX_LENGTH}
-          className="h-11 w-full rounded-xl bg-plum-900/[0.04] pl-11 pr-10 text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="h-11 w-full rounded-xl bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         {searchInput && (
           <button
             onClick={() => setSearchInput('')}
             aria-label="Xóa tìm kiếm"
-            className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700"
+            className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
           >
             <X size={14} />
           </button>
@@ -282,33 +282,33 @@ export function ForumPage() {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <FilterMultiSelect
-            buttonIcon={<LayoutGrid size={15} className="text-brand-600" />}
+            buttonIcon={<LayoutGrid size={15} className="text-primary-solid" />}
             allLabel="Tất cả thể loại"
             noun="thể loại"
             items={topics}
             selected={topicIds}
             onChange={setTopicIds}
-            itemIcon={(name) => <TopicIcon name={name} size={16} className="text-plum-400" />}
+            itemIcon={(name) => <TopicIcon name={name} size={16} className="text-text-subtle" />}
           />
           <FilterMultiSelect
-            buttonIcon={<GraduationCap size={15} className="text-brand-600" />}
+            buttonIcon={<GraduationCap size={15} className="text-primary-solid" />}
             allLabel="Tất cả ngành"
             noun="ngành"
             items={majors}
             selected={majorIds}
             onChange={setMajorIds}
             searchable
-            itemIcon={() => <GraduationCap size={16} className="text-plum-400" />}
+            itemIcon={() => <GraduationCap size={16} className="text-text-subtle" />}
           />
           {(topicIds.length > 0 || majorIds.length > 0 || sorts.length > 0 || searchInput.trim().length > 0) && (
-            <button onClick={resetFilter} className="text-xs font-semibold text-plum-400 underline-offset-2 transition-colors hover:text-plum-700 hover:underline">
+            <button onClick={resetFilter} className="text-xs font-semibold text-text-subtle underline-offset-2 transition-colors hover:text-text-muted hover:underline">
               Xóa lọc
             </button>
           )}
         </div>
 
         <div className="flex flex-col items-start gap-1 sm:items-end">
-          <div className="flex gap-1 rounded-xl bg-plum-900/[0.04] p-1">
+          <div className="no-scrollbar flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface-2 p-1">
             {SORTS.map((s) => {
               const inSorts = sorts.includes(s.key)
               // Khi chưa chọn gì (rỗng), "Newest" là mặc định nên vẫn hiển thị active.
@@ -319,18 +319,18 @@ export function ForumPage() {
                   key={s.key}
                   onClick={() => toggleSort(s.key)}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
-                    active ? 'bg-plum-900/[0.08] text-plum-900' : 'text-plum-400 hover:text-plum-900',
+                    'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
+                    active ? 'bg-surface text-text shadow-raised' : 'text-text-subtle hover:text-text',
                   )}
                 >
                   <s.icon size={13} /> {s.label}
                   {/* Số thứ tự ưu tiên khi chọn nhiều tiêu chí */}
-                  {inSorts && sorts.length > 1 && <span className="grid h-4 w-4 place-items-center rounded-full bg-brand-500 text-[10px] font-bold text-white">{order + 1}</span>}
+                  {inSorts && sorts.length > 1 && <span className="grid h-4 w-4 place-items-center rounded-full bg-primary-solid text-xs font-bold text-on-primary">{order + 1}</span>}
                 </button>
               )
             })}
           </div>
-          {sorts.length > 1 && <span className="text-[11px] text-plum-400">Sắp theo thứ tự ưu tiên 1 → {sorts.length}</span>}
+          {sorts.length > 1 && <span className="text-xs text-text-subtle">Sắp theo thứ tự ưu tiên 1 → {sorts.length}</span>}
         </div>
       </div>
 

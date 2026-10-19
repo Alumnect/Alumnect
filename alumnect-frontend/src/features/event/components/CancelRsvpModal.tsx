@@ -30,7 +30,7 @@ export function CancelRsvpModal({
       isOpen={isOpen}
       onClose={handleClose}
       title="Hủy đăng ký sự kiện"
-      icon={<CalendarX size={18} className="text-rose-500" />}
+      icon={<CalendarX size={18} className="text-danger" />}
       maxWidthClassName="max-w-md"
       footer={
         <div className="flex justify-end gap-2.5">
@@ -56,7 +56,7 @@ export function CancelRsvpModal({
                 <CalendarX size={16} />
               )
             }
-            className="border-rose-500 bg-rose-600 text-white hover:bg-rose-700"
+            className="border-danger bg-danger text-text-inverse hover:opacity-90"
           >
             {isPending ? 'Đang hủy…' : 'Xác nhận hủy'}
           </Button>
@@ -64,17 +64,17 @@ export function CancelRsvpModal({
       }
     >
       <div className="space-y-3">
-        <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-200">
-          <AlertTriangle size={16} className="shrink-0 text-amber-600 dark:text-amber-400" />
-          <p className="text-amber-800 dark:text-amber-200">
-            <strong className="text-amber-900 dark:text-amber-300">Lưu ý:</strong> Bạn có thể mất suất tham dự nếu sự kiện hết chỗ khi đăng ký lại.
+        <div className="flex items-center gap-2.5 rounded-xl border border-warning-border bg-warning-soft p-3 text-xs text-warning">
+          <AlertTriangle size={16} className="shrink-0 text-warning" />
+          <p className="text-warning">
+            <strong className="text-warning">Lưu ý:</strong> Bạn có thể mất suất tham dự nếu sự kiện hết chỗ khi đăng ký lại.
           </p>
         </div>
 
-        <p className="text-sm leading-relaxed text-plum-700 dark:text-[#e4e6eb]">
+        <p className="text-sm leading-relaxed text-text-muted">
           Bạn có chắc chắn muốn hủy đăng ký tham gia sự kiện{' '}
           {eventTitle ? (
-            <span className="font-bold text-plum-900 dark:text-[#f0f2f5]">"{eventTitle}"</span>
+            <span className="font-bold text-text">"{eventTitle}"</span>
           ) : (
             'này'
           )}{' '}

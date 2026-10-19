@@ -117,18 +117,18 @@ export function JobsPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             {/* Chức danh công việc / từ khóa */}
             <div className="relative flex-1">
-              <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400" />
+              <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="Chức danh công việc hoặc từ khóa..."
-                className="h-11 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-10 pr-9 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-colors"
+                className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
               />
               {keyword && (
                 <button
                   onClick={() => setKeyword('')}
                   aria-label="Xóa từ khóa"
-                  className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-plum-400 transition-colors hover:bg-plum-900/[0.06] hover:text-plum-700"
+                  className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
                 >
                   <X size={13} />
                 </button>
@@ -144,7 +144,7 @@ export function JobsPage() {
                 placeholder="Tất cả địa điểm"
                 searchPlaceholder="Tìm tỉnh / thành phố…"
                 searchable
-                buttonIcon={<MapPin size={15} className="text-[#F27024]" />}
+                buttonIcon={<MapPin size={15} className="text-primary-solid" />}
               />
             </div>
 
@@ -167,7 +167,7 @@ export function JobsPage() {
 
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary-solid" />
         </div>
       ) : isError ? (
         <EmptyState
@@ -208,23 +208,23 @@ export function JobsPage() {
                     if ((e.target as HTMLElement).closest('button, a')) return
                     navigate(`/app/posts/${post.id}`)
                   }}
-                  className="group relative rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md cursor-pointer dark:bg-[#242526] dark:border-[#393a3b] dark:hover:border-[#4e4f50]"
+                  className="group relative rounded-2xl border border-border bg-surface p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md cursor-pointer dark:hover:border-border-strong"
                 >
                   <div className="flex flex-col gap-3.5">
                     {/* Header Row: Company Icon, Job Title, Company Name & Action Buttons on Right */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       {/* Left: Job Title & Company */}
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 text-[#F27024] ring-1 ring-orange-200/70 font-bold shadow-xs dark:from-[#3a3b3c] dark:to-[#3a3b3c] dark:text-[#f27024] dark:ring-[#4e4f50]">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 text-primary-solid ring-1 ring-orange-200/70 font-bold shadow-xs dark:from-surface-2 dark:to-surface-2 dark:text-primary-solid dark:ring-border-strong">
                           <Building2 size={22} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h2 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-[#F27024] transition-colors leading-snug dark:text-[#e4e6eb] dark:group-hover:text-[#f27024]">
-                            <span className="text-slate-500 font-semibold dark:text-[#b0b3b8]">Tuyển dụng: </span>
+                          <h2 className="text-base sm:text-lg font-bold text-text group-hover:text-primary-solid transition-colors leading-snug dark:group-hover:text-primary-solid">
+                            <span className="text-text-subtle font-semibold">Tuyển dụng: </span>
                             <span className="capitalize">{job.title || 'Chưa cập nhật'}</span>
                           </h2>
-                          <p className="mt-0.5 text-sm font-semibold text-slate-600 dark:text-[#b0b3b8]">
-                            Công ty: <span className="text-[#004F9E] font-bold dark:text-[#4599ff]">{job.company || 'Chưa cập nhật'}</span>
+                          <p className="mt-0.5 text-sm font-semibold text-text-muted">
+                            Công ty: <span className="text-info font-bold">{job.company || 'Chưa cập nhật'}</span>
                           </p>
                         </div>
                       </div>
@@ -257,8 +257,8 @@ export function JobsPage() {
                           className={cn(
                             'grid h-9.5 w-9.5 place-items-center rounded-xl border transition-colors',
                             (saved[post.id] ?? post.saved)
-                              ? 'border-orange-200 bg-orange-50 text-[#F27024] dark:border-orange-500/40 dark:bg-orange-500/10'
-                              : 'border-slate-200 text-slate-400 hover:bg-slate-50 dark:border-[#393a3b] dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c]'
+                              ? 'border-orange-200 bg-primary-soft text-primary-solid dark:border-orange-500/40 dark:bg-orange-500/10'
+                              : 'border-border text-text-subtle hover:bg-surface-2'
                           )}
                           aria-label="Lưu công việc"
                           title={(saved[post.id] ?? post.saved) ? 'Bỏ lưu tin tuyển dụng' : 'Lưu tin tuyển dụng'}
@@ -272,7 +272,7 @@ export function JobsPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="font-bold bg-[#F27024] hover:bg-[#d96010] text-white shadow-xs rounded-xl px-4"
+                            className="font-bold bg-primary-solid hover:bg-[#d96010] text-on-primary shadow-xs rounded-xl px-4"
                           >
                             Ứng tuyển
                           </ButtonLink>
@@ -282,19 +282,19 @@ export function JobsPage() {
 
                     {/* Metadata Badges: Salary (Green Pill), Location & Author */}
                     <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:border-emerald-800/50 dark:text-emerald-400">
-                        <Coins size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-success-soft px-3 py-1.5 text-xs font-bold text-success border border-success-border">
+                        <Coins size={14} className="text-success shrink-0" />
                         <span>{formatSalary(job.salaryMin, job.salaryMax)}</span>
                       </span>
 
                       {job.location && (
                         <span
-                          className="inline-flex max-w-full sm:max-w-md items-center gap-1.5 rounded-lg bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-slate-700 dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:border dark:border-[#393a3b]"
+                          className="inline-flex max-w-full sm:max-w-md items-center gap-1.5 rounded-lg bg-slate-100/90 px-3 py-1.5 text-xs font-medium text-text-muted dark:bg-surface-2 dark:border dark:border-border"
                           title={job.location}
                         >
-                          <MapPin size={13} className="text-[#F27024] shrink-0" />
+                          <MapPin size={13} className="text-primary-solid shrink-0" />
                           <span className="truncate">
-                            <strong className="text-slate-800 dark:text-white">Địa điểm:</strong>{' '}
+                            <strong className="text-text">Địa điểm:</strong>{' '}
                             {extractCity(job.location) || job.location}
                           </span>
                         </span>
@@ -303,17 +303,17 @@ export function JobsPage() {
                       <Link
                         to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/90 hover:bg-orange-50 hover:text-[#F27024] px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors relative z-10 dark:bg-[#3a3b3c] dark:text-[#e4e6eb] dark:hover:bg-[#4e4f50] dark:border dark:border-[#393a3b]"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/90 hover:bg-primary-soft hover:text-primary-solid px-3 py-1.5 text-xs font-medium text-text-muted transition-colors relative z-10 dark:bg-surface-2 dark:border dark:border-border"
                       >
                         <Avatar src={post.avatar} name={post.author} size={18} />
-                        <span>Đăng bởi: <strong className="text-slate-800 hover:text-[#F27024] hover:underline dark:text-white">{post.author}</strong></span>
+                        <span>Đăng bởi: <strong className="text-text hover:text-primary-solid hover:underline">{post.author}</strong></span>
                       </Link>
                     </div>
 
                     {/* Description Box */}
                     {post.text && (
-                      <div className="rounded-xl bg-slate-50/80 p-3 border border-slate-100 text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed dark:bg-[#3a3b3c] dark:border-[#393a3b] dark:text-[#e4e6eb]">
-                        <span className="font-semibold text-slate-700 dark:text-white">Mô tả: </span>
+                      <div className="rounded-xl bg-surface-2 p-3 border border-border text-xs sm:text-sm text-text-muted line-clamp-2 leading-relaxed">
+                        <span className="font-semibold text-text-muted">Mô tả: </span>
                         {post.text}
                       </div>
                     )}

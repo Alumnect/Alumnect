@@ -149,22 +149,22 @@ export function AlumniDirectoryPage() {
     <div className="mx-auto max-w-6xl pb-12">
       {/* Page Header */}
       <PageHeader
-        icon={<Users size={22} className="text-brand-500" />}
+        icon={<Users size={22} className="text-primary-solid" />}
         title="Mạng lưới & Danh bạ AlumNect"
         subtitle="Khám phá và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University."
       />
 
       {/* Main Tabs Navigation - Chỉ hiển thị khi người dùng đã đăng nhập */}
       {isAuthenticated && (
-        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-plum-900/10 dark:border-plum-800/40 pb-3">
+        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-border pb-3">
           <button
             type="button"
             onClick={() => setActiveTab('directory')}
             className={cn(
               'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
               activeTab === 'directory'
-                ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/30'
-                : 'bg-white/70 dark:bg-plum-950/40 text-plum-600 dark:text-plum-300 hover:bg-plum-900/[0.05] dark:hover:bg-plum-900/20',
+                ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
+                : 'bg-surface/70 text-text-muted hover:bg-surface-2',
             )}
           >
             <Compass size={17} />
@@ -177,11 +177,11 @@ export function AlumniDirectoryPage() {
             className={cn(
               'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
               activeTab === 'suggestions'
-                ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/30'
-                : 'bg-white/70 dark:bg-plum-950/40 text-plum-600 dark:text-plum-300 hover:bg-plum-900/[0.05] dark:hover:bg-plum-900/20',
+                ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
+                : 'bg-surface/70 text-text-muted hover:bg-surface-2',
             )}
           >
-            <Target size={17} className={activeTab === 'suggestions' ? 'text-white' : 'text-brand-500'} />
+            <Target size={17} className={activeTab === 'suggestions' ? 'text-white' : 'text-primary-solid'} />
             <span>Gợi ý kết nối</span>
           </button>
 
@@ -191,8 +191,8 @@ export function AlumniDirectoryPage() {
             className={cn(
               'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
               activeTab === 'network'
-                ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/30'
-                : 'bg-white/70 dark:bg-plum-950/40 text-plum-600 dark:text-plum-300 hover:bg-plum-900/[0.05] dark:hover:bg-plum-900/20',
+                ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
+                : 'bg-surface/70 text-text-muted hover:bg-surface-2',
             )}
           >
             <HeartHandshake size={17} />
@@ -217,7 +217,7 @@ export function AlumniDirectoryPage() {
               {Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-plum-900/10 bg-white/60 p-5 backdrop-blur-xs"
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5 backdrop-blur-xs"
                 >
                   <div className="flex w-full flex-col items-center">
                     <Skeleton className="h-20 w-20 rounded-full" />
@@ -240,7 +240,7 @@ export function AlumniDirectoryPage() {
           {/* Error State */}
           {!isLoading && isError && (
             <EmptyState
-              icon={<Users size={28} className="text-coral-500" />}
+              icon={<Users size={28} className="text-danger" />}
               title="Không thể tải danh bạ thành viên"
               description={error instanceof Error ? error.message : 'Đã có lỗi xảy ra khi kết nối máy chủ.'}
               action={
@@ -254,7 +254,7 @@ export function AlumniDirectoryPage() {
           {/* Zero Result State */}
           {!isLoading && !isError && displayedUsers.length === 0 && (
             <EmptyState
-              icon={<Users size={28} className="text-brand-500" />}
+              icon={<Users size={28} className="text-primary-solid" />}
               title="Không tìm thấy thành viên phù hợp"
               description="Hãy thử thay đổi từ khóa tìm kiếm, chuyên ngành hoặc mở rộng phạm vi bộ lọc."
               action={
@@ -296,7 +296,7 @@ export function AlumniDirectoryPage() {
               {Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-plum-900/10 bg-white/60 p-5 backdrop-blur-xs"
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5 backdrop-blur-xs"
                 >
                   <div className="flex w-full flex-col items-center">
                     <Skeleton className="h-20 w-20 rounded-full" />
@@ -314,7 +314,7 @@ export function AlumniDirectoryPage() {
           {/* Error State */}
           {!isSuggestionsLoading && isSuggestionsError && (
             <EmptyState
-              icon={<Users size={28} className="text-coral-500" />}
+              icon={<Users size={28} className="text-danger" />}
               title="Không thể tải danh sách gợi ý"
               description="Đã xảy ra lỗi khi tính toán dữ liệu đề xuất kết nối."
               action={
@@ -328,7 +328,7 @@ export function AlumniDirectoryPage() {
           {/* Zero Suggestions */}
           {!isSuggestionsLoading && !isSuggestionsError && displayedSuggestions.length === 0 && (
             <EmptyState
-              icon={<Compass size={28} className="text-brand-500" />}
+              icon={<Compass size={28} className="text-primary-solid" />}
               title="Chưa có gợi ý phù hợp"
               description="Hãy hoàn thiện thông tin hồ sơ (chuyên ngành, khóa học, kinh nghiệm làm việc) để nhận được các đề xuất chính xác hơn."
               action={
@@ -367,7 +367,7 @@ export function AlumniDirectoryPage() {
                   'rounded-xl px-4 py-2 text-xs font-bold transition-all',
                   networkSubTab === 'following'
                     ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
-                    : 'bg-plum-900/5 text-plum-600 hover:bg-plum-900/10 dark:text-plum-300',
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3',
                 )}
               >
                 Đang theo dõi ({followingCount})
@@ -379,7 +379,7 @@ export function AlumniDirectoryPage() {
                   'rounded-xl px-4 py-2 text-xs font-bold transition-all',
                   networkSubTab === 'followers'
                     ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
-                    : 'bg-plum-900/5 text-plum-600 hover:bg-plum-900/10 dark:text-plum-300',
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3',
                 )}
               >
                 Người theo dõi ({followersCount})
@@ -388,13 +388,13 @@ export function AlumniDirectoryPage() {
 
             {/* Quick Network Search Bar */}
             <div className="relative w-full sm:w-72">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-plum-400" />
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
                 type="text"
                 value={networkSearch}
                 onChange={(e) => setNetworkSearch(e.target.value)}
                 placeholder="Tìm nhanh trong mạng lưới..."
-                className="h-9 w-full rounded-xl border border-plum-900/15 bg-white dark:bg-plum-900/20 pl-8 pr-3 text-xs text-plum-900 dark:text-plum-100 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none"
+                className="h-9 w-full rounded-xl border border-border-strong bg-surface pl-8 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none"
               />
             </div>
           </div>
@@ -403,7 +403,7 @@ export function AlumniDirectoryPage() {
           {(isFollowingLoading || isFollowersLoading) && (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-2xl bg-white/70 p-4 border border-plum-900/10">
+                <div key={i} className="flex items-center gap-3 rounded-2xl bg-surface/70 p-4 border border-border">
                   <Skeleton className="h-12 w-12 rounded-full shrink-0" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-40" />
@@ -417,7 +417,7 @@ export function AlumniDirectoryPage() {
 
           {!(isFollowingLoading || isFollowersLoading) && filteredNetworkUsers.length === 0 && (
             <EmptyState
-              icon={<HeartHandshake size={28} className="text-brand-500" />}
+              icon={<HeartHandshake size={28} className="text-primary-solid" />}
               title={
                 networkSearch
                   ? 'Không tìm thấy kết quả phù hợp'
@@ -446,7 +446,7 @@ export function AlumniDirectoryPage() {
                 <Card
                   key={member.userId}
                   hover={false}
-                  className="flex items-center justify-between p-4 border border-plum-900/10 dark:border-plum-800/40 bg-white/80 dark:bg-plum-950/60"
+                  className="flex items-center justify-between p-4 border border-border bg-surface/80"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 pr-3">
                     <Link to={`/app/profile?userId=${member.userId}`}>
@@ -459,11 +459,11 @@ export function AlumniDirectoryPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         to={`/app/profile?userId=${member.userId}`}
-                        className="block truncate text-sm font-bold text-plum-900 dark:text-plum-100 hover:text-brand-600 transition-colors"
+                        className="block truncate text-sm font-bold text-text hover:text-primary-solid transition-colors"
                       >
                         {member.fullName}
                       </Link>
-                      <p className="truncate text-xs text-plum-500 dark:text-plum-400 mt-0.5">
+                      <p className="truncate text-xs text-text-subtle mt-0.5">
                         {member.headline || 'Cựu sinh viên FPTU'}
                       </p>
                     </div>
@@ -474,7 +474,7 @@ export function AlumniDirectoryPage() {
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="text-xs text-plum-600 hover:text-coral-600 hover:border-coral-200"
+                        className="text-xs text-text-muted hover:text-danger hover:border-danger-border"
                         disabled={unfollowMutation.isPending}
                         onClick={() => unfollowMutation.mutate(member.userId)}
                         leftIcon={<UserX size={13} />}

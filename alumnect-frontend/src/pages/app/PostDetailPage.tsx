@@ -66,7 +66,7 @@ function BackToFeed() {
   return (
     <Link
       to="/app"
-      className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-plum-500 transition-colors hover:text-plum-900"
+      className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-text"
     >
       <ArrowLeft size={16} /> Quay lại bảng tin
     </Link>
@@ -106,8 +106,8 @@ function PostError({ message, onRetry }: { message?: string; onRetry: () => void
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tải được bài viết</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">Không tải được bài viết</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
       </div>
       <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
     </Card>
@@ -134,16 +134,16 @@ function PostNotAvailable() {
 function PostForbidden() {
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-500/10 text-brand-600">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-soft text-primary-solid">
         <Lock size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Bài viết dành cho thành viên</p>
-        <p className="mt-1 text-sm text-plum-500">Đăng nhập để xem nội dung bài viết này.</p>
+        <p className="font-bold text-text">Bài viết dành cho thành viên</p>
+        <p className="mt-1 text-sm text-text-subtle">Đăng nhập để xem nội dung bài viết này.</p>
       </div>
       <Link
         to="/login"
-        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary-solid px-4 text-sm font-semibold text-on-primary shadow-sm transition-transform hover:bg-primary-hover hover:-translate-y-0.5"
       >
         Đăng nhập <ArrowRight size={15} />
       </Link>
@@ -269,17 +269,17 @@ function PostDetailCard({
             <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 font-bold text-plum-900">
+            <p className="flex items-center gap-2 font-bold text-text">
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-                className="truncate hover:underline hover:text-brand-600 transition-colors"
+                className="truncate hover:underline hover:text-primary-solid transition-colors"
                 title={`Xem hồ sơ của ${post.author}`}
               >
                 {post.author}
               </Link>
-              <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
+              <Badge tone={meta.tone} className="px-2 py-0.5 text-xs">{meta.label}</Badge>
             </p>
-            <p className="truncate text-xs text-plum-400">{post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}</p>
+            <p className="truncate text-xs text-text-subtle">{post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}</p>
           </div>
           <PostActionMenu
             post={post}
@@ -294,32 +294,32 @@ function PostDetailCard({
 
         {/* Nội dung đầy đủ (không cắt dòng như thẻ ở bảng tin) */}
         {post.type !== 'event' && post.type !== 'recruitment' && (
-          <p className="mt-5 whitespace-pre-line text-[15px] leading-relaxed text-plum-800">{post.text}</p>
+          <p className="mt-5 whitespace-pre-line text-[15px] leading-relaxed text-text">{post.text}</p>
         )}
       </div>
 
       {/* --- Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-orange-200 bg-white shadow-sm ring-1 ring-orange-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-orange-200 bg-surface shadow-sm ring-1 ring-orange-50 transition-all dark:border-border dark:ring-0">
           {/* Header Tuyển dụng - Thiết kế trang trọng, nổi bật */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-amber-50/40 to-white px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-amber-50/40 to-white px-6 py-4 dark:border-border dark:from-surface-2 dark:to-surface">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-orange-100 text-[#F27024] shadow-2xs dark:bg-orange-500/20 dark:text-orange-400">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-orange-100 text-primary-solid shadow-2xs dark:bg-orange-500/20 dark:text-orange-400">
                 <Briefcase size={22} />
               </span>
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#F27024] dark:text-orange-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">
                   Cơ hội việc làm
                 </span>
-                <h3 className="text-lg font-bold text-plum-900 dark:text-[#f0f2f5] leading-snug">
+                <h3 className="text-lg font-bold text-text leading-snug">
                   {post.job.title}
                 </h3>
               </div>
             </div>
 
             {post.job.company && (
-              <div className="flex items-center gap-1.5 rounded-xl bg-white/90 px-3.5 py-1.5 border border-orange-200/80 text-sm font-bold text-slate-800 shadow-2xs dark:border-[#4e4f50] dark:bg-[#242526] dark:text-[#f0f2f5]">
-                <Building2 size={16} className="text-[#F27024]" />
+              <div className="flex items-center gap-1.5 rounded-xl bg-surface px-3.5 py-1.5 border border-orange-200/80 text-sm font-bold text-text shadow-2xs dark:border-border-strong">
+                <Building2 size={16} className="text-primary-solid" />
                 <span>{post.job.company}</span>
               </div>
             )}
@@ -327,10 +327,10 @@ function PostDetailCard({
 
           <div className="p-6">
             {/* Box Kêu gọi Ứng tuyển (tương tự RSVP của Sự kiện) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/30 p-4 shadow-xs dark:border-[#393a3b] dark:bg-none dark:bg-[#3a3b3c]">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/30 p-4 shadow-xs dark:border-border dark:bg-none dark:bg-surface-2">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">Ứng tuyển vị trí này</p>
-                <p className="text-xs text-slate-500 dark:text-[#b0b3b8] mt-0.5">
+                <p className="text-sm font-bold text-text">Ứng tuyển vị trí này</p>
+                <p className="text-xs text-text-subtle mt-0.5">
                   {post.job.applyUrl
                     ? 'Gửi hồ sơ trực tiếp qua liên kết tuyển dụng của doanh nghiệp'
                     : post.job.contactEmail
@@ -343,10 +343,10 @@ function PostDetailCard({
                 {post.job.contactEmail && (
                   <a
                     href={`mailto:${post.job.contactEmail}?subject=${encodeURIComponent(`Ứng tuyển vị trí ${post.job.title} - ${post.job.company}`)}`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-2xs dark:border-[#4e4f50] dark:bg-[#242526] dark:text-slate-200 dark:hover:bg-[#323334]"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-bold text-text-muted hover:bg-surface-2 hover:text-text transition-colors shadow-2xs dark:hover:bg-[#323334]"
                     title="Gửi email cho nhà tuyển dụng"
                   >
-                    <Mail size={14} className="text-slate-500 dark:text-slate-400" />
+                    <Mail size={14} className="text-text-subtle" />
                     <span>Gửi CV</span>
                   </a>
                 )}
@@ -355,7 +355,7 @@ function PostDetailCard({
                     href={post.job.applyUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#F27024] to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:from-[#d96010] hover:to-amber-700 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-bold text-on-primary shadow-sm hover:bg-primary-hover transition-all cursor-pointer"
                   >
                     <span>Ứng tuyển ngay</span>
                     <ExternalLink size={13} />
@@ -365,13 +365,13 @@ function PostDetailCard({
             </div>
 
             {/* Thông tin chi tiết: Mức lương, Email, Địa điểm (Grid trực quan tương tự Sự kiện) */}
-            <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
+            <div className="mb-6 grid gap-4 rounded-xl border border-border bg-surface-2 p-5 sm:grid-cols-2">
               <div>
-                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Mức lương</p>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Mức lương</p>
                 <div className="flex items-center gap-1.5 text-sm font-semibold">
-                  <Coins size={16} className="text-emerald-500 shrink-0" />
+                  <Coins size={16} className="text-success shrink-0" />
                   {(post.job.salaryMin || post.job.salaryMax) ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="text-success font-bold">
                       {post.job.salaryMin && post.job.salaryMax
                         ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VNĐ`
                         : post.job.salaryMin
@@ -379,34 +379,34 @@ function PostDetailCard({
                         : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VNĐ`}
                     </span>
                   ) : (
-                    <span className="text-slate-500 dark:text-[#b0b3b8] font-medium">Thỏa thuận</span>
+                    <span className="text-text-subtle font-medium">Thỏa thuận</span>
                   )}
                 </div>
               </div>
 
               <div>
-                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Liên hệ tuyển dụng</p>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Liên hệ tuyển dụng</p>
                 <div className="flex items-center gap-1.5 text-sm font-semibold">
-                  <Mail size={16} className="text-sky-500 shrink-0" />
+                  <Mail size={16} className="text-info shrink-0" />
                   {post.job.contactEmail ? (
                     <a
                       href={`mailto:${post.job.contactEmail}`}
-                      className="text-sky-600 hover:underline dark:text-sky-400 truncate"
+                      className="text-info hover:underline truncate"
                       title={post.job.contactEmail}
                     >
                       {post.job.contactEmail}
                     </a>
                   ) : (
-                    <span className="text-slate-400 dark:text-[#b0b3b8] font-normal">—</span>
+                    <span className="text-text-subtle font-normal">—</span>
                   )}
                 </div>
               </div>
 
               {post.job.location && (
-                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-slate-200/60 dark:border-[#4e4f50] pt-4">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#b0b3b8]">Địa điểm làm việc</p>
-                  <p className="flex items-start gap-1.5 text-sm font-medium text-plum-800 dark:text-[#f0f2f5]">
-                    <MapPin size={16} className="text-[#F27024] shrink-0 mt-0.5" />
+                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-border pt-4">
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">Địa điểm làm việc</p>
+                  <p className="flex items-start gap-1.5 text-sm font-medium text-text">
+                    <MapPin size={16} className="text-primary-solid shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{post.job.location}</span>
                   </p>
                 </div>
@@ -416,8 +416,8 @@ function PostDetailCard({
             {/* Mô tả tuyển dụng */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#F27024] dark:text-orange-400">Mô tả công việc:</p>
-                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 dark:text-[#e4e6eb]">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">Mô tả công việc:</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-text">
                   {post.text}
                 </p>
               </div>
@@ -428,7 +428,7 @@ function PostDetailCard({
               const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
               if (imgs.length === 0) return null
               return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 dark:border-[#393a3b] shadow-sm">
+                <div className="overflow-hidden rounded-xl border border-border shadow-sm">
                   <ImageCarousel images={imgs} height={420} altPrefix="Ảnh tuyển dụng" />
                 </div>
               )
@@ -439,15 +439,15 @@ function PostDetailCard({
 
       {/* --- Thẻ thông tin Sự kiện (nếu là bài event) --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all dark:bg-[#242526] dark:border-[#393a3b] dark:ring-0">
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-info-border bg-surface shadow-sm ring-1 ring-info-border transition-all dark:border-border dark:ring-0">
           {/* Header Sự kiện */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4 dark:border-[#393a3b] dark:from-[#3a3b3c] dark:to-[#242526]">
-            <h3 className="flex items-center gap-2 font-bold text-violet-900 text-lg dark:text-[#f0f2f5]">
-              <CalendarPlus size={20} className="text-violet-600 dark:text-violet-400" />
-              <span>Sự kiện: <span className="text-plum-900 dark:text-[#f0f2f5]">{post.event.title}</span></span>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4 dark:border-border dark:from-surface-2 dark:to-surface">
+            <h3 className="flex items-center gap-2 font-bold text-info text-lg dark:text-text">
+              <CalendarPlus size={20} className="text-info" />
+              <span>Sự kiện: <span className="text-text">{post.event.title}</span></span>
             </h3>
             {post.event.status === 'CANCELLED' ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 dark:bg-rose-500/20 dark:text-rose-400">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-1 text-xs font-bold text-danger">
                 <Ban size={13} /> Đã hủy
               </span>
             ) : isAuthor && !isEventEnded && onCancelEvent ? (
@@ -456,7 +456,7 @@ function PostDetailCard({
                 variant="secondary"
                 size="sm"
                 onClick={onCancelEvent}
-                className="border-rose-200 text-rose-600 hover:bg-rose-50 text-xs px-3 h-8 font-semibold dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                className="border-danger-border text-danger hover:bg-danger-soft text-xs px-3 h-8 font-semibold"
                 title="Hủy tổ chức sự kiện này"
               >
                 <Ban size={13} className="mr-1" /> Hủy sự kiện
@@ -466,9 +466,9 @@ function PostDetailCard({
 
           <div className="p-6">
             {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs dark:border-[#393a3b] dark:bg-none dark:bg-[#3a3b3c]">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs dark:border-border dark:bg-none dark:bg-surface-2">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-plum-900 dark:text-[#f0f2f5]">Đăng ký tham gia sự kiện</p>
+                <p className="text-sm font-bold text-text">Đăng ký tham gia sự kiện</p>
               </div>
               <EventRsvpButton
                 eventId={post.event.id ?? post.eventId}
@@ -485,12 +485,12 @@ function PostDetailCard({
             </div>
 
             {/* Thời gian & Địa điểm */}
-            <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2 dark:border-[#393a3b] dark:bg-[#3a3b3c]">
+            <div className="mb-6 grid gap-4 rounded-xl border border-border bg-surface-2 p-5 sm:grid-cols-2">
               {post.event.startTime && (
                 <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={15} className="text-violet-500" />
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Bắt đầu</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-text">
+                    <Clock size={15} className="text-info" />
                     {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
                     {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -498,30 +498,30 @@ function PostDetailCard({
               )}
               {post.event.endTime ? (
                 <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={15} className="text-coral-500" />
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Kết thúc</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-text">
+                    <Clock size={15} className="text-danger" />
                     {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
                     {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               ) : (
                 <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="text-sm font-semibold text-slate-400">—</p>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Kết thúc</p>
+                  <p className="text-sm font-semibold text-text-subtle">—</p>
                 </div>
               )}
               {(post.event.location || post.event.capacity) && (
-                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-slate-200/60 pt-4">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm & Sức chứa</p>
+                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-border pt-4">
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">Địa điểm & Sức chứa</p>
                   <div className="flex flex-wrap items-center gap-5">
                     {post.event.location && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
-                        <MapPin size={15} className="text-brand-500" /> {post.event.location}
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-text">
+                        <MapPin size={15} className="text-primary-solid" /> {post.event.location}
                       </p>
                     )}
                     {post.event.capacity && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-text">
                         <Users size={15} className="text-aqua-600" /> Tối đa {post.event.capacity} người
                       </p>
                     )}
@@ -533,8 +533,8 @@ function PostDetailCard({
             {/* Mô tả sự kiện */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện:</p>
-                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-info">Mô tả sự kiện:</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-text">
                   {post.text}
                 </p>
               </div>
@@ -545,7 +545,7 @@ function PostDetailCard({
               const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
               if (imgs.length === 0) return null
               return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
+                <div className="overflow-hidden rounded-xl border border-border shadow-sm">
                   <ImageCarousel images={imgs} height={420} altPrefix="Ảnh sự kiện" />
                 </div>
               )
@@ -564,7 +564,7 @@ function PostDetailCard({
 
       {/* Thanh hành động — số liệu tương tác. Đăng like/comment/repost thuộc UC17/18/21,
           ở UC16 chỉ hiển thị số đếm (nút vô hiệu hóa với Guest theo BR-12). */}
-      <div className="flex items-center gap-1.5 border-t border-slate-100 dark:border-[#393a3b] px-6 py-3">
+      <div className="flex items-center gap-1.5 border-t border-border px-6 py-3">
         <button
           disabled={!canInteract}
           onClick={handleLike}
@@ -572,8 +572,8 @@ function PostDetailCard({
           className={cn(
             'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
             liked
-              ? 'text-rose-500 font-extrabold'
-              : 'text-slate-600 dark:text-[#b0b3b8] enabled:hover:text-rose-500 dark:enabled:hover:text-rose-400',
+              ? 'text-danger font-extrabold'
+              : 'text-text-muted enabled:hover:text-rose-500 dark:enabled:hover:text-rose-400',
           )}
         >
           <AnimatePresence initial={false}>
@@ -584,7 +584,7 @@ function PostDetailCard({
               animate={{ scale: 1, opacity: 1 }}
               transition={TRANSITION.bounce}
             >
-              <Heart size={16} className={cn(liked && 'fill-rose-500 text-rose-500 dark:text-rose-400 dark:fill-rose-400')} />
+              <Heart size={16} className={cn(liked && 'fill-danger text-danger')} />
             </motion.span>
           </AnimatePresence>
           <span>{compact(likeCount)} thích</span>
@@ -595,14 +595,14 @@ function PostDetailCard({
             window.location.hash = 'comments'
             document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
           }}
-          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition-all duration-200 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
           <MessageCircle size={16} /> <span>{compact(post.comments)} bình luận</span>
         </button>
         <button
           disabled={!canInteract}
           onClick={onShare}
-          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-600 dark:text-[#b0b3b8] transition-all duration-200 enabled:hover:text-violet-500 dark:enabled:hover:text-violet-400 disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition-all duration-200 enabled:hover:text-violet-500 dark:enabled:hover:text-violet-400 disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
           <Repeat size={16} />
           <span>Chia sẻ</span>
@@ -612,7 +612,7 @@ function PostDetailCard({
             type="button"
             onClick={onReport}
             aria-label="Báo cáo bài viết"
-            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] transition-all duration-200 hover:bg-rose-500/10 dark:hover:bg-rose-500/15 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
+            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle transition-all duration-200 hover:bg-danger-soft hover:text-danger cursor-pointer"
           >
             <Flag size={16} />
           </button>
@@ -620,7 +620,7 @@ function PostDetailCard({
           <button
             disabled
             aria-label="Đăng nhập để báo cáo bài viết"
-            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-400 dark:text-[#8a8d91] disabled:cursor-not-allowed disabled:opacity-60"
+            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle dark:text-text-subtle disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Flag size={16} />
           </button>
@@ -632,16 +632,16 @@ function PostDetailCard({
             'inline-flex items-center justify-center rounded-xl p-2 transition-all duration-200 cursor-pointer',
             isAuthor ? 'ml-auto' : '',
             saved
-              ? 'text-[#F27024] dark:text-[#FF8C38] bg-[#F27024]/10 dark:bg-[#F27024]/15 hover:bg-[#F27024]/20'
-              : 'text-slate-400 dark:text-[#8a8d91] hover:bg-slate-100 dark:hover:bg-[#3a3b3c] hover:text-[#F27024] dark:hover:text-[#FF8C38]',
+              ? 'text-primary-solid dark:text-primary bg-primary-soft dark:bg-[#F27024]/15 hover:bg-[#F27024]/20'
+              : 'text-text-subtle dark:text-text-subtle hover:bg-surface-2 hover:text-primary-solid dark:hover:text-primary',
           )}
         >
-          <Bookmark size={16} className={cn(saved && 'fill-[#F27024] text-[#F27024] dark:fill-[#FF8C38] dark:text-[#FF8C38]')} />
+          <Bookmark size={16} className={cn(saved && 'fill-[#F27024] text-primary-solid dark:fill-[#FF8C38] dark:text-primary')} />
         </button>
       </div>
 
       {/* Khu bình luận */}
-      <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
+      <div className="border-t border-border bg-surface-2 p-6 sm:p-8">
         <CommentsSection postId={post.id} commentCount={post.comments} isGuest={!canInteract} />
       </div>
     </Card>
@@ -701,7 +701,7 @@ function CommentItem({
       className={cn(
         'group flex items-start gap-2.5 transition-all duration-300',
         isReply &&
-          'relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
+          'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
       )}
     >
       <Link
@@ -711,21 +711,21 @@ function CommentItem({
         <Avatar src={comment.avatar} name={comment.author} size={isReply ? 28 : 32} verified={comment.verified} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+        <div className="rounded-2xl bg-surface-2 p-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
               <Link
                 to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
-                className="text-xs font-bold text-plum-900 hover:underline dark:text-white transition-colors"
+                className="text-xs font-bold text-text hover:underline transition-colors"
               >
                 {comment.author}
               </Link>
               {comment.role && (
-                <span className="text-[10px] font-medium text-brand-600 bg-brand-500/10 px-1.5 py-0.5 rounded-md dark:text-brand-300">
+                <span className="text-xs font-medium text-primary-solid bg-primary-soft px-1.5 py-0.5 rounded-md">
                   {comment.role}
                 </span>
               )}
-              <span className="shrink-0 text-[10px] text-plum-400 dark:text-[#8a8d91]">
+              <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle">
                 • {comment.time}
               </span>
             </div>
@@ -735,7 +735,7 @@ function CommentItem({
                 <button
                   type="button"
                   onClick={handleStartEdit}
-                  className="text-plum-400 hover:text-brand-600 transition-colors cursor-pointer"
+                  className="text-text-subtle hover:text-primary-solid transition-colors cursor-pointer"
                   aria-label="Chỉnh sửa bình luận"
                 >
                   <Pencil size={13} />
@@ -745,7 +745,7 @@ function CommentItem({
                 <button
                   type="button"
                   onClick={() => onDelete(comment)}
-                  className="text-plum-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  className="text-text-subtle hover:text-danger transition-colors cursor-pointer"
                   aria-label="Xóa bình luận"
                 >
                   <Trash2 size={13} />
@@ -762,21 +762,21 @@ function CommentItem({
                 maxLength={1000}
                 rows={3}
                 autoFocus
-                className="w-full rounded-xl border border-plum-900/10 bg-white p-2.5 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white"
+                className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
                   disabled={updateComment.isPending}
-                  className="rounded-xl px-3 py-1.5 text-xs font-medium text-plum-500 hover:bg-plum-900/5 transition-colors cursor-pointer dark:text-[#b0b3b8]"
+                  className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={!editText.trim() || updateComment.isPending}
-                  className="rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-brand-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
                 >
                   {updateComment.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
                   <span>{updateComment.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
@@ -784,9 +784,9 @@ function CommentItem({
               </div>
             </form>
           ) : (
-            <div className="mt-1 text-xs text-plum-800 dark:text-plum-200 leading-relaxed">
+            <div className="mt-1 text-xs text-text leading-relaxed">
               {parentAuthor && (
-                <span className="mr-1.5 font-semibold text-brand-600 dark:text-brand-400">
+                <span className="mr-1.5 font-semibold text-primary-solid">
                   @{parentAuthor}
                 </span>
               )}
@@ -802,7 +802,7 @@ function CommentItem({
             <button
               type="button"
               onClick={() => onReply(comment.parentId || comment.id, comment.author)}
-              className="mt-1.5 inline-block text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400 cursor-pointer"
+              className="mt-1.5 inline-block text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
             >
               Trả lời
             </button>
@@ -864,15 +864,15 @@ function InlineReplyForm({
   }
 
   return (
-    <div className="relative ml-8 border-l-2 border-brand-500/20 pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
-      <form onSubmit={handleSubmit} className="flex items-start gap-2.5 rounded-2xl bg-plum-900/[0.03] p-3 dark:bg-[#3a3b3c]/50">
+    <div className="relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
+      <form onSubmit={handleSubmit} className="flex items-start gap-2.5 rounded-2xl bg-surface-2 p-3">
         <Avatar src={viewer?.avatarUrl ?? undefined} name={viewer?.name ?? 'Bạn'} size={28} verified={viewer?.verified} className="shrink-0" />
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex items-center justify-between text-[11px] text-plum-500 dark:text-[#b0b3b8]">
+          <div className="flex items-center justify-between text-xs text-text-subtle">
             <span>
-              Trả lời <strong className="text-brand-600 dark:text-brand-400">@{replyingTo.name}</strong>
+              Trả lời <strong className="text-primary-solid">@{replyingTo.name}</strong>
             </span>
-            <button type="button" onClick={onCancel} className="hover:text-plum-800 dark:hover:text-white cursor-pointer">
+            <button type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
               <X size={13} />
             </button>
           </div>
@@ -883,20 +883,20 @@ function InlineReplyForm({
             rows={2}
             autoFocus
             placeholder={`Viết phản hồi cho ${replyingTo.name}...`}
-            className="w-full rounded-xl border border-plum-900/10 bg-white p-2.5 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white"
+            className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-xl px-3 py-1.5 text-xs font-medium text-plum-500 hover:bg-plum-900/5 transition-colors cursor-pointer dark:text-[#b0b3b8]"
+              className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={!text.trim() || createComment.isPending}
-              className="rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-brand-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+              className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
             >
               {createComment.isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               <span>Gửi phản hồi</span>
@@ -919,12 +919,12 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
 
   if (isGuest || !viewer) {
     return (
-      <div className="flex items-center justify-between rounded-xl bg-white p-3 border border-plum-900/10 shadow-2xs dark:border-[#393a3b] dark:bg-[#242526]">
-        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Đăng nhập để tham gia bình luận.</p>
+      <div className="flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
+        <p className="text-xs text-text-subtle">Đăng nhập để tham gia bình luận.</p>
         <button
           type="button"
           onClick={() => promptLogin('Đăng nhập để tham gia bình luận.')}
-          className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 dark:text-brand-400 cursor-pointer"
+          className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
         >
           Đăng nhập <ArrowRight size={12} />
         </button>
@@ -961,13 +961,13 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
           onChange={(e) => setContent(e.target.value)}
           maxLength={1000}
           placeholder="Viết bình luận công khai..."
-          className="w-full rounded-2xl border border-plum-900/10 bg-white py-2 pl-3.5 pr-10 text-xs text-plum-900 placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-[#393a3b] dark:bg-[#18191a] dark:text-white dark:placeholder:text-[#8a8d91] transition-all shadow-2xs"
+          className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition-all shadow-2xs"
         />
         <button
           type="submit"
           disabled={!content.trim() || createComment.isPending}
           aria-label="Gửi bình luận"
-          className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-brand-600 transition-colors hover:text-brand-700 disabled:opacity-40 dark:text-brand-400 cursor-pointer"
+          className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
         >
           {createComment.isPending ? (
             <Loader2 size={13} className="animate-spin" />
@@ -1226,11 +1226,11 @@ function CommentsSection({
         </div>
       ) : isError ? (
         <Card hover={false} className="flex items-center justify-between gap-3 p-4">
-          <p className="text-sm text-plum-500">Không tải được bình luận.</p>
+          <p className="text-sm text-text-subtle">Không tải được bình luận.</p>
           <Button variant="secondary" size="sm" onClick={() => refetch()}>Thử lại</Button>
         </Card>
       ) : comments.length === 0 ? (
-        <p className="py-6 text-center text-sm text-plum-400">Chưa có bình luận nào — hãy là người đầu tiên bình luận.</p>
+        <p className="py-6 text-center text-sm text-text-subtle">Chưa có bình luận nào — hãy là người đầu tiên bình luận.</p>
       ) : (
         <div className="space-y-3">
           {rootComments.map((root) => {

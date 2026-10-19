@@ -69,6 +69,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             String targetId
     );
 
+    boolean existsByRecipientIdAndTypeAndTargetTypeAndTargetId(
+            Long recipientId,
+            NotificationType type,
+            String targetType,
+            String targetId
+    );
+
     /**
      * Đánh dấu toàn bộ thông báo chưa đọc của người dùng là đã đọc.
      *

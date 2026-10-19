@@ -297,38 +297,11 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
         }
         // 2. Nếu giao dịch vẫn đang PENDING
         else if (tx.getPaymentStatus() == PaymentStatus.PENDING) {
-            // Kiểm tra hết hạn thời gian
-            if (tx.getPaymentExpiresAt().isBefore(Instant.now())) {
-                tx.setPaymentStatus(PaymentStatus.EXPIRED);
-                paymentTransactionRepository.save(tx);
-                log.info("Giao dịch orderCode={} đã hết hạn thanh toán.", orderCode);
-            } else {
-                // Fallback Polling: Chủ động tra cứu trực tiếp từ PayOS phòng khi Webhook không gọi được về Localhost
-                try {
-                    PaymentLink paymentLink = payOSGateway.getPaymentLinkInformation(orderCode);
-                    if (paymentLink != null && paymentLink.getStatus() != null) {
-                        String payOsStatus = paymentLink.getStatus().toString();
-                        if ("PAID".equalsIgnoreCase(payOsStatus)) {
-                            log.info("Phát hiện orderCode={} đã PAID từ PayOS qua Polling fallback!", orderCode);
-                            activatePaidSubscription(tx, Instant.now(), paymentLink.getId());
-                        } else if ("CANCELLED".equalsIgnoreCase(payOsStatus)) {
-                            tx.setPaymentStatus(PaymentStatus.CANCELLED);
-                            paymentTransactionRepository.save(tx);
-                            if (sub != null && sub.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT) {
-                                sub.setStatus(MentorSubscriptionStatus.CANCELLED);
-                                mentorSubscriptionRepository.save(sub);
-                                if (sub.getMentorProfile() != null) {
-                                    mentorEligibilityService.recalculateMentorStatus(sub.getMentorProfile().getId());
-                                }
-                            }
-                        } else if ("EXPIRED".equalsIgnoreCase(payOsStatus)) {
-                            tx.setPaymentStatus(PaymentStatus.EXPIRED);
-                            paymentTransactionRepository.save(tx);
-                        }
-                    }
-                } catch (Exception ex) {
-                    log.warn("Không thể kiểm tra trạng thái từ PayOS Gateway cho orderCode={}: {}", orderCode, ex.getMessage());
-                }
+            // Luôn hỏi PayOS trước: người dùng có thể đã trả tiền sát giờ hết hạn
+            try {
+                syncPendingWithPayOS(tx);
+            } catch (Exception ex) {
+                log.warn("Không thể kiểm tra trạng thái từ PayOS Gateway cho orderCode={}: {}", orderCode, ex.getMessage());
             }
         }
 
@@ -436,13 +409,22 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
         if (data == null || data.getOrderCode() == null) {
             throw new BadRequestException("Dữ liệu Webhook PayOS không hợp lệ.");
         }
+        handleVerifiedWebhook(data);
+    }
 
+    @Override
+    @Transactional
+    public void handleVerifiedWebhook(WebhookData data) {
         Long orderCode = data.getOrderCode();
         log.info("Webhook PayOS hợp lệ cho orderCode={}, code={}, amount={}", orderCode, data.getCode(), data.getAmount());
 
         // 2. Khóa bi quan bản ghi giao dịch (Pessimistic Write Lock) chống race condition
-        PaymentTransaction tx = paymentTransactionRepository.findForUpdateByOrderCode(orderCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch với orderCode: " + orderCode));
+        PaymentTransaction tx = paymentTransactionRepository.findForUpdateByOrderCode(orderCode).orElse(null);
+        if (tx == null) {
+            // orderCode của luồng khác (thanh toán Task) hoặc payload kiểm tra của PayOS: bỏ qua, không trả lỗi
+            log.info("orderCode={} không thuộc giao dịch gói Mentor, bỏ qua.", orderCode);
+            return;
+        }
 
         // 3. Đảm bảo giao dịch thuộc loại MENTOR_SUBSCRIPTION
         if (tx.getTransactionType() != TransactionType.MENTOR_SUBSCRIPTION) {
@@ -458,8 +440,11 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
 
         // 5. Đối soát số tiền thanh toán (amount validation)
         if (data.getAmount() != null && tx.getAmount().longValue() != data.getAmount()) {
+            // Ghi nhận FAILED thay vì ném lỗi: ném lỗi làm PayOS gửi lại Webhook liên tục
             log.error("Số tiền thanh toán Webhook không khớp: DB={}, Webhook={}", tx.getAmount(), data.getAmount());
-            throw new BadRequestException("Số tiền thanh toán không khớp với hóa đơn hệ thống.");
+            tx.setPaymentStatus(PaymentStatus.FAILED);
+            paymentTransactionRepository.save(tx);
+            return;
         }
 
         // 6. Xử lý kết quả giao dịch
@@ -470,6 +455,46 @@ public class MentorPaymentServiceImpl implements MentorPaymentService {
             tx.setPaymentStatus(PaymentStatus.FAILED);
             paymentTransactionRepository.save(tx);
             log.warn("Giao dịch orderCode={} bị Payment Gateway báo thất bại với mã: {}", orderCode, data.getCode());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void reconcilePendingPayment(Long orderCode) {
+        PaymentTransaction tx = paymentTransactionRepository.findForUpdateByOrderCode(orderCode).orElse(null);
+        if (tx == null || tx.getPaymentStatus() != PaymentStatus.PENDING) {
+            return;
+        }
+        try {
+            syncPendingWithPayOS(tx);
+        } catch (Exception ex) {
+            // PayOS không phản hồi: chỉ tự hết hạn khi đã quá hạn lâu (link PayOS chắc chắn không còn thanh toán được)
+            if (tx.getPaymentExpiresAt().plus(java.time.Duration.ofDays(1)).isBefore(Instant.now())) {
+                tx.setPaymentStatus(PaymentStatus.EXPIRED);
+                paymentTransactionRepository.save(tx);
+            }
+            log.warn("Đối soát gói Mentor orderCode={} chưa thành công: {}", orderCode, ex.getMessage());
+        }
+    }
+
+    /** Đồng bộ một giao dịch PENDING theo trạng thái thật trên PayOS. */
+    private void syncPendingWithPayOS(PaymentTransaction tx) {
+        PaymentLink paymentLink = payOSGateway.getPaymentLinkInformation(tx.getOrderCode());
+        String payOsStatus = paymentLink != null && paymentLink.getStatus() != null ? paymentLink.getStatus().toString() : "";
+        MentorSubscription sub = tx.getMentorSubscription();
+        if ("PAID".equalsIgnoreCase(payOsStatus)) {
+            log.info("Phát hiện orderCode={} đã PAID trên PayOS.", tx.getOrderCode());
+            activatePaidSubscription(tx, Instant.now(), paymentLink.getId());
+        } else if ("CANCELLED".equalsIgnoreCase(payOsStatus) || "EXPIRED".equalsIgnoreCase(payOsStatus)) {
+            tx.setPaymentStatus("CANCELLED".equalsIgnoreCase(payOsStatus) ? PaymentStatus.CANCELLED : PaymentStatus.EXPIRED);
+            paymentTransactionRepository.save(tx);
+            if (sub != null && sub.getStatus() == MentorSubscriptionStatus.PENDING_PAYMENT) {
+                sub.setStatus(MentorSubscriptionStatus.CANCELLED);
+                mentorSubscriptionRepository.save(sub);
+                if (sub.getMentorProfile() != null) {
+                    mentorEligibilityService.recalculateMentorStatus(sub.getMentorProfile().getId());
+                }
+            }
         }
     }
 

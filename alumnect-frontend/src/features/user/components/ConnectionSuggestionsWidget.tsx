@@ -68,12 +68,12 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
       <div className="min-w-0 flex-1">
         <Link
           to={`/app/profile?userId=${user.userId}`}
-          className="block truncate text-sm font-bold text-plum-900 dark:text-plum-100 hover:underline"
+          className="block truncate text-sm font-bold text-text hover:underline"
           title={user.fullName}
         >
           {user.fullName}
         </Link>
-        <p className="truncate text-xs text-plum-500 dark:text-plum-400">
+        <p className="truncate text-xs text-text-subtle">
           {subtitle}
         </p>
       </div>
@@ -84,8 +84,8 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
         className={cn(
           'shrink-0 text-xs font-semibold',
           isFollowing
-            ? 'bg-plum-900/[0.06] text-plum-500 hover:bg-plum-900/[0.08]'
-            : 'border border-plum-900/10 text-plum-700 hover:bg-plum-900/[0.05] hover:text-plum-900',
+            ? 'bg-border text-text-subtle hover:bg-surface-3'
+            : 'border border-border text-text-muted hover:bg-surface-2 hover:text-text',
         )}
         disabled={isPending}
         onClick={handleFollowToggle}
@@ -153,10 +153,10 @@ export function ConnectionSuggestionsWidget({ limit = 4, className }: Connection
   return (
     <Card hover={false} className={cn('p-5', className)}>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-bold text-plum-900">Gợi ý kết nối</h3>
+        <h3 className="font-bold text-text">Gợi ý kết nối</h3>
         <Link
           to="/app/alumni"
-          className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+          className="text-xs font-semibold text-primary-solid hover:text-primary-solid"
         >
           Xem tất cả
         </Link>

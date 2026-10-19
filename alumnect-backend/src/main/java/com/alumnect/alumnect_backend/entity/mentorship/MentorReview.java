@@ -47,6 +47,11 @@ public class MentorReview {
     @JoinColumn(name = "student_id", nullable = false)
     private User student;
 
+    /** Task đã hoàn thành được đánh giá */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id")
+    private MentoringTask task;
+
     /** Số sao đánh giá từ 1 đến 5 */
     @Column(name = "rating", nullable = false)
     private Integer rating;

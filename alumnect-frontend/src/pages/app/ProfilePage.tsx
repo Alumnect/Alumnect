@@ -362,9 +362,9 @@ export function ProfilePage() {
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 space-y-6">
       {/* TOP FACEBOOK PROFILE HEADER CARD (Đồng nhất cho cả View & Edit mode) */}
       <Reveal>
-        <div className="bg-white rounded-3xl border border-plum-900/5 shadow-sm overflow-hidden text-left">
+        <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden text-left">
           {/* 1. Ảnh Bìa với Nút camera đổi ảnh bìa kiểu Facebook */}
-          <div className="relative h-52 sm:h-72 w-full bg-slate-100">
+          <div className="relative h-52 sm:h-72 w-full bg-surface-2">
             <SmartImage
               src={profile.coverUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1200'}
               alt="Profile cover"
@@ -372,7 +372,7 @@ export function ProfilePage() {
               imgClassName="object-cover"
             />
             {isOwnProfile && (
-              <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-plum-900 bg-white/90 hover:bg-white backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95">
+              <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-text bg-surface hover:bg-surface backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95">
                 {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
                 <span>Chỉnh sửa ảnh bìa</span>
                 <input
@@ -396,10 +396,10 @@ export function ProfilePage() {
                   name={profile.fullName}
                   size={140}
                   ring
-                  className="bg-white shadow-xl rounded-full border-4 border-white"
+                  className="bg-surface shadow-xl rounded-full border-4 border-white"
                 />
                 {isOwnProfile && (
-                  <label className="absolute bottom-2 right-2 p-2 rounded-full bg-plum-100 hover:bg-plum-200 text-plum-800 shadow-md cursor-pointer transition-all border-2 border-white hover:scale-110 active:scale-90">
+                  <label className="absolute bottom-2 right-2 p-2 rounded-full bg-surface-2 hover:bg-plum-200 text-text shadow-md cursor-pointer transition-all border-2 border-white hover:scale-110 active:scale-90">
                     {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={16} />}
                     <input
                       type="file"
@@ -420,7 +420,7 @@ export function ProfilePage() {
                     size="md"
                     leftIcon={activeTab === 'about' ? <User size={16} /> : <Edit3 size={16} />}
                     onClick={() => setActiveTab(activeTab === 'about' ? 'profile' : 'about')}
-                    className="rounded-2xl font-bold px-5 border border-plum-900/10 shadow-sm"
+                    className="rounded-2xl font-bold px-5 border border-border shadow-sm"
                   >
                     {activeTab === 'about' ? 'Xem trang cá nhân' : 'Chỉnh sửa hồ sơ'}
                   </Button>
@@ -431,7 +431,7 @@ export function ProfilePage() {
                       size="md"
                       leftIcon={<MessageCircle size={16} />}
                       onClick={() => navigate(`/app/messages?userId=${profile.userId}`)}
-                      className="rounded-2xl font-bold px-5 border border-plum-900/10 shadow-sm text-sm hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                      className="rounded-2xl font-bold px-5 border border-border shadow-sm text-sm hover:bg-primary-soft hover:text-primary-solid transition-colors"
                     >
                       Nhắn tin
                     </Button>
@@ -455,7 +455,7 @@ export function ProfilePage() {
                         {profile.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
                       </Button>
                       {followError && (
-                        <p className="text-xs text-rose-500 font-medium max-w-[200px] text-right">
+                        <p className="text-xs text-danger font-medium max-w-[200px] text-right">
                           {followError}
                         </p>
                       )}
@@ -468,32 +468,32 @@ export function ProfilePage() {
             {/* Thông tin tên & giới thiệu ngắn */}
             <div className="space-y-1.5 pb-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-plum-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
                   {profile.fullName}
                 </h1>
                 {isAlumni ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-[#d45105] dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-[#d45105] dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
                     <GraduationCap size={13} className="shrink-0" />
                     Cựu sinh viên
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200/80 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:bg-blue-950/40 dark:border-blue-800/60 dark:text-blue-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-info-soft border border-info-border px-2.5 py-0.5 text-xs font-bold text-info">
                     <GraduationCap size={13} className="shrink-0" />
                     Sinh viên
                   </span>
                 )}
                 {profile.studentCode && (
-                  <span className="text-xs sm:text-sm font-semibold text-plum-500 bg-plum-900/[0.04] px-2.5 py-0.5 rounded-full border border-plum-900/10 self-center">
+                  <span className="text-xs sm:text-sm font-semibold text-text-subtle bg-surface-2 px-2.5 py-0.5 rounded-full border border-border self-center">
                     ({profile.studentCode})
                   </span>
                 )}
               </div>
 
-              <p className="text-sm sm:text-base font-medium text-plum-600">
+              <p className="text-sm sm:text-base font-medium text-text-muted">
                 {profile.primaryExperience?.title ? (
                   <span>
                     {profile.primaryExperience.title} tại{' '}
-                    <strong className="font-semibold text-plum-800">
+                    <strong className="font-semibold text-text">
                       {profile.primaryExperience.company}
                     </strong>
                   </span>
@@ -502,25 +502,25 @@ export function ProfilePage() {
                 )}
               </p>
 
-              <div className="flex items-center gap-4 text-sm text-plum-500 font-medium pt-1 pb-1">
+              <div className="flex items-center gap-4 text-sm text-text-subtle font-medium pt-1 pb-1">
                 <button
                   onClick={() => handleOpenFollowModal('followers')}
-                  className="hover:text-brand-600 transition-colors"
+                  className="hover:text-primary-solid transition-colors"
                 >
-                  <strong className="font-bold text-plum-900">{profile.followersCount || 0}</strong> người theo dõi
+                  <strong className="font-bold text-text">{profile.followersCount || 0}</strong> người theo dõi
                 </button>
                 <span className="text-plum-300">•</span>
                 <button
                   onClick={() => handleOpenFollowModal('following')}
-                  className="hover:text-brand-600 transition-colors"
+                  className="hover:text-primary-solid transition-colors"
                 >
-                  Đang theo dõi <strong className="font-bold text-plum-900">{profile.followingCount || 0}</strong> người
+                  Đang theo dõi <strong className="font-bold text-text">{profile.followingCount || 0}</strong> người
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 text-xs sm:text-sm text-plum-500">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 text-xs sm:text-sm text-text-subtle">
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <MapPin size={15} className="text-plum-400" />{' '}
+                  <MapPin size={15} className="text-text-subtle" />{' '}
                   {profile.city ||
                     formatLocationCityOnly(profile.primaryExperience?.location, profile.primaryExperience?.locationCity) ||
                     'Đại học FPT'}
@@ -528,32 +528,32 @@ export function ProfilePage() {
 
 
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <GraduationCap size={15} className="text-plum-400" />
+                  <GraduationCap size={15} className="text-text-subtle" />
                   {profile.major ? `${profile.major.name} (${profile.major.code})` : 'N/A'}
                   {profile.cohort ? ` · K${profile.cohort}` : ''}
                   {profile.graduationYear ? ` · TN ${profile.graduationYear}` : ''}
                 </span>
                 {profile.campus && (
                   <span className="inline-flex items-center gap-1.5 font-medium">
-                    <Building size={15} className="text-plum-400" />
+                    <Building size={15} className="text-text-subtle" />
                     {profile.campus}
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <Calendar size={15} className="text-plum-400" />
+                  <Calendar size={15} className="text-text-subtle" />
                   Tham gia {new Date(profile.createdAt).toLocaleDateString('vi-VN')}
                 </span>
               </div>
             </div>
 
             {/* Navigation Tabs Bar phong cách Facebook & Instagram */}
-            <div className="flex border-t border-plum-900/5 pt-1 gap-1">
+            <div className="no-scrollbar -mx-1 flex gap-1 overflow-x-auto border-t border-border px-1 pt-1">
               <button
                 type="button"
                 onClick={() => setActiveTab('profile')}
-                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === 'profile'
-                  ? 'border-brand-500 text-brand-600'
-                  : 'border-transparent text-plum-500 hover:text-plum-800'
+                className={`shrink-0 whitespace-nowrap min-h-11 py-3 px-3 sm:px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer ${activeTab === 'profile'
+                  ? 'border-primary text-primary-solid'
+                  : 'border-transparent text-text-subtle hover:text-text'
                   }`}
               >
                 Tất cả hồ sơ
@@ -561,9 +561,9 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('posts')}
-                className={`py-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === 'posts'
-                  ? 'border-brand-500 text-brand-600'
-                  : 'border-transparent text-plum-500 hover:text-plum-800'
+                className={`shrink-0 whitespace-nowrap min-h-11 py-3 px-3 sm:px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer ${activeTab === 'posts'
+                  ? 'border-primary text-primary-solid'
+                  : 'border-transparent text-text-subtle hover:text-text'
                   }`}
               >
                 Bài viết
@@ -572,9 +572,9 @@ export function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('about')}
-                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === 'about'
-                    ? 'border-brand-500 text-brand-600'
-                    : 'border-transparent text-plum-500 hover:text-plum-800'
+                  className={`shrink-0 whitespace-nowrap min-h-11 py-3 px-3 sm:px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer ${activeTab === 'about'
+                    ? 'border-primary text-primary-solid'
+                    : 'border-transparent text-text-subtle hover:text-text'
                     }`}
                 >
                   Giới thiệu
@@ -584,12 +584,12 @@ export function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('saved')}
-                  className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'saved'
-                    ? 'border-brand-500 text-brand-600'
-                    : 'border-transparent text-plum-500 hover:text-plum-800'
+                  className={`shrink-0 whitespace-nowrap min-h-11 py-3 px-3 sm:px-4 text-sm font-bold border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${activeTab === 'saved'
+                    ? 'border-primary text-primary-solid'
+                    : 'border-transparent text-text-subtle hover:text-text'
                     }`}
                 >
-                  <Bookmark size={14} className={activeTab === 'saved' ? 'fill-brand-600' : ''} />
+                  <Bookmark size={14} className={activeTab === 'saved' ? 'fill-current' : ''} />
                   Bài viết đã lưu
                 </button>
               )}
@@ -618,19 +618,19 @@ export function ProfilePage() {
           {/* Thông tin liên hệ */}
           <Reveal>
             <Card hover={false} className="p-6 text-left">
-              <h2 className="text-lg font-bold text-plum-900">Thông tin liên hệ</h2>
+              <h2 className="text-lg font-bold text-text">Thông tin liên hệ</h2>
               <div className="mt-4 space-y-4">
-                <div className="flex items-center gap-3 text-sm text-plum-700">
-                  <Mail size={16} className="text-plum-400" />
+                <div className="flex items-center gap-3 text-sm text-text-muted">
+                  <Mail size={16} className="text-text-subtle" />
                   <span>{profile.email}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-plum-700">
-                  <Phone size={16} className="text-plum-400" />
+                <div className="flex items-center gap-3 text-sm text-text-muted">
+                  <Phone size={16} className="text-text-subtle" />
                   <span>{profile.phone || 'Chưa cập nhật số điện thoại'}</span>
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-plum-400 mb-2.5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-text-subtle mb-2.5">
                     Liên kết mạng xã hội & Website
                   </p>
                   {profile.socialLinks && profile.socialLinks.length > 0 ? (
@@ -643,7 +643,7 @@ export function ProfilePage() {
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-plum-600 bg-plum-50/50 border border-plum-900/5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm ${platform.color}`}
+                            className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-text-muted bg-surface-2 border border-border hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm ${platform.color}`}
                           >
                             {platform.icon}
                             <span>{platform.name}</span>
@@ -652,7 +652,7 @@ export function ProfilePage() {
                       })}
                     </div>
                   ) : (
-                    <p className="text-xs text-plum-400 italic">
+                    <p className="text-xs text-text-subtle italic">
                       Thành viên này chưa cập nhật liên kết mạng xã hội nào.
                     </p>
                   )}
@@ -664,8 +664,8 @@ export function ProfilePage() {
           {/* Giới thiệu */}
           <Reveal delay={0.1}>
             <Card hover={false} className="p-6 text-left">
-              <h2 className="text-lg font-bold text-plum-900">Giới thiệu</h2>
-              <p className="mt-3 text-sm leading-relaxed text-plum-600 whitespace-pre-line">
+              <h2 className="text-lg font-bold text-text">Giới thiệu</h2>
+              <p className="mt-3 text-sm leading-relaxed text-text-muted whitespace-pre-line">
                 {profile.biography || 'Thành viên này chưa cập nhật phần tự giới thiệu bản thân.'}
               </p>
             </Card>
@@ -676,8 +676,8 @@ export function ProfilePage() {
             <Card hover={false} className="p-6 text-left">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Briefcase size={20} className="text-brand-500" />
-                  <h2 className="text-lg font-bold text-plum-900">Hành trình & Sự nghiệp</h2>
+                  <Briefcase size={20} className="text-primary-solid" />
+                  <h2 className="text-lg font-bold text-text">Hành trình & Sự nghiệp</h2>
                 </div>
                 {isOwnProfile && (
                   <Button
@@ -685,7 +685,7 @@ export function ProfilePage() {
                     size="sm"
                     leftIcon={<Plus size={15} />}
                     onClick={handleOpenCreateExp}
-                    className="rounded-xl border border-plum-900/10 font-semibold"
+                    className="rounded-xl border border-border font-semibold"
                   >
                     Thêm vị trí
                   </Button>
@@ -701,30 +701,30 @@ export function ProfilePage() {
                         className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition-all ${exp.isPrimary
                           ? 'bg-amber-400 ring-amber-300'
                           : exp.isCurrent
-                            ? 'bg-brand-500 ring-brand-200'
+                            ? 'bg-primary-solid ring-brand-200'
                             : 'bg-plum-300 ring-plum-100'
                           }`}
                       />
 
-                      <div className="rounded-2xl p-4 transition-all duration-200 hover:bg-plum-50/50 border border-transparent hover:border-plum-900/5">
+                      <div className="rounded-2xl p-4 transition-all duration-200 hover:bg-surface-2 border border-transparent hover:border-border">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="text-base font-extrabold text-plum-900">{exp.title}</h3>
+                              <h3 className="text-base font-extrabold text-text">{exp.title}</h3>
                               {exp.isPrimary && (
-                                <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200/50">
-                                  <Star size={11} className="fill-amber-500 text-amber-500" /> Vai trò chính
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-warning-soft px-2 py-0.5 text-xs font-bold text-warning border border-warning-border">
+                                  <Star size={11} className="fill-warning text-warning" /> Vai trò chính
                                 </span>
                               )}
                               {exp.isCurrent && !exp.isPrimary && (
-                                <span className="inline-flex items-center rounded-lg bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 border border-brand-200/50">
+                                <span className="inline-flex items-center rounded-lg bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid border border-brand-200/50">
                                   Hiện tại
                                 </span>
                               )}
                             </div>
 
-                            <p className="text-sm font-bold text-plum-700 mt-0.5 flex items-center gap-1.5">
-                              <Building size={14} className="text-plum-400" />
+                            <p className="text-sm font-bold text-text-muted mt-0.5 flex items-center gap-1.5">
+                              <Building size={14} className="text-text-subtle" />
                               {exp.company}
                             </p>
                           </div>
@@ -738,7 +738,7 @@ export function ProfilePage() {
                                   type="button"
                                   onClick={() => handleOpenPromoteExp(exp)}
                                   title="Thăng chức / Đổi vai trò mới tại công ty"
-                                  className="p-1.5 rounded-xl text-plum-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
+                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition-all"
                                 >
                                   <TrendingUp size={15} />
                                 </button>
@@ -748,7 +748,7 @@ export function ProfilePage() {
                                   type="button"
                                   onClick={() => handleOpenRejoinExp(exp)}
                                   title="Thêm kinh nghiệm khác tại công ty này (Hiện tại hoặc Quá khứ)"
-                                  className="p-1.5 rounded-xl text-plum-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
+                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition-all"
                                 >
                                   <PlusSquare size={15} />
                                 </button>
@@ -757,7 +757,7 @@ export function ProfilePage() {
                                 type="button"
                                 onClick={() => handleOpenEditExp(exp)}
                                 title="Chỉnh sửa vị trí"
-                                className="p-1.5 rounded-xl text-plum-400 hover:text-plum-900 hover:bg-plum-100/50 transition-all"
+                                className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-plum-100/50 transition-all"
                               >
                                 <Edit3 size={15} />
                               </button>
@@ -765,7 +765,7 @@ export function ProfilePage() {
                                 type="button"
                                 onClick={() => setDeleteExpId(exp.id)}
                                 title="Xóa vị trí"
-                                className="p-1.5 rounded-xl text-plum-400 hover:text-coral-600 hover:bg-coral-50 transition-all"
+                                className="p-1.5 rounded-xl text-text-subtle hover:text-danger hover:bg-danger-soft transition-all"
                               >
                                 <Trash2 size={15} />
                               </button>
@@ -773,15 +773,15 @@ export function ProfilePage() {
                           )}
                         </div>
 
-                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-plum-500">
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-subtle">
                           <span className="inline-flex items-center gap-1">
-                            <Calendar size={13} className="text-plum-400" />
+                            <Calendar size={13} className="text-text-subtle" />
                             {exp.startDate ? formatPeriodDate(exp.startDate) : ''} - {exp.isCurrent ? 'Hiện tại' : (exp.endDate ? formatPeriodDate(exp.endDate) : '')}
 
                           </span>
                           {(exp.locationCity || exp.location) && (
                             <span className="inline-flex items-center gap-1">
-                              <MapPin size={13} className="text-plum-400" />
+                              <MapPin size={13} className="text-text-subtle" />
                               {formatLocationCityOnly(exp.location, exp.locationCity)}
                             </span>
                           )}
@@ -789,7 +789,7 @@ export function ProfilePage() {
                         </div>
 
                         {exp.description && (
-                          <p className="mt-2.5 text-xs leading-relaxed text-plum-600 whitespace-pre-line border-t border-plum-900/5 pt-2">
+                          <p className="mt-2.5 text-xs leading-relaxed text-text-muted whitespace-pre-line border-t border-border pt-2">
                             {exp.description}
                           </p>
                         )}
@@ -798,7 +798,7 @@ export function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <p className="mt-4 text-xs text-plum-400 italic">
+                <p className="mt-4 text-xs text-text-subtle italic">
                   Thành viên này chưa thêm lịch sử làm việc nào.
                 </p>
               )}
@@ -810,20 +810,20 @@ export function ProfilePage() {
             <Reveal delay={0.3}>
               <Card hover={false} className="p-6 text-left">
                 <div className="flex items-center gap-2 mb-4">
-                  <Sparkles size={20} className="text-brand-500" />
-                  <h2 className="text-lg font-bold text-plum-900">Kỹ năng chuyên môn</h2>
+                  <Sparkles size={20} className="text-primary-solid" />
+                  <h2 className="text-lg font-bold text-text">Kỹ năng chuyên môn</h2>
                 </div>
                 <div className="space-y-4">
                   {Object.entries(skillGroups).map(([groupName, skills]) => (
                     <div key={groupName}>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 mb-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle mb-2">
                         {groupName}
                       </h3>
                       <div className="flex flex-wrap gap-2">
                         {skills.map((skill) => (
                           <span
                             key={skill.id}
-                            className="inline-flex items-center rounded-xl bg-plum-50/70 px-3.5 py-1.5 text-xs font-semibold text-plum-700 border border-plum-900/5 shadow-2xs"
+                            className="inline-flex items-center rounded-xl bg-plum-50/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted border border-border shadow-2xs"
                           >
                             {skill.skillName}
                           </span>
@@ -851,14 +851,14 @@ export function ProfilePage() {
       {/* Modal Xác nhận xóa Kinh nghiệm */}
       {deleteExpId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-3xl border border-plum-900/5 shadow-2xl p-6 text-left space-y-4">
-            <div className="flex items-center gap-3 text-coral-600">
-              <span className="p-2 rounded-2xl bg-coral-50 border border-coral-200/40">
+          <div className="w-full max-w-md bg-surface rounded-3xl border border-border shadow-2xl p-6 text-left space-y-4">
+            <div className="flex items-center gap-3 text-danger">
+              <span className="p-2 rounded-2xl bg-danger-soft border border-danger-border">
                 <AlertTriangle size={20} />
               </span>
-              <h3 className="text-lg font-bold text-plum-900">Xóa kinh nghiệm</h3>
+              <h3 className="text-lg font-bold text-text">Xóa kinh nghiệm</h3>
             </div>
-            <p className="text-sm text-plum-600">
+            <p className="text-sm text-text-muted">
               Bạn có chắc muốn xóa kinh nghiệm làm việc này không?
             </p>
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -876,7 +876,7 @@ export function ProfilePage() {
                 size="sm"
                 onClick={handleConfirmDeleteExp}
                 disabled={deleteExpMutation.isPending}
-                className="rounded-xl bg-coral-500 hover:bg-coral-600 text-white"
+                className="rounded-xl bg-danger hover:opacity-90 text-text-inverse"
               >
                 {deleteExpMutation.isPending && <Loader2 size={14} className="animate-spin mr-1" />}
                 Xóa

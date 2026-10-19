@@ -29,13 +29,13 @@ export function JoinRequestsList({ groupId }: { groupId: number }) {
     return (
       <div className="space-y-2">
         {[0, 1].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-xl bg-plum-900/[0.05]" />
+          <div key={i} className="h-16 animate-pulse rounded-xl bg-surface-2" />
         ))}
       </div>
     )
   }
   if (isError) {
-    return <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">{(error as Error)?.message ?? 'Không tải được danh sách yêu cầu.'}</p>
+    return <p className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{(error as Error)?.message ?? 'Không tải được danh sách yêu cầu.'}</p>
   }
   if (requests.length === 0) {
     return <EmptyState icon={<Inbox size={22} />} title="Không có yêu cầu nào đang chờ duyệt" description="Khi có người gửi yêu cầu tham gia, họ sẽ xuất hiện ở đây." className="py-10" />
@@ -45,7 +45,7 @@ export function JoinRequestsList({ groupId }: { groupId: number }) {
 
   return (
     <div>
-      <ul className="divide-y divide-plum-900/5">
+      <ul className="divide-y divide-border">
         {requests.map((r) => {
           const busy = busyId === r.requestId
           return (
@@ -54,10 +54,10 @@ export function JoinRequestsList({ groupId }: { groupId: number }) {
                 <Avatar src={r.avatarUrl ?? ''} name={r.fullName} size={42} />
               </Link>
               <div className="min-w-0 flex-1">
-                <Link to={`/app/profile?userId=${r.userId}`} className="block truncate text-sm font-semibold text-plum-900 hover:text-brand-600">
+                <Link to={`/app/profile?userId=${r.userId}`} className="block truncate text-sm font-semibold text-text hover:text-primary-solid">
                   {r.fullName}
                 </Link>
-                <p className="truncate text-xs text-plum-500">
+                <p className="truncate text-xs text-text-subtle">
                   {r.headline ? `${r.headline} · ` : ''}
                   {r.requestedAt ? `Gửi lúc ${new Date(r.requestedAt).toLocaleString('vi-VN')}` : ''}
                 </p>

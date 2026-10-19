@@ -25,16 +25,16 @@ public class JwtService {
 
     // Khóa bí mật dùng để ký token mã hóa Base64 (được tiêm vào từ file cấu
     // hình/môi trường)
-    @Value("${app.jwt.secret}")
+    @Value("${app.jwt.secret:${JWT_SECRET:MTIzNDU2NDU5OThEMzIxM0F6eGMzNTE2NTQzMjEzMjE2NTQ5OHEzMTNhMnMxZDMyMnp4M2MyMQ==}}")
     private String keySecret;
 
     // Thời gian sống của Access Token (mili-giây), được tiêm vào từ file cấu
     // hình/môi trường
-    @Value("${app.jwt.expiration}")
+    @Value("${app.jwt.expiration:${JWT_EXPIRATION:86400000}}")
     private long jwtExpiration;
 
     // Thời gian sống của Refresh Token (mili-giây) — BR-03: 7 ngày
-    @Value("${app.jwt.refresh-expiration}")
+    @Value("${app.jwt.refresh-expiration:${JWT_REFRESH_EXPIRATION:604800000}}")
     private long jwtRefreshExpiration;
 
     /**

@@ -74,18 +74,18 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
     return (
       <Card hover={false} className={cn('p-5', className)}>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-bold text-plum-900 flex items-center gap-1.5">
-            <CalendarDays size={16} className="text-brand-600" />
+          <h3 className="font-bold text-text flex items-center gap-1.5">
+            <CalendarDays size={16} className="text-primary-solid" />
             Sự kiện sắp diễn ra
           </h3>
           <Link
             to="/app/events"
-            className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+            className="text-xs font-semibold text-primary-solid hover:text-primary-solid"
           >
             Tất cả
           </Link>
         </div>
-        <div className="py-4 text-center text-xs text-plum-400">
+        <div className="py-4 text-center text-xs text-text-subtle">
           <p>Chưa có sự kiện nào sắp tới</p>
         </div>
       </Card>
@@ -95,13 +95,13 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
   return (
     <Card hover={false} className={cn('p-5', className)}>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-bold text-plum-900 flex items-center gap-1.5">
-          <CalendarDays size={16} className="text-brand-600" />
+        <h3 className="font-bold text-text flex items-center gap-1.5">
+          <CalendarDays size={16} className="text-primary-solid" />
           Sự kiện sắp diễn ra
         </h3>
         <Link
           to="/app/events"
-          className="text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+          className="text-xs font-semibold text-primary-solid hover:text-primary-solid transition-colors"
         >
           Xem tất cả
         </Link>
@@ -117,17 +117,17 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
           return (
             <li
               key={post.id}
-              className="group/event flex items-start gap-3 rounded-xl p-1.5 -mx-1.5 transition-colors hover:bg-plum-900/[0.03]"
+              className="group/event flex items-start gap-3 rounded-xl p-1.5 -mx-1.5 transition-colors hover:bg-surface-2"
             >
               <Link
                 to={`/app/posts/${post.id}`}
-                className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-plum-900/[0.04] py-1.5 text-center ring-1 ring-inset ring-plum-900/10 transition-colors group-hover/event:bg-brand-50 group-hover/event:ring-brand-200"
+                className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-surface-2 py-1.5 text-center ring-1 ring-inset ring-border transition-colors group-hover/event:bg-brand-50 group-hover/event:ring-brand-200"
                 title={`Xem chi tiết ${eventTitle}`}
               >
-                <span className="text-[10px] font-bold uppercase text-brand-600">
+                <span className="text-xs font-bold uppercase text-primary-solid">
                   {dateInfo.month}
                 </span>
-                <span className="text-base font-extrabold text-plum-900">
+                <span className="text-base font-extrabold text-text">
                   {dateInfo.day}
                 </span>
               </Link>
@@ -135,13 +135,13 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
               <div className="min-w-0 flex-1">
                 <Link
                   to={`/app/posts/${post.id}`}
-                  className="block truncate text-sm font-semibold text-plum-900 group-hover/event:text-brand-600 transition-colors"
+                  className="block truncate text-sm font-semibold text-text group-hover/event:text-brand-600 transition-colors"
                   title={eventTitle}
                 >
                   {eventTitle}
                 </Link>
 
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-plum-400">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-subtle">
                   <span className="flex items-center gap-1">
                     <Users size={11} className="shrink-0" />
                     {compact(event.attendeeCount ?? 0)}

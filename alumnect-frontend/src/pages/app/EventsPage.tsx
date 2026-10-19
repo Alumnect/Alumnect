@@ -58,14 +58,14 @@ export function EventsPage() {
         subtitle="Tham gia các buổi giao lưu, hội thảo và ngày hội cựu sinh viên FPTU."
       />
 
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              'rounded-full px-4 py-2 text-sm font-semibold transition-all',
-              tab === t ? 'bg-brand-600 text-white shadow-sm' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]',
+              'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors',
+              tab === t ? 'bg-primary-solid text-on-primary shadow-raised' : 'bg-surface-2 text-text-muted hover:bg-surface-3',
             )}
           >
             {t}
@@ -103,7 +103,7 @@ export function EventsPage() {
         <>
           {isLoading ? (
             <div className="flex h-64 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary-solid" />
             </div>
           ) : isError ? (
             <EmptyState
@@ -134,11 +134,11 @@ export function EventsPage() {
                         <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-500 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
                         <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
-                          <span className="text-[10px] font-bold uppercase text-gold-600">{dateInfo.month}</span>
-                          <span className="text-xl font-extrabold text-plum-900">{dateInfo.day}</span>
+                          <span className="text-xs font-bold uppercase text-warning">{dateInfo.month}</span>
+                          <span className="text-xl font-extrabold text-text">{dateInfo.day}</span>
                         </div>
                         {event.status === 'CANCELLED' && (
-                          <div className="absolute left-20 top-3 flex items-center gap-1 rounded-xl bg-rose-600/95 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-xs">
+                          <div className="absolute left-20 top-3 flex items-center gap-1 rounded-xl bg-danger-soft px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-xs">
                             <Ban size={13} /> Đã hủy
                           </div>
                         )}
@@ -172,7 +172,7 @@ export function EventsPage() {
                         className={cn(
                           'absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 z-10',
                           (saved[post.id] ?? post.saved)
-                            ? 'bg-white text-[#F27024] shadow-orange-500/20'
+                            ? 'bg-surface text-primary-solid shadow-orange-500/20'
                             : 'bg-black/35 text-white/90 hover:bg-black/55 hover:text-white backdrop-blur-xs'
                         )}
                         aria-label="Lưu sự kiện"
@@ -183,32 +183,32 @@ export function EventsPage() {
                     </div>
                     <div className="flex flex-col justify-between flex-1 p-5">
                       <Link to={`/app/posts/${post.id}`} className="block">
-                        <h2 className="text-lg font-bold text-plum-900 line-clamp-2 hover:underline hover:text-brand-600 transition-colors">{event.title || 'Sự kiện chưa đặt tên'}</h2>
+                        <h2 className="text-lg font-bold text-text line-clamp-2 hover:underline hover:text-primary-solid transition-colors">{event.title || 'Sự kiện chưa đặt tên'}</h2>
                         {event.location && (
-                          <p className="mt-2 flex items-center gap-1.5 text-sm text-plum-500 truncate">
+                          <p className="mt-2 flex items-center gap-1.5 text-sm text-text-subtle truncate">
                             <MapPin size={14} className="shrink-0" /> {event.location}
                           </p>
                         )}
-                        <p className="mt-1 flex items-center gap-1.5 text-sm text-plum-500">
+                        <p className="mt-1 flex items-center gap-1.5 text-sm text-text-subtle">
                           <Clock size={14} className="shrink-0" /> {dateInfo.dateStr} {dateInfo.timeStr && `· ${dateInfo.timeStr}`}
                         </p>
                         {post.text && (
-                          <p className="mt-3 text-sm text-plum-600 line-clamp-3">
+                          <p className="mt-3 text-sm text-text-muted line-clamp-3">
                             {post.text}
                           </p>
                         )}
                       </Link>
-                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-plum-900/8 pt-4">
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
                         <div className="flex flex-1 items-center gap-2 min-w-0">
                           <Link
                             to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-2 min-w-0 hover:text-brand-600 transition-colors group/author"
+                            className="flex items-center gap-2 min-w-0 hover:text-primary-solid transition-colors group/author"
                           >
                             <div className="shrink-0">
                               <Avatar src={post.avatar} name={post.author} size={24} />
                             </div>
-                            <span className="text-[13px] font-medium text-plum-900 truncate group-hover/author:underline group-hover/author:text-brand-600" title={post.author}>
+                            <span className="text-[13px] font-medium text-text truncate group-hover/author:underline group-hover/author:text-brand-600" title={post.author}>
                               {post.author}
                             </span>
                           </Link>
@@ -224,10 +224,10 @@ export function EventsPage() {
                                 status: event.status,
                               })
                             }}
-                            className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-plum-500 hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                            className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-text-subtle hover:bg-primary-soft hover:text-primary-solid transition-colors"
                             title="Bấm để xem danh sách người tham gia"
                           >
-                            <Users size={12} className="text-brand-500" />
+                            <Users size={12} className="text-primary-solid" />
                             <span>
                               {event.attendeeCount ?? 0}
                               {event.capacity ? ` / ${compact(event.capacity)}` : ''}
@@ -249,7 +249,7 @@ export function EventsPage() {
                                     title: event.title,
                                   })
                                 }}
-                                className="h-8 px-3 text-xs gap-1.5 rounded-xl font-semibold border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300"
+                                className="h-8 px-3 text-xs gap-1.5 rounded-xl font-semibold border-danger-border text-danger hover:bg-danger-soft hover:border-danger-border"
                                 title="Hủy tổ chức sự kiện này"
                               >
                                 <Ban size={13} /> Hủy sự kiện

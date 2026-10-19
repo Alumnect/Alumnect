@@ -37,7 +37,7 @@ export function DeleteSalaryContributionModal({
         onClick={handleDelete}
         disabled={deleteMut.isPending}
         leftIcon={deleteMut.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
-        className="border-rose-500 bg-rose-500 text-white hover:bg-rose-600"
+        className="border-danger bg-danger text-text-inverse hover:opacity-90"
       >
         {deleteMut.isPending ? 'Đang xóa…' : 'Xóa'}
       </Button>
@@ -45,13 +45,13 @@ export function DeleteSalaryContributionModal({
   )
 
   return (
-    <Modal isOpen onClose={deleteMut.isPending ? () => {} : onClose} title="Xóa dữ liệu lương" icon={<AlertTriangle size={18} className="text-rose-500" />} footer={footer}>
-      <p className="text-sm text-plum-600">
-        Bạn có chắc muốn xóa lượt đóng góp <span className="font-semibold text-plum-900">"{contribution.jobTitle}"</span> này không? Hành động này{' '}
-        <span className="font-semibold text-rose-600">không thể hoàn tác</span>.
+    <Modal isOpen onClose={deleteMut.isPending ? () => {} : onClose} title="Xóa dữ liệu lương" icon={<AlertTriangle size={18} className="text-danger" />} footer={footer}>
+      <p className="text-sm text-text-muted">
+        Bạn có chắc muốn xóa lượt đóng góp <span className="font-semibold text-text">"{contribution.jobTitle}"</span> này không? Hành động này{' '}
+        <span className="font-semibold text-danger">không thể hoàn tác</span>.
       </p>
       {deleteMut.isError && (
-        <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600">
+        <p className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
           {(deleteMut.error as Error)?.message || 'Không thể xóa, vui lòng thử lại sau.'}
         </p>
       )}

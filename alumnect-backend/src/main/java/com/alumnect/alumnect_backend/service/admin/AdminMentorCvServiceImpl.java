@@ -25,8 +25,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.alumnect.alumnect_backend.common.enums.MentorStatus;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.*;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -71,22 +74,80 @@ public class AdminMentorCvServiceImpl implements AdminMentorCvService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AdminMentorCvResponse> getMentorList(String keyword, Pageable pageable) {
-        log.info("Quản trị viên lấy danh sách Mentor với từ khóa: {}", keyword);
+    public AdminMentorCvResponse getMentorDetail(Long mentorProfileId) {
+        log.info("Quản trị viên xem thông tin quản lý của Mentor có Profile ID: {}", mentorProfileId);
 
-        Page<MentorProfile> page = mentorProfileRepository.findAll(pageable);
+        // Tìm hồ sơ Mentor theo Profile ID hoặc User ID
+        MentorProfile profile = mentorProfileRepository.findById(mentorProfileId)
+                .orElseGet(() -> mentorProfileRepository.findByUserId(mentorProfileId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ Mentor với ID: " + mentorProfileId)));
+
+        return mapToAdminMentorCvResponse(profile);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<AdminMentorCvResponse> getMentorList(String keyword, MentorStatus status, String subscriptionStatus, Pageable pageable) {
+        log.info("Quản trị viên lấy danh sách Mentor với keyword='{}', status={}, subscriptionStatus={}", keyword, status, subscriptionStatus);
+
+        Specification<MentorProfile> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 1. Lọc theo trạng thái hồ sơ Mentor
+            if (status != null) {
+                predicates.add(cb.equal(root.get("mentorStatus"), status));
+            }
+
+            // 2. Lọc theo từ khóa tìm kiếm (tên, email, vị trí hoặc công ty)
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String kw = "%" + keyword.trim().toLowerCase() + "%";
+                Join<MentorProfile, User> userJoin = root.join("user", JoinType.INNER);
+                Join<User, UserProfile> profileJoin = userJoin.join("profile", JoinType.LEFT);
+
+                Expression<String> emailExpr = cb.lower(userJoin.get("email"));
+                Expression<String> nameExpr = cb.lower(profileJoin.get("fullName"));
+
+                // Subquery tìm kiếm trong kinh nghiệm làm việc (Experiences: vị trí hoặc công ty)
+                Subquery<Long> expSub = query.subquery(Long.class);
+                Root<Experience> expRoot = expSub.from(Experience.class);
+                expSub.select(expRoot.get("id"));
+                expSub.where(
+                        cb.equal(expRoot.get("user").get("id"), userJoin.get("id")),
+                        cb.or(
+                                cb.like(cb.lower(expRoot.get("company")), kw),
+                                cb.like(cb.lower(expRoot.get("title")), kw)
+                        )
+                );
+
+                predicates.add(cb.or(
+                        cb.like(emailExpr, kw),
+                        cb.like(nameExpr, kw),
+                        cb.exists(expSub)
+                ));
+            }
+
+            // 3. Lọc theo trạng thái gói dịch vụ
+            if (subscriptionStatus != null && !subscriptionStatus.trim().isEmpty()) {
+                try {
+                    MentorSubscriptionStatus subStatusEnum = MentorSubscriptionStatus.valueOf(subscriptionStatus.trim().toUpperCase());
+                    Subquery<Long> subSub = query.subquery(Long.class);
+                    Root<MentorSubscription> subRoot = subSub.from(MentorSubscription.class);
+                    subSub.select(subRoot.get("id"));
+                    subSub.where(
+                            cb.equal(subRoot.get("mentorProfile").get("id"), root.get("id")),
+                            cb.equal(subRoot.get("status"), subStatusEnum)
+                    );
+                    predicates.add(cb.exists(subSub));
+                } catch (IllegalArgumentException ignored) {
+                    // Bỏ qua giá trị enum không hợp lệ
+                }
+            }
+
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<MentorProfile> page = mentorProfileRepository.findAll(spec, pageable);
         List<AdminMentorCvResponse> responses = page.getContent().stream()
-                .filter(profile -> {
-                    if (keyword == null || keyword.trim().isEmpty()) {
-                        return true;
-                    }
-                    String kw = keyword.trim().toLowerCase();
-                    User user = profile.getUser();
-                    String email = user != null ? user.getEmail().toLowerCase() : "";
-                    UserProfile userProfile = user != null ? userProfileRepository.findById(user.getId()).orElse(null) : null;
-                    String name = userProfile != null && userProfile.getFullName() != null ? userProfile.getFullName().toLowerCase() : "";
-                    return email.contains(kw) || name.contains(kw);
-                })
                 .map(this::mapToAdminMentorCvResponse)
                 .collect(Collectors.toList());
 
@@ -181,6 +242,10 @@ public class AdminMentorCvServiceImpl implements AdminMentorCvService {
                 .subscriptionStartDate(startDate)
                 .subscriptionEndDate(endDate)
                 .updatedAt(profile.getUpdatedAt())
+                .reputationScore(profile.getReputationScore())
+                .completedTasks(profile.getCompletedTasks())
+                .rating(profile.getRating())
+                .reviewCount(profile.getReviewCount())
                 .build();
     }
 }

@@ -90,15 +90,15 @@ export function GroupDetailPage() {
     const notFound = (error as (Error & { status?: number }) | null)?.status === 404
     return (
       <div className="mx-auto max-w-2xl py-10">
-        <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-plum-900/[0.08] p-12 text-center shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400 dark:bg-white/5">
+        <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-border p-12 text-center shadow-card dark:bg-surface">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
             {notFound ? <SearchX size={28} /> : <AlertTriangle size={28} />}
           </span>
           <div>
-            <h2 className="text-xl font-extrabold text-plum-900 dark:text-white">
+            <h2 className="text-xl font-extrabold text-text">
               {notFound ? 'Không tìm thấy hội nhóm' : 'Không tải được hội nhóm'}
             </h2>
-            <p className="mt-1.5 text-sm text-plum-500 dark:text-[#b0b3b8]">
+            <p className="mt-1.5 text-sm text-text-subtle">
               {notFound ? 'Hội nhóm này không tồn tại hoặc đã bị xóa.' : ((error as Error)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.')}
             </p>
           </div>
@@ -167,7 +167,7 @@ export function GroupDetailPage() {
       {/* Nút quay lại */}
       <Link
         to="/app/groups"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-plum-500 transition-colors hover:text-brand-600 dark:text-[#b0b3b8] dark:hover:text-brand-400"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-primary-solid"
       >
         <ArrowLeft size={16} /> Tất cả hội nhóm
       </Link>
@@ -181,14 +181,14 @@ export function GroupDetailPage() {
 
       {/* Thông báo nhóm tạm ngừng */}
       {group.status === 'INACTIVE' && (
-        <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500/10 px-5 py-3 text-sm font-medium text-amber-800 dark:text-amber-300">
-          <Info size={17} className="shrink-0 text-amber-600" />
+        <div className="flex items-center gap-2.5 rounded-2xl bg-warning-soft px-5 py-3 text-sm font-medium text-warning">
+          <Info size={17} className="shrink-0 text-warning" />
           <span>Hội nhóm đang tạm ngừng hoạt động và không nhận thêm thành viên mới.</span>
         </div>
       )}
 
       {/* Thanh điều hướng phụ (Sub-navigation Tabs) chuẩn Threads */}
-      <div className="flex items-center justify-between border-b border-plum-900/[0.08] dark:border-[#393a3b]">
+      <div className="flex items-center justify-between border-b border-border">
         <div className="flex gap-2 sm:gap-6 overflow-x-auto scrollbar-none">
           {tabs.map((t) => {
             const isActive = activeTab === t.key
@@ -199,14 +199,14 @@ export function GroupDetailPage() {
                 className={cn(
                   'relative flex items-center gap-2 pb-3.5 pt-1 text-sm font-bold transition-colors whitespace-nowrap',
                   isActive
-                    ? 'text-brand-600 dark:text-brand-400'
-                    : 'text-plum-500 hover:text-plum-900 dark:text-[#b0b3b8] dark:hover:text-white',
+                    ? 'text-primary-solid'
+                    : 'text-text-subtle hover:text-text',
                 )}
               >
-                <t.icon size={17} className={isActive ? 'text-brand-600 dark:text-brand-400' : 'text-plum-400 dark:text-[#b0b3b8]'} />
+                <t.icon size={17} className={isActive ? 'text-primary-solid' : 'text-text-subtle'} />
                 <span>{t.label}</span>
                 {typeof t.badge === 'number' && (
-                  <span className="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-brand-500 px-1.5 text-[10px] font-black text-white">
+                  <span className="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-primary-solid px-1.5 text-xs font-black text-on-primary">
                     {t.badge}
                   </span>
                 )}
@@ -214,7 +214,7 @@ export function GroupDetailPage() {
                 {isActive && (
                   <motion.div
                     layoutId="group-active-tab-indicator"
-                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-500"
+                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary-solid"
                     transition={TRANSITION.indicator}
                   />
                 )}
@@ -237,12 +237,12 @@ export function GroupDetailPage() {
               >
                 {/* Trạng thái nhóm riêng tư mà người xem chưa là thành viên */}
                 {isPrivateOutsider ? (
-                  <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-plum-900/[0.08] p-10 text-center shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-                    <div className="grid h-16 w-16 place-items-center rounded-3xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20">
+                  <Card hover={false} className="flex flex-col items-center gap-4 rounded-3xl border border-border p-10 text-center shadow-card dark:bg-surface">
+                    <div className="grid h-16 w-16 place-items-center rounded-3xl bg-warning-soft text-warning">
                       <Lock size={32} />
                     </div>
                     <div className="max-w-md">
-                      <h3 className="text-xl font-extrabold text-plum-900 dark:text-white">
+                      <h3 className="text-xl font-extrabold text-text">
                         Hội nhóm riêng tư
                       </h3>
                     </div>
@@ -275,15 +275,15 @@ export function GroupDetailPage() {
                 transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="space-y-5"
               >
-                <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-                  <h3 className="text-lg font-black text-plum-900 dark:text-white">Mô tả hội nhóm</h3>
-                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-plum-700 dark:text-plum-200">
+                <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
+                  <h3 className="text-lg font-black text-text">Mô tả hội nhóm</h3>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-text-muted">
                     {group.description}
                   </p>
 
                   {group.topics.length > 0 && (
-                    <div className="mt-5 border-t border-plum-900/[0.06] pt-4 dark:border-[#393a3b]">
-                      <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-plum-400">
+                    <div className="mt-5 border-t border-border pt-4">
+                      <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-text-subtle">
                         Chủ đề hoạt động
                       </h4>
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -298,49 +298,49 @@ export function GroupDetailPage() {
                 </Card>
 
                 {/* Quy định tham gia (Community Rules) */}
-                <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
-                  <div className="flex items-center gap-2 text-plum-900 dark:text-white">
-                    <ScrollText size={20} className="text-brand-500" />
+                <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
+                  <div className="flex items-center gap-2 text-text">
+                    <ScrollText size={20} className="text-primary-solid" />
                     <h3 className="text-lg font-black">Nội quy & Chuẩn mực cộng đồng</h3>
                   </div>
 
                   {group.joinRules ? (
-                    <div className="mt-4 rounded-2xl bg-plum-900/[0.03] p-4 text-sm leading-relaxed text-plum-700 dark:bg-[#3a3b3c] dark:text-plum-200 whitespace-pre-line">
+                    <div className="mt-4 rounded-2xl bg-surface-2 p-4 text-sm leading-relaxed text-text-muted whitespace-pre-line">
                       {group.joinRules}
                     </div>
                   ) : (
-                    <p className="mt-2 text-sm text-plum-500 dark:text-[#b0b3b8]">
+                    <p className="mt-2 text-sm text-text-subtle">
                       Hội nhóm này áp dụng các quy tắc văn hóa và ứng xử chung của nền tảng AlumNect.
                     </p>
                   )}
 
                   {/* 3 quy chuẩn ứng xử mẫu */}
                   <div className="mt-5 space-y-3">
-                    <div className="flex items-start gap-3 rounded-2xl border border-plum-900/[0.06] p-3.5 dark:border-[#393a3b]">
-                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/10 text-xs font-black text-brand-600">
+                    <div className="flex items-start gap-3 rounded-2xl border border-border p-3.5">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary-solid">
                         1
                       </span>
                       <div>
-                        <strong className="text-sm font-bold text-plum-900 dark:text-white">Tôn trọng & Lắng nghe</strong>
-                        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Luôn giữ tinh thần hòa nhã, lịch sự trong giao tiếp và tranh luận mang tính xây dựng.</p>
+                        <strong className="text-sm font-bold text-text">Tôn trọng & Lắng nghe</strong>
+                        <p className="text-xs text-text-subtle">Luôn giữ tinh thần hòa nhã, lịch sự trong giao tiếp và tranh luận mang tính xây dựng.</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 rounded-2xl border border-plum-900/[0.06] p-3.5 dark:border-[#393a3b]">
-                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/10 text-xs font-black text-brand-600">
+                    <div className="flex items-start gap-3 rounded-2xl border border-border p-3.5">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary-solid">
                         2
                       </span>
                       <div>
-                        <strong className="text-sm font-bold text-plum-900 dark:text-white">Không quảng cáo rác & Spam</strong>
-                        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Mọi bài viết thương mại hoặc tuyển dụng cần được sự đồng ý của ban quản trị nhóm.</p>
+                        <strong className="text-sm font-bold text-text">Không quảng cáo rác & Spam</strong>
+                        <p className="text-xs text-text-subtle">Mọi bài viết thương mại hoặc tuyển dụng cần được sự đồng ý của ban quản trị nhóm.</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 rounded-2xl border border-plum-900/[0.06] p-3.5 dark:border-[#393a3b]">
-                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-500/10 text-xs font-black text-brand-600">
+                    <div className="flex items-start gap-3 rounded-2xl border border-border p-3.5">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary-solid">
                         3
                       </span>
                       <div>
-                        <strong className="text-sm font-bold text-plum-900 dark:text-white">Bảo mật thông tin nội bộ</strong>
-                        <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Không mang nội dung thảo luận riêng tư của các thành viên ra các kênh công cộng khi chưa được phép.</p>
+                        <strong className="text-sm font-bold text-text">Bảo mật thông tin nội bộ</strong>
+                        <p className="text-xs text-text-subtle">Không mang nội dung thảo luận riêng tư của các thành viên ra các kênh công cộng khi chưa được phép.</p>
                       </div>
                     </div>
                   </div>
@@ -356,11 +356,11 @@ export function GroupDetailPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
               >
-                <Card hover={false} className="rounded-3xl border border-plum-900/[0.08] p-6 shadow-card dark:border-[#393a3b] dark:bg-[#242526]">
+                <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-black text-plum-900 dark:text-white">Thành viên hội nhóm</h3>
-                      <p className="text-xs text-plum-500 dark:text-[#b0b3b8]">Danh sách những người đang sinh hoạt và kết nối trong cộng đồng</p>
+                      <h3 className="text-lg font-black text-text">Thành viên hội nhóm</h3>
+                      <p className="text-xs text-text-subtle">Danh sách những người đang sinh hoạt và kết nối trong cộng đồng</p>
                     </div>
                   </div>
 

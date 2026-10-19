@@ -19,7 +19,7 @@ function TickBox({ checked }: { checked: boolean }) {
     <span
       className={cn(
         'grid h-[18px] w-[18px] shrink-0 place-items-center rounded-md border transition-colors',
-        checked ? 'border-brand-500 bg-brand-500 text-white' : 'border-plum-900/20 bg-transparent',
+        checked ? 'border-primary bg-primary-solid text-on-primary' : 'border-border-strong bg-transparent',
       )}
     >
       {checked && <Check size={12} strokeWidth={3} />}
@@ -65,7 +65,7 @@ export function FilterMultiSelect({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 rounded-full bg-plum-900/[0.04] px-4 py-2 text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-900/[0.07]"
+        className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm font-semibold text-text-muted transition-colors hover:bg-border"
       >
         {buttonIcon}
         <span>{label}</span>
@@ -73,15 +73,15 @@ export function FilterMultiSelect({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-2 w-72 overflow-hidden rounded-xl card-surface p-2 shadow-lg ring-1 ring-plum-900/10">
+        <div className="absolute left-0 top-full z-20 mt-2 w-72 overflow-hidden rounded-xl card-surface p-2 shadow-lg ring-1 ring-border">
           {searchable && (
-            <div className="mb-1 flex items-center gap-2 rounded-lg bg-plum-900/[0.04] px-3">
-              <Search size={14} className="shrink-0 text-plum-400" />
+            <div className="mb-1 flex items-center gap-2 rounded-lg bg-surface-2 px-3">
+              <Search size={14} className="shrink-0 text-text-subtle" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={`Tìm ${noun}…`}
-                className="h-9 w-full bg-transparent text-sm text-plum-900 placeholder:text-plum-400 focus:outline-none"
+                className="h-9 w-full bg-transparent text-sm text-text placeholder:text-text-subtle focus:outline-none"
               />
             </div>
           )}
@@ -92,20 +92,20 @@ export function FilterMultiSelect({
               onClick={() => onChange([])}
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-                selected.length === 0 ? 'bg-brand-500/10 text-brand-700' : 'text-plum-700 hover:bg-plum-900/[0.04]',
+                selected.length === 0 ? 'bg-primary-soft text-primary-solid' : 'text-text-muted hover:bg-surface-2',
               )}
             >
               <span className="flex-1 text-left">{allLabel}</span>
-              {selected.length === 0 && <Check size={15} className="text-brand-600" />}
+              {selected.length === 0 && <Check size={15} className="text-primary-solid" />}
             </button>
 
-            <div className="my-1 h-px bg-plum-900/[0.06]" />
+            <div className="my-1 h-px bg-border" />
 
             {filtered.map((it) => (
               <button
                 key={it.id}
                 onClick={() => toggle(it.id)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-plum-700 transition-colors hover:bg-plum-900/[0.04]"
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-text-muted transition-colors hover:bg-surface-2"
               >
                 <TickBox checked={isSelected(it.id)} />
                 {itemIcon?.(it.name)}
@@ -113,7 +113,7 @@ export function FilterMultiSelect({
               </button>
             ))}
 
-            {filtered.length === 0 && <p className="px-3 py-4 text-center text-xs text-plum-400">Không tìm thấy {noun}</p>}
+            {filtered.length === 0 && <p className="px-3 py-4 text-center text-xs text-text-subtle">Không tìm thấy {noun}</p>}
           </div>
         </div>
       )}
