@@ -15,7 +15,7 @@ import { GoogleLogin } from '@react-oauth/google'
 import { useNavigate } from 'react-router-dom'
 import type { RegisterFormValues } from '../model/schemas'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { toast, SelectDropdown } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 interface RegisterFormProps {
@@ -248,21 +248,15 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         {/* Dropdown Chuyên ngành */}
         <label className="block">
           <span className="mb-1.5 block text-sm font-semibold text-text-muted">Chuyên ngành</span>
-          <select
-            className={cn(
-              'h-12 w-full rounded-xl border border-border bg-surface-2 px-3 text-sm text-text transition-colors focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500/25',
-              errors.majorId && 'border-danger focus:ring-danger focus:border-danger'
-            )}
+          <SelectDropdown
+            value={watch('majorId') ? Number(watch('majorId')) : ''}
+            onChange={(val) => setValue('majorId', val as number, { shouldValidate: true, shouldDirty: true })}
+            options={majors.map((m) => ({ value: m.id, label: `${m.code} - ${m.name}` }))}
+            placeholder="Chọn chuyên ngành"
             disabled={isLoadingMajors}
-            {...register('majorId')}
-          >
-            <option value="">Chọn chuyên ngành</option>
-            {majors.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.code} - {m.name}
-              </option>
-            ))}
-          </select>
+            searchPlaceholder="Tìm chuyên ngành…"
+            buttonClassName={cn('h-12 text-sm', errors.majorId && 'border-danger ring-danger/20')}
+          />
           {errors.majorId && (
             <span className="mt-1 block text-xs font-medium text-danger">{errors.majorId.message}</span>
           )}

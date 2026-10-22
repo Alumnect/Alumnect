@@ -9,6 +9,7 @@ import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
 import com.alumnect.alumnect_backend.dao.message.ConversationRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealRepository;
+import com.alumnect.alumnect_backend.dao.notification.NotificationRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskAmendmentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
@@ -67,6 +68,7 @@ import java.util.Optional;
 public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentService {
 
     private final MentoringDealRepository dealRepository;
+    private final NotificationRepository notificationRepository;
     private final MentoringTaskRepository taskRepository;
     private final MentoringTaskPaymentRepository paymentRepository;
     private final MentoringRequestRepository requestRepository;
@@ -708,6 +710,7 @@ public class MentoringTaskPaymentServiceImpl implements MentoringTaskPaymentServ
             mentoringRequest.setConfirmedDeal(deal);
             mentoringRequest.setStatus(MentoringRequestStatus.CLOSED);
             requestRepository.saveAndFlush(mentoringRequest);
+            notificationRepository.markAsReadByTarget("MENTORING_INCOMING_REQUEST", String.valueOf(mentoringRequest.getId()));
 
             // 5.1 Đóng các luồng Deal của Mentor khác cùng Request (giữ nguyên lịch sử phiên bản)
             for (MentoringDeal other : dealRepository.findByRequestIdAndIdNot(mentoringRequest.getId(), deal.getId())) {

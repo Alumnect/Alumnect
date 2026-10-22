@@ -195,7 +195,15 @@ export function NotificationsPage() {
       if (!notification.isRead) markAsReadMutation.mutate(notification.id)
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Không thể xử lý yêu cầu Mentoring')
+      const message = err instanceof Error ? err.message : 'Không thể xử lý yêu cầu Mentoring'
+      // Yêu cầu đã đóng/hết hạn: nút phản hồi không còn tác dụng, đánh dấu đã đọc để ẩn đi và tránh bấm lặp
+      if (message.includes('đã đóng')) {
+        if (!notification.isRead) markAsReadMutation.mutate(notification.id)
+        queryClient.invalidateQueries({ queryKey: ['notifications'] })
+        queryClient.invalidateQueries({ queryKey: ['mentoring', 'incoming-requests'] })
+        return
+      }
+      toast.error(message)
     } finally {
       setRespondingId(null)
     }

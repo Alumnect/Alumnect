@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { ArrowDownRight, ArrowUpRight, BadgeDollarSign, Download, HandCoins, RefreshCw, Scale, Search, ShieldCheck, WalletCards } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { SelectDropdown } from '@/components/ui'
 import { useAdminRevenueOverview } from '../hooks/useAdmin'
 import type { AdminRevenueTransactionDto } from '../api/adminApi'
 
@@ -127,7 +128,18 @@ export function AdminRevenuePage() {
       <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-xs">
         <div className="flex flex-col gap-3 border-b border-border p-5 md:flex-row md:items-center md:justify-between">
           <div><h2 className="font-bold text-slate-950 dark:text-white">Giao dịch doanh thu</h2><p className="text-xs text-text-subtle">{transactions.length} kết quả trong kỳ đang chọn</p></div>
-          <div className="flex flex-col gap-2 sm:flex-row"><label className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tên, email hoặc mã..." className="h-9 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs outline-none focus:border-primary sm:w-60" /></label><select value={source} onChange={(event) => setSource(event.target.value as typeof source)} className="h-9 rounded-xl border border-border bg-surface px-3 text-xs font-semibold outline-none"><option value="ALL">Tất cả nguồn thu</option><option value="MENTOR_SUBSCRIPTION">Gói Mentor</option><option value="DISPUTE_FEE">Phí tranh chấp</option></select></div>
+          <div className="flex flex-col gap-2 sm:flex-row"><label className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tên, email hoặc mã..." className="h-9 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs outline-none focus:border-primary sm:w-60" /></label><SelectDropdown
+              value={source}
+              onChange={(val) => setSource(val as typeof source)}
+              options={[
+                { value: 'ALL', label: 'Tất cả nguồn thu' },
+                { value: 'MENTOR_SUBSCRIPTION', label: 'Gói Mentor' },
+                { value: 'DISPUTE_FEE', label: 'Phí tranh chấp' },
+              ]}
+              placeholder="Tất cả nguồn thu"
+              className="sm:w-48"
+              buttonClassName="h-9 text-xs"
+            /></div>
         </div>
         <div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead className="bg-surface-2 text-xs uppercase tracking-wider text-text-subtle"><tr><th className="px-5 py-3">Giao dịch</th><th className="px-5 py-3">Người thanh toán</th><th className="px-5 py-3">Thời gian</th><th className="px-5 py-3">Phương thức</th><th className="px-5 py-3 text-right">Doanh thu</th></tr></thead><tbody className="divide-y divide-border">
           {isLoading ? Array.from({ length: 5 }).map((_, index) => <TableSkeleton key={index} />) : transactions.length ? transactions.map((item) => <tr key={item.id} className="hover:bg-surface-2"><td className="px-5 py-4"><p className="font-semibold text-text">{item.description}</p><p className="mt-0.5 text-xs text-text-subtle">#{item.referenceCode}</p></td><td className="px-5 py-4"><p className="font-semibold">{item.payerName}</p><p className="mt-0.5 text-xs text-text-subtle">{item.payerEmail}</p></td><td className="px-5 py-4 text-xs text-text-subtle">{formatDateTime(item.occurredAt)}</td><td className="px-5 py-4"><span className="rounded-full bg-surface-2 px-2.5 py-1 text-xs font-bold text-text-muted">{item.paymentMethod}</span></td><td className="px-5 py-4 text-right font-extrabold text-success">+{formatVnd(item.amount)}</td></tr>) : <tr><td colSpan={5} className="px-5 py-14 text-center text-sm text-text-subtle">Không có giao dịch doanh thu phù hợp.</td></tr>}

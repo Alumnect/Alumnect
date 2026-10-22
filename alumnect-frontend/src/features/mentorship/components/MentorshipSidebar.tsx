@@ -14,7 +14,6 @@ import {
 } from '../constants/mentorshipNavigation'
 import { mentoringGroupApi } from '../api/mentoringGroupApi'
 import { useConversations } from '@/features/message'
-import { useIncomingMentoringRequests } from '../hooks/useIncomingMentoringRequests'
 
 type MentorshipSidebarContentProps = { onNavigate?: () => void }
 
@@ -26,12 +25,6 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
   const hasAcceptedTerms = termsStatus?.accepted === true
   const { data: mentorStatus } = useMentorStatus(isAlumni && hasAcceptedTerms)
   const hasMentorProfile = mentorStatus?.hasMentorProfile ?? false
-  const { data: pendingIncomingRequests } = useIncomingMentoringRequests({
-    status: 'PENDING',
-    page: 0,
-    size: 1,
-    enabled: hasMentorProfile && mentorStatus?.active === true,
-  })
   const { data: mentoringConversations = [] } = useConversations('primary', 'MENTORING')
   const { data: groupInvitations = [] } = useQuery({
     queryKey: ['mentoring-groups', 'invitations'],
@@ -91,7 +84,6 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
   const badgeFor = (item: MentorshipNavigationItem) => {
     if (item.to === '/app/mentoring/messages') return mentoringUnreadCount
     if (item.to === '/app/mentoring/groups') return groupInvitations.length
-    if (item.to === '/app/mentoring/incoming-requests') return pendingIncomingRequests?.totalElements ?? 0
     return 0
   }
 

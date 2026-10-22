@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X, User, GraduationCap, MapPin, Plus, Trash2, AlertTriangle, Loader2, Link as LinkIcon, Sparkles, Upload, Image as ImageIcon } from 'lucide-react'
 import axios from 'axios'
 import { Button } from '@/components/ui/Button'
-import { Avatar, SmartImage, toast } from '@/components/ui'
+import { Avatar, SmartImage, toast, SelectDropdown } from '@/components/ui'
 import { useMajors, usePresignedUrl } from '@/features/auth/hooks/useAuth'
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
 import { CampusSelect } from './CampusSelect'
@@ -424,19 +424,14 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                 <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                   Chuyên ngành học
                 </label>
-                <select
-                  value={majorId || ''}
-                  onChange={(e) => setMajorId(e.target.value ? Number(e.target.value) : undefined)}
+                <SelectDropdown<string | number>
+                  value={majorId ?? ''}
+                  onChange={(val) => setMajorId(val === '' ? undefined : Number(val))}
+                  options={[{ value: '', label: '-- Chọn Chuyên ngành --' }, ...(majors ?? []).map((m) => ({ value: m.id, label: `${m.name} (${m.code})` }))]}
+                  placeholder="-- Chọn Chuyên ngành --"
                   disabled={loading}
-                  className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  <option value="">-- Chọn Chuyên ngành --</option>
-                  {majors?.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.code})
-                    </option>
-                  ))}
-                </select>
+                  buttonClassName="h-12 text-sm"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

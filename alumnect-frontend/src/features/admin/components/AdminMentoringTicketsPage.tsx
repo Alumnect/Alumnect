@@ -22,7 +22,7 @@ import {
   ArrowRight,
   MessageSquare,
 } from 'lucide-react'
-import { Badge, Card, EmptyState, Pagination, Skeleton, toast } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTickets, useAcceptAdminTicket, useAdminDisputeContext } from '../hooks/useAdmin'
 import {
@@ -198,37 +198,32 @@ export function AdminMentoringTicketsPage() {
 
             {/* Filter by Ticket Type */}
             <div className="flex items-center gap-1.5">
-              <select
+              <SelectDropdown
                 value={typeFilter}
-                onChange={(e) => {
-                  setTypeFilter(e.target.value)
+                onChange={(val) => {
+                  setTypeFilter(String(val))
                   setPage(0)
                 }}
-                className="h-9 rounded-lg border border-border-strong bg-surface px-2.5 text-xs text-text-muted focus:border-primary focus:outline-none cursor-pointer"
-              >
-                <option value="ALL">Tất cả loại Ticket</option>
-                <option value="DISPUTE">Khiếu nại / Tranh chấp (DISPUTE)</option>
-                <option value="SETTLEMENT">Thỏa thuận Hòa giải (SETTLEMENT)</option>
-              </select>
+                options={[{ value: 'ALL', label: 'Tất cả loại Ticket' }, { value: 'DISPUTE', label: 'Khiếu nại / Tranh chấp (DISPUTE)' }, { value: 'SETTLEMENT', label: 'Thỏa thuận Hòa giải (SETTLEMENT)' }]}
+                placeholder="Tất cả loại Ticket"
+                className="w-52"
+                buttonClassName="h-9 text-xs"
+              />
             </div>
 
             {/* Filter by Status */}
             <div className="flex items-center gap-1.5">
-              <select
+              <SelectDropdown
                 value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value)
+                onChange={(val) => {
+                  setStatusFilter(String(val))
                   setPage(0)
                 }}
-                className="h-9 rounded-lg border border-border-strong bg-surface px-2.5 text-xs text-text-muted focus:border-primary focus:outline-none cursor-pointer"
-              >
-                <option value="ALL">Tất cả trạng thái xử lý</option>
-                <option value="OPEN">Chờ tiếp nhận (OPEN)</option>
-                <option value="IN_REVIEW">Đang xử lý (IN_REVIEW)</option>
-                <option value="RESOLVED">Đã giải quyết (RESOLVED)</option>
-                <option value="REJECTED">Bị từ chối (REJECTED)</option>
-                <option value="CANCELLED">Đã hủy (CANCELLED)</option>
-              </select>
+                options={[{ value: 'ALL', label: 'Tất cả trạng thái xử lý' }, { value: 'OPEN', label: 'Chờ tiếp nhận (OPEN)' }, { value: 'IN_REVIEW', label: 'Đang xử lý (IN_REVIEW)' }, { value: 'RESOLVED', label: 'Đã giải quyết (RESOLVED)' }, { value: 'REJECTED', label: 'Bị từ chối (REJECTED)' }, { value: 'CANCELLED', label: 'Đã hủy (CANCELLED)' }]}
+                placeholder="Tất cả trạng thái xử lý"
+                className="w-56"
+                buttonClassName="h-9 text-xs"
+              />
             </div>
 
             {/* Reset Filters */}

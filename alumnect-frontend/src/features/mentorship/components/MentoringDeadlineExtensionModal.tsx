@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CalendarClock, Send } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { Modal } from '@/components/ui'
+import { DateTimePicker, Modal } from '@/components/ui'
 import { useCreateDeadlineExtension } from '../hooks/useMentoringTaskResolutions'
 import { MentoringActionButton, MentoringField, MentoringFormError } from './MentoringUi'
 import { MENTORING_INPUT, apiErrorMessage, toDateTimeLocal } from '../model/mentoringUiUtils'
@@ -90,12 +90,11 @@ export function MentoringDeadlineExtensionModal({
           <span className="font-semibold text-text">{currentLabel}</span>
         </div>
         <MentoringField label="Hạn chót mới" required>
-          <input
-            type="datetime-local"
+          <DateTimePicker
+            mode="datetime"
             value={proposedDeadline}
             min={toDateTimeLocal(openedAt)}
-            onChange={(e) => setProposedDeadline(e.target.value)}
-            className={MENTORING_INPUT}
+            onChange={setProposedDeadline}
           />
         </MentoringField>
         <div className="flex flex-wrap gap-2">

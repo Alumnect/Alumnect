@@ -15,7 +15,7 @@ import {
   Award,
   CheckCircle2,
 } from 'lucide-react'
-import { Badge, Card, EmptyState, Pagination, Skeleton } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminMentors } from '../hooks/useAdmin'
 import { AdminMentorCvModal } from './AdminMentorCvModal'
@@ -174,39 +174,32 @@ export function AdminMentorListSection() {
 
             {/* Filter by Mentor Status */}
             <div className="flex items-center gap-1.5">
-              <select
+              <SelectDropdown
                 value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value)
+                onChange={(val) => {
+                  setStatusFilter(String(val))
                   setPage(0)
                 }}
-                className="h-9 rounded-lg border border-border-strong bg-surface px-2.5 text-xs text-text-muted focus:border-primary focus:outline-none cursor-pointer"
-              >
-                <option value="ALL">Tất cả trạng thái Mentor</option>
-                <option value="ACTIVE">Đang hoạt động</option>
-                <option value="PAYMENT_PENDING">Chờ thanh toán</option>
-                <option value="INCOMPLETE">Chưa hoàn thiện</option>
-                <option value="EXPIRED">Đã hết hạn</option>
-              </select>
+                options={[{ value: 'ALL', label: 'Tất cả trạng thái Mentor' }, { value: 'ACTIVE', label: 'Đang hoạt động' }, { value: 'PAYMENT_PENDING', label: 'Chờ thanh toán' }, { value: 'INCOMPLETE', label: 'Chưa hoàn thiện' }, { value: 'EXPIRED', label: 'Đã hết hạn' }]}
+                placeholder="Tất cả trạng thái Mentor"
+                className="w-52"
+                buttonClassName="h-9 text-xs"
+              />
             </div>
 
             {/* Filter by Subscription Status */}
             <div className="flex items-center gap-1.5">
-              <select
+              <SelectDropdown
                 value={subStatusFilter}
-                onChange={(e) => {
-                  setSubStatusFilter(e.target.value)
+                onChange={(val) => {
+                  setSubStatusFilter(String(val))
                   setPage(0)
                 }}
-                className="h-9 rounded-lg border border-border-strong bg-surface px-2.5 text-xs text-text-muted focus:border-primary focus:outline-none cursor-pointer"
-              >
-                <option value="ALL">Tất cả gói dịch vụ</option>
-                <option value="ACTIVE">Đang hiệu lực</option>
-                <option value="PAID">Đã thanh toán</option>
-                <option value="EXPIRED">Đã hết hạn</option>
-                <option value="PENDING_PAYMENT">Chờ thanh toán</option>
-                <option value="CANCELLED">Đã hủy</option>
-              </select>
+                options={[{ value: 'ALL', label: 'Tất cả gói dịch vụ' }, { value: 'ACTIVE', label: 'Đang hiệu lực' }, { value: 'PAID', label: 'Đã thanh toán' }, { value: 'EXPIRED', label: 'Đã hết hạn' }, { value: 'PENDING_PAYMENT', label: 'Chờ thanh toán' }, { value: 'CANCELLED', label: 'Đã hủy' }]}
+                placeholder="Tất cả gói dịch vụ"
+                className="w-48"
+                buttonClassName="h-9 text-xs"
+              />
             </div>
 
             {/* Reset Filters Button */}

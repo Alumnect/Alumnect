@@ -134,7 +134,8 @@ class MentoringAuditFixesTest {
         UserRepository userRepository = mock(UserRepository.class);
         MentoringRequestLifecycleService lifecycle = new MentoringRequestLifecycleService(requestRepository, distributionRepository,
                 dealRepository, taskRepository, paymentRepository, conversationRepository, userRepository,
-                mock(MentoringConversationService.class), notificationService, mock(PayOSGateway.class));
+                mock(MentoringConversationService.class), notificationService,
+                mock(com.alumnect.alumnect_backend.dao.notification.NotificationRepository.class), mock(PayOSGateway.class));
 
         MentoringRequest request = MentoringRequest.builder().id(8L).title("Java").student(student).status(MentoringRequestStatus.OPEN).build();
         when(requestRepository.findByIdForUpdate(8L)).thenReturn(Optional.of(request));

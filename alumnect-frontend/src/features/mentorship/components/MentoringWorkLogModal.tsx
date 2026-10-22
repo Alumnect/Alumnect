@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, FileText, Paperclip, Upload, Loader2, Trash2, CheckCircle2 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DateTimePicker } from '@/components/ui'
 import { mentoringTaskApi } from '../api/mentoringTaskApi'
 import { useCreateWorkLog, useUpdateWorkLog } from '../hooks/useMentoringTasks'
 import type {
@@ -66,6 +66,8 @@ export function MentoringWorkLogModal({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<WorkLogFormValues>({
     resolver: zodResolver(workLogSchema),
@@ -222,11 +224,12 @@ export function MentoringWorkLogModal({
             <label className="block text-xs font-bold text-text-muted mb-1.5">
               Ngày thực hiện công việc <span className="text-danger">*</span>
             </label>
-            <input
-              type="date"
-              {...register('logDate')}
+            <DateTimePicker
+              mode="date"
+              value={watch('logDate')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              invalid={!!errors.logDate}
+              onChange={(val) => setValue('logDate', val, { shouldValidate: true, shouldDirty: true })}
             />
             {errors.logDate && (
               <p className="mt-1 text-xs font-bold text-danger">{errors.logDate.message}</p>

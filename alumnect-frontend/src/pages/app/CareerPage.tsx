@@ -19,7 +19,7 @@ import {
   GraduationCap,
   BookOpen,
 } from 'lucide-react'
-import { PageHeader, Card, Avatar, Skeleton, EmptyState, Pagination } from '@/components/ui'
+import { PageHeader, Card, Avatar, Skeleton, EmptyState, Pagination, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useNavigate } from 'react-router-dom'
@@ -193,18 +193,12 @@ export function CareerPage() {
                       <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
                         <BookOpen size={12} className="text-info" /> Chuyên ngành
                       </label>
-                      <select
+                      <SelectDropdown<string | number>
                         value={majorId}
-                        onChange={(e) => setMajorId(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full h-10 rounded-xl border border-border bg-surface px-2.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                      >
-                        <option value="">Tất cả chuyên ngành</option>
-                        {majors.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => setMajorId(val === '' ? '' : Number(val))}
+                        options={[{ value: '', label: 'Tất cả chuyên ngành' }, ...majors.map((m) => ({ value: m.id, label: m.name }))]}
+                        placeholder="Tất cả chuyên ngành"
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">

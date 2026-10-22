@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Search, SlidersHorizontal, X, RotateCcw, Check, Compass } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { SelectDropdown } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useMajors } from '@/features/auth/hooks/useAuth'
 import { useUserFilterOptions } from '../hooks/useUserQueries'
@@ -230,21 +231,12 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
               Chuyên ngành học
             </label>
-            <select
-              value={filters.majorId || ''}
-              onChange={(e) => {
-                const val = e.target.value ? Number(e.target.value) : null
-                onChange({ ...filters, majorId: val, category: 'ALL' })
-              }}
-              className="h-10 w-full rounded-xl border border-border-strong bg-surface px-3 text-xs font-medium text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="">Tất cả chuyên ngành</option>
-              {majors.map((m) => (
-                <option key={m.id} value={m.id}>
-                  [{m.code}] {m.name}
-                </option>
-              ))}
-            </select>
+            <SelectDropdown<string | number>
+              value={filters.majorId ?? ''}
+              onChange={(val) => onChange({ ...filters, majorId: val === '' ? null : Number(val), category: 'ALL' })}
+              options={[{ value: '', label: 'Tất cả chuyên ngành' }, ...majors.map((m) => ({ value: m.id, label: `[${m.code}] ${m.name}` }))]}
+              placeholder="Tất cả chuyên ngành"
+            />
           </div>
 
           {/* Niên khóa & Tỉnh thành */}
@@ -253,36 +245,24 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
                 Khóa nhập học
               </label>
-              <select
-                value={filters.cohort || ''}
-                onChange={(e) => onChange({ ...filters, cohort: e.target.value ? Number(e.target.value) : null })}
-                className="h-10 w-full rounded-xl border border-border-strong bg-surface px-3 text-xs font-medium text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="">Tất cả các khóa</option>
-                {cohorts.map((c) => (
-                  <option key={c} value={c}>
-                    Khóa K{c}
-                  </option>
-                ))}
-              </select>
+              <SelectDropdown<string | number>
+                value={filters.cohort ?? ''}
+                onChange={(val) => onChange({ ...filters, cohort: val === '' ? null : Number(val) })}
+                options={[{ value: '', label: 'Tất cả các khóa' }, ...cohorts.map((c) => ({ value: c, label: `Khóa K${c}` }))]}
+                placeholder="Tất cả các khóa"
+              />
             </div>
 
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
                 Tỉnh / Thành phố
               </label>
-              <select
+              <SelectDropdown<string | number>
                 value={filters.city}
-                onChange={(e) => onChange({ ...filters, city: e.target.value })}
-                className="h-10 w-full rounded-xl border border-border-strong bg-surface px-3 text-xs font-medium text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="">Tất cả địa điểm</option>
-                {cities.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => onChange({ ...filters, city: String(val) })}
+                options={[{ value: '', label: 'Tất cả địa điểm' }, ...cities.map((c) => ({ value: c, label: c }))]}
+                placeholder="Tất cả địa điểm"
+              />
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.common.enums.MentoringDistributionStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringRequestStatus;
 import com.alumnect.alumnect_backend.common.enums.PaymentStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringDealRepository;
+import com.alumnect.alumnect_backend.dao.notification.NotificationRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestDistributionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringRequestRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
@@ -55,6 +56,7 @@ public class MentoringRequestLifecycleService {
     private final UserRepository userRepository;
     private final MentoringConversationService conversationService;
     private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
     private final PayOSGateway payOSGateway;
 
     /** Request có thể hủy khi còn mở và chưa kích hoạt Task. */
@@ -108,6 +110,9 @@ public class MentoringRequestLifecycleService {
         Instant now = Instant.now();
         request.setStatus(status);
         requestRepository.save(request);
+
+        // Request đã đóng: các lời mời phản hồi cũ không còn hành động được nên ẩn nút Nhận/Bỏ qua
+        notificationRepository.markAsReadByTarget("MENTORING_INCOMING_REQUEST", String.valueOf(request.getId()));
 
         for (MentoringRequestDistribution d : distributionRepository
                 .findByRequestIdAndStatus(request.getId(), MentoringDistributionStatus.PENDING)) {

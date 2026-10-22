@@ -191,6 +191,15 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
     @Override
     @Transactional
     public void postSystemMessage(Conversation conversation, User sender, String content) {
+        postMessage(conversation, sender, content, MessageType.SYSTEM);
+    }
+
+    @Override
+    public void postUserMessage(Conversation conversation, User sender, String content) {
+        postMessage(conversation, sender, content, MessageType.TEXT);
+    }
+
+    private void postMessage(Conversation conversation, User sender, String content, MessageType type) {
         if (conversation == null) {
             return;
         }
@@ -199,7 +208,7 @@ public class MentoringConversationServiceImpl implements MentoringConversationSe
                 .conversation(conversation)
                 .sender(sender)
                 .content(content)
-                .type(MessageType.SYSTEM)
+                .type(type)
                 .createdAt(now)
                 .build());
         conversation.setLastMessageAt(now);
