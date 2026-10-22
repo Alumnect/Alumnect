@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react'
-import { Badge, EmptyState, Pagination, Skeleton } from '@/components/ui'
+import { Badge, EmptyState, Pagination, Skeleton, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminPayoutBalance, useAdminTaskFunds } from '../hooks/useAdmin'
 import { AdminTaskLedgerDetailModal } from './AdminTaskLedgerDetailModal'
@@ -228,42 +228,33 @@ export function AdminMentoringFinancesPage() {
             {/* Lọc Trạng thái Task */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-text-subtle font-medium">Trạng thái Task:</span>
-              <select
+              <SelectDropdown
                 value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value)
+                onChange={(val) => {
+                  setStatusFilter(String(val))
                   setPage(0)
                 }}
-                className="bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
-              >
-                <option value="ALL">Tất cả trạng thái</option>
-                <option value="PREPARATION">Chuẩn bị </option>
-                <option value="IN_PROGRESS">Đang làm </option>
-                <option value="SUBMITTED">Chờ duyệt </option>
-                <option value="COMPLETED">Hoàn thành</option>
-                <option value="DISPUTED">Tranh chấp</option>
-                <option value="RESOLVED">Đã phán quyết</option>
-                <option value="CANCELLED">Đã hủy </option>
-              </select>
+                options={[{ value: 'ALL', label: 'Tất cả trạng thái' }, { value: 'PREPARATION', label: 'Chuẩn bị' }, { value: 'IN_PROGRESS', label: 'Đang làm' }, { value: 'SUBMITTED', label: 'Chờ duyệt' }, { value: 'COMPLETED', label: 'Hoàn thành' }, { value: 'DISPUTED', label: 'Tranh chấp' }, { value: 'RESOLVED', label: 'Đã phán quyết' }, { value: 'CANCELLED', label: 'Đã hủy' }]}
+                placeholder="Tất cả trạng thái"
+                className="w-48"
+                buttonClassName="h-9 text-xs"
+              />
             </div>
 
             {/* Lọc Trạng thái Quyết toán */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-text-subtle font-medium">Quyết toán:</span>
-              <select
+              <SelectDropdown
                 value={settlementFilter}
-                onChange={(e) => {
-                  setSettlementFilter(e.target.value)
+                onChange={(val) => {
+                  setSettlementFilter(String(val))
                   setPage(0)
                 }}
-                className="bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
-              >
-                <option value="ALL">Tất cả quyết toán</option>
-                <option value="HOLDING_ESCROW">Đang giữ Escrow</option>
-                <option value="SETTLED">Đã quyết toán hoàn tất</option>
-                <option value="PARTIALLY_SETTLED">Đã thanh toán một phần</option>
-                <option value="UNSETTLED">Chưa quyết toán</option>
-              </select>
+                options={[{ value: 'ALL', label: 'Tất cả quyết toán' }, { value: 'HOLDING_ESCROW', label: 'Đang giữ Escrow' }, { value: 'SETTLED', label: 'Đã quyết toán hoàn tất' }, { value: 'PARTIALLY_SETTLED', label: 'Đã thanh toán một phần' }, { value: 'UNSETTLED', label: 'Chưa quyết toán' }]}
+                placeholder="Tất cả quyết toán"
+                className="w-52"
+                buttonClassName="h-9 text-xs"
+              />
             </div>
 
             {(keyword || statusFilter !== 'ALL' || settlementFilter !== 'ALL') && (

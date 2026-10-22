@@ -98,7 +98,7 @@ export function IncomingRequestResponseModal({
 
         <MentoringField
           label={isAccept ? 'Lời nhắn cho người học' : 'Lý do từ chối'}
-          hint={`Không bắt buộc · ${responseNote.length}/${MAX_NOTE} ký tự`}
+          hint={`${isAccept ? "Sẽ hiển thị như tin nhắn đầu tiên trong khung chat · " : ""}Không bắt buộc · ${responseNote.length}/${MAX_NOTE} ký tự`}
         >
           <textarea
             value={responseNote}

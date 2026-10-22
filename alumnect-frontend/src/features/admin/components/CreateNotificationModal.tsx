@@ -7,7 +7,7 @@ import {
   ChevronDown,
   Check,
 } from 'lucide-react'
-import { Avatar, toast } from '@/components/ui'
+import { Avatar, DateTimePicker, toast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
   adminApi,
@@ -708,27 +708,25 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                 <div className="pt-1.5 space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <input
-                        type="date"
-                        required={sendType === 'SCHEDULE'}
+                      <DateTimePicker
+                        mode="date"
+                        size="sm"
                         value={scheduleDate}
-                        onChange={(e) => {
-                          setScheduleDate(e.target.value)
+                        onChange={(v) => {
+                          setScheduleDate(v)
                           setErrors((prev) => ({ ...prev, schedule: undefined }))
                         }}
-                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                     <div>
-                      <input
-                        type="time"
-                        required={sendType === 'SCHEDULE'}
+                      <DateTimePicker
+                        mode="time"
+                        size="sm"
                         value={scheduleTime}
-                        onChange={(e) => {
-                          setScheduleTime(e.target.value)
+                        onChange={(v) => {
+                          setScheduleTime(v)
                           setErrors((prev) => ({ ...prev, schedule: undefined }))
                         }}
-                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                   </div>
@@ -760,27 +758,25 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                 <div className="pt-1.5 space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <input
-                        type="date"
-                        required={expirationType === 'CUSTOM'}
+                      <DateTimePicker
+                        mode="date"
+                        size="sm"
                         value={expireDate}
-                        onChange={(e) => {
-                          setExpireDate(e.target.value)
+                        onChange={(v) => {
+                          setExpireDate(v)
                           setErrors((prev) => ({ ...prev, expiration: undefined }))
                         }}
-                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                     <div>
-                      <input
-                        type="time"
-                        required={expirationType === 'CUSTOM'}
+                      <DateTimePicker
+                        mode="time"
+                        size="sm"
                         value={expireTime}
-                        onChange={(e) => {
-                          setExpireTime(e.target.value)
+                        onChange={(v) => {
+                          setExpireTime(v)
                           setErrors((prev) => ({ ...prev, expiration: undefined }))
                         }}
-                        className="w-full rounded-lg border border-border-strong bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
                   </div>

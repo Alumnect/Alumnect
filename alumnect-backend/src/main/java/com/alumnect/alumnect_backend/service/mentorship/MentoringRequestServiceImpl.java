@@ -600,6 +600,7 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
 
         List<MentorResponseItemResponse> mentorResponses = new ArrayList<>();
         MentoringResponseSummaryResponse summary;
+        String directMentorResponseStatus = null;
 
         if (reqType == MentoringRequestType.DIRECT) {
             // UC101: Yêu cầu trực tiếp — CHỈ HIỂN THỊ DUY NHẤT MENTOR ĐƯỢC CHỌN
@@ -612,6 +613,7 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
             if (targetDist != null) {
                 MentorResponseItemResponse item = mapDistributionToResponseItem(targetDist);
                 mentorResponses.add(item);
+                directMentorResponseStatus = mapDistributionStatusToBusiness(targetDist.getStatus());
                 summary = buildResponseSummary(List.of(targetDist));
             } else if (targetMentor != null) {
                 // Dự phòng nếu chưa có record distribution
@@ -691,6 +693,7 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 .createdAt(mentoringRequest.getCreatedAt())
                 .updatedAt(mentoringRequest.getUpdatedAt())
                 .responseSummary(summary)
+                .directMentorResponseStatus(directMentorResponseStatus)
                 .mentorResponses(mentorResponses)
                 .selectedMentorUserId(mentoringRequest.getSelectedMentor() != null ? mentoringRequest.getSelectedMentor().getId() : null)
                 .confirmedDealId(mentoringRequest.getConfirmedDeal() != null ? mentoringRequest.getConfirmedDeal().getId() : null)
@@ -1137,6 +1140,9 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
                 predicates.add(cb.equal(root.get("requestType"), requestType));
             }
             if (distStatus == MentoringDistributionStatus.PENDING) {
+                // Chờ phản hồi chỉ gồm yêu cầu còn có thể phản hồi: đang OPEN và chưa chọn Mentor nào
+                predicates.add(cb.equal(root.get("status"), MentoringRequestStatus.OPEN));
+                predicates.add(cb.isNull(root.get("selectedMentor")));
                 predicates.add(cb.or(
                         cb.isNull(distribution.get("id")),
                         cb.equal(distribution.get("status"), MentoringDistributionStatus.PENDING)));
@@ -1331,6 +1337,10 @@ public class MentoringRequestServiceImpl implements MentoringRequestService {
         Conversation conversation = mentoringConversationService.getOrCreateConversation(mentoringRequest, mentorUser);
         mentoringConversationService.postSystemMessage(conversation, mentorUser,
                 mentoringConversationService.displayName(mentorUser) + " đã đồng ý trao đổi về Request của bạn.");
+        // Lời nhắn của Mentor hiển thị như một tin nhắn thật trong Chat for Task để Học viên dễ thấy
+        if (savedDist.getResponseNote() != null && !savedDist.getResponseNote().isBlank()) {
+            mentoringConversationService.postUserMessage(conversation, mentorUser, savedDist.getResponseNote());
+        }
         notificationService.sendMentoringRequestResponseNotification(
                 mentorUser, mentoringRequest.getStudent(), mentoringRequest, true);
 

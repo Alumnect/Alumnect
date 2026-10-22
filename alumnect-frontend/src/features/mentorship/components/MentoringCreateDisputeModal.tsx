@@ -11,7 +11,7 @@ import {
   Trash2,
   Link as LinkIcon,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, SelectDropdown } from '@/components/ui'
 import { useCreateDisputeTicket } from '../hooks/useMentoringTickets'
 import type { TicketEvidencePayload } from '../model/mentoringTaskTypes'
 
@@ -230,17 +230,13 @@ export function MentoringCreateDisputeModal({
               <label className="text-xs font-semibold text-text">
                 Lý do khiếu nại chính ({isRequesterRole ? 'Dành cho Bên tạo yêu cầu' : 'Dành cho Bên thực hiện'}) <span className="text-danger">*</span>
               </label>
-              <select
+              <SelectDropdown
                 value={disputeReason}
-                onChange={(e) => setDisputeReason(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition-all"
-              >
-                {disputeReasons.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setDisputeReason(String(val))}
+                options={disputeReasons.map((r) => ({ value: r.value, label: r.label }))}
+                placeholder="Chọn lý do"
+                panelClassName="sm:max-w-none"
+              />
               {disputeReason === 'OTHER' && (
                 <input
                   type="text"

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
-import { Card, toast } from '@/components/ui'
+import { Card, toast, SelectDropdown } from '@/components/ui'
 import { ProvinceSelect } from './ProvinceSelect'
 import { CampusSelect } from './CampusSelect'
 import { useMajors } from '@/features/auth/hooks/useAuth'
@@ -321,19 +321,14 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                 <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                   Chuyên ngành học
                 </label>
-                <select
-                  value={majorId || ''}
-                  onChange={(e) => setMajorId(e.target.value ? Number(e.target.value) : undefined)}
+                <SelectDropdown<string | number>
+                  value={majorId ?? ''}
+                  onChange={(val) => setMajorId(val === '' ? undefined : Number(val))}
+                  options={[{ value: '', label: '-- Chọn Chuyên ngành --' }, ...(majors ?? []).map((m) => ({ value: m.id, label: `${m.name} (${m.code})` }))]}
+                  placeholder="-- Chọn Chuyên ngành --"
                   disabled={loading}
-                  className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text font-semibold focus:border-primary focus:outline-none"
-                >
-                  <option value="">-- Chọn Chuyên ngành --</option>
-                  {majors?.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.code})
-                    </option>
-                  ))}
-                </select>
+                  buttonClassName="h-12 text-sm"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

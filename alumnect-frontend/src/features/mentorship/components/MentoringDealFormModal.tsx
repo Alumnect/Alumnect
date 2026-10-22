@@ -2,8 +2,8 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { X, Send, Edit3, Loader2, DollarSign, Calendar } from 'lucide-react'
-import { Button, toast } from '@/components/ui'
+import { X, Send, Edit3, Loader2, DollarSign } from 'lucide-react'
+import { Button, DateTimePicker, SelectDropdown, toast } from '@/components/ui'
 import {
   MENTORING_DEAL_TASK_TYPES,
   proposeDealSchema,
@@ -92,6 +92,8 @@ export function MentoringDealFormModal({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProposeDealFormData>({
     resolver: zodResolver(proposeDealSchema),
@@ -165,13 +167,12 @@ export function MentoringDealFormModal({
               <label className="font-bold text-text">
                 Loại nhiệm vụ <span className="text-danger">*</span>
               </label>
-              <select {...register('taskType')} className={inputClass}>
-                {MENTORING_DEAL_TASK_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {MENTORING_TASK_TYPE_LABELS[type]}
-                  </option>
-                ))}
-              </select>
+              <SelectDropdown
+                value={watch('taskType')}
+                onChange={(val) => setValue('taskType', val as ProposeDealFormData['taskType'], { shouldValidate: true, shouldDirty: true })}
+                options={MENTORING_DEAL_TASK_TYPES.map((type) => ({ value: type, label: MENTORING_TASK_TYPE_LABELS[type] }))}
+                placeholder="Chọn loại nhiệm vụ"
+              />
               {errors.taskType && <p className="text-danger text-xs font-medium">{errors.taskType.message}</p>}
             </div>
 
@@ -179,10 +180,15 @@ export function MentoringDealFormModal({
               <label className="font-bold text-text">
                 Hình thức tham gia <span className="text-danger">*</span>
               </label>
-              <select {...register('participationType')} className={inputClass}>
-                <option value="INDIVIDUAL">Kèm cặp cá nhân 1-1</option>
-                <option value="GROUP">Hướng dẫn theo nhóm học viên</option>
-              </select>
+              <SelectDropdown
+                value={watch('participationType')}
+                onChange={(val) => setValue('participationType', val as ProposeDealFormData['participationType'], { shouldValidate: true, shouldDirty: true })}
+                options={[
+                  { value: 'INDIVIDUAL', label: 'Kèm cặp cá nhân 1-1' },
+                  { value: 'GROUP', label: 'Hướng dẫn theo nhóm học viên' },
+                ]}
+                placeholder="Chọn hình thức tham gia"
+              />
               {errors.participationType && (
                 <p className="text-danger text-xs font-medium">{errors.participationType.message}</p>
               )}
@@ -194,11 +200,16 @@ export function MentoringDealFormModal({
               <label className="font-bold text-text">
                 Hình thức làm việc <span className="text-danger">*</span>
               </label>
-              <select {...register('workingMode')} className={inputClass}>
-                <option value="ONLINE">Trực tuyến (Online)</option>
-                <option value="OFFLINE">Trực tiếp (Offline)</option>
-                <option value="BOTH">Linh hoạt (Online & Offline)</option>
-              </select>
+              <SelectDropdown
+                value={watch('workingMode')}
+                onChange={(val) => setValue('workingMode', val as ProposeDealFormData['workingMode'], { shouldValidate: true, shouldDirty: true })}
+                options={[
+                  { value: 'ONLINE', label: 'Trực tuyến (Online)' },
+                  { value: 'OFFLINE', label: 'Trực tiếp (Offline)' },
+                  { value: 'BOTH', label: 'Linh hoạt (Online & Offline)' },
+                ]}
+                placeholder="Chọn hình thức làm việc"
+              />
               {errors.workingMode && <p className="text-danger text-xs font-medium">{errors.workingMode.message}</p>}
             </div>
 
@@ -225,10 +236,12 @@ export function MentoringDealFormModal({
             <label className="font-bold text-text">
               Hạn chót hoàn thành (Deadline) <span className="text-danger">*</span>
             </label>
-            <div className="relative">
-              <input type="datetime-local" {...register('deadline')} className={`${inputClass} pl-9`} />
-              <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-text-subtle" />
-            </div>
+            <DateTimePicker
+              mode="datetime"
+              value={watch('deadline')}
+              invalid={!!errors.deadline}
+              onChange={(val) => setValue('deadline', val, { shouldValidate: true, shouldDirty: true })}
+            />
             {errors.deadline && <p className="text-danger text-xs font-medium">{errors.deadline.message}</p>}
           </div>
 

@@ -95,6 +95,9 @@ public class MentoringRequestDetailResponse {
     /** Tổng hợp số liệu phản hồi từ các Mentor */
     private MentoringResponseSummaryResponse responseSummary;
 
+    /** Trạng thái phản hồi của Mentor đích nếu là yêu cầu DIRECT: WAITING, ACCEPTED, DECLINED, EXPIRED */
+    private String directMentorResponseStatus;
+
     /** ID tài khoản Mentor được chốt chọn (null khi chưa xác nhận Deal) */
     private Long selectedMentorUserId;
 

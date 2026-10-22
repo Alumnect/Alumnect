@@ -21,7 +21,7 @@ import {
   ExternalLink,
   CheckCircle2,
 } from 'lucide-react'
-import { Card, toast, SelectDropdown, type SelectOption } from '@/components/ui'
+import { Card, toast, SelectDropdown, DateTimePicker, type SelectOption } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import {
@@ -132,6 +132,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
   const selectedGroupId = useWatch({ control, name: 'groupId' }) as number | null | undefined
   const selectedIndustryId = useWatch({ control, name: 'industryId' }) as number | undefined
   const descriptionValue = useWatch({ control, name: 'description' })
+  const expectedDeadlineValue = useWatch({ control, name: 'expectedDeadline' }) as string | null | undefined
 
   // Tải danh sách nhóm do user quản lý khi chọn loại hình GROUP
   const { data: managedGroups = [], isLoading: loadingManagedGroups, refetch: refetchGroups } = useQuery({
@@ -867,12 +868,13 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             <label htmlFor="expectedDeadline" className="block text-xs font-bold text-text">
               Hạn chót hoàn thành (Expected Deadline)
             </label>
-            <input
+            <DateTimePicker
               id="expectedDeadline"
-              type="date"
+              mode="date"
+              value={expectedDeadlineValue ?? ''}
               min={minimumDeadline}
-              {...register('expectedDeadline')}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
+              invalid={!!errors.expectedDeadline}
+              onChange={(val) => setValue('expectedDeadline', val || null, { shouldValidate: true, shouldDirty: true })}
             />
             {errors.expectedDeadline && (
               <p className="text-xs font-semibold text-danger pt-0.5">

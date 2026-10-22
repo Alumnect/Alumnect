@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FileEdit, Send } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { Modal } from '@/components/ui'
+import { DateTimePicker, Modal } from '@/components/ui'
 import { useCreateTaskAmendment } from '../hooks/useMentoringTaskResolutions'
 import { MentoringActionButton, MentoringField, MentoringFormError } from './MentoringUi'
 import { MENTORING_INPUT, apiErrorMessage, toDateTimeLocal } from '../model/mentoringUiUtils'
@@ -145,12 +145,12 @@ export function MentoringTaskAmendmentModal({
             />
           </MentoringField>
           <MentoringField label="Deadline mới" hint="Để trống nếu giữ nguyên">
-            <input
-              type="datetime-local"
+            <DateTimePicker
+              mode="datetime"
               value={newDeadline}
               min={toDateTimeLocal(openedAt)}
-              onChange={(e) => setNewDeadline(e.target.value)}
-              className={MENTORING_INPUT}
+              clearable
+              onChange={setNewDeadline}
             />
           </MentoringField>
         </div>

@@ -69,6 +69,11 @@ public interface MentoringConversationService {
     void postSystemMessage(Conversation conversation, User sender, String content);
 
     /**
+     * Gửi tin nhắn văn bản thường (TEXT) do người dùng viết vào Chat for Task, ví dụ lời nhắn khi Mentor đồng ý trao đổi.
+     */
+    void postUserMessage(Conversation conversation, User sender, String content);
+
+    /**
      * Lấy tên hiển thị của người dùng (họ tên trong hồ sơ hoặc email dự phòng).
      *
      * @param user Người dùng

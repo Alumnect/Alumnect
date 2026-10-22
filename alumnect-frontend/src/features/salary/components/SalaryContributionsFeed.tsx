@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { vi } from 'date-fns/locale'
-import { Modal, EmptyState, Pagination } from '@/components/ui'
+import { Modal, EmptyState, Pagination, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useSalaryFeed, useIndustries } from '../hooks/useSalary'
 import { getIndustryIcon, VIETNAM_CITIES } from '../model/salary'
@@ -175,32 +175,22 @@ export function SalaryContributionsFeed({
               </div>
 
               {/* Chọn ngành */}
-              <select
+              <SelectDropdown
                 value={selectedIndustry}
-                onChange={(e) => setSelectedIndustry(e.target.value)}
-                className="h-9 w-full truncate rounded-lg border border-border bg-surface px-2.5 text-xs text-text font-medium focus:border-primary focus:outline-none cursor-pointer"
-              >
-                <option value="">Tất cả ngành nghề</option>
-                {industryList.map((ind) => (
-                  <option key={ind.id} value={ind.name}>
-                    {ind.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedIndustry(String(val))}
+                options={[{ value: '', label: 'Tất cả ngành nghề' }, ...industryList.map((ind) => ({ value: ind.name, label: ind.name }))]}
+                placeholder="Tất cả ngành nghề"
+                buttonClassName="h-9 rounded-lg"
+              />
 
               {/* Chọn khu vực */}
-              <select
+              <SelectDropdown
                 value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                className="h-9 w-full truncate rounded-lg border border-border bg-surface px-2.5 text-xs text-text font-medium focus:border-primary focus:outline-none cursor-pointer"
-              >
-                <option value="">Tất cả khu vực</option>
-                {regionList.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedRegion(String(val))}
+                options={[{ value: '', label: 'Tất cả khu vực' }, ...regionList.map((city) => ({ value: city, label: city }))]}
+                placeholder="Tất cả khu vực"
+                buttonClassName="h-9 rounded-lg"
+              />
             </div>
 
             {/* Hàng 2: Sắp xếp & Nút xóa lọc */}
@@ -208,15 +198,18 @@ export function SalaryContributionsFeed({
               <div className="flex items-center gap-1.5 text-text-subtle">
                 <ArrowUpDown size={12} className="text-text-subtle" />
                 <span className="text-xs text-text-subtle">Sắp xếp:</span>
-                <select
+                <SelectDropdown
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="bg-transparent font-semibold text-text focus:outline-none cursor-pointer text-xs dark:bg-surface"
-                >
-                  <option value="latest">Mới nhất</option>
-                  <option value="salaryDesc">Lương: Cao → Thấp</option>
-                  <option value="salaryAsc">Lương: Thấp → Cao</option>
-                </select>
+                  onChange={(val) => setSortBy(val as typeof sortBy)}
+                  options={[
+                    { value: 'latest', label: 'Mới nhất' },
+                    { value: 'salaryDesc', label: 'Lương: Cao → Thấp' },
+                    { value: 'salaryAsc', label: 'Lương: Thấp → Cao' },
+                  ]}
+                  placeholder="Sắp xếp"
+                  className="w-44"
+                  buttonClassName="h-8 rounded-lg"
+                />
               </div>
 
               {isFiltering && (
