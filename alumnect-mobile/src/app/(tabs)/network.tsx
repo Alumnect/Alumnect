@@ -3,12 +3,13 @@ import { Pressable, ScrollView, TextInput, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Briefcase, Map, Search } from 'lucide-react-native'
-import { Card, Chip, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Briefcase, CalendarDays, Map, Search, BriefcaseBusiness } from 'lucide-react-native'
+import { Card, Chip, Empty, Screen, Txt } from '@/components/ui'
 import { UserRow } from '@/components/UserRow'
 import { userApi } from '@/api/users'
 import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
+import { ListSkeleton } from '@/components/Skeleton'
 
 export default function NetworkScreen() {
   const t = useTheme()
@@ -38,6 +39,14 @@ export default function NetworkScreen() {
           <Briefcase size={20} color={t.primary} /><Txt weight="600">Career Path</Txt>
         </Card>
       </View>
+      <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginTop: 10 }}>
+        <Card onPress={() => router.push('/jobs')} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <BriefcaseBusiness size={20} color={t.primary} /><Txt weight="600">Việc làm</Txt>
+        </Card>
+        <Card onPress={() => router.push('/events')} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <CalendarDays size={20} color={t.primary} /><Txt weight="600">Sự kiện</Txt>
+        </Card>
+      </View>
       <View style={{ margin: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: t.inputBg, borderRadius: 12, paddingHorizontal: 12 }}>
         <Search size={18} color={t.textMuted} />
         <TextInput value={query} onChangeText={setQuery} placeholder="Tìm theo tên, kỹ năng, công ty..." placeholderTextColor={t.textMuted} style={{ flex: 1, color: t.text, paddingVertical: 10, paddingHorizontal: 8 }} />
@@ -51,7 +60,7 @@ export default function NetworkScreen() {
       </View>
 
       {results.isLoading ? (
-        <Loading />
+        <ListSkeleton variant="row" />
       ) : (
         <FlashList
           data={users}

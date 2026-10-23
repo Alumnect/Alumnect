@@ -84,7 +84,7 @@ export default function TicketChatScreen() {
           }}
         />
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 10, borderTopWidth: 1, borderTopColor: t.border, backgroundColor: t.bg }}>
-          <Pressable onPress={addEvidence} hitSlop={8}><Paperclip size={22} color={t.textMuted} /></Pressable>
+          <Pressable onPress={addEvidence} hitSlop={8} accessibilityRole="button" accessibilityLabel="Đính kèm minh chứng"><Paperclip size={22} color={t.textMuted} /></Pressable>
           <TextInput value={text} onChangeText={setText} placeholder="Nhập nội dung trao đổi..." placeholderTextColor={t.textMuted} multiline style={{ flex: 1, maxHeight: 100, backgroundColor: t.inputBg, color: t.text, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }} />
           <Pressable onPress={() => text.trim() && send.mutate()} disabled={send.isPending} hitSlop={8}><Send size={24} color={text.trim() ? t.primary : t.textMuted} /></Pressable>
         </View>

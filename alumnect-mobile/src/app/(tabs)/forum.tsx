@@ -4,11 +4,12 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { MessageSquare, Plus, Search } from 'lucide-react-native'
-import { Avatar, Card, Chip, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Card, Chip, Empty, Screen, Txt } from '@/components/ui'
 import { VoteButton } from '@/components/VoteButton'
 import { forumApi } from '@/api/forum'
 import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
+import { ListSkeleton } from '@/components/Skeleton'
 
 const SORTS: [string, string][] = [['recent', 'Mới nhất'], ['votes', 'Nhiều vote'], ['answers', 'Nhiều trả lời']]
 
@@ -46,7 +47,7 @@ export default function ForumTab() {
           {(topics.data ?? []).map((tp) => <Chip key={tp.id} label={tp.name} active={topicId === tp.id} onPress={() => setTopicId(tp.id)} />)}
         </ScrollView>
       </View>
-      {q.isLoading ? <Loading /> : (
+      {q.isLoading ? <ListSkeleton variant="post" /> : (
         <FlashList
           data={items}
           keyExtractor={(x) => x.id}

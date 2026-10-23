@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8080/api/v1'
 
+// eslint-disable-next-line import/no-named-as-default-member
 const http: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,

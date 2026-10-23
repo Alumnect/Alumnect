@@ -9,6 +9,7 @@ import { WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import type { WorkingMode } from '@/api/mentoring'
 import { REQUEST_TASK_TYPES, requestApi } from '@/api/mentoringFlow'
 import { toast, errMsg } from '@/lib/toast'
+import { palette } from '@/theme'
 
 /** UC90 (mentorId rỗng) và UC91 (gửi trực tiếp cho mentor). */
 export function RequestForm({ mentorId, mentorName }: { mentorId?: number; mentorName?: string }) {
@@ -74,7 +75,7 @@ export function RequestForm({ mentorId, mentorName }: { mentorId?: number; mento
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 4 }}>
             {(industries.data ?? []).map((i) => <Chip key={i.id} label={i.name} active={industryId === i.id} onPress={() => setIndustryId(i.id)} />)}
           </View>
-          {errors.industry ? <Txt size={12} color="#DC2626" style={{ marginBottom: 8 }}>{errors.industry}</Txt> : <View style={{ height: 10 }} />}
+          {errors.industry ? <Txt size={12} color={palette.danger} style={{ marginBottom: 8 }}>{errors.industry}</Txt> : <View style={{ height: 10 }} />}
           <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Loại hỗ trợ</Txt>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
             {REQUEST_TASK_TYPES.map((t) => <Chip key={t.value} label={t.label} active={taskType === t.value} onPress={() => setTaskType(t.value)} />)}

@@ -57,7 +57,7 @@ export default function RequestDetailScreen() {
               </View>
               <Txt size={12} weight="700" color={m.responseStatus === 'ACCEPTED' ? t.success : t.textMuted}>{RESPONSE_STATUS_LABEL[m.responseStatus] ?? m.responseStatus}</Txt>
             </View>
-            {m.responseNote ? <Txt muted size={13} style={{ marginTop: 6 }}>"{m.responseNote}"</Txt> : null}
+            {m.responseNote ? <Txt muted size={13} style={{ marginTop: 6 }}>“{m.responseNote}”</Txt> : null}
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
               <Button title="Hồ sơ" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(m.mentorProfileId) } })} />
               {m.canMessage && m.conversationId ? <Button title="Nhắn tin & chốt deal" style={{ flex: 1.4, height: 38 }} onPress={() => router.push({ pathname: '/chat/[id]', params: { id: String(m.conversationId) } })} /> : null}

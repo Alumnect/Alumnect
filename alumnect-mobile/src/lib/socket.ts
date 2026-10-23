@@ -4,6 +4,10 @@ import type { IMessage, StompSubscription } from '@stomp/stompjs'
 import type { InfiniteData } from '@tanstack/react-query'
 import { queryClient } from './queryClient'
 import { useAuthStore } from '@/store/authStore'
+import type { ApiResponse } from './http'
+import { toast, errMsg } from './toast'
+import { requestApi } from '@/api/mentoringFlow'
+import { notificationApi } from '@/api/notifications'
 
 const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'ws://10.0.2.2:8080/ws'
 
@@ -55,12 +59,49 @@ function onChatMessage(m: IMessage) {
   }
 }
 
+const isMentoringKey = (q: { queryKey: readonly unknown[] }) =>
+  typeof q.queryKey[0] === 'string' && (q.queryKey[0] as string).startsWith('mentoring')
+
+type SocketNotification = { id: number; type?: string; content?: string; targetType?: string | null; targetId?: string | null }
+
 function onNotification(m: IMessage) {
   try {
-    const n = JSON.parse(m.body) as { type?: string }
+    const n = JSON.parse(m.body) as SocketNotification
+
+    // Chuông tăng ngay lập tức (không chờ gọi lại API), đồng bộ với server sau đó.
+    queryClient.setQueryData<ApiResponse<{ unreadCount: number }>>(['notifications', 'unread'], (old) =>
+      old ? { ...old, data: { ...old.data, unreadCount: (old.data?.unreadCount ?? 0) + 1 } } : old,
+    )
     queryClient.invalidateQueries({ queryKey: ['notifications'] })
-    if (n.type?.startsWith('MENTORING_')) {
-      queryClient.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && (q.queryKey[0] as string).startsWith('mentoring') })
+
+    if (n.type?.startsWith('MENTORING_')) queryClient.invalidateQueries({ predicate: isMentoringKey })
+
+    // Yêu cầu mentoring mới: toast có nút Nhận / Bỏ qua (giống Web).
+    if (n.targetType === 'MENTORING_INCOMING_REQUEST' && n.targetId) {
+      const requestId = Number(n.targetId)
+      if (Number.isInteger(requestId) && requestId > 0) {
+        const respond = async (accepted: boolean) => {
+          try {
+            if (accepted) {
+              await requestApi.accept(requestId)
+              toast.success('Đã nhận yêu cầu Mentoring. Kênh trao đổi đã được mở.')
+            } else {
+              await requestApi.decline(requestId)
+              toast.success('Đã bỏ qua yêu cầu Mentoring.')
+            }
+            await notificationApi.markRead(n.id)
+          } catch (e) {
+            toast.error(errMsg(e, 'Không thể xử lý yêu cầu Mentoring'))
+          } finally {
+            queryClient.invalidateQueries({ predicate: isMentoringKey })
+            queryClient.invalidateQueries({ queryKey: ['notifications'] })
+          }
+        }
+        toast.action(n.content || 'Bạn vừa nhận được một yêu cầu Mentoring mới.', [
+          { label: 'Nhận', onPress: () => void respond(true) },
+          { label: 'Bỏ qua', secondary: true, onPress: () => void respond(false) },
+        ])
+      }
     }
   } catch {
     /* bỏ qua */

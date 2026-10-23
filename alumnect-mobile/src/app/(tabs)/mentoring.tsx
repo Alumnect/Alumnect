@@ -3,7 +3,7 @@ import { Pressable, ScrollView, TextInput, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Award, ClipboardList, FileText, ListChecks, Search, UserCheck } from 'lucide-react-native'
+import { Award, ClipboardList, FileText, Handshake, Landmark, ListChecks, MessageCircle, RotateCcw, Search, UserCheck, Users } from 'lucide-react-native'
 import { Chip, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { MentorCardView } from '@/components/MentorCardView'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
@@ -31,13 +31,23 @@ export default function MentoringTab() {
   const [fieldId, setFieldId] = useState<number | undefined>()
   const [mode, setMode] = useState<WorkingMode | undefined>()
   const [type, setType] = useState<MentoringType | undefined>()
+  const [skill, setSkill] = useState<string | undefined>()
   const keyword = useDebounced(kw, 400)
 
-  const industries = useQuery({ queryKey: ['mentoring-industries'], queryFn: mentoringApi.industries })
+  // UC88: bộ lọc động lấy từ GET /mentors/filter-options (ngành, hình thức, loại hình, kỹ năng phổ biến).
+  const options = useQuery({ queryKey: ['mentor-filter-options'], queryFn: mentoringApi.filterOptions, staleTime: 10 * 60_000 })
+  const industries = { data: options.data?.industries ?? [] }
+  const modeOptions = options.data?.workingModes?.length
+    ? options.data.workingModes
+    : (Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((v) => ({ value: v, label: WORKING_MODE_LABEL[v] }))
+  const typeOptions = options.data?.mentoringTypes?.length
+    ? options.data.mentoringTypes
+    : (Object.keys(MENTORING_TYPE_LABEL) as MentoringType[]).map((v) => ({ value: v, label: MENTORING_TYPE_LABEL[v] }))
+  const skills = options.data?.popularSkills ?? []
   const q = useInfiniteQuery({
-    queryKey: ['mentoring-search', keyword, fieldId, mode, type],
+    queryKey: ['mentoring-search', keyword, fieldId, skill, mode, type],
     initialPageParam: 0,
-    queryFn: ({ pageParam }) => mentoringApi.search({ keyword, fieldId, workingMode: mode, mentoringType: type, page: pageParam }),
+    queryFn: ({ pageParam }) => mentoringApi.search({ keyword, fieldId, skill, workingMode: mode, mentoringType: type, page: pageParam }),
     getNextPageParam: (l) => (l.last ? undefined : l.pageNumber + 1),
   })
   const items = q.data?.pages.flatMap((p) => p.content) ?? []
@@ -60,6 +70,11 @@ export default function MentoringTab() {
               {role === 'STUDENT' ? <Quick icon={<ClipboardList size={22} color={t.primary} />} label="Yêu cầu của tôi" onPress={() => router.push('/mentoring/my-requests')} /> : null}
               {role === 'ALUMNI' ? <Quick icon={<ClipboardList size={22} color={t.primary} />} label="Yêu cầu đến" onPress={() => router.push('/mentoring/incoming-requests')} /> : null}
               <Quick icon={<ListChecks size={22} color={t.primary} />} label="Task" onPress={() => router.push('/mentoring/tasks')} />
+              <Quick icon={<Users size={22} color={t.primary} />} label="Nhóm" onPress={() => router.push('/mentoring/groups')} />
+              <Quick icon={<Handshake size={22} color={t.primary} />} label="Thỏa thuận" onPress={() => router.push('/mentoring/deals')} />
+              <Quick icon={<MessageCircle size={22} color={t.primary} />} label="Tin nhắn" onPress={() => router.push('/mentoring/messages')} />
+              {role === 'ALUMNI' ? <Quick icon={<Landmark size={22} color={t.primary} />} label="Thu nhập" onPress={() => router.push('/mentoring/earnings')} /> : null}
+              <Quick icon={<RotateCcw size={22} color={t.primary} />} label="Hoàn tiền" onPress={() => router.push('/mentoring/refunds')} />
               {role === 'ALUMNI' ? <Quick icon={<UserCheck size={22} color={t.primary} />} label="Làm mentor" onPress={() => router.push('/mentoring/status')} /> : null}
             </ScrollView>
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.inputBg, borderRadius: 12, paddingHorizontal: 12, marginBottom: 10 }}>
@@ -71,9 +86,14 @@ export default function MentoringTab() {
               {(industries.data ?? []).map((i) => <Chip key={i.id} label={i.name} active={fieldId === i.id} onPress={() => setFieldId(fieldId === i.id ? undefined : i.id)} />)}
             </ScrollView>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-              {(Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((k) => <Chip key={k} label={WORKING_MODE_LABEL[k]} active={mode === k} onPress={() => setMode(mode === k ? undefined : k)} />)}
-              {(Object.keys(MENTORING_TYPE_LABEL) as MentoringType[]).map((k) => <Chip key={k} label={MENTORING_TYPE_LABEL[k]} active={type === k} onPress={() => setType(type === k ? undefined : k)} />)}
+              {modeOptions.map((o) => <Chip key={`m-${o.value}`} label={o.label} active={mode === o.value} onPress={() => setMode(mode === o.value ? undefined : (o.value as WorkingMode))} />)}
+              {typeOptions.map((o) => <Chip key={`t-${o.value}`} label={o.label} active={type === o.value} onPress={() => setType(type === o.value ? undefined : (o.value as MentoringType))} />)}
             </ScrollView>
+            {skills.length ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {skills.map((sk) => <Chip key={sk} label={sk} active={skill === sk} onPress={() => setSkill(skill === sk ? undefined : sk)} />)}
+              </ScrollView>
+            ) : null}
             {q.isLoading ? <Loading /> : null}
           </View>
         }

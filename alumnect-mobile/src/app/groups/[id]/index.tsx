@@ -8,6 +8,8 @@ import { MoreHorizontal, Plus } from 'lucide-react-native'
 import { Button, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
+import { ShareSheet } from '@/components/ShareSheet'
+import { groupPath } from '@/lib/share'
 import { GroupPostCard } from '@/components/GroupPostCard'
 import { categoryLabel, groupApi, isManager } from '@/api/groups'
 import { useTheme } from '@/theme'
@@ -21,6 +23,7 @@ export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const gid = Number(id)
   const [menu, setMenu] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
 
   const group = useQuery({ queryKey: ['group', id], queryFn: () => groupApi.get(id!) })
   const g = group.data
@@ -58,6 +61,7 @@ export default function GroupDetailScreen() {
   const pending = g.viewerMembershipStatus === 'PENDING'
 
   const actions = [
+    { label: 'Chia sẻ nhóm', onPress: () => setShareOpen(true) },
     ...(manager ? [{ label: 'Chỉnh sửa nhóm', onPress: () => router.push({ pathname: '/groups/create', params: { id } }) }] : []),
     ...(manager ? [{ label: `Yêu cầu tham gia${g.pendingRequestCount ? ` (${g.pendingRequestCount})` : ''}`, onPress: () => router.push({ pathname: '/groups/[id]/join-requests', params: { id } }) }] : []),
     ...(owner ? [{ label: g.status === 'INACTIVE' ? 'Mở lại nhóm' : 'Đóng nhóm', onPress: () => run(() => groupApi.setStatus(gid, g.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE'), g.status === 'INACTIVE' ? 'Đã mở lại nhóm.' : 'Đã đóng nhóm.') }] : []),
@@ -103,6 +107,17 @@ export default function GroupDetailScreen() {
           <Plus size={28} color="#fff" />
         </Pressable>
       ) : null}
+      <ShareSheet
+        visible={shareOpen}
+        onClose={() => setShareOpen(false)}
+        item={{
+          title: g.name,
+          subtitle: `${g.memberCount} thành viên • ${g.description || 'Hội nhóm trên AlumNect'}`,
+          thumbnail: g.coverImageUrl,
+          path: groupPath(g.id),
+          typeLabel: 'hội nhóm',
+        }}
+      />
       <ActionSheet visible={menu} onClose={() => setMenu(false)} actions={actions} />
     </Screen>
   )

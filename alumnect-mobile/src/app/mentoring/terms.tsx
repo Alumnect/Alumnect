@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 import { mentoringApi } from '@/api/mentoring'
 import { MENTORING_TERMS_SECTIONS } from '@/constants/mentoringTerms'
 import { toast, errMsg } from '@/lib/toast'
+import { palette } from '@/theme'
 
 /** UC80: xem và chấp nhận điều khoản mentoring. */
 export default function MentoringTermsScreen() {
@@ -35,7 +36,7 @@ export default function MentoringTermsScreen() {
           </View>
         ))}
         {status.data?.accepted ? (
-          <Txt color="#16A34A" weight="700">Bạn đã chấp nhận phiên bản {status.data.currentVersion}.</Txt>
+          <Txt color={palette.success} weight="700">Bạn đã chấp nhận phiên bản {status.data.currentVersion}.</Txt>
         ) : (
           <Button title="Tôi đã đọc và đồng ý" onPress={() => accept.mutate()} loading={accept.isPending} />
         )}

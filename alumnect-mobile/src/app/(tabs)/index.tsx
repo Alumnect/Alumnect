@@ -5,13 +5,14 @@ import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Bell, MessageCircle, Plus, Search } from 'lucide-react-native'
-import { Screen, Txt, Chip, Loading, Empty } from '@/components/ui'
+import { Screen, Txt, Chip, Empty } from '@/components/ui'
 import { PostCard } from '@/components/PostCard'
 import { feedApi } from '@/api/feed'
 import type { FeedFilter, Post } from '@/api/feed'
 import { useTheme } from '@/theme'
 import { useDebounced } from '@/lib/hooks'
 import { useUnreadCount } from '@/api/notifications'
+import { ListSkeleton } from '@/components/Skeleton'
 
 const FILTERS: [FeedFilter, string][] = [
   ['all', 'Tất cả'],
@@ -68,7 +69,7 @@ export default function FeedScreen() {
       </View>
 
       {q.isLoading ? (
-        <Loading />
+        <ListSkeleton variant="post" />
       ) : (
         <FlashList
           data={posts}

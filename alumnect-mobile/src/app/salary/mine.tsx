@@ -7,6 +7,7 @@ import { Button, Card, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { formatVnd, salaryApi } from '@/api/salary'
 import { toast, errMsg } from '@/lib/toast'
+import { palette } from '@/theme'
 
 /** UC48–49: đóng góp của tôi — sửa / xóa. */
 export default function MyContributionsScreen() {
@@ -36,7 +37,7 @@ export default function MyContributionsScreen() {
             <Card style={{ marginBottom: 10 }}>
               <Txt weight="700">{item.jobTitle}</Txt>
               <Txt muted size={13}>{[item.company, item.region].filter(Boolean).join(' · ')}</Txt>
-              <Txt weight="800" color="#F27124" style={{ marginVertical: 4 }}>{formatVnd(item.grossAmount)}</Txt>
+              <Txt weight="800" color={palette.primary} style={{ marginVertical: 4 }}>{formatVnd(item.grossAmount)}</Txt>
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <Button title="Sửa" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => router.push({ pathname: '/salary/contribute', params: { id: item.id } })} />
                 <Button title="Xóa" variant="danger" style={{ flex: 1, height: 38 }} onPress={() => del.mutate(item.id)} />

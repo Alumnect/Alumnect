@@ -42,6 +42,7 @@ export function PaymentSheet({
   useEffect(() => {
     if (!checkout) return
     done.current = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus('PENDING')
     const id = setInterval(async () => {
       try {

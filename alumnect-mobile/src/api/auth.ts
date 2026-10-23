@@ -30,6 +30,15 @@ interface LoginResponse {
   accountStatus: string
 }
 
+export interface GoogleRegisterPayload {
+  token: string
+  fullName: string
+  role: 'STUDENT' | 'ALUMNI'
+  majorId: number
+  studentCode: string
+  proofUrl?: string
+}
+
 export type AuthResponse = { user: AuthUser; accessToken: string; refreshToken: string }
 
 const toAuth = (d: LoginResponse): AuthResponse => ({
@@ -59,6 +68,13 @@ export const authApi = {
     const res = await http.post<unknown, ApiResponse<LoginResponse>>('/auth/google', { token })
     return toAuth(res.data)
   },
+  registerWithGoogle: async (p: GoogleRegisterPayload) => {
+    const res = await http.post<unknown, ApiResponse<LoginResponse>>('/auth/google/register', p)
+    return toAuth(res.data)
+  },
+  /** Thu hồi một refresh token trên server (dùng khi từ chối phiên Admin trên mobile). */
+  revokeSession: (refreshToken?: string | null) =>
+    refreshToken ? http.post('/auth/logout', { refreshToken }).catch(() => undefined) : Promise.resolve(),
   forgotPassword: (input: { email: string }) => http.post<unknown, ApiResponse<void>>('/auth/forgot-password', input),
   verifyResetOtp: (p: { email: string; token: string }) =>
     http.post<unknown, ApiResponse<void>>('/auth/verify-reset-otp', p),

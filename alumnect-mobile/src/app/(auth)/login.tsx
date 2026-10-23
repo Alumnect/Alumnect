@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { View } from 'react-native'
-import { Link } from 'expo-router'
+import { Link, useRouter } from 'expo-router'
 import { useMutation } from '@tanstack/react-query'
 import * as LocalAuthentication from 'expo-local-authentication'
 import * as SecureStore from 'expo-secure-store'
@@ -9,11 +9,16 @@ import { Button, Input, Txt } from '@/components/ui'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
 import { queryClient } from '@/lib/queryClient'
+import { getGoogleIdToken, isGoogleConfigured } from '@/lib/google'
 import { toast, errMsg } from '@/lib/toast'
+import { palette } from '@/theme'
 
 const CRED_KEY = 'alumnect.biometric.cred'
 
+const ADMIN_MSG = 'Tài khoản Quản trị viên vui lòng sử dụng trên phiên bản Web máy tính để quản trị hệ thống.'
+
 export default function LoginScreen() {
+  const router = useRouter()
   const login = useAuthStore((s) => s.login)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,7 +40,8 @@ export default function LoginScreen() {
     mutationFn: (v: { email: string; password: string }) => authApi.login(v),
     onSuccess: async (data, v) => {
       if (data.user.role === 'ADMIN') {
-        toast.error('Tài khoản Quản trị viên vui lòng sử dụng trên phiên bản Web máy tính để quản trị hệ thống.')
+        void authApi.revokeSession(data.refreshToken)
+        toast.error(ADMIN_MSG)
         return
       }
       queryClient.clear()
@@ -45,6 +51,37 @@ export default function LoginScreen() {
       toast.success('Đăng nhập thành công!')
     },
     onError: (e) => toast.error(errMsg(e, 'Email hoặc mật khẩu không chính xác')),
+  })
+
+  // UC03: đăng nhập Google. Tài khoản chưa tồn tại (404) → chuyển sang đăng ký, điền sẵn thông tin.
+  const google = useMutation({
+    mutationFn: async () => {
+      const idToken = await getGoogleIdToken()
+      if (!idToken) return null
+      try {
+        return { idToken, auth: await authApi.loginWithGoogle(idToken) }
+      } catch (e) {
+        const err = e as Error & { status?: number; data?: { error?: number; data?: { email?: string; fullName?: string } } }
+        if (err.status === 404 || err.data?.error === 404) {
+          const meta = err.data?.data
+          router.push({ pathname: '/(auth)/register', params: { googleToken: idToken, email: meta?.email ?? '', fullName: meta?.fullName ?? '' } })
+          return null
+        }
+        throw e
+      }
+    },
+    onSuccess: (res) => {
+      if (!res) return
+      if (res.auth.user.role === 'ADMIN') {
+        void authApi.revokeSession(res.auth.refreshToken)
+        toast.error(ADMIN_MSG)
+        return
+      }
+      queryClient.clear()
+      login(res.auth)
+      toast.success('Đăng nhập thành công!')
+    },
+    onError: (e) => toast.error(errMsg(e, 'Không thể đăng nhập bằng Google. Vui lòng thử lại.')),
   })
 
   const submit = (v = { email: email.trim(), password }) => {
@@ -69,13 +106,16 @@ export default function LoginScreen() {
       <Input label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" error={errors.email} placeholder="you@fpt.edu.vn" />
       <Input label="Mật khẩu" value={password} onChangeText={setPassword} secureTextEntry error={errors.password} placeholder="••••••••" />
       <Link href="/(auth)/forgot-password" style={{ alignSelf: 'flex-end', marginBottom: 16 }}>
-        <Txt color="#F27124" weight="600" size={13}>Quên mật khẩu?</Txt>
+        <Txt color={palette.primary} weight="600" size={13}>Quên mật khẩu?</Txt>
       </Link>
       <Button title="Đăng nhập" onPress={() => submit()} loading={mutation.isPending} />
+      {isGoogleConfigured() ? (
+        <Button title="Tiếp tục với Google" variant="outline" onPress={() => google.mutate()} loading={google.isPending} style={{ marginTop: 12 }} />
+      ) : null}
       {hasBio ? <Button title="Đăng nhập bằng vân tay / khuôn mặt" variant="outline" onPress={biometric} style={{ marginTop: 12 }} /> : null}
       <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24, gap: 6 }}>
         <Txt muted>Chưa có tài khoản?</Txt>
-        <Link href="/(auth)/register"><Txt color="#F27124" weight="700">Đăng ký</Txt></Link>
+        <Link href="/(auth)/register"><Txt color={palette.primary} weight="700">Đăng ký</Txt></Link>
       </View>
     </AuthScaffold>
   )

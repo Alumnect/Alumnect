@@ -11,19 +11,22 @@ import { useTheme } from '@/theme'
 const STATUS_LABEL: Record<string, string> = { INCOMPLETE: 'Chưa hoàn thiện', PAYMENT_PENDING: 'Chờ thanh toán', ACTIVE: 'Đang hoạt động', EXPIRED: 'Đã hết hạn' }
 
 /** UC84: trạng thái mentor và gói đăng ký; điểm vào các bước điều khoản → hồ sơ → gói. */
+function Row({ ok, label }: { ok: boolean; label: string }) {
+  const t = useTheme()
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}>
+      {ok ? <Check size={18} color={t.success} /> : <X size={18} color={t.danger} />}
+      <Txt>{label}</Txt>
+    </View>
+  )
+}
+
 export default function MentorStatusScreen() {
   const t = useTheme()
   const router = useRouter()
   const q = useQuery({ queryKey: ['mentoring-status'], queryFn: mentoringApi.status })
   const s = q.data
   if (q.isLoading || !s) return <Screen><Header title="Trạng thái mentor" /><Loading /></Screen>
-
-  const Row = ({ ok, label }: { ok: boolean; label: string }) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}>
-      {ok ? <Check size={18} color={t.success} /> : <X size={18} color={t.danger} />}
-      <Txt>{label}</Txt>
-    </View>
-  )
 
   return (
     <Screen>

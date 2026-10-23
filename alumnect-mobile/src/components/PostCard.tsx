@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Pressable, Share, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
@@ -12,6 +12,8 @@ import type { Post } from '@/api/feed'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
+import { ShareSheet } from './ShareSheet'
+import { postPath } from '@/lib/share'
 
 const TYPE_LABEL: Record<string, string> = { achievement: 'Thành tựu', recruitment: 'Tuyển dụng', event: 'Sự kiện' }
 
@@ -23,7 +25,7 @@ export const REPORT_REASONS: [string, string][] = [
   ['OTHER', 'Lý do khác'],
 ]
 
-export function PostCard({ post, detail }: { post: Post; detail?: boolean }) {
+function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
   const t = useTheme()
   const router = useRouter()
   const qc = useQueryClient()
@@ -32,6 +34,7 @@ export function PostCard({ post, detail }: { post: Post; detail?: boolean }) {
   const [likes, setLikes] = useState(post.likes)
   const [saved, setSaved] = useState(post.saved)
   const [menu, setMenu] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const isMine = me?.id === post.authorId
   const images = post.images.length ? post.images : post.image ? [post.image] : []
@@ -100,7 +103,7 @@ export function PostCard({ post, detail }: { post: Post; detail?: boolean }) {
           </View>
           <Txt muted size={12} numberOfLines={1}>{[post.role, post.time].filter(Boolean).join(' · ')}</Txt>
         </Pressable>
-        <Pressable onPress={() => setMenu(true)} hitSlop={10}>
+        <Pressable onPress={() => setMenu(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Tùy chọn bài viết">
           <MoreHorizontal size={20} color={t.textMuted} />
         </Pressable>
       </View>
@@ -135,26 +138,40 @@ export function PostCard({ post, detail }: { post: Post; detail?: boolean }) {
       {images.length > 1 ? <Txt muted size={12} style={{ marginTop: 4 }}>+{images.length - 1} ảnh khác</Txt> : null}
 
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 20 }}>
-        <Pressable onPress={toggleLike} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Pressable onPress={toggleLike} accessibilityRole="button" accessibilityLabel={liked ? 'Bỏ thích' : 'Thích'} accessibilityState={{ selected: liked }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Heart size={20} color={liked ? t.danger : t.textMuted} fill={liked ? t.danger : 'transparent'} />
           <Txt muted size={13}>{likes}</Txt>
         </Pressable>
-        <Pressable onPress={openPost} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Pressable onPress={openPost} accessibilityRole="button" accessibilityLabel="Bình luận" style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <MessageCircle size={20} color={t.textMuted} />
           <Txt muted size={13}>{post.comments}</Txt>
         </Pressable>
         <Pressable
-          onPress={() => Share.share({ message: `${post.author}: ${post.text.slice(0, 200)}` })}
+          onPress={() => setShareOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Chia sẻ"
           style={{ flexDirection: 'row', alignItems: 'center' }}
         >
           <Share2 size={19} color={t.textMuted} />
         </Pressable>
         <View style={{ flex: 1 }} />
-        <Pressable onPress={toggleSave}>
+        <Pressable onPress={toggleSave} hitSlop={8} accessibilityRole="button" accessibilityLabel={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}>
           <Bookmark size={20} color={saved ? t.primary : t.textMuted} fill={saved ? t.primary : 'transparent'} />
         </Pressable>
       </View>
 
+      <ShareSheet
+        visible={shareOpen}
+        onClose={() => setShareOpen(false)}
+        item={{
+          title: post.author,
+          subtitle: post.text,
+          thumbnail: post.image || post.images?.[0] || null,
+          avatarUrl: post.avatar,
+          path: postPath(post.id),
+          typeLabel: 'bài viết',
+        }}
+      />
       <ActionSheet
         visible={menu}
         onClose={() => setMenu(false)}
@@ -176,3 +193,5 @@ export function PostCard({ post, detail }: { post: Post; detail?: boolean }) {
     </Card>
   )
 }
+
+export const PostCard = React.memo(PostCardImpl)

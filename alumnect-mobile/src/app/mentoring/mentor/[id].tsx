@@ -7,7 +7,7 @@ import { Avatar, Button, Card, Empty, Loading, Screen, Txt } from '@/components/
 import { Header } from '@/components/Header'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import { useAuthStore } from '@/store/authStore'
-import { useTheme } from '@/theme'
+import { useTheme, palette } from '@/theme'
 
 /** UC86, 89: chi tiết / hồ sơ mentor. */
 export default function MentorDetailScreen() {
@@ -28,7 +28,7 @@ export default function MentorDetailScreen() {
           <Txt size={22} weight="800" style={{ marginTop: 10 }}>{m.fullName}</Txt>
           <Txt muted style={{ textAlign: 'center' }}>{[m.currentPosition, m.currentCompany].filter(Boolean).join(' · ') || m.headline || ''}</Txt>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-            <Star size={16} color="#F59E0B" fill="#F59E0B" />
+            <Star size={16} color={palette.star} fill={palette.star} />
             <Txt weight="700">{m.rating?.toFixed?.(1)}</Txt>
             <Txt muted>({m.reviewCount} đánh giá) · {m.completedTasks} task hoàn thành</Txt>
           </View>

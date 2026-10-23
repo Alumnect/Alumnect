@@ -5,9 +5,9 @@ import { Star } from 'lucide-react-native'
 import { Avatar, Card, Txt } from './ui'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
 import type { MentorCard } from '@/api/mentoring'
-import { useTheme } from '@/theme'
+import { useTheme, palette } from '@/theme'
 
-export function MentorCardView({ m }: { m: MentorCard }) {
+function MentorCardViewImpl({ m }: { m: MentorCard }) {
   const t = useTheme()
   const router = useRouter()
   const fields = m.supportedFields.map((f) => (typeof f === 'string' ? f : f.name)).slice(0, 3)
@@ -19,7 +19,7 @@ export function MentorCardView({ m }: { m: MentorCard }) {
           <Txt weight="700" size={16} numberOfLines={1}>{m.fullName}</Txt>
           <Txt muted size={13} numberOfLines={1}>{[m.currentPosition, m.currentCompany].filter(Boolean).join(' · ') || m.headline || ''}</Txt>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-            <Star size={14} color="#F59E0B" fill="#F59E0B" />
+            <Star size={14} color={palette.star} fill={palette.star} />
             <Txt size={13} weight="600">{m.rating?.toFixed?.(1) ?? m.rating}</Txt>
             <Txt muted size={12}>({m.reviewCount})</Txt>
           </View>
@@ -41,3 +41,5 @@ export function MentorCardView({ m }: { m: MentorCard }) {
     </Card>
   )
 }
+
+export const MentorCardView = React.memo(MentorCardViewImpl)

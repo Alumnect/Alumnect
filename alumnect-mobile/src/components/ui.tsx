@@ -75,6 +75,9 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
       style={({ pressed }) => [
         styles.btn,
         { backgroundColor: bg, borderColor: variant === 'outline' ? t.primary : 'transparent', opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
@@ -126,7 +129,7 @@ export function Card({ children, style, onPress }: { children: React.ReactNode; 
   const body = { backgroundColor: t.card, borderColor: t.border }
   if (onPress) {
     return (
-      <Pressable onPress={onPress} style={[styles.card, body, style]}>
+      <Pressable onPress={onPress} accessibilityRole="button" style={[styles.card, body, style]}>
         {children}
       </Pressable>
     )
@@ -162,6 +165,8 @@ export function Chip({ label, active, onPress }: { label: string; active?: boole
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: !!active }}
       style={{
         paddingHorizontal: 14,
         paddingVertical: 7,

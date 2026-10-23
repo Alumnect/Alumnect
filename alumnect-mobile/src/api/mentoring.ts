@@ -146,6 +146,15 @@ export interface PaymentStatusResponse {
   mentorStatus?: MentorStatus
 }
 
+/** UC88: danh mục bộ lọc động từ GET /mentors/filter-options. */
+export interface MentorFilterOptions {
+  industries: { id: number; name: string }[]
+  specializations: { id: number; code: string; name: string }[]
+  workingModes: { value: string; label: string }[]
+  mentoringTypes: { value: string; label: string }[]
+  popularSkills: string[]
+}
+
 const d = <T>(p: Promise<ApiResponse<T>>) => p.then((r) => r.data)
 
 export const mentoringApi = {
@@ -166,14 +175,17 @@ export const mentoringApi = {
   cancelPayment: (orderCode: number) => d(http.post<unknown, ApiResponse<PaymentStatusResponse>>(`/mentoring/subscriptions/payment/cancel/${orderCode}`)),
   industries: () => http.get<unknown, ApiResponse<{ id: number; name: string }[]>>('/industries').then((r) => r.data ?? []),
 
-  search: (p: { keyword?: string; fieldId?: number; workingMode?: WorkingMode; mentoringType?: MentoringType; page?: number; sortBy?: string; sortDir?: string }) => {
+  filterOptions: () => d(http.get<unknown, ApiResponse<MentorFilterOptions>>('/mentors/filter-options')),
+
+  search: (p: { keyword?: string; fieldId?: number; skill?: string; workingMode?: WorkingMode; mentoringType?: MentoringType; page?: number; sortBy?: string; sortDir?: string }) => {
     const params: Record<string, unknown> = { page: p.page ?? 0, size: 9 }
     if (p.keyword?.trim()) params.keyword = p.keyword.trim()
     if (p.fieldId != null) params.fieldId = p.fieldId
+    if (p.skill) params.skill = p.skill
     if (p.workingMode) params.workingMode = p.workingMode
     if (p.mentoringType) params.mentoringType = p.mentoringType
     if (p.sortBy) params.sortBy = p.sortBy
-    if (p.sortDir) params.sortDir = p.sortDir
+    if (p.sortDir) params.sortDirection = p.sortDir
     return d(http.get<unknown, ApiResponse<PageResponse<MentorCard>>>('/mentors', { params }))
   },
   mentor: (id: number | string) => d(http.get<unknown, ApiResponse<MentorDetail>>(`/mentors/${id}`)),

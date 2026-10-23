@@ -3,12 +3,14 @@ import { Pressable, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Empty, Screen, Txt } from '@/components/ui'
+import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import { notificationApi } from '@/api/notifications'
 import type { NotificationItem } from '@/api/notifications'
 import { useTheme } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
+import { routeForTarget } from '@/lib/notificationRoute'
 
 export default function NotificationsScreen() {
   const t = useTheme()
@@ -37,16 +39,15 @@ export default function NotificationsScreen() {
 
   const open = (n: NotificationItem) => {
     if (!n.isRead) readOne.mutate(n.id)
-    if (n.targetType === 'POST' && n.targetId) router.push({ pathname: '/post/[id]', params: { id: n.targetId } })
-    else if (n.targetType === 'USER' && n.targetId) router.push({ pathname: '/profile/[id]', params: { id: n.targetId } })
-    else if (n.targetType === 'QUESTION' && n.targetId) router.push({ pathname: '/forum/[id]', params: { id: n.targetId } })
+    const href = routeForTarget(n.targetType, n.targetId)
+    if (href) router.push(href)
   }
 
   return (
     <Screen>
       <Header title="Thông báo" right={<Txt color={t.primary} weight="600" size={13} onPress={() => readAll.mutate()}>Đọc tất cả</Txt>} />
       {q.isLoading ? (
-        <Loading />
+        <ListSkeleton variant="row" />
       ) : (
         <FlashList
           data={items}

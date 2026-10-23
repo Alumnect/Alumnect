@@ -38,7 +38,7 @@ export function FollowButton({ userId, initial, onChange }: { userId: number; in
   )
 }
 
-export function UserRow({ user }: { user: UserCard }) {
+function UserRowImpl({ user }: { user: UserCard }) {
   const router = useRouter()
   const me = useAuthStore((s) => s.user)
   const isMe = me?.id === String(user.userId)
@@ -56,3 +56,5 @@ export function UserRow({ user }: { user: UserCard }) {
     </Pressable>
   )
 }
+
+export const UserRow = React.memo(UserRowImpl)

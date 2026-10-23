@@ -28,7 +28,7 @@ export function VoteButton({ voted, votes, onVote, onUnvote }: { voted: boolean;
     m.mutate(next)
   }
   return (
-    <Pressable onPress={toggle} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }} hitSlop={8}>
+    <Pressable onPress={toggle} accessibilityRole="button" accessibilityLabel={state.voted ? 'Bỏ bình chọn' : 'Bình chọn'} accessibilityState={{ selected: state.voted }} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }} hitSlop={8}>
       <ArrowBigUp size={24} color={state.voted ? t.primary : t.textMuted} fill={state.voted ? t.primary : 'transparent'} />
       <Txt weight="700" color={state.voted ? t.primary : t.textMuted}>{state.votes}</Txt>
     </Pressable>

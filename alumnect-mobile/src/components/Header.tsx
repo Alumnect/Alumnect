@@ -10,7 +10,7 @@ export function Header({ title, right }: { title: string; right?: React.ReactNod
   const router = useRouter()
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, height: 52, borderBottomWidth: 1, borderBottomColor: t.border, backgroundColor: t.bg }}>
-      <Pressable onPress={() => router.back()} hitSlop={10} style={{ width: 36 }}>
+      <Pressable onPress={() => router.back()} hitSlop={10} style={{ width: 36 }} accessibilityRole="button" accessibilityLabel="Quay lại">
         <ChevronLeft size={26} color={t.text} />
       </Pressable>
       <Txt size={17} weight="700" style={{ flex: 1 }} numberOfLines={1}>{title}</Txt>

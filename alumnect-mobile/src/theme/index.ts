@@ -8,6 +8,7 @@ export const palette = {
   danger: '#DC2626',
   warning: '#D97706',
   info: '#2563EB',
+  star: '#F59E0B',
 }
 
 const light = {

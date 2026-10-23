@@ -11,6 +11,7 @@ import { taskApi } from '@/api/mentoringTask'
 import type { WorkLogPayload } from '@/api/mentoringTask'
 import { pickImage, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
+import { palette } from '@/theme'
 
 const TITLES: Record<string, string> = {
   worklog: 'Nhật ký công việc', extension: 'Đề xuất gia hạn', amendment: 'Điều chỉnh task', settlement: 'Đề xuất hòa giải',
@@ -98,10 +99,10 @@ export default function TaskActionScreen() {
   }
 
   const showFiles = type === 'worklog' || type === 'completion' || type === 'dispute'
-  const Money = ({ k, label }: { k: string; label: string }) => (
+  const money = (k: string, label: string) => (
     <Input label={label} value={f[k] ?? ''} onChangeText={(v) => set(k)(v.replace(/\D/g, ''))} keyboardType="number-pad" error={errors[k]} />
   )
-  const T = ({ k, label, multiline = true }: { k: string; label: string; multiline?: boolean }) => (
+  const field = (k: string, label: string, multiline = true) => (
     <Input label={label} value={f[k] ?? ''} onChangeText={set(k)} multiline={multiline} error={errors[k]} />
   )
 
@@ -112,10 +113,10 @@ export default function TaskActionScreen() {
       <Header title={TITLES[type!] ?? 'Task'} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-          {type === 'worklog' ? (<><DateField label="Ngày làm việc" value={date} onChange={setDate} /><T k="description" label="Mô tả" /><T k="workCompleted" label="Công việc đã hoàn thành" /><T k="result" label="Kết quả đạt được" /><T k="nextAction" label="Việc tiếp theo (tùy chọn)" /></>) : null}
-          {type === 'extension' ? (<><DateField label="Hạn chót mới" value={date} onChange={setDate} error={errors.date} /><T k="reason" label="Lý do" /></>) : null}
-          {type === 'amendment' ? (<><T k="newScope" label="Phạm vi mới (tùy chọn)" /><T k="newResult" label="Kết quả kỳ vọng mới (tùy chọn)" /><Money k="amount" label="Chi phí phát sinh thêm (VND)" /><DateField label="Hạn chót mới (tùy chọn)" value={date} onChange={setDate} /><T k="reason" label="Lý do" /></>) : null}
-          {type === 'settlement' ? (<><Txt muted size={13} style={{ marginBottom: 8 }}>Tổng ngân sách task: {formatVnd(task.data?.overview.agreedPrice)}</Txt><Money k="mentor" label="Mentor nhận (VND)" /><Money k="refund" label="Hoàn cho sinh viên (VND)" /><T k="reason" label="Lý do" /></>) : null}
+          {type === 'worklog' ? (<><DateField label="Ngày làm việc" value={date} onChange={setDate} />{field('description', "Mô tả")}{field('workCompleted', "Công việc đã hoàn thành")}{field('result', "Kết quả đạt được")}{field('nextAction', "Việc tiếp theo (tùy chọn)")}</>) : null}
+          {type === 'extension' ? (<><DateField label="Hạn chót mới" value={date} onChange={setDate} error={errors.date} />{field('reason', "Lý do")}</>) : null}
+          {type === 'amendment' ? (<>{field('newScope', "Phạm vi mới (tùy chọn)")}{field('newResult', "Kết quả kỳ vọng mới (tùy chọn)")}{money('amount', "Chi phí phát sinh thêm (VND)")}<DateField label="Hạn chót mới (tùy chọn)" value={date} onChange={setDate} />{field('reason', "Lý do")}</>) : null}
+          {type === 'settlement' ? (<><Txt muted size={13} style={{ marginBottom: 8 }}>Tổng ngân sách task: {formatVnd(task.data?.overview.agreedPrice)}</Txt>{money('mentor', "Mentor nhận (VND)")}{money('refund', "Hoàn cho sinh viên (VND)")}{field('reason', "Lý do")}</>) : null}
           {type === 'settlement-ticket' ? (
             snapshot.isLoading ? <Loading /> : snapshot.data ? (
               <>
@@ -125,20 +126,20 @@ export default function TaskActionScreen() {
                   <Txt>Sinh viên hoàn: {formatVnd(snapshot.data.studentRefund)}</Txt>
                   <Txt muted size={13}>Lý do: {snapshot.data.reason}</Txt>
                 </Card>
-                <T k="note" label="Ghi chú cho quản trị viên (tùy chọn)" />
+                {field('note', "Ghi chú cho quản trị viên (tùy chọn)")}
               </>
             ) : <Txt muted>Không có thỏa thuận hòa giải để gửi.</Txt>
           ) : null}
-          {type === 'completion' ? (<><T k="summary" label="Tóm tắt kết quả" /><T k="deliverables" label="Sản phẩm bàn giao (tùy chọn)" /></>) : null}
-          {type === 'dispute' ? (<><T k="title" label="Tiêu đề" multiline={false} /><T k="reason" label="Lý do tranh chấp" /><T k="description" label="Mô tả chi tiết" /><T k="solution" label="Giải pháp mong muốn" /></>) : null}
+          {type === 'completion' ? (<>{field('summary', "Tóm tắt kết quả")}{field('deliverables', "Sản phẩm bàn giao (tùy chọn)")}</>) : null}
+          {type === 'dispute' ? (<>{field('title', "Tiêu đề", false)}{field('reason', "Lý do tranh chấp")}{field('description', "Mô tả chi tiết")}{field('solution', "Giải pháp mong muốn")}</>) : null}
           {type === 'review' ? (
             <>
               <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Chất lượng hướng dẫn</Txt>
               <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
-                {[1, 2, 3, 4, 5].map((n) => <Pressable key={n} onPress={() => setRating(n)}><Star size={36} color="#F59E0B" fill={n <= rating ? '#F59E0B' : 'transparent'} /></Pressable>)}
+                {[1, 2, 3, 4, 5].map((n) => <Pressable key={n} onPress={() => setRating(n)} accessibilityRole="button" accessibilityLabel={`${n} sao`}><Star size={36} color={palette.star} fill={n <= rating ? palette.star : 'transparent'} /></Pressable>)}
               </View>
-              {errors.rating ? <Txt size={12} color="#DC2626" style={{ marginBottom: 8 }}>{errors.rating}</Txt> : null}
-              <T k="comment" label="Nhận xét (tùy chọn)" />
+              {errors.rating ? <Txt size={12} color={palette.danger} style={{ marginBottom: 8 }}>{errors.rating}</Txt> : null}
+              {field('comment', "Nhận xét (tùy chọn)")}
             </>
           ) : null}
 

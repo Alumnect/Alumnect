@@ -51,7 +51,7 @@ export default function MapScreen() {
   const keyword = useDebounced(search, 500)
 
   const q = useQuery({ queryKey: ['alumni-map', keyword, cohort], queryFn: () => exploreApi.map({ search: keyword || undefined, cohort }) })
-  const points = q.data ?? []
+  const points = useMemo(() => q.data ?? [], [q.data])
   const cohorts = useMemo(() => Array.from(new Set(points.map((p) => p.cohort).filter((c): c is number => c != null))).sort((a, b) => b - a), [points])
 
   React.useEffect(() => {

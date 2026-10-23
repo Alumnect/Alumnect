@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
@@ -12,11 +12,9 @@ import { useTheme } from '@/theme'
 export default function RankingsScreen() {
   const t = useTheme()
   const router = useRouter()
-  const [fieldId, setFieldId] = useState<number | null>(null)
+  const [pickedField, setFieldId] = useState<number | null>(null)
   const industries = useQuery({ queryKey: ['mentoring-industries'], queryFn: mentoringApi.industries })
-  useEffect(() => {
-    if (fieldId == null && industries.data?.length) setFieldId(industries.data[0].id)
-  }, [industries.data, fieldId])
+  const fieldId = pickedField ?? industries.data?.[0]?.id ?? null
 
   const q = useInfiniteQuery({
     queryKey: ['mentoring-ranking', fieldId],

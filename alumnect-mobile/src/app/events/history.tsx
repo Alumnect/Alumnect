@@ -7,6 +7,7 @@ import { Card, Chip, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { eventApi } from '@/api/events'
 import type { HistoryFilter } from '@/api/events'
+import { palette } from '@/theme'
 
 const FILTERS: [HistoryFilter, string][] = [['all', 'Tất cả'], ['upcoming', 'Sắp diễn ra'], ['past', 'Đã qua'], ['cancelled', 'Đã hủy']]
 
@@ -44,7 +45,7 @@ export default function EventHistoryScreen() {
               <Txt weight="700" size={16}>{item.title}</Txt>
               <Txt muted size={13} style={{ marginTop: 4 }}>{item.startTime ? new Date(item.startTime).toLocaleString('vi-VN') : ''}</Txt>
               {item.location ? <Txt muted size={13}>{item.location}</Txt> : null}
-              <Txt size={12} weight="700" color="#F27124" style={{ marginTop: 6 }}>{item.registrationStatus === 'CANCELLED' || item.eventStatus === 'CANCELLED' ? 'Đã hủy' : item.attendanceState === 'PAST' ? 'Đã qua' : 'Sắp diễn ra'}</Txt>
+              <Txt size={12} weight="700" color={palette.primary} style={{ marginTop: 6 }}>{item.registrationStatus === 'CANCELLED' || item.eventStatus === 'CANCELLED' ? 'Đã hủy' : item.attendanceState === 'PAST' ? 'Đã qua' : 'Sắp diễn ra'}</Txt>
             </Card>
           )}
         />

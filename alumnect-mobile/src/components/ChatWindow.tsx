@@ -5,18 +5,54 @@ import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ImageIcon, Info, Send } from 'lucide-react-native'
-import { Avatar, Screen, Txt } from './ui'
+import { Avatar, Button, Screen, Txt } from './ui'
 import { Header } from './Header'
 import { chatApi } from '@/api/chat'
 import { dealApi } from '@/api/mentoringFlow'
-import { Button } from './ui'
 import type { Message } from '@/api/chat'
+import { SharedCard } from '@/components/SharedCards'
+import { parseSharedLink } from '@/lib/share'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
 import { pickImage, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 
 /** Khung chat (UC30): FlashList inverted + KeyboardAvoidingView; hỗ trợ hội thoại nháp (chưa có id). */
+const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupChat }: { item: Message; mine: boolean; isGroupChat: boolean }) {
+  const t = useTheme()
+    if (item.type === 'SYSTEM') {
+      return <Txt muted size={12} style={{ textAlign: 'center', marginVertical: 6 }}>{item.content}</Txt>
+    }
+        const shared = item.isDeleted ? null : parseSharedLink(item.content)
+    const cardOnly = !!shared && !shared.note && !(item.attachments?.length)
+    return (
+      <View style={{ flexDirection: mine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8, marginVertical: 3 }}>
+        {!mine ? <Avatar uri={item.senderAvatar} name={item.senderName} size={28} /> : null}
+        <View style={cardOnly ? { maxWidth: '88%' } : { maxWidth: '78%', backgroundColor: mine ? t.primary : t.inputBg, borderRadius: 16, padding: 10 }}>
+          {isGroupChat && !mine ? <Txt size={11} weight="700" color={t.primary}>{item.senderName}</Txt> : null}
+          {item.isDeleted ? (
+            <Txt muted size={13}>Tin nhắn đã bị thu hồi</Txt>
+          ) : (
+            <>
+              {item.attachments?.map((a) =>
+                a.mediaType === 'IMAGE' ? (
+                  <Image key={a.id} source={{ uri: a.url }} style={{ width: 200, height: 200, borderRadius: 10, marginBottom: item.content ? 6 : 0 }} contentFit="cover" />
+                ) : (
+                  <Txt key={a.id} size={13} color={mine ? '#fff' : t.info}>{a.fileName ?? 'Tệp đính kèm'}</Txt>
+                ),
+              )}
+              {(shared ? shared.note : item.content) ? <Txt color={mine ? '#fff' : t.text}>{shared ? shared.note : item.content}</Txt> : null}
+              {shared ? <View style={{ marginTop: shared.note ? 8 : 0 }}><SharedCard link={shared} mine={mine} /></View> : null}
+            </>
+          )}
+          <Txt size={10} color={mine && !cardOnly ? 'rgba(255,255,255,0.8)' : t.textMuted} style={{ marginTop: 2, alignSelf: 'flex-end' }}>
+            {new Date(item.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+          </Txt>
+        </View>
+      </View>
+    )
+})
+
 export function ChatWindow({
   conversationId,
   recipientId,
@@ -113,40 +149,10 @@ export function ChatWindow({
           contentContainerStyle={{ padding: 12 }}
           onEndReached={() => q.hasNextPage && q.fetchNextPage()}
           ListEmptyComponent={convId == null ? <Txt muted style={{ textAlign: 'center', padding: 24 }}>Hãy gửi tin nhắn đầu tiên.</Txt> : null}
-          renderItem={({ item }) => {
-            if (item.type === 'SYSTEM') {
-              return <Txt muted size={12} style={{ textAlign: 'center', marginVertical: 6 }}>{item.content}</Txt>
-            }
-            const mine = String(item.senderId) === me?.id
-            return (
-              <View style={{ flexDirection: mine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8, marginVertical: 3 }}>
-                {!mine ? <Avatar uri={item.senderAvatar} name={item.senderName} size={28} /> : null}
-                <View style={{ maxWidth: '78%', backgroundColor: mine ? t.primary : t.inputBg, borderRadius: 16, padding: 10 }}>
-                  {isGroupChat && !mine ? <Txt size={11} weight="700" color={t.primary}>{item.senderName}</Txt> : null}
-                  {item.isDeleted ? (
-                    <Txt muted size={13}>Tin nhắn đã bị thu hồi</Txt>
-                  ) : (
-                    <>
-                      {item.attachments?.map((a) =>
-                        a.mediaType === 'IMAGE' ? (
-                          <Image key={a.id} source={{ uri: a.url }} style={{ width: 200, height: 200, borderRadius: 10, marginBottom: item.content ? 6 : 0 }} contentFit="cover" />
-                        ) : (
-                          <Txt key={a.id} size={13} color={mine ? '#fff' : t.info}>{a.fileName ?? 'Tệp đính kèm'}</Txt>
-                        ),
-                      )}
-                      {item.content ? <Txt color={mine ? '#fff' : t.text}>{item.content}</Txt> : null}
-                    </>
-                  )}
-                  <Txt size={10} color={mine ? 'rgba(255,255,255,0.8)' : t.textMuted} style={{ marginTop: 2, alignSelf: 'flex-end' }}>
-                    {new Date(item.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </Txt>
-                </View>
-              </View>
-            )
-          }}
+          renderItem={({ item }) => <MessageBubble item={item} mine={String(item.senderId) === me?.id} isGroupChat={!!isGroupChat} />}
         />
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 10, borderTopWidth: 1, borderTopColor: t.border, backgroundColor: t.bg }}>
-          <Pressable onPress={sendImage} hitSlop={8}><ImageIcon size={24} color={t.textMuted} /></Pressable>
+          <Pressable onPress={sendImage} hitSlop={8} accessibilityRole="button" accessibilityLabel="Gửi ảnh"><ImageIcon size={24} color={t.textMuted} /></Pressable>
           <TextInput
             value={text}
             onChangeText={setText}
@@ -155,7 +161,7 @@ export function ChatWindow({
             multiline
             style={{ flex: 1, maxHeight: 100, backgroundColor: t.inputBg, color: t.text, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }}
           />
-          <Pressable onPress={submit} disabled={send.isPending} hitSlop={8}>
+          <Pressable onPress={submit} disabled={send.isPending} hitSlop={8} accessibilityRole="button" accessibilityLabel="Gửi tin nhắn">
             <Send size={24} color={text.trim() ? t.primary : t.textMuted} />
           </Pressable>
         </View>
