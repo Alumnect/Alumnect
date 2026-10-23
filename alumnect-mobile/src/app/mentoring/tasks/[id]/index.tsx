@@ -1,14 +1,17 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { Pressable, ScrollView, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Button, Card, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, Input, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { SectionCard, StatBox, StatRow } from '@/components/DetailBits'
+import { statusTone } from '@/constants/status'
+import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, FileCheck2, FilePen, History, MessageCircle, NotebookPen, PackageCheck, Plus, Scale, ShieldAlert, Star, Target, Zap } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { PaymentSheet } from '@/components/PaymentSheet'
 import { TASK_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
 import type { TaskCheckout } from '@/api/mentoringTask'
 import { formatVnd } from '@/api/mentoring'
-import { useTheme } from '@/theme'
+import { useTheme, palette } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
 
 /** UC96–101, 104: trung tâm quản lý một task — nhật ký, gia hạn, điều chỉnh, nghiệm thu, hòa giải, tranh chấp. */
@@ -43,43 +46,79 @@ export default function TaskDetailScreen() {
   const { overview: o, permissions: p } = d
   const other = p.isStudent ? d.mentor : d.student
 
-  return (
-    <Screen>
-      <Header title="Chi tiết task" />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
-        <Txt size={20} weight="800">{o.taskTitle}</Txt>
-        <Txt weight="700" color={t.primary} style={{ marginTop: 2 }}>{TASK_STATUS_LABEL[o.status] ?? o.status}{o.isOverdue ? ' · Quá hạn' : ''}</Txt>
-        <View style={{ height: 8, backgroundColor: t.inputBg, borderRadius: 4, marginTop: 10, overflow: 'hidden' }}>
-          <View style={{ width: `${Math.min(100, o.progressPercentage)}%`, height: 8, backgroundColor: t.primary }} />
-        </View>
-        <Txt muted size={12} style={{ marginTop: 4 }}>{o.confirmedWorkLogs}/{o.totalWorkLogs} nhật ký đã xác nhận · Hạn {new Date(o.deadline).toLocaleString('vi-VN')} ({o.daysRemaining} ngày)</Txt>
+  const pct = Math.min(100, o.progressPercentage ?? 0)
+  const actions: { key: string; label: string; icon: React.ReactNode; onPress: () => void; tone?: string }[] = [
+    ...(d.conversationId ? [{ key: 'chat', label: 'Chat', icon: <MessageCircle size={20} color={palette.info} />, tone: palette.info, onPress: () => router.push({ pathname: '/chat/[id]', params: { id: String(d.conversationId) } }) }] : []),
+    { key: 'report', label: 'Báo cáo & dòng tiền', icon: <BarChart3 size={20} color={palette.success} />, tone: palette.success, onPress: () => router.push({ pathname: '/mentoring/tasks/[id]/report', params: { id: String(tid) } }) },
+    ...(p.canSubmitCompletion ? [{ key: 'completion', label: 'Nộp kết quả', icon: <PackageCheck size={20} color={palette.primary} />, onPress: () => go('completion') }] : []),
+    ...(p.canRequestExtension ? [{ key: 'extension', label: 'Gia hạn', icon: <CalendarPlus size={20} color={palette.warning} />, tone: palette.warning, onPress: () => go('extension') }] : []),
+    ...(p.canRequestAmendment ? [{ key: 'amendment', label: 'Điều chỉnh task', icon: <FilePen size={20} color="#7C3AED" />, tone: '#7C3AED', onPress: () => go('amendment') }] : []),
+    ...(p.canProposeSettlement ? [{ key: 'settlement', label: 'Đề xuất hòa giải', icon: <Scale size={20} color="#0891B2" />, tone: '#0891B2', onPress: () => go('settlement') }] : []),
+    ...(p.canSubmitSettlementTicket ? [{ key: 'ticket', label: 'Gửi biên bản hòa giải', icon: <FileCheck2 size={20} color="#0891B2" />, tone: '#0891B2', onPress: () => go('settlement-ticket') }] : []),
+    ...(p.isStudent && o.status === 'COMPLETED' ? [{ key: 'review', label: 'Đánh giá mentor', icon: <Star size={20} color={palette.star} />, tone: palette.star, onPress: () => go('review') }] : []),
+    ...(p.canCreateDisputeTicket ? [{ key: 'dispute', label: 'Khiếu nại', icon: <ShieldAlert size={20} color={palette.danger} />, tone: palette.danger, onPress: () => go('dispute') }] : []),
+  ]
 
-        <Card style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(other.id) } })}>
-          <Avatar uri={other.avatarUrl} name={other.fullName} size={44} />
+  return (
+    <Screen bg={t.card}>
+      <Header title="Chi tiết task" />
+      <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <Tag label={TASK_STATUS_LABEL[o.status] ?? o.status} tone={statusTone(o.status)} />
+            {o.isOverdue ? <Tag label="Quá hạn" tone="danger" /> : null}
+          </View>
+          <Txt size={21} weight="800" style={{ marginTop: 10, lineHeight: 28 }}>{o.taskTitle}</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }}>
+            <View style={{ flex: 1, height: 10, backgroundColor: t.inputBg, borderRadius: 5, overflow: 'hidden' }}>
+              <View style={{ width: `${pct}%`, height: 10, borderRadius: 5, backgroundColor: pct >= 100 ? t.success : t.primary }} />
+            </View>
+            <Txt weight="800">{`${pct}%`}</Txt>
+          </View>
+          <StatRow style={{ marginTop: 14 }}>
+            <StatBox value={`${o.confirmedWorkLogs}/${o.totalWorkLogs}`} label="Nhật ký đã duyệt" />
+            <StatBox value={o.daysRemaining} label="Ngày còn lại" color={o.isOverdue ? t.danger : undefined} />
+            <StatBox value={formatVnd(o.agreedPrice)} label="Ngân sách" color={t.primary} />
+          </StatRow>
+          <Txt muted size={12} style={{ marginTop: 8 }}>{`Hạn chót: ${new Date(o.deadline).toLocaleString('vi-VN')}`}</Txt>
+        </View>
+
+        <Card style={{ marginHorizontal: 12, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(other.id) } })}>
+          <Avatar uri={other.avatarUrl} name={other.fullName} size={46} />
           <View style={{ flex: 1 }}>
-            <Txt muted size={12}>{p.isStudent ? 'Mentor' : 'Sinh viên'}</Txt>
+            <Txt muted size={12}>{p.isStudent ? 'Mentor của bạn' : 'Sinh viên'}</Txt>
             <Txt weight="700">{other.fullName}</Txt>
           </View>
-          <Txt weight="800" color={t.primary}>{formatVnd(o.agreedPrice)}</Txt>
-        </Card>
-        <Card style={{ marginTop: 12 }}>
-          <Txt weight="700">Phạm vi</Txt><Txt>{o.taskScope}</Txt>
-          <Txt weight="700" style={{ marginTop: 8 }}>Kết quả kỳ vọng</Txt><Txt>{d.deal.expectedResult}</Txt>
+          <ChevronRight size={18} color={t.textSubtle} />
         </Card>
 
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
-          {d.conversationId ? <Button title="Chat" variant="outline" style={{ height: 40 }} onPress={() => router.push({ pathname: '/chat/[id]', params: { id: String(d.conversationId) } })} /> : null}
-          <Button title="Báo cáo & dòng tiền" variant="outline" style={{ height: 40 }} onPress={() => router.push({ pathname: '/mentoring/tasks/[id]/report', params: { id: String(tid) } })} />
-          {p.canRequestExtension ? <Button title="Gia hạn" variant="outline" style={{ height: 40 }} onPress={() => go('extension')} /> : null}
-          {p.canRequestAmendment ? <Button title="Điều chỉnh task" variant="outline" style={{ height: 40 }} onPress={() => go('amendment')} /> : null}
-          {p.canProposeSettlement ? <Button title="Đề xuất hòa giải" variant="outline" style={{ height: 40 }} onPress={() => go('settlement')} /> : null}
-          {p.canSubmitCompletion ? <Button title="Nộp kết quả" style={{ height: 40 }} onPress={() => go('completion')} /> : null}
-          {p.canCreateDisputeTicket ? <Button title="Khiếu nại" variant="danger" style={{ height: 40 }} onPress={() => go('dispute')} /> : null}
-          {p.isStudent && o.status === 'COMPLETED' ? <Button title="Đánh giá mentor" style={{ height: 40 }} onPress={() => go('review')} /> : null}
-        </View>
+        <SectionCard title="Phạm vi & kết quả" icon={<Target size={18} color={t.primary} />}>
+          <Txt muted size={12} weight="700">PHẠM VI</Txt>
+          <Txt style={{ lineHeight: 21, marginTop: 2 }}>{o.taskScope}</Txt>
+          <Txt muted size={12} weight="700" style={{ marginTop: 10 }}>KẾT QUẢ KỲ VỌNG</Txt>
+          <Txt style={{ lineHeight: 21, marginTop: 2 }}>{d.deal.expectedResult}</Txt>
+        </SectionCard>
+
+        <SectionCard title="Thao tác" icon={<Zap size={18} color={t.primary} />}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 }}>
+            {actions.map((a) => (
+              <Pressable
+                key={a.key}
+                onPress={a.onPress}
+                accessibilityRole="button"
+                style={({ pressed }) => ({ width: '50%', padding: 4, opacity: pressed ? 0.7 : 1 })}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: t.surface }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: `${a.tone ?? palette.primary}1A` }}>{a.icon}</View>
+                  <Txt size={13} weight="700" style={{ flex: 1 }} numberOfLines={2}>{a.label}</Txt>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </SectionCard>
 
         {d.activeExtension && d.activeExtension.status === 'PENDING' ? (
-          <Card style={{ marginTop: 14 }}>
+          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Yêu cầu gia hạn</Txt>
             <Txt size={13}>{d.activeExtension.createdByName} đề xuất hạn mới {new Date(d.activeExtension.proposedDeadline).toLocaleString('vi-VN')}</Txt>
             <Txt muted size={13}>Lý do: {d.activeExtension.reason}</Txt>
@@ -92,7 +131,7 @@ export default function TaskDetailScreen() {
         ) : null}
 
         {d.activeAmendment && ['PENDING', 'AWAITING_TOPUP'].includes(d.activeAmendment.status) ? (
-          <Card style={{ marginTop: 14 }}>
+          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Đề xuất điều chỉnh task ({d.activeAmendment.status === 'AWAITING_TOPUP' ? 'chờ nạp thêm' : 'chờ phản hồi'})</Txt>
             {d.activeAmendment.newScope ? <Txt size={13}>Phạm vi mới: {d.activeAmendment.newScope}</Txt> : null}
             {d.activeAmendment.additionalAmount ? <Txt size={13}>Phát sinh: {formatVnd(d.activeAmendment.additionalAmount)}</Txt> : null}
@@ -107,7 +146,7 @@ export default function TaskDetailScreen() {
         ) : null}
 
         {d.activeSettlementProposal && d.activeSettlementProposal.status === 'PENDING' ? (
-          <Card style={{ marginTop: 14 }}>
+          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Đề xuất hòa giải</Txt>
             <Txt size={13}>Mentor nhận {formatVnd(d.activeSettlementProposal.mentorAmount)} · Sinh viên hoàn {formatVnd(d.activeSettlementProposal.studentRefund)}</Txt>
             <Txt muted size={13}>Lý do: {d.activeSettlementProposal.reason}</Txt>
@@ -118,10 +157,9 @@ export default function TaskDetailScreen() {
             </View>
           </Card>
         ) : null}
-        {p.canSubmitSettlementTicket ? <Button title="Gửi biên bản hòa giải" variant="outline" style={{ marginTop: 10 }} onPress={() => go('settlement-ticket')} /> : null}
 
         {d.latestCompletion && d.latestCompletion.status === 'PENDING' ? (
-          <Card style={{ marginTop: 14 }}>
+          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Kết quả được nộp</Txt>
             <Txt>{d.latestCompletion.finalSummary}</Txt>
             {d.latestCompletion.deliverables ? <Txt muted size={13}>Sản phẩm: {d.latestCompletion.deliverables}</Txt> : null}
@@ -138,31 +176,35 @@ export default function TaskDetailScreen() {
         ) : null}
 
         {d.activeTicket ? (
-          <Card style={{ marginTop: 14, borderColor: t.danger }} onPress={() => router.push({ pathname: '/mentoring/dispute/[ticketId]/chat', params: { ticketId: String(d.activeTicket!.id), taskId: String(tid) } })}>
+          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.danger }} onPress={() => router.push({ pathname: '/mentoring/dispute/[ticketId]/chat', params: { ticketId: String(d.activeTicket!.id), taskId: String(tid) } })}>
             <Txt weight="700" color={t.danger}>Ticket {d.activeTicket.ticketCode} · {d.activeTicket.status}</Txt>
             <Txt>{d.activeTicket.title}</Txt>
             <Txt muted size={12}>Chạm để trao đổi & nộp minh chứng</Txt>
           </Card>
         ) : null}
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 8 }}>
-          <Txt weight="700" size={16} style={{ flex: 1 }}>Nhật ký công việc</Txt>
-          {p.canAddWorkLog ? <Button title="Thêm" style={{ height: 36, paddingHorizontal: 16 }} onPress={() => go('worklog')} /> : null}
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 8, marginBottom: 8 }}>
+          <Txt weight="800" size={16} style={{ flex: 1 }}>Nhật ký công việc</Txt>
+          {p.canAddWorkLog ? <Button title="Thêm nhật ký" size="sm" icon={<Plus size={15} color="#fff" />} onPress={() => go('worklog')} /> : null}
         </View>
-        {d.workLogs.length === 0 ? <Txt muted>Chưa có nhật ký nào.</Txt> : null}
+        {d.workLogs.length === 0 ? <Empty icon={<NotebookPen size={26} color={t.primary} />} title="Chưa có nhật ký" text="Mentor ghi nhật ký sau mỗi buổi làm việc để theo dõi tiến độ." /> : null}
         {d.workLogs.map((w) => (
-          <Card key={w.id} style={{ marginBottom: 10 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Txt weight="700">{new Date(w.logDate).toLocaleDateString('vi-VN')}</Txt>
-              <Txt size={12} weight="700" color={w.status === 'CONFIRMED' ? t.success : w.status === 'REJECTED' ? t.danger : t.warning}>
-                {w.status === 'CONFIRMED' ? 'Đã xác nhận' : w.status === 'REJECTED' ? 'Cần làm rõ' : 'Chờ xác nhận'}
-              </Txt>
+          <Card key={w.id} style={{ marginHorizontal: 12, marginBottom: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <CalendarDays size={15} color={t.textMuted} />
+              <Txt weight="800" style={{ flex: 1 }}>{new Date(w.logDate).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}</Txt>
+              <Tag
+                label={w.status === 'CONFIRMED' ? 'Đã xác nhận' : w.status === 'REJECTED' ? 'Cần làm rõ' : 'Chờ xác nhận'}
+                tone={w.status === 'CONFIRMED' ? 'success' : w.status === 'REJECTED' ? 'danger' : 'warning'}
+              />
             </View>
-            <Txt style={{ marginTop: 4 }}>{w.description}</Txt>
-            <Txt muted size={13} style={{ marginTop: 4 }}>Đã làm: {w.workCompleted}</Txt>
-            <Txt muted size={13}>Kết quả: {w.result}</Txt>
-            {w.nextAction ? <Txt muted size={13}>Tiếp theo: {w.nextAction}</Txt> : null}
-            {w.studentFeedback ? <Txt size={13} color={t.warning}>Phản hồi: {w.studentFeedback}</Txt> : null}
+            <Txt style={{ marginTop: 8, lineHeight: 21 }}>{w.description}</Txt>
+            <View style={{ marginTop: 8, padding: 10, borderRadius: 12, backgroundColor: t.surface, gap: 4 }}>
+              <Txt size={13}><Txt size={13} weight="700">Đã làm: </Txt>{w.workCompleted}</Txt>
+              <Txt size={13}><Txt size={13} weight="700">Kết quả: </Txt>{w.result}</Txt>
+              {w.nextAction ? <Txt size={13}><Txt size={13} weight="700">Tiếp theo: </Txt>{w.nextAction}</Txt> : null}
+            </View>
+            {w.studentFeedback ? <Txt size={13} color={t.warning} style={{ marginTop: 6 }}>{`Phản hồi: ${w.studentFeedback}`}</Txt> : null}
             {w.canConfirm || w.canReject ? (
               <View style={{ marginTop: 8 }}>
                 <Input value={feedback[w.id] ?? ''} onChangeText={(v) => setFeedback({ ...feedback, [w.id]: v })} placeholder="Phản hồi (bắt buộc khi yêu cầu làm rõ)" />
@@ -178,10 +220,20 @@ export default function TaskDetailScreen() {
 
         {d.history.length ? (
           <>
-            <Txt weight="700" size={16} style={{ marginTop: 16, marginBottom: 8 }}>Lịch sử</Txt>
-            {d.history.slice(0, 15).map((h) => (
-              <Txt key={h.id} muted size={12} style={{ marginBottom: 4 }}>{new Date(h.timestamp).toLocaleString('vi-VN')} · {h.title} ({h.actorName})</Txt>
-            ))}
+            <SectionCard title="Lịch sử hoạt động" icon={<History size={18} color={t.primary} />} style={{ marginTop: 8 }}>
+              {d.history.slice(0, 15).map((h, i, arr) => (
+                <View key={h.id} style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ alignItems: 'center' }}>
+                    <View style={{ width: 10, height: 10, borderRadius: 5, marginTop: 5, backgroundColor: i === 0 ? t.primary : t.border }} />
+                    {i < arr.length - 1 ? <View style={{ flex: 1, width: 2, backgroundColor: t.divider }} /> : null}
+                  </View>
+                  <View style={{ flex: 1, paddingBottom: 12 }}>
+                    <Txt size={13} weight="600">{h.title}</Txt>
+                    <Txt muted size={12}>{`${h.actorName} · ${new Date(h.timestamp).toLocaleString('vi-VN')}`}</Txt>
+                  </View>
+                </View>
+              ))}
+            </SectionCard>
           </>
         ) : null}
       </ScrollView>

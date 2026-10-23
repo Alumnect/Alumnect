@@ -3,10 +3,12 @@ import { ScrollView, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Avatar, Card, Chip, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Card, Chip, Empty, Screen, Txt } from '@/components/ui'
+import { ListSkeleton } from '@/components/Skeleton'
+import { Star, Trophy } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { mentoringApi } from '@/api/mentoring'
-import { useTheme } from '@/theme'
+import { useTheme, palette } from '@/theme'
 
 /** UC87: bảng xếp hạng mentor theo lĩnh vực. */
 export default function RankingsScreen() {
@@ -24,35 +26,50 @@ export default function RankingsScreen() {
     getNextPageParam: (l) => (l.last ? undefined : l.pageNumber + 1),
   })
   const items = q.data?.pages.flatMap((p) => p.content) ?? []
+  const medal = (r: number) => (r === 1 ? '#F5B301' : r === 2 ? '#A0AEC0' : r === 3 ? '#CD7F32' : null)
   return (
-    <Screen>
-      <Header title="Bảng xếp hạng mentor" />
-      <View style={{ height: 52 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ padding: 12 }}>
+    <Screen bg={t.card}>
+      <Header title="Bảng xếp hạng mentor" subtitle="Theo điểm uy tín trong từng lĩnh vực" />
+      <View style={{ backgroundColor: t.card }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
           {(industries.data ?? []).map((i) => <Chip key={i.id} label={i.name} active={fieldId === i.id} onPress={() => setFieldId(i.id)} />)}
         </ScrollView>
       </View>
-      {q.isLoading ? <Loading /> : (
-        <FlashList
-          data={items}
-          keyExtractor={(m) => String(m.mentorId)}
-          contentContainerStyle={{ padding: 16 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
-          ListEmptyComponent={<Empty text="Chưa có dữ liệu xếp hạng." />}
-          renderItem={({ item }) => (
-            <Card style={{ marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }} onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(item.mentorId) } })}>
-              <Txt size={20} weight="800" color={item.rank <= 3 ? t.primary : t.textMuted} style={{ width: 28, textAlign: 'center' }}>{item.rank}</Txt>
-              <Avatar uri={item.avatarUrl} name={item.fullName} size={46} />
-              <View style={{ flex: 1 }}>
-                <Txt weight="700" numberOfLines={1}>{item.fullName}</Txt>
-                <Txt muted size={12} numberOfLines={1}>{item.currentCompany ?? item.headline ?? ''}</Txt>
-                <Txt size={12}>★ {item.rating?.toFixed?.(1)} · {item.completedTasks} task</Txt>
-              </View>
-              <Txt weight="800" color={t.primary}>{Math.round(item.reputationScore)}</Txt>
-            </Card>
-          )}
-        />
-      )}
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
+        {q.isLoading ? <ListSkeleton variant="row" /> : (
+          <FlashList
+            data={items}
+            keyExtractor={(m) => String(m.mentorId)}
+            contentContainerStyle={{ paddingVertical: 12 }}
+            onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+            ListEmptyComponent={<Empty icon={<Trophy size={28} color={t.primary} />} title="Chưa có xếp hạng" text="Lĩnh vực này chưa có mentor nào được xếp hạng." />}
+            renderItem={({ item }) => {
+              const m = medal(item.rank)
+              return (
+                <Card style={{ marginHorizontal: 12, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }} onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(item.mentorId) } })}>
+                  <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: m ? `${m}26` : t.inputBg }}>
+                    {m ? <Trophy size={16} color={m} /> : <Txt weight="800" muted>{item.rank}</Txt>}
+                  </View>
+                  <Avatar uri={item.avatarUrl} name={item.fullName} size={48} />
+                  <View style={{ flex: 1 }}>
+                    <Txt weight="700" numberOfLines={1}>{item.fullName}</Txt>
+                    <Txt muted size={12} numberOfLines={1}>{item.currentCompany ?? item.headline ?? ''}</Txt>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                      <Star size={12} color={palette.star} fill={palette.star} />
+                      <Txt size={12} weight="600">{item.rating?.toFixed?.(1)}</Txt>
+                      <Txt muted size={12}>{`· ${item.completedTasks} task`}</Txt>
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Txt weight="800" size={18} color={t.primary}>{Math.round(item.reputationScore)}</Txt>
+                    <Txt muted size={11}>điểm</Txt>
+                  </View>
+                </Card>
+              )
+            }}
+          />
+        )}
+      </View>
     </Screen>
   )
 }

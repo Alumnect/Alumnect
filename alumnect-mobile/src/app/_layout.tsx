@@ -1,7 +1,14 @@
 import React, { useEffect } from 'react'
-import { ActivityIndicator, Pressable, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, View } from 'react-native'
+import { Text } from '@/components/AppText'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { useFonts } from 'expo-font'
+import { BeVietnamPro_400Regular } from '@expo-google-fonts/be-vietnam-pro/400Regular'
+import { BeVietnamPro_500Medium } from '@expo-google-fonts/be-vietnam-pro/500Medium'
+import { BeVietnamPro_600SemiBold } from '@expo-google-fonts/be-vietnam-pro/600SemiBold'
+import { BeVietnamPro_700Bold } from '@expo-google-fonts/be-vietnam-pro/700Bold'
+import { BeVietnamPro_800ExtraBold } from '@expo-google-fonts/be-vietnam-pro/800ExtraBold'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -10,7 +17,7 @@ import { queryClient } from '@/lib/queryClient'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/lib/toast'
 import { authApi } from '@/api/auth'
-import { useTheme, palette } from '@/theme'
+import { useTheme, palette, FONT } from '@/theme'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { startRealtime } from '@/lib/socket'
 
@@ -33,7 +40,7 @@ function ActionToast({ text, actions }: { text?: string; actions: NonNullable<Ac
             }}
             style={{ flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center', backgroundColor: a.secondary ? t.inputBg : t.primary }}
           >
-            <Text style={{ color: a.secondary ? t.text : '#fff', fontWeight: '700', fontSize: 13 }}>{a.label}</Text>
+            <Text style={{ color: a.secondary ? t.text : t.onPrimary, fontWeight: '700', fontSize: 13 }}>{a.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -43,9 +50,9 @@ function ActionToast({ text, actions }: { text?: string; actions: NonNullable<Ac
 
 const toastConfig: ToastConfig = {
   action: ({ text1, props }) => <ActionToast text={text1} actions={(props as ActionToastProps).actions ?? []} />,
-  success: (p) => <BaseToast {...p} style={{ borderLeftColor: palette.success }} text1Style={{ fontSize: 14 }} text1NumberOfLines={3} />,
-  error: (p) => <ErrorToast {...p} style={{ borderLeftColor: palette.danger }} text1Style={{ fontSize: 14 }} text1NumberOfLines={3} />,
-  info: (p) => <BaseToast {...p} style={{ borderLeftColor: palette.info }} text1Style={{ fontSize: 14 }} text1NumberOfLines={3} />,
+  success: (p) => <BaseToast {...p} style={{ borderLeftColor: palette.success }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
+  error: (p) => <ErrorToast {...p} style={{ borderLeftColor: palette.danger }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
+  info: (p) => <BaseToast {...p} style={{ borderLeftColor: palette.info }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
 }
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -86,6 +93,15 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const t = useTheme()
+  // Giữ màn hình nền cho tới khi font tải xong để chữ không bị nhảy font; nếu lỗi thì dùng font hệ thống.
+  const [fontsLoaded, fontError] = useFonts({
+    [FONT.regular]: BeVietnamPro_400Regular,
+    [FONT.medium]: BeVietnamPro_500Medium,
+    [FONT.semibold]: BeVietnamPro_600SemiBold,
+    [FONT.bold]: BeVietnamPro_700Bold,
+    [FONT.extrabold]: BeVietnamPro_800ExtraBold,
+  })
+  if (!fontsLoaded && !fontError) return <View style={{ flex: 1, backgroundColor: t.bg }} />
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -93,7 +109,7 @@ export default function RootLayout() {
           <StatusBar style={t.isDark ? 'light' : 'dark'} />
           <AuthGate>
             <OfflineBanner />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }} />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg }, animation: 'slide_from_right' }} />
           </AuthGate>
           <Toast config={toastConfig} topOffset={50} />
         </QueryClientProvider>

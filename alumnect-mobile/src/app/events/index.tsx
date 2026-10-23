@@ -1,25 +1,79 @@
 import React, { useMemo, useState } from 'react'
-import { ScrollView, TextInput, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { CalendarCheck, MapPin, Search, Users } from 'lucide-react-native'
-import { Card, Chip, Empty, Screen, Txt } from '@/components/ui'
+import { CalendarCheck, CalendarDays, Clock, History, MapPin, Users } from '@/components/icons'
+import { Card, Chip, Empty, IconButton, Screen, SearchBar, Segmented, Tag, Txt } from '@/components/ui'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import { feedApi } from '@/api/feed'
+import type { Post } from '@/api/feed'
+import { normalize } from '@/constants/filters'
 import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
 
-const TABS: [string | undefined, string][] = [['upcoming', 'Sắp diễn ra'], ['this_month', 'Trong tháng này']]
+type Tab = 'upcoming' | 'this_month'
+type Quick = 'all' | 'registered' | 'available' | 'online'
 
-/** Danh sách sự kiện: bài viết loại "event" trong Feed, backend lọc theo eventFilter (giống /app/events trên Web). */
+const EventCard = React.memo(function EventCard({ p }: { p: Post }) {
+  const t = useTheme()
+  const router = useRouter()
+  const e = p.event!
+  const d = new Date(e.startTime!)
+  const full = !!e.capacity && e.attendeeCount >= e.capacity
+  const pct = e.capacity ? Math.min(1, e.attendeeCount / e.capacity) : 0
+  return (
+    <Card
+      style={{ marginHorizontal: 12, marginBottom: 10 }}
+      onPress={() => e.id && router.push({ pathname: '/events/[id]', params: { id: String(e.id), title: e.title ?? '', start: e.startTime ?? '', end: e.endTime ?? '', location: e.location ?? '', hostId: p.authorId ?? '', postId: p.id } })}
+    >
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ width: 58, borderRadius: 14, overflow: 'hidden', backgroundColor: t.surface, alignItems: 'center' }}>
+          <View style={{ alignSelf: 'stretch', backgroundColor: t.danger, paddingVertical: 3 }}>
+            <Txt size={11} weight="800" color="#fff" style={{ textAlign: 'center' }}>{`THÁNG ${d.getMonth() + 1}`}</Txt>
+          </View>
+          <Txt size={24} weight="800" style={{ paddingTop: 4 }}>{String(d.getDate()).padStart(2, '0')}</Txt>
+          <Txt muted size={11} style={{ paddingBottom: 6 }}>{d.toLocaleDateString('vi-VN', { weekday: 'short' })}</Txt>
+        </View>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Txt weight="800" size={16} numberOfLines={2}>{e.title}</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Clock size={13} color={t.textMuted} />
+            <Txt muted size={13}>{d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</Txt>
+          </View>
+          {e.location ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <MapPin size={13} color={t.textMuted} />
+              <Txt muted size={13} numberOfLines={1} style={{ flex: 1 }}>{e.location}</Txt>
+            </View>
+          ) : null}
+        </View>
+      </View>
+      <View style={{ marginTop: 12, gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Users size={14} color={t.textMuted} />
+          <Txt muted size={12} style={{ flex: 1 }}>{`${e.attendeeCount}${e.capacity ? `/${e.capacity}` : ''} người tham gia`}</Txt>
+          {e.status === 'CANCELLED' ? <Tag label="Đã huỷ" tone="danger" /> : e.isRegistered ? <Tag label="Đã đăng ký" tone="success" icon={<CalendarCheck size={12} color={t.success} />} /> : full ? <Tag label="Hết chỗ" tone="warning" /> : null}
+        </View>
+        {e.capacity ? (
+          <View style={{ height: 6, borderRadius: 3, backgroundColor: t.inputBg, overflow: 'hidden' }}>
+            <View style={{ width: `${pct * 100}%`, height: 6, borderRadius: 3, backgroundColor: full ? t.warning : t.primary }} />
+          </View>
+        ) : null}
+      </View>
+    </Card>
+  )
+})
+
+/** Sự kiện: tab thời gian + tìm kiếm + lọc nhanh (đã đăng ký, còn chỗ, online). */
 export default function EventsScreen() {
   const t = useTheme()
   const router = useRouter()
-  const [tab, setTab] = useState<string | undefined>('upcoming')
+  const [tab, setTab] = useState<Tab>('upcoming')
+  const [quick, setQuick] = useState<Quick>('all')
   const [kw, setKw] = useState('')
-  const keyword = useDebounced(kw, 300).trim().toLowerCase()
+  const keyword = normalize(useDebounced(kw, 300))
 
   const q = useInfiniteQuery({
     queryKey: ['events-list', tab],
@@ -29,67 +83,49 @@ export default function EventsScreen() {
   })
   const events = useMemo(() => {
     const all = (q.data?.pages.flatMap((p) => p.items) ?? []).filter((p) => p.event?.startTime)
-    if (!keyword) return all
-    return all.filter((p) => [p.event?.title, p.event?.location, p.text, p.author].some((s) => s?.toLowerCase().includes(keyword)))
-  }, [q.data, keyword])
+    return all.filter((p) => {
+      const e = p.event!
+      const okKw = !keyword || [e.title, e.location, p.text, p.author].some((s) => s && normalize(s).includes(keyword))
+      const okQuick =
+        quick === 'all' ||
+        (quick === 'registered' && e.isRegistered) ||
+        (quick === 'available' && (!e.capacity || e.attendeeCount < e.capacity) && e.status !== 'CANCELLED') ||
+        (quick === 'online' && /online|zoom|meet|teams/i.test(e.location ?? ''))
+      return okKw && okQuick
+    })
+  }, [q.data, keyword, quick])
 
   return (
-    <Screen>
-      <Header title="Sự kiện & Họp mặt" right={<Txt color={t.primary} weight="600" size={13} onPress={() => router.push('/events/history')}>Lịch sử</Txt>} />
-      <View style={{ padding: 16, paddingBottom: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.inputBg, borderRadius: 12, paddingHorizontal: 12 }}>
-          <Search size={18} color={t.textMuted} />
-          <TextInput value={kw} onChangeText={setKw} placeholder="Tìm sự kiện, địa điểm..." placeholderTextColor={t.textMuted} style={{ flex: 1, color: t.text, paddingVertical: 10, paddingHorizontal: 8 }} />
-        </View>
-      </View>
-      <View style={{ height: 48 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 6 }}>
-          {TABS.map(([k, l]) => <Chip key={l} label={l} active={tab === k} onPress={() => setTab(k)} />)}
-        </ScrollView>
-      </View>
-      {q.isLoading ? (
-        <ListSkeleton variant="post" />
-      ) : (
+    <Screen bg={t.card}>
+      <Header title="Sự kiện & Họp mặt" right={<IconButton label="Lịch sử tham gia" icon={<History size={20} color={t.text} />} onPress={() => router.push('/events/history')} />} />
+      <Segmented<Tab> tabs={[['upcoming', 'Sắp diễn ra'], ['this_month', 'Trong tháng này']]} value={tab} onChange={setTab} />
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
         <FlashList
-          data={events}
+          data={q.isLoading ? [] : events}
           keyExtractor={(p) => p.id}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty text="Chưa có sự kiện nào." />}
-          renderItem={({ item: p }) => {
-            const e = p.event!
-            const d = new Date(e.startTime!)
-            return (
-              <Card
-                style={{ marginBottom: 12 }}
-                onPress={() => e.id && router.push({ pathname: '/events/[id]', params: { id: String(e.id), title: e.title ?? '', start: e.startTime ?? '', end: e.endTime ?? '', location: e.location ?? '', hostId: p.authorId ?? '', postId: p.id } })}
-              >
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <View style={{ width: 54, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: t.primaryTint, paddingVertical: 8 }}>
-                    <Txt size={11} weight="700" color={t.primary}>{`TH${d.getMonth() + 1}`}</Txt>
-                    <Txt size={22} weight="800" color={t.primary}>{String(d.getDate()).padStart(2, '0')}</Txt>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Txt weight="700" size={16} numberOfLines={2}>{e.title}</Txt>
-                    <Txt muted size={13} style={{ marginTop: 2 }}>{d.toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' })}</Txt>
-                    {e.location ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}><MapPin size={13} color={t.textMuted} /><Txt muted size={13} numberOfLines={1}>{e.location}</Txt></View> : null}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 6 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Users size={13} color={t.textMuted} />
-                        <Txt muted size={12}>{e.attendeeCount}{e.capacity ? `/${e.capacity}` : ''} tham gia</Txt>
-                      </View>
-                      {e.isRegistered ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}><CalendarCheck size={13} color={t.primary} /><Txt size={12} weight="700" color={t.primary}>Đã đăng ký</Txt></View> : null}
-                      {e.status === 'CANCELLED' ? <Txt size={12} weight="700" color={t.danger}>Đã hủy</Txt> : null}
-                    </View>
-                  </View>
-                </View>
-              </Card>
-            )
-          }}
+          ListHeaderComponent={
+            <View>
+              <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 10 }}>
+                <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm sự kiện theo tên, địa điểm..." style={{ paddingHorizontal: 16 }} />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                  {([['all', 'Tất cả'], ['registered', 'Đã đăng ký'], ['available', 'Còn chỗ'], ['online', 'Trực tuyến']] as [Quick, string][]).map(([k, l]) => (
+                    <Chip key={k} label={l} active={quick === k} onPress={() => setQuick(k)} />
+                  ))}
+                </ScrollView>
+              </View>
+              {q.isLoading ? <ListSkeleton variant="post" /> : null}
+            </View>
+          }
+          ListEmptyComponent={
+            q.isLoading ? null : <Empty icon={<CalendarDays size={28} color={t.primary} />} title="Chưa có sự kiện" text="Sự kiện mới sẽ xuất hiện ở đây khi được đăng." />
+          }
+          renderItem={({ item }) => <EventCard p={item} />}
         />
-      )}
+      </View>
     </Screen>
   )
 }

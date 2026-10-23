@@ -1,5 +1,6 @@
 import React from 'react'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
+import { Text } from '@/components/AppText'
 import NetInfo from '@react-native-community/netinfo'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { palette } from '@/theme'

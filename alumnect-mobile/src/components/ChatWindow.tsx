@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import { TextInput } from '@/components/AppText'
 import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ImageIcon, Info, Send } from 'lucide-react-native'
+import { ImageIcon, Info, Send } from '@/components/icons'
 import { Avatar, Button, Screen, Txt } from './ui'
 import { Header } from './Header'
 import { chatApi } from '@/api/chat'
@@ -28,7 +29,7 @@ const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupCha
     return (
       <View style={{ flexDirection: mine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8, marginVertical: 3 }}>
         {!mine ? <Avatar uri={item.senderAvatar} name={item.senderName} size={28} /> : null}
-        <View style={cardOnly ? { maxWidth: '88%' } : { maxWidth: '78%', backgroundColor: mine ? t.primary : t.inputBg, borderRadius: 16, padding: 10 }}>
+        <View style={cardOnly ? { maxWidth: '88%' } : { maxWidth: '78%', backgroundColor: mine ? t.primary : t.card, borderRadius: 20, borderBottomRightRadius: mine ? 6 : 20, borderBottomLeftRadius: mine ? 20 : 6, paddingHorizontal: 12, paddingVertical: 8 }}>
           {isGroupChat && !mine ? <Txt size={11} weight="700" color={t.primary}>{item.senderName}</Txt> : null}
           {item.isDeleted ? (
             <Txt muted size={13}>Tin nhắn đã bị thu hồi</Txt>
@@ -38,10 +39,10 @@ const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupCha
                 a.mediaType === 'IMAGE' ? (
                   <Image key={a.id} source={{ uri: a.url }} style={{ width: 200, height: 200, borderRadius: 10, marginBottom: item.content ? 6 : 0 }} contentFit="cover" />
                 ) : (
-                  <Txt key={a.id} size={13} color={mine ? '#fff' : t.info}>{a.fileName ?? 'Tệp đính kèm'}</Txt>
+                  <Txt key={a.id} size={13} color={mine ? t.onPrimary : t.info}>{a.fileName ?? 'Tệp đính kèm'}</Txt>
                 ),
               )}
-              {(shared ? shared.note : item.content) ? <Txt color={mine ? '#fff' : t.text}>{shared ? shared.note : item.content}</Txt> : null}
+              {(shared ? shared.note : item.content) ? <Txt color={mine ? t.onPrimary : t.text}>{shared ? shared.note : item.content}</Txt> : null}
               {shared ? <View style={{ marginTop: shared.note ? 8 : 0 }}><SharedCard link={shared} mine={mine} /></View> : null}
             </>
           )}
@@ -151,18 +152,25 @@ export function ChatWindow({
           ListEmptyComponent={convId == null ? <Txt muted style={{ textAlign: 'center', padding: 24 }}>Hãy gửi tin nhắn đầu tiên.</Txt> : null}
           renderItem={({ item }) => <MessageBubble item={item} mine={String(item.senderId) === me?.id} isGroupChat={!!isGroupChat} />}
         />
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 10, borderTopWidth: 1, borderTopColor: t.border, backgroundColor: t.bg }}>
-          <Pressable onPress={sendImage} hitSlop={8} accessibilityRole="button" accessibilityLabel="Gửi ảnh"><ImageIcon size={24} color={t.textMuted} /></Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, gap: 8, borderTopWidth: 1, borderTopColor: t.border, backgroundColor: t.card }}>
+          <Pressable onPress={sendImage} hitSlop={8} accessibilityRole="button" accessibilityLabel="Gửi ảnh" style={{ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: t.primaryTint }}><ImageIcon size={20} color={t.primary} /></Pressable>
           <TextInput
             value={text}
             onChangeText={setText}
             placeholder="Nhập tin nhắn..."
             placeholderTextColor={t.textMuted}
             multiline
-            style={{ flex: 1, maxHeight: 100, backgroundColor: t.inputBg, color: t.text, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }}
+            style={{ flex: 1, maxHeight: 110, minHeight: 38, backgroundColor: t.inputBg, color: t.text, borderRadius: 19, paddingHorizontal: 14, paddingTop: 9, paddingBottom: 9, fontSize: 15 }}
           />
-          <Pressable onPress={submit} disabled={send.isPending} hitSlop={8} accessibilityRole="button" accessibilityLabel="Gửi tin nhắn">
-            <Send size={24} color={text.trim() ? t.primary : t.textMuted} />
+          <Pressable
+            onPress={submit}
+            disabled={send.isPending}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Gửi tin nhắn"
+            style={{ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: text.trim() ? t.primary : t.inputBg }}
+          >
+            <Send size={18} color={text.trim() ? t.onPrimary : t.textSubtle} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>

@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Pressable, TextInput, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Empty, Loading, Screen, Txt, SearchBar } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
 import { groupApi, isManager } from '@/api/groups'
@@ -50,7 +50,7 @@ export default function GroupMembersScreen() {
   return (
     <Screen>
       <Header title="Thành viên" />
-      <TextInput value={kw} onChangeText={setKw} placeholder="Tìm thành viên..." placeholderTextColor={t.textMuted} style={{ margin: 16, backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 }} />
+      <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm thành viên..." style={{ margin: 16 }} />
       {q.isLoading ? <Loading /> : (
         <FlashList
           data={items}

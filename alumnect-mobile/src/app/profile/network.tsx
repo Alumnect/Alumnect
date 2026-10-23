@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Chip, Empty, Loading, Screen } from '@/components/ui'
+import { Empty, Screen, Segmented } from '@/components/ui'
+import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import { UserRow } from '@/components/UserRow'
 import { userApi } from '@/api/users'
@@ -21,17 +21,14 @@ export default function NetworkListScreen() {
   return (
     <Screen>
       <Header title="Kết nối" />
-      <View style={{ flexDirection: 'row', padding: 12 }}>
-        <Chip label="Người theo dõi" active={tab === 'followers'} onPress={() => setTab('followers')} />
-        <Chip label="Đang theo dõi" active={tab === 'following'} onPress={() => setTab('following')} />
-      </View>
-      {q.isLoading ? <Loading /> : (
+      <Segmented tabs={[['followers', 'Người theo dõi'], ['following', 'Đang theo dõi']]} value={tab} onChange={(k) => setTab(k as typeof tab)} />
+      {q.isLoading ? <ListSkeleton variant="row" /> : (
         <FlashList
           data={users}
           keyExtractor={(u) => String(u.userId)}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
+          contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && q.fetchNextPage()}
-          ListEmptyComponent={<Empty text="Danh sách trống." />}
+          ListEmptyComponent={<Empty title="Danh sách trống" text={tab === 'followers' ? 'Chưa có ai theo dõi.' : 'Chưa theo dõi ai.'} />}
           renderItem={({ item }) => <UserRow user={item} />}
         />
       )}

@@ -34,7 +34,8 @@ export interface UserProfile {
   isAccountVerified: boolean
   primaryExperience?: { id: number; title: string; company: string } | null
   experiences?: Experience[]
-  skills?: { id: number; groupName: string; skillName: string }[]
+  skills?: { id: number; groupName: string; skillName: string; sortOrder?: number }[]
+  socialLinks?: string[] | null
   followersCount?: number
   followingCount?: number
   isFollowing?: boolean
@@ -54,13 +55,40 @@ export interface UserCard {
   suggestionReason?: string
 }
 
+export interface UserSkillRequest { groupName: string; skillName: string; sortOrder: number }
+
+/**
+ * Backend ghi đè toàn bộ hồ sơ (trường nào gửi null sẽ bị xoá), nên luôn gửi đủ mọi trường
+ * như Web (EditProfileView), kể cả những trường màn hình không sửa.
+ */
 export interface UpdateProfileRequest {
   fullName: string
-  avatarUrl?: string | null
-  phone?: string | null
-  headline?: string | null
-  biography?: string | null
-  city?: string | null
+  avatarUrl: string | null
+  coverUrl: string | null
+  phone: string | null
+  headline: string | null
+  biography: string | null
+  campus: string | null
+  cohort: number | null
+  majorId: number | null
+  graduationYear: number | null
+  city: string | null
+  socialLinks: string[]
+  skills: UserSkillRequest[]
+}
+
+export interface UserSearchParams {
+  query?: string
+  role?: string
+  majorId?: number
+  cohort?: number
+  city?: string
+  skill?: string
+  company?: string
+  sortBy?: string
+  sortDirection?: 'ASC' | 'DESC'
+  page?: number
+  size?: number
 }
 
 export const userApi = {
@@ -73,7 +101,9 @@ export const userApi = {
     http.get<unknown, ApiResponse<PageResponse<UserCard>>>(`/users/${id}/followers`, { params: { page, size: 20 } }),
   following: (id: number | string, page = 0) =>
     http.get<unknown, ApiResponse<PageResponse<UserCard>>>(`/users/${id}/following`, { params: { page, size: 20 } }),
-  search: (params: { query?: string; role?: string; majorId?: number; cohort?: number; city?: string; page?: number; size?: number }) =>
+  search: (params: UserSearchParams) =>
     http.get<unknown, ApiResponse<PageResponse<UserCard>>>('/users/search', { params: { size: 20, ...params } }),
+  /** Danh sách khóa và thành phố có dữ liệu thật, dùng cho bộ lọc (giống Web). */
+  filterOptions: () => http.get<unknown, ApiResponse<{ cohorts?: number[]; cities?: string[] }>>('/users/filter-options').then((r) => r.data ?? {}),
   suggestions: (limit = 10) => http.get<unknown, ApiResponse<UserCard[]>>('/users/suggestions', { params: { limit } }),
 }

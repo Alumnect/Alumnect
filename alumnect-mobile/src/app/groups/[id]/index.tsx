@@ -4,15 +4,16 @@ import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MoreHorizontal, Plus } from 'lucide-react-native'
-import { Button, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Bell, Check, Globe, ImagePlus, Lock, MessageCircle, MessageSquare, MoreHorizontal, Share2, UserPlus, Users } from '@/components/icons'
+import { Avatar, Button, Empty, IconButton, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { useAuthStore } from '@/store/authStore'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
 import { ShareSheet } from '@/components/ShareSheet'
 import { groupPath } from '@/lib/share'
 import { GroupPostCard } from '@/components/GroupPostCard'
 import { categoryLabel, groupApi, isManager } from '@/api/groups'
-import { useTheme } from '@/theme'
+import { useTheme, palette } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
 
 /** UC114–120, 125: chi tiết nhóm + bài viết + thao tác quản lý. */
@@ -24,6 +25,8 @@ export default function GroupDetailScreen() {
   const gid = Number(id)
   const [menu, setMenu] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [aboutOpen, setAboutOpen] = useState(false)
+  const me = useAuthStore((s) => s.user)
 
   const group = useQuery({ queryKey: ['group', id], queryFn: () => groupApi.get(id!) })
   const g = group.data
@@ -69,44 +72,126 @@ export default function GroupDetailScreen() {
     ...(isMember && !owner ? [{ label: 'Rời khỏi nhóm', danger: true, onPress: () => leave.mutate() }] : []),
   ]
 
+  const canSee = isMember || g.privacy === 'PUBLIC'
+
   return (
-    <Screen>
-      <Header title={g.name} right={actions.length ? <Pressable onPress={() => setMenu(true)} hitSlop={10}><MoreHorizontal size={22} color={t.text} /></Pressable> : undefined} />
-      <FlashList
-        data={items}
-        keyExtractor={(p) => String(p.id)}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        onEndReached={() => posts.hasNextPage && posts.fetchNextPage()}
-        ListHeaderComponent={
-          <View>
-            {g.coverImageUrl ? <Image source={{ uri: g.coverImageUrl }} style={{ height: 150 }} contentFit="cover" /> : <View style={{ height: 80, backgroundColor: t.primaryTint }} />}
-            <View style={{ padding: 16 }}>
-              <Txt size={22} weight="800">{g.name}</Txt>
-              <Txt muted size={13} style={{ marginTop: 2 }}>{categoryLabel(g.category)} · {g.privacy === 'PRIVATE' ? 'Riêng tư' : 'Công khai'} · {g.memberCount} thành viên</Txt>
-              <Txt style={{ marginTop: 10, lineHeight: 21 }}>{g.description}</Txt>
-              {g.joinRules ? <Txt muted size={13} style={{ marginTop: 8 }}>Quy định: {g.joinRules}</Txt> : null}
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                {!isMember ? (
-                  <Button title={pending ? 'Đang chờ duyệt' : 'Tham gia nhóm'} disabled={pending || g.status !== 'ACTIVE'} onPress={() => join.mutate()} loading={join.isPending} style={{ flex: 1 }} />
-                ) : null}
-                {g.canViewMembers || isMember ? <Button title="Thành viên" variant="outline" onPress={() => router.push({ pathname: '/groups/[id]/members', params: { id } })} style={{ flex: 1 }} /> : null}
+    <Screen bg={t.card}>
+      <Header title={g.name} right={actions.length ? <IconButton label="Tuỳ chọn nhóm" icon={<MoreHorizontal size={20} color={t.text} />} onPress={() => setMenu(true)} /> : undefined} />
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
+        <FlashList
+          data={items}
+          keyExtractor={(p) => String(p.id)}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          onEndReached={() => posts.hasNextPage && posts.fetchNextPage()}
+          refreshing={posts.isRefetching}
+          onRefresh={() => { group.refetch(); posts.refetch() }}
+          ListHeaderComponent={
+            <View>
+              <View style={{ backgroundColor: t.card, marginBottom: 10 }}>
+                {g.coverImageUrl ? (
+                  <Image source={{ uri: g.coverImageUrl }} style={{ height: 170, backgroundColor: t.inputBg }} contentFit="cover" />
+                ) : (
+                  <View style={{ height: 110, backgroundColor: palette.primary, overflow: 'hidden' }}>
+                    <View style={{ position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: palette.primarySoft, opacity: 0.55, top: -100, right: -40 }} />
+                    <View style={{ position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: palette.primaryDark, opacity: 0.45, bottom: -70, left: 20 }} />
+                  </View>
+                )}
+                <View style={{ padding: 16 }}>
+                  <Txt size={24} weight="800">{g.name}</Txt>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                    <Tag
+                      label={g.privacy === 'PRIVATE' ? 'Nhóm riêng tư' : 'Nhóm công khai'}
+                      tone="neutral"
+                      icon={g.privacy === 'PRIVATE' ? <Lock size={11} color={t.textMuted} /> : <Globe size={11} color={t.textMuted} />}
+                    />
+                    <Tag label={categoryLabel(g.category)} />
+                    <Txt muted size={13}>{`· ${g.memberCount} thành viên`}</Txt>
+                  </View>
+                  {g.status === 'INACTIVE' ? <Tag label="Nhóm đang tạm đóng" tone="warning" style={{ marginTop: 10 }} /> : null}
+
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+                    {!isMember ? (
+                      <Button
+                        title={pending ? 'Đang chờ duyệt' : 'Tham gia nhóm'}
+                        icon={pending ? undefined : <UserPlus size={16} color="#fff" />}
+                        disabled={pending || g.status !== 'ACTIVE'}
+                        onPress={() => join.mutate()}
+                        loading={join.isPending}
+                        style={{ flex: 1, height: 40 }}
+                        size="sm"
+                      />
+                    ) : (
+                      <Button title="Đã tham gia" variant="secondary" size="sm" icon={<Check size={16} color={t.primary} />} onPress={() => setMenu(true)} style={{ flex: 1, height: 40 }} />
+                    )}
+                    {g.canViewMembers || isMember ? (
+                      <Button title="Thành viên" variant="outline" size="sm" icon={<Users size={16} color={t.text} />} onPress={() => router.push({ pathname: '/groups/[id]/members', params: { id } })} style={{ flex: 1, height: 40 }} />
+                    ) : null}
+                    {g.conversationId && isMember ? (
+                      <IconButton
+                        label="Mở chat nhóm"
+                        icon={<MessageCircle size={18} color={t.text} />}
+                        onPress={() => groupApi.joinChat(gid).then((r) => router.push({ pathname: '/chat/[id]', params: { id: String(r.conversationId) } })).catch((e) => toast.error(errMsg(e)))}
+                      />
+                    ) : null}
+                    <IconButton label="Chia sẻ nhóm" icon={<Share2 size={18} color={t.text} />} onPress={() => setShareOpen(true)} />
+                  </View>
+
+                  {manager && g.pendingRequestCount ? (
+                    <Pressable
+                      onPress={() => router.push({ pathname: '/groups/[id]/join-requests', params: { id } })}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, padding: 12, borderRadius: 12, backgroundColor: t.warningTint }}
+                    >
+                      <Bell size={16} color={t.warning} />
+                      <Txt size={13} weight="700" color={t.warning} style={{ flex: 1 }}>{`${g.pendingRequestCount} yêu cầu tham gia đang chờ duyệt`}</Txt>
+                    </Pressable>
+                  ) : null}
+
+                  {g.description ? (
+                    <View style={{ marginTop: 14 }}>
+                      <Txt weight="800" style={{ marginBottom: 4 }}>Giới thiệu</Txt>
+                      <Txt style={{ lineHeight: 21 }} numberOfLines={aboutOpen ? undefined : 3}>{g.description}</Txt>
+                      {g.description.length > 140 ? <Txt size={13} weight="700" color={t.primary} onPress={() => setAboutOpen(!aboutOpen)}>{aboutOpen ? 'Thu gọn' : 'Xem thêm'}</Txt> : null}
+                    </View>
+                  ) : null}
+                  {g.joinRules ? (
+                    <View style={{ marginTop: 10, padding: 12, borderRadius: 12, backgroundColor: t.surface }}>
+                      <Txt weight="700" size={13}>Quy định nhóm</Txt>
+                      <Txt muted size={13} style={{ marginTop: 2 }}>{g.joinRules}</Txt>
+                    </View>
+                  ) : null}
+                </View>
               </View>
-              {g.conversationId && isMember ? (
-                <Button title="Mở chat nhóm" variant="ghost" onPress={() => groupApi.joinChat(gid).then((r) => router.push({ pathname: '/chat/[id]', params: { id: String(r.conversationId) } })).catch((e) => toast.error(errMsg(e)))} style={{ marginTop: 6 }} />
+
+              {isMember ? (
+                <Pressable
+                  onPress={() => router.push({ pathname: '/groups/[id]/create-post', params: { id } })}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: t.card, marginHorizontal: 12, marginBottom: 10, padding: 12, borderRadius: 16 }}
+                  accessibilityRole="button"
+                >
+                  <Avatar uri={me?.avatarUrl} name={me?.name} size={38} />
+                  <View style={{ flex: 1, height: 38, borderRadius: 19, backgroundColor: t.inputBg, justifyContent: 'center', paddingHorizontal: 14 }}>
+                    <Txt muted>Viết gì đó cho nhóm...</Txt>
+                  </View>
+                  <ImagePlus size={22} color={palette.success} />
+                </Pressable>
               ) : null}
-              {g.status === 'INACTIVE' ? <Txt color={t.warning} weight="600" style={{ marginTop: 8 }}>Nhóm đang tạm đóng.</Txt> : null}
-              <Txt weight="700" size={16} style={{ marginTop: 18 }}>Bài viết</Txt>
+              {canSee ? <Txt weight="800" size={16} style={{ paddingHorizontal: 16, marginBottom: 8 }}>Bài viết</Txt> : null}
             </View>
-          </View>
-        }
-        ListEmptyComponent={posts.isLoading ? <Loading /> : <Empty text={isMember || g.privacy === 'PUBLIC' ? 'Chưa có bài viết nào.' : 'Tham gia nhóm để xem bài viết.'} />}
-        renderItem={({ item }) => <View style={{ paddingHorizontal: 16 }}><GroupPostCard post={item} /></View>}
-      />
-      {isMember ? (
-        <Pressable onPress={() => router.push({ pathname: '/groups/[id]/create-post', params: { id } })} style={{ position: 'absolute', right: 20, bottom: 30, width: 56, height: 56, borderRadius: 28, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', elevation: 6 }}>
-          <Plus size={28} color="#fff" />
-        </Pressable>
-      ) : null}
+          }
+          ListEmptyComponent={
+            posts.isLoading && canSee ? (
+              <Loading />
+            ) : (
+              <Empty
+                icon={canSee ? <MessageSquare size={26} color={t.primary} /> : <Lock size={26} color={t.primary} />}
+                title={canSee ? 'Chưa có bài viết' : 'Nhóm riêng tư'}
+                text={canSee ? 'Hãy mở đầu cuộc trò chuyện trong nhóm.' : 'Tham gia nhóm để xem bài viết và thảo luận.'}
+              />
+            )
+          }
+          renderItem={({ item }) => <View style={{ paddingHorizontal: 12 }}><GroupPostCard post={item} /></View>}
+        />
+      </View>
       <ShareSheet
         visible={shareOpen}
         onClose={() => setShareOpen(false)}

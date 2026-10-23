@@ -186,6 +186,8 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
       fullName: fullName.trim(),
       avatarUrl: profile.avatarUrl || null,
       coverUrl: profile.coverUrl || null,
+      // Web không có ô sửa headline: gửi lại giá trị cũ để backend (ghi đè toàn bộ) không xoá mất.
+      headline: profile.headline || null,
 
       phone: phone.trim() || null,
       biography: biography.trim() || null,

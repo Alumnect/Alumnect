@@ -2,7 +2,10 @@ import React from 'react'
 import { ScrollView, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Button, Card, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { InfoRow } from '@/components/DetailBits'
+import { statusTone } from '@/constants/status'
+import { CalendarClock, ClipboardList, Handshake, Hourglass, Laptop, Layers, ListChecks, MessageCircle, Wallet, XCircle } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { REQUEST_STATUS_LABEL, RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
 import { WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
@@ -28,43 +31,57 @@ export default function RequestDetailScreen() {
   const r = q.data
   if (q.isLoading) return <Screen><Header title="Yêu cầu" /><Loading /></Screen>
   if (!r) return <Screen><Header title="Yêu cầu" /><Empty text="Không tìm thấy yêu cầu." /></Screen>
+  const responses = r.mentorResponses ?? []
   return (
-    <Screen>
+    <Screen bg={t.card}>
       <Header title="Chi tiết yêu cầu" />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        <Txt size={20} weight="800">{r.title}</Txt>
-        <Txt weight="700" color={t.primary} style={{ marginTop: 4 }}>{REQUEST_STATUS_LABEL[r.status] ?? r.status}</Txt>
-        <Txt style={{ marginTop: 10, lineHeight: 21 }}>{r.description}</Txt>
-        <Card style={{ marginTop: 12, gap: 4 }}>
-          <Txt muted size={13}>Loại hỗ trợ: {taskTypeLabel(r.taskType)}</Txt>
-          <Txt muted size={13}>Lĩnh vực: {r.industryName}</Txt>
-          <Txt muted size={13}>Hình thức: {WORKING_MODE_LABEL[r.workingMode]}</Txt>
-          {r.budgetMin != null || r.budgetMax != null ? <Txt muted size={13}>Ngân sách: {formatVnd(r.budgetMin)} – {formatVnd(r.budgetMax)}</Txt> : null}
-          {r.expectedDeadline ? <Txt muted size={13}>Hạn mong muốn: {new Date(r.expectedDeadline).toLocaleString('vi-VN')}</Txt> : null}
+      <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }}>
+        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+          <Tag label={REQUEST_STATUS_LABEL[r.status] ?? r.status} tone={statusTone(r.status)} />
+          <Txt size={21} weight="800" style={{ marginTop: 10, lineHeight: 28 }}>{r.title}</Txt>
+          <Txt style={{ marginTop: 10, lineHeight: 22 }}>{r.description}</Txt>
+        </View>
+        <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 4 }}>
+          <InfoRow icon={<ClipboardList size={16} color={t.primary} />} label="Loại hỗ trợ" value={taskTypeLabel(r.taskType)} />
+          <InfoRow icon={<Layers size={16} color={t.primary} />} label="Lĩnh vực" value={r.industryName ?? '—'} />
+          <InfoRow icon={<Laptop size={16} color={t.primary} />} label="Hình thức" value={WORKING_MODE_LABEL[r.workingMode] ?? '—'} last={r.budgetMin == null && r.budgetMax == null && !r.expectedDeadline} />
+          {r.budgetMin != null || r.budgetMax != null ? <InfoRow icon={<Wallet size={16} color={t.primary} />} label="Ngân sách" value={`${formatVnd(r.budgetMin)} – ${formatVnd(r.budgetMax)}`} last={!r.expectedDeadline} /> : null}
+          {r.expectedDeadline ? <InfoRow icon={<CalendarClock size={16} color={t.primary} />} label="Hạn mong muốn" value={new Date(r.expectedDeadline).toLocaleString('vi-VN')} last /> : null}
         </Card>
 
-        {r.confirmedDealId ? <Button title="Xem deal đã chốt" style={{ marginTop: 12 }} onPress={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(r.confirmedDealId) } })} /> : null}
-        {r.taskId ? <Button title="Mở task" variant="outline" style={{ marginTop: 8 }} onPress={() => router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(r.taskId) } })} /> : null}
+        {r.confirmedDealId || r.taskId ? (
+          <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 12, marginBottom: 10 }}>
+            {r.confirmedDealId ? <Button title="Xem deal đã chốt" size="sm" icon={<Handshake size={15} color="#fff" />} style={{ flex: 1, height: 42 }} onPress={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(r.confirmedDealId) } })} /> : null}
+            {r.taskId ? <Button title="Mở task" size="sm" variant="secondary" icon={<ListChecks size={15} color={t.primary} />} style={{ flex: 1, height: 42 }} onPress={() => router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(r.taskId) } })} /> : null}
+          </View>
+        ) : null}
 
-        <Txt weight="700" size={16} style={{ marginTop: 20, marginBottom: 8 }}>Phản hồi từ mentor ({r.mentorResponses?.length ?? 0})</Txt>
-        {(r.mentorResponses ?? []).map((m) => (
-          <Card key={m.mentorProfileId} style={{ marginBottom: 10 }}>
+        <Txt weight="800" size={16} style={{ paddingHorizontal: 16, marginVertical: 8 }}>{`Phản hồi từ mentor (${responses.length})`}</Txt>
+        {responses.length === 0 ? (
+          <Empty icon={<Hourglass size={26} color={t.primary} />} title="Đang chờ mentor phản hồi" text="Bạn sẽ nhận thông báo khi có mentor chấp nhận yêu cầu." />
+        ) : null}
+        {responses.map((m) => (
+          <Card key={m.mentorProfileId} style={{ marginHorizontal: 12, marginBottom: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Avatar uri={m.mentorAvatar} name={m.mentorName} size={44} />
+              <Avatar uri={m.mentorAvatar} name={m.mentorName} size={46} />
               <View style={{ flex: 1 }}>
                 <Txt weight="700">{m.mentorName}</Txt>
                 <Txt muted size={12} numberOfLines={1}>{m.mentorHeadline ?? ''}</Txt>
               </View>
-              <Txt size={12} weight="700" color={m.responseStatus === 'ACCEPTED' ? t.success : t.textMuted}>{RESPONSE_STATUS_LABEL[m.responseStatus] ?? m.responseStatus}</Txt>
+              <Tag label={RESPONSE_STATUS_LABEL[m.responseStatus] ?? m.responseStatus} tone={statusTone(m.responseStatus)} />
             </View>
-            {m.responseNote ? <Txt muted size={13} style={{ marginTop: 6 }}>“{m.responseNote}”</Txt> : null}
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-              <Button title="Hồ sơ" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(m.mentorProfileId) } })} />
-              {m.canMessage && m.conversationId ? <Button title="Nhắn tin & chốt deal" style={{ flex: 1.4, height: 38 }} onPress={() => router.push({ pathname: '/chat/[id]', params: { id: String(m.conversationId) } })} /> : null}
+            {m.responseNote ? (
+              <View style={{ marginTop: 10, padding: 10, borderRadius: 12, backgroundColor: t.surface }}>
+                <Txt size={13} style={{ fontStyle: 'italic' }}>{`“${m.responseNote}”`}</Txt>
+              </View>
+            ) : null}
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+              <Button title="Hồ sơ" size="sm" variant="outline" style={{ flex: 1 }} onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(m.mentorProfileId) } })} />
+              {m.canMessage && m.conversationId ? <Button title="Nhắn tin & chốt deal" size="sm" icon={<MessageCircle size={14} color="#fff" />} style={{ flex: 1.6 }} onPress={() => router.push({ pathname: '/chat/[id]', params: { id: String(m.conversationId) } })} /> : null}
             </View>
           </Card>
         ))}
-        {r.canCancel ? <Button title="Hủy yêu cầu" variant="danger" style={{ marginTop: 12 }} onPress={() => cancel.mutate()} loading={cancel.isPending} /> : null}
+        {r.canCancel ? <Button title="Huỷ yêu cầu" variant="ghost" icon={<XCircle size={16} color={t.danger} />} style={{ marginHorizontal: 12, marginTop: 4 }} onPress={() => cancel.mutate()} loading={cancel.isPending} /> : null}
       </ScrollView>
     </Screen>
   )

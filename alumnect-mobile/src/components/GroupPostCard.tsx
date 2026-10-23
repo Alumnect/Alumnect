@@ -4,8 +4,9 @@ import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Heart, MessageCircle, MoreHorizontal, Pin, Share2 } from 'lucide-react-native'
-import { Avatar, Card, Txt } from './ui'
+import { Heart, MessageCircle, MoreHorizontal, Pin, Share2 } from '@/components/icons'
+import { Avatar, Card, Tag, Txt } from './ui'
+import { ActionBtn } from './PostCard'
 import { ActionSheet } from './ActionSheet'
 import { ShareSheet } from './ShareSheet'
 import { groupPostPath } from '@/lib/share'
@@ -57,32 +58,49 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
     ...(post.canDelete ? [{ label: 'Xóa bài viết', danger: true, onPress: () => del.mutate() }] : []),
   ]
 
+  const images = post.imageUrls ?? []
+
   return (
-    <Card style={{ marginBottom: 12 }} onPress={detail ? undefined : open}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Avatar uri={post.author.avatarUrl} name={post.author.fullName} size={40} />
+    <Card style={{ marginBottom: 10, paddingHorizontal: 0, paddingBottom: 4 }} onPress={detail ? undefined : open}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 }}>
+        <Avatar uri={post.author.avatarUrl} name={post.author.fullName} size={42} />
         <View style={{ flex: 1 }}>
-          <Txt weight="700">{post.author.fullName}</Txt>
-          <Txt muted size={12}>{[post.author.roleLabel, new Date(post.createdAt).toLocaleDateString('vi-VN')].filter(Boolean).join(' · ')}</Txt>
+          <Txt weight="700" numberOfLines={1}>{post.author.fullName}</Txt>
+          <Txt muted size={12} numberOfLines={1}>{[post.author.roleLabel, new Date(post.createdAt).toLocaleDateString('vi-VN')].filter(Boolean).join(' · ')}</Txt>
         </View>
-        {post.isPinned ? <Pin size={16} color={t.primary} /> : null}
-        {actions.length ? <Pressable onPress={() => setMenu(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Tùy chọn bài viết"><MoreHorizontal size={20} color={t.textMuted} /></Pressable> : null}
+        {post.isPinned ? <Tag label="Đã ghim" icon={<Pin size={11} color={t.primary} />} /> : null}
+        {actions.length ? (
+          <Pressable onPress={() => setMenu(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Tùy chọn bài viết" style={{ padding: 4 }}>
+            <MoreHorizontal size={20} color={t.textMuted} />
+          </Pressable>
+        ) : null}
       </View>
-      {post.topic ? <Txt size={12} color={t.primary} weight="700" style={{ marginTop: 8 }}>#{post.topic}</Txt> : null}
-      <Txt style={{ marginTop: 8, lineHeight: 21 }} numberOfLines={detail ? undefined : 8}>{post.content}</Txt>
-      {post.imageUrls?.[0] ? <Image source={{ uri: post.imageUrls[0] }} style={{ marginTop: 10, width: '100%', aspectRatio: 1.6, borderRadius: 12 }} contentFit="cover" cachePolicy="disk" /> : null}
-      <View style={{ flexDirection: 'row', gap: 20, marginTop: 12 }}>
-        <Pressable onPress={toggleLike} accessibilityRole="button" accessibilityLabel={liked ? 'Bỏ thích' : 'Thích'} accessibilityState={{ selected: liked }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Heart size={20} color={liked ? t.danger : t.textMuted} fill={liked ? t.danger : 'transparent'} />
-          <Txt muted size={13}>{likes}</Txt>
-        </Pressable>
-        <Pressable onPress={open} accessibilityRole="button" accessibilityLabel="Bình luận" style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <MessageCircle size={20} color={t.textMuted} />
-          <Txt muted size={13}>{post.commentCount}</Txt>
-        </Pressable>
-        <Pressable onPress={() => setShareOpen(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Chia sẻ">
-          <Share2 size={19} color={t.textMuted} />
-        </Pressable>
+      {post.topic ? <Tag label={`#${post.topic}`} tone="neutral" style={{ marginTop: 10, marginLeft: 14 }} /> : null}
+      {post.content ? <Txt style={{ marginTop: 10, lineHeight: 22, paddingHorizontal: 14 }} numberOfLines={detail ? undefined : 6}>{post.content}</Txt> : null}
+      {images.length ? (
+        <View style={{ marginTop: 12, flexDirection: 'row', gap: 2 }}>
+          {images.slice(0, 2).map((uri, i) => (
+            <View key={uri + i} style={{ flex: 1 }}>
+              <Image source={{ uri }} style={{ width: '100%', aspectRatio: images.length > 1 ? 0.85 : 1.4, backgroundColor: t.inputBg }} contentFit="cover" cachePolicy="disk" />
+              {i === 1 && images.length > 2 ? (
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Txt size={24} weight="800" color="#fff">{`+${images.length - 2}`}</Txt>
+                </View>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      ) : null}
+      {likes > 0 || post.commentCount > 0 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, marginTop: 10 }}>
+          <Txt muted size={12} style={{ flex: 1 }}>{likes > 0 ? `${likes} lượt thích` : ''}</Txt>
+          {post.commentCount > 0 ? <Txt muted size={12}>{`${post.commentCount} bình luận`}</Txt> : null}
+        </View>
+      ) : null}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, marginHorizontal: 8, borderTopWidth: 1, borderTopColor: t.divider, paddingTop: 2 }}>
+        <ActionBtn onPress={toggleLike} label={liked ? 'Bỏ thích' : 'Thích'} text="Thích" active={liked} activeColor={t.danger} icon={<Heart size={19} color={liked ? t.danger : t.textMuted} fill={liked ? t.danger : 'transparent'} />} />
+        <ActionBtn onPress={open} label="Bình luận" text="Bình luận" icon={<MessageCircle size={19} color={t.textMuted} />} />
+        <ActionBtn onPress={() => setShareOpen(true)} label="Chia sẻ" text="Chia sẻ" icon={<Share2 size={18} color={t.textMuted} />} />
       </View>
       <ShareSheet
         visible={shareOpen}

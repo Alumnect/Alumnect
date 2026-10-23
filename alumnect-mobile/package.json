@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.2.1",
     "@react-native-community/netinfo": "12.0.1",
@@ -17,6 +18,7 @@
     "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.13",
     "expo-document-picker": "~58.0.4",
+    "expo-font": "~58.0.9",
     "expo-haptics": "~58.0.7",
     "expo-image": "~58.0.16",
     "expo-image-manipulator": "~58.0.15",
@@ -28,6 +30,7 @@
     "expo-status-bar": "~58.0.4",
     "expo-web-browser": "~58.0.6",
     "lucide-react-native": "^1.61.0",
+    "phosphor-react-native": "^3.0.6",
     "react": "19.3.0",
     "react-native": "0.88.0",
     "react-native-gesture-handler": "~3.3.0",
@@ -48,8 +51,8 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"

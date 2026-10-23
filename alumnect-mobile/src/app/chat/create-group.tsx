@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { Pressable, TextInput, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check } from 'lucide-react-native'
-import { Avatar, Button, Input, Screen, Txt } from '@/components/ui'
+import { Check } from '@/components/icons'
+import { Avatar, Button, Input, Screen, Txt, SearchBar } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { chatApi } from '@/api/chat'
 import { useDebounced } from '@/lib/hooks'
@@ -45,7 +45,7 @@ export default function CreateGroupScreen() {
       <Header title="Tạo nhóm chat" />
       <View style={{ padding: 16, paddingBottom: 0 }}>
         <Input label="Tên nhóm" value={title} onChangeText={setTitle} error={error} />
-        <TextInput value={kw} onChangeText={setKw} placeholder="Tìm thành viên..." placeholderTextColor={t.textMuted} style={{ backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 }} />
+        <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm thành viên..." />
       </View>
       <FlashList
         data={q.data?.data ?? []}

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import { TextInput } from '@/components/AppText'
 import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useLocalSearchParams } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Paperclip, Send } from 'lucide-react-native'
+import { Paperclip, Send } from '@/components/icons'
 import { Avatar, Card, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { formatVnd } from '@/api/mentoring'
@@ -72,10 +73,10 @@ export default function TicketChatScreen() {
               <View style={{ flexDirection: mine ? 'row-reverse' : 'row', gap: 8, marginVertical: 4 }}>
                 <Avatar uri={item.senderAvatar} name={item.senderName} size={30} />
                 <View style={{ maxWidth: '78%', backgroundColor: mine ? t.primary : item.senderRole === 'ADMIN' ? t.primaryTint : t.inputBg, borderRadius: 14, padding: 10 }}>
-                  <Txt size={11} weight="700" color={mine ? '#fff' : t.primary}>{item.senderName} · {item.senderRole === 'ADMIN' ? 'Quản trị viên' : item.senderRole === 'MENTOR' ? 'Mentor' : 'Sinh viên'}</Txt>
-                  <Txt color={mine ? '#fff' : t.text}>{item.content}</Txt>
+                  <Txt size={11} weight="700" color={mine ? t.onPrimary : t.primary}>{item.senderName} · {item.senderRole === 'ADMIN' ? 'Quản trị viên' : item.senderRole === 'MENTOR' ? 'Mentor' : 'Sinh viên'}</Txt>
+                  <Txt color={mine ? t.onPrimary : t.text}>{item.content}</Txt>
                   {item.proposedMentorAmount != null || item.proposedStudentRefund != null ? (
-                    <Txt size={12} color={mine ? '#fff' : t.text}>Đề xuất: mentor {formatVnd(item.proposedMentorAmount)} · hoàn {formatVnd(item.proposedStudentRefund)}</Txt>
+                    <Txt size={12} color={mine ? t.onPrimary : t.text}>Đề xuất: mentor {formatVnd(item.proposedMentorAmount)} · hoàn {formatVnd(item.proposedStudentRefund)}</Txt>
                   ) : null}
                   <Txt size={10} color={mine ? 'rgba(255,255,255,0.8)' : t.textMuted} style={{ alignSelf: 'flex-end' }}>{new Date(item.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</Txt>
                 </View>
