@@ -24,17 +24,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('framer-motion') || id.includes('motion'))
-              return 'vendor-motion'
-            if (id.includes('react-router')) return 'vendor-router'
-            if (id.includes('lucide-react') || id.includes('@phosphor-icons'))
-              return 'vendor-icons'
-            if (id.includes('@tanstack/react-query')) return 'vendor-query'
-            if (id.includes('zod')) return 'vendor-zod'
-            if (id.includes('react-dom') || id.includes('react/')) return 'vendor-react'
-            return 'vendor-libs'
-          }
+          if (!id.includes('node_modules')) return
+          const pkg = id
+            .replace(/\\/g, '/')
+            .match(/node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?((?:@[^/]+\/)?[^/]+)/)?.[1]
+          if (!pkg) return
+          // Lõi chạy ngay khi mở app
+          if (pkg === 'react' || pkg === 'react-dom' || pkg === 'scheduler') return 'vendor-react'
+          if (pkg === 'react-router' || pkg === 'react-router-dom') return 'vendor-router'
+          if (pkg === 'framer-motion' || pkg === 'motion' || pkg.startsWith('motion-')) return 'vendor-motion'
+          if (pkg === 'lucide-react' || pkg === '@phosphor-icons/react') return 'vendor-icons'
+          if (pkg.startsWith('@tanstack/')) return 'vendor-query'
+          if (pkg === 'zod') return 'vendor-zod'
+          // Còn lại (maplibre, docx-preview, react-datepicker, axios…): để bundler tự tách theo nơi dùng →
+          // thư viện chỉ dùng ở route lazy sẽ không nằm trong gói tải ban đầu
         },
       },
     },

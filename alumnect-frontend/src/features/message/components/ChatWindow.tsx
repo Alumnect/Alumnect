@@ -120,7 +120,7 @@ export function ChatWindow({
         </p>
         <Link
           to="/app/alumni"
-          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-xs font-bold text-on-primary shadow-sm transition-all duration-200 hover:scale-105 hover:bg-primary-hover active:scale-95"
+          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-xs font-bold text-on-primary shadow-sm transition duration-200 hover:scale-105 hover:bg-primary-hover active:scale-95"
         >
           <Users size={16} />
           Khám phá danh bạ thành viên
@@ -231,7 +231,7 @@ export function ChatWindow({
             <Link
               to={`/app/groups/${conversation.communityGroupId}`}
               title={`Đến trang hội nhóm: ${conversation.communityGroupName || displayName}`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-primary-soft-border bg-brand-50/70 px-2.5 py-1.5 text-xs font-semibold text-primary-solid transition-all hover:bg-primary-soft hover:border-primary-soft-border active:scale-95 dark:bg-brand-950/50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary-soft-border bg-brand-50/70 px-2.5 py-1.5 text-xs font-semibold text-primary-solid transition hover:bg-primary-soft hover:border-primary-soft-border active:scale-95 dark:bg-brand-950/50"
             >
               <Users size={13} className="shrink-0 text-primary-solid" />
               <span className="hidden sm:inline max-w-[120px] md:max-w-[180px] truncate">

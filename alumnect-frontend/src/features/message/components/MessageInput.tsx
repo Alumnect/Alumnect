@@ -150,7 +150,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
           onClick={handleSend}
           disabled={(!content.trim() && attachments.length === 0) || isSending || isUploading || disabled}
           aria-label="Gửi tin nhắn"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-solid text-on-primary shadow-sm transition-all duration-200 hover:scale-105 hover:bg-primary-hover disabled:opacity-40 disabled:hover:scale-100"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-solid text-on-primary shadow-sm transition duration-200 hover:scale-105 hover:bg-primary-hover disabled:opacity-40 disabled:hover:scale-100"
         >
           {isSending ? (
             <Loader2 size={18} className="animate-spin" />

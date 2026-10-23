@@ -205,7 +205,7 @@ export function MentoringTicketDiscussionThread({
             return (
               <div
                 key={msg.id}
-                className={`p-3.5 rounded-xl border transition-all ${
+                className={`p-3.5 rounded-xl border transition ${
                   isAdminMsg
                     ? 'bg-info-soft border-info shadow-2xs'
                     : isStudentMsg

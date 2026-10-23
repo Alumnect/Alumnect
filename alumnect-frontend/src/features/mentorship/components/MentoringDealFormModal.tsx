@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Send, Edit3, Loader2, DollarSign } from 'lucide-react'
-import { Button, DateTimePicker, SelectDropdown, toast } from '@/components/ui'
+import { Button, SelectDropdown, toast } from '@/components/ui'
+import { DateTimePicker } from '@/components/ui/DateTimePicker'
 import {
   MENTORING_DEAL_TASK_TYPES,
   proposeDealSchema,

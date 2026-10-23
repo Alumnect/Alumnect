@@ -729,11 +729,10 @@ html.dark .mentoring-shell .mentoring-chat-outgoing * {
 
 /* ---- Interaction helpers ---- */
 .hover-lift {
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 .hover-lift:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 26px 54px -26px rgb(120 100 140 / 0.45);
+  border-color: var(--c-border-strong);
 }
 .press { transition: transform 0.12s ease; }
 .press:active { transform: scale(0.97); }

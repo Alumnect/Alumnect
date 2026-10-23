@@ -128,7 +128,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             placeholder="Tìm theo tên, chức danh, kỹ năng, công ty hoặc mã SV..."
-            className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-10 text-sm text-text placeholder:text-text-subtle transition-all focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-10 text-sm text-text placeholder:text-text-subtle transition focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {localQuery && (
             <button
@@ -174,7 +174,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
               title={cat.fullName || cat.label}
               onClick={() => handleSelectCategory(cat)}
               className={cn(
-                'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all shadow-xs',
+                'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition shadow-xs',
                 isSelected
                   ? 'bg-primary-solid text-on-primary shadow-raised ring-2 ring-brand-400/40'
                   : 'bg-surface-2 text-text-muted border border-border hover:bg-surface-3 hover:border-primary-soft-border',
@@ -214,7 +214,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                   type="button"
                   onClick={() => onChange({ ...filters, role: r.value })}
                   className={cn(
-                    'flex items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-semibold transition-all',
+                    'flex items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs font-semibold transition',
                     filters.role === r.value
                       ? 'border-primary bg-primary-soft text-primary-solid shadow-sm'
                       : 'border-border bg-surface text-text-muted hover:border-border-strong',
@@ -286,7 +286,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                     type="button"
                     onClick={() => onChange({ ...filters, sortBy: s.sortBy, sortDirection: s.sortDirection })}
                     className={cn(
-                      'rounded-xl border p-2.5 text-center text-xs font-semibold transition-all',
+                      'rounded-xl border p-2.5 text-center text-xs font-semibold transition',
                       isSelected
                         ? 'border-primary bg-primary-soft text-primary-solid'
                         : 'border-border bg-surface text-text-muted hover:border-border-strong',

@@ -816,7 +816,7 @@ export function MentoringGroupDetailPage() {
                   {requests.map((req) => (
                     <div
                       key={req.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border p-4 hover:border-primary-soft-border transition-all"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border p-4 hover:border-primary-soft-border transition"
                     >
                       <div className="space-y-1">
                         <Link

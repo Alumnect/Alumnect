@@ -260,7 +260,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                 type="button"
                 onClick={() => setCategoryOpen((prev) => !prev)}
                 className={cn(
-                  'flex h-11 w-full items-center justify-between rounded-2xl border px-4 text-left text-sm transition-all cursor-pointer',
+                  'flex h-11 w-full items-center justify-between rounded-2xl border px-4 text-left text-sm transition cursor-pointer',
                   errors.category
                     ? 'border-danger bg-danger-soft text-danger'
                     : 'border-border bg-surface-2 text-text hover:border-brand-500/40 hover:bg-surface focus:outline-none dark:hover:border-brand-500/50',
@@ -299,7 +299,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                             setCategoryOpen(false)
                           }}
                           className={cn(
-                            'flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-all cursor-pointer',
+                            'flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition cursor-pointer',
                             isSelected
                               ? 'bg-primary-soft font-bold text-primary-solid'
                               : 'font-medium text-text-muted hover:bg-surface-2'
@@ -339,7 +339,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                       onClick={() => setValue('privacy', opt.value, { shouldDirty: true })}
                       aria-pressed={isSelected}
                       className={cn(
-                        'flex h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-bold transition-all cursor-pointer',
+                        'flex h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-bold transition cursor-pointer',
                         isSelected
                           ? 'border-brand-400/70 bg-primary-soft text-primary-solid shadow-2xs'
                           : 'border-border bg-surface-2 text-text-muted hover:border-border-strong hover:bg-surface-2',

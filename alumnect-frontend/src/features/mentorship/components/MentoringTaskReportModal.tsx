@@ -239,7 +239,7 @@ export function MentoringTaskReportModal({
                   {/* Progress Bar */}
                   <div className="w-full bg-surface-3 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-success h-2 rounded-full transition-all duration-300"
+                      className="bg-success h-2 rounded-full transition duration-300"
                       style={{ width: `${Math.min(100, Math.max(0, report.progressPercentage))}%` }}
                     />
                   </div>

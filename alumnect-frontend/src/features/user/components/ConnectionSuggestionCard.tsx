@@ -75,7 +75,7 @@ export function ConnectionSuggestionCard({ user }: ConnectionSuggestionCardProps
     <TiltCard className="group h-full" max={4}>
       <Card
         hover={false}
-        className="relative flex h-full flex-col justify-between p-5 text-center transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/5 border border-border bg-surface backdrop-blur-sm"
+        className="relative flex h-full flex-col justify-between p-5 text-center transition duration-300 border border-border bg-surface backdrop-blur-sm"
       >
         <div>
           {/* Avatar Section */}

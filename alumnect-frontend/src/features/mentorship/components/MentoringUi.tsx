@@ -274,7 +274,7 @@ export function MentoringStatTile({
   return (
     <Link
       to={to}
-      className="group flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:hover:border-brand-500/40"
+      className="group flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs transition hover:border-brand-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:hover:border-brand-500/40"
     >
       <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl [&>svg]:h-5 [&>svg]:w-5', TONES[tone].badge)}>{icon}</span>
       <span className="min-w-0 flex-1">

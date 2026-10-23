@@ -41,7 +41,7 @@ import { EntitySelectField, type SelectOption } from '@/features/forum/component
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
 const FIELD_CLASS =
-  'w-full rounded-xl border border-border bg-surface text-sm text-text placeholder:text-plum-400/80 transition-all focus:border-brand-400/70 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border-strong [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:placeholder-[#b0b3b8]'
+  'w-full rounded-xl border border-border bg-surface text-sm text-text placeholder:text-plum-400/80 transition focus:border-brand-400/70 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border-strong [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:placeholder-[#b0b3b8]'
 
 /** Hàm hỗ trợ hiển thị mức lương thành chữ dễ đọc (triệu/tỷ). */
 function formatVndText(num: number): string {

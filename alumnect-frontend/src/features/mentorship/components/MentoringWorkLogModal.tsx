@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, FileText, Paperclip, Upload, Loader2, Trash2, CheckCircle2 } from 'lucide-react'
-import { Button, DateTimePicker } from '@/components/ui'
+import { Button } from '@/components/ui'
+import { DateTimePicker } from '@/components/ui/DateTimePicker'
 import { mentoringTaskApi } from '../api/mentoringTaskApi'
 import { useCreateWorkLog, useUpdateWorkLog } from '../hooks/useMentoringTasks'
 import type {
@@ -246,7 +247,7 @@ export function MentoringWorkLogModal({
               placeholder="VD: Buổi hướng dẫn thiết kế Database & cài đặt Spring Boot"
               {...register('description')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.description && (
               <p className="mt-1 text-xs font-bold text-danger">{errors.description.message}</p>
@@ -263,7 +264,7 @@ export function MentoringWorkLogModal({
               placeholder="Chi tiết các hạng mục đã hoàn thành trong buổi làm việc..."
               {...register('workCompleted')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-normal text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-normal text-text outline-hidden transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.workCompleted && (
               <p className="mt-1 text-xs font-bold text-danger">{errors.workCompleted.message}</p>
@@ -280,7 +281,7 @@ export function MentoringWorkLogModal({
               placeholder="Sản phẩm bàn giao, code demo, tài liệu hướng dẫn đã hoàn thiện..."
               {...register('result')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-normal text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-normal text-text outline-hidden transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.result && (
               <p className="mt-1 text-xs font-bold text-danger">{errors.result.message}</p>
@@ -297,7 +298,7 @@ export function MentoringWorkLogModal({
               placeholder="VD: Học viên làm bài tập thực hành phần JPA Repository"
               {...register('nextAction')}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text outline-hidden transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.nextAction && (
               <p className="mt-1 text-xs font-bold text-danger">{errors.nextAction.message}</p>

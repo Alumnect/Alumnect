@@ -138,7 +138,7 @@ export default function AdminPostDetailPage() {
               <div className="space-y-4">
                 {/* --- Thẻ thông tin Tuyển dụng (nếu là bài RECRUITMENT) --- */}
                 {post.type === 'RECRUITMENT' && post.job && (
-                  <div className="mb-4 overflow-hidden rounded-2xl border border-orange-200 bg-surface shadow-sm ring-1 ring-orange-50 transition-all dark:border-border dark:ring-0">
+                  <div className="mb-4 overflow-hidden rounded-2xl border border-orange-200 bg-surface shadow-sm ring-1 ring-orange-50 transition dark:border-border dark:ring-0">
                     {/* Header Tuyển dụng */}
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 bg-surface-2 px-6 py-4 dark:border-border">
                       <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export default function AdminPostDetailPage() {
                               href={post.job.applyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-sm hover:bg-primary-hover transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-sm hover:bg-primary-hover transition cursor-pointer"
                             >
                               <span>Ứng tuyển</span>
                               <ExternalLink size={12} />
@@ -261,7 +261,7 @@ export default function AdminPostDetailPage() {
 
                 {/* --- Thẻ thông tin Sự kiện (nếu là bài EVENT) --- */}
                 {post.type === 'EVENT' && post.event && (
-                  <div className="mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-surface shadow-sm ring-1 ring-violet-50 transition-all dark:border-border dark:ring-0">
+                  <div className="mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-surface shadow-sm ring-1 ring-violet-50 transition dark:border-border dark:ring-0">
                     <div className="border-b border-violet-100 bg-surface-2 px-6 py-4 dark:border-border">
                       <h3 className="flex items-center gap-2 font-bold text-violet-900 text-base dark:text-text">
                         <CalendarPlus size={18} className="text-violet-600 dark:text-violet-400" />
@@ -430,7 +430,7 @@ export default function AdminPostDetailPage() {
                   <Button
                     onClick={() => setShowConfirmModal(true)}
                     disabled={toggleMutation.isPending}
-                    className={`w-full justify-center gap-2 text-xs font-bold transition-all shadow-sm ${
+                    className={`w-full justify-center gap-2 text-xs font-bold transition shadow-sm ${
                       post.hidden
                         ? 'bg-success text-text-inverse hover:opacity-90'
                         : 'bg-danger-soft text-danger hover:bg-danger-border/60 border border-danger-border'

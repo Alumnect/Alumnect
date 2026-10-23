@@ -211,7 +211,7 @@ export function AdminResolveTicketModal({
               {/* Option 1: Full Mentor */}
               <div
                 onClick={() => setDecision('FULL_MENTOR_PAYMENT')}
-                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
                   decision === 'FULL_MENTOR_PAYMENT'
                     ? 'border-success bg-success-soft shadow-xs'
                     : 'border-border hover:border-border-strong'
@@ -234,7 +234,7 @@ export function AdminResolveTicketModal({
               {/* Option 2: Partial Split */}
               <div
                 onClick={() => setDecision('PARTIAL_SPLIT')}
-                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
                   decision === 'PARTIAL_SPLIT'
                     ? 'border-primary-solid bg-primary-soft shadow-xs'
                     : 'border-border hover:border-border-strong'
@@ -257,7 +257,7 @@ export function AdminResolveTicketModal({
               {/* Option 3: Full Student Refund */}
               <div
                 onClick={() => setDecision('FULL_STUDENT_REFUND')}
-                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
                   decision === 'FULL_STUDENT_REFUND'
                     ? 'border-info bg-info-soft shadow-xs'
                     : 'border-border hover:border-border-strong'

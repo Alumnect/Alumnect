@@ -62,7 +62,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
             <button
               type="button"
               onClick={() => setActiveTab('snapshot')}
-              className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'snapshot'
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -73,7 +73,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
             <button
               type="button"
               onClick={() => setActiveTab('history')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'history'
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'

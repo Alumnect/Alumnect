@@ -118,7 +118,7 @@ export function SelectDropdown<T extends string | number = string | number>({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          'group flex h-10 w-full items-center gap-2 rounded-2xl border bg-surface px-3.5 text-xs font-semibold shadow-2xs transition-all duration-200 cursor-pointer',
+          'group flex h-10 w-full items-center gap-2 rounded-2xl border bg-surface px-3.5 text-xs font-semibold shadow-2xs transition duration-200 cursor-pointer',
           disabled && 'opacity-60 cursor-not-allowed pointer-events-none',
           open
             ? 'border-primary ring-2 ring-primary/20 text-primary-solid'

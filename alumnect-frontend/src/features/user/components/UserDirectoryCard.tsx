@@ -71,7 +71,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
 
   return (
     <TiltCard className="group h-full" max={5}>
-      <Card hover={false} className="relative flex h-full flex-col justify-between p-6 text-center transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/10 border border-border bg-surface/80 backdrop-blur-sm">
+      <Card hover={false} className="relative flex h-full flex-col justify-between p-6 text-center transition duration-300 border border-border bg-surface/80 backdrop-blur-sm">
         <div>
           {/* Avatar Section */}
           <div className="mx-auto mt-2 mb-4 inline-block">
@@ -180,7 +180,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                   size="sm"
                   variant={isFollowingLocal ? 'secondary' : 'outline'}
                   className={cn(
-                    'flex-1 text-xs font-semibold transition-all duration-200',
+                    'flex-1 text-xs font-semibold transition duration-200',
                     !isFollowingLocal && 'text-primary-solid border-primary-soft-border bg-primary-soft hover:bg-primary-solid hover:text-white shadow-xs'
                   )}
                   disabled={isPending}

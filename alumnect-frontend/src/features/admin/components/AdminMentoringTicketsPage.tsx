@@ -495,7 +495,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('evidence')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'evidence'
                       ? 'border-primary-solid text-primary-solid'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -511,7 +511,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('context')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'context'
                       ? 'border-primary-solid text-primary-solid'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -529,7 +529,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('ticket')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'ticket'
                       ? 'border-primary-solid text-primary-solid'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -542,7 +542,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('discussion')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'discussion'
                       ? 'border-primary-solid text-primary-solid font-bold'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -652,7 +652,7 @@ export function AdminMentoringTicketsPage() {
                               return (
                                 <div
                                   key={ev.id}
-                                  className="p-4 rounded-xl border border-border bg-surface hover:border-border-strong shadow-2xs flex flex-col justify-between transition-all"
+                                  className="p-4 rounded-xl border border-border bg-surface hover:border-border-strong shadow-2xs flex flex-col justify-between transition"
                                 >
                                   <div>
                                     {/* Header card: Người nộp */}

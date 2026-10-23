@@ -7,7 +7,8 @@ import {
   ChevronDown,
   Check,
 } from 'lucide-react'
-import { Avatar, DateTimePicker, toast } from '@/components/ui'
+import { Avatar, toast } from '@/components/ui'
+import { DateTimePicker } from '@/components/ui/DateTimePicker'
 import { cn } from '@/lib/utils'
 import {
   adminApi,

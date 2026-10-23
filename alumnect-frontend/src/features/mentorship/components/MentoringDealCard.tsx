@@ -35,7 +35,7 @@ export function MentoringDealCard({ deal, onViewDetail, onOpenChat, isActive = f
   return (
     <article
       className={cn(
-        'flex flex-col rounded-2xl border bg-surface p-5 shadow-xs transition hover:shadow-sm',
+        'flex flex-col rounded-2xl border bg-surface p-5 shadow-xs transition',
         isActive
           ? 'border-primary ring-2 ring-primary/20'
           : 'border-border hover:border-brand-500/40 dark:hover:border-brand-500/40',

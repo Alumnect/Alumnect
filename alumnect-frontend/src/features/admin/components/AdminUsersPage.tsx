@@ -95,7 +95,7 @@ export function AdminUsersPage() {
                   setPage(0) // reset về trang đầu
                 }}
                 className={cn(
-                  'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                  'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
                   tab === t.value
                     ? 'bg-primary-solid text-on-primary shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -210,7 +210,7 @@ export function AdminUsersPage() {
                                 setSelectedCvMentorId(u.mentorProfileId || u.id)
                                 setIsCvModalOpen(true)
                               }}
-                              className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1.5 text-xs font-bold text-primary-solid hover:bg-orange-100 border border-orange-200/80 shadow-sm transition-all"
+                              className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1.5 text-xs font-bold text-primary-solid hover:bg-orange-100 border border-orange-200/80 shadow-sm transition"
                               title="Xem CV Mentor"
                             >
                               <FileText size={13} /> CV Mentor
@@ -226,7 +226,7 @@ export function AdminUsersPage() {
                             <button
                               onClick={() => handleToggleLock(u.id, u.accountStatus)}
                               className={cn(
-                                'grid h-8 w-8 place-items-center rounded-lg ring-1 ring-inset transition-all',
+                                'grid h-8 w-8 place-items-center rounded-lg ring-1 ring-inset transition',
                                 u.accountStatus === 'LOCKED'
                                   ? 'bg-success-soft text-success ring-success hover:bg-success-border/60'
                                   : 'bg-danger-soft text-danger ring-danger hover:bg-danger-border/60'
@@ -428,7 +428,7 @@ export function AdminUsersPage() {
                             handleToggleLock(userDetail.id, userDetail.accountStatus)
                           }}
                           className={cn(
-                            'font-bold text-xs rounded-xl px-4 py-2 transition-all',
+                            'font-bold text-xs rounded-xl px-4 py-2 transition',
                             userDetail.accountStatus === 'LOCKED'
                               ? 'bg-success text-text-inverse hover:opacity-90 shadow-xs'
                               : 'border border-danger-border bg-danger-soft text-danger hover:bg-danger-border/60 hover:text-danger'

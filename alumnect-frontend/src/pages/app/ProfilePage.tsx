@@ -372,7 +372,7 @@ export function ProfilePage() {
               imgClassName="object-cover"
             />
             {isOwnProfile && (
-              <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-text bg-surface hover:bg-surface backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95">
+              <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-text bg-surface hover:bg-surface backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition hover:scale-105 active:scale-95">
                 {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
                 <span>Chỉnh sửa ảnh bìa</span>
                 <input
@@ -399,7 +399,7 @@ export function ProfilePage() {
                   className="bg-surface shadow-xl rounded-full border-4 border-white"
                 />
                 {isOwnProfile && (
-                  <label className="absolute bottom-2 right-2 p-2 rounded-full bg-surface-2 hover:bg-plum-200 text-text shadow-md cursor-pointer transition-all border-2 border-white hover:scale-110 active:scale-90">
+                  <label className="absolute bottom-2 right-2 p-2 rounded-full bg-surface-2 hover:bg-plum-200 text-text shadow-md cursor-pointer transition border-2 border-white hover:scale-110 active:scale-90">
                     {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={16} />}
                     <input
                       type="file"
@@ -643,7 +643,7 @@ export function ProfilePage() {
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-text-muted bg-surface-2 border border-border hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm ${platform.color}`}
+                            className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-text-muted bg-surface-2 border border-border hover:scale-[1.02] active:scale-[0.98] transition duration-200 shadow-sm ${platform.color}`}
                           >
                             {platform.icon}
                             <span>{platform.name}</span>
@@ -698,7 +698,7 @@ export function ProfilePage() {
                     <div key={exp.id} className="relative group">
                       {/* Biểu tượng trên Timeline */}
                       <span
-                        className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition-all ${exp.isPrimary
+                        className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition ${exp.isPrimary
                           ? 'bg-amber-400 ring-amber-300'
                           : exp.isCurrent
                             ? 'bg-primary-solid ring-brand-200'
@@ -706,7 +706,7 @@ export function ProfilePage() {
                           }`}
                       />
 
-                      <div className="rounded-2xl p-4 transition-all duration-200 hover:bg-surface-2 border border-transparent hover:border-border">
+                      <div className="rounded-2xl p-4 transition duration-200 hover:bg-surface-2 border border-transparent hover:border-border">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
@@ -738,7 +738,7 @@ export function ProfilePage() {
                                   type="button"
                                   onClick={() => handleOpenPromoteExp(exp)}
                                   title="Thăng chức / Đổi vai trò mới tại công ty"
-                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition-all"
+                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition"
                                 >
                                   <TrendingUp size={15} />
                                 </button>
@@ -748,7 +748,7 @@ export function ProfilePage() {
                                   type="button"
                                   onClick={() => handleOpenRejoinExp(exp)}
                                   title="Thêm kinh nghiệm khác tại công ty này (Hiện tại hoặc Quá khứ)"
-                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition-all"
+                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition"
                                 >
                                   <PlusSquare size={15} />
                                 </button>
@@ -757,7 +757,7 @@ export function ProfilePage() {
                                 type="button"
                                 onClick={() => handleOpenEditExp(exp)}
                                 title="Chỉnh sửa vị trí"
-                                className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-plum-100/50 transition-all"
+                                className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-plum-100/50 transition"
                               >
                                 <Edit3 size={15} />
                               </button>
@@ -765,7 +765,7 @@ export function ProfilePage() {
                                 type="button"
                                 onClick={() => setDeleteExpId(exp.id)}
                                 title="Xóa vị trí"
-                                className="p-1.5 rounded-xl text-text-subtle hover:text-danger hover:bg-danger-soft transition-all"
+                                className="p-1.5 rounded-xl text-text-subtle hover:text-danger hover:bg-danger-soft transition"
                               >
                                 <Trash2 size={15} />
                               </button>

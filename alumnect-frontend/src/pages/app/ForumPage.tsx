@@ -68,7 +68,7 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
   }
 
   return (
-    <Card hover={false} className="p-5 transition-all hover:-translate-y-0.5">
+    <Card hover={false} className="p-5 transition">
       <div className="flex gap-4">
         <div className="flex flex-col items-center gap-1">
           <button

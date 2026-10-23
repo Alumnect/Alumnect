@@ -124,7 +124,7 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
               placeholder="VD: 0123456789"
               value={bankAccountNumber}
               onChange={(e) => onBankAccountNumberChange(e.target.value.replace(/\s+/g, ''))}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition-all placeholder:text-text-subtle dark:placeholder:text-text-subtle"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition placeholder:text-text-subtle dark:placeholder:text-text-subtle"
             />
           </div>
 
@@ -139,7 +139,7 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
               placeholder="VD: NGUYEN VAN A"
               value={bankAccountHolder}
               onChange={(e) => onBankAccountHolderChange(e.target.value.toUpperCase())}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm font-semibold tracking-wide uppercase focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition-all placeholder:text-text-subtle dark:placeholder:text-text-subtle"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm font-semibold tracking-wide uppercase focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition placeholder:text-text-subtle dark:placeholder:text-text-subtle"
             />
           </div>
         </div>

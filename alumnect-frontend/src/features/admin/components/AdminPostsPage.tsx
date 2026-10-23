@@ -162,7 +162,7 @@ function CustomCategoryDropdown({ value, onChange }: CustomCategoryDropdownProps
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex h-10 items-center justify-between gap-2.5 rounded-xl border bg-surface px-3.5 text-xs font-bold text-text shadow-sm transition-all duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[200px]',
+          'flex h-10 items-center justify-between gap-2.5 rounded-xl border bg-surface px-3.5 text-xs font-bold text-text shadow-sm transition duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[200px]',
           isOpen ? 'ring-2 ring-gold-400/40 border-gold-400 bg-surface-2' : 'border-border-strong hover:bg-surface-2'
         )}
       >
@@ -202,7 +202,7 @@ function CustomCategoryDropdown({ value, onChange }: CustomCategoryDropdownProps
                     setIsOpen(false)
                   }}
                   className={cn(
-                    'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 text-left cursor-pointer',
+                    'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition duration-150 text-left cursor-pointer',
                     isSelected
                       ? 'bg-plum-900 text-gold-300 shadow-md font-bold'
                       : cn('text-text', cfg.dropdownHoverBg)
@@ -309,13 +309,13 @@ export function AdminPostsPage() {
                     setPage(0)
                   }}
                   className={cn(
-                    'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 border cursor-pointer',
+                    'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition duration-200 border cursor-pointer',
                     isSelected ? cfg.pillActiveBg : cfg.pillInactiveBg
                   )}
                 >
                   <span
                     className={cn(
-                      'flex h-5 w-5 items-center justify-center rounded-md shrink-0 transition-all',
+                      'flex h-5 w-5 items-center justify-center rounded-md shrink-0 transition',
                       isSelected ? 'bg-white/20 text-current' : 'text-white'
                     )}
                     style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
@@ -343,7 +343,7 @@ export function AdminPostsPage() {
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
                 status === t.value
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -373,7 +373,7 @@ export function AdminPostsPage() {
                 setPage(0)
               }}
               placeholder="Tìm nội dung..."
-              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all"
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition"
             />
           </div>
 
@@ -386,7 +386,7 @@ export function AdminPostsPage() {
                 setPage(0)
               }}
               placeholder="Tìm tác giả, email..."
-              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all"
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition"
             />
           </div>
         </div>

@@ -249,7 +249,7 @@ export function EventRsvpButton({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className={cn(
-            'transition-all',
+            'transition',
             sizeClasses,
             isHovered
               ? 'border-danger-border bg-danger-soft text-danger hover:border-danger'
@@ -288,7 +288,7 @@ export function EventRsvpButton({
           variant="primary"
           onClick={handleRsvpClick}
           disabled={toggleRsvp.isPending}
-          className={cn('transition-all active:scale-95', sizeClasses)}
+          className={cn('transition active:scale-95', sizeClasses)}
         >
           {toggleRsvp.isPending ? (
             <>

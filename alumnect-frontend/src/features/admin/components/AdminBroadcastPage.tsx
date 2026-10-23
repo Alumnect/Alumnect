@@ -158,7 +158,7 @@ export function AdminBroadcastPage() {
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
                 statusFilter === tab.value
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -184,7 +184,7 @@ export function AdminBroadcastPage() {
                     setPage(0)
                   }}
                   className={cn(
-                    'rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer select-none',
+                    'rounded-full px-3 py-1 text-xs font-bold transition cursor-pointer select-none',
                     timeFilter === t.value
                       ? 'bg-plum-900 text-white shadow-xs'
                       : 'bg-surface-2 text-text-muted hover:bg-surface-3'

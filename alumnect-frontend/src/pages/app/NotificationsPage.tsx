@@ -316,7 +316,7 @@ export function NotificationsPage() {
                   hover
                   onClick={() => handleNotificationClick(n)}
                   className={cn(
-                    'group flex cursor-pointer items-center gap-4 p-4 transition-all duration-200 hover:shadow-md dark:border-border',
+                    'group flex cursor-pointer items-center gap-4 p-4 transition duration-200 dark:border-border',
                     !n.isRead
                       ? 'bg-brand-500/[0.05] ring-1 ring-inset ring-brand-400/30 dark:bg-surface-2/60 dark:ring-brand-500/40'
                       : 'bg-surface opacity-90 hover:opacity-100'

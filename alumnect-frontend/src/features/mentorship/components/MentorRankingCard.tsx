@@ -45,10 +45,10 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
     <Card
       hover
       className={cn(
-        'border bg-surface p-4 transition-all duration-200 backdrop-blur-sm sm:p-5 dark:border-border',
+        'border bg-surface p-4 transition duration-200 backdrop-blur-sm sm:p-5 dark:border-border',
         mentor.rank <= 3
           ? 'border-primary-soft-border shadow-xs'
-          : 'border-border hover:border-primary-soft-border hover:shadow-md hover:shadow-brand-500/5',
+          : 'border-border hover:border-primary-soft-border',
       )}
     >
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">

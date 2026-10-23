@@ -257,7 +257,7 @@ export function ImageCarousel({
           }}
           aria-label="Phóng to ảnh"
           title="Xem ảnh toàn màn hình"
-          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/90 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-all hover:bg-black/65 hover:text-white hover:scale-105 active:scale-95 shadow-sm"
+          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/90 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition hover:bg-black/65 hover:text-white hover:scale-105 active:scale-95 shadow-sm"
         >
           <Maximize2 size={16} />
         </button>
@@ -312,7 +312,7 @@ export function ImageCarousel({
                 }}
                 aria-label={`Ảnh ${idx + 1}`}
                 className={cn(
-                  'h-1.5 rounded-full transition-all duration-200',
+                  'h-1.5 rounded-full transition duration-200',
                   idx === current
                     ? 'w-5 bg-surface shadow-sm'
                     : 'w-1.5 bg-surface/60 hover:bg-white/85',

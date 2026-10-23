@@ -53,7 +53,7 @@ export function Modal({
         <div className={cn("fixed inset-0 flex items-end justify-center sm:items-center sm:p-4", zIndexClassName)}>
           {/* Lớp nền mờ (Backdrop) phủ toàn màn hình */}
           <motion.div
-            className="absolute inset-0 bg-overlay backdrop-blur-xs"
+            className="absolute inset-0 bg-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: TRANSITION.exit }}

@@ -132,7 +132,7 @@ export function MentoringTaskCompletionModal({
               value={finalSummary}
               onChange={(e) => setFinalSummary(e.target.value)}
               placeholder="Tóm tắt những mục tiêu đã đạt được, kiến thức hoặc sản phẩm đã hoàn thiện trong suốt quá trình hướng dẫn..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
             <p className="text-xs text-text-subtle mt-1">
               Mô tả chi tiết giúp học viên nắm rõ khối lượng công việc đã hoàn thành để nghiệm thu nhanh chóng.
@@ -149,7 +149,7 @@ export function MentoringTaskCompletionModal({
               value={deliverables}
               onChange={(e) => setDeliverables(e.target.value)}
               placeholder="Ví dụ: Link GitHub Repository, Google Drive slide thuyết trình, tài liệu hướng dẫn cài đặt..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
           </div>
 
@@ -164,7 +164,7 @@ export function MentoringTaskCompletionModal({
               value={attachmentUrls}
               onChange={(e) => setAttachmentUrls(e.target.value)}
               placeholder="https://drive.google.com/file/...&#10;https://github.com/..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none font-mono text-xs shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none font-mono text-xs shadow-sm"
             />
           </div>
 

@@ -20,15 +20,16 @@ import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
 import { useThemeStore } from '@/store/themeStore'
-import { useLogout } from '@/features/auth'
-import { useWebSocketChat } from '@/features/message'
-import { useWebSocketNotifications, useUnreadNotificationCount } from '@/features/notification'
+import { useLogout } from '@/features/auth/hooks/useAuthMutations'
+import { useWebSocketChat } from '@/features/message/hooks/useWebSocketChat'
+import { useWebSocketNotifications } from '@/features/notification/hooks/useWebSocketNotifications'
+import { useUnreadNotificationCount } from '@/features/notification/hooks/useNotifications'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
-import { MentorshipLayout } from '@/features/mentorship'
+import { MentorshipLayout } from '@/features/mentorship/components/MentorshipLayout'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 /* ----------------------------- small popover ----------------------------- */
@@ -87,7 +88,7 @@ function IconLink({ to, label, icon, badge, dot }: { to: string; label: string; 
     >
       <span className="transition-transform duration-200 group-hover:-translate-y-0.5">{icon}</span>
       {/* hover tooltip label */}
-      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100 dark:bg-black dark:text-white">
+      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-full group-hover:opacity-100 dark:bg-black dark:text-white">
         {label}
       </span>
       {badge ? (
@@ -184,7 +185,7 @@ export function AppShell() {
             <span className="transition-transform duration-200 group-hover:-translate-y-0.5">
               <SquaresFour size={21} weight={activePopover === 'apps' ? 'fill' : 'regular'} />
             </span>
-            <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+            <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-full group-hover:opacity-100">
               Khám phá
             </span>
           </span>
@@ -199,7 +200,7 @@ export function AppShell() {
                 key={item.to}
                 to={item.to}
                 aria-label={item.label}
-                className="group relative grid h-12 w-12 place-items-center rounded-2xl text-primary-solid transition-all hover:bg-primary-soft active:scale-95"
+                className="group relative grid h-12 w-12 place-items-center rounded-2xl text-primary-solid transition hover:bg-primary-soft active:scale-95"
               >
                 {Icon && (
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100/80 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:bg-primary-soft">
@@ -207,7 +208,7 @@ export function AppShell() {
                   </span>
                 )}
                 {/* Tooltip khi hover giống hệt icon ở ngoài */}
-                <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
+                <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
                   {item.label}
                 </span>
               </Link>
@@ -241,7 +242,7 @@ export function AppShell() {
               onChange={handleSearchChange}
               onKeyDown={handleSearchKeyDown}
               placeholder="Tìm kiếm bài viết…"
-              className="h-9.5 w-48 rounded-full border border-border bg-surface-2 pl-9 pr-8 text-sm text-text placeholder:text-text-subtle transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 lg:w-56"
+              className="h-9.5 w-40 rounded-full border border-border bg-surface-2 pl-9 pr-8 text-sm text-text placeholder:text-text-subtle transition focus:border-[#F27024]/80 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 lg:w-44 xl:w-48"
             />
             {keyword && (
               <button
@@ -256,7 +257,7 @@ export function AppShell() {
           </label>
 
           {/* primary nav (centre) */}
-          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex h-full">
+          <nav className="hidden h-full min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex xl:gap-1">
             {APP_PRIMARY_NAV.map((item) => {
               const Icon = item.icon
               return (
@@ -267,7 +268,7 @@ export function AppShell() {
                   aria-label={item.label}
                   className={({ isActive }) =>
                     cn(
-                      'group relative flex h-full w-20 xl:w-auto xl:px-1 items-center justify-center transition-colors',
+                      'group relative flex h-full w-20 xl:w-24 items-center justify-center transition-colors',
                       isActive ? 'text-primary-solid' : 'text-text-subtle hover:text-text',
                     )
                   }
@@ -275,21 +276,20 @@ export function AppShell() {
                   {({ isActive }) => (
                     <>
                       <div className={cn(
-                        'flex h-11 w-full items-center justify-center rounded-xl transition-all duration-200 xl:gap-2 xl:px-4',
+                        'flex h-11 w-full items-center justify-center rounded-xl transition-colors duration-200',
                         isActive ? 'bg-primary-soft text-primary-solid' : 'hover:bg-surface-2 text-text-subtle hover:text-text'
                       )}>
                         {Icon && (
                           <Icon
                             size={23}
                             weight={isActive ? 'fill' : 'regular'}
-                            className={cn('transition-all duration-200 group-hover:scale-110', isActive && 'text-primary-solid')}
+                            className={cn('transition duration-200 group-hover:scale-110', isActive && 'text-primary-solid')}
                           />
                         )}
-                        <span className="hidden whitespace-nowrap text-sm font-semibold xl:inline">{item.shortLabel ?? item.label}</span>
                       </div>
 
-                      {/* hover tooltip label (chỉ khi chưa đủ chỗ hiện nhãn chữ) */}
-                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 xl:hidden whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0.5 dark:bg-black dark:text-white">
+                      {/* hover tooltip label */}
+                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition duration-200 group-hover:opacity-100 group-hover:translate-y-0.5 dark:bg-black dark:text-white">
                         {item.label}
                       </span>
                       {isActive && (
@@ -465,8 +465,8 @@ export function AppShell() {
             <MentorshipLayout>
               <motion.div
                 key={location.pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={TRANSITION.page}
                 className={isMentoringChatRoute ? 'h-full min-h-0 overflow-hidden' : 'xl:min-h-full'}
               >
@@ -476,8 +476,8 @@ export function AppShell() {
           ) : (
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={TRANSITION.page}
               className={location.pathname === '/app/messages' ? "h-full min-h-0" : undefined}
             >
@@ -488,7 +488,7 @@ export function AppShell() {
       </main>
 
       {/* ===== mobile bottom tab bar ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-raised backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-stretch justify-around">
           {APP_PRIMARY_NAV.map((item) => {
             const Icon = item.icon
@@ -541,7 +541,7 @@ export function AppShell() {
         {sheet && (
           <>
             <motion.div
-              className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-40 bg-overlay lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: TRANSITION.exit }}
@@ -626,7 +626,7 @@ export function AppShell() {
             transition={TRANSITION.pop}
             aria-label="Cuộn lên đầu trang"
             title="Cuộn lên đầu trang"
-            className="fixed bottom-20 right-6 z-30 lg:bottom-7 lg:right-7 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary-solid shadow-lg shadow-orange-500/10 backdrop-blur-md transition-all hover:bg-primary-soft hover:border-orange-300 hover:scale-110 active:scale-95 cursor-pointer"
+            className="fixed bottom-20 right-6 z-30 lg:bottom-7 lg:right-7 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary-solid transition hover:bg-primary-soft hover:border-orange-300 hover:scale-110 active:scale-95 cursor-pointer"
           >
             <ArrowUp size={20} weight="bold" />
           </motion.button>

@@ -49,7 +49,7 @@ export function MyRequestCard({ request }: MyRequestCardProps) {
   ].filter(Boolean) as { icon: ReactNode; text: string }[]
 
   return (
-    <article className="rounded-2xl border border-border bg-surface p-5 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm dark:hover:border-brand-500/40">
+    <article className="rounded-2xl border border-border bg-surface p-5 shadow-xs transition hover:border-brand-500/40 dark:hover:border-brand-500/40">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
           <RequestStatusBadge status={request.status} />

@@ -245,7 +245,7 @@ export function ImageViewerModal({
             type="button"
             onClick={onClose}
             title="Đóng (Esc)"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#242526] text-white/90 shadow-md border border-white/10 transition-all hover:bg-[#3a3b3c] hover:text-white hover:scale-105 active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#242526] text-white/90 shadow-md border border-white/10 transition hover:bg-[#3a3b3c] hover:text-white hover:scale-105 active:scale-95"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -287,7 +287,7 @@ export function ImageViewerModal({
             onClick={(e) => { e.stopPropagation(); onPrev() }}
             title="Ảnh trước (←)"
             aria-label="Ảnh trước"
-            className="absolute left-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition-all hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
+            className="absolute left-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
           >
             <ChevronLeft size={26} />
           </button>
@@ -298,7 +298,7 @@ export function ImageViewerModal({
             onClick={(e) => { e.stopPropagation(); onNext() }}
             title="Ảnh sau (→)"
             aria-label="Ảnh sau"
-            className="absolute right-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition-all hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
+            className="absolute right-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
           >
             <ChevronRight size={26} />
           </button>

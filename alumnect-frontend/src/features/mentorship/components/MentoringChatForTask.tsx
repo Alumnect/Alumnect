@@ -905,7 +905,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                     type="button"
                     onClick={() => setIsDealMenuOpen((v) => !v)}
                     title="Giao dịch Deal Ticket"
-                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-brand-50/60 px-3 text-xs font-bold text-primary-solid transition-all hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-brand-50/60 px-3 text-xs font-bold text-primary-solid transition hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
                   >
                     <Handshake className="h-4 w-4 shrink-0" />
                     <span className="font-display font-bold">Giao dịch</span>
@@ -920,7 +920,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           setIsDealMenuOpen(false)
                           setIsAcceptByRequestOpen(true)
                         }}
-                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <span className="rounded-lg bg-success-soft p-1.5 text-success">
                           <ThumbsUp className="h-4 w-4" />
@@ -941,7 +941,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           setIsDealMenuOpen(false)
                           setIsFormOpen(true)
                         }}
-                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <span className="rounded-lg bg-brand-100/70 p-1.5 text-primary-solid dark:bg-brand-700/60">
                           <Edit3 className="h-4 w-4" />

@@ -74,7 +74,7 @@ const Trigger = forwardRef<HTMLInputElement, TriggerProps>(function Trigger(
         aria-invalid={invalid || undefined}
         {...rest}
         className={cn(
-          'w-full cursor-pointer rounded-xl border bg-surface text-text outline-none transition-all placeholder:text-text-subtle',
+          'w-full cursor-pointer rounded-xl border bg-surface text-text outline-none transition placeholder:text-text-subtle',
           'focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-60',
           fieldSize === 'sm' ? 'h-9 pl-8 pr-2.5 text-xs' : 'h-11 pl-10 pr-3.5 text-sm',
           invalid ? 'border-danger focus:border-danger focus:ring-danger/20' : 'border-border hover:border-border-strong',

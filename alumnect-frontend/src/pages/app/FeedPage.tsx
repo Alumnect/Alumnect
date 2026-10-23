@@ -8,6 +8,7 @@
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
 import { useState, useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -16,7 +17,7 @@ import {
   CalendarPlus,
   Briefcase,
   Award,
-  Trophy,
+  Send,
   Loader2,
   AlertTriangle,
   Inbox,
@@ -28,14 +29,12 @@ import {
   Coins,
   Heart,
   MessageCircle,
-  Repeat,
   Bookmark,
   Flag,
 } from 'lucide-react'
 import { TRANSITION } from '@/lib/motion'
-import { Avatar, Badge, Card, toast, ImageViewerModal } from '@/components/ui'
+import { Avatar, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Reveal } from '@/components/motion'
 import { UpcomingEventsWidget, CancelEventModal, useCancelEvent, EventRsvpButton } from '@/features/event'
 
 import { compact, cn } from '@/lib/utils'
@@ -74,53 +73,43 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
  */
 function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostType) => void }) {
   const firstName = viewer.name ? viewer.name.trim().split(' ').slice(-1)[0] : 'bạn'
+  const quick: { type: PostType; label: string; icon: ReactNode }[] = [
+    { type: 'normal', label: 'Ảnh / Video', icon: <ImageIcon size={18} /> },
+    { type: 'recruitment', label: 'Tuyển dụng', icon: <Briefcase size={18} /> },
+    { type: 'event', label: 'Sự kiện', icon: <CalendarPlus size={18} /> },
+    { type: 'achievement', label: 'Thành tựu', icon: <Award size={18} /> },
+  ]
   return (
-    <Card hover={false} className="p-4 border border-border shadow-xs bg-surface rounded-2xl">
+    <div className="border-b border-border px-4 py-3.5 sm:px-5">
       <div className="flex items-center gap-3">
-        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={42} verified={viewer.verified} />
+        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={40} verified={viewer.verified} />
         <button
           type="button"
           onClick={() => onOpen()}
-          className="h-11 flex-1 rounded-full border border-border bg-surface-2 px-4 text-left text-sm text-text-subtle transition-all hover:bg-surface-2 hover:border-border-strong"
+          className="h-10 min-w-0 flex-1 truncate text-left text-[15px] text-text-subtle transition-colors hover:text-text-muted"
         >
           {firstName} ơi, bạn đang nghĩ gì thế?
         </button>
+        <Button type="button" size="sm" variant="primary" className="shrink-0 rounded-full px-5" onClick={() => onOpen()}>
+          Đăng
+        </Button>
       </div>
-      <div className="mt-3 flex items-center gap-1 border-t border-border pt-2 sm:justify-start">
-        <button
-          type="button"
-          onClick={() => onOpen('normal')}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-1 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:flex-none sm:px-3"
-        >
-          <ImageIcon size={18} className="shrink-0 text-info" />
-          <span>Ảnh / Video</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onOpen('recruitment')}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-1 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:flex-none sm:px-3"
-        >
-          <Briefcase size={18} className="shrink-0 text-primary-solid" />
-          <span>Tuyển dụng</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onOpen('event')}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-1 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:flex-none sm:px-3"
-        >
-          <CalendarPlus size={18} className="shrink-0 text-info" />
-          <span>Sự kiện</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onOpen('achievement')}
-          className="hidden min-h-11 items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:inline-flex"
-        >
-          <Award size={18} className="shrink-0 text-warning" />
-          <span>Thành tựu</span>
-        </button>
+      <div className="mt-1 flex items-center gap-1 pl-[52px]">
+        {quick.map((q) => (
+          <button
+            key={q.type}
+            type="button"
+            onClick={() => onOpen(q.type)}
+            aria-label={q.label}
+            title={q.label}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
+          >
+            {q.icon}
+            <span className="hidden sm:inline">{q.label}</span>
+          </button>
+        ))}
       </div>
-    </Card>
+    </div>
   )
 }
 
@@ -140,8 +129,11 @@ export function PostCard({
   onReport,
   onShare,
   onCancelEvent,
+  variant = 'card',
 }: {
   post: Post
+  /** 'row': một hàng trong danh sách có đường kẻ mảnh (Bảng tin); 'card': thẻ riêng có viền (trang cá nhân…) */
+  variant?: 'row' | 'card'
   canInteract: boolean
   currentUserId?: string
   currentUserName?: string
@@ -244,49 +236,42 @@ export function PostCard({
   }
 
   return (
-    <Card
-      hover={false}
+    <article
       onClick={handleCardClick}
       className={cn(
-        "overflow-hidden relative transition-shadow duration-200 cursor-pointer border border-border shadow-raised hover:shadow-overlay bg-surface rounded-2xl",
-        post.type === 'achievement' && "border-warning-border"
+        'relative cursor-pointer transition-colors',
+        variant === 'row'
+          ? 'border-b border-border last:border-b-0 hover:bg-surface-2/50'
+          : 'overflow-hidden rounded-2xl border border-border bg-surface hover:bg-surface-2/40',
       )}
     >
-      {post.type === 'achievement' && (
-        <div className="absolute -top-4 -right-4 p-6 opacity-[0.04] pointer-events-none -rotate-12">
-          <Trophy size={160} className="text-warning" />
-        </div>
-      )}
-      <div className="p-5 relative z-10">
-        {/* --- Phần 1: Header — avatar, tên tác giả, badge loại bài, thời gian, menu "..." --- */}
-        <div className="flex items-center gap-3">
+      <div className="relative z-10 px-4 pt-4 sm:px-5">
+        {/* --- Header: avatar, tên, loại bài, vai trò · thời gian, menu "..." --- */}
+        <div className="flex items-start gap-3">
           <Link
             to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-            className="shrink-0 transition-transform duration-200 hover:scale-105"
+            className="shrink-0"
             title={`Xem hồ sơ của ${post.author}`}
           >
             <Avatar src={post.avatar} name={post.author} size={44} verified={post.verified} />
           </Link>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-                className="truncate font-bold text-text hover:underline hover:text-primary-solid transition-colors text-sm sm:text-base"
+                className="truncate text-[15px] font-bold text-text hover:underline"
                 title={`Xem hồ sơ của ${post.author}`}
               >
                 {post.author}
               </Link>
-              <Link to={`/app/posts/${post.id}`}>
-                {post.type === 'achievement' ? (
-                  <Badge tone={meta.tone} className="flex cursor-pointer items-center gap-1 border border-warning-border px-2.5 py-0.5 text-xs hover:opacity-85">
-                    <Award size={12} /> {meta.label}
-                  </Badge>
-                ) : post.type !== 'normal' ? (
-                  <Badge tone={meta.tone} className="px-2 py-0.5 text-xs cursor-pointer hover:opacity-85">{meta.label}</Badge>
-                ) : null}
-              </Link>
+              {post.type !== 'normal' && (
+                <Link to={`/app/posts/${post.id}`} className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-text-muted hover:text-text">
+                  {post.type === 'achievement' && <Award size={12} className="text-warning" />}
+                  {meta.label}
+                </Link>
+              )}
             </div>
-            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-text-subtle hover:text-text-muted transition-colors mt-0.5">
+            <Link to={`/app/posts/${post.id}`} className="mt-0.5 block truncate text-[13px] text-text-subtle hover:text-text-muted">
               {post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}
             </Link>
           </div>
@@ -301,17 +286,13 @@ export function PostCard({
           />
         </div>
 
-        {/* --- Phần 2: Nội dung văn bản bài viết --- */}
-        {post.text && (
-          <p className="mt-3.5 whitespace-pre-line text-base leading-relaxed text-text">
-            {post.text}
-          </p>
-        )}
+        {/* --- Nội dung văn bản --- */}
+        {post.text && <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-text">{post.text}</p>}
       </div>
 
       {/* --- Phần 3: Khối thông tin Tuyển dụng (nếu là bài recruitment) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-5 mb-4 rounded-xl border border-border bg-surface-2 p-4 transition-colors hover:border-primary-soft-border">
+        <div className="mx-4 mb-1 mt-3 rounded-2xl border border-border p-4 sm:mx-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -329,7 +310,7 @@ export function PostCard({
                 href={post.job.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-primary-solid px-3.5 text-sm font-bold text-on-primary shadow-raised hover:bg-primary-hover transition-colors"
+                className="shrink-0 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-solid px-4 text-sm font-bold text-on-primary hover:bg-primary-hover transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 Ứng tuyển <ExternalLink size={12} />
@@ -366,7 +347,7 @@ export function PostCard({
 
       {/* --- Phần 3b: Khối thông tin Sự kiện (nếu là bài event) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-5 mb-4 rounded-xl border border-border bg-surface-2 p-4 transition-colors hover:border-info-border">
+        <div className="mx-4 mb-1 mt-3 rounded-2xl border border-border p-4 sm:mx-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -430,7 +411,7 @@ export function PostCard({
           : post.image ? [post.image] : []
         if (imgs.length === 0) return null
         return (
-          <div className="px-5 pb-2">
+          <div className="px-4 pb-1 pt-3 sm:px-5">
             <div className="overflow-hidden rounded-2xl border border-border">
               {imgs.length === 1 && (
                 <img
@@ -447,7 +428,7 @@ export function PostCard({
               )}
 
               {imgs.length === 2 && (
-                <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
                   {imgs.map((url, i) => (
                     <img
                       key={i}
@@ -466,7 +447,7 @@ export function PostCard({
               )}
 
               {imgs.length === 3 && (
-                <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
                   <img
                     src={imgs[0]}
                     alt="Ảnh bài viết"
@@ -496,7 +477,7 @@ export function PostCard({
               )}
 
               {imgs.length >= 4 && (
-                <div className="grid grid-cols-2 gap-1 bg-black/5 dark:bg-black/40">
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
                   {imgs.slice(0, 3).map((url, i) => (
                     <img
                       key={i}
@@ -538,124 +519,92 @@ export function PostCard({
         )
       })()}
 
-      {/* --- Phần 5: Thanh hành động — Thích / Bình luận / Chia sẻ / Lưu / Báo cáo --- */}
-      <div className="flex items-center gap-1 border-t border-border px-2 py-1 text-sm font-semibold text-text-muted sm:px-3">
-        <div className="grid min-w-0 flex-1 grid-cols-3 gap-1">
-          {/* Nút Thích */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleLike()
-            }}
-            aria-pressed={liked}
-            className={cn(
-              'inline-flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1 transition-colors cursor-pointer hover:bg-surface-2',
-              liked
-                ? 'text-danger font-bold'
-                : 'hover:text-danger',
-            )}
-          >
-            <AnimatePresence initial={false}>
-              <motion.span
-                key={liked ? 'liked' : 'unliked'}
-                className="inline-flex"
-                initial={{ scale: 0.55, opacity: 0.4 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={TRANSITION.bounce}
-              >
-                <Heart size={18} className={cn(liked && 'fill-current')} />
-              </motion.span>
-            </AnimatePresence>
-            <span className="truncate">{compact(likeCount)}<span className="sr-only sm:not-sr-only"> thích</span></span>
-          </button>
+      {/* --- Thanh hành động: icon + số, nền chỉ hiện khi rê chuột --- */}
+      <div className="flex items-center gap-0.5 px-2.5 pb-2 pt-1 text-text-muted sm:px-3.5">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleLike()
+          }}
+          aria-pressed={liked}
+          aria-label={liked ? 'Bỏ thích bài viết' : 'Thích bài viết'}
+          className={cn(
+            'inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition-colors hover:bg-surface-2',
+            liked ? 'text-danger' : 'hover:text-danger',
+          )}
+        >
+          <motion.span key={liked ? 'liked' : 'unliked'} className="inline-flex" initial={{ scale: liked ? 0.8 : 1 }} animate={{ scale: 1 }} transition={TRANSITION.bounce}>
+            <Heart size={20} className={cn(liked && 'fill-current')} />
+          </motion.span>
+          {likeCount > 0 && <span className="tabular-nums">{compact(likeCount)}</span>}
+        </button>
 
-          {/* Nút Bình luận */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              if (!canInteract) {
-                promptLogin('Đăng nhập để bình luận về bài viết.')
-                return
-              }
-              setShowComments((prev) => !prev)
-            }}
-            className={cn(
-              'inline-flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1 transition-colors cursor-pointer hover:bg-surface-2',
-              showComments
-                ? 'text-primary-solid bg-primary-soft'
-                : 'hover:text-primary-solid',
-            )}
-          >
-            <MessageCircle size={18} />
-            <span className="truncate">{compact(commentCount)}<span className="sr-only sm:not-sr-only"> bình luận</span></span>
-          </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (!canInteract) {
+              promptLogin('Đăng nhập để bình luận về bài viết.')
+              return
+            }
+            setShowComments((prev) => !prev)
+          }}
+          aria-expanded={showComments}
+          aria-label="Bình luận"
+          className={cn(
+            'inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition-colors hover:bg-surface-2',
+            showComments ? 'text-primary-solid' : 'hover:text-text',
+          )}
+        >
+          <MessageCircle size={20} />
+          {commentCount > 0 && <span className="tabular-nums">{compact(commentCount)}</span>}
+        </button>
 
-          {/* Nút Chia sẻ */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              if (!canInteract) {
-                promptLogin('Đăng nhập để chia sẻ bài viết.')
-              } else if (onShare) {
-                onShare(post)
-              }
-            }}
-            aria-label="Chia sẻ bài viết"
-            className="inline-flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1 transition-colors cursor-pointer hover:bg-surface-2 hover:text-text"
-          >
-            <Repeat size={18} />
-            <span className="sr-only sm:not-sr-only">Chia sẻ</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!canInteract) {
+              promptLogin('Đăng nhập để chia sẻ bài viết.')
+            } else if (onShare) {
+              onShare(post)
+            }
+          }}
+          aria-label="Chia sẻ bài viết"
+          className="inline-flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 transition-colors hover:bg-surface-2 hover:text-text"
+        >
+          <Send size={19} />
+        </button>
 
-        {/* Các nút phụ bên phải: Lưu & Báo cáo */}
-        <div className="flex shrink-0 items-center">
+        <div className="ml-auto flex items-center">
           <button
             type="button"
             aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+            aria-pressed={saved}
             onClick={(e) => {
               e.stopPropagation()
               handleSave()
             }}
-            className={cn(
-              'inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors cursor-pointer',
-              saved
-                ? 'text-primary-solid hover:bg-primary-soft'
-                : 'text-text-subtle hover:text-primary-solid hover:bg-surface-2',
-            )}
+            className={cn('inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-surface-2', saved ? 'text-primary-solid' : 'hover:text-text')}
           >
-            <Bookmark size={18} className={cn(saved && 'fill-current')} />
+            <Bookmark size={20} className={cn(saved && 'fill-current')} />
           </button>
-
-          {!isAuthor && (canReport ? (
+          {!isAuthor && (canReport || !canInteract) && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                onReport?.(post)
+                if (canReport) onReport?.(post)
+                else promptLogin('Đăng nhập để báo cáo bài viết.')
               }}
               aria-label="Báo cáo bài viết"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors cursor-pointer text-text-subtle hover:bg-danger-soft hover:text-danger"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-danger-soft hover:text-danger"
             >
-              <Flag size={18} />
+              <Flag size={19} />
             </button>
-          ) : !canInteract ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                promptLogin('Đăng nhập để báo cáo bài viết.')
-              }}
-              aria-label="Báo cáo bài viết"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors cursor-pointer text-text-subtle hover:bg-danger-soft hover:text-danger"
-            >
-              <Flag size={18} />
-            </button>
-          ) : null)}
+          )}
         </div>
       </div>
 
@@ -691,35 +640,27 @@ export function PostCard({
         senderAvatar={post.avatar}
         time={post.time}
       />
-    </Card>
+    </article>
   )
 }
 
 /** Khung xương (skeleton) hiển thị trong lúc tải bảng tin lần đầu. */
 function PostSkeleton() {
   return (
-    <Card hover={false} className="p-5 relative overflow-hidden">
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-10 w-10 border-4 border-primary-soft-border border-t-brand-600 rounded-full"
-        />
-      </div>
-      <div className="flex items-center gap-3 opacity-30">
-        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-border" />
+    <div className="border-b border-border px-4 py-4 last:border-b-0 sm:px-5" role="status" aria-label="Đang tải bài viết">
+      <div className="flex items-center gap-3">
+        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-surface-3" />
         <div className="flex-1 space-y-2">
-          <div className="h-3.5 w-40 animate-pulse rounded bg-border" />
-          <div className="h-3 w-24 animate-pulse rounded bg-border" />
+          <div className="h-3.5 w-40 animate-pulse rounded bg-surface-3" />
+          <div className="h-3 w-24 animate-pulse rounded bg-surface-3" />
         </div>
       </div>
       <div className="mt-4 space-y-2">
-        <div className="h-3.5 w-full animate-pulse rounded bg-border" />
-        <div className="h-3.5 w-11/12 animate-pulse rounded bg-border" />
-        <div className="h-3.5 w-2/3 animate-pulse rounded bg-border" />
+        <div className="h-3.5 w-full animate-pulse rounded bg-surface-3" />
+        <div className="h-3.5 w-11/12 animate-pulse rounded bg-surface-3" />
+        <div className="h-3.5 w-2/3 animate-pulse rounded bg-surface-3" />
       </div>
-      <div className="mt-4 h-40 w-full animate-pulse rounded-xl bg-surface-2" />
-    </Card>
+    </div>
   )
 }
 
@@ -730,37 +671,27 @@ function PostSkeleton() {
  */
 function FeedError({ message, onRetry }: { message?: string; onRetry: () => void }) {
   return (
-    <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
-        <AlertTriangle size={24} />
-      </span>
+    <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+      <AlertTriangle size={32} className="text-danger" aria-hidden />
       <div>
         <p className="font-bold text-text">Không tải được bảng tin</p>
         <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
       </div>
       <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
-    </Card>
+    </div>
   )
 }
 
 /** Trạng thái rỗng khi cộng đồng chưa có bài viết nào ("No posts yet"). */
 function FeedEmpty() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/50 p-12 text-center">
-      <motion.div
-        initial={{ y: 0 }}
-        animate={{ y: [-5, 5, -5] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="mb-4 text-brand-300 drop-shadow-sm"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
-      </motion.div>
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <Inbox size={40} className="mb-3 text-text-subtle" aria-hidden />
       <h3 className="mb-1 text-lg font-bold text-text">Chưa có bài viết nào</h3>
       <p className="text-sm text-text-subtle">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
     </div>
   )
 }
-
 
 /**
  * Trang bảng tin cộng đồng (UC15 - View community Feed).
@@ -877,185 +808,153 @@ export function FeedPage() {
   return (
     <div className="mx-auto flex max-w-6xl items-start justify-center gap-8">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
-      <div className="w-full max-w-[640px] shrink-0 space-y-5">
-        {/* Khối A: Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy gì ở đây —
-            Guest khi tương tác sẽ được mời đăng nhập qua popup (kiểu Facebook). */}
-        {canPost && viewer && (
-          <>
-            <Reveal>
+      <div className="w-full max-w-[640px] shrink-0">
+        <div className="overflow-hidden rounded-3xl border border-border bg-surface">
+          {/* Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy — Guest tương tác sẽ được mời đăng nhập qua popup. */}
+          {canPost && viewer && (
+            <>
               <Composer viewer={viewer} onOpen={handleOpenComposer} />
-            </Reveal>
-            {/* Modal soạn & đăng / chỉnh sửa bài viết (UC14 / UC22) */}
-            <CreatePostModal
-              open={composerOpen}
-              onClose={handleCloseComposer}
-              viewer={viewer}
-              editPost={editingPost ?? undefined}
-              defaultType={composerDefaultType}
-              onPostCreated={handlePostCreated}
-            />
-          </>
-        )}
+              {/* Modal soạn & đăng / chỉnh sửa bài viết (UC14 / UC22) */}
+              <CreatePostModal
+                open={composerOpen}
+                onClose={handleCloseComposer}
+                viewer={viewer}
+                editPost={editingPost ?? undefined}
+                defaultType={composerDefaultType}
+                onPostCreated={handlePostCreated}
+              />
+            </>
+          )}
 
-        {/* Khối B: Bộ lọc danh mục bài viết (phong cách Facebook / Instagram - 1 dòng duy nhất) */}
-        <div className="no-scrollbar flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-surface-2 p-1 w-fit">
-          {FILTERS.map((f) => {
-            const isActive = filter === f.key
-            return (
-              <button
-                key={f.key}
-                type="button"
-                onClick={() => setFilter(f.key)}
-                className={cn(
-                  'shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-sm sm:px-4 font-semibold transition-colors duration-200 cursor-pointer',
-                  isActive
-                    ? 'bg-surface text-primary-solid shadow-raised font-bold'
-                    : 'text-text-muted hover:text-text hover:bg-surface/50'
-                )}
-              >
-                {f.label}
-              </button>
+          {/* Bộ lọc theo loại bài viết: tab gạch chân chia đều (kiểu Threads) */}
+          <div role="tablist" aria-label="Lọc bài viết theo loại" className="flex border-b border-border">
+            {FILTERS.map((f) => {
+              const isActive = filter === f.key
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setFilter(f.key)}
+                  className={cn(
+                    'relative h-12 min-w-0 flex-1 truncate px-0.5 text-sm font-semibold transition-colors',
+                    isActive ? 'text-text' : 'text-text-subtle hover:text-text-muted',
+                  )}
+                >
+                  {f.label}
+                  {isActive && <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary-solid" />}
+                </button>
+              )
+            })}
+          </div>
+
+          {isLoading ? (
+            <>
+              <PostSkeleton />
+              <PostSkeleton />
+              <PostSkeleton />
+            </>
+          ) : isError ? (
+            <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
+          ) : posts.length === 0 ? (
+            debouncedKeyword ? (
+              <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                <Search size={36} className="mb-3 text-text-subtle" aria-hidden />
+                <h3 className="mb-1 text-lg font-bold text-text">Không tìm thấy kết quả</h3>
+                <p className="text-sm text-text-subtle">
+                  Không có bài viết nào khớp với từ khóa "<span className="font-semibold">{debouncedKeyword}</span>"
+                </p>
+              </div>
+            ) : (
+              <FeedEmpty />
             )
-          })}
+          ) : (
+            <>
+              {posts.map((p) => (
+                <PostCard
+                  key={p.id}
+                  variant="row"
+                  post={p}
+                  canInteract={!isGuest}
+                  canReport={canReport}
+                  currentUserId={viewer?.id}
+                  currentUserName={viewer?.name}
+                  onEdit={handleStartEdit}
+                  onDelete={setDeletingPost}
+                  onReport={setReportingPost}
+                  onShare={setSharingPost}
+                  onCancelEvent={setCancellingEventPost}
+                />
+              ))}
+              {/* Vùng tự động tải thêm trang (Infinite scroll sentinel) */}
+              <div ref={loadMoreRef} className="py-5 text-center">
+                {isFetchingNextPage && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
+                    <Loader2 size={18} className="animate-spin text-primary-solid" />
+                    <span>Đang tải thêm bài viết…</span>
+                  </div>
+                )}
+                {!hasNextPage && posts.length > 0 && <p className="text-sm text-text-subtle">Bạn đã xem hết bảng tin</p>}
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Khối C: Vùng nội dung theo trạng thái, xét lần lượt:
-            1) loading  → khung xương skeleton
-            2) error    → thẻ lỗi + nút Thử lại (MSG05)
-            3) rỗng     → thông báo "Chưa có bài viết nào"
-            4) có dữ liệu → danh sách bài viết + nút tải thêm */}
-        {isLoading ? (
-          // (1) Đang tải trang đầu: hiển thị 3 skeleton
-          <div className="space-y-5">
-            <PostSkeleton />
-            <PostSkeleton />
-            <PostSkeleton />
-          </div>
-        ) : isError ? (
-          // (2) Lỗi tải: cho phép người dùng thử lại
-          <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
-        ) : posts.length === 0 ? (
-          // (3) Không có bài viết nào
-          debouncedKeyword ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/50 p-12 text-center">
-              <Search size={48} className="mb-4 text-brand-300 drop-shadow-sm" />
-              <h3 className="mb-1 text-lg font-bold text-text">Không tìm thấy kết quả</h3>
-              <p className="text-sm text-text-subtle">
-                Không có bài viết nào khớp với từ khóa "<span className="font-semibold">{debouncedKeyword}</span>"
-              </p>
-            </div>
-          ) : (
-            <FeedEmpty />
-          )
-        ) : (
-          // (4) Có dữ liệu: render danh sách + điều khiển phân trang
-          <>
-            <div className="space-y-5">
-              {posts.map((p) => (
-                <Reveal key={p.id} duration={0.6}>
-                  <PostCard
-                    post={p}
-                    canInteract={!isGuest}
-                    canReport={canReport}
-                    currentUserId={viewer?.id}
-                    currentUserName={viewer?.name}
-                    onEdit={handleStartEdit}
-                    onDelete={setDeletingPost}
-                    onReport={setReportingPost}
-                    onShare={setSharingPost}
-                    onCancelEvent={setCancellingEventPost}
-                  />
-                </Reveal>
-              ))}
-            </div>
-
-            {/* Vùng tự động tải thêm trang (Infinite scroll sentinel kiểu Facebook) */}
-            <div ref={loadMoreRef} className="py-4 text-center">
-              {isFetchingNextPage && (
-                <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
-                  <Loader2 size={18} className="animate-spin text-primary-solid" />
-                  <span>Đang tải thêm bài viết…</span>
-                </div>
-              )}
-              {!hasNextPage && posts.length > 0 && (
-                <p className="text-sm text-text-subtle">Bạn đã xem hết bảng tin 🎉</p>
-              )}
-            </div>
-
-            {deletingPost && (
-              <DeletePostModal
-                open={!!deletingPost}
-                onClose={() => setDeletingPost(null)}
-                post={deletingPost}
-                onDeleted={() => {
-                   if (deletingPost) {
-                     setSessionCreatedPosts((prev) => prev.filter((p) => String(p.id) !== String(deletingPost.id)))
-                   }
-                   setDeletingPost(null)
-                   refetch()
-                }}
-              />
-            )}
-            {reportingPost && (
-              <ReportPostModal
-                open={!!reportingPost}
-                postId={reportingPost.id}
-                onClose={() => setReportingPost(null)}
-              />
-            )}
-            {sharingPost && (
-              <ShareModal
-                isOpen={!!sharingPost}
-                onClose={() => setSharingPost(null)}
-                post={sharingPost}
-              />
-            )}
-            {cancellingEventPost && (
-              <CancelEventModal
-                isOpen={!!cancellingEventPost}
-                onClose={() => setCancellingEventPost(null)}
-                onConfirm={() => {
-                  const eventId = cancellingEventPost.event?.id ?? cancellingEventPost.eventId ?? cancellingEventPost.id
-                  if (!eventId) return
-                  cancelEventMutation.mutate(
-                    { eventId },
-                    {
-                      onSuccess: (res) => {
-                        toast.success(res.message || 'Đã hủy sự kiện thành công!')
-                        setCancellingEventPost(null)
-                        refetch()
-                      },
-                      onError: (err: any) => {
-                        toast.error(
-                          err.response?.data?.message ||
-                            err.message ||
-                            'Không thể hủy sự kiện. Vui lòng thử lại.'
-                        )
-                      },
-                    }
-                  )
-                }}
-                isPending={cancelEventMutation.isPending}
-                eventTitle={cancellingEventPost.event?.title}
-              />
-            )}
-          </>
+        {/* Các hộp thoại của bài viết */}
+        {deletingPost && (
+          <DeletePostModal
+            open={!!deletingPost}
+            onClose={() => setDeletingPost(null)}
+            post={deletingPost}
+            onDeleted={() => {
+              if (deletingPost) {
+                setSessionCreatedPosts((prev) => prev.filter((p) => String(p.id) !== String(deletingPost.id)))
+              }
+              setDeletingPost(null)
+              refetch()
+            }}
+          />
+        )}
+        {reportingPost && <ReportPostModal open={!!reportingPost} postId={reportingPost.id} onClose={() => setReportingPost(null)} />}
+        {sharingPost && <ShareModal isOpen={!!sharingPost} onClose={() => setSharingPost(null)} post={sharingPost} />}
+        {cancellingEventPost && (
+          <CancelEventModal
+            isOpen={!!cancellingEventPost}
+            onClose={() => setCancellingEventPost(null)}
+            onConfirm={() => {
+              const eventId = cancellingEventPost.event?.id ?? cancellingEventPost.eventId ?? cancellingEventPost.id
+              if (!eventId) return
+              cancelEventMutation.mutate(
+                { eventId },
+                {
+                  onSuccess: (res) => {
+                    toast.success(res.message || 'Đã hủy sự kiện thành công!')
+                    setCancellingEventPost(null)
+                    refetch()
+                  },
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onError: (err: any) => {
+                    toast.error(err.response?.data?.message || err.message || 'Không thể hủy sự kiện. Vui lòng thử lại.')
+                  },
+                },
+              )
+            }}
+            isPending={cancelEventMutation.isPending}
+            eventTitle={cancellingEventPost.event?.title}
+          />
         )}
       </div>
 
       {/* ============ CỘT PHẢI: GỢI Ý (ẩn trên mobile) ============
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
-      <aside className="hidden w-[320px] shrink-0 space-y-5 lg:block">
+      <aside className="sticky top-24 hidden w-[300px] shrink-0 space-y-4 lg:block">
         {/* Mục 1: Gợi ý kết nối (UC10 - View Connection Suggestions) */}
-        <Reveal direction="left">
-          <ConnectionSuggestionsWidget limit={4} />
-        </Reveal>
+        <ConnectionSuggestionsWidget limit={4} />
 
         {/* Mục 2: Gợi ý sự kiện sắp tới */}
-        <Reveal direction="left" delay={0.1}>
-          <UpcomingEventsWidget limit={3} />
-        </Reveal>
+        <UpcomingEventsWidget limit={3} />
       </aside>
     </div>
   )

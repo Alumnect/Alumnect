@@ -243,7 +243,7 @@ export function MentoringWorkLogList({
               <div
                 key={log.id}
                 className={cn(
-                  'rounded-2xl border p-5 transition-all duration-200',
+                  'rounded-2xl border p-5 transition duration-200',
                   log.status === 'PENDING_CONFIRMATION'
                     ? 'border-warning bg-warning-soft'
                     : log.status === 'CONFIRMED'
@@ -347,7 +347,7 @@ export function MentoringWorkLogList({
                               href={att.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="group inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-text-muted shadow-2xs transition-all hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid"
+                              className="group inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-text-muted shadow-2xs transition hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid"
                             >
                               {isImage ? (
                                 <ImageIcon className="h-4 w-4 text-primary-solid shrink-0" />
@@ -560,7 +560,7 @@ export function MentoringWorkLogList({
                   placeholder="Ví dụ: Nội dung hoàn thành đúng hạn, hướng dẫn rất nhiệt tình và rõ ràng..."
                   rows={3}
                   maxLength={2000}
-                  className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-hidden transition-all"
+                  className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-hidden transition"
                 />
               </div>
 
@@ -643,7 +643,7 @@ export function MentoringWorkLogList({
                   placeholder="Ví dụ: Cần đính kèm thêm slide tài liệu hướng dẫn và cập nhật kết quả kiểm thử chức năng..."
                   rows={4}
                   maxLength={2000}
-                  className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-danger focus:ring-2 focus:ring-danger focus:outline-hidden transition-all"
+                  className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-danger focus:ring-2 focus:ring-danger focus:outline-hidden transition"
                 />
                 <span className="mt-1 block text-right text-xs text-text-subtle">
                   {feedbackText.length}/2000 ký tự

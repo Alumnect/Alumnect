@@ -55,7 +55,7 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-all"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition"
           aria-label="Đóng"
         >
           <X size={16} />

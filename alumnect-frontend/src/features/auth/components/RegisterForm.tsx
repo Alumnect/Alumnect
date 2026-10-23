@@ -182,7 +182,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
               type="button"
               onClick={() => setValue('role', r.key as 'STUDENT' | 'ALUMNI')}
               className={cn(
-                'relative rounded-2xl border p-4 text-left transition-all duration-300',
+                'relative rounded-2xl border p-4 text-left transition duration-300',
                 active
                   ? 'border-brand-400/60 bg-primary-soft ring-2 ring-primary/30'
                   : 'border-border bg-surface-2 hover:border-border-strong hover:bg-surface-2',

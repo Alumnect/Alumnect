@@ -138,7 +138,7 @@ export function EventAttendeesModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo họ tên, chức danh..."
-              className="w-full rounded-xl border border-border bg-surface-2 py-2 pl-9 pr-8 text-xs sm:text-sm text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-1 focus:ring-primary transition-all"
+              className="w-full rounded-xl border border-border bg-surface-2 py-2 pl-9 pr-8 text-xs sm:text-sm text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-1 focus:ring-primary transition"
             />
             {search && (
               <button
@@ -157,7 +157,7 @@ export function EventAttendeesModal({
               type="button"
               onClick={() => setRoleFilter('ALL')}
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-semibold transition-all',
+                'rounded-full px-3 py-1 text-xs font-semibold transition',
                 roleFilter === 'ALL'
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-slate-200/70'
@@ -170,7 +170,7 @@ export function EventAttendeesModal({
               type="button"
               onClick={() => setRoleFilter('STUDENT')}
               className={cn(
-                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-all',
+                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition',
                 roleFilter === 'STUDENT'
                   ? 'bg-info text-text-inverse shadow-xs'
                   : 'bg-info-soft text-info hover:bg-info-border/60'
@@ -184,7 +184,7 @@ export function EventAttendeesModal({
               type="button"
               onClick={() => setRoleFilter('ALUMNI')}
               className={cn(
-                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-all',
+                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition',
                 roleFilter === 'ALUMNI'
                   ? 'bg-warning text-text-inverse shadow-xs'
                   : 'bg-warning-soft text-warning hover:bg-warning-border/60'
@@ -246,7 +246,7 @@ export function EventAttendeesModal({
             {filteredAttendees.map((attendee) => (
               <div
                 key={attendee.userId}
-                className="group flex items-center justify-between rounded-xl border border-border bg-surface-2 p-2.5 transition-all hover:border-primary-soft-border hover:bg-brand-50/20 hover:shadow-xs"
+                className="group flex items-center justify-between rounded-xl border border-border bg-surface-2 p-2.5 transition hover:border-primary-soft-border hover:bg-brand-50/20"
               >
                 <Link
                   to={`/app/profile?userId=${attendee.userId}`}
@@ -257,7 +257,7 @@ export function EventAttendeesModal({
                     src={attendee.avatarUrl}
                     name={attendee.fullName}
                     size={38}
-                    className="shrink-0 group-hover:ring-2 group-hover:ring-brand-400 group-hover:ring-offset-1 transition-all"
+                    className="shrink-0 group-hover:ring-2 group-hover:ring-brand-400 group-hover:ring-offset-1 transition"
                   />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-text group-hover:text-primary-solid transition-colors">

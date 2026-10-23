@@ -465,7 +465,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
             <button
               type="button"
               onClick={handleDisbandClick}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-danger-border bg-danger-soft py-2.5 text-xs font-bold text-danger shadow-sm transition-all hover:bg-danger-border/60 hover:text-danger active:scale-98"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-danger-border bg-danger-soft py-2.5 text-xs font-bold text-danger shadow-sm transition hover:bg-danger-border/60 hover:text-danger active:scale-98"
             >
               <Trash2 size={14} />
               Giải tán nhóm
@@ -475,7 +475,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
               <button
                 type="button"
                 onClick={handleLeaveClick}
-                className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface-2 py-2.5 px-3 text-xs font-bold text-text-muted transition-all hover:bg-border hover:text-text active:scale-98"
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface-2 py-2.5 px-3 text-xs font-bold text-text-muted transition hover:bg-border hover:text-text active:scale-98"
               >
                 <LogOut size={14} className="text-text-subtle" />
                 Rời khỏi nhóm
@@ -483,7 +483,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
               <button
                 type="button"
                 onClick={handleDisbandClick}
-                className="flex items-center justify-center gap-1.5 rounded-2xl border border-danger-border bg-danger-soft py-2.5 px-3 text-xs font-bold text-danger transition-all hover:bg-danger-border/60 hover:text-danger active:scale-98"
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-danger-border bg-danger-soft py-2.5 px-3 text-xs font-bold text-danger transition hover:bg-danger-border/60 hover:text-danger active:scale-98"
               >
                 <Trash2 size={14} className="text-danger" />
                 Giải tán nhóm
@@ -493,7 +493,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
             <button
               type="button"
               onClick={handleLeaveClick}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-danger-border bg-danger-soft py-2.5 text-xs font-bold text-danger transition-all hover:bg-danger-border/60 hover:text-danger active:scale-98"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-danger-border bg-danger-soft py-2.5 text-xs font-bold text-danger transition hover:bg-danger-border/60 hover:text-danger active:scale-98"
             >
               <LogOut size={14} />
               Rời khỏi nhóm
@@ -531,7 +531,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                         type="button"
                         onClick={() => setSelectedNewAdminId(m.userId)}
                         className={cn(
-                          'flex w-full items-center justify-between rounded-xl px-2.5 py-1.5 transition-all text-left',
+                          'flex w-full items-center justify-between rounded-xl px-2.5 py-1.5 transition text-left',
                           isSelected
                             ? 'bg-warning-soft text-warning ring-1 ring-warning'
                             : 'hover:bg-surface-2'
@@ -546,7 +546,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                         </div>
                         <div
                           className={cn(
-                            'grid h-4 w-4 place-items-center rounded-full border transition-all',
+                            'grid h-4 w-4 place-items-center rounded-full border transition',
                             isSelected
                               ? 'border-warning bg-warning text-text-inverse'
                               : 'border-border-strong'
@@ -573,7 +573,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                     type="button"
                     onClick={handleConfirmAction}
                     disabled={!selectedNewAdminId || removeMemberMutation.isPending}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-danger py-2.5 text-xs font-semibold text-text-inverse shadow-md shadow-rose-600/25 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-danger py-2.5 text-xs font-semibold text-text-inverse shadow-md shadow-rose-600/25 transition hover:opacity-90 active:scale-95 disabled:opacity-50"
                   >
                     {removeMemberMutation.isPending ? (
                       <Loader2 size={13} className="animate-spin" />
@@ -650,7 +650,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                     type="button"
                     onClick={handleConfirmAction}
                     disabled={removeMemberMutation.isPending || deleteConversationMutation.isPending}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-danger py-2.5 text-xs font-semibold text-text-inverse shadow-md shadow-rose-600/25 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-danger py-2.5 text-xs font-semibold text-text-inverse shadow-md shadow-rose-600/25 transition hover:opacity-90 active:scale-95 disabled:opacity-50"
                   >
                     {(removeMemberMutation.isPending || deleteConversationMutation.isPending) ? (
                       <Loader2 size={13} className="animate-spin" />

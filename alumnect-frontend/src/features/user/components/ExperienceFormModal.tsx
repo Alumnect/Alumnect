@@ -365,7 +365,7 @@ export function ExperienceFormModal({
                   placeholder="VD: Senior Frontend Developer..."
                   required
                   disabled={loading}
-                  className="w-full rounded-2xl border border-border bg-surface py-2.5 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-2xl border border-border bg-surface py-2.5 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -381,7 +381,7 @@ export function ExperienceFormModal({
                   placeholder="VD: FPT Software..."
                   required
                   disabled={loading || mode === 'promote' || mode === 'rejoin'}
-                  className="w-full rounded-2xl border border-border bg-plum-50/30 disabled:bg-surface-2 disabled:text-text-subtle py-2.5 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-2xl border border-border bg-plum-50/30 disabled:bg-surface-2 disabled:text-text-subtle py-2.5 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -484,7 +484,7 @@ export function ExperienceFormModal({
                 placeholder="Mô tả công việc, dự án đã tham gia..."
                 rows={5}
                 disabled={loading}
-                className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
+                className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
               />
             </div>
           </div>

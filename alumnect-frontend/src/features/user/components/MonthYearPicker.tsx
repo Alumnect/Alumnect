@@ -111,7 +111,7 @@ export function MonthYearPicker({
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-2.5 px-3.5 text-xs font-semibold transition-all shadow-sm',
+          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-2.5 px-3.5 text-xs font-semibold transition shadow-sm',
           isOpen
             ? 'border-primary ring-2 ring-primary/20 bg-brand-50/10'
             : 'hover:border-brand-500/50 hover:bg-plum-50/30',
@@ -176,7 +176,7 @@ export function MonthYearPicker({
                   disabled={disabled}
                   onClick={() => handleSelectMonth(mNum)}
                   className={cn(
-                    'py-2 px-2 rounded-xl text-xs transition-all text-center select-none font-semibold',
+                    'py-2 px-2 rounded-xl text-xs transition text-center select-none font-semibold',
                     isSelected
                       ? 'bg-primary-solid text-on-primary font-extrabold shadow-raised scale-[1.03]'
                       : disabled

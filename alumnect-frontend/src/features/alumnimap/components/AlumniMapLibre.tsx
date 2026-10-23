@@ -708,7 +708,7 @@ function AlumniMarker({
       <div
         className={`
           flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-soft
-          transition-all duration-300 transform group-hover:scale-110
+          transition duration-300 transform group-hover:scale-110
           ${isSelected
             ? 'ring-4 ring-primary scale-110 shadow-glow'
             : 'border border-border hover:border-primary-soft-border'
@@ -730,7 +730,7 @@ function AlumniMarker({
       {/* Mũi tên chỉ xuống */}
       <div
         className={`
-          h-2.5 w-2.5 rotate-45 -mt-1.5 transition-all duration-300
+          h-2.5 w-2.5 rotate-45 -mt-1.5 transition duration-300
           ${isSelected ? 'bg-primary-solid' : 'bg-surface border-r border-b border-border'}
         `}
       />

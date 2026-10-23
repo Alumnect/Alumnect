@@ -86,7 +86,7 @@ export function ConversationList({
             type="button"
             onClick={() => onTabChange('primary')}
             className={cn(
-              'flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-bold transition-all',
+              'flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-bold transition',
               currentTab === 'primary'
                 ? 'bg-surface text-text shadow-xs'
                 : 'text-text-subtle hover:text-text'
@@ -99,7 +99,7 @@ export function ConversationList({
             type="button"
             onClick={() => onTabChange('requests')}
             className={cn(
-              'relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-bold transition-all',
+              'relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-bold transition',
               currentTab === 'requests'
                 ? 'bg-surface text-text shadow-xs'
                 : 'text-text-subtle hover:text-text'
@@ -168,7 +168,7 @@ export function ConversationList({
                 key={conv.id ?? `draft-${conv.recipientId}`}
                 onClick={() => onSelect(conv)}
                 className={cn(
-                  'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-all duration-150',
+                  'flex w-full items-center gap-3 px-4 py-3.5 text-left transition duration-150',
                   isActive
                     ? 'bg-primary-soft shadow-[inset_3px_0_0_0] shadow-brand-500'
                     : 'hover:bg-surface-2'

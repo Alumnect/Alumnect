@@ -395,7 +395,7 @@ export function MentoringTicketDetailModal({
                 type="button"
                 onClick={onReject}
                 disabled={isRejecting || isConfirming}
-                className="inline-flex items-center justify-center rounded-2xl border-2 border-danger px-5 py-2.5 text-sm font-bold text-danger transition-all hover:bg-danger-soft active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-2xl border-2 border-danger px-5 py-2.5 text-sm font-bold text-danger transition hover:bg-danger-soft active:scale-95 disabled:opacity-50"
               >
                 {isRejecting ? (
                   <>
@@ -413,7 +413,7 @@ export function MentoringTicketDetailModal({
                   type="button"
                   onClick={onRevert}
                   disabled={isRejecting || isConfirming}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-warning bg-warning-soft px-5 py-2.5 text-sm font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-warning bg-warning-soft px-5 py-2.5 text-sm font-bold text-warning transition hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                 >
                   <RefreshCw className="h-4 w-4 text-warning" />
                   <span>Yêu cầu điều chỉnh</span>
@@ -425,7 +425,7 @@ export function MentoringTicketDetailModal({
                 type="button"
                 onClick={onConfirm}
                 disabled={isConfirming || isRejecting}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-solid px-6 py-2.5 text-sm font-bold text-on-primary shadow-sm transition-all hover:bg-primary-solid active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-solid px-6 py-2.5 text-sm font-bold text-on-primary shadow-sm transition hover:bg-primary-solid active:scale-95 disabled:opacity-50"
               >
                 {isConfirming ? (
                   <>
@@ -457,7 +457,7 @@ export function MentoringTicketDetailModal({
                   <button
                     type="button"
                     onClick={onPay}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-sm font-bold text-on-primary shadow-sm transition-all hover:bg-primary-hover active:scale-95"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-sm font-bold text-on-primary shadow-sm transition hover:bg-primary-hover active:scale-95"
                   >
                     <CreditCard className="h-4 w-4" />
                     <span>Thanh toán Task ngay</span>

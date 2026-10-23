@@ -110,7 +110,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
               <button
                 type="button"
                 onClick={() => setTopicOpen((prev) => !prev)}
-                className="flex h-10 w-full items-center justify-between rounded-xl border border-border bg-surface px-3.5 text-xs text-text transition-all hover:border-brand-500/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                className="flex h-10 w-full items-center justify-between rounded-xl border border-border bg-surface px-3.5 text-xs text-text transition hover:border-brand-500/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   {topic ? (
@@ -155,7 +155,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
                         setTopicOpen(false)
                       }}
                       className={cn(
-                        'flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-all cursor-pointer',
+                        'flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition cursor-pointer',
                         !topic
                           ? 'bg-primary-soft font-bold text-primary-solid'
                           : 'font-medium text-text-muted hover:bg-surface-2',
@@ -180,7 +180,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
                             setTopicOpen(false)
                           }}
                           className={cn(
-                            'flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-all cursor-pointer',
+                            'flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition cursor-pointer',
                             selected
                               ? 'bg-primary-soft font-bold text-primary-solid'
                               : 'font-medium text-text-muted hover:bg-surface-2',

@@ -52,7 +52,7 @@ export function CampusSelect({
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-3 px-4 text-sm font-semibold cursor-pointer transition-all shadow-xs',
+          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-3 px-4 text-sm font-semibold cursor-pointer transition shadow-xs',
           isOpen
             ? 'border-primary ring-2 ring-primary/20 bg-brand-50/10'
             : 'hover:border-brand-500/50 hover:bg-plum-50/30',
@@ -106,7 +106,7 @@ export function CampusSelect({
                   type="button"
                   onClick={() => handleSelect(campus)}
                   className={cn(
-                    'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-left transition-all cursor-pointer',
+                    'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-left transition cursor-pointer',
                     isSelected
                       ? 'bg-primary-soft text-primary-solid font-bold'
                       : 'text-text hover:bg-surface-2 hover:text-text'

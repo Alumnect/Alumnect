@@ -21,21 +21,23 @@ export const EASE_IN: Bezier = [0.32, 0, 0.67, 0]
 export const EASE_IN_OUT: Bezier = [0.65, 0, 0.35, 1]
 
 /** Tên các nhóm chuyển động dùng chung. */
-type MotionToken = 'page' | 'content' | 'pop' | 'overlay' | 'exit' | 'height' | 'indicator' | 'sheet' | 'bounce'
+type MotionToken = 'page' | 'content' | 'pop' | 'overlay' | 'dialog' | 'exit' | 'height' | 'indicator' | 'sheet' | 'bounce'
 
 export const TRANSITION: Record<MotionToken, Transition> = {
   /** Trang / khối nội dung lớn xuất hiện. */
-  page: { duration: 0.4, ease: EASE_OUT },
+  page: { duration: 0.22, ease: EASE_OUT },
   /** Khối nội dung vừa: nội dung tab, danh sách, thẻ. */
-  content: { duration: 0.32, ease: EASE_OUT },
+  content: { duration: 0.2, ease: EASE_OUT },
   /** Popover, dropdown, menu nhỏ, hộp thoại. */
-  pop: { duration: 0.26, ease: EASE_OUT },
+  pop: { duration: 0.18, ease: EASE_OUT },
+  /** Hộp thoại modal. */
+  dialog: { duration: 0.2, ease: EASE_OUT },
   /** Lớp nền mờ phía sau hộp thoại. */
-  overlay: { duration: 0.24, ease: EASE_OUT },
+  overlay: { duration: 0.18, ease: EASE_OUT },
   /** Rời đi (mọi loại phần tử). */
   exit: { duration: 0.16, ease: EASE_IN },
   /** Mở / đóng vùng có chiều cao thay đổi (khung bình luận, ô tìm kiếm). */
-  height: { duration: 0.34, ease: EASE_IN_OUT },
+  height: { duration: 0.24, ease: EASE_IN_OUT },
   /** Chỉ báo tab dùng layoutId: lò xo mềm, gần như không nảy. */
   indicator: { type: 'spring', stiffness: 300, damping: 32, mass: 0.9 },
   /** Bottom sheet trượt từ dưới lên. */

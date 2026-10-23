@@ -5,9 +5,9 @@ export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'text-on-primary bg-primary-solid shadow-raised hover:bg-primary-hover font-bold',
+    'text-on-primary bg-primary-solid hover:bg-primary-hover font-bold',
   secondary:
-    'text-text bg-surface border border-border shadow-raised hover:border-primary hover:text-primary-solid font-semibold',
+    'text-text bg-surface border border-border-strong hover:bg-surface-2 font-semibold',
   outline:
     'text-text-muted border border-border-strong hover:border-primary hover:text-primary-solid hover:bg-primary-soft',
   ghost: 'text-text-muted hover:text-text hover:bg-surface-2',
@@ -25,7 +25,7 @@ const SIZES: Record<ButtonSize, string> = {
 /** Sinh chuỗi class Tailwind cho nút bấm theo variant/size — dùng chung cho Button và ButtonLink. */
 export function buttonClasses(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', className?: string) {
   return cn(
-    'group/btn sheen press relative inline-flex items-center justify-center overflow-hidden font-semibold whitespace-nowrap transition-all duration-300 select-none',
+    'group/btn press relative inline-flex items-center justify-center font-semibold whitespace-nowrap transition-colors duration-150 select-none',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50 disabled:pointer-events-none',
     VARIANTS[variant],
     SIZES[size],

@@ -178,7 +178,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
               return (
                 <div
                   key={item.userId}
-                  className="flex flex-col gap-1.5 p-3 bg-surface hover:bg-cream-100/30 rounded-2xl border border-border transition-all shadow-sm group"
+                  className="flex flex-col gap-1.5 p-3 bg-surface hover:bg-cream-100/30 rounded-2xl border border-border transition shadow-sm group"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <Link

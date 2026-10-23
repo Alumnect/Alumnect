@@ -112,7 +112,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
   return (
     <Link
       to={`/app/posts/${postId}`}
-      className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition-all hover:shadow-md ${
+      className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition ${
         isMe
           ? 'border-brand-400/40 bg-surface text-text shadow-2xs hover:bg-surface dark:border-brand-500/30'
           : 'border-border bg-surface-2 text-text hover:bg-surface'

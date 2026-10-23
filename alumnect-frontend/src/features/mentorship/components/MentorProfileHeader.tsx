@@ -118,7 +118,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
             leftIcon={<Send className="h-4 w-4" />}
             onClick={onRequestMentor}
             disabled={!mentor.canReceiveRequest}
-            className={`min-h-11 rounded-xl px-6 py-2.5 font-semibold shadow-sm transition-all ${
+            className={`min-h-11 rounded-xl px-6 py-2.5 font-semibold shadow-sm transition ${
               mentor.canReceiveRequest
                 ? 'bg-primary-solid hover:bg-primary-hover shadow-raised active:scale-95 dark:text-text-inverse'
                 : 'bg-surface-3 text-text-subtle cursor-not-allowed'
@@ -130,7 +130,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
           {mentor.userId && (
             <Link
               to={`/app/profile?userId=${mentor.userId}`}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition-all hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid active:scale-95"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid active:scale-95"
               title="Xem trang cá nhân của Mentor"
             >
               <User className="h-3.5 w-3.5 text-text-subtle" />

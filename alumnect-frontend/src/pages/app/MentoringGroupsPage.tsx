@@ -195,7 +195,7 @@ export function MentoringGroupsPage() {
                     <Card
                       key={group.id}
                       hover={false}
-                      className="border border-warning-border bg-warning-soft p-5 sm:p-6 transition-all"
+                      className="border border-warning-border bg-warning-soft p-5 sm:p-6 transition"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-2">
@@ -335,7 +335,7 @@ export function MentoringGroupsPage() {
                     <Card
                       key={group.id}
                       hover={false}
-                      className="flex flex-col justify-between border border-border bg-surface p-5 transition-all hover:shadow-md"
+                      className="flex flex-col justify-between border border-border bg-surface p-5 transition"
                     >
                       <div className="space-y-4">
                         {/* Header: Icon, Name & Badges */}

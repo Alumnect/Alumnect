@@ -7,7 +7,7 @@ import type { Message } from '../model/types'
 import { SharedPostBubbleCard } from './SharedPostBubbleCard'
 import { SharedGroupBubbleCard } from './SharedGroupBubbleCard'
 import { SharedGroupPostBubbleCard } from './SharedGroupPostBubbleCard'
-import { parseAdjustmentMessage } from '@/features/mentorship'
+import { parseAdjustmentMessage } from '@/features/mentorship/model/mentoringAdjustmentTypes'
 
 interface MessageBubbleProps {
   message: Message
@@ -178,7 +178,7 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   target="_blank"
                   rel="noreferrer"
                   className={cn(
-                    'flex max-w-[280px] items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-xs shadow-xs transition-all hover:bg-surface-2 hover:shadow-sm sm:max-w-sm',
+                    'flex max-w-[280px] items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-xs shadow-xs transition hover:bg-surface-2 sm:max-w-sm',
                     isMe ? 'rounded-br-xs' : 'rounded-bl-xs'
                   )}
                 >

@@ -240,7 +240,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                 key={item.id}
                 type="button"
                 onClick={() => setActiveSection(item.id as any)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all text-left ${active
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition text-left ${active
                   ? 'bg-primary-soft text-primary-solid border border-brand-200/40 shadow-xs'
                   : 'text-text-muted hover:bg-plum-50/70 hover:text-text'
                   }`}

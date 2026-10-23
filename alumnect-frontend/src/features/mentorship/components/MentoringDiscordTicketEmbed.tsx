@@ -326,7 +326,7 @@ export function MentoringDiscordTicketEmbed({
                     onClick={onReject}
                     disabled={isRejecting || isConfirming}
                     title="Từ chối thỏa thuận này"
-                    className="inline-flex items-center justify-center rounded-xl border border-danger bg-danger-soft px-3 py-1.5 text-xs font-bold text-danger transition-all hover:bg-danger-border/60 active:scale-95 disabled:opacity-50"
+                    className="inline-flex items-center justify-center rounded-xl border border-danger bg-danger-soft px-3 py-1.5 text-xs font-bold text-danger transition hover:bg-danger-border/60 active:scale-95 disabled:opacity-50"
                   >
                     {isRejecting ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -342,7 +342,7 @@ export function MentoringDiscordTicketEmbed({
                       onClick={onRevert}
                       disabled={isRejecting || isConfirming}
                       title="Yêu cầu Mentor điều chỉnh lại giá, hạn chót hoặc nội dung"
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                     >
                       <RefreshCw className="h-3.5 w-3.5 text-warning" />
                       <span>Yêu cầu điều chỉnh</span>
@@ -354,7 +354,7 @@ export function MentoringDiscordTicketEmbed({
                     type="button"
                     onClick={onConfirm}
                     disabled={isConfirming || isRejecting}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition-all hover:bg-primary-solid active:scale-95 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-solid active:scale-95 disabled:opacity-50"
                   >
                     {isConfirming ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -379,7 +379,7 @@ export function MentoringDiscordTicketEmbed({
                       <button
                         type="button"
                         onClick={onPay}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition-all hover:bg-primary-hover active:scale-95"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95"
                       >
                         <CreditCard className="h-3.5 w-3.5" />
                         <span>Thanh toán Task ngay</span>
@@ -406,7 +406,7 @@ export function MentoringDiscordTicketEmbed({
                     type="button"
                     onClick={onRevert}
                     title="Đề xuất lại các điều khoản mới (Deal lại)"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                   >
                     <RefreshCw className="h-3.5 w-3.5 text-warning" />
                     <span>Deal lại</span>
@@ -423,7 +423,7 @@ export function MentoringDiscordTicketEmbed({
                     type="button"
                     onClick={onRevert}
                     title="Gửi phiên bản Deal Ticket mới"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition-all hover:bg-warning-border/60 active:scale-95"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95"
                   >
                     <RefreshCw className="h-3.5 w-3.5 text-warning" />
                     <span>Deal lại</span>

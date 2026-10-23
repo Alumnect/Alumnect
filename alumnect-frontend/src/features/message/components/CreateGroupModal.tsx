@@ -254,7 +254,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
                       </div>
                     </div>
                     <div
-                      className={`grid h-5 w-5 place-items-center rounded-full border transition-all ${
+                      className={`grid h-5 w-5 place-items-center rounded-full border transition ${
                         isSelected
                           ? 'border-primary bg-primary-solid text-on-primary'
                           : 'border-border-strong bg-surface dark:border-[#555]'

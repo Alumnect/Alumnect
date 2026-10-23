@@ -63,7 +63,7 @@ export function ConfirmModal({
         <div className={cn('fixed inset-0 flex items-end justify-center sm:items-center sm:p-4', zIndexClassName)}>
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-overlay backdrop-blur-xs"
+            className="absolute inset-0 bg-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -122,7 +122,7 @@ export function ConfirmModal({
                 onClick={onConfirm}
                 disabled={isLoading}
                 className={cn(
-                  'inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50',
+                  'inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50',
                   variantStyles.confirmBtn
                 )}
               >

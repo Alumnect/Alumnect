@@ -161,7 +161,7 @@ export function AlumniDirectoryPage() {
             type="button"
             onClick={() => setActiveTab('directory')}
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
               activeTab === 'directory'
                 ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
                 : 'bg-surface/70 text-text-muted hover:bg-surface-2',
@@ -175,7 +175,7 @@ export function AlumniDirectoryPage() {
             type="button"
             onClick={() => setActiveTab('suggestions')}
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
               activeTab === 'suggestions'
                 ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
                 : 'bg-surface/70 text-text-muted hover:bg-surface-2',
@@ -189,7 +189,7 @@ export function AlumniDirectoryPage() {
             type="button"
             onClick={() => setActiveTab('network')}
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
               activeTab === 'network'
                 ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
                 : 'bg-surface/70 text-text-muted hover:bg-surface-2',
@@ -217,7 +217,7 @@ export function AlumniDirectoryPage() {
               {Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5 backdrop-blur-xs"
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5-xs"
                 >
                   <div className="flex w-full flex-col items-center">
                     <Skeleton className="h-20 w-20 rounded-full" />
@@ -296,7 +296,7 @@ export function AlumniDirectoryPage() {
               {Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5 backdrop-blur-xs"
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5-xs"
                 >
                   <div className="flex w-full flex-col items-center">
                     <Skeleton className="h-20 w-20 rounded-full" />
@@ -364,7 +364,7 @@ export function AlumniDirectoryPage() {
                 type="button"
                 onClick={() => setNetworkSubTab('following')}
                 className={cn(
-                  'rounded-xl px-4 py-2 text-xs font-bold transition-all',
+                  'rounded-xl px-4 py-2 text-xs font-bold transition',
                   networkSubTab === 'following'
                     ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',
@@ -376,7 +376,7 @@ export function AlumniDirectoryPage() {
                 type="button"
                 onClick={() => setNetworkSubTab('followers')}
                 className={cn(
-                  'rounded-xl px-4 py-2 text-xs font-bold transition-all',
+                  'rounded-xl px-4 py-2 text-xs font-bold transition',
                   networkSubTab === 'followers'
                     ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',

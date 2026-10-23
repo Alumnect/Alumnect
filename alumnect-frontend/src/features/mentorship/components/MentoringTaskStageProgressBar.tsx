@@ -86,7 +86,7 @@ export function MentoringTaskStageProgressBar({
             <div
               key={stage.key}
               className={cn(
-                'relative flex items-center gap-3.5 rounded-2xl p-3.5 transition-all duration-200 border',
+                'relative flex items-center gap-3.5 rounded-2xl p-3.5 transition duration-200 border',
                 isCurrent
                   ? 'border-primary-soft-border bg-brand-50/70 shadow-xs dark:bg-brand-500/10'
                   : isPassed

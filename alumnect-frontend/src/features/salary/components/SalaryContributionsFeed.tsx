@@ -127,7 +127,7 @@ export function SalaryContributionsFeed({
           <button
             type="button"
             onClick={handleOpen}
-            className="group flex items-center gap-2 rounded-full border border-primary-soft-border bg-surface px-3.5 py-2 text-xs font-semibold text-primary-solid shadow-md transition-all duration-200 hover:scale-105 hover:border-primary hover:bg-primary-soft hover:shadow-lg hover:shadow-brand-500/10 cursor-pointer"
+            className="group flex items-center gap-2 rounded-full border border-primary-soft-border bg-surface px-3.5 py-2 text-xs font-semibold text-primary-solid shadow-md transition duration-200 hover:scale-105 hover:border-primary hover:bg-primary-soft cursor-pointer"
             title="Xem các lượt đóng góp lương gần đây"
           >
             <History size={15} className="text-primary-solid transition-transform group-hover:-rotate-45" />
@@ -161,7 +161,7 @@ export function SalaryContributionsFeed({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm chức danh, công ty…"
-                  className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-7 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
+                  className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-7 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition"
                 />
                 {searchQuery && (
                   <button
@@ -274,7 +274,7 @@ export function SalaryContributionsFeed({
                     return (
                       <div
                         key={c.id}
-                        className="flex flex-col justify-between rounded-xl border border-border bg-surface p-3 shadow-xs transition-all hover:border-primary-soft-border hover:shadow-sm"
+                        className="flex flex-col justify-between rounded-xl border border-border bg-surface p-3 shadow-xs transition hover:border-primary-soft-border"
                       >
                         <div>
                           {/* Chức danh & thời gian */}

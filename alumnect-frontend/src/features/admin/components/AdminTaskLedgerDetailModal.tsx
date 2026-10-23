@@ -323,7 +323,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('ledgers')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'ledgers'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'
@@ -341,7 +341,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('extensions')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'extensions'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'
@@ -359,7 +359,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('amendments')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'amendments'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'
@@ -377,7 +377,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('disputes')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'disputes'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'

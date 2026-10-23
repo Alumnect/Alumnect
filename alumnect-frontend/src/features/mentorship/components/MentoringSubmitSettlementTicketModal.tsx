@@ -160,11 +160,11 @@ export function MentoringSubmitSettlementTicketModal({
                   </div>
                   <div className="h-2.5 w-full bg-info-soft rounded-full overflow-hidden flex">
                     <div
-                      className="h-full bg-info transition-all duration-300"
+                      className="h-full bg-info transition duration-300"
                       style={{ width: `${mentorPercent}%` }}
                     />
                     <div
-                      className="h-full bg-info transition-all duration-300"
+                      className="h-full bg-info transition duration-300"
                       style={{ width: `${studentPercent}%` }}
                     />
                   </div>
@@ -191,7 +191,7 @@ export function MentoringSubmitSettlementTicketModal({
                   maxLength={1000}
                   rows={3}
                   placeholder="Ghi chú thêm về thông tin tài khoản hoặc ngữ cảnh bàn giao..."
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
                 />
                 <div className="text-right text-xs text-text-subtle">
                   {note.length}/1000 ký tự

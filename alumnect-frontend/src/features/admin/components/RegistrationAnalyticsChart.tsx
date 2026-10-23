@@ -137,7 +137,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
               type="button"
               onClick={() => setPeriod(t.key)}
               className={cn(
-                'relative rounded-xl px-3 py-1.5 text-xs font-bold transition-all',
+                'relative rounded-xl px-3 py-1.5 text-xs font-bold transition',
                 period === t.key
                   ? 'text-text shadow-sm'
                   : 'text-text-subtle hover:text-text'
@@ -239,7 +239,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                   fill="#ffffff"
                   stroke="#fb8366"
                   strokeWidth="3"
-                  className="transition-all duration-200"
+                  className="transition duration-200"
                 />
               </g>
             ))}
@@ -293,7 +293,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                       animate={{ height: `${heightPct}%` }}
                       transition={{ duration: 0.5, delay: i * 0.03, ease: 'easeOut' }}
                       className={cn(
-                        'w-full max-w-[42px] rounded-t-xl transition-all duration-300',
+                        'w-full max-w-[42px] rounded-t-xl transition duration-300',
                         isHovered
                           ? 'bg-gradient-to-t from-brand-600 via-brand-500 to-violet-400 shadow-lg shadow-brand-500/40 ring-2 ring-brand-400'
                           : 'bg-gradient-to-t from-brand-500/40 via-brand-500/70 to-brand-400 opacity-90'

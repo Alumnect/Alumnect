@@ -90,7 +90,7 @@ export function GroupsPage() {
               size="sm"
               leftIcon={<Plus size={16} />}
               onClick={handleCreateClick}
-              className="rounded-xl px-4 py-2 font-bold shadow-soft transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="rounded-xl px-4 py-2 font-bold shadow-soft transition hover:scale-[1.02] active:scale-[0.98]"
             >
               Tạo hội nhóm
             </Button>
@@ -113,7 +113,7 @@ export function GroupsPage() {
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  'relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all',
+                  'relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition',
                   isActive
                     ? 'bg-plum-900 text-white shadow-sm dark:bg-white dark:text-plum-900'
                     : 'bg-surface-2 text-text-muted hover:bg-border dark:hover:text-white',

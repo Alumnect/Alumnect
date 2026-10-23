@@ -196,7 +196,7 @@ export function MentoringTaskReviewModal({
               value={feedbackNote}
               onChange={(e) => setFeedbackNote(e.target.value)}
               placeholder="Nhập cảm nhận hoặc yêu cầu chỉnh sửa bổ sung (bắt buộc nếu yêu cầu chỉnh sửa)..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
           </div>
 

@@ -114,7 +114,7 @@ export function AdminRevenuePage() {
             {(data?.monthlyRevenue ?? Array.from({ length: 12 })).map((item, index) => {
               const total = item?.totalRevenue ?? 0
               const height = total ? Math.max(8, total / chartMax * 100) : 3
-              return <div key={item?.month ?? index} className="group flex h-full min-w-0 flex-1 flex-col justify-end"><div className="relative flex flex-1 items-end"><div className="w-full rounded-t-md bg-gradient-to-t from-[#F27024] to-[#FFB067] transition-all group-hover:from-[#dc5e16]" style={{ height: `${isLoading ? 18 + index * 4 % 55 : height}%` }} title={`${item?.label ?? ''}: ${formatVnd(total)}`} /></div><span className="mt-2 truncate text-center text-xs font-semibold text-text-subtle">{item?.label?.slice(0, 2) ?? ''}</span></div>
+              return <div key={item?.month ?? index} className="group flex h-full min-w-0 flex-1 flex-col justify-end"><div className="relative flex flex-1 items-end"><div className="w-full rounded-t-md bg-gradient-to-t from-[#F27024] to-[#FFB067] transition group-hover:from-[#dc5e16]" style={{ height: `${isLoading ? 18 + index * 4 % 55 : height}%` }} title={`${item?.label ?? ''}: ${formatVnd(total)}`} /></div><span className="mt-2 truncate text-center text-xs font-semibold text-text-subtle">{item?.label?.slice(0, 2) ?? ''}</span></div>
             })}
           </div>
         </div>

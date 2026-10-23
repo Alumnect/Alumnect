@@ -146,7 +146,7 @@ export function CareerPage() {
                 placeholder="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-12 rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle transition-all focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-12 rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle transition focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               {search && (
                 <button
@@ -429,7 +429,7 @@ export function CareerPage() {
                   {/* Close */}
                   <button
                     onClick={() => setSelectedAlumni(null)}
-                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition-all duration-150 cursor-pointer"
+                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition duration-150 cursor-pointer"
                   >
                     <X size={16} strokeWidth={2.5} />
                   </button>
@@ -510,7 +510,7 @@ function ViewProfileButton({ userId }: { userId: number }) {
   return (
     <button
       onClick={() => navigate(`/app/profile?userId=${userId}`)}
-      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 active:scale-95 text-white text-xs font-bold px-4 py-2 transition-all duration-200 cursor-pointer"
+      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 active:scale-95 text-white text-xs font-bold px-4 py-2 transition duration-200 cursor-pointer"
       style={{ boxShadow: '0 4px 16px -4px rgb(124 134 238 / 0.5)' }}
     >
       <User size={12} />

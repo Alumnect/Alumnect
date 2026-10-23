@@ -335,7 +335,7 @@ export function CreatePostModal({
                       rows={5}
                       maxLength={POST_CONTENT_MAX}
                       placeholder={type === 'recruitment' ? "Mô tả chi tiết công việc tuyển dụng..." : "Bạn muốn chia sẻ điều gì với cộng đồng?"}
-                      className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-4 text-[15px] leading-relaxed text-text outline-none transition-colors placeholder:text-text-subtle focus:border-primary transition-all duration-300 focus:bg-surface dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                      className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-4 text-[15px] leading-relaxed text-text outline-none transition-colors placeholder:text-text-subtle focus:border-primary transition duration-300 focus:bg-surface dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
                     />
                     <div className="mt-1 flex items-center justify-between">
                       {errors.content ? (
@@ -361,7 +361,7 @@ export function CreatePostModal({
                         disabled={!!editPost}
                         onClick={() => setValue('type', t)}
                         className={cn(
-                          'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed',
+                          'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed',
                           type === t
                             ? 'bg-primary-solid text-on-primary shadow-sm enabled:hover:bg-brand-700'
                             : 'bg-surface text-text-muted border border-border enabled:hover:border-brand-300 enabled:hover:text-brand-600 dark:border-border-strong dark:enabled:hover:border-brand-400 dark:enabled:hover:text-brand-400'
@@ -387,7 +387,7 @@ export function CreatePostModal({
                         </label>
                         <input
                           {...register('job.title')}
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
                           placeholder="VD: Frontend Developer"
                         />
                         {errors.job?.title && <p className="mt-1 text-xs text-danger">{errors.job.title.message}</p>}
@@ -398,7 +398,7 @@ export function CreatePostModal({
                         </label>
                         <input
                           {...register('job.company')}
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
                           placeholder="VD: FPT Software"
                         />
                         {errors.job?.company && <p className="mt-1 text-xs text-danger">{errors.job.company.message}</p>}
@@ -439,7 +439,7 @@ export function CreatePostModal({
                             min={0}
                             step={500000}
                             {...register('job.salaryMin', { valueAsNumber: true })}
-                            className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                            className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
                             placeholder="Tối thiểu"
                           />
                           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VNĐ</span>
@@ -450,7 +450,7 @@ export function CreatePostModal({
                             min={0}
                             step={500000}
                             {...register('job.salaryMax', { valueAsNumber: true })}
-                            className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                            className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
                             placeholder="Tối đa"
                           />
                           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VNĐ</span>
@@ -467,7 +467,7 @@ export function CreatePostModal({
                         <input
                           {...register('job.contactEmail')}
                           type="email"
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
                           placeholder="hr@company.com"
                         />
                         {errors.job?.contactEmail && <p className="mt-1 text-xs text-danger">{errors.job.contactEmail.message}</p>}
@@ -479,7 +479,7 @@ export function CreatePostModal({
                         <input
                           {...register('job.applyUrl')}
                           type="url"
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
                           placeholder="https://..."
                         />
                       </div>
@@ -499,7 +499,7 @@ export function CreatePostModal({
                       </label>
                       <input
                         {...register('event.title')}
-                        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
                         placeholder="VD: Hội thảo công nghệ 2024"
                       />
                       {errors.event?.title && <p className="mt-1 text-xs text-danger">{errors.event.title.message}</p>}
@@ -529,7 +529,7 @@ export function CreatePostModal({
                               placeholderText="Chọn ngày giờ"
                               wrapperClassName="w-full"
                               popperPlacement="bottom-start"
-                              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
+                              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
                             />
                           )}
                         />
@@ -557,7 +557,7 @@ export function CreatePostModal({
                               placeholderText="Chọn ngày giờ"
                               wrapperClassName="w-full"
                               popperPlacement="bottom-end"
-                              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
+                              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
                             />
                           )}
                         />
@@ -593,7 +593,7 @@ export function CreatePostModal({
                           type="number"
                           min={currentAttendees > 0 ? currentAttendees : 1}
                           {...register('event.capacity', { valueAsNumber: true })}
-                          className="w-full h-[38px] rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:focus:border-primary"
+                          className="w-full h-[38px] rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:focus:border-primary"
                         />
                         {errors.event?.capacity && (
                           <p className="mt-1 text-xs text-danger">{errors.event.capacity.message}</p>
@@ -611,7 +611,7 @@ export function CreatePostModal({
                         rows={4}
                         maxLength={POST_CONTENT_MAX}
                         placeholder="Giới thiệu về nội dung sự kiện, khách mời, lịch trình..."
-                        className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm leading-relaxed text-text outline-none focus:border-primary transition-all duration-300 focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                        className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm leading-relaxed text-text outline-none focus:border-primary transition duration-300 focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
                       />
                     </div>
 

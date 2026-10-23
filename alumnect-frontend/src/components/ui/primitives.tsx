@@ -57,7 +57,7 @@ export function Badge({
   )
 }
 
-/** Pillowy surface card. */
+/** Thẻ nền phẳng: viền mảnh, không đổ bóng (kiểu tối giản). */
 export function Card({
   className,
   children,
@@ -68,7 +68,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-2xl bg-surface border border-border text-text shadow-raised',
+        'group relative overflow-hidden rounded-2xl bg-surface border border-border text-text',
         glass && 'glass',
         hover && 'hover-lift',
         className,

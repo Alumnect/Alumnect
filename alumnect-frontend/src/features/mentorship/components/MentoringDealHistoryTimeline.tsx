@@ -64,7 +64,7 @@ export function MentoringDealHistoryTimeline({
 
               {/* Thẻ phiên bản */}
               <div
-                className={`rounded-2xl p-4 border text-xs transition-all ${
+                className={`rounded-2xl p-4 border text-xs transition ${
                   isLatest
                     ? 'bg-brand-50/40 border-primary-soft-border shadow-xs dark:bg-brand-700/20'
                     : 'bg-surface border-border'

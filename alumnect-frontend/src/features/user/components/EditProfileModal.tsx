@@ -226,7 +226,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-all"
+            className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition"
             disabled={loading}
           >
             <X size={18} />
@@ -244,7 +244,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-1.5 py-3 px-3 text-xs font-bold border-b-2 transition-all ${
+              className={`flex items-center gap-1.5 py-3 px-3 text-xs font-bold border-b-2 transition ${
                 activeTab === tab.id
                   ? 'border-primary text-primary-solid'
                   : 'border-transparent text-text-subtle hover:text-text-muted'
@@ -322,7 +322,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                         disabled={loading}
                         className="flex-1 rounded-xl border border-border bg-surface py-2 px-3 text-xs text-text focus:border-primary focus:outline-none"
                       />
-                      <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition-all shrink-0">
+                      <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition shrink-0">
                         {isUploadingAvatar ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
@@ -370,7 +370,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                       disabled={loading}
                       className="flex-1 rounded-xl border border-border bg-surface py-2 px-3 text-xs text-text focus:border-primary focus:outline-none"
                     />
-                    <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition-all shrink-0">
+                    <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition shrink-0">
                       {isUploadingCover ? (
                         <Loader2 size={14} className="animate-spin" />
                       ) : (

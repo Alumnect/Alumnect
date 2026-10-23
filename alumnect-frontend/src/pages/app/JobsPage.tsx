@@ -208,7 +208,7 @@ export function JobsPage() {
                     if ((e.target as HTMLElement).closest('button, a')) return
                     navigate(`/app/posts/${post.id}`)
                   }}
-                  className="group relative rounded-2xl border border-border bg-surface p-5 sm:p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-md cursor-pointer dark:hover:border-border-strong"
+                  className="group relative rounded-2xl border border-border bg-surface p-5 sm:p-6 transition duration-200 hover:border-orange-300 cursor-pointer dark:hover:border-border-strong"
                 >
                   <div className="flex flex-col gap-3.5">
                     {/* Header Row: Company Icon, Job Title, Company Name & Action Buttons on Right */}

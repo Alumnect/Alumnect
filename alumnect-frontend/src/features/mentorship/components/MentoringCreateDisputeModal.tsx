@@ -221,7 +221,7 @@ export function MentoringCreateDisputeModal({
                     ? 'Ví dụ: Khiếu nại Bên thực hiện không bàn giao kết quả đúng cam kết'
                     : 'Ví dụ: Khiếu nại Bên tạo yêu cầu chậm trễ nghiệm thu và đòi hỏi ngoài thỏa thuận'
                 }
-                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition-all"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition"
               />
             </div>
 
@@ -243,7 +243,7 @@ export function MentoringCreateDisputeModal({
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
                   placeholder="Nhập lý do cụ thể..."
-                  className="w-full mt-2 px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition-all"
+                  className="w-full mt-2 px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition"
                 />
               )}
             </div>
@@ -259,7 +259,7 @@ export function MentoringCreateDisputeModal({
                 maxLength={3000}
                 rows={4}
                 placeholder="Trình bày rõ các mốc thời gian, cam kết bị vi phạm và những trao đổi đã thực hiện..."
-                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition-all resize-none"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition resize-none"
               />
               <div className="text-right text-xs text-text-subtle">
                 {description.length}/3000 ký tự
@@ -281,7 +281,7 @@ export function MentoringCreateDisputeModal({
                     ? 'Ví dụ: Yêu cầu hoàn lại 80% tiền ký quỹ hoặc bàn giao đúng kết quả cam kết'
                     : 'Ví dụ: Yêu cầu giải ngân 100% thù lao do đã bàn giao đầy đủ sản phẩm cam kết'
                 }
-                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition-all"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition"
               />
             </div>
 

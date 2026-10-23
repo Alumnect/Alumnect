@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <button
               type="button"
               onClick={this.handleReload}
-              className="inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-xs font-bold text-on-primary shadow-xs transition-all hover:bg-primary-hover active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95 cursor-pointer"
             >
               <RefreshCw className="h-4 w-4" />
               <span>Tải lại trang</span>
@@ -74,7 +74,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <button
               type="button"
               onClick={this.handleGoHome}
-              className="inline-flex items-center gap-2 rounded-2xl border border-border bg-surface px-5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition-all hover:bg-primary-soft hover:text-primary-solid cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-2xl border border-border bg-surface px-5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition hover:bg-primary-soft hover:text-primary-solid cursor-pointer"
             >
               <Home className="h-4 w-4" />
               <span>Về Trang chủ</span>

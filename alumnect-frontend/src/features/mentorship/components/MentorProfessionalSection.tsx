@@ -189,7 +189,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
               placeholder="Chia sẻ ngắn gọn định hướng hoặc điều bạn muốn hỗ trợ..."
               value={bio}
               onChange={(e) => onBioChange(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text placeholder-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition-all text-sm resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text placeholder-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition text-sm resize-none"
             />
             <div className="flex justify-end items-center text-xs text-text-subtle dark:text-text-subtle mt-1">
               <span>{bio.length}/2000</span>

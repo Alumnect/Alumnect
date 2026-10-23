@@ -295,7 +295,7 @@ export function MapPage() {
                   placeholder="Tìm theo tên, công ty, vị trí..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-9 rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-brand-500/50 focus:bg-surface focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all"
+                  className="w-full h-9 rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-brand-500/50 focus:bg-surface focus:outline-none focus:ring-1 focus:ring-primary/30 transition"
                 />
               </div>
             </div>
@@ -323,7 +323,7 @@ export function MapPage() {
                           key={alumni.alumniId}
                           onClick={() => handleSelectAlumni(alumni)}
                           className={cn(
-                            'w-full flex items-start gap-3 p-2.5 rounded-2xl text-left transition-all border border-transparent',
+                            'w-full flex items-start gap-3 p-2.5 rounded-2xl text-left transition border border-transparent',
                             isSelected
                               ? 'bg-brand-50/70 border-primary-soft-border shadow-sm'
                               : 'hover:bg-surface-2'
@@ -371,7 +371,7 @@ export function MapPage() {
                   aria-haspopup="listbox"
                   onClick={() => setIsMajorMenuOpen((open) => !open)}
                   className={cn(
-                    'inline-flex h-8 max-w-[210px] items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all',
+                    'inline-flex h-8 max-w-[210px] items-center gap-2 rounded-xl px-3 text-xs font-bold transition',
                     selectedMajorId
                       ? 'bg-primary-solid text-on-primary shadow-sm'
                       : 'bg-surface-2 text-text-muted hover:bg-surface-3',
@@ -472,7 +472,7 @@ export function MapPage() {
                     onClick={() => handleThemeChange(entry.theme)}
                     disabled={switchingState === 'switching'}
                     className={cn(
-                      'rounded-xl px-2.5 py-1 text-xs font-bold transition-all cursor-pointer',
+                      'rounded-xl px-2.5 py-1 text-xs font-bold transition cursor-pointer',
                       mapTheme === entry.theme
                         ? 'bg-plum-900 text-white shadow-sm'
                         : 'bg-surface-2 text-text-muted hover:bg-border',

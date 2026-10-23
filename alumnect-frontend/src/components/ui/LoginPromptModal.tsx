@@ -20,7 +20,7 @@ export function LoginPromptModal() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Lớp nền mờ — bấm ra ngoài để đóng */}
           <motion.div
-            className="absolute inset-0 bg-plum-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: TRANSITION.exit }}
