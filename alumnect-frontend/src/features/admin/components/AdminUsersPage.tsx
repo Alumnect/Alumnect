@@ -83,40 +83,42 @@ export function AdminUsersPage() {
         subtitle="Tìm kiếm, xem hồ sơ chi tiết và khóa/mở khóa tài khoản người dùng."
       />
 
-      {/* Tabs and search bar */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => {
-                setTab(t.value)
-                setPage(0) // reset về trang đầu
+      {/* Tabs and search bar bọc Card chuẩn đồng bộ với AdminPostsPage & AdminReportsQueue */}
+      <Card hover={false} className="mb-5 p-4 bg-surface/80 backdrop-blur border border-border shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => {
+                  setTab(t.value)
+                  setPage(0) // reset về trang đầu
+                }}
+                className={cn(
+                  'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                  tab === t.value
+                    ? 'bg-primary-solid text-on-primary shadow-xs'
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3'
+                )}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex items-center sm:w-72">
+            <Search size={16} className="pointer-events-none absolute left-3 text-text-subtle" />
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setPage(0)
               }}
-              className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
-                tab === t.value
-                  ? 'bg-primary-solid text-on-primary shadow-xs'
-                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
-              )}
-            >
-              {t.name}
-            </button>
-          ))}
+              placeholder="Tìm theo tên, email, mã số..."
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+            />
+          </div>
         </div>
-        <div className="relative flex items-center sm:w-72">
-          <Search size={16} className="pointer-events-none absolute left-3 text-text-subtle" />
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              setPage(0)
-            }}
-            placeholder="Tìm theo tên, email, mã số..."
-            className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-sm text-text placeholder:text-text-subtle focus:border-gold-400/50 focus:outline-none"
-          />
-        </div>
-      </div>
+      </Card>
 
       <Reveal>
         {isLoading ? (

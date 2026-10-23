@@ -299,7 +299,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
 
           {/* Section 2: Academic Info */}
           {activeSection === 'academic' && (
-            <Card hover={false} className="p-6 space-y-5">
+            <Card hover={false} className="p-6 space-y-5 !overflow-visible">
               <div className="border-b border-border pb-3">
                 <h3 className="text-lg font-extrabold text-text flex items-center gap-2">
                   <GraduationCap size={18} className="text-primary-solid" /> Thông tin học tập tại FPT University

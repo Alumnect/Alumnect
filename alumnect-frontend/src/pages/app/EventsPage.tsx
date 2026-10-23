@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban } from 'lucide-react'
+import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban, Search, X } from 'lucide-react'
 import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
@@ -14,6 +14,7 @@ const TABS = ['Sắp diễn ra', 'Trong tháng này', 'Lịch sử tham gia']
 
 export function EventsPage() {
   const [tab, setTab] = useState('Sắp diễn ra')
+  const [keyword, setKeyword] = useState('')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
   const [cancelEventTarget, setCancelEventTarget] = useState<{ id: string | number; title?: string } | null>(null)
   const [attendeeModalTarget, setAttendeeModalTarget] = useState<{
@@ -33,10 +34,20 @@ export function EventsPage() {
 
   // Lấy danh sách sự kiện đã được Backend lọc trực tiếp từ Database (chỉ lấy sự kiện hợp lệ, chưa kết thúc, chưa hủy)
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('event', '', 12, currentEventFilter)
-  const filteredEvents = useMemo(
-    () => data?.pages.flatMap((page) => page.items).filter((post) => Boolean(post.event && post.event.startTime)) || [],
-    [data]
-  )
+  const filteredEvents = useMemo(() => {
+    const events = data?.pages.flatMap((page) => page.items).filter((post) => Boolean(post.event && post.event.startTime)) || []
+    if (!keyword.trim()) return events
+    const q = keyword.trim().toLowerCase()
+    return events.filter((post) => {
+      const e = post.event
+      return (
+        (e?.title && e.title.toLowerCase().includes(q)) ||
+        (e?.location && e.location.toLowerCase().includes(q)) ||
+        (post.text && post.text.toLowerCase().includes(q)) ||
+        (post.author && post.author.toLowerCase().includes(q))
+      )
+    })
+  }, [data, keyword])
 
   const getEventDateInfo = (isoString?: string | null) => {
     if (!isoString) return { month: 'TH--', day: '--', dateStr: 'Chưa xác định', timeStr: '' }
@@ -58,20 +69,46 @@ export function EventsPage() {
         subtitle="Tham gia các buổi giao lưu, hội thảo và ngày hội cựu sinh viên FPTU."
       />
 
-      <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={cn(
-              'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors',
-              tab === t ? 'bg-primary-solid text-on-primary shadow-raised' : 'bg-surface-2 text-text-muted hover:bg-surface-3',
-            )}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      {/* Khung tìm kiếm sự kiện & lọc tab thời gian */}
+      <Card hover={false} className="mb-6 p-4 space-y-3.5">
+        {/* Ô tìm kiếm sự kiện */}
+        <div className="relative">
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+          <input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="Tìm kiếm sự kiện theo tên, địa điểm hoặc từ khóa..."
+            className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+          />
+          {keyword && (
+            <button
+              onClick={() => setKeyword('')}
+              aria-label="Xóa tìm kiếm"
+              className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted cursor-pointer"
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
+        {/* Cụm Tabs thời gian */}
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pt-0.5">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={cn(
+                'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors cursor-pointer',
+                tab === t
+                  ? 'bg-primary-solid text-on-primary shadow-raised'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3',
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </Card>
 
       {tab === 'Lịch sử tham gia' ? (
         !isAuthenticated ? (
@@ -115,9 +152,19 @@ export function EventsPage() {
           ) : filteredEvents.length === 0 ? (
             <EmptyState
               icon={<CalendarDays size={24} />}
-              title="Chưa có sự kiện nào ở mục này"
-              description="Hãy thử chọn tab khác hoặc quay lại sau để xem các sự kiện mới."
-              action={<Button size="sm" variant="secondary" onClick={() => setTab('Sắp diễn ra')}>Xem tất cả sự kiện</Button>}
+              title={keyword ? `Không tìm thấy sự kiện nào khớp "${keyword.trim()}"` : 'Chưa có sự kiện nào ở mục này'}
+              description={keyword ? 'Thử tìm với từ khóa khác hoặc xóa ô tìm kiếm để xem tất cả sự kiện.' : 'Hãy thử chọn tab khác hoặc quay lại sau để xem các sự kiện mới.'}
+              action={
+                keyword ? (
+                  <Button size="sm" variant="secondary" onClick={() => setKeyword('')}>
+                    Xóa tìm kiếm
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="secondary" onClick={() => setTab('Sắp diễn ra')}>
+                    Xem tất cả sự kiện
+                  </Button>
+                )
+              }
             />
           ) : (
           <Stagger className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" gap={0.08}>

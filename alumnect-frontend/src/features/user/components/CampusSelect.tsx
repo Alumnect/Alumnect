@@ -47,7 +47,7 @@ export function CampusSelect({
   }
 
   return (
-    <div className={cn('relative text-left', className)} ref={containerRef}>
+    <div className={cn('relative text-left', isOpen ? 'z-40' : 'z-auto', className)} ref={containerRef}>
       {/* Trigger Button */}
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -97,7 +97,7 @@ export function CampusSelect({
             <span className="text-xs lowercase font-normal text-plum-400/80">5 cơ sở</span>
           </div>
 
-          <div className="space-y-0.5 max-h-64 overflow-y-auto">
+          <div className="space-y-0.5 max-h-64 overflow-y-auto overscroll-contain pr-1">
             {FPT_CAMPUSES.map((campus) => {
               const isSelected = value === campus
               return (

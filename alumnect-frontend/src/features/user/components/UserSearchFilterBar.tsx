@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Search, SlidersHorizontal, X, RotateCcw, Check, Compass } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { SelectDropdown } from '@/components/ui'
+import { SelectDropdown, Card } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useMajors } from '@/features/auth/hooks/useAuth'
 import { useUserFilterOptions } from '../hooks/useUserQueries'
@@ -117,7 +117,8 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
   ].filter(Boolean).length
 
   return (
-    <div className="mb-6 flex flex-col gap-3">
+    <>
+      <Card hover={false} className="mb-6 p-4 space-y-3.5 overflow-visible relative z-20">
       {/* Search Input Bar & Advanced Filter Toggle */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label className="relative flex flex-1 items-center">
@@ -127,7 +128,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             placeholder="Tìm theo tên, chức danh, kỹ năng, công ty hoặc mã SV..."
-            className="h-12 w-full rounded-2xl border border-border bg-surface/70 pl-10 pr-10 text-sm text-text placeholder:text-text-subtle shadow-sm backdrop-blur-sm transition-all focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-10 text-sm text-text placeholder:text-text-subtle transition-all focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {localQuery && (
             <button
@@ -148,7 +149,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           size="md"
           leftIcon={<SlidersHorizontal size={16} />}
           onClick={() => setIsModalOpen(true)}
-          className="relative shrink-0"
+          className="relative shrink-0 rounded-xl"
         >
           <span>Bộ lọc</span>
           {activeAdvancedFilterCount > 0 && (
@@ -160,7 +161,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
       </div>
 
       {/* Quick Category Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-0.5">
         <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-text-subtle mr-1">
           <Compass size={13} className="text-primary-solid" /> Ngành:
         </span>
@@ -176,15 +177,15 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
                 'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all shadow-xs',
                 isSelected
                   ? 'bg-primary-solid text-on-primary shadow-raised ring-2 ring-brand-400/40'
-                  : 'bg-surface/80 text-text-muted border border-border hover:bg-surface hover:border-primary-soft-border',
+                  : 'bg-surface-2 text-text-muted border border-border hover:bg-surface-3 hover:border-primary-soft-border',
               )}
             >
               {cat.label}
             </button>
           )
         })}
-
       </div>
+    </Card>
 
       {/* Advanced Filter Modal */}
       <Modal
@@ -319,6 +320,6 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           </Button>
         </div>
       </Modal>
-    </div>
+    </>
   )
 }

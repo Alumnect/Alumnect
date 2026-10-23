@@ -132,7 +132,7 @@ export function GroupsPage() {
       </div>
 
       {tab === 'discover' && (
-        <div className="space-y-4">
+        <Card hover={false} className="mb-4 p-4">
           {/* Ô tìm kiếm từ khóa với debounce */}
           <div className="relative">
             <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
@@ -141,7 +141,7 @@ export function GroupsPage() {
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Tìm kiếm hội nhóm theo tên, từ khóa hoặc chủ đề…"
               maxLength={GROUP_SEARCH_MAX}
-              className="h-12 w-full rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:border-brand-500/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:border-brand-500/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
             />
             {searchInput && (
               <button
@@ -153,7 +153,7 @@ export function GroupsPage() {
               </button>
             )}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Danh sách Hội nhóm / Trạng thái */}
