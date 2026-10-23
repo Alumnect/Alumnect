@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink, Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
 import {
@@ -24,6 +24,7 @@ import { useLogout } from '@/features/auth/hooks/useAuthMutations'
 import { useWebSocketChat } from '@/features/message/hooks/useWebSocketChat'
 import { useWebSocketNotifications } from '@/features/notification/hooks/useWebSocketNotifications'
 import { useUnreadNotificationCount } from '@/features/notification/hooks/useNotifications'
+import { RouteTransition } from './RouteTransition'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -453,7 +454,7 @@ export function AppShell() {
         location.pathname === '/app/map'
           ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
           : location.pathname === '/app/messages'
-          ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100vh-3.85rem)] overflow-y-auto no-scrollbar"
+          ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] overflow-y-auto no-scrollbar lg:h-[calc(100vh-3.85rem)]"
           : isMentoringChatRoute
           ? "h-[calc(100dvh-7.65rem)] max-w-[1560px] overflow-hidden px-3 py-3 sm:px-6 lg:h-[calc(100dvh-4.1rem)] lg:px-8"
           : isMentoringRoute
@@ -463,26 +464,10 @@ export function AppShell() {
         <ErrorBoundary>
           {isMentoringRoute ? (
             <MentorshipLayout>
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={TRANSITION.page}
-                className={isMentoringChatRoute ? 'h-full min-h-0 overflow-hidden' : 'xl:min-h-full'}
-              >
-                <Outlet />
-              </motion.div>
+              <RouteTransition className={isMentoringChatRoute ? 'h-full min-h-0 overflow-hidden' : 'xl:min-h-full'} />
             </MentorshipLayout>
           ) : (
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={TRANSITION.page}
-              className={location.pathname === '/app/messages' ? "h-full min-h-0" : undefined}
-            >
-              <Outlet />
-            </motion.div>
+            <RouteTransition className={location.pathname === '/app/messages' ? 'h-full min-h-0' : undefined} />
           )}
         </ErrorBoundary>
       </main>

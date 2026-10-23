@@ -77,7 +77,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
   }
 
   return (
-    <div className="border-t border-border bg-surface/80 p-3 backdrop-blur-md">
+    <div className="border-t border-border bg-surface p-3">
       {/* Danh sách tệp đính kèm chờ gửi */}
       {attachments.length > 0 && (
         <div className="mb-2.5 flex flex-wrap gap-2">
@@ -121,7 +121,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isSending || disabled}
           aria-label="Đính kèm tệp"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-surface-2 text-text-subtle transition-colors hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid disabled:opacity-50"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-50"
         >
           {isUploading ? (
             <Loader2 size={18} className="animate-spin text-primary-solid" />
@@ -141,7 +141,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
           onKeyDown={handleKeyDown}
           placeholder="Nhập tin nhắn..."
           disabled={isSending || disabled}
-          className="h-11 flex-1 rounded-xl border border-border bg-surface-2 px-4 text-sm text-text placeholder:text-text-subtle transition-colors focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-400/20 disabled:opacity-50"
+          className="h-11 min-w-0 flex-1 rounded-full bg-surface-2 px-5 text-[15px] text-text placeholder:text-text-subtle transition-colors focus:bg-surface-3 focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:opacity-50"
         />
 
         {/* Nút gửi */}
@@ -150,7 +150,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
           onClick={handleSend}
           disabled={(!content.trim() && attachments.length === 0) || isSending || isUploading || disabled}
           aria-label="Gửi tin nhắn"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-solid text-on-primary shadow-sm transition duration-200 hover:scale-105 hover:bg-primary-hover disabled:opacity-40 disabled:hover:scale-100"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-solid text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-40"
         >
           {isSending ? (
             <Loader2 size={18} className="animate-spin" />

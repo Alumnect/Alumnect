@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import { RouteTransition } from './RouteTransition'
 import { motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
 import { ShieldCheck, SignOut } from '@/components/icons'
@@ -9,7 +10,6 @@ import { useLogout } from '@/features/auth'
 import { useAuthStore } from '@/store/authStore'
 
 export function AdminShell() {
-  const location = useLocation()
   const logoutM = useLogout()
   const user = useAuthStore((s) => s.user)
 
@@ -128,14 +128,7 @@ export function AdminShell() {
         </nav>
 
         <main className="px-4 py-6 sm:px-8 sm:py-7">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={TRANSITION.page}
-          >
-            <Outlet />
-          </motion.div>
+          <RouteTransition />
         </main>
       </div>
     </div>

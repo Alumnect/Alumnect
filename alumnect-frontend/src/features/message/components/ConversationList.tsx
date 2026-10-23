@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, MessageCircleMore, MessagesSquare, UserPlus, Users, UserCheck } from 'lucide-react'
+import { format, isToday } from 'date-fns'
+import { Search, MessageCircleMore, MessagesSquare, UserPlus, Users } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { CreateGroupModal } from './CreateGroupModal'
@@ -56,78 +57,71 @@ export function ConversationList({
   })
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-r border-border bg-surface/70 backdrop-blur-md">
+    <div className="flex h-full min-h-0 flex-col border-r border-border bg-surface">
       {/* Header & Search */}
-      <div className="shrink-0 border-b border-border p-4">
+      <div className="shrink-0 p-4 pb-3">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-text">Hộp thư tin nhắn</h2>
+          <h2 className="text-xl font-extrabold text-text">Tin nhắn</h2>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => setIsCreateGroupOpen(true)}
               title="Tạo nhóm trò chuyện mới"
-              className="grid h-8 w-8 place-items-center rounded-xl bg-surface-2 text-text-muted transition-colors hover:bg-primary-soft hover:text-primary-solid"
+              aria-label="Tạo nhóm trò chuyện mới"
+              className="grid h-9 w-9 place-items-center rounded-full text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
             >
-              <Users size={16} />
+              <Users size={18} />
             </button>
             <Link
               to="/app/alumni"
               title="Tìm người để nhắn tin"
-              className="grid h-8 w-8 place-items-center rounded-xl bg-surface-2 text-text-muted transition-colors hover:bg-primary-soft hover:text-primary-solid"
+              aria-label="Tìm người để nhắn tin"
+              className="grid h-9 w-9 place-items-center rounded-full text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
             >
-              <UserPlus size={15} />
+              <UserPlus size={18} />
             </Link>
           </div>
         </div>
 
-        {/* Tab switch: Hộp thư chính & Tin nhắn chờ */}
-        <div className="mb-3 grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1">
-          <button
-            type="button"
-            onClick={() => onTabChange('primary')}
-            className={cn(
-              'flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-bold transition',
-              currentTab === 'primary'
-                ? 'bg-surface text-text shadow-xs'
-                : 'text-text-subtle hover:text-text'
-            )}
-          >
-            <UserCheck size={13} />
-            <span>Hộp thư</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onTabChange('requests')}
-            className={cn(
-              'relative flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-bold transition',
-              currentTab === 'requests'
-                ? 'bg-surface text-text shadow-xs'
-                : 'text-text-subtle hover:text-text'
-            )}
-          >
-            <MessageCircleMore size={14} />
-            <span>Tin nhắn chờ</span>
-            {requestsCount > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-solid px-1 text-xs font-bold text-on-primary shadow-xs">
-                {requestsCount}
-              </span>
-            )}
-          </button>
+        {/* Hộp thư chính & Tin nhắn chờ */}
+        <div role="tablist" aria-label="Loại hộp thư" className="mb-3 flex border-b border-border">
+          {([
+            ['primary', 'Hộp thư'],
+            ['requests', 'Tin nhắn chờ'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={currentTab === key}
+              onClick={() => onTabChange(key)}
+              className={cn(
+                'relative flex h-10 flex-1 items-center justify-center gap-1.5 text-sm font-semibold transition-colors',
+                currentTab === key ? 'text-text' : 'text-text-subtle hover:text-text-muted',
+              )}
+            >
+              {label}
+              {key === 'requests' && requestsCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-solid px-1.5 text-xs font-bold text-on-primary">{requestsCount}</span>
+              )}
+              {currentTab === key && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-primary-solid" />}
+            </button>
+          ))}
         </div>
 
         <label className="relative flex items-center">
-          <Search size={16} className="pointer-events-none absolute left-3 text-text-subtle" />
+          <Search size={16} className="pointer-events-none absolute left-3.5 text-text-subtle" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm kiếm người hoặc nhóm..."
-            className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-sm text-text placeholder:text-text-subtle transition-colors focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-400/20 dark:placeholder-[#b0b3b8]"
+            className="h-10 w-full rounded-full bg-surface-2 pl-10 pr-4 text-sm text-text placeholder:text-text-subtle transition-colors focus:bg-surface-3 focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </label>
       </div>
 
       {/* List */}
-      <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto overscroll-contain divide-y divide-border">
+      <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto overscroll-contain">
         {isLoading ? (
           <div className="space-y-3 p-4">
             {[1, 2, 3, 4].map((i) => (
@@ -162,73 +156,37 @@ export function ConversationList({
               (!conv.id && activeRecipientId != null && conv.recipientId === activeRecipientId)
             const isGroup = isGroupConversation(conv)
             const displayName = isGroup ? conv.title || 'Nhóm trò chuyện' : conv.recipientName
+            const lastDate = conv.lastMessageAt ? new Date(conv.lastMessageAt) : null
+            const lastTime = lastDate && !isNaN(lastDate.getTime()) ? (isToday(lastDate) ? format(lastDate, 'HH:mm') : format(lastDate, 'dd/MM')) : ''
 
             return (
               <button
                 key={conv.id ?? `draft-${conv.recipientId}`}
                 onClick={() => onSelect(conv)}
-                className={cn(
-                  'flex w-full items-center gap-3 px-4 py-3.5 text-left transition duration-150',
-                  isActive
-                    ? 'bg-primary-soft shadow-[inset_3px_0_0_0] shadow-brand-500'
-                    : 'hover:bg-surface-2'
-                )}
+                aria-current={isActive ? 'true' : undefined}
+                className={cn('flex w-full items-center gap-3 px-4 py-3 text-left transition-colors', isActive ? 'bg-surface-2' : 'hover:bg-surface-2/60')}
               >
                 {isGroup ? (
-                  <div className="relative shrink-0">
-                    <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-soft text-primary-solid shadow-xs ring-1 ring-primary/20">
-                      {conv.avatarUrl ? (
-                        <img src={conv.avatarUrl} alt="Group" className="h-full w-full rounded-2xl object-cover" />
-                      ) : (
-                        <Users size={20} />
-                      )}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-primary-solid text-on-primary shadow-xs">
-                      <Users size={9} />
-                    </div>
+                  <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-primary-solid">
+                    {conv.avatarUrl ? <img src={conv.avatarUrl} alt="" className="h-full w-full object-cover" /> : <Users size={20} />}
                   </div>
                 ) : (
-                  <Avatar
-                    src={conv.recipientAvatar || undefined}
-                    name={conv.recipientName}
-                    size={46}
-                    ring={isActive}
-                  />
+                  <Avatar src={conv.recipientAvatar || undefined} name={conv.recipientName} size={48} />
                 )}
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-1.5">
-                    <p className="truncate text-sm font-bold text-text">
-                      {displayName}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className={cn('truncate text-[15px] text-text', conv.unreadCount > 0 ? 'font-bold' : 'font-semibold')}>{displayName}</p>
+                    {lastTime && <span className="shrink-0 text-xs text-text-subtle">{lastTime}</span>}
+                  </div>
+                  <div className="mt-0.5 flex items-center justify-between gap-2">
+                    <p className={cn('truncate text-sm', conv.unreadCount > 0 ? 'font-semibold text-text' : 'text-text-subtle')}>
+                      {formatLastMessage(conv.lastMessage)}
                     </p>
                     {conv.unreadCount > 0 && (
-                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary-solid px-1.5 text-xs font-bold text-on-primary shadow-sm">
-                        {conv.unreadCount}
-                      </span>
+                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary-solid px-1.5 text-xs font-bold text-on-primary">{conv.unreadCount}</span>
                     )}
                   </div>
-
-                  {!isGroup && conv.recipientMajor && (
-                    <p className="truncate text-xs font-medium text-text-subtle">
-                      {conv.recipientMajor}
-                    </p>
-                  )}
-                  {isGroup && (
-                    <p className="text-xs font-medium text-text-subtle">
-                      {conv.memberCount ? `${conv.memberCount} thành viên` : 'Nhóm trò chuyện'}
-                    </p>
-                  )}
-
-                  <p
-                    className={cn(
-                      'mt-0.5 truncate text-xs',
-                      conv.unreadCount > 0
-                        ? 'font-bold text-text'
-                        : 'text-text-subtle'
-                    )}
-                  >
-                    {formatLastMessage(conv.lastMessage)}
-                  </p>
                 </div>
               </button>
             )

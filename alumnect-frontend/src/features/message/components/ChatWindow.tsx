@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { MessagesSquare, Users, Loader2, Info, Check, Trash2, ExternalLink } from 'lucide-react'
+import { MessagesSquare, Users, Loader2, Info, Check, Trash2, ExternalLink, ChevronLeft } from 'lucide-react'
+import { format, isToday } from 'date-fns'
 import { Avatar, Button, ConfirmModal, toast } from '@/components/ui'
-import { MessageBubble } from './MessageBubble'
+import { MessageBubble, type BubblePosition } from './MessageBubble'
 import { MessageInput } from './MessageInput'
 import { GroupInfoModal } from './GroupInfoModal'
 import { useAuthStore } from '@/store/authStore'
@@ -21,6 +22,8 @@ interface ChatWindowProps {
   onConversationDeleted?: () => void
   onConversationAccepted?: () => void
   onConversationUpdated?: (updated: Conversation) => void
+  /** Điện thoại: quay lại danh sách hội thoại */
+  onBack?: () => void
 }
 
 export function ChatWindow({
@@ -35,6 +38,7 @@ export function ChatWindow({
   onConversationDeleted,
   onConversationAccepted,
   onConversationUpdated,
+  onBack,
 }: ChatWindowProps) {
   const currentUserId = useAuthStore((state) => state.user?.id)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -101,7 +105,7 @@ export function ChatWindow({
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-surface-2 dark:bg-transparent">
+      <div className="flex h-full flex-col items-center justify-center bg-surface p-8 text-center">
         <Loader2 size={36} className="animate-spin text-primary-solid mb-3" />
         <p className="text-sm font-medium text-text-subtle">Đang chuẩn bị cuộc trò chuyện...</p>
       </div>
@@ -110,20 +114,18 @@ export function ChatWindow({
 
   if (!conversation) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-surface-2 dark:bg-transparent">
-        <div className="mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-primary-soft text-primary-solid shadow-sm">
-          <MessagesSquare size={32} />
-        </div>
-        <h3 className="text-lg font-bold text-text">Chưa chọn cuộc trò chuyện</h3>
-        <p className="mt-1 max-w-sm text-sm text-text-subtle">
-          Hãy chọn một thành viên từ danh sách bên trái hoặc nhấn Nhắn tin từ trang danh bạ để bắt đầu trao đổi.
-        </p>
+      <div className="flex h-full flex-col items-center justify-center bg-surface p-8 text-center">
+        <span className="mb-4 grid h-16 w-16 place-items-center rounded-full border border-border text-text-muted">
+          <MessagesSquare size={30} />
+        </span>
+        <h3 className="text-lg font-bold text-text">Tin nhắn của bạn</h3>
+        <p className="mt-1 max-w-xs text-sm text-text-subtle">Chọn một cuộc trò chuyện bên trái, hoặc nhắn tin cho thành viên từ danh bạ để bắt đầu.</p>
         <Link
           to="/app/alumni"
-          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-xs font-bold text-on-primary shadow-sm transition duration-200 hover:scale-105 hover:bg-primary-hover active:scale-95"
+          className="mt-5 inline-flex h-10 items-center gap-2 rounded-full bg-primary-solid px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
         >
           <Users size={16} />
-          Khám phá danh bạ thành viên
+          Tìm thành viên để nhắn tin
         </Link>
       </div>
     )
@@ -159,11 +161,16 @@ export function ChatWindow({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface-2 dark:bg-transparent">
+    <div className="flex h-full min-h-0 flex-col bg-surface">
       {/* Header cuộc trò chuyện */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface/80 px-5 py-3.5 backdrop-blur-md">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3 py-3 sm:px-5">
+        {onBack && (
+          <button type="button" onClick={onBack} aria-label="Quay lại danh sách" className="-ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-text-muted hover:bg-surface-2 md:hidden">
+            <ChevronLeft size={22} />
+          </button>
+        )}
         {isGroup ? (
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
               onClick={() => setIsGroupInfoOpen(true)}
@@ -202,7 +209,7 @@ export function ChatWindow({
         ) : (
           <Link
             to={conversation.recipientId ? `/app/profile?userId=${conversation.recipientId}` : '#'}
-            className="flex items-center gap-3 transition-opacity hover:opacity-90"
+            className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-90"
             title={`Xem hồ sơ của ${displayName}`}
           >
             <Avatar
@@ -211,7 +218,7 @@ export function ChatWindow({
               size={42}
             />
             <div>
-              <h3 className="text-sm font-bold text-text">{displayName}</h3>
+              <h3 className="truncate text-[15px] font-bold text-text">{displayName}</h3>
               {conversation.recipientMajor ? (
                 <p className="text-xs font-medium text-text-subtle">
                   {conversation.recipientMajor}
@@ -255,7 +262,7 @@ export function ChatWindow({
 
       {/* Banner Tin nhắn chờ từ người lạ */}
       {isStrangerRequest && (
-        <div className="flex shrink-0 items-center justify-between border-b border-warning-border bg-warning-soft px-5 py-3 text-xs text-warning backdrop-blur-sm">
+        <div className="flex shrink-0 items-center justify-between border-b border-warning-border bg-warning-soft px-5 py-3 text-xs text-warning">
           <p className="font-medium">
             Người này không nằm trong danh bạ theo dõi của bạn. Bạn có muốn chấp nhận cuộc trò chuyện không?
           </p>
@@ -287,7 +294,7 @@ export function ChatWindow({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="chat-scrollbar flex-1 min-h-0 space-y-3.5 overflow-y-auto overscroll-contain p-5"
+        className="chat-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-5"
       >
         {isFetchingNextPage && (
           <div className="flex justify-center py-2">
@@ -308,12 +315,33 @@ export function ChatWindow({
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center text-text-subtle">
-            <p className="text-sm">Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên! 👋</p>
+            <p className="text-sm">Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên.</p>
           </div>
         ) : (
-          messages.map((m) => {
+          messages.map((m, i) => {
             const isMe = currentUserId ? String(m.senderId) === String(currentUserId) : false
-            return <MessageBubble key={m.id} message={m} isMe={isMe} isGroup={isGroup} />
+            const prev = messages[i - 1]
+            const next = messages[i + 1]
+            const sameCluster = (a?: Message, b?: Message) =>
+              !!a &&
+              !!b &&
+              a.type !== 'SYSTEM' &&
+              b.type !== 'SYSTEM' &&
+              String(a.senderId) === String(b.senderId) &&
+              Math.abs(new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) < 5 * 60 * 1000
+            const joinPrev = sameCluster(prev, m)
+            const joinNext = sameCluster(m, next)
+            const position: BubblePosition = joinPrev ? (joinNext ? 'middle' : 'last') : joinNext ? 'first' : 'single'
+            // Nhãn thời gian khi là tin đầu hoặc cách tin trước > 15 phút
+            const gap = prev ? new Date(m.createdAt).getTime() - new Date(prev.createdAt).getTime() : Infinity
+            const d = new Date(m.createdAt)
+            const timeLabel = !m.createdAt || isNaN(d.getTime()) ? null : gap > 15 * 60 * 1000 ? (isToday(d) ? format(d, 'HH:mm') : format(d, 'dd/MM/yyyy HH:mm')) : null
+            return (
+              <div key={m.id}>
+                {timeLabel && <p className="my-3 text-center text-xs font-medium text-text-subtle">{timeLabel}</p>}
+                <MessageBubble message={m} isMe={isMe} isGroup={isGroup} position={position} />
+              </div>
+            )
           })
         )}
       </div>

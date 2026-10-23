@@ -80,7 +80,7 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
     { type: 'achievement', label: 'Thành tựu', icon: <Award size={18} /> },
   ]
   return (
-    <div className="border-b border-border px-4 py-3.5 sm:px-5">
+    <div className="rounded-2xl border border-border bg-surface px-4 py-3.5 sm:px-5">
       <div className="flex items-center gap-3">
         <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={40} verified={viewer.verified} />
         <button
@@ -157,6 +157,8 @@ export function PostCard({
 
   const viewer = useAuthStore((s) => s.user)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
+  // Bài dài chỉ hiện ~6 dòng + "Xem thêm" để các thẻ trong bảng tin có chiều cao gần nhau, dễ quét mắt
+  const isLongText = (post.text?.length ?? 0) > 320 || (post.text?.split('\n').length ?? 0) > 6
 
   // Đồng bộ lại state khi post props thay đổi (ví dụ sau khi refetch hoặc đổi tab)
   useEffect(() => {
@@ -242,7 +244,7 @@ export function PostCard({
         'relative cursor-pointer transition-colors',
         variant === 'row'
           ? 'border-b border-border last:border-b-0 hover:bg-surface-2/50'
-          : 'overflow-hidden rounded-2xl border border-border bg-surface hover:bg-surface-2/40',
+          : 'overflow-hidden rounded-2xl border border-border bg-surface hover:border-border-strong',
       )}
     >
       <div className="relative z-10 px-4 pt-4 sm:px-5">
@@ -287,7 +289,16 @@ export function PostCard({
         </div>
 
         {/* --- Nội dung văn bản --- */}
-        {post.text && <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-text">{post.text}</p>}
+        {post.text && (
+          <>
+            <p className={cn('mt-3 whitespace-pre-line text-[15px] leading-relaxed text-text', isLongText && 'line-clamp-6')}>{post.text}</p>
+            {isLongText && (
+              <Link to={`/app/posts/${post.id}`} className="mt-1 inline-block text-sm font-semibold text-text-subtle hover:text-text">
+                Xem thêm
+              </Link>
+            )}
+          </>
+        )}
       </div>
 
       {/* --- Phần 3: Khối thông tin Tuyển dụng (nếu là bài recruitment) — Thiết kế phẳng, tinh gọn --- */}
@@ -647,7 +658,7 @@ export function PostCard({
 /** Khung xương (skeleton) hiển thị trong lúc tải bảng tin lần đầu. */
 function PostSkeleton() {
   return (
-    <div className="border-b border-border px-4 py-4 last:border-b-0 sm:px-5" role="status" aria-label="Đang tải bài viết">
+    <div className="rounded-2xl border border-border bg-surface px-4 py-4 sm:px-5" role="status" aria-label="Đang tải bài viết">
       <div className="flex items-center gap-3">
         <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-surface-3" />
         <div className="flex-1 space-y-2">
@@ -809,7 +820,7 @@ export function FeedPage() {
     <div className="mx-auto flex max-w-6xl items-start justify-center gap-8">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
       <div className="w-full max-w-[640px] shrink-0">
-        <div className="overflow-hidden rounded-3xl border border-border bg-surface">
+        <div className="space-y-4">
           {/* Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy — Guest tương tác sẽ được mời đăng nhập qua popup. */}
           {canPost && viewer && (
             <>
@@ -827,7 +838,7 @@ export function FeedPage() {
           )}
 
           {/* Bộ lọc theo loại bài viết: tab gạch chân chia đều (kiểu Threads) */}
-          <div role="tablist" aria-label="Lọc bài viết theo loại" className="flex border-b border-border">
+          <div role="tablist" aria-label="Lọc bài viết theo loại" className="flex border-b border-border-strong/60">
             {FILTERS.map((f) => {
               const isActive = filter === f.key
               return (
@@ -850,16 +861,18 @@ export function FeedPage() {
           </div>
 
           {isLoading ? (
-            <>
+            <div className="space-y-4">
               <PostSkeleton />
               <PostSkeleton />
               <PostSkeleton />
-            </>
+            </div>
           ) : isError ? (
-            <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
+            <div className="rounded-2xl border border-border bg-surface">
+              <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
+            </div>
           ) : posts.length === 0 ? (
             debouncedKeyword ? (
-              <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-6 py-16 text-center">
                 <Search size={36} className="mb-3 text-text-subtle" aria-hidden />
                 <h3 className="mb-1 text-lg font-bold text-text">Không tìm thấy kết quả</h3>
                 <p className="text-sm text-text-subtle">
@@ -867,14 +880,17 @@ export function FeedPage() {
                 </p>
               </div>
             ) : (
-              <FeedEmpty />
+              <div className="rounded-2xl border border-border bg-surface">
+                <FeedEmpty />
+              </div>
             )
           ) : (
             <>
+              <div className="space-y-4">
               {posts.map((p) => (
                 <PostCard
                   key={p.id}
-                  variant="row"
+                  variant="card"
                   post={p}
                   canInteract={!isGuest}
                   canReport={canReport}
@@ -887,6 +903,7 @@ export function FeedPage() {
                   onCancelEvent={setCancellingEventPost}
                 />
               ))}
+              </div>
               {/* Vùng tự động tải thêm trang (Infinite scroll sentinel) */}
               <div ref={loadMoreRef} className="py-5 text-center">
                 {isFetchingNextPage && (
