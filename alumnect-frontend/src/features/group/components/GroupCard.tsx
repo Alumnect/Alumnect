@@ -28,8 +28,8 @@ export function GroupCard({ group }: { group: GroupCardData }) {
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
               isPrivate
-                ? 'bg-warning-soft text-white'
-                : 'bg-success-soft text-white'
+                ? 'bg-amber-600 text-white dark:bg-amber-500'
+                : 'bg-emerald-600 text-white dark:bg-emerald-500'
             }`}
           >
             {isPrivate ? <Lock size={10} /> : <Globe size={10} />}

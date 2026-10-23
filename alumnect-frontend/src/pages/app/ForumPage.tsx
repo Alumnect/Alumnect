@@ -257,82 +257,85 @@ export function ForumPage() {
         }
       />
 
-      {/* Ô tìm kiếm câu hỏi theo tiêu đề/nội dung (UC44), debounce trước khi gọi API */}
-      <div className="relative mb-4">
-        <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
-          maxLength={SEARCH_KEYWORD_MAX_LENGTH}
-          className="h-11 w-full rounded-xl bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-        {searchInput && (
-          <button
-            onClick={() => setSearchInput('')}
-            aria-label="Xóa tìm kiếm"
-            className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
-          >
-            <X size={14} />
-          </button>
-        )}
-      </div>
-
-      {/* Bộ lọc chủ đề (dropdown) + tiêu chí sắp xếp (multi-select ưu tiên) */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterMultiSelect
-            buttonIcon={<LayoutGrid size={15} className="text-primary-solid" />}
-            allLabel="Tất cả thể loại"
-            noun="thể loại"
-            items={topics}
-            selected={topicIds}
-            onChange={setTopicIds}
-            itemIcon={(name) => <TopicIcon name={name} size={16} className="text-text-subtle" />}
+      {/* Khung tìm kiếm & bộ lọc đồng bộ chuẩn Card */}
+      <Card hover={false} className="mb-6 p-4 space-y-3.5 overflow-visible relative z-20">
+        {/* Ô tìm kiếm câu hỏi theo tiêu đề/nội dung (UC44), debounce trước khi gọi API */}
+        <div className="relative">
+          <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
+            maxLength={SEARCH_KEYWORD_MAX_LENGTH}
+            className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
           />
-          <FilterMultiSelect
-            buttonIcon={<GraduationCap size={15} className="text-primary-solid" />}
-            allLabel="Tất cả ngành"
-            noun="ngành"
-            items={majors}
-            selected={majorIds}
-            onChange={setMajorIds}
-            searchable
-            itemIcon={() => <GraduationCap size={16} className="text-text-subtle" />}
-          />
-          {(topicIds.length > 0 || majorIds.length > 0 || sorts.length > 0 || searchInput.trim().length > 0) && (
-            <button onClick={resetFilter} className="text-xs font-semibold text-text-subtle underline-offset-2 transition-colors hover:text-text-muted hover:underline">
-              Xóa lọc
+          {searchInput && (
+            <button
+              onClick={() => setSearchInput('')}
+              aria-label="Xóa tìm kiếm"
+              className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
+            >
+              <X size={14} />
             </button>
           )}
         </div>
 
-        <div className="flex flex-col items-start gap-1 sm:items-end">
-          <div className="no-scrollbar flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface-2 p-1">
-            {SORTS.map((s) => {
-              const inSorts = sorts.includes(s.key)
-              // Khi chưa chọn gì (rỗng), "Newest" là mặc định nên vẫn hiển thị active.
-              const active = inSorts || (sorts.length === 0 && s.key === 'recent')
-              const order = sorts.indexOf(s.key)
-              return (
-                <button
-                  key={s.key}
-                  onClick={() => toggleSort(s.key)}
-                  className={cn(
-                    'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-                    active ? 'bg-surface text-text shadow-raised' : 'text-text-subtle hover:text-text',
-                  )}
-                >
-                  <s.icon size={13} /> {s.label}
-                  {/* Số thứ tự ưu tiên khi chọn nhiều tiêu chí */}
-                  {inSorts && sorts.length > 1 && <span className="grid h-4 w-4 place-items-center rounded-full bg-primary-solid text-xs font-bold text-on-primary">{order + 1}</span>}
-                </button>
-              )
-            })}
+        {/* Bộ lọc chủ đề (dropdown) + tiêu chí sắp xếp (multi-select ưu tiên) */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterMultiSelect
+              buttonIcon={<LayoutGrid size={15} className="text-primary-solid" />}
+              allLabel="Tất cả thể loại"
+              noun="thể loại"
+              items={topics}
+              selected={topicIds}
+              onChange={setTopicIds}
+              itemIcon={(name) => <TopicIcon name={name} size={16} className="text-text-subtle" />}
+            />
+            <FilterMultiSelect
+              buttonIcon={<GraduationCap size={15} className="text-primary-solid" />}
+              allLabel="Tất cả ngành"
+              noun="ngành"
+              items={majors}
+              selected={majorIds}
+              onChange={setMajorIds}
+              searchable
+              itemIcon={() => <GraduationCap size={16} className="text-text-subtle" />}
+            />
+            {(topicIds.length > 0 || majorIds.length > 0 || sorts.length > 0 || searchInput.trim().length > 0) && (
+              <button onClick={resetFilter} className="text-xs font-semibold text-text-subtle underline-offset-2 transition-colors hover:text-text-muted hover:underline">
+                Xóa lọc
+              </button>
+            )}
           </div>
-          {sorts.length > 1 && <span className="text-xs text-text-subtle">Sắp theo thứ tự ưu tiên 1 → {sorts.length}</span>}
+
+          <div className="flex flex-col items-start gap-1 sm:items-end">
+            <div className="no-scrollbar flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface-2 p-1 border border-border">
+              {SORTS.map((s) => {
+                const inSorts = sorts.includes(s.key)
+                // Khi chưa chọn gì (rỗng), "Newest" là mặc định nên vẫn hiển thị active.
+                const active = inSorts || (sorts.length === 0 && s.key === 'recent')
+                const order = sorts.indexOf(s.key)
+                return (
+                  <button
+                    key={s.key}
+                    onClick={() => toggleSort(s.key)}
+                    className={cn(
+                      'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
+                      active ? 'bg-surface text-text shadow-raised' : 'text-text-subtle hover:text-text',
+                    )}
+                  >
+                    <s.icon size={13} /> {s.label}
+                    {/* Số thứ tự ưu tiên khi chọn nhiều tiêu chí */}
+                    {inSorts && sorts.length > 1 && <span className="grid h-4 w-4 place-items-center rounded-full bg-primary-solid text-xs font-bold text-on-primary">{order + 1}</span>}
+                  </button>
+                )
+              })}
+            </div>
+            {sorts.length > 1 && <span className="text-xs text-text-subtle">Sắp theo thứ tự ưu tiên 1 → {sorts.length}</span>}
+          </div>
         </div>
-      </div>
+      </Card>
 
       {/* Vùng nội dung theo trạng thái */}
       {isLoading ? (

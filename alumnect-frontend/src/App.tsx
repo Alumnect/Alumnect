@@ -22,7 +22,6 @@ import { MapPage } from '@/pages/app/MapPage'
 import { CareerPage } from '@/pages/app/CareerPage'
 import { MessagesPage } from '@/pages/app/MessagesPage'
 import { NotificationsPage } from '@/pages/app/NotificationsPage'
-import { SubscriptionPage } from '@/pages/app/SubscriptionPage'
 import { ProfilePage } from '@/pages/app/ProfilePage'
 import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
 import { MentoringHomePage } from '@/pages/app/MentoringHomePage'
@@ -89,7 +88,6 @@ function App() {
             <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
             <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-            <Route path="subscription" element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
             <Route path="map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
             <Route path="career" element={<ProtectedRoute><CareerPage /></ProtectedRoute>} />
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />

@@ -212,34 +212,6 @@ export const MAP_MARKERS = [
 ]
 export type MapMarker = (typeof MAP_MARKERS)[number]
 
-/** Pricing / posting packages. */
-export const PACKAGES = [
-  {
-    name: 'Gói Cơ bản',
-    price: 0,
-    period: 'miễn phí',
-    highlight: false,
-    features: ['1 tin tuyển dụng đang chạy', 'Hồ sơ cơ bản', 'Bảng tin cộng đồng', 'Đăng ký sự kiện'],
-    cta: 'Gói hiện tại',
-  },
-  {
-    name: 'Gói Nhà tuyển dụng',
-    price: 990000,
-    period: '/ tháng',
-    highlight: true,
-    features: ['10 tin tuyển dụng đang chạy', 'Ghim bài nổi bật', 'Thống kê ứng viên', 'Hỗ trợ ưu tiên', 'Huy hiệu nhà tuyển dụng uy tín'],
-    cta: 'Nâng cấp ngay',
-  },
-  {
-    name: 'Gói Doanh nghiệp',
-    price: 4900000,
-    period: '/ tháng',
-    highlight: false,
-    features: ['Không giới hạn tin tuyển dụng', 'Trang thương hiệu doanh nghiệp', 'Phân tích nhân tài nâng cao', 'Chuyên viên hỗ trợ riêng', 'Tài trợ sự kiện'],
-    cta: 'Liên hệ tư vấn',
-  },
-]
-
 /** Admin KPI cards. */
 export const ADMIN_KPIS = [
   { label: 'Tổng người dùng', value: 24800, delta: '+8.2%', up: true },
