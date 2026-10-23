@@ -1,17 +1,18 @@
 import React, { useState } from 'react'
-import { Pressable, ScrollView, TextInput, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Bell, MessageCircle, Plus, Search } from 'lucide-react-native'
-import { Screen, Txt, Chip, Empty } from '@/components/ui'
+import { Bell, Bookmark, BriefcaseBusiness, CalendarDays, Coins, Image as ImageIcon, Map, MessageCircle, Route, Search, Users, X } from '@/components/icons'
+import { Avatar, Empty, IconButton, PillLink, Screen, SearchBar, Segmented, Txt } from '@/components/ui'
 import { PostCard } from '@/components/PostCard'
 import { feedApi } from '@/api/feed'
 import type { FeedFilter, Post } from '@/api/feed'
 import { useTheme } from '@/theme'
 import { useDebounced } from '@/lib/hooks'
 import { useUnreadCount } from '@/api/notifications'
+import { useAuthStore } from '@/store/authStore'
 import { ListSkeleton } from '@/components/Skeleton'
 
 const FILTERS: [FeedFilter, string][] = [
@@ -22,11 +23,63 @@ const FILTERS: [FeedFilter, string][] = [
   ['event', 'Sự kiện'],
 ]
 
+/** Khoảng nền giữa các khối của đầu trang: tách khối bằng khoảng trống thay vì đổ bóng. */
+function Gap() {
+  const t = useTheme()
+  return <View style={{ height: 1, backgroundColor: t.divider }} />
+}
+
+/** Ô soạn bài ở đầu bảng tin (giống Composer trên Web) với lối tắt chọn loại bài. */
+function Composer() {
+  const t = useTheme()
+  const router = useRouter()
+  const user = useAuthStore((s) => s.user)
+  const firstName = user?.name?.trim().split(' ').slice(-1)[0] ?? 'bạn'
+  const go = (type?: string) => router.push(type ? { pathname: '/post/create', params: { type } } : '/post/create')
+  return (
+    <View style={{ backgroundColor: t.card, paddingHorizontal: 16, paddingVertical: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Avatar uri={user?.avatarUrl} name={user?.name} size={44} />
+        <Pressable
+          onPress={() => go()}
+          accessibilityRole="button"
+          accessibilityLabel="Tạo bài viết mới"
+          style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: t.inputBg, justifyContent: 'center', paddingHorizontal: 16 }}
+        >
+          <Txt muted numberOfLines={1}>{`${firstName} ơi, bạn đang nghĩ gì?`}</Txt>
+        </Pressable>
+        <IconButton filled={false} label="Đăng ảnh" icon={<ImageIcon size={24} color={t.primary} weight="duotone" />} onPress={() => go()} />
+      </View>
+    </View>
+  )
+}
+
+/** Hàng lối tắt khám phá: một dòng cuộn ngang thay cho hai hàng ô lớn. */
+function Explore() {
+  const t = useTheme()
+  const router = useRouter()
+  const icon = (Icon: typeof Users) => <Icon size={18} color={t.primary} weight="bold" />
+  return (
+    <View style={{ backgroundColor: t.card }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+        <PillLink icon={icon(BriefcaseBusiness)} label="Việc làm" onPress={() => router.push('/jobs')} />
+        <PillLink icon={icon(CalendarDays)} label="Sự kiện" onPress={() => router.push('/events')} />
+        <PillLink icon={icon(Users)} label="Hội nhóm" onPress={() => router.push('/groups')} />
+        <PillLink icon={icon(Map)} label="Bản đồ" onPress={() => router.push('/map')} />
+        <PillLink icon={icon(Route)} label="Lộ trình" onPress={() => router.push('/career')} />
+        <PillLink icon={icon(Coins)} label="Mức lương" onPress={() => router.push('/salary')} />
+        <PillLink icon={icon(Bookmark)} label="Đã lưu" onPress={() => router.push('/saved-posts')} />
+      </ScrollView>
+    </View>
+  )
+}
+
 export default function FeedScreen() {
   const t = useTheme()
   const router = useRouter()
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [search, setSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
   const keyword = useDebounced(search, 400)
   const unread = useUnreadCount()
 
@@ -37,45 +90,34 @@ export default function FeedScreen() {
     getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
   })
   const posts: Post[] = q.data?.pages.flatMap((p) => p.items) ?? []
+  const searching = !!keyword
 
   return (
-    <Screen>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, gap: 10 }}>
-        <Txt size={24} weight="800" color={t.primary} style={{ flex: 1 }}>Alumnect</Txt>
-        <Pressable onPress={() => router.push('/notifications')} hitSlop={8}>
-          <Bell size={24} color={t.text} />
-          {unread > 0 ? (
-            <View style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: t.danger, alignItems: 'center', justifyContent: 'center' }}>
-              <Txt size={10} weight="700" color="#fff">{unread > 99 ? '99+' : unread}</Txt>
-            </View>
-          ) : null}
-        </Pressable>
-        <Pressable onPress={() => router.push('/chat')} hitSlop={8}>
-          <MessageCircle size={24} color={t.text} />
-        </Pressable>
+    <Screen bg={t.card}>
+      <View style={{ backgroundColor: t.card, paddingLeft: 16, paddingRight: 6, paddingTop: 2, paddingBottom: 6, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Txt size={26} weight="800" color={t.primary} style={{ flex: 1, letterSpacing: -0.8 }}>alumnect</Txt>
+          <IconButton
+            filled={false}
+            label={searchOpen ? 'Đóng tìm kiếm' : 'Tìm kiếm'}
+            icon={searchOpen ? <X size={24} color={t.text} /> : <Search size={24} color={t.text} />}
+            onPress={() => {
+              if (searchOpen) setSearch('')
+              setSearchOpen(!searchOpen)
+            }}
+          />
+          <IconButton filled={false} label="Thông báo" badge={unread} icon={<Bell size={24} color={t.text} />} onPress={() => router.push('/notifications')} />
+          <IconButton filled={false} label="Tin nhắn" icon={<MessageCircle size={24} color={t.text} />} onPress={() => router.push('/chat')} />
+        </View>
+        {searchOpen ? <SearchBar value={search} onChangeText={setSearch} placeholder="Tìm bài viết, người đăng..." autoFocus style={{ paddingRight: 10 }} /> : null}
       </View>
 
-      <View style={{ margin: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: t.inputBg, borderRadius: 12, paddingHorizontal: 12 }}>
-        <Search size={18} color={t.textMuted} />
-        <TextInput value={search} onChangeText={setSearch} placeholder="Tìm kiếm bài viết..." placeholderTextColor={t.textMuted} style={{ flex: 1, color: t.text, paddingVertical: 10, paddingHorizontal: 8 }} />
-      </View>
-
-      <View style={{ height: 44 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-          {FILTERS.map(([k, label]) => (
-            <Chip key={k} label={label} active={filter === k} onPress={() => setFilter(k)} />
-          ))}
-        </ScrollView>
-      </View>
-
-      {q.isLoading ? (
-        <ListSkeleton variant="post" />
-      ) : (
+      <View style={{ flex: 1, backgroundColor: t.card }}>
         <FlashList
-          data={posts}
+          data={q.isLoading ? [] : posts}
           keyExtractor={(p) => p.id}
           renderItem={({ item }) => <PostCard post={item} />}
-          contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
+          contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           onEndReachedThreshold={0.5}
           refreshing={q.isRefetching}
@@ -83,16 +125,32 @@ export default function FeedScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
             q.refetch()
           }}
-          ListEmptyComponent={<Empty text="Chưa có bài viết nào." />}
+          ListHeaderComponent={
+            <View>
+              {!searching ? (
+                <>
+                  <Composer />
+                  <Explore />
+                  <Gap />
+                </>
+              ) : null}
+              <Segmented tabs={FILTERS} value={filter} onChange={setFilter} scrollable />
+              {q.isLoading ? <ListSkeleton variant="post" /> : null}
+            </View>
+          }
+          ListEmptyComponent={
+            q.isLoading ? null : (
+              <Empty
+                icon={<MessageCircle size={28} color={t.primary} weight="duotone" />}
+                title={searching ? 'Không tìm thấy bài viết' : 'Bảng tin còn trống'}
+                text={searching ? 'Thử từ khoá khác hoặc bỏ bộ lọc.' : 'Hãy là người đầu tiên chia sẻ điều gì đó với cộng đồng.'}
+                action={searching ? undefined : 'Tạo bài viết'}
+                onAction={() => router.push('/post/create')}
+              />
+            )
+          }
         />
-      )}
-
-      <Pressable
-        onPress={() => router.push('/post/create')}
-        style={{ position: 'absolute', right: 20, bottom: 90, width: 56, height: 56, borderRadius: 28, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', elevation: 6 }}
-      >
-        <Plus size={28} color="#fff" />
-      </Pressable>
+      </View>
     </Screen>
   )
 }

@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { ScrollView, TextInput, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Button, Card, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, Input, Loading, Screen, Txt, SearchBar } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
 import { groupApi, isActiveMember, isPendingMember } from '@/api/mentoringGroups'
@@ -103,9 +103,7 @@ export default function MentoringGroupDetailScreen() {
         {isLeader && g.status === 'ACTIVE' ? (
           <Card style={{ marginBottom: 14 }}>
             <Txt weight="700" style={{ marginBottom: 8 }}>Mời thành viên</Txt>
-            <View style={{ backgroundColor: t.inputBg, borderRadius: 12, paddingHorizontal: 12 }}>
-              <TextInput value={kw} onChangeText={setKw} placeholder="Tìm theo tên (≥ 2 ký tự)..." placeholderTextColor={t.textMuted} style={{ color: t.text, paddingVertical: 10 }} />
-            </View>
+            <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm theo tên (≥ 2 ký tự)..." />
             {(search.data?.data.content ?? []).map((u) => (
               <View key={u.userId} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 }}>
                 <Avatar uri={u.avatarUrl} name={u.fullName} size={36} />

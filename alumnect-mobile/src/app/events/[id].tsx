@@ -2,9 +2,10 @@ import React from 'react'
 import { ScrollView, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Calendar, MapPin, Users } from 'lucide-react-native'
-import { Button, Card, Loading, Screen, Txt } from '@/components/ui'
+import { CalendarDays, CalendarX2, CheckCircle2, ChevronRight, Clock, MapPin, Users } from '@/components/icons'
+import { Button, Card, Loading, Screen, Tag, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
+import { BottomBar, BrandCover, InfoRow } from '@/components/DetailBits'
 import { eventApi } from '@/api/events'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
@@ -24,6 +25,7 @@ export default function EventScreen() {
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['event-rsvp', id] })
     qc.invalidateQueries({ queryKey: ['feed'] })
+    qc.invalidateQueries({ queryKey: ['events-list'] })
     qc.invalidateQueries({ queryKey: ['event-history'] })
   }
 
@@ -44,32 +46,99 @@ export default function EventScreen() {
   })
 
   const isHost = !!p.hostId && p.hostId === me?.id
-  const fmt = (v?: string) => (v ? new Date(v).toLocaleString('vi-VN') : '')
+  const start = p.start ? new Date(p.start) : null
+  const end = p.end ? new Date(p.end) : null
+  const count = st?.attendeeCount ?? 0
+  const cap = st?.capacity ?? null
+  const full = !!cap && count >= cap
+  const pct = cap ? Math.min(1, count / cap) : 0
 
   return (
-    <Screen>
+    <Screen bg={t.card}>
       <Header title="Sự kiện" />
       {status.isLoading ? <Loading /> : (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          <Txt size={22} weight="800">{p.title ?? 'Sự kiện'}</Txt>
-          <Card style={{ marginTop: 16, gap: 10 }}>
-            {p.start ? <View style={{ flexDirection: 'row', gap: 8 }}><Calendar size={18} color={t.primary} /><Txt>{fmt(p.start)}{p.end ? ` – ${fmt(p.end)}` : ''}</Txt></View> : null}
-            {p.location ? <View style={{ flexDirection: 'row', gap: 8 }}><MapPin size={18} color={t.primary} /><Txt>{p.location}</Txt></View> : null}
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Users size={18} color={t.primary} />
-              <Txt>{st?.attendeeCount ?? 0}{st?.capacity ? ` / ${st.capacity}` : ''} người tham gia</Txt>
+        <>
+          <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }}>
+            <View style={{ backgroundColor: t.card, marginBottom: 10 }}>
+              <BrandCover height={130} />
+              <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+                <View style={{ width: 72, marginTop: -40, borderRadius: 16, overflow: 'hidden', backgroundColor: t.card, alignItems: 'center', borderWidth: 1, borderColor: t.border }}>
+                  <View style={{ alignSelf: 'stretch', backgroundColor: t.danger, paddingVertical: 4 }}>
+                    <Txt size={11} weight="800" color="#fff" style={{ textAlign: 'center' }}>{start ? `THÁNG ${start.getMonth() + 1}` : '--'}</Txt>
+                  </View>
+                  <Txt size={28} weight="800" style={{ paddingVertical: 4 }}>{start ? String(start.getDate()).padStart(2, '0') : '--'}</Txt>
+                </View>
+                <Txt size={22} weight="800" style={{ marginTop: 12, lineHeight: 30 }}>{p.title ?? 'Sự kiện'}</Txt>
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                  {st?.registered ? <Tag label="Bạn đã đăng ký" tone="success" icon={<CheckCircle2 size={12} color={t.success} />} /> : null}
+                  {full ? <Tag label="Đã đủ chỗ" tone="warning" /> : null}
+                  {isHost ? <Tag label="Bạn là người tổ chức" /> : null}
+                </View>
+              </View>
             </View>
-          </Card>
-          <View style={{ gap: 10, marginTop: 20 }}>
+
+            <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 4 }}>
+              {start ? (
+                <InfoRow
+                  icon={<CalendarDays size={16} color={t.primary} />}
+                  label="Ngày"
+                  value={start.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                />
+              ) : null}
+              {start ? (
+                <InfoRow
+                  icon={<Clock size={16} color={t.primary} />}
+                  label="Thời gian"
+                  value={`${start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}${end ? ` – ${end.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}` : ''}`}
+                />
+              ) : null}
+              {p.location ? <InfoRow icon={<MapPin size={16} color={t.primary} />} label="Địa điểm" value={p.location} last /> : null}
+            </Card>
+
+            <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/events/attendees', params: { id } })}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center' }}>
+                  <Users size={16} color={t.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Txt weight="700">{`${count}${cap ? ` / ${cap}` : ''} người tham gia`}</Txt>
+                  <Txt muted size={12}>Xem danh sách người tham gia</Txt>
+                </View>
+                <ChevronRight size={18} color={t.textSubtle} />
+              </View>
+              {cap ? (
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: t.inputBg, overflow: 'hidden', marginTop: 12 }}>
+                  <View style={{ width: `${pct * 100}%`, height: 8, borderRadius: 4, backgroundColor: full ? t.warning : t.primary }} />
+                </View>
+              ) : null}
+            </Card>
+
+            {isHost ? (
+              <Button
+                title="Huỷ sự kiện"
+                variant="ghost"
+                icon={<CalendarX2 size={16} color={t.danger} />}
+                onPress={() => cancelEvent.mutate()}
+                loading={cancelEvent.isPending}
+                style={{ marginHorizontal: 12 }}
+              />
+            ) : null}
+          </ScrollView>
+          <BottomBar>
             {st?.registered ? (
-              <Button title="Hủy đăng ký" variant="outline" onPress={() => cancel.mutate()} loading={cancel.isPending} />
+              <Button title="Huỷ đăng ký" variant="outline" onPress={() => cancel.mutate()} loading={cancel.isPending} style={{ flex: 1 }} />
             ) : (
-              <Button title="Đăng ký tham gia" onPress={() => rsvp.mutate()} loading={rsvp.isPending} />
+              <Button
+                title={full ? 'Đã hết chỗ' : 'Đăng ký tham gia'}
+                disabled={full}
+                icon={full ? undefined : <CheckCircle2 size={17} color="#fff" />}
+                onPress={() => rsvp.mutate()}
+                loading={rsvp.isPending}
+                style={{ flex: 1 }}
+              />
             )}
-            <Button title="Danh sách người tham gia" variant="outline" onPress={() => router.push({ pathname: '/events/attendees', params: { id } })} />
-            {isHost ? <Button title="Hủy sự kiện" variant="danger" onPress={() => cancelEvent.mutate()} loading={cancelEvent.isPending} /> : null}
-          </View>
-        </ScrollView>
+          </BottomBar>
+        </>
       )}
     </Screen>
   )

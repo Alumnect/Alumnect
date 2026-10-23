@@ -1,9 +1,9 @@
 import React from 'react'
-import { Pressable, View } from 'react-native'
+import { View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bookmark, CalendarCheck, ChevronRight, DollarSign, KeyRound, LogOut, Users } from 'lucide-react-native'
-import { Button, Card, Loading, Screen, Txt } from '@/components/ui'
+import { Bookmark, Briefcase, CalendarCheck, Coins, KeyRound, LogOut, MessageCircle, Pencil, Route, Users } from '@/components/icons'
+import { Button, Card, IconButton, Loading, MenuRow, Screen, Txt } from '@/components/ui'
 import { ProfileView } from '@/components/ProfileView'
 import { userApi } from '@/api/users'
 import { authApi } from '@/api/auth'
@@ -11,14 +11,12 @@ import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
 import { toast } from '@/lib/toast'
 
-function Row({ icon, label, onPress }: { icon: React.ReactNode; label: string; onPress: () => void }) {
-  const t = useTheme()
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Pressable onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 }}>
-      {icon}
-      <Txt style={{ flex: 1 }} weight="600">{label}</Txt>
-      <ChevronRight size={18} color={t.textMuted} />
-    </Pressable>
+    <View style={{ marginBottom: 12 }}>
+      <Txt muted size={12} weight="700" style={{ marginLeft: 4, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{title}</Txt>
+      <Card style={{ paddingVertical: 2 }}>{children}</Card>
+    </View>
   )
 }
 
@@ -47,19 +45,30 @@ export default function ProfileTab() {
   if (q.isLoading || !q.data?.data) return <Screen><Loading /></Screen>
   const isAlumni = q.data.data.role === 'ALUMNI'
   return (
-    <Screen>
+    <Screen bg={t.card}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 6, gap: 8, backgroundColor: t.card }}>
+        <Txt size={22} weight="800" style={{ flex: 1 }}>Cá nhân</Txt>
+        <IconButton label="Tin nhắn" icon={<MessageCircle size={20} color={t.text} />} onPress={() => router.push('/chat')} />
+      </View>
       <ProfileView profile={q.data.data} isMe>
-        <Button title="Chỉnh sửa hồ sơ" variant="outline" onPress={() => router.push('/profile/edit')} style={{ marginBottom: 12 }} />
-        <Card style={{ marginBottom: 12 }}>
-          <Row icon={<Bookmark size={20} color={t.primary} />} label="Bài viết đã lưu" onPress={() => router.push('/saved-posts')} />
-          <Row icon={<CalendarCheck size={20} color={t.primary} />} label="Lịch sử sự kiện" onPress={() => router.push('/events/history')} />
-          <Row icon={<DollarSign size={20} color={t.primary} />} label="Khảo sát lương" onPress={() => router.push('/salary')} />
-          <Row icon={<Users size={20} color={t.primary} />} label={isAlumni ? 'Hội nhóm cựu sinh viên' : 'Hội nhóm'} onPress={() => router.push('/groups')} />
-          <Row icon={<KeyRound size={20} color={t.primary} />} label="Đổi mật khẩu" onPress={() => router.push('/change-password')} />
-        </Card>
-        <Button title="Đăng xuất" variant="danger" onPress={() => out.mutate()} loading={out.isPending} />
-        <View style={{ height: 8 }} />
-        <LogOut size={0} color="transparent" />
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+          <Button title="Sửa hồ sơ" size="sm" icon={<Pencil size={15} color={t.onPrimary} />} onPress={() => router.push('/profile/edit')} style={{ flex: 1, height: 40 }} />
+          <Button title="Kinh nghiệm" size="sm" variant="secondary" icon={<Briefcase size={15} color={t.primary} />} onPress={() => router.push('/profile/experience')} style={{ flex: 1, height: 40 }} />
+        </View>
+
+        <Group title="Hoạt động của tôi">
+          <MenuRow icon={<Bookmark size={18} color={t.primary} />} label="Bài viết đã lưu" onPress={() => router.push('/saved-posts')} />
+          <MenuRow icon={<CalendarCheck size={18} color={t.primary} />} label="Lịch sử sự kiện" hint="Sự kiện đã đăng ký tham gia" onPress={() => router.push('/events/history')} />
+          <MenuRow icon={<Users size={18} color={t.primary} />} label={isAlumni ? 'Hội nhóm cựu sinh viên' : 'Hội nhóm'} onPress={() => router.push('/groups')} />
+          <MenuRow icon={<Coins size={18} color={t.primary} />} label="Khảo sát lương" hint="Đóng góp và xem mức lương" onPress={() => router.push('/salary')} />
+          <MenuRow icon={<Route size={18} color={t.primary} />} label="Lộ trình sự nghiệp" onPress={() => router.push('/career')} last />
+        </Group>
+
+        <Group title="Tài khoản">
+          <MenuRow icon={<KeyRound size={18} color={t.primary} />} label="Đổi mật khẩu" onPress={() => router.push('/change-password')} />
+          <MenuRow icon={<LogOut size={18} color={t.danger} />} label={out.isPending ? 'Đang đăng xuất...' : 'Đăng xuất'} danger onPress={() => out.mutate()} last />
+        </Group>
+        <Txt muted size={12} style={{ textAlign: 'center', marginTop: 4 }}>Alumnect · FPT University</Txt>
       </ProfileView>
     </Screen>
   )

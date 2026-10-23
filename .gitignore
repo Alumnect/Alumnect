@@ -26,3 +26,6 @@ Thumbs.db
 /Review_Backend*.md
 /Review_Frontend*.md
 /Review_SRS_vs_Code*.md
+
+# Thư mục bàn giao chứa bí mật (env, keystore): tuyệt đối không commit
+_handover-secrets/

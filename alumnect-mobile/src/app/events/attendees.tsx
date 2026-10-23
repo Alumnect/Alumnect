@@ -1,16 +1,14 @@
 import React, { useState } from 'react'
-import { Pressable, TextInput, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Empty, Loading, Screen, Txt, SearchBar } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { eventApi } from '@/api/events'
 import { useDebounced } from '@/lib/hooks'
-import { useTheme } from '@/theme'
 
 export default function AttendeesScreen() {
-  const t = useTheme()
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const [kw, setKw] = useState('')
@@ -19,7 +17,7 @@ export default function AttendeesScreen() {
   return (
     <Screen>
       <Header title="Người tham gia" />
-      <TextInput value={kw} onChangeText={setKw} placeholder="Tìm theo tên..." placeholderTextColor={t.textMuted} style={{ margin: 16, backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 }} />
+      <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm theo tên..." style={{ margin: 16 }} />
       {q.isLoading ? <Loading /> : (
         <FlashList
           data={q.data?.data ?? []}

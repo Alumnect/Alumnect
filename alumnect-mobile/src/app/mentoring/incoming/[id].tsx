@@ -1,8 +1,12 @@
 import React, { useState } from 'react'
-import { ScrollView } from 'react-native'
+import { Pressable, ScrollView, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Button, Card, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, Input, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { BottomBar, InfoRow } from '@/components/DetailBits'
+import { statusTone } from '@/constants/status'
+import { useTheme } from '@/theme'
+import { CalendarClock, Check, ClipboardList, Laptop, Layers, MessageCircle, Wallet } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
 import { WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
@@ -10,6 +14,7 @@ import { toast, errMsg } from '@/lib/toast'
 
 /** UC93: mentor xem chi tiết, chấp nhận / từ chối yêu cầu. */
 export default function IncomingDetailScreen() {
+  const t = useTheme()
   const router = useRouter()
   const qc = useQueryClient()
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -37,32 +42,44 @@ export default function IncomingDetailScreen() {
   if (q.isLoading) return <Screen><Header title="Yêu cầu" /><Loading /></Screen>
   if (!r) return <Screen><Header title="Yêu cầu" /><Empty text="Không tìm thấy yêu cầu." /></Screen>
   return (
-    <Screen>
+    <Screen bg={t.card}>
       <Header title="Chi tiết yêu cầu" />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(r.studentId) } })}>
-          <Avatar uri={r.studentAvatar} name={r.studentName} size={48} />
-          <Txt weight="700">{r.studentName}</Txt>
-        </Card>
-        <Txt size={20} weight="800">{r.title}</Txt>
-        <Txt style={{ marginTop: 8, lineHeight: 21 }}>{r.description}</Txt>
-        <Card style={{ marginTop: 12, gap: 4 }}>
-          <Txt muted size={13}>Loại hỗ trợ: {taskTypeLabel(r.taskType)}</Txt>
-          <Txt muted size={13}>Lĩnh vực: {r.industryName}</Txt>
-          <Txt muted size={13}>Hình thức: {WORKING_MODE_LABEL[r.workingMode]}</Txt>
-          {r.budgetMin != null || r.budgetMax != null ? <Txt muted size={13}>Ngân sách: {formatVnd(r.budgetMin)} – {formatVnd(r.budgetMax)}</Txt> : null}
-          {r.expectedDeadline ? <Txt muted size={13}>Hạn mong muốn: {new Date(r.expectedDeadline).toLocaleString('vi-VN')}</Txt> : null}
-          <Txt weight="700" size={13}>Phản hồi của bạn: {RESPONSE_STATUS_LABEL[r.responseStatus] ?? r.responseStatus}</Txt>
+      <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+          <Pressable onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(r.studentId) } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Avatar uri={r.studentAvatar} name={r.studentName} size={48} />
+            <View style={{ flex: 1 }}>
+              <Txt weight="700">{r.studentName}</Txt>
+              <Txt muted size={12}>Sinh viên · xem hồ sơ</Txt>
+            </View>
+            <Tag label={RESPONSE_STATUS_LABEL[r.responseStatus] ?? r.responseStatus} tone={statusTone(r.responseStatus)} />
+          </Pressable>
+          <Txt size={21} weight="800" style={{ marginTop: 14, lineHeight: 28 }}>{r.title}</Txt>
+          <Txt style={{ marginTop: 8, lineHeight: 22 }}>{r.description}</Txt>
+        </View>
+        <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 4 }}>
+          <InfoRow icon={<ClipboardList size={16} color={t.primary} />} label="Loại hỗ trợ" value={taskTypeLabel(r.taskType)} />
+          <InfoRow icon={<Layers size={16} color={t.primary} />} label="Lĩnh vực" value={r.industryName ?? '—'} />
+          <InfoRow icon={<Laptop size={16} color={t.primary} />} label="Hình thức" value={WORKING_MODE_LABEL[r.workingMode] ?? '—'} last={r.budgetMin == null && r.budgetMax == null && !r.expectedDeadline} />
+          {r.budgetMin != null || r.budgetMax != null ? <InfoRow icon={<Wallet size={16} color={t.primary} />} label="Ngân sách" value={`${formatVnd(r.budgetMin)} – ${formatVnd(r.budgetMax)}`} last={!r.expectedDeadline} /> : null}
+          {r.expectedDeadline ? <InfoRow icon={<CalendarClock size={16} color={t.primary} />} label="Hạn mong muốn" value={new Date(r.expectedDeadline).toLocaleString('vi-VN')} last /> : null}
         </Card>
         {r.canRespond ? (
-          <>
-            <Input label="Ghi chú phản hồi (tùy chọn)" value={note} onChangeText={setNote} multiline style={{ marginTop: 14 }} />
-            <Button title="Chấp nhận" onPress={() => accept.mutate()} loading={accept.isPending} />
-            <Button title="Từ chối" variant="outline" style={{ marginTop: 8 }} onPress={() => decline.mutate()} loading={decline.isPending} />
-          </>
+          <Card style={{ marginHorizontal: 12 }}>
+            <Input label="Lời nhắn cho sinh viên (tuỳ chọn)" value={note} onChangeText={setNote} multiline placeholder="VD: Mình có kinh nghiệm phần này, hẹn trao đổi chi tiết nhé!" />
+          </Card>
         ) : null}
-        {r.canMessage && r.conversationId ? <Button title="Mở chat" variant="outline" style={{ marginTop: 12 }} onPress={() => router.push({ pathname: '/chat/[id]', params: { id: String(r.conversationId) } })} /> : null}
       </ScrollView>
+      {r.canRespond ? (
+        <BottomBar>
+          <Button title="Từ chối" variant="outline" onPress={() => decline.mutate()} loading={decline.isPending} style={{ flex: 1 }} />
+          <Button title="Chấp nhận" icon={<Check size={17} color="#fff" />} onPress={() => accept.mutate()} loading={accept.isPending} style={{ flex: 1.5 }} />
+        </BottomBar>
+      ) : r.canMessage && r.conversationId ? (
+        <BottomBar>
+          <Button title="Mở chat với sinh viên" icon={<MessageCircle size={16} color="#fff" />} onPress={() => router.push({ pathname: '/chat/[id]', params: { id: String(r.conversationId) } })} style={{ flex: 1 }} />
+        </BottomBar>
+      ) : null}
     </Screen>
   )
 }

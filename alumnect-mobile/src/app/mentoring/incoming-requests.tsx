@@ -3,18 +3,22 @@ import { View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Avatar, Card, Chip, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Inbox } from '@/components/icons'
+import { Avatar, Card, Empty, Screen, Segmented, Tag, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
+import { ListSkeleton } from '@/components/Skeleton'
 import { RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
+import { statusTone } from '@/constants/status'
 import { useTheme } from '@/theme'
 
-const FILTERS: [string | undefined, string][] = [[undefined, 'Tất cả'], ['WAITING', 'Đang chờ'], ['ACCEPTED', 'Đã nhận'], ['DECLINED', 'Đã từ chối']]
+type Tab = 'ALL' | 'WAITING' | 'ACCEPTED' | 'DECLINED'
 
 /** UC93: yêu cầu đến dành cho mentor. */
 export default function IncomingRequestsScreen() {
   const t = useTheme()
   const router = useRouter()
-  const [status, setStatus] = useState<string | undefined>()
+  const [tab, setTab] = useState<Tab>('ALL')
+  const status = tab === 'ALL' ? undefined : tab
   const q = useInfiniteQuery({
     queryKey: ['mentoring-incoming', status],
     initialPageParam: 0,
@@ -23,34 +27,35 @@ export default function IncomingRequestsScreen() {
   })
   const items = q.data?.pages.flatMap((p) => p.content) ?? []
   return (
-    <Screen>
-      <Header title="Yêu cầu đến" />
-      <View style={{ flexDirection: 'row', padding: 12 }}>
-        {FILTERS.map(([k, l]) => <Chip key={l} label={l} active={status === k} onPress={() => setStatus(k)} />)}
-      </View>
-      {q.isLoading ? <Loading /> : (
-        <FlashList
-          data={items}
-          keyExtractor={(r) => String(r.id)}
-          contentContainerStyle={{ padding: 16, paddingTop: 4 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
-          refreshing={q.isRefetching}
-          onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty text="Chưa có yêu cầu nào." />}
-          renderItem={({ item }) => (
-            <Card style={{ marginBottom: 10 }} onPress={() => router.push({ pathname: '/mentoring/incoming/[id]', params: { id: String(item.id) } })}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Avatar uri={item.studentAvatar} name={item.studentName} size={40} />
-                <View style={{ flex: 1 }}>
-                  <Txt weight="700" numberOfLines={1}>{item.title}</Txt>
-                  <Txt muted size={12}>{item.studentName} · {taskTypeLabel(item.taskType)}</Txt>
+    <Screen bg={t.card}>
+      <Header title="Yêu cầu đến" subtitle="Sinh viên đang cần bạn hỗ trợ" />
+      <Segmented<Tab> tabs={[['ALL', 'Tất cả'], ['WAITING', 'Đang chờ'], ['ACCEPTED', 'Đã nhận'], ['DECLINED', 'Từ chối']]} value={tab} onChange={setTab} />
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
+        {q.isLoading ? <ListSkeleton variant="row" /> : (
+          <FlashList
+            data={items}
+            keyExtractor={(r) => String(r.id)}
+            contentContainerStyle={{ paddingVertical: 12 }}
+            onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+            refreshing={q.isRefetching}
+            onRefresh={() => q.refetch()}
+            ListEmptyComponent={<Empty icon={<Inbox size={28} color={t.primary} />} title="Chưa có yêu cầu" text="Khi sinh viên gửi yêu cầu phù hợp, bạn sẽ thấy ở đây." />}
+            renderItem={({ item }) => (
+              <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/mentoring/incoming/[id]', params: { id: String(item.id) } })}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Avatar uri={item.studentAvatar} name={item.studentName} size={44} />
+                  <View style={{ flex: 1 }}>
+                    <Txt weight="700" numberOfLines={1}>{item.studentName}</Txt>
+                    <Txt muted size={12}>{taskTypeLabel(item.taskType)}</Txt>
+                  </View>
+                  <Tag label={RESPONSE_STATUS_LABEL[item.responseStatus] ?? item.responseStatus} tone={statusTone(item.responseStatus)} />
                 </View>
-                <Txt size={12} weight="700" color={item.responseStatus === 'ACCEPTED' ? t.success : t.primary}>{RESPONSE_STATUS_LABEL[item.responseStatus] ?? item.responseStatus}</Txt>
-              </View>
-            </Card>
-          )}
-        />
-      )}
+                <Txt weight="800" size={15} style={{ marginTop: 10 }} numberOfLines={2}>{item.title}</Txt>
+              </Card>
+            )}
+          />
+        )}
+      </View>
     </Screen>
   )
 }

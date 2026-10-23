@@ -3,8 +3,8 @@ import { ScrollView, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react-native'
-import { Button, Card, Chip, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Plus, Users } from '@/components/icons'
+import { Button, Card, Chip, Empty, Loading, Screen, Txt, Tag } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { groupApi, isActiveMember } from '@/api/mentoringGroups'
 import type { MentoringGroup } from '@/api/mentoringGroups'
@@ -39,13 +39,19 @@ export default function MentoringGroupsScreen() {
   const Item = ({ g }: { g: MentoringGroup }) => {
     const joined = g.joinedMemberCount ?? g.members?.filter(isActiveMember).length ?? 1
     return (
-      <Card style={{ marginBottom: 12 }} onPress={tab === 'INVITATIONS' ? undefined : () => router.push({ pathname: '/mentoring/groups/[id]', params: { id: String(g.id) } })}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-          <Txt weight="700" size={16} style={{ flex: 1 }} numberOfLines={2}>{g.name}</Txt>
-          {g.canManage ? <Txt size={11} weight="700" color={t.primary}>Trưởng nhóm</Txt> : null}
+      <Card style={{ marginBottom: 10 }} onPress={tab === 'INVITATIONS' ? undefined : () => router.push({ pathname: '/mentoring/groups/[id]', params: { id: String(g.id) } })}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+          <Txt weight="800" size={16} style={{ flex: 1 }} numberOfLines={2}>{g.name}</Txt>
+          {g.canManage ? <Tag label="Trưởng nhóm" /> : null}
         </View>
-        {g.description ? <Txt muted size={13} numberOfLines={2} style={{ marginTop: 2 }}>{g.description}</Txt> : null}
-        <Txt muted size={12} style={{ marginTop: 6 }}>{joined}/{g.maxMembers} thành viên · Trưởng nhóm: {g.leaderName ?? '—'}</Txt>
+        {g.description ? <Txt muted size={13} numberOfLines={2} style={{ marginTop: 4, lineHeight: 19 }}>{g.description}</Txt> : null}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+          <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: t.inputBg, overflow: 'hidden' }}>
+            <View style={{ width: `${Math.min(100, (joined / Math.max(1, g.maxMembers)) * 100)}%`, height: 6, borderRadius: 3, backgroundColor: t.primary }} />
+          </View>
+          <Txt muted size={12}>{`${joined}/${g.maxMembers} thành viên`}</Txt>
+        </View>
+        <Txt muted size={12} style={{ marginTop: 6 }}>{`Trưởng nhóm: ${g.leaderName ?? '—'}`}</Txt>
         {tab === 'INVITATIONS' ? (
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
             <Button title="Tham gia" style={{ flex: 1, height: 40 }} loading={respond.isPending} onPress={() => respond.mutate({ id: g.id, ok: true })} />
@@ -58,9 +64,9 @@ export default function MentoringGroupsScreen() {
 
   return (
     <Screen>
-      <Header title="Nhóm Mentoring" right={<Plus size={24} color={t.primary} onPress={() => router.push('/mentoring/groups/create')} />} />
-      <View style={{ height: 52 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ padding: 12 }}>
+      <Header title="Nhóm Mentoring" right={<Button title="Tạo nhóm" size="sm" icon={<Plus size={15} color="#fff" />} onPress={() => router.push('/mentoring/groups/create')} />} />
+      <View style={{ backgroundColor: t.card }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
           {TABS.map(([k, l]) => <Chip key={k} label={k === 'INVITATIONS' && invites.data?.length ? `Lời mời (${invites.data.length})` : l} active={tab === k} onPress={() => setTab(k)} />)}
         </ScrollView>
       </View>
@@ -68,10 +74,10 @@ export default function MentoringGroupsScreen() {
         <FlashList
           data={data}
           keyExtractor={(g) => String(g.id)}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ padding: 12 }}
           refreshing={list.isRefetching}
           onRefresh={() => list.refetch()}
-          ListEmptyComponent={<Empty text={tab === 'INVITATIONS' ? 'Bạn không có lời mời nào.' : 'Bạn chưa có nhóm Mentoring nào.'} />}
+          ListEmptyComponent={<Empty icon={<Users size={26} color={t.primary} />} title={tab === 'INVITATIONS' ? 'Không có lời mời' : 'Chưa có nhóm'} text={tab === 'INVITATIONS' ? 'Lời mời tham gia nhóm mentoring sẽ hiện ở đây.' : 'Tạo nhóm để cùng bạn bè nhận hướng dẫn từ mentor.'} />}
           renderItem={({ item }) => <Item g={item} />}
         />
       )}

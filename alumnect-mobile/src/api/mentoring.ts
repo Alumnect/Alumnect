@@ -177,10 +177,11 @@ export const mentoringApi = {
 
   filterOptions: () => d(http.get<unknown, ApiResponse<MentorFilterOptions>>('/mentors/filter-options')),
 
-  search: (p: { keyword?: string; fieldId?: number; skill?: string; workingMode?: WorkingMode; mentoringType?: MentoringType; page?: number; sortBy?: string; sortDir?: string }) => {
+  search: (p: { keyword?: string; fieldId?: number; majorId?: number; skill?: string; workingMode?: WorkingMode; mentoringType?: MentoringType; page?: number; sortBy?: string; sortDir?: string }) => {
     const params: Record<string, unknown> = { page: p.page ?? 0, size: 9 }
     if (p.keyword?.trim()) params.keyword = p.keyword.trim()
     if (p.fieldId != null) params.fieldId = p.fieldId
+    if (p.majorId != null) params.majorId = p.majorId
     if (p.skill) params.skill = p.skill
     if (p.workingMode) params.workingMode = p.workingMode
     if (p.mentoringType) params.mentoringType = p.mentoringType

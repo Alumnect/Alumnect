@@ -1,6 +1,6 @@
 import React from 'react'
 import { View } from 'react-native'
-import { AlertTriangle } from 'lucide-react-native'
+import { AlertTriangle } from '@/components/icons'
 import { Button, Screen, Txt } from './ui'
 import { useTheme } from '@/theme'
 

@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Send } from 'lucide-react-native'
-import { Avatar, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { MessageCircle } from '@/components/icons'
+import { Empty, Loading, Screen, Txt } from '@/components/ui'
+import { CommentBubble, CommentComposer } from '@/components/Comments'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
 import { GroupPostCard } from '@/components/GroupPostCard'
@@ -23,6 +24,7 @@ export default function GroupPostDetailScreen() {
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<GroupComment | null>(null)
   const [sel, setSel] = useState<GroupComment | null>(null)
+  const [replyTo, setReplyTo] = useState<GroupComment | null>(null)
 
   const post = useQuery({ queryKey: ['group-post', gid, pid], queryFn: () => groupApi.post(gid, pid) })
   const comments = useInfiniteQuery({
@@ -31,15 +33,17 @@ export default function GroupPostDetailScreen() {
     queryFn: ({ pageParam }) => groupApi.comments(gid, pid, pageParam),
     getNextPageParam: (l) => (l.hasMore ? l.page + 1 : undefined),
   })
-  const items = comments.data?.pages.flatMap((x) => x.items) ?? []
+  const raw = comments.data?.pages.flatMap((x) => x.items) ?? []
+  const roots = raw.filter((c) => !c.parentId || !raw.some((r) => r.id === c.parentId))
+  const items = roots.flatMap((r) => [r, ...raw.filter((c) => c.parentId === r.id)])
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['group-post', gid, pid] })
     qc.invalidateQueries({ queryKey: ['group-posts', gid] })
   }
 
   const send = useMutation({
-    mutationFn: () => (editing ? groupApi.updateComment(gid, pid, editing.id, text.trim()) : groupApi.createComment(gid, pid, text.trim())),
-    onSuccess: () => { toast.success(editing ? 'Đã cập nhật bình luận.' : 'Đã gửi bình luận!'); setText(''); setEditing(null); refresh() },
+    mutationFn: () => (editing ? groupApi.updateComment(gid, pid, editing.id, text.trim()) : groupApi.createComment(gid, pid, text.trim(), replyTo ? replyTo.parentId ?? replyTo.id : undefined)),
+    onSuccess: () => { toast.success(editing ? 'Đã cập nhật bình luận.' : 'Đã gửi bình luận!'); setText(''); setEditing(null); setReplyTo(null); refresh() },
     onError: (e) => toast.error(errMsg(e)),
   })
   const del = useMutation({
@@ -52,36 +56,53 @@ export default function GroupPostDetailScreen() {
   if (!post.data) return <Screen><Header title="Bài viết" /><Empty text="Không tìm thấy bài viết." /></Screen>
 
   return (
-    <Screen edges={['top', 'bottom']}>
-      <Header title="Bài viết nhóm" />
+    <Screen bg={t.card}>
+      <Header title={`Bài viết của ${post.data.author.fullName}`} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlashList
           data={items}
           keyExtractor={(c) => String(c.id)}
+          contentContainerStyle={{ paddingBottom: 12 }}
           onEndReached={() => comments.hasNextPage && comments.fetchNextPage()}
-          ListHeaderComponent={<View style={{ padding: 16, paddingBottom: 4 }}><GroupPostCard post={post.data} detail /><Txt weight="700">Bình luận</Txt></View>}
-          ListEmptyComponent={<Txt muted style={{ textAlign: 'center', padding: 24 }}>Chưa có bình luận nào.</Txt>}
-          renderItem={({ item }) => (
-            <Pressable onLongPress={() => (item.canEdit || item.canDelete) && setSel(item)} style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 8 }}>
-              <Avatar uri={item.author.avatarUrl} name={item.author.fullName} size={34} />
-              <View style={{ flex: 1, backgroundColor: t.inputBg, borderRadius: 12, padding: 10 }}>
-                <Txt weight="700" size={13}>{item.author.fullName}</Txt>
-                <Txt>{item.content}</Txt>
-                <Txt muted size={11} style={{ marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('vi-VN')}</Txt>
+          ListHeaderComponent={
+            <View>
+              <View style={{ backgroundColor: t.bg, paddingTop: 10, paddingHorizontal: 12 }}>
+                <GroupPostCard post={post.data} detail />
               </View>
-            </Pressable>
+              <Txt weight="800" size={16} style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>Bình luận</Txt>
+            </View>
+          }
+          ListEmptyComponent={comments.isLoading ? <Loading /> : <Empty icon={<MessageCircle size={26} color={t.primary} />} title="Chưa có bình luận" text="Hãy là người đầu tiên bình luận." />}
+          renderItem={({ item }) => (
+            <CommentBubble
+              author={item.author.fullName}
+              authorId={item.author.userId}
+              avatar={item.author.avatarUrl}
+              text={item.content}
+              time={new Date(item.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+              reply={!!item.parentId}
+              mine={item.canEdit || item.canDelete}
+              onReply={() => { setEditing(null); setReplyTo(item) }}
+              onMore={item.canEdit || item.canDelete ? () => setSel(item) : undefined}
+            />
           )}
         />
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8, borderTopWidth: 1, borderTopColor: t.border, backgroundColor: t.bg }}>
-          <TextInput value={text} onChangeText={setText} placeholder={editing ? 'Sửa bình luận...' : 'Viết bình luận...'} placeholderTextColor={t.textMuted} style={{ flex: 1, backgroundColor: t.inputBg, color: t.text, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 }} />
-          <Pressable onPress={() => text.trim() && send.mutate()} disabled={send.isPending} hitSlop={8}><Send size={22} color={text.trim() ? t.primary : t.textMuted} /></Pressable>
-        </View>
+        <CommentComposer
+          value={text}
+          onChangeText={setText}
+          onSend={() => send.mutate()}
+          sending={send.isPending}
+          placeholder={replyTo ? `Trả lời ${replyTo.author.fullName}...` : 'Viết bình luận...'}
+          context={editing ? 'Đang sửa bình luận' : replyTo ? `Đang trả lời ${replyTo.author.fullName}` : null}
+          onCancelContext={() => { setEditing(null); setReplyTo(null); setText('') }}
+          autoFocusKey={replyTo?.id ?? editing?.id ?? null}
+        />
       </KeyboardAvoidingView>
       <ActionSheet
         visible={!!sel}
         onClose={() => setSel(null)}
         actions={sel ? [
-          ...(sel.canEdit ? [{ label: 'Sửa bình luận', onPress: () => { setEditing(sel); setText(sel.content) } }] : []),
+          ...(sel.canEdit ? [{ label: 'Sửa bình luận', onPress: () => { setReplyTo(null); setEditing(sel); setText(sel.content) } }] : []),
           ...(sel.canDelete ? [{ label: 'Xóa bình luận', danger: true, onPress: () => del.mutate(sel) }] : []),
         ] : []}
       />

@@ -2,9 +2,8 @@ import React, { useMemo, useState } from 'react'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Pressable, TextInput, View } from 'react-native'
-import { Search } from 'lucide-react-native'
-import { Avatar, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { Pressable, View } from 'react-native'
+import { Avatar, Empty, Loading, Screen, Txt, SearchBar } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { chatApi, convAvatar, convName } from '@/api/chat'
 import { messagePreview } from '@/lib/share'
@@ -25,10 +24,7 @@ export default function MentoringMessagesScreen() {
   return (
     <Screen>
       <Header title="Tin nhắn Mentoring" />
-      <View style={{ margin: 16, marginBottom: 6, flexDirection: 'row', alignItems: 'center', backgroundColor: t.inputBg, borderRadius: 12, paddingHorizontal: 12 }}>
-        <Search size={18} color={t.textMuted} />
-        <TextInput value={kw} onChangeText={setKw} placeholder="Tìm Mentor hoặc học viên..." placeholderTextColor={t.textMuted} style={{ flex: 1, color: t.text, paddingVertical: 10, paddingHorizontal: 8 }} />
-      </View>
+      <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm Mentor hoặc học viên..." style={{ margin: 16, marginBottom: 6 }} />
       {q.isLoading ? <Loading /> : (
         <FlashList
           data={items}

@@ -109,8 +109,15 @@ export default function LoginScreen() {
         <Txt color={palette.primary} weight="600" size={13}>Quên mật khẩu?</Txt>
       </Link>
       <Button title="Đăng nhập" onPress={() => submit()} loading={mutation.isPending} />
+      {isGoogleConfigured() || hasBio ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 18 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: palette.primary + '22' }} />
+          <Txt muted size={12}>hoặc</Txt>
+          <View style={{ flex: 1, height: 1, backgroundColor: palette.primary + '22' }} />
+        </View>
+      ) : null}
       {isGoogleConfigured() ? (
-        <Button title="Tiếp tục với Google" variant="outline" onPress={() => google.mutate()} loading={google.isPending} style={{ marginTop: 12 }} />
+        <Button title="Tiếp tục với Google" variant="outline" icon={<Txt size={16} weight="800" color="#4285F4">G</Txt>} onPress={() => google.mutate()} loading={google.isPending} />
       ) : null}
       {hasBio ? <Button title="Đăng nhập bằng vân tay / khuôn mặt" variant="outline" onPress={biometric} style={{ marginTop: 12 }} /> : null}
       <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24, gap: 6 }}>

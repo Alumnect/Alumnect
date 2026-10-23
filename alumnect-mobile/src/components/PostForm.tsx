@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { X } from 'lucide-react-native'
+import { X } from '@/components/icons'
 import { Button, Chip, Input, Screen, Txt } from './ui'
 import { Header } from './Header'
 import { feedApi } from '@/api/feed'
@@ -22,10 +22,10 @@ const MAX = 5000
 const DRAFT_KEY = 'alumnect.draft.post'
 
 /** Form dùng chung cho tạo (UC14) và sửa (UC22) bài viết; tự lưu nháp khi tạo mới. */
-export function PostForm({ existing }: { existing?: Post }) {
+export function PostForm({ existing, initialType }: { existing?: Post; initialType?: PostType }) {
   const router = useRouter()
   const qc = useQueryClient()
-  const [type, setType] = useState<PostType>(existing?.type ?? 'normal')
+  const [type, setType] = useState<PostType>(existing?.type ?? initialType ?? 'normal')
   const [content, setContent] = useState(existing?.text ?? '')
   const [media, setMedia] = useState<string[]>(existing?.images.length ? existing.images : existing?.image ? [existing.image] : [])
   const [uploading, setUploading] = useState(false)

@@ -61,7 +61,7 @@ export interface ExperienceRequest {
 export const exploreApi = {
   map: (f: { search?: string; cohort?: number; majorId?: number }) =>
     http.get<unknown, ApiResponse<MapPoint[]>>('/alumni-map', { params: f }).then((r) => r.data ?? []),
-  careerPaths: (f: { search?: string; cohort?: number; majorId?: number; page?: number }) =>
+  careerPaths: (f: { search?: string; title?: string; company?: string; location?: string; cohort?: number; majorId?: number; page?: number }) =>
     http.get<unknown, ApiResponse<PageResponse<CareerSummary>>>('/career-paths', { params: { size: 10, ...f } }).then((r) => r.data),
   careerDetail: (userId: number) => http.get<unknown, ApiResponse<CareerDetail>>(`/career-paths/users/${userId}`).then((r) => r.data),
 }

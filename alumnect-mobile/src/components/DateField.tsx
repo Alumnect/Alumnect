@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Platform, Pressable, Text, View } from 'react-native'
+import { Platform, Pressable, View } from 'react-native'
+import { Text } from '@/components/AppText'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { Calendar } from 'lucide-react-native'
+import { Calendar } from '@/components/icons'
 import { useTheme } from '@/theme'
 
 /** Chọn ngày + giờ (Android: hiện lần lượt hộp ngày rồi giờ). Giá trị là chuỗi ISO local 'YYYY-MM-DDTHH:mm:ss'. */

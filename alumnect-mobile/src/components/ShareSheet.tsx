@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react'
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native'
+import { TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
 import * as Clipboard from 'expo-clipboard'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Link2, Send } from 'lucide-react-native'
+import { ChevronLeft, Link2, Send } from '@/components/icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Avatar, Txt } from './ui'
 import { chatApi, convAvatar, convName, isGroup } from '@/api/chat'
@@ -152,7 +153,7 @@ export function ShareSheet({ visible, onClose, item }: { visible: boolean; onClo
                         onPress={() => void send(r)}
                         style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, backgroundColor: s === 'sent' ? t.inputBg : t.primary, opacity: s === 'sending' ? 0.6 : 1 }}
                       >
-                        <Txt size={13} weight="700" color={s === 'sent' ? t.textMuted : '#fff'}>{s === 'sent' ? 'Đã gửi' : s === 'sending' ? 'Đang gửi' : 'Gửi'}</Txt>
+                        <Txt size={13} weight="700" color={s === 'sent' ? t.textMuted : t.onPrimary}>{s === 'sent' ? 'Đã gửi' : s === 'sending' ? 'Đang gửi' : 'Gửi'}</Txt>
                       </Pressable>
                     </View>
                   )

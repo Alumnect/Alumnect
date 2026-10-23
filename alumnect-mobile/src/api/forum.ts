@@ -97,10 +97,13 @@ const mapDetail = (r: Raw): QuestionDetail => ({
 })
 
 export const forumApi = {
-  list: async (o: { page?: number; sort?: string; keyword?: string; topicId?: number }) => {
+  /** Lọc nhiều thể loại / nhiều ngành: backend nhận danh sách id phân tách bằng dấu phẩy (giống Web). */
+  list: async (o: { page?: number; sort?: string; keyword?: string; topicId?: number; topicIds?: number[]; majorIds?: number[] }) => {
     const params: Record<string, string | number> = { page: o.page ?? 0, size: PAGE_SIZE, sort: o.sort ?? 'recent' }
     if (o.keyword?.trim()) params.keyword = o.keyword.trim()
-    if (o.topicId) params.topicId = o.topicId
+    const topics = o.topicIds?.length ? o.topicIds : o.topicId ? [o.topicId] : []
+    if (topics.length) params.topicId = topics.join(',')
+    if (o.majorIds?.length) params.majorId = o.majorIds.join(',')
     return page(await http.get('/questions', { params }), mapQuestion, o.page ?? 0)
   },
   topics: async (): Promise<Topic[]> => {
