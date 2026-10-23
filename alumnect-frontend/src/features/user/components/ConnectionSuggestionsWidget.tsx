@@ -68,7 +68,7 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
       <div className="min-w-0 flex-1">
         <Link
           to={`/app/profile?userId=${user.userId}`}
-          className="block truncate text-sm font-bold text-text hover:underline"
+          className="line-clamp-2 break-words text-sm font-bold leading-tight text-text hover:underline"
           title={user.fullName}
         >
           {user.fullName}
@@ -82,7 +82,7 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
         size="sm"
         variant={isFollowing ? 'secondary' : 'secondary'}
         className={cn(
-          'shrink-0 text-xs font-semibold',
+          'h-8 shrink-0 px-3 text-xs font-semibold',
           isFollowing
             ? 'bg-border text-text-subtle hover:bg-surface-3'
             : 'border border-border text-text-muted hover:bg-surface-2 hover:text-text',

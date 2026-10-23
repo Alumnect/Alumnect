@@ -817,9 +817,9 @@ export function FeedPage() {
 
   // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
-    <div className="mx-auto flex max-w-6xl items-start justify-center gap-8">
+    <div className="mx-auto grid max-w-[1216px] grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_620px_minmax(0,1fr)]">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
-      <div className="w-full max-w-[640px] shrink-0">
+      <div className="mx-auto w-full min-w-0 max-w-[620px] xl:col-start-2">
         <div className="space-y-4">
           {/* Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy — Guest tương tác sẽ được mời đăng nhập qua popup. */}
           {canPost && viewer && (
@@ -966,7 +966,7 @@ export function FeedPage() {
       {/* ============ CỘT PHẢI: GỢI Ý (ẩn trên mobile) ============
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
-      <aside className="sticky top-24 hidden w-[300px] shrink-0 space-y-4 lg:block">
+      <aside className="sticky top-24 hidden w-full space-y-4 xl:col-start-3 xl:block xl:max-w-[280px]">
         {/* Mục 1: Gợi ý kết nối (UC10 - View Connection Suggestions) */}
         <ConnectionSuggestionsWidget limit={4} />
 
