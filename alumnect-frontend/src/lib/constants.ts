@@ -35,6 +35,10 @@ export const BRAND = {
 
 export type NavItem = {
   label: string
+  /** Nhãn ngắn cho thanh điều hướng trên (desktop) */
+  shortLabel?: string
+  /** Nhãn ngắn cho thanh tab dưới (điện thoại) để không bị cắt chữ */
+  tabLabel?: string
   to: string
   icon?: ComponentType<IconProps>
   badge?: string
@@ -47,9 +51,9 @@ export type NavItem = {
 export const APP_PRIMARY_NAV: NavItem[] = [
   { label: 'Bảng tin', to: '/app', icon: House },
   { label: 'Thành viên', to: '/app/alumni', icon: Users },
-  { label: 'Tuyển dụng', to: '/app/jobs', icon: Briefcase },
+  { label: 'Tuyển dụng', tabLabel: 'Việc làm', to: '/app/jobs', icon: Briefcase },
   { label: 'Sự kiện', to: '/app/events', icon: CalendarBlank },
-  { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: Question },
+  { label: 'Diễn đàn hỏi đáp', shortLabel: 'Diễn đàn', tabLabel: 'Diễn đàn', to: '/app/forum', icon: Question },
 ]
 
 /** Secondary features — tucked into the "More" apps menu (used less often). */

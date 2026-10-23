@@ -14,7 +14,6 @@ import {
   ArrowUp,
   Sun,
   Moon,
-  GlobeSimple,
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
@@ -126,11 +125,13 @@ export function AppShell() {
   const isMentoringRoute = location.pathname.startsWith('/app/mentoring')
   const isMentoringChatRoute = location.pathname.startsWith('/app/mentoring/chats/')
 
+  // Ô tìm kiếm trên thanh đầu tìm bài viết ở Bảng tin: gõ chỉ cập nhật từ khóa, nhấn Enter mới chuyển về Bảng tin
+  // (không tự nhảy trang giữa lúc đang gõ).
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
-    if (location.pathname !== '/app') {
-      navigate('/app')
-    }
+  }
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && location.pathname !== '/app') navigate('/app')
   }
 
   // Trạng thái hiển thị nút "Cuộn lên đầu trang" (Back to top)
@@ -146,20 +147,6 @@ export function AppShell() {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  // Trạng thái ngôn ngữ (thiết kế sẵn sàng kết nối i18n)
-  const [currentLang, setCurrentLang] = useState<'vi' | 'en'>(() => {
-    return (localStorage.getItem('alumnect_lang') as 'vi' | 'en') || 'vi'
-  })
-  const [langMenuOpen, setLangMenuOpen] = useState(false)
-  const langMenuRef = useRef<HTMLDivElement>(null)
-  useClickOutside(langMenuRef, () => setLangMenuOpen(false), langMenuOpen)
-
-  const handleSelectLang = (lang: 'vi' | 'en') => {
-    setCurrentLang(lang)
-    localStorage.setItem('alumnect_lang', lang)
-    setLangMenuOpen(false)
   }
 
   const handleClearSearch = () => {
@@ -252,6 +239,7 @@ export function AppShell() {
             <input
               value={keyword}
               onChange={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Tìm kiếm bài viết…"
               className="h-9.5 w-48 rounded-full border border-border bg-surface-2 pl-9 pr-8 text-sm text-text placeholder:text-text-subtle transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 lg:w-56"
             />
@@ -279,7 +267,7 @@ export function AppShell() {
                   aria-label={item.label}
                   className={({ isActive }) =>
                     cn(
-                      'group relative flex h-full w-20 xl:w-24 items-center justify-center transition-colors',
+                      'group relative flex h-full w-20 xl:w-auto xl:px-1 items-center justify-center transition-colors',
                       isActive ? 'text-primary-solid' : 'text-text-subtle hover:text-text',
                     )
                   }
@@ -287,7 +275,7 @@ export function AppShell() {
                   {({ isActive }) => (
                     <>
                       <div className={cn(
-                        'flex h-11 w-full items-center justify-center rounded-xl transition-all duration-200',
+                        'flex h-11 w-full items-center justify-center rounded-xl transition-all duration-200 xl:gap-2 xl:px-4',
                         isActive ? 'bg-primary-soft text-primary-solid' : 'hover:bg-surface-2 text-text-subtle hover:text-text'
                       )}>
                         {Icon && (
@@ -297,10 +285,11 @@ export function AppShell() {
                             className={cn('transition-all duration-200 group-hover:scale-110', isActive && 'text-primary-solid')}
                           />
                         )}
+                        <span className="hidden whitespace-nowrap text-sm font-semibold xl:inline">{item.shortLabel ?? item.label}</span>
                       </div>
 
-                      {/* hover tooltip label */}
-                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0.5 dark:bg-black dark:text-white">
+                      {/* hover tooltip label (chỉ khi chưa đủ chỗ hiện nhãn chữ) */}
+                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 xl:hidden whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0.5 dark:bg-black dark:text-white">
                         {item.label}
                       </span>
                       {isActive && (
@@ -384,6 +373,17 @@ export function AppShell() {
                   <div className="my-1 h-px bg-border" />
                   <button
                     type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setTheme(theme === 'dark' ? 'light' : 'dark')
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                  >
+                    {theme === 'dark' ? <Sun size={18} weight="regular" className="text-text-subtle" /> : <Moon size={18} weight="regular" className="text-text-subtle" />}
+                    {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => logoutM.mutate()}
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-danger transition-colors hover:bg-coral-300/25 dark:hover:bg-rose-500/15"
                   >
@@ -393,6 +393,14 @@ export function AppShell() {
               </>
             ) : (
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+                  className="grid h-10 w-10 place-items-center rounded-2xl text-text-subtle transition-colors hover:bg-surface-2 hover:text-text sm:h-11 sm:w-11"
+                >
+                  {theme === 'dark' ? <Sun size={20} weight="fill" className="text-warning" /> : <Moon size={20} weight="regular" />}
+                </button>
                 <Link to="/login" className="ml-1">
                   <Button size="sm" variant="primary" className="rounded-xl font-bold shadow-sm">
                     Đăng nhập
@@ -419,6 +427,7 @@ export function AppShell() {
                   autoFocus
                   value={keyword}
                   onChange={handleSearchChange}
+                  onKeyDown={handleSearchKeyDown}
                   placeholder="Tìm kiếm bài viết…"
                   className="h-11 w-full rounded-xl border border-border bg-surface pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
                 />
@@ -511,7 +520,7 @@ export function AppShell() {
                         className={cn('relative', isActive && 'text-primary-solid')}
                       />
                     )}
-                    <span className="relative w-full truncate text-center">{item.label}</span>
+                    <span className="relative w-full truncate text-center">{item.tabLabel ?? item.shortLabel ?? item.label}</span>
                   </>
                 )}
               </NavLink>
@@ -573,6 +582,15 @@ export function AppShell() {
               </div>
 
 
+              <button
+                type="button"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-surface px-4 py-3 text-sm font-semibold text-text-muted ring-1 ring-inset ring-border"
+              >
+                {theme === 'dark' ? <Sun size={18} weight="fill" className="text-warning" /> : <Moon size={18} weight="regular" />}
+                {theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+              </button>
+
               <div className="mt-3 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 {isAuthenticated ? (
                   <>
@@ -592,91 +610,6 @@ export function AppShell() {
           </>
         )}
       </AnimatePresence>
-
-      {/* Floating Preferences Dock (Theme & Language Switcher) - Góc dưới bên trái (Mini Compact) */}
-      <div className={cn(
-        'fixed z-30 items-center rounded-full border border-border bg-surface p-1 shadow-raised transition-all hover:shadow-overlay lg:bottom-6 lg:left-6 lg:right-auto lg:top-auto lg:flex',
-        isMentoringRoute ? 'right-3 top-[4.55rem] flex' : 'bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 flex',
-      )}>
-        {/* Nút chuyển chế độ Sáng / Tối */}
-        <button
-          type="button"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-          title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-          className="group relative grid h-9 w-9 place-items-center rounded-full text-text-subtle hover:bg-surface-2 hover:text-text transition-all cursor-pointer"
-        >
-          {theme === 'dark' ? (
-            <Sun size={15} weight="fill" className="text-warning transition-transform duration-300 group-hover:rotate-45" />
-          ) : (
-            <Moon size={15} weight="fill" className="text-text-muted transition-transform duration-300 group-hover:-rotate-12" />
-          )}
-          {/* Tooltip khi hover */}
-          <span className="pointer-events-none absolute bottom-[calc(100%+6px)] left-0 z-50 whitespace-nowrap rounded-md bg-slate-900 px-2 py-0.5 text-xs font-medium text-white opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100 dark:bg-white dark:text-slate-900">
-            {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
-          </span>
-        </button>
-
-        {/* Divider chia tách Theme và Language */}
-        <div className="mx-0.5 h-3.5 w-px bg-surface-3" />
-
-        {/* Nút Ngôn ngữ (Language Switcher) */}
-        <div className="relative" ref={langMenuRef}>
-          <button
-            type="button"
-            onClick={() => setLangMenuOpen((prev) => !prev)}
-            aria-label="Chọn ngôn ngữ"
-            title="Đổi ngôn ngữ (Language)"
-            className="group relative flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold text-text-muted hover:bg-surface-2 hover:text-text transition-all cursor-pointer"
-          >
-            <GlobeSimple size={14} weight="bold" className="text-text-subtle group-hover:text-primary-solid transition-colors" />
-            <span className="tracking-wider">{currentLang.toUpperCase()}</span>
-          </button>
-
-          {/* Menu chọn ngôn ngữ khi click */}
-          <AnimatePresence>
-            {langMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 6, scale: 0.95 }}
-                transition={TRANSITION.pop}
-                className="absolute bottom-full left-0 mb-1.5 w-32 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-lg backdrop-blur-md"
-              >
-                <div className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-text-subtle">
-                  Ngôn ngữ
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLang('vi')}
-                  className={cn(
-                    'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors cursor-pointer',
-                    currentLang === 'vi'
-                      ? 'bg-primary-soft text-primary-solid'
-                      : 'text-text-muted hover:bg-surface-2'
-                  )}
-                >
-                  <span className="flex items-center gap-1.5">🇻🇳 Tiếng Việt</span>
-                  {currentLang === 'vi' && <span className="h-1.5 w-1.5 rounded-full bg-primary-solid" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLang('en')}
-                  className={cn(
-                    'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors cursor-pointer',
-                    currentLang === 'en'
-                      ? 'bg-primary-soft text-primary-solid'
-                      : 'text-text-muted hover:bg-surface-2'
-                  )}
-                >
-                  <span className="flex items-center gap-1.5">🇬🇧 English</span>
-                  {currentLang === 'en' && <span className="h-1.5 w-1.5 rounded-full bg-primary-solid" />}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
 
       {/* Popup mời đăng nhập (kiểu Facebook) — hiện khi Guest cố tương tác */}
       <LoginPromptModal />
