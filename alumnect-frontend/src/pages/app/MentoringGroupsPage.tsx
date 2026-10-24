@@ -20,7 +20,7 @@ import {
   Loader2,
   Layers,
 } from 'lucide-react'
-import { Card, Container, Skeleton, toast } from '@/components/ui'
+import { Card, Container, Skeleton, toast, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { MentoringTermsGate, MentorPageHeader } from '@/features/mentorship'
@@ -471,8 +471,12 @@ export function MentoringGroupsPage() {
 
         {/* DIALOG: Confirmation to Decline Invitation */}
         {declineTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
+          <DialogFrame
+            onClose={() => setDeclineTarget(null)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-md"
+            className="p-6 space-y-4 border-danger-border"
+          >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <AlertTriangle className="h-5 w-5" />
@@ -505,14 +509,17 @@ export function MentoringGroupsPage() {
                   {declineMutation.isPending ? 'Đang xử lý...' : 'Từ chối lời mời'}
                 </Button>
               </div>
-            </Card>
-          </div>
+            </DialogFrame>
         )}
 
         {/* DIALOG: Confirmation to Leave Group */}
         {leavingGroup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
+          <DialogFrame
+            onClose={() => setLeavingGroup(null)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-md"
+            className="p-6 space-y-4 border-danger-border"
+          >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <LogOut className="h-5 w-5" />
@@ -545,8 +552,7 @@ export function MentoringGroupsPage() {
                   {leaveMutation.isPending ? 'Đang xử lý...' : 'Xác nhận rời nhóm'}
                 </Button>
               </div>
-            </Card>
-          </div>
+            </DialogFrame>
         )}
       </div>
       </MentoringTermsGate>

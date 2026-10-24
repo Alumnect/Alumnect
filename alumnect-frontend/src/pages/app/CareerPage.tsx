@@ -427,7 +427,7 @@ export function CareerPage() {
                   <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
 
                   {/* Close */}
-                  <button
+                  <button aria-label="Đóng"
                     onClick={() => setSelectedAlumni(null)}
                     className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition duration-150 cursor-pointer"
                   >
@@ -606,12 +606,9 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
 
                 {/* Role cards */}
                 <div className="mt-2.5 space-y-2">
-                  {group.roles.map((role, rIdx) => (
-                    <motion.div
+                  {group.roles.map((role) => (
+                    <div
                       key={role.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: gIdx * 0.05 + rIdx * 0.03, duration: 0.3 }}
                       className={`relative rounded-xl px-3.5 py-2.5 border transition-colors ${
                         role.isCurrent
                           ? 'bg-gradient-to-br from-brand-50/80 to-white border-primary-soft-border dark:from-surface-2 dark:to-surface'
@@ -645,7 +642,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
                           {role.description}
                         </p>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>

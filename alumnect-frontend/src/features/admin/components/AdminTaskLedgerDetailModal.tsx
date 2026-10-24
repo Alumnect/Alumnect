@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   TrendingUp,
 } from 'lucide-react'
-import { Badge, EmptyState, Skeleton } from '@/components/ui'
+import { Badge, EmptyState, Skeleton, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTaskFundDetail, useRetryAdminPayout } from '../hooks/useAdmin'
 
@@ -163,8 +163,12 @@ export function AdminTaskLedgerDetailModal({
   const summary = detail?.summary
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col bg-surface dark:bg-bg rounded-3xl shadow-2xl border border-border overflow-hidden text-text">
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-5xl"
+      className="flex flex-col overflow-hidden"
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border bg-surface dark:bg-bg shrink-0">
           <div className="flex items-center gap-3">
@@ -665,7 +669,6 @@ export function AdminTaskLedgerDetailModal({
             Đóng cửa sổ
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

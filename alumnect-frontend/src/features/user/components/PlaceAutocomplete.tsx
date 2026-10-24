@@ -408,7 +408,7 @@ export function PlaceAutocomplete({
           </span>
         )}
         {value && (
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={handleClear}
             className="absolute right-3 p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2"

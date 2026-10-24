@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { 
   Inbox, Eye, EyeOff, X, 
   Flag, ArrowRight, ShieldAlert, Check, Ban,
@@ -7,7 +6,7 @@ import {
   Trash2, Info, UserX, HelpCircle,
   Search, User
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -581,17 +580,12 @@ export function AdminReportsQueue() {
       </Reveal>
 
       {/* Modal chi tiết báo cáo vi phạm */}
-      {selectedReport && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-            onClick={() => setSelectedReport(null)}
-          />
-
-          {/* Card Modal */}
-          <Card hover={false} className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface max-h-[90vh] flex flex-col pop">
+      {selectedReport && <DialogFrame
+          onClose={() => setSelectedReport(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-2xl"
+          className="z-10 overflow-hidden border-plum-950/15 flex flex-col pop"
+        >
             
             {/* Header Modal */}
             <div className="flex items-center justify-between p-6 border-b border-border bg-surface rounded-t-3xl shrink-0">
@@ -784,22 +778,15 @@ export function AdminReportsQueue() {
               </div>
 
             </div>
-          </Card>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
 
       {/* Custom Confirmation Popup Dialog */}
-      {confirmAction && createPortal(
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-plum-950/30 backdrop-blur-xs transition-opacity cursor-pointer"
-            onClick={() => setConfirmAction(null)}
-          />
-
-          {/* Dialog Container */}
-          <Card hover={false} className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface p-6 pop">
+      {confirmAction && <DialogFrame
+          onClose={() => setConfirmAction(null)}
+          zIndexClassName="z-60"
+          maxWidthClassName="max-w-sm"
+          className="z-10 overflow-hidden border-plum-950/15 p-6 pop"
+        >
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="rounded-full bg-primary-soft p-3 border border-primary-soft-border text-primary-solid animate-breathe">
                 <ShieldAlert size={28} />
@@ -834,10 +821,7 @@ export function AdminReportsQueue() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
     </div>
   )
 }

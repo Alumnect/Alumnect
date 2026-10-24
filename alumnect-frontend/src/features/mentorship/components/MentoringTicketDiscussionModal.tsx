@@ -1,4 +1,4 @@
-import { createPortal } from 'react-dom'
+import { DialogFrame } from '@/components/ui/DialogFrame'
 import {
   MessageSquare,
   X,
@@ -25,15 +25,12 @@ export function MentoringTicketDiscussionModal({
   const studentName = ticket.student?.fullName || ticket.studentName || 'Học viên'
   const mentorName = ticket.mentor?.fullName || ticket.mentorName || 'Cố vấn'
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-plum-900/60 backdrop-blur-xs dark:bg-black/70 animate-in fade-in duration-200"
-      onClick={onClose}
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-3xl"
+      className="overflow-hidden flex flex-col"
     >
-      <div
-        className="relative w-full max-w-3xl bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[92vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* Header Modal */}
         <div className="px-5 py-3.5 bg-gradient-to-r from-violet-500/10 via-violet-500/10 to-transparent border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -61,7 +58,7 @@ export function MentoringTicketDiscussionModal({
             </div>
           </div>
 
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-full hover:bg-surface-3 dark:hover:bg-surface-2 text-text-subtle hover:text-text-muted transition-colors"
@@ -81,8 +78,5 @@ export function MentoringTicketDiscussionModal({
             totalAmount={ticket.totalAmount}
           />
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

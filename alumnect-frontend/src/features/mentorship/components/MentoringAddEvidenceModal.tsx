@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   FileText,
   X,
@@ -12,7 +11,7 @@ import {
   Paperclip,
   CheckCircle2,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { useTicketEvidences, useAddTicketEvidence } from '../hooks/useMentoringTickets'
 import type { MentoringDisputeTicket } from '../model/mentoringTaskTypes'
 
@@ -115,12 +114,12 @@ export function MentoringAddEvidenceModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="bg-surface border border-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-2xl"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-amber-50 to-brand-50 dark:from-amber-950/20 dark:to-brand-700/20">
           <div className="flex items-center gap-3">
@@ -141,7 +140,7 @@ export function MentoringAddEvidenceModal({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 text-text-subtle hover:text-text-muted rounded-lg hover:bg-surface-3 dark:hover:bg-surface-2 transition"
@@ -364,8 +363,5 @@ export function MentoringAddEvidenceModal({
             Đóng
           </Button>
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

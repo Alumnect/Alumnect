@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { X, Users, UserPlus, LogOut, ShieldCheck, UserX, Edit2, Check, Loader2, Camera, Crown, Trash2 } from 'lucide-react'
-import { Avatar, Button, toast } from '@/components/ui'
+import { Avatar, Button, toast, DialogFrame } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { chatApi } from '../api/chatApi'
@@ -239,9 +238,12 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
 
   if (!isOpen || !conversationId) return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative flex max-h-[85vh] sm:max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-surface shadow-2xl dark:text-text">
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[9999]"
+      maxWidthClassName="max-w-md"
+      className="flex flex-col overflow-hidden dark:text-text"
+    >
         {/* Header - Cố định ở đỉnh modal */}
         <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3.5">
           <div className="flex items-center gap-2.5">
@@ -250,7 +252,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
             </div>
             <h3 className="text-sm font-bold text-text">Thông tin nhóm</h3>
           </div>
-          <button
+          <button aria-label="Đóng"
             onClick={onClose}
             className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
           >
@@ -672,8 +674,5 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
             )}
           </div>
         )}
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

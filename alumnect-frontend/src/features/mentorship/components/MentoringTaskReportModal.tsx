@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom'
 import {
   FileText,
   X,
@@ -13,7 +12,7 @@ import {
   Scale,
   Award,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { useTaskReport } from '../hooks/useMentoringTasks'
 
 interface MentoringTaskReportModalProps {
@@ -91,12 +90,12 @@ export function MentoringTaskReportModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="bg-surface border border-border rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-3xl"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-violet-500/5 to-violet-500/5 dark:from-surface dark:to-violet-600/20">
           <div className="flex items-center gap-3">
@@ -117,7 +116,7 @@ export function MentoringTaskReportModal({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 text-text-subtle hover:text-text-muted rounded-lg hover:bg-surface-3 dark:hover:bg-surface-2 transition"
@@ -424,8 +423,5 @@ export function MentoringTaskReportModal({
             Đóng
           </Button>
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

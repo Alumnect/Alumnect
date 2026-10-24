@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   FileText,
   X,
@@ -8,7 +7,7 @@ import {
   ShieldAlert,
   Send,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
 import {
   useSettlementSnapshot,
@@ -82,12 +81,12 @@ export function MentoringSubmitSettlementTicketModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-lg bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-lg"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-violet-500/5 to-violet-500/5 dark:from-surface dark:to-violet-600/20">
           <div className="flex items-center gap-3">
@@ -99,7 +98,7 @@ export function MentoringSubmitSettlementTicketModal({
               <p className="text-xs text-text-subtle">Yêu cầu Ban Quản Trị giải ngân và hoàn tiền theo thỏa thuận</p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-text-subtle hover:text-text-muted hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -240,8 +239,5 @@ export function MentoringSubmitSettlementTicketModal({
             </form>
           )}
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { toast, DialogFrame } from '@/components/ui'
 import { useResolveAdminTicket } from '../hooks/useAdmin'
 import type {
   MentoringDisputeTicket,
@@ -148,14 +148,12 @@ export function AdminResolveTicketModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
-      onClick={onClose}
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-2xl"
+      className="overflow-hidden flex flex-col"
     >
-      <div
-        className="relative w-full max-w-2xl bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[92vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* Header Modal */}
         <div className="flex items-center justify-between px-6 py-4.5 bg-primary-solid text-on-primary shadow-xs">
           <div className="flex items-center gap-3">
@@ -176,7 +174,7 @@ export function AdminResolveTicketModal({
               </h3>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             onClick={onClose}
             className="p-2 text-on-primary/70 hover:text-on-primary rounded-lg hover:bg-on-primary/10 transition-colors"
           >
@@ -517,7 +515,6 @@ export function AdminResolveTicketModal({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

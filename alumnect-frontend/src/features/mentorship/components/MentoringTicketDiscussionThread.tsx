@@ -1,3 +1,4 @@
+import { ImageViewerModal } from '@/components/ui/ImageViewerModal'
 import { useState, useRef, useEffect } from 'react'
 import {
   MessageSquare,
@@ -11,7 +12,6 @@ import {
   Paperclip,
   CheckCircle2,
   Eye,
-  X,
   FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -533,30 +533,12 @@ export function MentoringTicketDiscussionThread({
       )}
 
       {/* Lightbox Xem ảnh phóng to */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 bg-plum-900/80 backdrop-blur-xs dark:bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div
-            className="relative max-w-4xl max-h-[90vh] bg-black rounded-xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
-            >
-              <X size={18} />
-            </button>
-            <img
-              src={previewImage}
-              alt="Evidence zoom"
-              className="max-h-[85vh] w-auto object-contain mx-auto"
-            />
-          </div>
-        </div>
-      )}
+      <ImageViewerModal
+        isOpen={previewImage !== null}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage ?? ''}
+        alt="Ảnh bằng chứng phóng to"
+      />
     </div>
   )
 }

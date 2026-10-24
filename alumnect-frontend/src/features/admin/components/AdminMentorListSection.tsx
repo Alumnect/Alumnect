@@ -15,7 +15,7 @@ import {
   Award,
   CheckCircle2,
 } from 'lucide-react'
-import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminMentors } from '../hooks/useAdmin'
 import { AdminMentorCvModal } from './AdminMentorCvModal'
@@ -428,15 +428,12 @@ export function AdminMentorListSection() {
 
       {/* Modal Chi tiết Hồ sơ Cố vấn (Popup chuẩn 640px) */}
       {selectedMentorDetail !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-slate-900/50 transition-opacity"
-            onClick={() => setSelectedMentorDetail(null)}
-          />
-
-          {/* Modal Container */}
-          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text">
+        <DialogFrame
+          onClose={() => setSelectedMentorDetail(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-2xl"
+          className="z-10 flex flex-col overflow-hidden"
+        >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
               <div>
@@ -677,8 +674,7 @@ export function AdminMentorListSection() {
                 Đóng
               </button>
             </div>
-          </div>
-        </div>
+          </DialogFrame>
       )}
     </div>
   )

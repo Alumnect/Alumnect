@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import {
   FileText,
   FileImage,
@@ -21,7 +20,7 @@ import {
   Clock,
   AlertTriangle,
 } from 'lucide-react'
-import { Badge, Button, Avatar, toast } from '@/components/ui'
+import { Badge, Button, Avatar, toast, DialogFrame } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { renderAsync } from 'docx-preview'
 import type { AdminVerificationRequestDto } from '../api/adminApi'
@@ -290,25 +289,16 @@ export function AdminVerificationDetailModal({
     ? `https://docs.google.com/viewer?url=${encodeURIComponent(currentProofUrl)}&embedded=true`
     : ''
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-plum-950/70 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
-      {/* Backdrop (Chặn đóng khi đang nhập lý do từ chối để tránh mất nội dung) */}
-      <div
-        className="absolute inset-0"
-        onClick={() => {
+  return <DialogFrame
+      onClose={() => {
           if (inlineAction === 'NONE') {
             onClose()
           }
         }}
-      />
-
-      {/* Main Modal Container */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        className="relative z-10 w-full max-w-[1200px] w-[95vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] max-h-[92vh] bg-surface dark:bg-bg rounded-3xl shadow-2xl border border-border flex flex-col overflow-hidden transition"
-        onClick={(e) => e.stopPropagation()}
-      >
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-[1200px]"
+      className="z-10 w-[95vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] flex flex-col overflow-hidden transition"
+    >
         {/* ================= 1. HEADER (CỐ ĐỊNH) ================= */}
         <header className="px-5 py-3.5 sm:px-6 sm:py-4 bg-surface dark:bg-bg border-b border-border dark:border-border flex items-center justify-between gap-3 shrink-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
@@ -932,8 +922,5 @@ export function AdminVerificationDetailModal({
             </div>
           )}
         </footer>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

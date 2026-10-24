@@ -164,7 +164,7 @@ export function SalaryContributionsFeed({
                   className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-7 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition"
                 />
                 {searchQuery && (
-                  <button
+                  <button aria-label="Đóng"
                     type="button"
                     onClick={() => setSearchQuery('')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"

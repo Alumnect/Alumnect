@@ -92,7 +92,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
                 <Paperclip size={14} className="text-primary-solid" />
               )}
               <span className="max-w-[140px] truncate font-medium">{att.fileName}</span>
-              <button
+              <button aria-label="Đóng"
                 type="button"
                 onClick={() => handleRemoveAttachment(idx)}
                 className="ml-1 rounded-full p-0.5 hover:bg-brand-200 text-primary-solid transition-colors"

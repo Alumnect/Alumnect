@@ -32,18 +32,6 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 
-// Hiệu ứng chuyển động mượt mà theo từng tầng (Staggered Animation)
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.09,
-      delayChildren: 0.04,
-    },
-  },
-}
-
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: {
@@ -210,10 +198,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
   const topMentors = mentorsData?.content ?? []
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
+    <div
       className="space-y-6"
     >
       {/* 1. Hero Banner: Tối giản, thanh lịch, gọn gàng */}
@@ -350,7 +335,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
           </Card>
         )}
       </motion.div>
-    </motion.div>
+    </div>
   )
 }
 

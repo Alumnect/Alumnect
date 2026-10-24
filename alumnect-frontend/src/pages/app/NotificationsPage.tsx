@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
@@ -298,7 +297,7 @@ export function NotificationsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {notifications.map((n, idx) => {
+          {notifications.map((n) => {
             const Icon = ICONS[n.type] || Bell
             const toneClass = TONES[n.type] || 'bg-brand-500/15 text-primary-solid'
             const avatarName = n.senderName || 'Hệ thống AlumNect'
@@ -306,11 +305,8 @@ export function NotificationsPage() {
             const isReportResolved = n.type === 'REPORT_RESOLVED'
 
             return (
-              <motion.div
+              <div
                 key={n.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: Math.min(idx * 0.02, 0.25) }}
               >
                 <Card
                   hover
@@ -559,7 +555,7 @@ export function NotificationsPage() {
                     />
                   )}
                 </Card>
-              </motion.div>
+              </div>
             )
           })}
 

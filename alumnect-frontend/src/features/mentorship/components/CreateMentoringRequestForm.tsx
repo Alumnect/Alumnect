@@ -425,7 +425,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               <span className="font-bold">Không thể tạo yêu cầu: </span>
               <span>{serverError}</span>
             </div>
-            <button
+            <button aria-label="Đóng"
               type="button"
               onClick={() => setServerError(null)}
               className="text-danger hover:text-danger"
@@ -944,7 +944,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                     {item.uploading ? (
                       <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
                     ) : (
-                      <button
+                      <button aria-label="Đóng"
                         type="button"
                         onClick={() => handleRemoveFile(idx)}
                         className="p-1 rounded-lg text-text-subtle hover:text-danger hover:bg-danger-soft transition-colors"

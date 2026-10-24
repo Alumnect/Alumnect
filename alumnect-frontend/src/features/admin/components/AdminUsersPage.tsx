@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { Search, Lock, Unlock, Users, X, Loader2, Mail, Phone, BookOpen, GraduationCap, Calendar, FileText, Award } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal, Pagination } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -256,18 +255,12 @@ export function AdminUsersPage() {
 
       {/* User Profile Detail Drawer / Modal */}
       {selectedUserId !== null &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-              onClick={() => setSelectedUserId(null)}
-            />
-
-            <Card
-              hover={false}
-              className="relative z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto bg-surface p-0 shadow-2xl border border-plum-950/15 rounded-3xl pop"
-            >
+        <DialogFrame
+            onClose={() => setSelectedUserId(null)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-xl"
+            className="z-10 overflow-y-auto p-0 border-plum-950/15 pop"
+          >
               {/* Header Banner - Clean white matching user modals */}
               <div className="relative bg-surface p-6 border-b border-border rounded-t-3xl">
                 <button
@@ -456,10 +449,7 @@ export function AdminUsersPage() {
                   </>
                 ) : null}
               </div>
-            </Card>
-          </div>,
-          document.body
-        )}
+            </DialogFrame>}
 
       {/* Modal xác nhận khóa / mở khóa tài khoản */}
       {confirmUserLock && (

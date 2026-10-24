@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import {
   X,
   Search,
@@ -7,7 +6,7 @@ import {
   ChevronDown,
   Check,
 } from 'lucide-react'
-import { Avatar, toast } from '@/components/ui'
+import { Avatar, toast, DialogFrame } from '@/components/ui'
 import { DateTimePicker } from '@/components/ui/DateTimePicker'
 import { cn } from '@/lib/utils'
 import {
@@ -485,16 +484,12 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 transition-opacity"
-        onClick={handleSafeClose}
-      />
-
-      {/* Modal Box */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text">
+  return <DialogFrame
+      onClose={handleSafeClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-2xl"
+      className="z-10 flex flex-col overflow-hidden"
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
           <div>
@@ -821,8 +816,5 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
             </button>
           </div>
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

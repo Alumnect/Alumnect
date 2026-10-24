@@ -351,7 +351,7 @@ function AnswerBubble({
                 <span>
                   Trả lời <strong className="text-primary-solid">@{a.author}</strong>
                 </span>
-                <button type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
+                <button aria-label="Đóng" type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
                   <X size={13} />
                 </button>
               </div>

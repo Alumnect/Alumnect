@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   Calendar,
   FileText,
@@ -21,7 +20,7 @@ import {
   ChevronUp,
   ShieldCheck,
 } from 'lucide-react'
-import { Button, toast } from '@/components/ui'
+import { Button, toast, DialogFrame } from '@/components/ui'
 import { Avatar } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
 import { useConfirmWorkLog, useRejectWorkLog } from '../hooks/useMentoringTasks'
@@ -511,13 +510,12 @@ export function MentoringWorkLogList({
       )}
 
       {/* Confirmation Modal */}
-      {confirmingLog && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div
-            className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-2xl space-y-4 dark:bg-[#1f2022]"
-            role="dialog"
-            aria-modal="true"
-          >
+      {confirmingLog && typeof document !== 'undefined' && <DialogFrame
+          onClose={() => setConfirmingLog(null)}
+          zIndexClassName="z-[100]"
+          maxWidthClassName="max-w-md"
+          className="p-6 space-y-4"
+        >
             <div className="flex items-center justify-between border-b border-border pb-3 dark:border-white/[0.06]">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-success-soft text-success">
@@ -527,7 +525,7 @@ export function MentoringWorkLogList({
                   Xác nhận nghiệm thu công việc
                 </h3>
               </div>
-              <button
+              <button aria-label="Đóng"
                 type="button"
                 onClick={() => setConfirmingLog(null)}
                 className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted transition-colors"
@@ -594,19 +592,15 @@ export function MentoringWorkLogList({
                 Xác nhận nghiệm thu
               </Button>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
 
       {/* Rejection / Adjustment Request Modal */}
-      {rejectingLog && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div
-            className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-2xl space-y-4 dark:bg-[#1f2022]"
-            role="dialog"
-            aria-modal="true"
-          >
+      {rejectingLog && typeof document !== 'undefined' && <DialogFrame
+          onClose={() => setRejectingLog(null)}
+          zIndexClassName="z-[100]"
+          maxWidthClassName="max-w-md"
+          className="p-6 space-y-4"
+        >
             <div className="flex items-center justify-between border-b border-border pb-3 dark:border-white/[0.06]">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger-soft text-danger">
@@ -616,7 +610,7 @@ export function MentoringWorkLogList({
                   Yêu cầu Mentor điều chỉnh Work Log
                 </h3>
               </div>
-              <button
+              <button aria-label="Đóng"
                 type="button"
                 onClick={() => setRejectingLog(null)}
                 className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted transition-colors"
@@ -680,10 +674,7 @@ export function MentoringWorkLogList({
                 Gửi yêu cầu điều chỉnh
               </Button>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
     </div>
   )
 }

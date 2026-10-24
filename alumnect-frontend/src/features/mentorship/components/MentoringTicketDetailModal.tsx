@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom'
 import {
   FileText,
   Clock,
@@ -10,7 +9,7 @@ import {
   RefreshCw,
   CreditCard,
 } from 'lucide-react'
-import { Avatar } from '@/components/ui'
+import { Avatar, DialogFrame } from '@/components/ui'
 import { format } from 'date-fns'
 import {
   MENTORING_PARTICIPATION_LABELS,
@@ -168,17 +167,12 @@ export function MentoringTicketDetailModal({
 
   if (!isOpen || typeof document === 'undefined') return null
 
-  return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-lg"
+      className="z-10 flex flex-col overflow-hidden"
     >
-      {/* Background click to close */}
-      <div className="absolute inset-0" onClick={onClose} />
-
-      {/* Main Card Modal */}
-      <div className="relative z-10 flex w-full max-w-lg max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-border bg-surface text-text shadow-2xl dark:bg-surface">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-5">
@@ -506,8 +500,5 @@ export function MentoringTicketDetailModal({
           )}
         </div>
 
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

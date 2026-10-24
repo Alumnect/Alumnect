@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import React from 'react'
 import { CheckCircle2, Sparkles, Users, ArrowRight, AlertCircle, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { DialogFrame } from '@/components/ui/DialogFrame'
 import { Badge } from '@/components/ui/primitives'
 import type { CreateMentoringRequestData } from '../model/mentoringRequestTypes'
 import { WORKING_MODE_LABELS, PARTICIPATION_TYPE_LABELS, TASK_TYPE_OPTIONS } from '../model/mentoringRequestTypes'
@@ -26,46 +25,12 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
   data,
   onExploreMentors,
 }) => {
-  useEffect(() => {
-    if (isOpen && data) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isOpen, data])
-
-  if (typeof document === 'undefined') return null
+  if (!isOpen || !data) return null
 
   const taskTypeOption = data ? TASK_TYPE_OPTIONS.find((t) => t.value === data.taskType) : undefined
 
-  return createPortal(
-    <AnimatePresence>
-      {isOpen && data && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <motion.div
-            key="success-modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-plum-900/40 backdrop-blur-sm"
-          />
-
-          {/* Modal Card */}
-          <motion.div
-            key="success-modal-card"
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-surface p-6 sm:p-8 shadow-2xl border border-border text-left"
-            role="dialog"
-            aria-modal="true"
-          >
+  return (
+    <DialogFrame onClose={onClose} zIndexClassName="z-50" maxWidthClassName="max-w-xl" className="overflow-y-auto p-6 text-left sm:p-8">
           {/* Header Icon */}
           <div className="flex items-center gap-3 pb-3 border-b border-border">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success-soft text-success">
@@ -214,10 +179,6 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
               </Button>
             )}
           </div>
-        </motion.div>
-      </div>
-    )}
-  </AnimatePresence>,
-  document.body
-)
+    </DialogFrame>
+  )
 }

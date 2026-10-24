@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import {
   X,
   CreditCard,
@@ -13,7 +12,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { vnd } from '@/lib/utils'
 import {
@@ -153,11 +152,14 @@ export function MentoringTaskPaymentModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-xl bg-surface rounded-3xl border border-border shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[92vh] overflow-y-auto chat-scrollbar">
+  return <DialogFrame
+      onClose={handleCancel}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-xl"
+      className="p-6 sm:p-7 text-left space-y-6 overflow-y-auto chat-scrollbar"
+    >
         {/* Nút đóng */}
-        <button
+        <button aria-label="Đóng"
           type="button"
           onClick={handleCancel}
           disabled={cancelPaymentMutation.isPending}
@@ -425,8 +427,5 @@ export function MentoringTaskPaymentModal({
             </div>
           </div>
         )}
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

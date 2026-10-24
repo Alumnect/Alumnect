@@ -282,7 +282,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                   autoFocus
                 />
                 {searchQuery && (
-                  <button
+                  <button aria-label="Đóng"
                     type="button"
                     onClick={() => setSearchQuery('')}
                     className="text-text-subtle hover:text-text-muted p-0.5 cursor-pointer"

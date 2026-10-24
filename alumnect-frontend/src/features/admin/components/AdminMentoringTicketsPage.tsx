@@ -1,3 +1,4 @@
+import { ImageViewerModal } from '@/components/ui/ImageViewerModal'
 import { useState } from 'react'
 import {
   Scale,
@@ -22,7 +23,7 @@ import {
   ArrowRight,
   MessageSquare,
 } from 'lucide-react'
-import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, toast } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, toast, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTickets, useAcceptAdminTicket, useAdminDisputeContext } from '../hooks/useAdmin'
 import {
@@ -443,15 +444,12 @@ export function AdminMentoringTicketsPage() {
 
       {/* 7. Modal Xem Bằng Chứng & Bối Cảnh Toàn Diện Của Task (UC118) */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
-            onClick={() => setSelectedTicket(null)}
-          />
-
-          {/* Modal Container */}
-          <div className="relative z-10 w-full max-w-4xl max-h-[92vh] bg-surface rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden text-text animate-in fade-in zoom-in-95 duration-150">
+        <DialogFrame
+          onClose={() => setSelectedTicket(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-4xl"
+          className="z-10 flex flex-col overflow-hidden fade-in zoom-in-95 duration-150"
+        >
             {/* Modal Header */}
             <div className="px-6 pt-5 pb-3 border-b border-border bg-surface shrink-0">
               <div className="flex items-start justify-between gap-4">
@@ -1123,34 +1121,16 @@ export function AdminMentoringTicketsPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </DialogFrame>
       )}
 
       {/* Lightbox Preview Hình Ảnh Bằng Chứng (UC118) */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] bg-transparent">
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="absolute -top-10 right-0 p-1.5 text-white hover:text-slate-300 transition-colors cursor-pointer"
-              aria-label="Đóng ảnh"
-            >
-              <X size={24} />
-            </button>
-            <img
-              src={previewImage}
-              alt="Bằng chứng tranh chấp phóng to"
-              className="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-      )}
+      <ImageViewerModal
+        isOpen={previewImage !== null}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage ?? ''}
+        alt="Bằng chứng tranh chấp phóng to"
+      />
 
       {/* 8. Modal Ra Phán Quyết Giải Quyết Ticket (UC120) */}
       <AdminResolveTicketModal

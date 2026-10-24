@@ -26,7 +26,7 @@ import {
   MessageCircle,
 } from 'lucide-react'
 import axios from 'axios'
-import { Avatar, Card, Skeleton, EmptyState, SmartImage, toast } from '@/components/ui'
+import { Avatar, Card, Skeleton, EmptyState, SmartImage, toast, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAuthStore } from '@/store/authStore'
@@ -364,13 +364,13 @@ export function ProfilePage() {
       <Reveal>
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden text-left">
           {/* 1. Ảnh Bìa với Nút camera đổi ảnh bìa kiểu Facebook */}
-          <div className="relative h-52 sm:h-72 w-full bg-surface-2">
-            <SmartImage
-              src={profile.coverUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1200'}
-              alt="Profile cover"
-              className="h-full w-full"
-              imgClassName="object-cover"
-            />
+          <div className="relative h-44 w-full bg-surface-2 sm:h-60">
+            {profile.coverUrl ? (
+              <SmartImage src={profile.coverUrl} alt="Ảnh bìa" className="h-full w-full" imgClassName="object-cover" />
+            ) : (
+              // Chưa có ảnh bìa: nền nhạt theo màu thương hiệu (không dùng ảnh ngoài nhiều màu)
+              <div className="h-full w-full bg-gradient-to-br from-primary-soft via-surface-2 to-info-soft" aria-hidden />
+            )}
             {isOwnProfile && (
               <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-text bg-surface hover:bg-surface backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition hover:scale-105 active:scale-95">
                 {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
@@ -850,8 +850,12 @@ export function ProfilePage() {
 
       {/* Modal Xác nhận xóa Kinh nghiệm */}
       {deleteExpId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-surface rounded-3xl border border-border shadow-2xl p-6 text-left space-y-4">
+        <DialogFrame
+          onClose={() => setDeleteExpId(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-md"
+          className="p-6 text-left space-y-4"
+        >
             <div className="flex items-center gap-3 text-danger">
               <span className="p-2 rounded-2xl bg-danger-soft border border-danger-border">
                 <AlertTriangle size={20} />
@@ -882,8 +886,7 @@ export function ProfilePage() {
                 Xóa
               </Button>
             </div>
-          </div>
-        </div>
+          </DialogFrame>
       )}
 
       {/* Modal danh sách Follower / Following */}

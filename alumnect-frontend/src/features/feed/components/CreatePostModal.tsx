@@ -1,6 +1,4 @@
 import { useState, useEffect, type ChangeEvent } from 'react'
-import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import DatePicker from 'react-datepicker'
@@ -9,7 +7,7 @@ import {
   X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2, MapPin, Users, Coins, Link, Mail, Clock
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Avatar, ImageCarousel, toast } from '@/components/ui'
+import { Avatar, DialogFrame, ImageCarousel, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import type { AuthUser } from '@/store/authStore'
@@ -286,22 +284,10 @@ export function CreatePostModal({
     setValue('mediaUrls', current.filter((_, i) => i !== idx), { shouldValidate: true })
   }
 
-  return createPortal(
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex overflow-y-auto bg-plum-900/40 backdrop-blur-sm p-4 sm:p-6"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative m-auto w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-surface shadow-2xl border border-border overflow-hidden"
-          >
+  if (!open) return null
+
+  return (
+    <DialogFrame onClose={close} zIndexClassName="z-[9999]" maxWidthClassName="max-w-xl" className="overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-6 pb-4 border-b border-border bg-surface shrink-0">
               <h3 className="text-xl font-bold text-text">
@@ -633,7 +619,7 @@ export function CreatePostModal({
                                   ) : (
                                     <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
                                   )}
-                                  <button
+                                  <button aria-label="Xóa"
                                     type="button"
                                     onClick={() => removeImage(idx)}
                                     className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -676,7 +662,7 @@ export function CreatePostModal({
                                 ) : (
                                   <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
                                 )}
-                                <button
+                                <button aria-label="Xóa"
                                   type="button"
                                   onClick={() => removeImage(idx)}
                                   className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -745,10 +731,6 @@ export function CreatePostModal({
                 </Button>
               </div>
             </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>,
-    document.body
+    </DialogFrame>
   )
 }

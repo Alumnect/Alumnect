@@ -2,7 +2,6 @@
  * AlumniDetailCard – Thẻ thông tin tóm tắt Alumni khi click Marker bản đồ.
  * Sử dụng interface AlumniCardData chuẩn hóa cho MapLibre.
  */
-import { motion } from 'framer-motion'
 import { X, MapPin, Briefcase, User, GraduationCap } from 'lucide-react'
 import { Card, Avatar, Button } from '@/components/ui'
 import { useNavigate } from 'react-router-dom'
@@ -44,11 +43,7 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
   if (!alumni) return null
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 50, scale: 0.95 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+    <div
       className="w-full"
     >
       <Card hover={false} className="relative overflow-hidden p-5 border border-border shadow-soft bg-surface rounded-3xl">
@@ -119,7 +114,7 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
           </Button>
         </div>
       </Card>
-    </motion.div>
+    </div>
   )
 }
 

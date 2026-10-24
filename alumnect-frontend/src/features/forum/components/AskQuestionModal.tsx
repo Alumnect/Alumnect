@@ -8,17 +8,14 @@
  *    modal (trang chi tiết tự làm mới qua invalidate cache). Chỉ tác giả mới mở được (nút "Chỉnh sửa" đã ẩn).
  *  - Ảnh: chọn nhiều ảnh, upload qua presigned URL, xem trước và xóa từng ảnh, tối đa MAX_QUESTION_IMAGES.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { TRANSITION } from '@/lib/motion'
 import { X, Loader2, AlertTriangle, LayoutGrid, GraduationCap, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { DialogFrame, toast } from '@/components/ui'
 import { useMajors } from '@/features/auth/hooks/useAuth'
 import { createQuestionSchema, MAX_QUESTION_IMAGES } from '../model/question'
 import type { CreateQuestionInput, QuestionDetail } from '../model/question'
@@ -122,35 +119,15 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
     setValue('imageUrls', imageUrls.filter((_, i) => i !== idx), { shouldValidate: true, shouldDirty: true })
   }
 
-  // Khóa cuộn nền + đóng bằng phím Esc khi modal đang mở.
-  useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = prevOverflow
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [onClose])
 
   const canAddMore = imageUrls.length < MAX_QUESTION_IMAGES && uploadingCount === 0
 
-  // Portal ra thẳng <body> để thoát khỏi ancestor có transform/filter (motion.div bọc <Outlet/>
-  // trong AppShell) — nếu không, `fixed inset-0` sẽ neo theo phần tử đó thay vì viewport.
-  return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={TRANSITION.overlay} className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4" onClick={onClose}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={TRANSITION.pop}
-        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl card-surface p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return (
+    <DialogFrame onClose={onClose} zIndexClassName="z-50" maxWidthClassName="max-w-xl" className="overflow-y-auto p-6">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-text">{isEdit ? 'Chỉnh sửa câu hỏi' : 'Đặt câu hỏi'}</h2>
-          <button onClick={onClose} aria-label="Đóng" className="grid h-9 w-9 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-text">
+          <h2 className="text-lg font-semibold text-text">{isEdit ? 'Chỉnh sửa câu hỏi' : 'Đặt câu hỏi'}</h2>
+          <button type="button" onClick={onClose} data-dialog-close aria-label="Đóng" className="grid h-10 w-10 place-items-center rounded-lg text-text-muted transition-colors hover:bg-surface-3 hover:text-text">
             <X size={18} />
           </button>
         </div>
@@ -266,8 +243,6 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
             </Button>
           </div>
         </form>
-      </motion.div>
-    </motion.div>,
-    document.body,
+    </DialogFrame>
   )
 }

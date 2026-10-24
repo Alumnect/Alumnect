@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Send, Edit3, Loader2, DollarSign } from 'lucide-react'
-import { Button, SelectDropdown, toast } from '@/components/ui'
+import { Button, SelectDropdown, toast, DialogFrame } from '@/components/ui'
 import { DateTimePicker } from '@/components/ui/DateTimePicker'
 import {
   MENTORING_DEAL_TASK_TYPES,
@@ -136,9 +135,12 @@ export function MentoringDealFormModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-surface rounded-3xl border border-border shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[90vh] overflow-y-auto chat-scrollbar">
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-2xl"
+      className="p-6 sm:p-7 text-left space-y-6 overflow-y-auto chat-scrollbar"
+    >
         <button
           type="button"
           onClick={onClose}
@@ -300,8 +302,5 @@ export function MentoringDealFormModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

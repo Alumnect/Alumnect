@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import {
   AlertTriangle,
   X,
@@ -11,7 +10,7 @@ import {
   Trash2,
   Link as LinkIcon,
 } from 'lucide-react'
-import { Button, SelectDropdown } from '@/components/ui'
+import { Button, SelectDropdown, DialogFrame } from '@/components/ui'
 import { useCreateDisputeTicket } from '../hooks/useMentoringTickets'
 import type { TicketEvidencePayload } from '../model/mentoringTaskTypes'
 
@@ -150,12 +149,12 @@ export function MentoringCreateDisputeModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-lg bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-lg"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-coral-50 to-coral-50 dark:from-surface dark:to-coral-950/20">
           <div className="flex items-center gap-3">
@@ -167,7 +166,7 @@ export function MentoringCreateDisputeModal({
               <p className="text-xs text-text-subtle">Yêu cầu Ban Quản Trị can thiệp và phân xử công bằng</p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-text-subtle hover:text-text-muted hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -302,7 +301,7 @@ export function MentoringCreateDisputeModal({
                         <LinkIcon className="w-3.5 h-3.5 text-info shrink-0" />
                         <span className="font-medium text-text truncate">{ev.title}</span>
                       </div>
-                      <button
+                      <button aria-label="Xóa"
                         type="button"
                         onClick={() => handleRemoveEvidence(idx)}
                         className="text-text-subtle hover:text-danger p-1 rounded transition-colors"
@@ -384,8 +383,5 @@ export function MentoringCreateDisputeModal({
             </div>
           </form>
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

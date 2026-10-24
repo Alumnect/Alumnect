@@ -12,7 +12,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react'
-import { Badge, Card, Skeleton, toast } from '@/components/ui'
+import { Badge, Card, Skeleton, toast, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminMentorPackages, useUpdateMentorPackage } from '../hooks/useAdmin'
 import type { AdminMentorPackageDto } from '../api/adminApi'
@@ -303,15 +303,12 @@ export function AdminMentorPackagesPage() {
 
           {/* Modal Chỉnh sửa Gói dịch vụ */}
           {isModalOpen && selectedPkg && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 bg-slate-900/50 transition-opacity"
-                onClick={handleCloseModal}
-              />
-
-              {/* Modal Box */}
-              <div className="relative z-10 w-full max-w-xl max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text">
+            <DialogFrame
+              onClose={handleCloseModal}
+              zIndexClassName="z-50"
+              maxWidthClassName="max-w-xl"
+              className="z-10 flex flex-col overflow-hidden"
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
                   <div>
@@ -490,8 +487,7 @@ export function AdminMentorPackagesPage() {
                     {updateMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
                   </button>
                 </div>
-              </div>
-            </div>
+              </DialogFrame>
           )}
         </div>
       )}

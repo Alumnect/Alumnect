@@ -430,7 +430,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                         <LinkIcon size={14} className="text-text-subtle shrink-0" />
                         {link}
                       </span>
-                      <button
+                      <button aria-label="Xóa"
                         type="button"
                         onClick={() => handleRemoveSocialLink(idx)}
                         className="text-danger hover:text-danger p-1"
@@ -505,7 +505,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                       className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3.5 py-1.5 text-xs font-semibold text-text-muted border border-border shadow-2xs"
                     >
                       <span className="text-text-subtle font-normal">[{skill.groupName}]</span> {skill.skillName}
-                      <button
+                      <button aria-label="Đóng"
                         type="button"
                         onClick={() => handleRemoveSkill(idx)}
                         className="text-text-subtle hover:text-danger ml-1.5"

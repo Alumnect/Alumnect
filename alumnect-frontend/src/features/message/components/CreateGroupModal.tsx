@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { X, Users, Search, Check, Loader2, Camera } from 'lucide-react'
-import { Avatar, Button, toast } from '@/components/ui'
+import { Avatar, Button, toast, DialogFrame } from '@/components/ui'
 import { chatApi } from '../api/chatApi'
 import { useAuthStore } from '@/store/authStore'
 import { useCreateGroup } from '../hooks/useChat'
@@ -133,9 +132,12 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
     }
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-surface shadow-2xl dark:text-text">
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[9999]"
+      maxWidthClassName="max-w-md"
+      className="overflow-hidden dark:text-text"
+    >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div className="flex items-center gap-2.5">
@@ -144,7 +146,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
             </div>
             <h3 className="text-base font-bold text-text">Tạo nhóm trò chuyện</h3>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
@@ -282,8 +284,5 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

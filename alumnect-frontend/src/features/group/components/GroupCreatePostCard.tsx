@@ -234,7 +234,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                 {images.map((img, idx) => (
                   <div key={idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-border">
                     <img src={img} alt="Đính kèm" className="h-full w-full object-cover" />
-                    <button
+                    <button aria-label="Đóng"
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
                       className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-plum-900/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-90"

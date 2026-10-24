@@ -1,8 +1,9 @@
-import { useEffect, type ReactNode } from 'react'
+import { useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X, AlertTriangle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useDialog } from '@/hooks/useDialog'
 
 export interface ConfirmModalProps {
   isOpen: boolean
@@ -31,16 +32,10 @@ export function ConfirmModal({
   isLoading = false,
   zIndexClassName = 'z-50',
 }: ConfirmModalProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isOpen])
+  const titleId = useId()
+  const panelRef = useRef<HTMLDivElement>(null)
+  // Đang xử lý: Esc không đóng hộp thoại
+  useDialog(panelRef, { open: isOpen, onClose: isLoading ? () => {} : onClose })
 
   const variantStyles = {
     danger: {
@@ -72,8 +67,10 @@ export function ConfirmModal({
 
           {/* Modal Card */}
           <motion.div
+            ref={panelRef}
             role="alertdialog"
             aria-modal="true"
+            aria-labelledby={titleId}
             className="relative flex w-full flex-col items-center rounded-t-2xl border border-border bg-surface p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center text-text shadow-overlay sm:max-w-sm sm:rounded-2xl sm:pb-6"
             initial={{ opacity: 0, scale: 0.92, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -85,6 +82,7 @@ export function ConfirmModal({
               <button
                 type="button"
                 onClick={onClose}
+                data-dialog-close
                 aria-label="Đóng"
                 className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
               >
@@ -98,7 +96,7 @@ export function ConfirmModal({
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-bold text-text">
+            <h3 id={titleId} className="text-lg font-bold text-text">
               {title}
             </h3>
 

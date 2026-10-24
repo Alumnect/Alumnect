@@ -91,6 +91,8 @@ export function useDialog(
     const onKeyDown = (event: KeyboardEvent) => {
       if (stack[stack.length - 1] !== entry) return
       if (event.key === 'Escape' && !event.defaultPrevented) {
+        // Esc đang đóng một danh sách chọn/menu mở bên trong hộp thoại: để danh sách xử lý, không đóng cả hộp thoại
+        if ((event.target as HTMLElement | null)?.closest?.('[data-popup-open]')) return
         event.stopPropagation()
         entry.close()
         return

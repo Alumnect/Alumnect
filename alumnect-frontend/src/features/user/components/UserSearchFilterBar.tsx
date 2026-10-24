@@ -131,7 +131,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-10 text-sm text-text placeholder:text-text-subtle transition focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {localQuery && (
-            <button
+            <button aria-label="Đóng"
               type="button"
               onClick={() => {
                 setLocalQuery('')

@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react'
-import { createPortal } from 'react-dom'
 import {
   CheckCircle2,
   X,
@@ -9,7 +8,7 @@ import {
   Link2,
   Sparkles,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { useSubmitTaskCompletion } from '../hooks/useMentoringTaskCompletion'
 
 interface MentoringTaskCompletionModalProps {
@@ -74,12 +73,12 @@ export function MentoringTaskCompletionModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-xl bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-xl"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-mint-50 via-mint-50 to-transparent dark:from-mint-950/20 dark:to-mint-950/20 border-b border-border">
           <div className="flex items-center gap-3">
@@ -95,7 +94,7 @@ export function MentoringTaskCompletionModal({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 text-text-subtle hover:text-text-muted rounded-lg hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -197,8 +196,5 @@ export function MentoringTaskCompletionModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

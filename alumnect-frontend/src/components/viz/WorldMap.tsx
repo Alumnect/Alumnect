@@ -48,7 +48,7 @@ export function WorldMap({ className, markers = [] }: { className?: string; mark
         </svg>
 
         {/* markers */}
-        {markers.map((m, i) => (
+        {markers.map((m) => (
           <button
             key={m.id}
             className="group absolute -translate-x-1/2 -translate-y-1/2"
@@ -57,11 +57,7 @@ export function WorldMap({ className, markers = [] }: { className?: string; mark
             onMouseLeave={() => setActive(null)}
             aria-label={`${m.city}: ${m.count} alumni`}
           >
-            <motion.span
-              initial={{ scale: 0, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 + i * 0.08, type: 'spring', stiffness: 320, damping: 18 }}
+            <span
               className="relative block"
             >
               <span className="absolute inset-0 -m-2 animate-ping rounded-full bg-brand-400/30" />
@@ -69,16 +65,14 @@ export function WorldMap({ className, markers = [] }: { className?: string; mark
                 className="block rounded-full bg-gradient-to-br from-brand-400 to-violet-500 ring-2 ring-plum-900/70"
                 style={{ width: 8 + Math.min(14, m.count / 900), height: 8 + Math.min(14, m.count / 900) }}
               />
-            </motion.span>
+            </span>
 
             {active === m.id && (
-              <motion.span
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
+              <span
                 className="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg glass-strong px-3 py-1.5 text-xs font-semibold text-text shadow-glow"
               >
                 {m.city} · {compact(m.count)} alumni
-              </motion.span>
+              </span>
             )}
           </button>
         ))}

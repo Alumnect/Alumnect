@@ -137,7 +137,7 @@ export function MonthYearPicker({
         <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-surface rounded-3xl border border-border shadow-2xl p-4 animate-scale-up">
           {/* Year Switcher Header */}
           <div className="flex items-center justify-between mb-3 px-1 pb-2 border-b border-border">
-            <button
+            <button aria-label="Trước"
               type="button"
               onClick={handlePrevYear}
               className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-surface-2 transition-colors"
@@ -145,7 +145,7 @@ export function MonthYearPicker({
               <ChevronLeft size={16} />
             </button>
             <span className="font-extrabold text-sm text-text">Năm {viewYear}</span>
-            <button
+            <button aria-label="Sau"
               type="button"
               onClick={handleNextYear}
               disabled={viewYear >= maxYear}

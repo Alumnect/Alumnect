@@ -130,7 +130,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
         </span>
         <div className="flex items-center gap-1">
           {value && !disabled && (
-            <button
+            <button aria-label="Đóng"
               type="button"
               onClick={handleClear}
               className="p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"

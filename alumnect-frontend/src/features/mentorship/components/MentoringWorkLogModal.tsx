@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, FileText, Paperclip, Upload, Loader2, Trash2, CheckCircle2 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { DateTimePicker } from '@/components/ui/DateTimePicker'
 import { mentoringTaskApi } from '../api/mentoringTaskApi'
 import { useCreateWorkLog, useUpdateWorkLog } from '../hooks/useMentoringTasks'
@@ -183,9 +182,12 @@ export function MentoringWorkLogModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-border bg-surface shadow-2xl">
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-2xl"
+      className="flex flex-col"
+    >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border p-5 dark:border-white/[0.06]">
           <div className="flex items-center gap-2.5">
@@ -202,7 +204,7 @@ export function MentoringWorkLogModal({
             </div>
           </div>
 
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
@@ -400,8 +402,5 @@ export function MentoringWorkLogModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

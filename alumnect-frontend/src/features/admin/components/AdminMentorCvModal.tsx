@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import {
   FileText,
   ExternalLink,
@@ -14,7 +13,7 @@ import {
   FileCode,
   FileSpreadsheet,
 } from 'lucide-react'
-import { Badge, Skeleton, toast } from '@/components/ui'
+import { Badge, Skeleton, toast, DialogFrame } from '@/components/ui'
 import { useAdminMentorCv } from '../hooks/useAdmin'
 import { renderAsync } from 'docx-preview'
 
@@ -210,21 +209,12 @@ export function AdminMentorCvModal({
     ? `https://docs.google.com/viewer?url=${encodeURIComponent(cvUrl)}&embedded=true`
     : ''
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Main Modal Container */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        className="relative z-10 w-full max-w-[1200px] w-[92vw] h-[90vh] max-h-[90vh] bg-surface rounded-xl shadow-xl border border-border flex flex-col overflow-hidden text-text"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-[1200px]"
+      className="z-10 w-[92vw] h-[90vh] flex flex-col overflow-hidden"
+    >
         {/* Header */}
         <header className="px-6 py-4 bg-surface border-b border-border flex items-center justify-between gap-4 shrink-0">
           <div className="min-w-0">
@@ -565,8 +555,5 @@ export function AdminMentorCvModal({
             Đóng
           </button>
         </footer>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

@@ -872,7 +872,7 @@ function InlineReplyForm({
             <span>
               Trả lời <strong className="text-primary-solid">@{replyingTo.name}</strong>
             </span>
-            <button type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
+            <button aria-label="Đóng" type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
               <X size={13} />
             </button>
           </div>
