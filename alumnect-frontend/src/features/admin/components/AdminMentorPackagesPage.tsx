@@ -12,7 +12,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react'
-import { Badge, Card, Skeleton, toast, DialogFrame } from '@/components/ui'
+import { Badge, Card, Skeleton, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminMentorPackages, useUpdateMentorPackage } from '../hooks/useAdmin'
 import type { AdminMentorPackageDto } from '../api/adminApi'
@@ -158,7 +158,8 @@ export function AdminMentorPackagesPage() {
       </div>
 
       {/* Tab 2: Danh sách Cố vấn */}
-      {activeTab === 'MENTORS' && <AdminMentorListSection />}
+      <FadeSwitch id={activeTab}>
+{activeTab === 'MENTORS' && <AdminMentorListSection />}
 
       {/* Tab 1: Quản lý Gói dịch vụ */}
       {activeTab === 'PACKAGES' && (
@@ -491,6 +492,7 @@ export function AdminMentorPackagesPage() {
           )}
         </div>
       )}
+</FadeSwitch>
     </div>
   )
 }

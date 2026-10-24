@@ -22,7 +22,7 @@ import {
   Users,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Badge, Card, Skeleton, toast } from '@/components/ui'
+import { Badge, Card, Skeleton, toast, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { TRANSITION } from '@/lib/motion'
@@ -227,7 +227,8 @@ export function GroupDetailPage() {
       {/* Nội dung các Tab */}
       <div className="min-h-[32rem] space-y-5 [overflow-anchor:none]">
             {/* TAB 1: THẢO LUẬN (DISCUSSIONS) */}
-            {activeTab === 'discussions' && (
+            <FadeSwitch id={activeTab}>
+{activeTab === 'discussions' && (
               <div
                 key="tab-discussions"
                 className="space-y-4"
@@ -364,6 +365,7 @@ export function GroupDetailPage() {
                 </Card>
               </div>
             )}
+</FadeSwitch>
 
             {/* TAB 4: QUẢN TRỊ NHÓM (MANAGEMENT - CHỈ CHO OWNER/ADMIN) */}
             {activeTab === 'manage' && isManager && (

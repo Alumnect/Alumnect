@@ -21,7 +21,7 @@ import {
   ArrowLeft,
   Loader2,
 } from 'lucide-react'
-import { Card, Container, Skeleton, toast, DialogFrame } from '@/components/ui'
+import { Card, Container, Skeleton, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { MentoringTermsGate } from '@/features/mentorship'
@@ -363,7 +363,8 @@ export function MentoringGroupDetailPage() {
         </Card>
 
         {/* TAB 1: OVERVIEW */}
-        {activeTab === 'OVERVIEW' && (
+        <FadeSwitch id={activeTab}>
+{activeTab === 'OVERVIEW' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
               {/* Snapshot Active Members Preview */}
@@ -869,6 +870,7 @@ export function MentoringGroupDetailPage() {
             </Card>
           </div>
         )}
+</FadeSwitch>
 
         {/* MODAL: Invite Members */}
         {group && (

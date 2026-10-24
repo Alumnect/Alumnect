@@ -33,7 +33,7 @@ import {
   Flag,
 } from 'lucide-react'
 import { TRANSITION } from '@/lib/motion'
-import { Avatar, toast, ImageViewerModal } from '@/components/ui'
+import { Avatar, FadeSwitch, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { UpcomingEventsWidget, CancelEventModal, useCancelEvent, EventRsvpButton } from '@/features/event'
 
@@ -241,7 +241,7 @@ export function PostCard({
     <article
       onClick={handleCardClick}
       className={cn(
-        'relative cursor-pointer transition-colors',
+        'relative cursor-pointer transition-colors [contain-intrinsic-size:auto_260px] [content-visibility:auto]',
         variant === 'row'
           ? 'border-b border-border last:border-b-0 hover:bg-surface-2/50'
           : 'overflow-hidden rounded-2xl border border-border bg-surface hover:border-border-strong',
@@ -854,12 +854,13 @@ export function FeedPage() {
                   )}
                 >
                   {f.label}
-                  {isActive && <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary-solid" />}
+                  {isActive && <motion.span layoutId="feed-tab-underline" transition={TRANSITION.indicator} className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary-solid" />}
                 </button>
               )
             })}
           </div>
 
+          <FadeSwitch id={`${filter}-${isLoading ? "loading" : isError ? "error" : posts.length === 0 ? "empty" : "list"}`}>
           {isLoading ? (
             <div className="space-y-4">
               <PostSkeleton />
@@ -916,6 +917,7 @@ export function FeedPage() {
               </div>
             </>
           )}
+          </FadeSwitch>
         </div>
 
         {/* Các hộp thoại của bài viết */}

@@ -9,7 +9,7 @@ import {
   HeartHandshake,
   UserX,
 } from 'lucide-react'
-import { PageHeader, EmptyState, Skeleton, Pagination, Avatar, Card } from '@/components/ui'
+import { PageHeader, EmptyState, Skeleton, Pagination, Avatar, Card, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import {
   UserSearchFilterBar,
@@ -202,7 +202,8 @@ export function AlumniDirectoryPage() {
       )}
 
       {/* ===================== TAB 1: DANH BẠ THÀNH VIÊN ===================== */}
-      {activeTab === 'directory' && (
+      <FadeSwitch id={activeTab}>
+{activeTab === 'directory' && (
         <>
           {/* Filter & Search Bar */}
           <UserSearchFilterBar
@@ -500,6 +501,7 @@ export function AlumniDirectoryPage() {
           )}
         </div>
       )}
+</FadeSwitch>
     </div>
   )
 }

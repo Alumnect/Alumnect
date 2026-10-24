@@ -16,7 +16,7 @@ import {
 } from '@/features/auth'
 import type { ForgotInput, OtpFormInput, PasswordFormInput } from '@/features/auth'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { toast, FadeSwitch } from '@/components/ui'
 
 export function ForgotPasswordPage() {
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email')
@@ -202,7 +202,8 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthScaffold>
-      {step === 'email' && (
+      <FadeSwitch id={step}>
+{step === 'email' && (
         <>
           <Link
             to="/login"
@@ -455,6 +456,7 @@ export function ForgotPasswordPage() {
           </div>
         )
       )}
+</FadeSwitch>
     </AuthScaffold>
   )
 }

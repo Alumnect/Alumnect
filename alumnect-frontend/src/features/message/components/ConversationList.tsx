@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format, isToday } from 'date-fns'
 import { Search, MessageCircleMore, MessagesSquare, UserPlus, Users } from 'lucide-react'
-import { Avatar } from '@/components/ui'
+import { motion } from 'framer-motion'
+import { Avatar, FadeSwitch } from '@/components/ui'
+import { TRANSITION } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { CreateGroupModal } from './CreateGroupModal'
 import { type Conversation, isGroupConversation } from '../model/types'
@@ -104,7 +106,7 @@ export function ConversationList({
               {key === 'requests' && requestsCount > 0 && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-solid px-1.5 text-xs font-bold text-on-primary">{requestsCount}</span>
               )}
-              {currentTab === key && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-primary-solid" />}
+              {currentTab === key && <motion.span layoutId="msg-tab-underline" transition={TRANSITION.indicator} className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-primary-solid" />}
             </button>
           ))}
         </div>
@@ -122,6 +124,7 @@ export function ConversationList({
 
       {/* List */}
       <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <FadeSwitch id={currentTab}>
         {isLoading ? (
           <div className="space-y-3 p-4">
             {[1, 2, 3, 4].map((i) => (
@@ -192,6 +195,7 @@ export function ConversationList({
             )
           })
         )}
+        </FadeSwitch>
       </div>
 
       {/* Modal tạo nhóm */}

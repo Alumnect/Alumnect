@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban, Search, X } from 'lucide-react'
-import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast } from '@/components/ui'
+import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { useFeed, useToggleSavePost } from '@/features/feed'
@@ -110,6 +110,7 @@ export function EventsPage() {
         </div>
       </Card>
 
+      <FadeSwitch id={tab}>
       {tab === 'Lịch sử tham gia' ? (
         !isAuthenticated ? (
           <EmptyState
@@ -341,6 +342,7 @@ export function EventsPage() {
           )}
         </>
       )}
+      </FadeSwitch>
 
       {cancelEventTarget && (
         <CancelEventModal

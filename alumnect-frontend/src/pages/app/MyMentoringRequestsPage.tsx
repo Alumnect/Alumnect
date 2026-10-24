@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { BookOpen, Plus, RefreshCw, Send } from 'lucide-react'
-import { Button, ButtonLink, Container, EmptyState, Pagination, Skeleton } from '@/components/ui'
+import { Button, ButtonLink, Container, EmptyState, Pagination, Skeleton, FadeSwitch } from '@/components/ui'
 import {
   MentoringTermsGate,
   MentorPageHeader,
@@ -63,7 +63,8 @@ function MyMentoringRequestsContent() {
 
       <MentoringFilterTabs ariaLabel="Lọc theo loại yêu cầu" options={TYPE_TABS} value={activeTab} onChange={setActiveTab} />
 
-      {isLoading ? (
+      <FadeSwitch id={activeTab}>
+{isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-3 rounded-2xl border border-border bg-surface p-5">
@@ -108,6 +109,7 @@ function MyMentoringRequestsContent() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
+</FadeSwitch>
     </div>
   )
 }

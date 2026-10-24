@@ -23,7 +23,7 @@ import {
   ArrowRight,
   MessageSquare,
 } from 'lucide-react'
-import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, toast, DialogFrame } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTickets, useAcceptAdminTicket, useAdminDisputeContext } from '../hooks/useAdmin'
 import {
@@ -563,7 +563,8 @@ export function AdminMentoringTicketsPage() {
               ) : (
                 <>
                   {/* TAB 1: BẰNG CHỨNG TRANH CHẤP (UC118) */}
-                  {activeModalTab === 'evidence' && (
+                  <FadeSwitch id={activeModalTab}>
+{activeModalTab === 'evidence' && (
                     <div className="space-y-4">
                       {/* Filter Bằng chứng theo bên nộp */}
                       <div className="flex items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-border">
@@ -1065,6 +1066,7 @@ export function AdminMentoringTicketsPage() {
                       totalAmount={selectedTicket.totalAmount}
                     />
                   )}
+</FadeSwitch>
                 </>
               )}
             </div>

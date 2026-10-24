@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   TrendingUp,
 } from 'lucide-react'
-import { Badge, EmptyState, Skeleton, DialogFrame } from '@/components/ui'
+import { Badge, EmptyState, Skeleton, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTaskFundDetail, useRetryAdminPayout } from '../hooks/useAdmin'
 
@@ -398,7 +398,8 @@ export function AdminTaskLedgerDetailModal({
                 </div>
 
                 {/* TAB 1: Sổ quỹ giao dịch (Ledgers Table) */}
-                {activeTab === 'ledgers' && (
+                <FadeSwitch id={activeTab}>
+{activeTab === 'ledgers' && (
                   <div className="space-y-3">
                     {(!detail.ledgers || detail.ledgers.length === 0) ? (
                       <EmptyState
@@ -654,6 +655,7 @@ export function AdminTaskLedgerDetailModal({
                     )}
                   </div>
                 )}
+</FadeSwitch>
               </div>
             </>
           )}

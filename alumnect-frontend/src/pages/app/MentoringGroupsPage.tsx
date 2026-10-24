@@ -20,7 +20,7 @@ import {
   Loader2,
   Layers,
 } from 'lucide-react'
-import { Card, Container, Skeleton, toast, DialogFrame } from '@/components/ui'
+import { Card, Container, Skeleton, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { MentoringTermsGate, MentorPageHeader } from '@/features/mentorship'
@@ -157,7 +157,8 @@ export function MentoringGroupsPage() {
           />
 
           {/* Search Input */}
-          {activeTab !== 'INVITATIONS' && (
+          <FadeSwitch id={activeTab}>
+{activeTab !== 'INVITATIONS' && (
             <div className="relative w-full md:w-64 shrink-0">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
               <input
@@ -169,6 +170,7 @@ export function MentoringGroupsPage() {
               />
             </div>
           )}
+</FadeSwitch>
         </div>
 
         {/* TAB: PENDING INVITATIONS */}

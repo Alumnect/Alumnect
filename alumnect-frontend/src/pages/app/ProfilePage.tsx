@@ -26,7 +26,7 @@ import {
   MessageCircle,
 } from 'lucide-react'
 import axios from 'axios'
-import { Avatar, Card, Skeleton, EmptyState, SmartImage, toast, DialogFrame } from '@/components/ui'
+import { Avatar, Card, Skeleton, EmptyState, SmartImage, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAuthStore } from '@/store/authStore'
@@ -599,6 +599,7 @@ export function ProfilePage() {
       </Reveal>
 
       {/* MAIN BODY CONTAINER */}
+      <FadeSwitch id={activeTab}>
       {isOwnProfile && activeTab === 'about' ? (
         /* Chế độ Chỉnh sửa Hồ sơ dạng Facebook */
         <EditProfileView
@@ -837,6 +838,7 @@ export function ProfilePage() {
           )}
         </div>
       )}
+      </FadeSwitch>
 
       {/* Modal Quản lý Kinh nghiệm (Thêm / Sửa / Thăng chức) */}
       {isOwnProfile && (

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
-import { Card, toast, SelectDropdown } from '@/components/ui'
+import { Card, toast, SelectDropdown, FadeSwitch } from '@/components/ui'
 import { ProvinceSelect } from './ProvinceSelect'
 import { CampusSelect } from './CampusSelect'
 import { useMajors } from '@/features/auth/hooks/useAuth'
@@ -256,7 +256,8 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
         {/* Right Content Editor Cards */}
         <div className="md:col-span-8 space-y-6">
           {/* Section 1: Overview / Basic Info */}
-          {activeSection === 'overview' && (
+          <FadeSwitch id={activeSection}>
+{activeSection === 'overview' && (
             <Card hover={false} className="p-6 space-y-5">
               <div className="border-b border-border pb-3">
                 <h3 className="text-lg font-extrabold text-text flex items-center gap-2">
@@ -518,6 +519,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
               </div>
             </Card>
           )}
+</FadeSwitch>
 
           {/* Bottom Action Footer Bar */}
           <div className="flex items-center justify-end gap-3 bg-surface p-5 rounded-3xl border border-border shadow-sm">

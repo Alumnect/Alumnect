@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X, User, GraduationCap, MapPin, Plus, Trash2, AlertTriangle, Loader2, Link as LinkIcon, Sparkles, Upload, Image as ImageIcon } from 'lucide-react'
 import axios from 'axios'
 import { Button } from '@/components/ui/Button'
-import { Avatar, SmartImage, toast, SelectDropdown, DialogFrame } from '@/components/ui'
+import { Avatar, SmartImage, toast, SelectDropdown, DialogFrame, FadeSwitch } from '@/components/ui'
 import { useMajors, usePresignedUrl } from '@/features/auth/hooks/useAuth'
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
 import { CampusSelect } from './CampusSelect'
@@ -270,7 +270,8 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
           )}
 
           {/* Tab 1: Basic Info */}
-          {activeTab === 'basic' && (
+          <FadeSwitch id={activeTab}>
+{activeTab === 'basic' && (
             <div className="space-y-4">
               {/* Họ tên */}
               <div>
@@ -615,6 +616,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               </div>
             </div>
           )}
+</FadeSwitch>
 
           {/* Footer Buttons */}
           <div className="pt-4 flex items-center justify-end gap-3 border-t border-border mt-6">

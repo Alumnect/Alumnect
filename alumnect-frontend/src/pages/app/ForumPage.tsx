@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HelpCircle, ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap, Search, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -337,7 +337,8 @@ export function ForumPage() {
         </div>
       </Card>
 
-      {/* Vùng nội dung theo trạng thái */}
+      {/* Vùng nội dung theo trạng thái — đổi bộ lọc/sắp xếp thì mờ đi rồi hiện lại */}
+      <FadeSwitch id={`${sorts.join("+")}|${topicIds.join(",")}|${majorIds.join(",")}|${isLoading ? "loading" : isError ? "error" : "ready"}`}>
       {isLoading ? (
         <div className="space-y-4">
           <QuestionSkeleton />
@@ -372,6 +373,7 @@ export function ForumPage() {
           )}
         </>
       )}
+      </FadeSwitch>
 
       {/* Modal đặt câu hỏi (UC40) */}
       {askOpen && <AskQuestionModal onClose={() => setAskOpen(false)} />}
