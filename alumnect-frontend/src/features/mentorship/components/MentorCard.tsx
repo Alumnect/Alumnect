@@ -31,7 +31,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
   return (
     <Card
       hover
-      className="group flex h-full flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-xs transition-all duration-200 hover:border-brand-400/70 hover:shadow-md"
+      className="group flex h-full flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-xs transition duration-200 hover:border-brand-400/70"
     >
       <div>
         {/* Phần Header Card: Avatar + Tên + Chức danh */}
@@ -144,7 +144,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
         <Link
           to={mentorDetailUrl}
           onClick={(e) => e.stopPropagation()}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2.5 text-sm font-semibold text-on-primary shadow-xs transition-all hover:bg-primary-hover hover:shadow-md hover:shadow-brand-500/20 active:scale-[0.98] dark:text-text-inverse"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2.5 text-sm font-semibold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-[0.98] dark:text-text-inverse"
         >
           <span>Xem hồ sơ</span>
         </Link>

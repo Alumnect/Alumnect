@@ -137,7 +137,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
               type="button"
               onClick={() => setPeriod(t.key)}
               className={cn(
-                'relative rounded-xl px-3 py-1.5 text-xs font-bold transition-all',
+                'relative rounded-xl px-3 py-1.5 text-xs font-bold transition',
                 period === t.key
                   ? 'text-text shadow-sm'
                   : 'text-text-subtle hover:text-text'
@@ -161,13 +161,13 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
         <div className="flex items-center gap-5">
           {/* Bar Legend */}
           <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-md bg-gradient-to-t from-brand-600 to-brand-400 shadow-sm" />
+            <span className="h-3 w-3 rounded-sm bg-primary shadow-sm" />
             <span className="font-semibold text-text-muted">Tài khoản đăng ký</span>
           </div>
 
           {/* Line Legend */}
           <div className="flex items-center gap-2">
-            <span className="h-0.5 w-4 rounded bg-gradient-to-r from-amber-500 to-coral-500" />
+            <span className="h-0.5 w-4 rounded bg-warning" />
             <span className="h-2.5 w-2.5 rounded-full bg-coral-500 ring-2 ring-coral-200" />
             <span className="font-semibold text-text-muted">Xu hướng tăng trưởng</span>
           </div>
@@ -239,7 +239,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                   fill="#ffffff"
                   stroke="#fb8366"
                   strokeWidth="3"
-                  className="transition-all duration-200"
+                  className="transition duration-200"
                 />
               </g>
             ))}
@@ -274,7 +274,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       className="absolute -top-14 z-30 flex flex-col items-center pointer-events-none"
                     >
-                      <div className="rounded-xl bg-plum-900 px-3 py-1.5 text-xs font-bold text-white shadow-xl shadow-plum-900/30 ring-1 ring-white/10 whitespace-nowrap">
+                      <div className="rounded-xl bg-text px-3 py-1.5 text-xs font-bold text-text-inverse shadow-xl shadow-black/30 ring-1 ring-white/10 whitespace-nowrap">
                         <span className="block text-gold-300 font-extrabold">{d.label}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span>Đăng ký: <strong className="text-white">{d.count}</strong></span>
@@ -293,10 +293,10 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                       animate={{ height: `${heightPct}%` }}
                       transition={{ duration: 0.5, delay: i * 0.03, ease: 'easeOut' }}
                       className={cn(
-                        'w-full max-w-[42px] rounded-t-xl transition-all duration-300',
+                        'w-full max-w-[42px] rounded-t-xl transition duration-300',
                         isHovered
                           ? 'bg-gradient-to-t from-brand-600 via-brand-500 to-violet-400 shadow-lg shadow-brand-500/40 ring-2 ring-brand-400'
-                          : 'bg-gradient-to-t from-brand-500/40 via-brand-500/70 to-brand-400 opacity-90'
+                          : 'bg-primary'
                       )}
                     />
                   </div>

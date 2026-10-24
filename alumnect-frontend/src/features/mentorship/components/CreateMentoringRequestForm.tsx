@@ -21,7 +21,8 @@ import {
   ExternalLink,
   CheckCircle2,
 } from 'lucide-react'
-import { Card, toast, SelectDropdown, DateTimePicker, type SelectOption } from '@/components/ui'
+import { Card, toast, SelectDropdown, type SelectOption } from '@/components/ui'
+import { DateTimePicker } from '@/components/ui/DateTimePicker'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import {
@@ -424,7 +425,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               <span className="font-bold">Không thể tạo yêu cầu: </span>
               <span>{serverError}</span>
             </div>
-            <button
+            <button aria-label="Đóng"
               type="button"
               onClick={() => setServerError(null)}
               className="text-danger hover:text-danger"
@@ -606,7 +607,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   key={mode}
                   type="button"
                   onClick={() => setValue('workingMode', mode)}
-                  className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all ${selectedWorkingMode === mode
+                  className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition ${selectedWorkingMode === mode
                       ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
                       : 'border-border bg-surface text-text-muted hover:border-border-strong'
                     }`}
@@ -630,7 +631,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   disabled={type === 'GROUP' && groupUnsupportedByTargetMentor}
                   onClick={() => setValue('participationType', type)}
                   title={type === 'GROUP' && groupUnsupportedByTargetMentor ? 'Mentor này hiện chỉ nhận mentoring cá nhân' : undefined}
-                  className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-45 ${selectedParticipationType === type
+                  className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${selectedParticipationType === type
                       ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
                       : 'border-border bg-surface text-text-muted hover:border-border-strong'
                     }`}
@@ -830,7 +831,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   key={opt.value}
                   type="button"
                   onClick={() => setValue('taskType', opt.value)}
-                  className={`flex flex-col text-left rounded-2xl border p-3.5 transition-all ${selectedTaskType === opt.value
+                  className={`flex flex-col text-left rounded-2xl border p-3.5 transition ${selectedTaskType === opt.value
                       ? 'border-primary bg-brand-50/70 shadow-xs dark:bg-brand-700/40'
                       : 'border-border bg-surface hover:border-border-strong'
                     }`}
@@ -943,7 +944,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                     {item.uploading ? (
                       <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
                     ) : (
-                      <button
+                      <button aria-label="Đóng"
                         type="button"
                         onClick={() => handleRemoveFile(idx)}
                         className="p-1 rounded-lg text-text-subtle hover:text-danger hover:bg-danger-soft transition-colors"

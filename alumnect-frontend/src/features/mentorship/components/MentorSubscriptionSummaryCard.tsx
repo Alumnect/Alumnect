@@ -233,7 +233,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
           </div>
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-surface-3">
             <div
-              className="h-full rounded-full bg-primary-solid transition-all duration-500"
+              className="h-full rounded-full bg-primary-solid transition duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>

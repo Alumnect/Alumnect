@@ -51,7 +51,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
         <Card
           hover
           className={cn(
-            'flex min-h-full flex-col justify-between border bg-surface p-5 pt-10 text-center transition-all duration-300 backdrop-blur-sm',
+            'flex min-h-full flex-col justify-between border bg-surface p-5 pt-10 text-center transition duration-300 backdrop-blur-sm',
             rankStyle.border,
             rankStyle.shadow,
           )}
@@ -122,7 +122,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
           <div className="pt-3">
             <Link
               to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-2 text-xs font-bold text-text-muted transition-colors hover:bg-primary-solid hover:text-white"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-2 text-xs font-bold text-text-muted transition-colors hover:bg-primary-solid hover:text-on-primary"
             >
               <span>Xem chi tiết cố vấn</span>
               <ArrowRight className="h-3 w-3" />
@@ -146,7 +146,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
         {first && renderPodiumCard(first, 1, {
           badge: 'bg-gradient-to-r from-amber-400 to-gold-500 text-text shadow-gold-500/30',
           border: 'border-warning ring-2 ring-warning',
-          shadow: 'shadow-lg shadow-gold-500/15 hover:shadow-xl hover:shadow-gold-500/25',
+          shadow: 'shadow-lg shadow-gold-500/15',
           icon: <Trophy className="h-3.5 w-3.5 text-text" />,
           rankTitle: 'Quán quân #1',
         })}

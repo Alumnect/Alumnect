@@ -1,5 +1,5 @@
 import http from '@/lib/http'
-import { postSchema } from '@/features/feed'
+import { postSchema } from '@/features/feed/model/post'
 import type { Post } from '@/features/feed'
 import { commentSchema } from '../model/comment'
 import type { Comment, CommentsPageResult } from '../model/comment'

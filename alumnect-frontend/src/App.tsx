@@ -3,52 +3,64 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
 import { ProtectedRoute, RoleRoute } from '@/components/routing/guards'
 import { AppShell, AdminShell, ScrollToTop } from '@/components/layout'
+import { SectionTransition } from '@/components/layout/SectionTransition'
 import { NotFoundPage } from '@/pages/NotFoundPage'
-import { LoginPage } from '@/pages/auth/LoginPage'
-import { RegisterPage } from '@/pages/auth/RegisterPage'
-import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { FeedPage } from '@/pages/app/FeedPage'
-import { PostDetailPage } from '@/pages/app/PostDetailPage'
-import { AlumniDirectoryPage } from '@/pages/app/AlumniDirectoryPage'
-import { JobsPage } from '@/pages/app/JobsPage'
-import { EventsPage } from '@/pages/app/EventsPage'
-import { GroupsPage } from '@/pages/app/GroupsPage'
-import { GroupDetailPage } from '@/pages/app/GroupDetailPage'
-import { GroupPostDetailPage } from '@/pages/app/GroupPostDetailPage'
-import { ForumPage } from '@/pages/app/ForumPage'
-import { QuestionDetailPage } from '@/pages/app/QuestionDetailPage'
-import { SalaryPage } from '@/pages/app/SalaryPage'
-import { MapPage } from '@/pages/app/MapPage'
-import { CareerPage } from '@/pages/app/CareerPage'
-import { MessagesPage } from '@/pages/app/MessagesPage'
-import { NotificationsPage } from '@/pages/app/NotificationsPage'
-import { ProfilePage } from '@/pages/app/ProfilePage'
-import { ChangePasswordPage } from '@/pages/app/ChangePasswordPage'
-import { MentoringHomePage } from '@/pages/app/MentoringHomePage'
-import { MentorEarningsPage } from '@/pages/app/MentorEarningsPage'
-import { MentoringRefundsPage } from '@/pages/app/MentoringRefundsPage'
-import { MentoringTermsPage } from '@/pages/app/MentoringTermsPage'
-import { BecomeMentorPage } from '@/pages/app/BecomeMentorPage'
-import { MentorSubscriptionPage } from '@/pages/app/MentorSubscriptionPage'
-import { MentorStatusPage } from '@/pages/app/MentorStatusPage'
-import { MentorRankingPage } from '@/pages/app/MentorRankingPage'
-import { MentorDiscoverPage } from '@/pages/app/MentorDiscoverPage'
-import { MentorDetailPage } from '@/pages/app/MentorDetailPage'
-import { CreateMentoringRequestPage } from '@/pages/app/CreateMentoringRequestPage'
-import { CreateDirectMentoringRequestPage } from '@/pages/app/CreateDirectMentoringRequestPage'
-import { MyMentoringRequestsPage } from '@/pages/app/MyMentoringRequestsPage'
-import { MentoringRequestDetailPage } from '@/pages/app/MentoringRequestDetailPage'
-import IncomingMentoringRequestsPage from '@/pages/app/IncomingMentoringRequestsPage'
-import IncomingMentoringRequestDetailPage from '@/pages/app/IncomingMentoringRequestDetailPage'
-import { MentoringDealsPage } from '@/pages/app/MentoringDealsPage'
-import { MentoringChatPage } from '@/pages/app/MentoringChatPage'
-import { MentoringMessagesPage } from '@/pages/app/MentoringMessagesPage'
-import { MyMentoringTasksPage } from '@/pages/app/MyMentoringTasksPage'
-import { MentoringTaskDetailPage } from '@/pages/app/MentoringTaskDetailPage'
-import { MentoringGroupsPage } from '@/pages/app/MentoringGroupsPage'
-import { MentoringGroupDetailPage } from '@/pages/app/MentoringGroupDetailPage'
-import { AdminOverviewPage, AdminUsersPage, AdminSectionPage, AdminPostsPage, AdminPostDetailPage, AdminBroadcastPage, AdminMentorPackagesPage, AdminMentoringTicketsPage, AdminMentoringFinancesPage, AdminRevenuePage } from '@/features/admin'
 import { ToastContainer } from '@/components/ui'
+import { lazyPage, lazyDefaultPage } from '@/lib/lazyPage'
+
+const LoginPage = lazyPage(() => import('@/pages/auth/LoginPage'), 'LoginPage')
+const RegisterPage = lazyPage(() => import('@/pages/auth/RegisterPage'), 'RegisterPage')
+const ForgotPasswordPage = lazyPage(() => import('@/pages/auth/ForgotPasswordPage'), 'ForgotPasswordPage')
+const PostDetailPage = lazyPage(() => import('@/pages/app/PostDetailPage'), 'PostDetailPage')
+const AlumniDirectoryPage = lazyPage(() => import('@/pages/app/AlumniDirectoryPage'), 'AlumniDirectoryPage')
+const JobsPage = lazyPage(() => import('@/pages/app/JobsPage'), 'JobsPage')
+const EventsPage = lazyPage(() => import('@/pages/app/EventsPage'), 'EventsPage')
+const GroupsPage = lazyPage(() => import('@/pages/app/GroupsPage'), 'GroupsPage')
+const GroupDetailPage = lazyPage(() => import('@/pages/app/GroupDetailPage'), 'GroupDetailPage')
+const GroupPostDetailPage = lazyPage(() => import('@/pages/app/GroupPostDetailPage'), 'GroupPostDetailPage')
+const ForumPage = lazyPage(() => import('@/pages/app/ForumPage'), 'ForumPage')
+const QuestionDetailPage = lazyPage(() => import('@/pages/app/QuestionDetailPage'), 'QuestionDetailPage')
+const SalaryPage = lazyPage(() => import('@/pages/app/SalaryPage'), 'SalaryPage')
+const MapPage = lazyPage(() => import('@/pages/app/MapPage'), 'MapPage')
+const CareerPage = lazyPage(() => import('@/pages/app/CareerPage'), 'CareerPage')
+const MessagesPage = lazyPage(() => import('@/pages/app/MessagesPage'), 'MessagesPage')
+const NotificationsPage = lazyPage(() => import('@/pages/app/NotificationsPage'), 'NotificationsPage')
+const ProfilePage = lazyPage(() => import('@/pages/app/ProfilePage'), 'ProfilePage')
+const ChangePasswordPage = lazyPage(() => import('@/pages/app/ChangePasswordPage'), 'ChangePasswordPage')
+const MentoringHomePage = lazyPage(() => import('@/pages/app/MentoringHomePage'), 'MentoringHomePage')
+const MentorEarningsPage = lazyPage(() => import('@/pages/app/MentorEarningsPage'), 'MentorEarningsPage')
+const MentoringRefundsPage = lazyPage(() => import('@/pages/app/MentoringRefundsPage'), 'MentoringRefundsPage')
+const MentoringTermsPage = lazyPage(() => import('@/pages/app/MentoringTermsPage'), 'MentoringTermsPage')
+const BecomeMentorPage = lazyPage(() => import('@/pages/app/BecomeMentorPage'), 'BecomeMentorPage')
+const MentorSubscriptionPage = lazyPage(() => import('@/pages/app/MentorSubscriptionPage'), 'MentorSubscriptionPage')
+const MentorStatusPage = lazyPage(() => import('@/pages/app/MentorStatusPage'), 'MentorStatusPage')
+const MentorRankingPage = lazyPage(() => import('@/pages/app/MentorRankingPage'), 'MentorRankingPage')
+const MentorDiscoverPage = lazyPage(() => import('@/pages/app/MentorDiscoverPage'), 'MentorDiscoverPage')
+const MentorDetailPage = lazyPage(() => import('@/pages/app/MentorDetailPage'), 'MentorDetailPage')
+const CreateMentoringRequestPage = lazyPage(() => import('@/pages/app/CreateMentoringRequestPage'), 'CreateMentoringRequestPage')
+const CreateDirectMentoringRequestPage = lazyPage(() => import('@/pages/app/CreateDirectMentoringRequestPage'), 'CreateDirectMentoringRequestPage')
+const MyMentoringRequestsPage = lazyPage(() => import('@/pages/app/MyMentoringRequestsPage'), 'MyMentoringRequestsPage')
+const MentoringRequestDetailPage = lazyPage(() => import('@/pages/app/MentoringRequestDetailPage'), 'MentoringRequestDetailPage')
+const IncomingMentoringRequestsPage = lazyDefaultPage(() => import('@/pages/app/IncomingMentoringRequestsPage'))
+const IncomingMentoringRequestDetailPage = lazyDefaultPage(() => import('@/pages/app/IncomingMentoringRequestDetailPage'))
+const MentoringDealsPage = lazyPage(() => import('@/pages/app/MentoringDealsPage'), 'MentoringDealsPage')
+const MentoringChatPage = lazyPage(() => import('@/pages/app/MentoringChatPage'), 'MentoringChatPage')
+const MentoringMessagesPage = lazyPage(() => import('@/pages/app/MentoringMessagesPage'), 'MentoringMessagesPage')
+const MyMentoringTasksPage = lazyPage(() => import('@/pages/app/MyMentoringTasksPage'), 'MyMentoringTasksPage')
+const MentoringTaskDetailPage = lazyPage(() => import('@/pages/app/MentoringTaskDetailPage'), 'MentoringTaskDetailPage')
+const MentoringGroupsPage = lazyPage(() => import('@/pages/app/MentoringGroupsPage'), 'MentoringGroupsPage')
+const MentoringGroupDetailPage = lazyPage(() => import('@/pages/app/MentoringGroupDetailPage'), 'MentoringGroupDetailPage')
+const AdminOverviewPage = lazyPage(() => import('@/features/admin'), 'AdminOverviewPage')
+const AdminUsersPage = lazyPage(() => import('@/features/admin'), 'AdminUsersPage')
+const AdminSectionPage = lazyPage<'AdminSectionPage', { sectionKey: string }>(() => import('@/features/admin'), 'AdminSectionPage')
+const AdminPostsPage = lazyPage(() => import('@/features/admin'), 'AdminPostsPage')
+const AdminPostDetailPage = lazyPage(() => import('@/features/admin'), 'AdminPostDetailPage')
+const AdminBroadcastPage = lazyPage(() => import('@/features/admin'), 'AdminBroadcastPage')
+const AdminMentorPackagesPage = lazyPage(() => import('@/features/admin'), 'AdminMentorPackagesPage')
+const AdminMentoringTicketsPage = lazyPage(() => import('@/features/admin'), 'AdminMentoringTicketsPage')
+const AdminMentoringFinancesPage = lazyPage(() => import('@/features/admin'), 'AdminMentoringFinancesPage')
+const AdminRevenuePage = lazyPage(() => import('@/features/admin'), 'AdminRevenuePage')
 
 function App() {
   return (
@@ -56,7 +68,9 @@ function App() {
       <ToastContainer />
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
+        <SectionTransition>
+          {(location) => (
+        <Routes location={location}>
           {/* Trang chủ mở thẳng vào app ở chế độ khách (đã bỏ landing page) */}
           <Route path="/" element={<Navigate to="/app" replace />} />
 
@@ -153,6 +167,8 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+          )}
+        </SectionTransition>
       </BrowserRouter>
     </QueryClientProvider>
   )

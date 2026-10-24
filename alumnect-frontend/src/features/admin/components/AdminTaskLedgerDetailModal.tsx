@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   TrendingUp,
 } from 'lucide-react'
-import { Badge, EmptyState, Skeleton } from '@/components/ui'
+import { Badge, EmptyState, Skeleton, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTaskFundDetail, useRetryAdminPayout } from '../hooks/useAdmin'
 
@@ -163,8 +163,12 @@ export function AdminTaskLedgerDetailModal({
   const summary = detail?.summary
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col bg-surface dark:bg-bg rounded-3xl shadow-2xl border border-border overflow-hidden text-text">
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-5xl"
+      className="flex flex-col overflow-hidden"
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border bg-surface dark:bg-bg shrink-0">
           <div className="flex items-center gap-3">
@@ -257,7 +261,7 @@ export function AdminTaskLedgerDetailModal({
 
               {/* Bảng cân đối dòng tiền Task (KPI Cards) */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-50/50 to-white dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-surface border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Tổng thu ký quỹ</span>
                     <ArrowDownLeft className="w-4 h-4 text-success" />
@@ -270,7 +274,7 @@ export function AdminTaskLedgerDetailModal({
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-blue-50/50 to-white dark:from-blue-950/30 dark:via-blue-950/10 dark:to-surface border border-blue-200/80 dark:border-blue-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-blue-200/80 dark:border-blue-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Đang giữ Escrow</span>
                     <Wallet className="w-4 h-4 text-info" />
@@ -283,7 +287,7 @@ export function AdminTaskLedgerDetailModal({
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-500/10 via-purple-50/50 to-white dark:from-purple-950/30 dark:via-purple-950/10 dark:to-surface border border-purple-200/80 dark:border-purple-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Đã chi Cố vấn</span>
                     <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -294,7 +298,7 @@ export function AdminTaskLedgerDetailModal({
                   <p className="text-xs text-text-subtle mt-0.5">Thù lao Mentoring</p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-50/50 to-white dark:from-amber-950/30 dark:via-amber-950/10 dark:to-surface border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Đã hoàn Học viên</span>
                     <RotateCcw className="w-4 h-4 text-warning" />
@@ -305,7 +309,7 @@ export function AdminTaskLedgerDetailModal({
                   <p className="text-xs text-text-subtle mt-0.5">Hoàn tiền giải quyết</p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-500/10 via-slate-50/50 to-white dark:from-slate-800/40 dark:via-slate-800/20 dark:to-surface border border-border shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-border shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Phí nền tảng/Hòa giải</span>
                     <ShieldCheck className="w-4 h-4 text-text-subtle" />
@@ -323,7 +327,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('ledgers')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'ledgers'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'
@@ -331,8 +335,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <Wallet className="w-4 h-4" />
                     <span>Sổ quỹ giao dịch</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'ledgers' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'ledgers' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.ledgers?.length || 0}
                     </span>
@@ -341,7 +345,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('extensions')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'extensions'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'
@@ -349,8 +353,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <Clock className="w-4 h-4" />
                     <span>Gia hạn thời hạn</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'extensions' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'extensions' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.extensionHistory?.length || 0}
                     </span>
@@ -359,7 +363,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('amendments')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'amendments'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'
@@ -367,8 +371,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <TrendingUp className="w-4 h-4" />
                     <span>Điều chỉnh & Bổ sung quỹ</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'amendments' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'amendments' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.amendmentHistory?.length || 0}
                     </span>
@@ -377,7 +381,7 @@ export function AdminTaskLedgerDetailModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('disputes')}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer ${
                       activeTab === 'disputes'
                         ? 'bg-primary-solid text-on-primary shadow-xs'
                         : 'text-text-muted hover:text-text hover:bg-surface-2'
@@ -385,8 +389,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <Scale className="w-4 h-4" />
                     <span>Vé tranh chấp & Phán quyết</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'disputes' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'disputes' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.disputeTickets?.length || 0}
                     </span>
@@ -394,7 +398,8 @@ export function AdminTaskLedgerDetailModal({
                 </div>
 
                 {/* TAB 1: Sổ quỹ giao dịch (Ledgers Table) */}
-                {activeTab === 'ledgers' && (
+                <FadeSwitch id={activeTab}>
+{activeTab === 'ledgers' && (
                   <div className="space-y-3">
                     {(!detail.ledgers || detail.ledgers.length === 0) ? (
                       <EmptyState
@@ -650,6 +655,7 @@ export function AdminTaskLedgerDetailModal({
                     )}
                   </div>
                 )}
+</FadeSwitch>
               </div>
             </>
           )}
@@ -665,7 +671,6 @@ export function AdminTaskLedgerDetailModal({
             Đóng cửa sổ
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

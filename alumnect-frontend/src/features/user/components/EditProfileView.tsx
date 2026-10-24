@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
-import { Card, toast, SelectDropdown } from '@/components/ui'
+import { Card, toast, SelectDropdown, FadeSwitch } from '@/components/ui'
 import { ProvinceSelect } from './ProvinceSelect'
 import { CampusSelect } from './CampusSelect'
 import { useMajors } from '@/features/auth/hooks/useAuth'
@@ -242,7 +242,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                 key={item.id}
                 type="button"
                 onClick={() => setActiveSection(item.id as any)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition-all text-left ${active
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-sm transition text-left ${active
                   ? 'bg-primary-soft text-primary-solid border border-brand-200/40 shadow-xs'
                   : 'text-text-muted hover:bg-plum-50/70 hover:text-text'
                   }`}
@@ -258,7 +258,8 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
         {/* Right Content Editor Cards */}
         <div className="md:col-span-8 space-y-6">
           {/* Section 1: Overview / Basic Info */}
-          {activeSection === 'overview' && (
+          <FadeSwitch id={activeSection}>
+{activeSection === 'overview' && (
             <Card hover={false} className="p-6 space-y-5">
               <div className="border-b border-border pb-3">
                 <h3 className="text-lg font-extrabold text-text flex items-center gap-2">
@@ -432,7 +433,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                         <LinkIcon size={14} className="text-text-subtle shrink-0" />
                         {link}
                       </span>
-                      <button
+                      <button aria-label="Xóa"
                         type="button"
                         onClick={() => handleRemoveSocialLink(idx)}
                         className="text-danger hover:text-danger p-1"
@@ -507,7 +508,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                       className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3.5 py-1.5 text-xs font-semibold text-text-muted border border-border shadow-2xs"
                     >
                       <span className="text-text-subtle font-normal">[{skill.groupName}]</span> {skill.skillName}
-                      <button
+                      <button aria-label="Đóng"
                         type="button"
                         onClick={() => handleRemoveSkill(idx)}
                         className="text-text-subtle hover:text-danger ml-1.5"
@@ -520,6 +521,7 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
               </div>
             </Card>
           )}
+</FadeSwitch>
 
           {/* Bottom Action Footer Bar */}
           <div className="flex items-center justify-end gap-3 bg-surface p-5 rounded-3xl border border-border shadow-sm">

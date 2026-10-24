@@ -53,7 +53,7 @@ export function MentorFieldSelector({
       <button
         type="button"
         onClick={() => handleScroll('left')}
-        className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-surface text-text-muted shadow-xs transition-all hover:border-primary hover:bg-primary-soft hover:text-primary-solid active:scale-95"
+        className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-surface text-text-muted shadow-xs transition hover:border-primary hover:bg-primary-soft hover:text-primary-solid active:scale-95"
         aria-label="Cuộn sang trái"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -74,7 +74,7 @@ export function MentorFieldSelector({
                 type="button"
                 onClick={() => onSelectField(field.id)}
                 className={cn(
-                  'inline-flex min-h-11 shrink-0 snap-start cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200',
+                  'inline-flex min-h-11 shrink-0 snap-start cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition duration-200',
                   isSelected
                     ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30 ring-2 ring-primary/20'
                     : 'border border-border bg-surface text-text-muted hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid',
@@ -93,7 +93,7 @@ export function MentorFieldSelector({
       <button
         type="button"
         onClick={() => handleScroll('right')}
-        className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-surface text-text-muted shadow-xs transition-all hover:border-primary hover:bg-primary-soft hover:text-primary-solid active:scale-95"
+        className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-surface text-text-muted shadow-xs transition hover:border-primary hover:bg-primary-soft hover:text-primary-solid active:scale-95"
         aria-label="Cuộn sang phải"
       >
         <ChevronRight className="h-4 w-4" />

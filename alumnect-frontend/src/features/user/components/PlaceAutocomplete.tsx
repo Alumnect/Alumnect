@@ -400,7 +400,7 @@ export function PlaceAutocomplete({
             if (suggestions.length > 0) setOpen(true)
           }}
           placeholder={placeholder}
-          className={cn("w-full rounded-2xl border border-border bg-surface py-3 pl-10 pr-10 text-sm text-text placeholder-plum-400 shadow-sm transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary", inputClassName)}
+          className={cn("w-full rounded-2xl border border-border bg-surface py-3 pl-10 pr-10 text-sm text-text placeholder-plum-400 shadow-sm transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary", inputClassName)}
         />
         {loading && (
           <span className="absolute right-10 text-text-subtle">
@@ -408,7 +408,7 @@ export function PlaceAutocomplete({
           </span>
         )}
         {value && (
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={handleClear}
             className="absolute right-3 p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2"

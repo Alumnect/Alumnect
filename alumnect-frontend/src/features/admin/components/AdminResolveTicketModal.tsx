@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { toast, DialogFrame } from '@/components/ui'
 import { useResolveAdminTicket } from '../hooks/useAdmin'
 import type {
   MentoringDisputeTicket,
@@ -148,14 +148,12 @@ export function AdminResolveTicketModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
-      onClick={onClose}
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-2xl"
+      className="overflow-hidden flex flex-col"
     >
-      <div
-        className="relative w-full max-w-2xl bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[92vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* Header Modal */}
         <div className="flex items-center justify-between px-6 py-4.5 bg-primary-solid text-on-primary shadow-xs">
           <div className="flex items-center gap-3">
@@ -176,7 +174,7 @@ export function AdminResolveTicketModal({
               </h3>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             onClick={onClose}
             className="p-2 text-on-primary/70 hover:text-on-primary rounded-lg hover:bg-on-primary/10 transition-colors"
           >
@@ -211,7 +209,7 @@ export function AdminResolveTicketModal({
               {/* Option 1: Full Mentor */}
               <div
                 onClick={() => setDecision('FULL_MENTOR_PAYMENT')}
-                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
                   decision === 'FULL_MENTOR_PAYMENT'
                     ? 'border-success bg-success-soft shadow-xs'
                     : 'border-border hover:border-border-strong'
@@ -234,7 +232,7 @@ export function AdminResolveTicketModal({
               {/* Option 2: Partial Split */}
               <div
                 onClick={() => setDecision('PARTIAL_SPLIT')}
-                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
                   decision === 'PARTIAL_SPLIT'
                     ? 'border-primary-solid bg-primary-soft shadow-xs'
                     : 'border-border hover:border-border-strong'
@@ -257,7 +255,7 @@ export function AdminResolveTicketModal({
               {/* Option 3: Full Student Refund */}
               <div
                 onClick={() => setDecision('FULL_STUDENT_REFUND')}
-                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between ${
                   decision === 'FULL_STUDENT_REFUND'
                     ? 'border-info bg-info-soft shadow-xs'
                     : 'border-border hover:border-border-strong'
@@ -417,7 +415,7 @@ export function AdminResolveTicketModal({
             </div>
             {!isFundBalanced && (
               <div className="text-3xs text-danger font-medium">
-                ⚠️ Tổng tiền phân bổ không khớp quỹ Escrow. Vui lòng điều chỉnh lại số tiền!
+                Tổng tiền phân bổ không khớp quỹ Escrow. Vui lòng điều chỉnh lại số tiền!
               </div>
             )}
           </div>
@@ -517,7 +515,6 @@ export function AdminResolveTicketModal({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

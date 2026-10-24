@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react'
-import { createPortal } from 'react-dom'
 import {
   CheckCircle2,
   X,
@@ -9,7 +8,7 @@ import {
   Link2,
   Sparkles,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { useSubmitTaskCompletion } from '../hooks/useMentoringTaskCompletion'
 
 interface MentoringTaskCompletionModalProps {
@@ -74,14 +73,14 @@ export function MentoringTaskCompletionModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-xl bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-xl"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-mint-50 via-mint-50 to-transparent dark:from-mint-950/20 dark:to-mint-950/20 border-b border-border">
+        <div className="bg-surface-2 flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-success text-text-inverse shadow-sm">
               <FileCheck2 className="w-5 h-5" />
@@ -95,7 +94,7 @@ export function MentoringTaskCompletionModal({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 text-text-subtle hover:text-text-muted rounded-lg hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -132,7 +131,7 @@ export function MentoringTaskCompletionModal({
               value={finalSummary}
               onChange={(e) => setFinalSummary(e.target.value)}
               placeholder="Tóm tắt những mục tiêu đã đạt được, kiến thức hoặc sản phẩm đã hoàn thiện trong suốt quá trình hướng dẫn..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
             <p className="text-xs text-text-subtle mt-1">
               Mô tả chi tiết giúp học viên nắm rõ khối lượng công việc đã hoàn thành để nghiệm thu nhanh chóng.
@@ -149,7 +148,7 @@ export function MentoringTaskCompletionModal({
               value={deliverables}
               onChange={(e) => setDeliverables(e.target.value)}
               placeholder="Ví dụ: Link GitHub Repository, Google Drive slide thuyết trình, tài liệu hướng dẫn cài đặt..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
           </div>
 
@@ -164,7 +163,7 @@ export function MentoringTaskCompletionModal({
               value={attachmentUrls}
               onChange={(e) => setAttachmentUrls(e.target.value)}
               placeholder="https://drive.google.com/file/...&#10;https://github.com/..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none font-mono text-xs shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none font-mono text-xs shadow-sm"
             />
           </div>
 
@@ -197,8 +196,5 @@ export function MentoringTaskCompletionModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

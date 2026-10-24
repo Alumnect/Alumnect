@@ -9,7 +9,9 @@ export function ScrollToTop() {
   const { pathname, hash } = useLocation()
   useEffect(() => {
     if (hash) return
-    window.scrollTo({ top: 0, behavior: 'instant' })
+    // Chờ trang cũ mờ đi (~140ms, xem RouteTransition) rồi mới về đầu trang — tránh nội dung cũ nhảy lên khi đang rời đi
+    const id = window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 150)
+    return () => window.clearTimeout(id)
   }, [pathname, hash])
   return null
 }

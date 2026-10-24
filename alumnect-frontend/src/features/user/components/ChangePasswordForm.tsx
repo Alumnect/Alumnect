@@ -97,7 +97,7 @@ export function ChangePasswordForm() {
   return (
     <div className="w-full max-w-xl rounded-3xl bg-surface p-6 md:p-8 shadow-sm border border-border">
       <div className="flex items-center gap-2">
-        <KeyRound className="text-primary-solid animate-pulse" size={24} />
+        <KeyRound className="text-text-muted" size={22} aria-hidden />
         <h2 className="text-2xl font-extrabold text-text tracking-tight">Đổi mật khẩu</h2>
       </div>
       <p className="mt-1 text-sm text-text-subtle">Bảo vệ tài khoản của bạn bằng cách cập nhật mật khẩu định kỳ.</p>

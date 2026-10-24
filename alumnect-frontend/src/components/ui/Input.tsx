@@ -9,7 +9,7 @@ export function controlClasses(invalid?: boolean, className?: string) {
     'focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-text-disabled',
     invalid
       ? 'border-danger focus:border-danger focus:ring-danger/25'
-      : 'border-border-strong hover:border-primary focus:border-primary focus:ring-primary/25',
+      : 'border-border-input hover:border-primary focus:border-primary focus:ring-primary/25',
     className,
   )
 }
@@ -63,11 +63,13 @@ export function FormField({
   const id = useId()
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label htmlFor={id} className="block text-sm font-semibold text-text">
+      <label id={id} className="block text-sm font-semibold text-text">
         {label}
         {required && <span className="text-danger"> *</span>}
       </label>
-      <div id={id}>{children}</div>
+      <div role="group" aria-labelledby={id}>
+        {children}
+      </div>
       {hint && !error && <p className="text-xs text-text-subtle">{hint}</p>}
       {error && (
         <p role="alert" className="text-sm text-danger">

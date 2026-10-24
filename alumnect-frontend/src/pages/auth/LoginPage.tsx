@@ -24,7 +24,7 @@ export function LoginPage() {
 
   return (
     <AuthScaffold>
-      <h2 className="text-3xl font-extrabold text-text">Chào mừng trở lại</h2>
+      <h1 className="text-3xl font-extrabold text-text">Chào mừng trở lại</h1>
       <p className="mt-2 text-sm text-text-subtle">Đăng nhập để kết nối cùng mạng lưới cựu sinh viên FPTU.</p>
 
       {successMessage && (
@@ -65,11 +65,11 @@ export function LoginPage() {
         />
 
         <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2 text-text-subtle">
+          <label className="flex min-h-7 cursor-pointer items-center gap-2 text-text-muted">
             <input type="checkbox" className="h-4 w-4 rounded border-border-strong accent-brand-500" {...register('remember')} />
             Ghi nhớ đăng nhập
           </label>
-          <Link to="/forgot-password" className="font-semibold text-primary-solid hover:text-primary-solid">
+          <Link to="/forgot-password" className="inline-flex min-h-7 items-center font-semibold text-primary-solid hover:underline">
             Quên mật khẩu?
           </Link>
         </div>

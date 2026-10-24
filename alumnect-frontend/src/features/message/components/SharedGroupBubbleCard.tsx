@@ -76,7 +76,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
   return (
     <Link
       to={`/app/groups/${groupId}`}
-      className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition-all hover:shadow-md ${
+      className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition ${
         isMe
           ? 'border-brand-400/40 bg-surface text-text shadow-2xs hover:bg-surface dark:border-brand-500/30'
           : 'border-border bg-surface-2 text-text hover:bg-surface'
@@ -92,7 +92,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-indigo-600 flex items-center justify-center text-white">
+          <div className="h-full w-full bg-info flex items-center justify-center text-text-inverse">
             <Users size={36} className="opacity-70" />
           </div>
         )}

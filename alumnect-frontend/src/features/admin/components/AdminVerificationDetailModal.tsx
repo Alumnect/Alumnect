@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import {
   FileText,
   FileImage,
@@ -21,7 +20,7 @@ import {
   Clock,
   AlertTriangle,
 } from 'lucide-react'
-import { Badge, Button, Avatar, toast } from '@/components/ui'
+import { Badge, Button, Avatar, toast, DialogFrame } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { renderAsync } from 'docx-preview'
 import type { AdminVerificationRequestDto } from '../api/adminApi'
@@ -290,25 +289,16 @@ export function AdminVerificationDetailModal({
     ? `https://docs.google.com/viewer?url=${encodeURIComponent(currentProofUrl)}&embedded=true`
     : ''
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-plum-950/70 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
-      {/* Backdrop (Chặn đóng khi đang nhập lý do từ chối để tránh mất nội dung) */}
-      <div
-        className="absolute inset-0"
-        onClick={() => {
+  return <DialogFrame
+      onClose={() => {
           if (inlineAction === 'NONE') {
             onClose()
           }
         }}
-      />
-
-      {/* Main Modal Container */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        className="relative z-10 w-full max-w-[1200px] w-[95vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] max-h-[92vh] bg-surface dark:bg-bg rounded-3xl shadow-2xl border border-border flex flex-col overflow-hidden transition-all"
-        onClick={(e) => e.stopPropagation()}
-      >
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-[1200px]"
+      className="z-10 w-[95vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] flex flex-col overflow-hidden transition"
+    >
         {/* ================= 1. HEADER (CỐ ĐỊNH) ================= */}
         <header className="px-5 py-3.5 sm:px-6 sm:py-4 bg-surface dark:bg-bg border-b border-border dark:border-border flex items-center justify-between gap-3 shrink-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
@@ -350,7 +340,7 @@ export function AdminVerificationDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-text-subtle hover:text-text-muted hover:bg-surface-2 dark:text-text-muted dark:hover:bg-surface-2 transition-all cursor-pointer"
+            className="p-2 rounded-xl text-text-subtle hover:text-text-muted hover:bg-surface-2 dark:text-text-muted dark:hover:bg-surface-2 transition cursor-pointer"
             aria-label="Đóng cửa sổ"
             title="Đóng cửa sổ (Esc)"
           >
@@ -553,7 +543,7 @@ export function AdminVerificationDetailModal({
                         setRotation(0)
                       }}
                       className={cn(
-                        'px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer',
+                        'px-2.5 py-1 rounded-lg font-bold transition cursor-pointer',
                         selectedFileIndex === idx
                           ? 'bg-primary-solid text-on-primary shadow-xs'
                           : 'text-text-muted hover:bg-surface-2 dark:hover:bg-surface-2'
@@ -635,7 +625,7 @@ export function AdminVerificationDetailModal({
                   size="sm"
                   disabled={!currentProofUrl || isDownloading}
                   onClick={handleDownloadProof}
-                  className="rounded-xl font-bold bg-surface dark:bg-bg text-text-muted hover:bg-surface-2 dark:hover:bg-surface-2 border border-border cursor-pointer text-xs px-3 py-1.5 transition-all flex items-center gap-1.5"
+                  className="rounded-xl font-bold bg-surface dark:bg-bg text-text-muted hover:bg-surface-2 dark:hover:bg-surface-2 border border-border cursor-pointer text-xs px-3 py-1.5 transition flex items-center gap-1.5"
                 >
                   {isDownloading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -837,7 +827,7 @@ export function AdminVerificationDetailModal({
                       : 'Ghi chú phê duyệt (Tùy chọn, vd: Minh chứng tốt nghiệp hợp lệ)...'
                   }
                   className={cn(
-                    'w-full rounded-xl border bg-surface dark:bg-bg p-2.5 text-xs text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 transition-all',
+                    'w-full rounded-xl border bg-surface dark:bg-bg p-2.5 text-xs text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 transition',
                     actionError
                       ? 'border-danger focus:ring-danger'
                       : 'border-border focus:border-primary focus:ring-primary/20'
@@ -872,7 +862,7 @@ export function AdminVerificationDetailModal({
                   size="sm"
                   disabled={isSubmitting}
                   className={cn(
-                    'rounded-xl text-xs font-bold px-4 py-1.5 text-white transition-all shadow-sm flex items-center gap-1.5',
+                    'rounded-xl text-xs font-bold px-4 py-1.5 text-white transition shadow-sm flex items-center gap-1.5',
                     inlineAction === 'APPROVING'
                       ? 'bg-success hover:opacity-90'
                       : 'bg-danger hover:opacity-90'
@@ -895,7 +885,7 @@ export function AdminVerificationDetailModal({
             variant="secondary"
             size="sm"
             onClick={onClose}
-            className="rounded-xl font-bold text-text-muted hover:bg-surface-2 dark:hover:bg-surface-2 border border-border px-4 py-1.5 cursor-pointer text-xs transition-all"
+            className="rounded-xl font-bold text-text-muted hover:bg-surface-2 dark:hover:bg-surface-2 border border-border px-4 py-1.5 cursor-pointer text-xs transition"
           >
             Đóng
           </Button>
@@ -912,7 +902,7 @@ export function AdminVerificationDetailModal({
                   setReviewNote('')
                   setActionError(null)
                 }}
-                className="rounded-xl font-bold border border-danger-border bg-danger-soft text-danger hover:bg-danger-border/60 px-4 py-1.5 cursor-pointer text-xs transition-all"
+                className="rounded-xl font-bold border border-danger-border bg-danger-soft text-danger hover:bg-danger-border/60 px-4 py-1.5 cursor-pointer text-xs transition"
               >
                 Từ chối
               </Button>
@@ -925,15 +915,12 @@ export function AdminVerificationDetailModal({
                   setReviewNote('Minh chứng tốt nghiệp hợp lệ. Đã phê duyệt quyền Cựu sinh viên FPTU.')
                   setActionError(null)
                 }}
-                className="rounded-xl font-bold bg-success hover:opacity-90 text-text-inverse shadow-raised border-none px-4 py-1.5 cursor-pointer text-xs transition-all"
+                className="rounded-xl font-bold bg-success hover:opacity-90 text-text-inverse shadow-raised border-none px-4 py-1.5 cursor-pointer text-xs transition"
               >
                 Phê duyệt
               </Button>
             </div>
           )}
         </footer>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

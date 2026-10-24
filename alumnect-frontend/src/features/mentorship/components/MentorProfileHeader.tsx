@@ -30,9 +30,6 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
       hover={false}
       className="relative w-full overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6"
     >
-      {/* Background Gradient Accent nhỏ */}
-      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-brand-300/15 via-violet-300/10 to-transparent blur-2xl" />
-
       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         {/* Khối Trái: Avatar & Định danh cá nhân */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 min-w-0 flex-1">
@@ -118,7 +115,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
             leftIcon={<Send className="h-4 w-4" />}
             onClick={onRequestMentor}
             disabled={!mentor.canReceiveRequest}
-            className={`min-h-11 rounded-xl px-6 py-2.5 font-semibold shadow-sm transition-all ${
+            className={`min-h-11 rounded-xl px-6 py-2.5 font-semibold shadow-sm transition ${
               mentor.canReceiveRequest
                 ? 'bg-primary-solid hover:bg-primary-hover shadow-raised active:scale-95 dark:text-text-inverse'
                 : 'bg-surface-3 text-text-subtle cursor-not-allowed'
@@ -130,7 +127,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
           {mentor.userId && (
             <Link
               to={`/app/profile?userId=${mentor.userId}`}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition-all hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid active:scale-95"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid active:scale-95"
               title="Xem trang cá nhân của Mentor"
             >
               <User className="h-3.5 w-3.5 text-text-subtle" />

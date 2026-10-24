@@ -1,4 +1,6 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import { PageHeadingGuard } from './PageHeadingGuard'
+import { RouteTransition } from './RouteTransition'
 import { motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
 import { ShieldCheck, SignOut } from '@/components/icons'
@@ -9,7 +11,6 @@ import { useLogout } from '@/features/auth'
 import { useAuthStore } from '@/store/authStore'
 
 export function AdminShell() {
-  const location = useLocation()
   const logoutM = useLogout()
   const user = useAuthStore((s) => s.user)
 
@@ -18,7 +19,7 @@ export function AdminShell() {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-grid mask-fade-b opacity-50" />
       <div className="pointer-events-none fixed right-0 top-0 -z-10 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(253,230,138,0.25),transparent)]" />
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-surface/70 backdrop-blur-xl lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-surface lg:flex">
         <div className="flex items-center gap-2.5 px-5 py-5">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary-solid text-on-primary shadow-raised">
             <ShieldCheck size={20} weight="fill" />
@@ -39,7 +40,7 @@ export function AdminShell() {
                 end={item.to === '/admin'}
                 className={({ isActive }) =>
                   cn(
-                    'relative flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-all',
+                    'relative flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition',
                     isActive ? 'text-primary-solid' : 'text-text-subtle hover:bg-surface-2 hover:text-text',
                   )
                 }
@@ -101,7 +102,7 @@ export function AdminShell() {
         </header>
 
         {/* Điều hướng admin trên mobile/tablet: cùng danh sách ADMIN_NAV với sidebar, cuộn ngang */}
-        <nav aria-label="Điều hướng quản trị" className="no-scrollbar sticky top-16 z-20 flex gap-1 overflow-x-auto border-b border-border bg-surface/95 px-3 py-2 backdrop-blur-xl lg:hidden">
+        <nav aria-label="Điều hướng quản trị" className="no-scrollbar sticky top-16 z-20 flex gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-2 lg:hidden">
           {ADMIN_NAV.map((item) => {
             const Icon = item.icon
             return (
@@ -128,14 +129,8 @@ export function AdminShell() {
         </nav>
 
         <main className="px-4 py-6 sm:px-8 sm:py-7">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={TRANSITION.page}
-          >
-            <Outlet />
-          </motion.div>
+          <PageHeadingGuard />
+          <RouteTransition />
         </main>
       </div>
     </div>

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { 
   Inbox, Eye, EyeOff, X, 
   Flag, ArrowRight, ShieldAlert, Check, Ban,
@@ -7,7 +6,7 @@ import {
   Trash2, Info, UserX, HelpCircle,
   Search, User
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -107,7 +106,7 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex h-10 items-center justify-between gap-2.5 rounded-2xl border bg-surface px-3.5 text-xs font-bold text-text shadow-2xs transition-all duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[190px]',
+          'flex h-10 items-center justify-between gap-2.5 rounded-2xl border bg-surface px-3.5 text-xs font-bold text-text shadow-2xs transition duration-200 hover:border-gold-400 focus:outline-none cursor-pointer min-w-[190px]',
           isOpen ? 'ring-2 ring-gold-400/40 border-gold-400 bg-surface-2' : 'border-border-strong hover:bg-surface-2'
         )}
       >
@@ -147,7 +146,7 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
                     setIsOpen(false)
                   }}
                   className={cn(
-                    'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 text-left cursor-pointer',
+                    'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition duration-150 text-left cursor-pointer',
                     isSelected
                       ? 'bg-primary-solid text-on-primary shadow-sm font-bold'
                       : cn('text-text', cfg.hoverBg)
@@ -337,13 +336,13 @@ export function AdminReportsQueue() {
                     setPage(0)
                   }}
                   className={cn(
-                    'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 border cursor-pointer',
+                    'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition duration-200 border cursor-pointer',
                     isSelected ? cfg.pillActiveBg : cfg.pillInactiveBg
                   )}
                 >
                   <span
                     className={cn(
-                      'flex h-5 w-5 items-center justify-center rounded-md shrink-0 transition-all',
+                      'flex h-5 w-5 items-center justify-center rounded-md shrink-0 transition',
                       isSelected ? 'bg-white/20 text-current' : 'text-white'
                     )}
                     style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
@@ -375,7 +374,7 @@ export function AdminReportsQueue() {
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
                 statusFilter === tab.key
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -399,26 +398,28 @@ export function AdminReportsQueue() {
           <div className="relative flex items-center sm:w-48">
             <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm nội dung..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
                 setPage(0)
               }}
               placeholder="Tìm nội dung..."
-              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all shadow-2xs"
+              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition shadow-2xs"
             />
           </div>
 
           <div className="relative flex items-center sm:w-48">
             <User size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm tác giả, email..."
               value={authorQuery}
               onChange={(e) => {
                 setAuthorQuery(e.target.value)
                 setPage(0)
               }}
               placeholder="Tìm tác giả, email..."
-              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition-all shadow-2xs"
+              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition shadow-2xs"
             />
           </div>
         </div>
@@ -557,7 +558,7 @@ export function AdminReportsQueue() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => setSelectedReport(r)}
-                              className="inline-flex items-center gap-1 bg-primary-soft hover:bg-primary-soft text-primary-solid font-bold text-xs rounded-full px-3 py-1.5 border border-primary-soft-border transition-colors shadow-2xs hover:shadow-xs cursor-pointer hover-sheen"
+                              className="inline-flex items-center gap-1 bg-primary-soft hover:bg-primary-soft text-primary-solid font-bold text-xs rounded-full px-3 py-1.5 border border-primary-soft-border transition-colors shadow-2xs cursor-pointer hover-sheen"
                             >
                               <Eye size={12} /> Chi tiết
                             </button>
@@ -581,17 +582,12 @@ export function AdminReportsQueue() {
       </Reveal>
 
       {/* Modal chi tiết báo cáo vi phạm */}
-      {selectedReport && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-            onClick={() => setSelectedReport(null)}
-          />
-
-          {/* Card Modal */}
-          <Card hover={false} className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface max-h-[90vh] flex flex-col pop">
+      {selectedReport && <DialogFrame
+          onClose={() => setSelectedReport(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-2xl"
+          className="z-10 overflow-hidden border-plum-950/15 flex flex-col pop"
+        >
             
             {/* Header Modal */}
             <div className="flex items-center justify-between p-6 border-b border-border bg-surface rounded-t-3xl shrink-0">
@@ -741,7 +737,7 @@ export function AdminReportsQueue() {
                     variant="secondary"
                     onClick={toggleSelectedReportWillHide}
                     className={cn(
-                      "w-full sm:w-auto font-bold text-xs rounded-full cursor-pointer transition-all",
+                      "w-full sm:w-auto font-bold text-xs rounded-full cursor-pointer transition",
                       activeWillHide 
                         ? "border border-success-border text-success hover:bg-success-soft" 
                         : "border border-danger-border text-danger hover:bg-danger-soft"
@@ -784,22 +780,15 @@ export function AdminReportsQueue() {
               </div>
 
             </div>
-          </Card>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
 
       {/* Custom Confirmation Popup Dialog */}
-      {confirmAction && createPortal(
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-plum-950/30 backdrop-blur-xs transition-opacity cursor-pointer"
-            onClick={() => setConfirmAction(null)}
-          />
-
-          {/* Dialog Container */}
-          <Card hover={false} className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface p-6 pop">
+      {confirmAction && <DialogFrame
+          onClose={() => setConfirmAction(null)}
+          zIndexClassName="z-60"
+          maxWidthClassName="max-w-sm"
+          className="z-10 overflow-hidden border-plum-950/15 p-6 pop"
+        >
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="rounded-full bg-primary-soft p-3 border border-primary-soft-border text-primary-solid animate-breathe">
                 <ShieldAlert size={28} />
@@ -834,10 +823,7 @@ export function AdminReportsQueue() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
     </div>
   )
 }

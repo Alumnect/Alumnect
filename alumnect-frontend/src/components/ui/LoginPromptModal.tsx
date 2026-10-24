@@ -1,8 +1,11 @@
+import { useId, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
 import { X, LogIn, ArrowRight } from 'lucide-react'
 import { useLoginPrompt } from '@/store/loginPrompt'
+import { useDialog } from '@/hooks/useDialog'
 
 /**
  * Popup nhỏ mời đăng nhập (kiểu Facebook) — hiện khi Guest cố thực hiện một hành động
@@ -13,14 +16,17 @@ export function LoginPromptModal() {
   const isOpen = useLoginPrompt((s) => s.isOpen)
   const message = useLoginPrompt((s) => s.message)
   const close = useLoginPrompt((s) => s.close)
+  const titleId = useId()
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialog(panelRef, { open: isOpen, onClose: close })
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Lớp nền mờ — bấm ra ngoài để đóng */}
           <motion.div
-            className="absolute inset-0 bg-plum-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: TRANSITION.exit }}
@@ -29,8 +35,10 @@ export function LoginPromptModal() {
           />
           {/* Hộp thoại */}
           <motion.div
+            ref={panelRef}
             role="dialog"
             aria-modal="true"
+            aria-labelledby={titleId}
             className="relative w-full max-w-sm rounded-3xl card-surface p-6 text-center"
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -38,17 +46,19 @@ export function LoginPromptModal() {
             transition={TRANSITION.pop}
           >
             <button
+              type="button"
               onClick={close}
+              data-dialog-close
               aria-label="Đóng"
               className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
             >
               <X size={18} />
             </button>
 
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500/15 to-violet-500/15 text-primary-solid">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft text-primary-solid">
               <LogIn size={26} />
             </span>
-            <h3 className="mt-4 text-lg font-extrabold text-text">Đăng nhập để tiếp tục</h3>
+            <h3 id={titleId} className="mt-4 text-lg font-extrabold text-text">Đăng nhập để tiếp tục</h3>
             <p className="mt-1.5 text-sm text-text-subtle">{message}</p>
 
             <div className="mt-5 flex flex-col gap-2.5">
@@ -70,6 +80,7 @@ export function LoginPromptModal() {
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }

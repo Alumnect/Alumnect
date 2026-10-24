@@ -110,7 +110,7 @@ export function EventHistoryView() {
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-plum-800/90 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
             <span>{item.registrationStatus}</span>
           </span>
         )
@@ -127,7 +127,7 @@ export function EventHistoryView() {
             type="button"
             onClick={() => setFilter(opt.key)}
             className={cn(
-              'rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all',
+              'rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold transition',
               filter === opt.key
                 ? 'bg-primary-solid text-on-primary shadow-sm'
                 : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -195,7 +195,7 @@ export function EventHistoryView() {
               <StaggerItem key={item.registrationId}>
                 <Card
                   hover={false}
-                  className="group h-full flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:shadow-glow"
+                  className="group h-full flex flex-col overflow-hidden transition"
                 >
                   {/* Event Cover & Date Badge */}
                   <div className="relative h-44 shrink-0 overflow-hidden bg-surface-2">

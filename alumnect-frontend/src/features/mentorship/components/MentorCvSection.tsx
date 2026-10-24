@@ -80,7 +80,7 @@ export const MentorCvSection: React.FC<Props> = ({
 
         <div
           onClick={() => !isUploading && fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+          className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${
             cvFileKey
               ? 'border-success bg-success-soft hover:bg-success-border/60'
               : 'border-border dark:border-border hover:border-primary bg-cream-100/60 dark:bg-bg/60 hover:bg-brand-50/30 dark:hover:bg-[#1f2022]'

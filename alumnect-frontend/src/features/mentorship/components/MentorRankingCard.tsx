@@ -15,7 +15,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-gold-500 text-white font-bold text-sm shadow-md shadow-gold-500/30">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-warning-border bg-warning-soft text-warning font-semibold text-sm shadow-md shadow-gold-500/30">
           <Trophy className="h-4 w-4" />
         </span>
       )
@@ -45,10 +45,10 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
     <Card
       hover
       className={cn(
-        'border bg-surface p-4 transition-all duration-200 backdrop-blur-sm sm:p-5 dark:border-border',
+        'border bg-surface p-4 transition duration-200 backdrop-blur-sm sm:p-5 dark:border-border',
         mentor.rank <= 3
           ? 'border-primary-soft-border shadow-xs'
-          : 'border-border hover:border-primary-soft-border hover:shadow-md hover:shadow-brand-500/5',
+          : 'border-border hover:border-primary-soft-border',
       )}
     >
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -123,7 +123,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           {/* Nút Xem chi tiết hồ sơ Mentor */}
           <Link
             to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
-            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-solid hover:text-white sm:col-auto sm:py-1.5"
+            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-solid hover:text-on-primary sm:col-auto sm:py-1.5"
           >
             <span>Chi tiết</span>
             <ExternalLink className="h-3 w-3" />

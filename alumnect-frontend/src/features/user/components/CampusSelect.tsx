@@ -52,7 +52,7 @@ export function CampusSelect({
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-3 px-4 text-sm font-semibold cursor-pointer transition-all shadow-xs',
+          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-3 px-4 text-sm font-semibold cursor-pointer transition shadow-xs',
           isOpen
             ? 'border-primary ring-2 ring-primary/20 bg-brand-50/10'
             : 'hover:border-brand-500/50 hover:bg-plum-50/30',
@@ -94,7 +94,7 @@ export function CampusSelect({
         <div className="absolute top-full left-0 mt-2 z-50 w-full bg-surface rounded-3xl border border-border shadow-2xl overflow-hidden animate-scale-up p-1.5">
           <div className="px-3 py-2 text-xs font-extrabold text-text-subtle uppercase tracking-wider border-b border-border mb-1 flex items-center justify-between">
             <span>Cơ sở FPT University</span>
-            <span className="text-xs lowercase font-normal text-plum-400/80">5 cơ sở</span>
+            <span className="text-xs lowercase font-normal text-text-subtle">5 cơ sở</span>
           </div>
 
           <div className="space-y-0.5 max-h-64 overflow-y-auto overscroll-contain pr-1">
@@ -106,7 +106,7 @@ export function CampusSelect({
                   type="button"
                   onClick={() => handleSelect(campus)}
                   className={cn(
-                    'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-left transition-all cursor-pointer',
+                    'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-left transition cursor-pointer',
                     isSelected
                       ? 'bg-primary-soft text-primary-solid font-bold'
                       : 'text-text hover:bg-surface-2 hover:text-text'

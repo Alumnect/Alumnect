@@ -124,7 +124,7 @@ function SavedFeedCard({
     <Card
       hover={false}
       className={cn(
-        'overflow-hidden relative transition-all duration-300 rounded-2xl border border-border shadow-sm hover:shadow-md bg-surface text-left mb-6',
+        'overflow-hidden relative transition duration-300 rounded-2xl border border-border shadow-sm bg-surface text-left mb-6',
         post.type === 'achievement' && 'border-amber-200 bg-gradient-to-br from-amber-50/50 via-white to-white shadow-amber-100/30 dark:from-surface dark:via-surface dark:to-surface dark:border-amber-500/40'
       )}
     >
@@ -168,7 +168,7 @@ function SavedFeedCard({
             onClick={() => onUnsave(post.id)}
             aria-label="Bỏ lưu bài viết"
             title="Bỏ lưu bài viết này"
-            className="group flex items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text-muted transition-all hover:bg-danger-soft hover:border-danger-border hover:text-danger active:scale-95 cursor-pointer shrink-0"
+            className="group flex items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text-muted transition hover:bg-danger-soft hover:border-danger-border hover:text-danger active:scale-95 cursor-pointer shrink-0"
           >
             <BookmarkSimple size={14} weight="fill" className="text-primary-solid group-hover:hidden" />
             <Trash size={14} weight="bold" className="hidden text-danger group-hover:block" />
@@ -206,7 +206,7 @@ function SavedFeedCard({
               </a>
             )}
           </div>
-          <p className="text-xs font-semibold text-text-muted mb-2">🏢 {post.job.company}</p>
+          <p className="text-xs font-semibold text-text-muted mb-2">{post.job.company}</p>
           {post.job.location && (
             <p className="text-xs text-text-subtle flex items-center gap-1 mb-2">
               <MapPin size={12} className="text-primary-solid" /> {post.job.location}
@@ -263,7 +263,7 @@ function SavedFeedCard({
           onClick={handleLike}
           aria-pressed={liked}
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 cursor-pointer',
+            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition duration-200 cursor-pointer',
             liked
               ? 'text-danger bg-danger-soft hover:bg-danger-border/60'
               : 'text-text-muted hover:bg-slate-200/60 dark:hover:bg-surface-2 hover:text-danger',
@@ -275,7 +275,7 @@ function SavedFeedCard({
 
         <Link
           to={`/app/posts/${post.id}#comments`}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-text-muted transition-all duration-200 hover:bg-primary-soft dark:hover:bg-[#F27024]/15 hover:text-primary-solid dark:hover:text-primary"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-text-muted transition duration-200 hover:bg-primary-soft dark:hover:bg-[#F27024]/15 hover:text-primary-solid dark:hover:text-primary"
         >
           <MessageCircle size={15} />
           <span>{compact(post.comments)} bình luận</span>
@@ -297,7 +297,7 @@ function SavedGridCard({
   const coverImage = post.images?.[0] || post.image || (post.type === 'event' ? 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80' : null)
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-surface shadow-sm hover:shadow-md transition-all duration-300 text-left flex flex-col h-full">
+    <div className="group relative overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition duration-300 text-left flex flex-col h-full">
       {/* Phần hình ảnh hoặc Banner màu */}
       <Link to={`/app/posts/${post.id}`} className="relative aspect-video w-full overflow-hidden bg-surface-2 block shrink-0">
         {coverImage ? (
@@ -307,7 +307,7 @@ function SavedGridCard({
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-plum-100/80 via-plum-50 to-orange-50/50 p-4 flex flex-col justify-center">
+          <div className="h-full w-full bg-surface-2 p-4 flex flex-col justify-center">
             <p className="text-xs text-text-muted line-clamp-3 font-medium">{post.text || 'Bài viết AlumNect'}</p>
           </div>
         )}
@@ -326,7 +326,7 @@ function SavedGridCard({
             onUnsave(post.id)
           }}
           title="Bỏ lưu bài viết"
-          className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-lg bg-surface text-danger shadow-sm backdrop-blur-xs hover:opacity-90 hover:text-white transition-all cursor-pointer"
+          className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-lg bg-surface text-danger shadow-sm backdrop-blur-xs hover:opacity-90 hover:text-white transition cursor-pointer"
         >
           <Trash size={13} weight="bold" />
         </button>
@@ -337,11 +337,11 @@ function SavedGridCard({
         <Link to={`/app/posts/${post.id}`} className="block">
           {post.type === 'recruitment' && post.job ? (
             <p className="font-bold text-text text-xs line-clamp-1 mb-1">
-              💼 {post.job.title} ({post.job.company})
+              {post.job.title} ({post.job.company})
             </p>
           ) : post.type === 'event' && post.event ? (
             <p className="font-bold text-text text-xs line-clamp-1 mb-1">
-              📅 {post.event.title}
+              {post.event.title}
             </p>
           ) : null}
 
@@ -425,7 +425,7 @@ export function SavedPostsView() {
                   type="button"
                   onClick={() => setFilter(f.key)}
                   className={cn(
-                    'rounded-xl px-4 py-2 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-2',
+                    'rounded-xl px-4 py-2 text-xs font-bold transition duration-200 cursor-pointer flex items-center gap-2',
                     active
                       ? 'bg-primary-solid text-on-primary shadow-xs shadow-orange-500/20'
                       : 'bg-surface-2 text-text-muted hover:bg-slate-200/80 hover:text-text',
@@ -436,7 +436,7 @@ export function SavedPostsView() {
                     <span
                       className={cn(
                         'rounded-full px-2 py-0.5 text-xs font-extrabold',
-                        active ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                        active ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                       )}
                     >
                       {count}
@@ -454,7 +454,7 @@ export function SavedPostsView() {
               onClick={() => setViewMode('grid')}
               title="Chế độ lưới ảnh (Mặc định)"
               className={cn(
-                'grid h-8 w-8 place-items-center rounded-lg text-xs transition-all cursor-pointer',
+                'grid h-8 w-8 place-items-center rounded-lg text-xs transition cursor-pointer',
                 viewMode === 'grid'
                   ? 'bg-surface text-text font-bold shadow-xs'
                   : 'text-text-subtle hover:text-text-muted'
@@ -467,7 +467,7 @@ export function SavedPostsView() {
               onClick={() => setViewMode('feed')}
               title="Chế độ dòng thời gian"
               className={cn(
-                'grid h-8 w-8 place-items-center rounded-lg text-xs transition-all cursor-pointer',
+                'grid h-8 w-8 place-items-center rounded-lg text-xs transition cursor-pointer',
                 viewMode === 'feed'
                   ? 'bg-surface text-text font-bold shadow-xs'
                   : 'text-text-subtle hover:text-text-muted'

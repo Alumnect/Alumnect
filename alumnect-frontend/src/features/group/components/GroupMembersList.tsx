@@ -76,6 +76,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
       <div className="relative mb-4">
         <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
         <input
+          aria-label="Tìm thành viên theo tên…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           maxLength={GROUP_SEARCH_MAX}

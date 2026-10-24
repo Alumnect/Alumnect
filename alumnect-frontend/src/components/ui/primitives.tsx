@@ -57,7 +57,7 @@ export function Badge({
   )
 }
 
-/** Pillowy surface card. */
+/** Thẻ nền phẳng: viền mảnh, không đổ bóng (kiểu tối giản). */
 export function Card({
   className,
   children,
@@ -68,7 +68,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-2xl bg-surface border border-border text-text shadow-raised',
+        'group relative overflow-hidden rounded-2xl bg-surface border border-border text-text',
         glass && 'glass',
         hover && 'hover-lift',
         className,
@@ -119,7 +119,7 @@ export function Avatar({
             'flex h-full w-full items-center justify-center rounded-full bg-primary-solid font-bold text-on-primary',
             ring && 'ring-2 ring-primary ring-offset-2 ring-offset-bg',
           )}
-          style={{ fontSize: Math.max(11, size * 0.36) }}
+          style={{ fontSize: Math.max(12, size * 0.36) }}
           aria-hidden
         >
           {initials(name)}

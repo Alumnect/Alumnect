@@ -116,7 +116,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-3 px-4 text-sm font-semibold cursor-pointer transition-all shadow-sm',
+          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-3 px-4 text-sm font-semibold cursor-pointer transition shadow-sm',
           isOpen
             ? 'border-primary ring-2 ring-primary/20 bg-brand-50/10'
             : 'hover:border-brand-500/50 hover:bg-plum-50/30',
@@ -130,7 +130,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
         </span>
         <div className="flex items-center gap-1">
           {value && !disabled && (
-            <button
+            <button aria-label="Đóng"
               type="button"
               onClick={handleClear}
               className="p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
@@ -156,6 +156,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
             <div className="relative flex items-center">
               <Search size={15} className="absolute left-3 text-text-subtle" />
               <input
+                aria-label="Tìm tên Tỉnh / Thành phố..."
                 type="text"
                 autoFocus
                 value={searchTerm}
@@ -177,7 +178,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
                     type="button"
                     onClick={() => handleSelect(prov)}
                     className={cn(
-                      'w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all',
+                      'w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition',
                       isSelected
                         ? 'bg-primary-soft text-primary-solid font-extrabold'
                         : 'text-text hover:bg-plum-50/70 hover:text-text'

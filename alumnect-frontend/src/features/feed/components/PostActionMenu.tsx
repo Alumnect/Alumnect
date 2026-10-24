@@ -25,8 +25,6 @@ export function PostActionMenu({
 }: PostActionMenuProps) {
   // Khi không phải chính tác giả bài viết thì không cần hiển thị menu "..."
   // vì các hành động Chia sẻ, Báo cáo, Lưu, Thích, Bình luận đã có đầy đủ ở thanh bên dưới.
-  if (!isAuthor) return null
-
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -59,6 +57,8 @@ export function PostActionMenu({
       (!post.event.endTime && post.event.startTime && new Date(post.event.startTime).getTime() < Date.now())
     )
   const isEventImmutable = isEventCancelled || isEventEnded
+
+  if (!isAuthor) return null
 
   return (
     <div ref={menuRef} className={`relative inline-block text-left ${className}`}>

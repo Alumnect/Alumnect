@@ -224,7 +224,7 @@ export function MentoringAdjustmentTicketEmbed({
                   type="button"
                   onClick={onReissue}
                   title="Soạn và gửi phiên bản Deal Ticket mới"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition-all hover:bg-primary-hover active:scale-95"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   <span>Tạo Deal Ticket mới</span>

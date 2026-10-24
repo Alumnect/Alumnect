@@ -78,7 +78,7 @@ export function MentorSearchHeader({
               onChange={(e) => setLocalKeyword(e.target.value)}
               placeholder="Tìm theo tên mentor, từ khóa, lĩnh vực, chuyên ngành..."
               aria-label="Tìm kiếm Mentor"
-              className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm font-medium text-text transition-all placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm font-medium text-text transition placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
 
             {localKeyword && (

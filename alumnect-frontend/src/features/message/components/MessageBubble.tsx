@@ -7,15 +7,21 @@ import type { Message } from '../model/types'
 import { SharedPostBubbleCard } from './SharedPostBubbleCard'
 import { SharedGroupBubbleCard } from './SharedGroupBubbleCard'
 import { SharedGroupPostBubbleCard } from './SharedGroupPostBubbleCard'
-import { parseAdjustmentMessage } from '@/features/mentorship'
+import { parseAdjustmentMessage } from '@/features/mentorship/model/mentoringAdjustmentTypes'
+
+export type BubblePosition = 'single' | 'first' | 'middle' | 'last'
 
 interface MessageBubbleProps {
   message: Message
   isMe: boolean
   isGroup?: boolean
+  /** Vị trí trong cụm tin liên tiếp của cùng một người (cách nhau < 5 phút) */
+  position?: BubblePosition
 }
 
-export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
+export function MessageBubble({ message, isMe, isGroup, position = 'single' }: MessageBubbleProps) {
+  const isFirst = position === 'single' || position === 'first'
+  const isLast = position === 'single' || position === 'last'
   const [previewImage, setPreviewImage] = useState<{ url: string; fileName?: string } | null>(null)
 
   const formattedTime = message.createdAt
@@ -85,20 +91,24 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
       className={cn(
         'flex w-full gap-2 transition-opacity duration-200',
         isMe ? 'justify-end' : 'justify-start',
+        isFirst ? 'mt-3 first:mt-0' : 'mt-0.5',
         isMe && message.status === 'sending' && 'opacity-70'
       )}
     >
-      {/* Avatar người gửi nếu không phải là tin nhắn của mình */}
-      {!isMe && (
-        <div className="shrink-0 self-end mb-0.5">
-          <Avatar src={message.senderAvatar || undefined} name={message.senderName} size={30} />
-        </div>
-      )}
+      {/* Avatar người gửi: chỉ ở tin cuối của cụm (các tin trên chừa chỗ trống cho thẳng hàng) */}
+      {!isMe &&
+        (isLast ? (
+          <div className="shrink-0 self-end">
+            <Avatar src={message.senderAvatar || undefined} name={message.senderName} size={28} />
+          </div>
+        ) : (
+          <div className="w-7 shrink-0" aria-hidden />
+        ))}
 
-      <div className={cn('flex flex-col gap-1 max-w-[78%] sm:max-w-[65%]', isMe ? 'items-end' : 'items-start')}>
+      <div className={cn('flex flex-col gap-0.5 max-w-[78%] sm:max-w-[68%]', isMe ? 'items-end' : 'items-start')}>
         {/* Tên người gửi trong nhóm */}
-        {isGroup && !isMe && (
-          <span className="text-xs font-semibold text-primary-solid px-1">
+        {isGroup && !isMe && isFirst && (
+          <span className="px-1 text-xs font-semibold text-text-subtle">
             {message.senderName}
           </span>
         )}
@@ -178,7 +188,7 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
                   target="_blank"
                   rel="noreferrer"
                   className={cn(
-                    'flex max-w-[280px] items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-xs shadow-xs transition-all hover:bg-surface-2 hover:shadow-sm sm:max-w-sm',
+                    'flex max-w-[280px] items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-xs shadow-xs transition hover:bg-surface-2 sm:max-w-sm',
                     isMe ? 'rounded-br-xs' : 'rounded-bl-xs'
                   )}
                 >
@@ -230,41 +240,40 @@ export function MessageBubble({ message, isMe, isGroup }: MessageBubbleProps) {
           return (
             <div className={cn('flex flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
               {noteText ? (
-                <div
-                  className={cn(
-                    'w-fit rounded-2xl px-4 py-2.5 shadow-xs',
-                    isMe
-                      ? 'mentoring-chat-outgoing rounded-br-xs bg-primary-solid text-on-primary'
-                      : 'rounded-bl-xs border border-border bg-surface text-text'
-                  )}
-                >
-                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                    {noteText}
-                  </p>
+                <>
                   <div
+                    title={formattedTime}
                     className={cn(
-                      'mt-1 flex items-center gap-1 text-xs',
-                      isMe ? 'justify-end text-white/75' : 'justify-start text-text-subtle'
+                      'w-fit rounded-[20px] px-3.5 py-2',
+                      isMe ? 'bg-primary-solid text-on-primary' : 'bg-surface-2 text-text',
+                      // cụm tin liên tiếp: bo góc phía gần nhau nhỏ lại cho liền mạch
+                      isMe ? (!isLast && 'rounded-br-md') : (!isLast && 'rounded-bl-md'),
+                      isMe ? (!isFirst && 'rounded-tr-md') : (!isFirst && 'rounded-tl-md'),
                     )}
                   >
-                    <span>{formattedTime}</span>
-                    {isMe && message.status === 'sending' && (
-                      <span title="Đang gửi..." className="inline-flex items-center text-white/70">
-                        <Clock size={11} className="animate-spin" />
-                      </span>
-                    )}
-                    {isMe && message.status === 'error' && (
-                      <span title="Gửi thất bại" className="inline-flex items-center text-rose-300">
-                        <AlertCircle size={11} />
-                      </span>
-                    )}
-                    {isMe && (!message.status || message.status === 'sent') && (
-                      <span title="Đã gửi" className="inline-flex items-center text-white/70">
-                        <Check size={11} />
-                      </span>
-                    )}
+                    <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{noteText}</p>
                   </div>
-                </div>
+                  {isLast && (
+                    <div className={cn('flex items-center gap-1 px-1 pt-0.5 text-xs text-text-subtle', isMe ? 'justify-end' : 'justify-start')}>
+                      <span>{formattedTime}</span>
+                      {isMe && message.status === 'sending' && (
+                        <span title="Đang gửi..." className="inline-flex items-center">
+                          <Clock size={11} className="animate-spin" />
+                        </span>
+                      )}
+                      {isMe && message.status === 'error' && (
+                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
+                          <AlertCircle size={11} />
+                        </span>
+                      )}
+                      {isMe && (!message.status || message.status === 'sent') && (
+                        <span title="Đã gửi" className="inline-flex items-center">
+                          <Check size={11} />
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : null}
 
               {/* Render thẻ bài viết nhúng interactive nếu có liên kết bài viết bảng tin */}

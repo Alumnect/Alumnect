@@ -65,12 +65,13 @@ export function InlineComments({
           <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
           <div className="relative flex-1">
             <input
+              aria-label="Viết phản hồi công khai..."
               type="text"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               maxLength={1000}
               placeholder="Viết phản hồi công khai..."
-              className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition-all shadow-2xs"
+              className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
             />
             <button
               type="submit"

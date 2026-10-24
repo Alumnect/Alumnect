@@ -110,7 +110,7 @@ export function MentoringDealSnapshotCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Xác nhận của Student */}
         <div
-          className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
+          className={`flex items-center justify-between p-3.5 rounded-2xl border transition ${
             deal.studentConfirmed
               ? 'bg-success-soft border-success-border'
               : 'bg-cream-100/40 border-border dark:bg-white/5'
@@ -152,7 +152,7 @@ export function MentoringDealSnapshotCard({
 
         {/* Xác nhận của Mentor */}
         <div
-          className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
+          className={`flex items-center justify-between p-3.5 rounded-2xl border transition ${
             deal.mentorConfirmed
               ? 'bg-success-soft border-success-border'
               : 'bg-cream-100/40 border-border dark:bg-white/5'

@@ -78,7 +78,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
   if (isForbidden) {
     return (
       <div
-        className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-2xl border text-left p-4 transition-all shadow-xs ${
+        className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-2xl border text-left p-4 transition shadow-xs ${
           isMe
             ? 'border-brand-400/40 bg-surface text-text dark:border-brand-500/30'
             : 'border-border bg-slate-50/90 text-text dark:bg-surface'
@@ -116,7 +116,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
   if (isNotFound) {
     return (
       <div
-        className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-2xl border text-left p-4 transition-all shadow-xs ${
+        className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-2xl border text-left p-4 transition shadow-xs ${
           isMe
             ? 'border-brand-400/40 bg-surface text-text dark:border-brand-500/30'
             : 'border-border bg-slate-50/90 text-text dark:bg-surface'
@@ -169,7 +169,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
   return (
     <Link
       to={`/app/groups/${groupId}/posts/${postId}`}
-      className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition-all hover:shadow-md ${
+      className={`group mt-2 block w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border text-left transition ${
         isMe
           ? 'border-brand-400/40 bg-surface text-text shadow-2xs hover:bg-surface dark:border-brand-500/30'
           : 'border-border bg-surface-2 text-text hover:bg-surface'

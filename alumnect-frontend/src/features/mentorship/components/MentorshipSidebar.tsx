@@ -13,7 +13,7 @@ import {
   type MentorshipNavigationItem,
 } from '../constants/mentorshipNavigation'
 import { mentoringGroupApi } from '../api/mentoringGroupApi'
-import { useConversations } from '@/features/message'
+import { useConversations } from '@/features/message/hooks/useChat'
 
 type MentorshipSidebarContentProps = { onNavigate?: () => void }
 
@@ -104,7 +104,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         end={item.end}
         onClick={onNavigate}
         className={cn(
-          'group relative flex items-center rounded-xl font-medium transition-all duration-150',
+          'group relative flex items-center rounded-xl font-medium transition duration-150',
           nested ? 'h-8 gap-2 pl-8 pr-2.5 text-[12px]' : 'h-10 gap-2.5 px-3 text-[13px]',
           isActive
             ? 'bg-primary-soft font-semibold text-primary-solid shadow-[inset_3px_0_0_#f27024]'
@@ -171,7 +171,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         <nav aria-label="Điều hướng Mentoring" className="space-y-3">
           {sections.map((section) => (
             <section key={section.label} className="border-t border-border pt-2.5 first:border-t-0 first:pt-0">
-              <h3 className="mb-1 px-3 text-xs font-bold uppercase tracking-[0.12em] text-plum-400/80 dark:text-text-subtle">{section.label}</h3>
+              <h3 className="mb-1 px-3 text-xs font-bold uppercase tracking-[0.12em] text-text-subtle">{section.label}</h3>
               <div className="space-y-0.5">{section.items.map((item) => item.children ? renderParent(item) : renderLink(item))}</div>
             </section>
           ))}

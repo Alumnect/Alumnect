@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X, User, GraduationCap, MapPin, Plus, Trash2, AlertTriangle, Loader2, Link as LinkIcon, Sparkles, Upload, Image as ImageIcon } from 'lucide-react'
 import axios from 'axios'
 import { Button } from '@/components/ui/Button'
-import { Avatar, SmartImage, toast, SelectDropdown } from '@/components/ui'
+import { Avatar, SmartImage, toast, SelectDropdown, DialogFrame, FadeSwitch } from '@/components/ui'
 import { useMajors, usePresignedUrl } from '@/features/auth/hooks/useAuth'
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
 import { CampusSelect } from './CampusSelect'
@@ -214,8 +214,12 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-2xl bg-surface rounded-3xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-2xl"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border bg-cream-50/50">
           <div className="flex items-center gap-2">
@@ -224,9 +228,9 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
             </span>
             <h3 className="text-lg font-bold text-text">Chỉnh sửa hồ sơ cá nhân</h3>
           </div>
-          <button
+          <button aria-label="Đóng"
             onClick={onClose}
-            className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-all"
+            className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition"
             disabled={loading}
           >
             <X size={18} />
@@ -244,7 +248,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-1.5 py-3 px-3 text-xs font-bold border-b-2 transition-all ${
+              className={`flex items-center gap-1.5 py-3 px-3 text-xs font-bold border-b-2 transition ${
                 activeTab === tab.id
                   ? 'border-primary text-primary-solid'
                   : 'border-transparent text-text-subtle hover:text-text-muted'
@@ -266,7 +270,8 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
           )}
 
           {/* Tab 1: Basic Info */}
-          {activeTab === 'basic' && (
+          <FadeSwitch id={activeTab}>
+{activeTab === 'basic' && (
             <div className="space-y-4">
               {/* Họ tên */}
               <div>
@@ -322,7 +327,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                         disabled={loading}
                         className="flex-1 rounded-xl border border-border bg-surface py-2 px-3 text-xs text-text focus:border-primary focus:outline-none"
                       />
-                      <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition-all shrink-0">
+                      <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition shrink-0">
                         {isUploadingAvatar ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
@@ -370,7 +375,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                       disabled={loading}
                       className="flex-1 rounded-xl border border-border bg-surface py-2 px-3 text-xs text-text focus:border-primary focus:outline-none"
                     />
-                    <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition-all shrink-0">
+                    <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition shrink-0">
                       {isUploadingCover ? (
                         <Loader2 size={14} className="animate-spin" />
                       ) : (
@@ -529,7 +534,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                         <LinkIcon size={14} className="text-text-subtle shrink-0" />
                         {link}
                       </span>
-                      <button
+                      <button aria-label="Xóa"
                         type="button"
                         onClick={() => handleRemoveSocialLink(idx)}
                         className="text-danger hover:text-danger p-1"
@@ -598,7 +603,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                       className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-1 text-xs font-semibold text-text-muted border border-border"
                     >
                       <span className="text-text-subtle font-normal">[{skill.groupName}]</span> {skill.skillName}
-                      <button
+                      <button aria-label="Đóng"
                         type="button"
                         onClick={() => handleRemoveSkill(idx)}
                         className="text-text-subtle hover:text-danger ml-1"
@@ -611,6 +616,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               </div>
             </div>
           )}
+</FadeSwitch>
 
           {/* Footer Buttons */}
           <div className="pt-4 flex items-center justify-end gap-3 border-t border-border mt-6">
@@ -636,7 +642,6 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

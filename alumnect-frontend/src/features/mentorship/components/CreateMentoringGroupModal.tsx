@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Users, X, Loader2 } from 'lucide-react'
-import { Card, toast } from '@/components/ui'
+import { Card, toast, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { mentoringGroupApi } from '../api/mentoringGroupApi'
 import type { MentoringGroupData } from '../model/mentoringRequestTypes'
@@ -64,8 +64,12 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg animate-in fade-in zoom-in-95 duration-150">
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-lg"
+      className="fade-in zoom-in-95 duration-150"
+    >
         <Card hover={false} className="border border-border-strong p-6 shadow-2xl dark:bg-surface">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-2.5">
@@ -77,7 +81,7 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
                 <p className="text-xs text-text-subtle">Mô hình Group-First: tạo nhóm trước khi gửi yêu cầu</p>
               </div>
             </div>
-            <button
+            <button aria-label="Đóng"
               type="button"
               onClick={onClose}
               className="rounded-lg p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
@@ -124,7 +128,7 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
             </div>
 
             <div className="rounded-xl bg-warning-soft p-3 text-xs leading-relaxed text-warning">
-              💡 Sau khi tạo nhóm, bạn sẽ là <strong>Trưởng nhóm</strong> và có thể mời các thành viên tham gia trước khi submit Mentoring Request.
+              Sau khi tạo nhóm, bạn sẽ là <strong>Trưởng nhóm</strong> và có thể mời các thành viên tham gia trước khi submit Mentoring Request.
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -143,7 +147,6 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
             </div>
           </form>
         </Card>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

@@ -111,7 +111,7 @@ export function MonthYearPicker({
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-2.5 px-3.5 text-xs font-semibold transition-all shadow-sm',
+          'w-full flex items-center justify-between rounded-2xl border border-border bg-surface py-2.5 px-3.5 text-xs font-semibold transition shadow-sm',
           isOpen
             ? 'border-primary ring-2 ring-primary/20 bg-brand-50/10'
             : 'hover:border-brand-500/50 hover:bg-plum-50/30',
@@ -137,7 +137,7 @@ export function MonthYearPicker({
         <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-surface rounded-3xl border border-border shadow-2xl p-4 animate-scale-up">
           {/* Year Switcher Header */}
           <div className="flex items-center justify-between mb-3 px-1 pb-2 border-b border-border">
-            <button
+            <button aria-label="Trước"
               type="button"
               onClick={handlePrevYear}
               className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-surface-2 transition-colors"
@@ -145,7 +145,7 @@ export function MonthYearPicker({
               <ChevronLeft size={16} />
             </button>
             <span className="font-extrabold text-sm text-text">Năm {viewYear}</span>
-            <button
+            <button aria-label="Sau"
               type="button"
               onClick={handleNextYear}
               disabled={viewYear >= maxYear}
@@ -176,7 +176,7 @@ export function MonthYearPicker({
                   disabled={disabled}
                   onClick={() => handleSelectMonth(mNum)}
                   className={cn(
-                    'py-2 px-2 rounded-xl text-xs transition-all text-center select-none font-semibold',
+                    'py-2 px-2 rounded-xl text-xs transition text-center select-none font-semibold',
                     isSelected
                       ? 'bg-primary-solid text-on-primary font-extrabold shadow-raised scale-[1.03]'
                       : disabled

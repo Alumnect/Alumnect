@@ -7,17 +7,14 @@
  *  - Chế độ TẠO: thành công thì điều hướng sang trang chi tiết nhóm vừa tạo; chế độ SỬA: thành công thì đóng modal.
  *  - Ảnh bìa: upload qua presigned URL, xem trước và gỡ được.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { TRANSITION } from '@/lib/motion'
-import { AlertTriangle, Check, ChevronDown, Globe, ImagePlus, Loader2, Lock, Plus, X } from 'lucide-react'
+import { AlertTriangle, Globe, ImagePlus, Loader2, Lock, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { DialogFrame, SelectDropdown, toast } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { groupApi } from '../api/groupApi'
 import { useCreateGroup, useUpdateGroup } from '../hooks/useGroupActions'
@@ -27,7 +24,6 @@ import {
   GROUP_NAME_MAX,
   GROUP_RULES_MAX,
   GROUP_TOPIC_MAX_LENGTH,
-  categoryLabel,
   groupFormSchema,
   parseTopics,
   validateTopics,
@@ -75,19 +71,6 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
   const coverImageUrl = watch('coverImageUrl')
   const nameValue = watch('name')
   const categoryValue = watch('category')
-  const [categoryOpen, setCategoryOpen] = useState(false)
-  const categoryRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!categoryOpen) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
-        setCategoryOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [categoryOpen])
 
   const updateTopics = (nextTopics: string[]) => {
     setTopics(nextTopics)
@@ -177,30 +160,12 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
     }
   }
 
-  // Khóa cuộn nền + đóng bằng phím Esc khi modal đang mở.
-  useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = prevOverflow
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [onClose])
 
-  return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={TRANSITION.overlay} className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/40 p-4" onClick={onClose}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={TRANSITION.pop}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl card-surface p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return (
+    <DialogFrame onClose={onClose} zIndexClassName="z-50" maxWidthClassName="max-w-2xl" className="overflow-y-auto p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-text">{isEdit ? 'Chỉnh sửa hội nhóm' : 'Tạo hội nhóm mới'}</h2>
-          <button onClick={onClose} aria-label="Đóng" className="grid h-9 w-9 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-text">
+          <h2 className="text-lg font-semibold text-text">{isEdit ? 'Chỉnh sửa hội nhóm' : 'Tạo hội nhóm mới'}</h2>
+          <button type="button" onClick={onClose} data-dialog-close aria-label="Đóng" className="grid h-10 w-10 place-items-center rounded-lg text-text-muted transition-colors hover:bg-surface-3 hover:text-text">
             <X size={18} />
           </button>
         </div>
@@ -216,7 +181,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                   <button
                     type="button"
                     onClick={() => setValue('coverImageUrl', null, { shouldDirty: true })}
-                    className="rounded-lg bg-plum-900/60 px-2.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:opacity-90"
+                    className="rounded-lg bg-black/60 px-2.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:opacity-90"
                   >
                     Gỡ ảnh
                   </button>
@@ -251,73 +216,17 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
 
           {/* Danh mục + loại hội nhóm */}
           <div className="grid gap-4 sm:grid-cols-2">
-            <div ref={categoryRef} className="relative">
+            <div>
               <label className="mb-1 block text-sm font-semibold text-text">
                 Danh mục hoạt động <span className="text-danger">*</span>
               </label>
-
-              <button
-                type="button"
-                onClick={() => setCategoryOpen((prev) => !prev)}
-                className={cn(
-                  'flex h-11 w-full items-center justify-between rounded-2xl border px-4 text-left text-sm transition-all cursor-pointer',
-                  errors.category
-                    ? 'border-danger bg-danger-soft text-danger'
-                    : 'border-border bg-surface-2 text-text hover:border-brand-500/40 hover:bg-surface focus:outline-none dark:hover:border-brand-500/50',
-                  categoryOpen && 'border-primary ring-2 ring-primary/20'
-                )}
-              >
-                <span className={cn(!categoryValue && 'text-text-subtle dark:text-text-subtle')}>
-                  {categoryValue ? categoryLabel(categoryValue) : '— Chọn danh mục —'}
-                </span>
-                <ChevronDown
-                  size={16}
-                  className={cn(
-                    'text-text-subtle transition-transform duration-200',
-                    categoryOpen && 'rotate-180 text-primary-solid'
-                  )}
-                />
-              </button>
-
-              <AnimatePresence>
-                {categoryOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-2xl border border-brand-500/15 bg-surface p-1.5 shadow-xl backdrop-blur-xl dark:border-white/10"
-                  >
-                    {GROUP_CATEGORIES.map((c) => {
-                      const isSelected = categoryValue === c.value
-                      return (
-                        <button
-                          key={c.value}
-                          type="button"
-                          onClick={() => {
-                            setValue('category', c.value, { shouldDirty: true, shouldValidate: true })
-                            setCategoryOpen(false)
-                          }}
-                          className={cn(
-                            'flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-all cursor-pointer',
-                            isSelected
-                              ? 'bg-primary-soft font-bold text-primary-solid'
-                              : 'font-medium text-text-muted hover:bg-surface-2'
-                          )}
-                        >
-                          <span>{c.label}</span>
-                          {isSelected && (
-                            <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-primary-solid text-on-primary">
-                              <Check size={11} strokeWidth={3} />
-                            </span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
+              <SelectDropdown
+                label="Danh mục hoạt động"
+                value={categoryValue ?? ''}
+                onChange={(v) => setValue('category', String(v), { shouldDirty: true, shouldValidate: true })}
+                options={GROUP_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+                placeholder="Chọn danh mục"
+              />
               {errors.category && <p className="mt-1 text-xs text-danger">{errors.category.message}</p>}
             </div>
 
@@ -339,7 +248,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                       onClick={() => setValue('privacy', opt.value, { shouldDirty: true })}
                       aria-pressed={isSelected}
                       className={cn(
-                        'flex h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-bold transition-all cursor-pointer',
+                        'flex h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-bold transition cursor-pointer',
                         isSelected
                           ? 'border-brand-400/70 bg-primary-soft text-primary-solid shadow-2xs'
                           : 'border-border bg-surface-2 text-text-muted hover:border-border-strong hover:bg-surface-2',
@@ -372,6 +281,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                   }
                 }}
                 maxLength={GROUP_TOPIC_MAX_LENGTH}
+                aria-label="Chủ đề thảo luận"
                 placeholder="Nhập chủ đề"
                 className={`h-11 ${FIELD_CLASS}`}
               />
@@ -419,8 +329,6 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
             </Button>
           </div>
         </form>
-      </motion.div>
-    </motion.div>,
-    document.body,
+    </DialogFrame>
   )
 }

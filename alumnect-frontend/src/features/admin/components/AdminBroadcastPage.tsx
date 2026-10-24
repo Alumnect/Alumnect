@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   Megaphone,
   Plus,
@@ -15,7 +14,7 @@ import {
   Archive,
   Hourglass,
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -139,7 +138,6 @@ export function AdminBroadcastPage() {
         actions={
           <Button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 font-bold shadow-sm"
             leftIcon={<Plus size={16} />}
           >
             Tạo thông báo mới
@@ -158,7 +156,7 @@ export function AdminBroadcastPage() {
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
                 statusFilter === tab.value
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -184,9 +182,9 @@ export function AdminBroadcastPage() {
                     setPage(0)
                   }}
                   className={cn(
-                    'rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer select-none',
+                    'rounded-full px-3 py-1 text-xs font-bold transition cursor-pointer select-none',
                     timeFilter === t.value
-                      ? 'bg-plum-900 text-white shadow-xs'
+                      ? 'bg-text text-text-inverse shadow-xs'
                       : 'bg-surface-2 text-text-muted hover:bg-surface-3'
                   )}
                 >
@@ -409,17 +407,12 @@ export function AdminBroadcastPage() {
       />
 
       {/* Modal Xem Chi Tiết Thông Báo */}
-      {detailItem && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-            onClick={() => setDetailItem(null)}
-          />
-
-          <Card
-            hover={false}
-            className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-plum-950/15 shadow-2xl bg-surface max-h-[90vh] flex flex-col pop"
-          >
+      {detailItem && <DialogFrame
+          onClose={() => setDetailItem(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-2xl"
+          className="z-10 overflow-hidden border-plum-950/15 flex flex-col pop"
+        >
             {/* Header Modal */}
             <div className="flex items-center justify-between p-6 border-b border-border bg-surface rounded-t-3xl shrink-0">
               <div className="flex items-center gap-3">
@@ -652,19 +645,15 @@ export function AdminBroadcastPage() {
                 Đóng
               </Button>
             </div>
-          </Card>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
 
       {/* Confirm Hủy Lịch Gửi */}
-      {cancelTargetId && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-            onClick={() => setCancelTargetId(null)}
-          />
-          <Card hover={false} className="relative z-10 w-full max-w-sm bg-surface p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
+      {cancelTargetId && <DialogFrame
+          onClose={() => setCancelTargetId(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-sm"
+          className="z-10 p-6 border-plum-950/15 pop"
+        >
             <h3 className="text-base font-bold text-text">Xác nhận hủy thông báo hẹn giờ?</h3>
             <p className="text-xs text-text-subtle mt-2 leading-relaxed">
               Thông báo này sẽ không được phát hành tự động nữa. Trạng thái sẽ chuyển sang ĐÃ HỦY.
@@ -683,19 +672,15 @@ export function AdminBroadcastPage() {
                 Xác nhận hủy
               </Button>
             </div>
-          </Card>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
 
       {/* Confirm Lưu Trữ Thông Báo (Archive) */}
-      {archiveTargetId && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-            onClick={() => setArchiveTargetId(null)}
-          />
-          <Card hover={false} className="relative z-10 w-full max-w-sm bg-surface p-6 shadow-2xl rounded-3xl border border-plum-950/15 pop">
+      {archiveTargetId && <DialogFrame
+          onClose={() => setArchiveTargetId(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-sm"
+          className="z-10 p-6 border-plum-950/15 pop"
+        >
             <div className="flex items-center gap-2.5 mb-2">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold-100 text-gold-700">
                 <Archive size={18} />
@@ -719,10 +704,7 @@ export function AdminBroadcastPage() {
                 Xác nhận lưu trữ
               </Button>
             </div>
-          </Card>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
     </div>
   )
 }

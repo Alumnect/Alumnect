@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   FileText,
   X,
@@ -8,7 +7,7 @@ import {
   ShieldAlert,
   Send,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
 import {
   useSettlementSnapshot,
@@ -82,14 +81,14 @@ export function MentoringSubmitSettlementTicketModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-lg bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-lg"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-violet-500/5 to-violet-500/5 dark:from-surface dark:to-violet-600/20">
+        <div className="bg-surface-2 px-6 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-info text-text-inverse shadow-sm">
               <FileText className="w-5 h-5" />
@@ -99,7 +98,7 @@ export function MentoringSubmitSettlementTicketModal({
               <p className="text-xs text-text-subtle">Yêu cầu Ban Quản Trị giải ngân và hoàn tiền theo thỏa thuận</p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-text-subtle hover:text-text-muted hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -160,11 +159,11 @@ export function MentoringSubmitSettlementTicketModal({
                   </div>
                   <div className="h-2.5 w-full bg-info-soft rounded-full overflow-hidden flex">
                     <div
-                      className="h-full bg-info transition-all duration-300"
+                      className="h-full bg-info transition duration-300"
                       style={{ width: `${mentorPercent}%` }}
                     />
                     <div
-                      className="h-full bg-info transition-all duration-300"
+                      className="h-full bg-info transition duration-300"
                       style={{ width: `${studentPercent}%` }}
                     />
                   </div>
@@ -191,7 +190,7 @@ export function MentoringSubmitSettlementTicketModal({
                   maxLength={1000}
                   rows={3}
                   placeholder="Ghi chú thêm về thông tin tài khoản hoặc ngữ cảnh bàn giao..."
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
                 />
                 <div className="text-right text-xs text-text-subtle">
                   {note.length}/1000 ký tự
@@ -240,8 +239,5 @@ export function MentoringSubmitSettlementTicketModal({
             </form>
           )}
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

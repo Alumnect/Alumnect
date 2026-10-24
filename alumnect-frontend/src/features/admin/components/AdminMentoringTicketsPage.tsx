@@ -1,3 +1,4 @@
+import { ImageViewerModal } from '@/components/ui/ImageViewerModal'
 import { useState } from 'react'
 import {
   Scale,
@@ -22,7 +23,7 @@ import {
   ArrowRight,
   MessageSquare,
 } from 'lucide-react'
-import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, toast } from '@/components/ui'
+import { Badge, Card, EmptyState, Pagination, Skeleton, SelectDropdown, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminTickets, useAcceptAdminTicket, useAdminDisputeContext } from '../hooks/useAdmin'
 import {
@@ -172,6 +173,7 @@ export function AdminMentoringTicketsPage() {
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-text-subtle" />
               <input
+                aria-label="Tìm mã ticket, tiêu đề, task, email..."
                 type="text"
                 value={keyword}
                 onChange={(e) => {
@@ -443,15 +445,12 @@ export function AdminMentoringTicketsPage() {
 
       {/* 7. Modal Xem Bằng Chứng & Bối Cảnh Toàn Diện Của Task (UC118) */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
-            onClick={() => setSelectedTicket(null)}
-          />
-
-          {/* Modal Container */}
-          <div className="relative z-10 w-full max-w-4xl max-h-[92vh] bg-surface rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden text-text animate-in fade-in zoom-in-95 duration-150">
+        <DialogFrame
+          onClose={() => setSelectedTicket(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-4xl"
+          className="z-10 flex flex-col overflow-hidden fade-in zoom-in-95 duration-150"
+        >
             {/* Modal Header */}
             <div className="px-6 pt-5 pb-3 border-b border-border bg-surface shrink-0">
               <div className="flex items-start justify-between gap-4">
@@ -461,7 +460,7 @@ export function AdminMentoringTicketsPage() {
                       {selectedTicket.ticketCode}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                      className={`px-2 py-0.5 rounded text-xs font-semibold border ${
                         getTypeBadge(selectedTicket.ticketType).className
                       }`}
                     >
@@ -495,7 +494,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('evidence')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'evidence'
                       ? 'border-primary-solid text-primary-solid'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -511,7 +510,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('context')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'context'
                       ? 'border-primary-solid text-primary-solid'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -529,7 +528,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('ticket')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'ticket'
                       ? 'border-primary-solid text-primary-solid'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -542,7 +541,7 @@ export function AdminMentoringTicketsPage() {
                 <button
                   type="button"
                   onClick={() => setActiveModalTab('discussion')}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer ${
                     activeModalTab === 'discussion'
                       ? 'border-primary-solid text-primary-solid font-bold'
                       : 'border-transparent text-text-subtle hover:text-text'
@@ -565,7 +564,8 @@ export function AdminMentoringTicketsPage() {
               ) : (
                 <>
                   {/* TAB 1: BẰNG CHỨNG TRANH CHẤP (UC118) */}
-                  {activeModalTab === 'evidence' && (
+                  <FadeSwitch id={activeModalTab}>
+{activeModalTab === 'evidence' && (
                     <div className="space-y-4">
                       {/* Filter Bằng chứng theo bên nộp */}
                       <div className="flex items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-border">
@@ -652,13 +652,13 @@ export function AdminMentoringTicketsPage() {
                               return (
                                 <div
                                   key={ev.id}
-                                  className="p-4 rounded-xl border border-border bg-surface hover:border-border-strong shadow-2xs flex flex-col justify-between transition-all"
+                                  className="p-4 rounded-xl border border-border bg-surface hover:border-border-strong shadow-2xs flex flex-col justify-between transition"
                                 >
                                   <div>
                                     {/* Header card: Người nộp */}
                                     <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-border">
                                       <div className="flex items-center gap-2 min-w-0">
-                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
+                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
                                           isStudent ? 'bg-info' : 'bg-success'
                                         }`}>
                                           {isStudent ? 'HV' : 'CV'}
@@ -673,7 +673,7 @@ export function AdminMentoringTicketsPage() {
                                         </div>
                                       </div>
 
-                                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                                      <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${
                                         isStudent
                                           ? 'bg-info-soft text-info border-info-border'
                                           : 'bg-success-soft text-success border-success-border'
@@ -873,7 +873,7 @@ export function AdminMentoringTicketsPage() {
                                     </div>
                                   </div>
                                   <div>
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
                                       ext.status === 'CONFIRMED'
                                         ? 'bg-success-soft text-success border-success-border'
                                         : ext.status === 'REJECTED'
@@ -1067,6 +1067,7 @@ export function AdminMentoringTicketsPage() {
                       totalAmount={selectedTicket.totalAmount}
                     />
                   )}
+</FadeSwitch>
                 </>
               )}
             </div>
@@ -1123,34 +1124,16 @@ export function AdminMentoringTicketsPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </DialogFrame>
       )}
 
       {/* Lightbox Preview Hình Ảnh Bằng Chứng (UC118) */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] bg-transparent">
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="absolute -top-10 right-0 p-1.5 text-white hover:text-slate-300 transition-colors cursor-pointer"
-              aria-label="Đóng ảnh"
-            >
-              <X size={24} />
-            </button>
-            <img
-              src={previewImage}
-              alt="Bằng chứng tranh chấp phóng to"
-              className="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-      )}
+      <ImageViewerModal
+        isOpen={previewImage !== null}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage ?? ''}
+        alt="Bằng chứng tranh chấp phóng to"
+      />
 
       {/* 8. Modal Ra Phán Quyết Giải Quyết Ticket (UC120) */}
       <AdminResolveTicketModal

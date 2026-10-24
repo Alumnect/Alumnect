@@ -156,7 +156,7 @@ export function SalaryPage() {
         title="Bảng lương cộng đồng"
         subtitle="Khám phá mức thu nhập thực tế theo vị trí, ngành nghề và cấp bậc do cựu sinh viên FPTU chia sẻ."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -196,6 +196,7 @@ export function SalaryPage() {
           <div className="relative">
             <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
+              aria-label="Tìm theo chức danh..."
               value={jobTitleInput}
               onChange={(e) => setJobTitleInput(e.target.value)}
               placeholder="Tìm theo chức danh..."
@@ -359,12 +360,12 @@ export function SalaryPage() {
                         <div className="relative h-3.5 rounded-full bg-surface-2 overflow-hidden">
                           {/* Dải lương từ thấp đến cao */}
                           <div
-                            className="absolute top-0 h-full rounded-full bg-primary-solid transition-all duration-500"
+                            className="absolute top-0 h-full rounded-full bg-primary-solid transition duration-500"
                             style={{ left: `${(s.p25 / max) * 100}%`, width: `${((s.p75 - s.p25) / max) * 100}%` }}
                           />
                           {/* Vạch mốc lương phổ biến */}
                           <div
-                            className="absolute top-0 h-full w-1.5 rounded-full bg-gold-400 shadow-sm transition-all duration-500"
+                            className="absolute top-0 h-full w-1.5 rounded-full bg-gold-400 shadow-sm transition duration-500"
                             style={{ left: `${(s.median / max) * 100}%` }}
                           />
                         </div>

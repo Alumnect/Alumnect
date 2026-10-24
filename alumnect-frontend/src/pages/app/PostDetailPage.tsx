@@ -143,7 +143,7 @@ function PostForbidden() {
       </div>
       <Link
         to="/login"
-        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary-solid px-4 text-sm font-semibold text-on-primary shadow-sm transition-transform hover:bg-primary-hover hover:-translate-y-0.5"
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary-solid px-4 text-sm font-semibold text-on-primary shadow-sm transition-transform hover:bg-primary-hover"
       >
         Đăng nhập <ArrowRight size={15} />
       </Link>
@@ -300,9 +300,9 @@ function PostDetailCard({
 
       {/* --- Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-orange-200 bg-surface shadow-sm ring-1 ring-orange-50 transition-all dark:border-border dark:ring-0">
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-orange-200 bg-surface shadow-sm ring-1 ring-orange-50 transition dark:border-border dark:ring-0">
           {/* Header Tuyển dụng - Thiết kế trang trọng, nổi bật */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-amber-50/40 to-white px-6 py-4 dark:border-border dark:from-surface-2 dark:to-surface">
+          <div className="bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 px-6 py-4 dark:border-border">
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-orange-100 text-primary-solid shadow-2xs dark:bg-orange-500/20 dark:text-orange-400">
                 <Briefcase size={22} />
@@ -327,7 +327,7 @@ function PostDetailCard({
 
           <div className="p-6">
             {/* Box Kêu gọi Ứng tuyển (tương tự RSVP của Sự kiện) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/30 p-4 shadow-xs dark:border-border dark:bg-none dark:bg-surface-2">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
               <div className="min-w-0">
                 <p className="text-sm font-bold text-text">Ứng tuyển vị trí này</p>
                 <p className="text-xs text-text-subtle mt-0.5">
@@ -355,7 +355,7 @@ function PostDetailCard({
                     href={post.job.applyUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-bold text-on-primary shadow-sm hover:bg-primary-hover transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-bold text-on-primary shadow-sm hover:bg-primary-hover transition cursor-pointer"
                   >
                     <span>Ứng tuyển ngay</span>
                     <ExternalLink size={13} />
@@ -439,9 +439,9 @@ function PostDetailCard({
 
       {/* --- Thẻ thông tin Sự kiện (nếu là bài event) --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-info-border bg-surface shadow-sm ring-1 ring-info-border transition-all dark:border-border dark:ring-0">
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-info-border bg-surface shadow-sm ring-1 ring-info-border transition dark:border-border dark:ring-0">
           {/* Header Sự kiện */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4 dark:border-border dark:from-surface-2 dark:to-surface">
+          <div className="bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 px-6 py-4 dark:border-border">
             <h3 className="flex items-center gap-2 font-bold text-info text-lg dark:text-text">
               <CalendarPlus size={20} className="text-info" />
               <span>Sự kiện: <span className="text-text">{post.event.title}</span></span>
@@ -466,7 +466,7 @@ function PostDetailCard({
 
           <div className="p-6">
             {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs dark:border-border dark:bg-none dark:bg-surface-2">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
               <div className="min-w-0">
                 <p className="text-sm font-bold text-text">Đăng ký tham gia sự kiện</p>
               </div>
@@ -570,7 +570,7 @@ function PostDetailCard({
           onClick={handleLike}
           aria-pressed={liked}
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
+            'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
             liked
               ? 'text-danger font-extrabold'
               : 'text-text-muted enabled:hover:text-rose-500 dark:enabled:hover:text-rose-400',
@@ -595,14 +595,14 @@ function PostDetailCard({
             window.location.hash = 'comments'
             document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
           }}
-          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition-all duration-200 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition duration-200 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
           <MessageCircle size={16} /> <span>{compact(post.comments)} bình luận</span>
         </button>
         <button
           disabled={!canInteract}
           onClick={onShare}
-          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition-all duration-200 enabled:hover:text-violet-500 dark:enabled:hover:text-violet-400 disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition duration-200 enabled:hover:text-violet-500 dark:enabled:hover:text-violet-400 disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
           <Repeat size={16} />
           <span>Chia sẻ</span>
@@ -612,7 +612,7 @@ function PostDetailCard({
             type="button"
             onClick={onReport}
             aria-label="Báo cáo bài viết"
-            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle transition-all duration-200 hover:bg-danger-soft hover:text-danger cursor-pointer"
+            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle transition duration-200 hover:bg-danger-soft hover:text-danger cursor-pointer"
           >
             <Flag size={16} />
           </button>
@@ -629,7 +629,7 @@ function PostDetailCard({
           aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           onClick={handleSave}
           className={cn(
-            'inline-flex items-center justify-center rounded-xl p-2 transition-all duration-200 cursor-pointer',
+            'inline-flex items-center justify-center rounded-xl p-2 transition duration-200 cursor-pointer',
             isAuthor ? 'ml-auto' : '',
             saved
               ? 'text-primary-solid dark:text-primary bg-primary-soft dark:bg-[#F27024]/15 hover:bg-[#F27024]/20'
@@ -699,7 +699,7 @@ function CommentItem({
     <div
       id={`comment-${comment.id}`}
       className={cn(
-        'group flex items-start gap-2.5 transition-all duration-300',
+        'group flex items-start gap-2.5 transition duration-300',
         isReply &&
           'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
       )}
@@ -735,7 +735,7 @@ function CommentItem({
                 <button
                   type="button"
                   onClick={handleStartEdit}
-                  className="text-text-subtle hover:text-primary-solid transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
                   aria-label="Chỉnh sửa bình luận"
                 >
                   <Pencil size={13} />
@@ -745,7 +745,7 @@ function CommentItem({
                 <button
                   type="button"
                   onClick={() => onDelete(comment)}
-                  className="text-text-subtle hover:text-danger transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
                   aria-label="Xóa bình luận"
                 >
                   <Trash2 size={13} />
@@ -776,7 +776,7 @@ function CommentItem({
                 <button
                   type="submit"
                   disabled={!editText.trim() || updateComment.isPending}
-                  className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
                 >
                   {updateComment.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
                   <span>{updateComment.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
@@ -872,7 +872,7 @@ function InlineReplyForm({
             <span>
               Trả lời <strong className="text-primary-solid">@{replyingTo.name}</strong>
             </span>
-            <button type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
+            <button aria-label="Đóng" type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
               <X size={13} />
             </button>
           </div>
@@ -896,7 +896,7 @@ function InlineReplyForm({
             <button
               type="submit"
               disabled={!text.trim() || createComment.isPending}
-              className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+              className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
             >
               {createComment.isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               <span>Gửi phản hồi</span>
@@ -956,12 +956,13 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
       <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
       <div className="relative flex-1">
         <input
+          aria-label="Viết bình luận công khai..."
           type="text"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           maxLength={1000}
           placeholder="Viết bình luận công khai..."
-          className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition-all shadow-2xs"
+          className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
         />
         <button
           type="submit"

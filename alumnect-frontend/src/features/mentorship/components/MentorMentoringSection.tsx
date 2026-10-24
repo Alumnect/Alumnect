@@ -125,7 +125,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                   key={item.value}
                   type="button"
                   onClick={() => onWorkingModeChange(isSelected ? null : item.value)}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${isSelected
+                  className={`p-4 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${isSelected
                     ? 'border-primary bg-brand-50/70 dark:bg-brand-600/15 ring-2 ring-brand-600/20 shadow-sm'
                     : 'border-border dark:border-border hover:border-border-strong bg-surface hover:bg-cream-100/50 dark:hover:bg-surface'
                     }`}
@@ -135,7 +135,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                       <Icon className="w-5 h-5" />
                     </div>
                     <div
-                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'border-primary bg-primary-solid' : 'border-border-strong'
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition ${isSelected ? 'border-primary bg-primary-solid' : 'border-border-strong'
                         }`}
                     >
                       {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-surface" />}
@@ -186,7 +186,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                   key={item.value}
                   type="button"
                   onClick={() => onMentoringTypeChange(isSelected ? null : item.value)}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${isSelected
+                  className={`p-4 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${isSelected
                     ? 'border-primary bg-brand-50/70 dark:bg-brand-600/15 ring-2 ring-brand-600/20 shadow-sm'
                     : 'border-border dark:border-border hover:border-border-strong bg-surface hover:bg-cream-100/50 dark:hover:bg-surface'
                     }`}
@@ -196,7 +196,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                       <Icon className="w-5 h-5" />
                     </div>
                     <div
-                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'border-primary bg-primary-solid' : 'border-border-strong'
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center transition ${isSelected ? 'border-primary bg-primary-solid' : 'border-border-strong'
                         }`}
                     >
                       {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-surface" />}
@@ -233,7 +233,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
           {/* Trigger Dropdown Box */}
           <div
             onClick={() => setIsDropdownOpen((prev) => !prev)}
-            className={`min-h-[46px] w-full px-3.5 py-2 rounded-xl border bg-white dark:bg-bg cursor-pointer transition-all flex items-center justify-between gap-2 ${isDropdownOpen
+            className={`min-h-[46px] w-full px-3.5 py-2 rounded-xl border bg-white dark:bg-bg cursor-pointer transition flex items-center justify-between gap-2 ${isDropdownOpen
               ? 'border-primary ring-2 ring-brand-600/20'
               : 'border-border dark:border-border hover:border-border-strong'
               }`}
@@ -274,6 +274,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
               <div className="p-3 border-b border-border dark:border-border bg-cream-100/60 dark:bg-bg flex items-center gap-2">
                 <Search className="w-4 h-4 text-text-subtle shrink-0" />
                 <input
+                  aria-label="Tìm kiếm..."
                   type="text"
                   placeholder="Tìm kiếm..."
                   value={searchQuery}
@@ -282,7 +283,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                   autoFocus
                 />
                 {searchQuery && (
-                  <button
+                  <button aria-label="Đóng"
                     type="button"
                     onClick={() => setSearchQuery('')}
                     className="text-text-subtle hover:text-text-muted p-0.5 cursor-pointer"
@@ -312,7 +313,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                       >
                         <span className="text-sm font-medium">{ind.name}</span>
                         <div
-                          className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${isChecked
+                          className={`w-4 h-4 rounded-md border flex items-center justify-center transition ${isChecked
                             ? 'border-primary bg-primary-solid text-on-primary'
                             : 'border-border-strong bg-surface'
                             }`}

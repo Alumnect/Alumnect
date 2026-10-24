@@ -97,7 +97,7 @@ export function Pagination({
               aria-label={`Trang ${item + 1}`}
               aria-current={isCurrent ? 'page' : undefined}
               className={cn(
-                'grid h-8 min-w-[32px] place-items-center rounded-lg px-2 text-xs font-semibold transition-all cursor-pointer',
+                'grid h-8 min-w-[32px] place-items-center rounded-lg px-2 text-xs font-semibold transition cursor-pointer',
                 isCurrent
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'border border-border bg-surface text-text-muted hover:bg-surface-2 hover:border-border-strong'

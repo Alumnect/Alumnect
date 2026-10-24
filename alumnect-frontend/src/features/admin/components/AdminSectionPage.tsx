@@ -10,13 +10,15 @@ import type { AdminVerificationRequestDto } from '../api/adminApi'
 import { AdminReportsQueue } from './AdminReportsQueue'
 import { AdminVerificationDetailModal } from './AdminVerificationDetailModal'
 
+/** Trang theo mục quản trị: "Báo cáo" dùng hàng đợi riêng; các mục còn lại dùng khung chung bên dưới (tách để thứ tự Hook luôn cố định). */
 export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
+  if (sectionKey === 'reports') return <AdminReportsQueue />
+  return <AdminGenericSection sectionKey={sectionKey} />
+}
+
+function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
   const s = ADMIN_SECTIONS[sectionKey]
   const Icon = s.icon
-
-  if (sectionKey === 'reports') {
-    return <AdminReportsQueue />
-  }
 
   const isVerifications = sectionKey === 'verifications'
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING')
@@ -103,7 +105,7 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                 setPage(0)
               }}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none',
+                'rounded-full px-4 py-1.5 text-xs font-bold transition duration-200 cursor-pointer select-none',
                 statusFilter === tab.key
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -199,7 +201,7 @@ export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMI
                         <button
                           type="button"
                           onClick={() => setDetailReq(r)}
-                          className="group/btn inline-flex items-center gap-1.5 rounded-xl border border-border bg-bg px-3 py-1.5 text-xs font-bold text-text-muted transition-all hover:border-gold-400 hover:bg-gold-50 hover:text-gold-700 shadow-2xs cursor-pointer"
+                          className="group/btn inline-flex items-center gap-1.5 rounded-xl border border-border bg-bg px-3 py-1.5 text-xs font-bold text-text-muted transition hover:border-gold-400 hover:bg-gold-50 hover:text-gold-700 shadow-2xs cursor-pointer"
                           title="Xem chi tiết tài liệu minh chứng"
                         >
                           <FileImage size={14} className="text-gold-600 transition-transform group-hover/btn:scale-110" />

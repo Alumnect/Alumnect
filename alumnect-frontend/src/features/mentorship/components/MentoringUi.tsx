@@ -1,5 +1,7 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -222,6 +224,7 @@ export function MentoringFilterTabs<T extends string>({
   onChange: (value: T) => void
   ariaLabel?: string
 }) {
+  const uid = useId()
   return (
     <div
       role="tablist"
@@ -238,14 +241,16 @@ export function MentoringFilterTabs<T extends string>({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors [&>svg]:h-3.5 [&>svg]:w-3.5',
-              active
-                ? 'bg-surface text-primary-solid shadow-xs'
-                : 'text-text-muted hover:text-text',
+              'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors [&>svg]:h-3.5 [&>svg]:w-3.5',
+              active ? 'text-primary-solid' : 'text-text-muted hover:text-text',
             )}
           >
-            {opt.icon}
-            {opt.label}
+            {/* Nền chữ nhật trượt giữa các tab đang chọn */}
+            {active && <motion.span layoutId={`mft-${uid}`} transition={TRANSITION.indicator} className="absolute inset-0 rounded-lg bg-surface shadow-xs" />}
+            <span className="relative z-10 inline-flex items-center gap-1.5">
+              {opt.icon}
+              {opt.label}
+            </span>
           </button>
         )
       })}
@@ -274,7 +279,7 @@ export function MentoringStatTile({
   return (
     <Link
       to={to}
-      className="group flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:hover:border-brand-500/40"
+      className="group flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs transition hover:border-brand-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:hover:border-brand-500/40"
     >
       <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl [&>svg]:h-5 [&>svg]:w-5', TONES[tone].badge)}>{icon}</span>
       <span className="min-w-0 flex-1">

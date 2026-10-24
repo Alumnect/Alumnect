@@ -142,11 +142,12 @@ export function CareerPage() {
             <div className="relative flex-1 w-full">
               <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
+                aria-label="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
                 type="text"
                 placeholder="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-12 rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle transition-all focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-12 rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle transition focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               {search && (
                 <button
@@ -339,7 +340,7 @@ export function CareerPage() {
                             {alumni.careerPreview.slice(0, 3).map((step, idx) => (
                               <React.Fragment key={step.experienceId}>
                                 <span
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-medium truncate max-w-[85px] ${
+                                  className={`px-2 py-0.5 rounded-md text-xs font-medium truncate max-w-[96px] ${
                                     step.isCurrent ? 'bg-primary-soft text-primary-solid font-semibold' : 'bg-surface-2 text-text-subtle'
                                   }`}
                                   title={`${step.title} @ ${step.company}`}
@@ -356,7 +357,7 @@ export function CareerPage() {
                             )}
                           </div>
                         )}
-                        <div className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide transition-colors ${
+                        <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wide transition-colors ${
                           isActive ? 'text-primary-solid' : 'text-text-subtle'
                         }`}>
                           <span>{alumni.totalExperiences} vai trò</span>
@@ -427,9 +428,9 @@ export function CareerPage() {
                   <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
 
                   {/* Close */}
-                  <button
+                  <button aria-label="Đóng"
                     onClick={() => setSelectedAlumni(null)}
-                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition-all duration-150 cursor-pointer"
+                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition duration-150 cursor-pointer"
                   >
                     <X size={16} strokeWidth={2.5} />
                   </button>
@@ -510,7 +511,7 @@ function ViewProfileButton({ userId }: { userId: number }) {
   return (
     <button
       onClick={() => navigate(`/app/profile?userId=${userId}`)}
-      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 active:scale-95 text-white text-xs font-bold px-4 py-2 transition-all duration-200 cursor-pointer"
+      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 active:scale-95 text-white text-xs font-bold px-4 py-2 transition duration-200 cursor-pointer"
       style={{ boxShadow: '0 4px 16px -4px rgb(124 134 238 / 0.5)' }}
     >
       <User size={12} />
@@ -606,12 +607,9 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
 
                 {/* Role cards */}
                 <div className="mt-2.5 space-y-2">
-                  {group.roles.map((role, rIdx) => (
-                    <motion.div
+                  {group.roles.map((role) => (
+                    <div
                       key={role.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: gIdx * 0.05 + rIdx * 0.03, duration: 0.3 }}
                       className={`relative rounded-xl px-3.5 py-2.5 border transition-colors ${
                         role.isCurrent
                           ? 'bg-gradient-to-br from-brand-50/80 to-white border-primary-soft-border dark:from-surface-2 dark:to-surface'
@@ -645,7 +643,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
                           {role.description}
                         </p>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, Users, MapPin } from 'lucide-react'
 import { Card, Skeleton } from '@/components/ui'
-import { useFeed } from '@/features/feed'
+import { useFeed } from '@/features/feed/hooks/useFeed'
 import { EventRsvpButton } from './EventRsvpButton'
 import { compact, cn } from '@/lib/utils'
 

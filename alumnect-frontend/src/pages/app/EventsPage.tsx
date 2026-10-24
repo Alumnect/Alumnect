@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban, Search, X } from 'lucide-react'
-import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast } from '@/components/ui'
+import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { useFeed, useToggleSavePost } from '@/features/feed'
@@ -75,6 +75,7 @@ export function EventsPage() {
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
           <input
+            aria-label="Tìm kiếm sự kiện theo tên, địa điểm hoặc từ khóa..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Tìm kiếm sự kiện theo tên, địa điểm hoặc từ khóa..."
@@ -110,6 +111,7 @@ export function EventsPage() {
         </div>
       </Card>
 
+      <FadeSwitch id={tab}>
       {tab === 'Lịch sử tham gia' ? (
         !isAuthenticated ? (
           <EmptyState
@@ -175,7 +177,7 @@ export function EventsPage() {
               
               return (
                 <StaggerItem key={post.id}>
-                  <Card hover={false} className="group h-full flex flex-col overflow-hidden transition-shadow duration-200 hover:shadow-xl">
+                  <Card hover={false} className="group h-full flex flex-col overflow-hidden transition-shadow duration-200">
                     <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden">
                       <Link to={`/app/posts/${post.id}`} className="block h-full w-full">
                         <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -217,7 +219,7 @@ export function EventsPage() {
                           )
                         }}
                         className={cn(
-                          'absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 z-10',
+                          'absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-xl shadow-sm transition hover:scale-105 active:scale-95 z-10',
                           (saved[post.id] ?? post.saved)
                             ? 'bg-surface text-primary-solid shadow-orange-500/20'
                             : 'bg-black/35 text-white/90 hover:bg-black/55 hover:text-white backdrop-blur-xs'
@@ -341,6 +343,7 @@ export function EventsPage() {
           )}
         </>
       )}
+      </FadeSwitch>
 
       {cancelEventTarget && (
         <CancelEventModal

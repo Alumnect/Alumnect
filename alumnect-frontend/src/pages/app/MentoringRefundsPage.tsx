@@ -142,7 +142,7 @@ function MentoringRefundsContent() {
                     />
                   )}
                   <span className="font-medium text-text">{selectedBank.fullName || selectedBank.name}</span>
-                  <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-mono font-semibold text-text-subtle">
+                  <span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs font-mono font-semibold text-text-subtle">
                     BIN {selectedBank.bin}
                   </span>
                 </div>

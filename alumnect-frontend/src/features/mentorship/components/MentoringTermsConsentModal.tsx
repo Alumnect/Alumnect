@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CheckCircle2, FileText, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { DialogFrame } from '@/components/ui/DialogFrame'
 import { cn } from '@/lib/utils'
 import { useAcceptMentoringTerms } from '../hooks/useMentoringTerms'
 import type { MentoringEntrySource } from '../model/mentoringTermsTypes'
@@ -19,33 +19,16 @@ export function MentoringTermsConsentModal({
   const acceptMutation = useAcceptMentoringTerms()
   const [isChecked, setIsChecked] = useState(false)
 
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [])
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[80] flex items-end justify-center overflow-y-auto bg-overlay backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="mentoring-consent-title"
-      aria-describedby="mentoring-consent-description"
-    >
-      <div className="relative w-full max-h-[92vh] overflow-y-auto rounded-t-2xl border border-border bg-surface p-5 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-text shadow-overlay sm:max-w-lg sm:rounded-2xl sm:p-6">
-        <span aria-hidden className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-surface-3 sm:hidden" />
-        <div className="flex items-center gap-3">
+  return (
+    <DialogFrame onClose={() => navigate('/app')} dismissible={false} zIndexClassName="z-[80]" maxWidthClassName="sm:max-w-lg" className="overflow-y-auto p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
+                <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary-solid">
             <ShieldCheck className="h-5 w-5" />
           </span>
           <div>
             <h2
               id="mentoring-consent-title"
-              className="font-display text-lg font-bold leading-snug text-text sm:text-2xl"
+              className="text-lg font-semibold leading-snug text-text sm:text-xl"
             >
               Chấp nhận điều khoản Mentoring
             </h2>
@@ -129,8 +112,6 @@ export function MentoringTermsConsentModal({
             {acceptMutation.isPending ? 'Đang ghi nhận...' : 'Đồng ý và tiếp tục'}
           </Button>
         </div>
-      </div>
-    </div>,
-    document.body,
+    </DialogFrame>
   )
 }

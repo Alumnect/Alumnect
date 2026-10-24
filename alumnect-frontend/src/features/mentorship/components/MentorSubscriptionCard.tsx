@@ -38,10 +38,10 @@ export function MentorSubscriptionCard({
     <Card
       hover={!isCurrentlyActive || isCurrentActivePackage}
       className={cn(
-        'relative flex flex-col justify-between p-5 rounded-2xl border transition-all duration-300 h-full bg-surface',
+        'relative flex flex-col justify-between p-5 rounded-2xl border transition duration-300 h-full bg-surface',
         isCurrentActivePackage
           ? 'border-success ring-2 ring-success shadow-md shadow-mint-500/10'
-          : 'border-cream-300/90 dark:border-border shadow-xs hover:-translate-y-0.5 hover:shadow-sm'
+          : 'border-cream-300/90 dark:border-border shadow-xs'
       )}
     >
       <div>

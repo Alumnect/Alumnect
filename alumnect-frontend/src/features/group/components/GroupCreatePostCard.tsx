@@ -150,7 +150,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                 aria-label="Nội dung bài thảo luận"
                 placeholder={`Bạn muốn chia sẻ điều gì với cộng đồng ${groupName} hôm nay?`}
                 rows={isFocused || images.length > 0 ? 3 : 2}
-                className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-3 text-sm text-text transition-all placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
+                className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-3 text-sm text-text transition placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
               />
             </div>
 
@@ -207,14 +207,14 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                               setSelectedTopic(topic)
                               setTopicMenuOpen(false)
                             }}
-                            className={`group/topic flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-all duration-150 cursor-pointer ${
+                            className={`group/topic flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition duration-150 cursor-pointer ${
                               selected
                                 ? 'bg-primary-soft font-bold text-primary-solid'
                                 : 'font-medium text-text-muted hover:bg-surface-2 hover:text-primary-solid'
                             }`}
                           >
                             <span>{topic ? `#${topic}` : 'Không chọn chủ đề'}</span>
-                            <span className={`grid h-4.5 w-4.5 place-items-center rounded-full transition-all ${selected ? 'scale-100 bg-brand-500 text-white' : 'scale-75 bg-transparent text-transparent group-hover/topic:scale-100 group-hover/topic:bg-brand-500/10'}`}>
+                            <span className={`grid h-4.5 w-4.5 place-items-center rounded-full transition ${selected ? 'scale-100 bg-brand-500 text-white' : 'scale-75 bg-transparent text-transparent group-hover/topic:scale-100 group-hover/topic:bg-brand-500/10'}`}>
                               <Check size={11} strokeWidth={3} />
                             </span>
                           </motion.button>
@@ -234,10 +234,10 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                 {images.map((img, idx) => (
                   <div key={idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-border">
                     <img src={img} alt="Đính kèm" className="h-full w-full object-cover" />
-                    <button
+                    <button aria-label="Đóng"
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
-                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-plum-900/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-90"
+                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-90"
                     >
                       <X size={12} />
                     </button>
@@ -253,7 +253,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                     <video src={url} className="h-full w-full object-cover" muted preload="metadata" />
                     <button type="button" onClick={() => setVideos((prev) => prev.filter((_, i) => i !== idx))}
                       aria-label={`Gỡ video ${idx + 1}`}
-                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-plum-900/80 text-white">
+                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/80 text-white">
                       <X size={12} />
                     </button>
                   </div>

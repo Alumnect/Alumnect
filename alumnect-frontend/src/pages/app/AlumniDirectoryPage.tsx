@@ -9,7 +9,7 @@ import {
   HeartHandshake,
   UserX,
 } from 'lucide-react'
-import { PageHeader, EmptyState, Skeleton, Pagination, Avatar, Card } from '@/components/ui'
+import { PageHeader, EmptyState, Skeleton, Pagination, Avatar, Card, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import {
   UserSearchFilterBar,
@@ -161,7 +161,7 @@ export function AlumniDirectoryPage() {
             type="button"
             onClick={() => setActiveTab('directory')}
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
               activeTab === 'directory'
                 ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
                 : 'bg-surface/70 text-text-muted hover:bg-surface-2',
@@ -175,13 +175,13 @@ export function AlumniDirectoryPage() {
             type="button"
             onClick={() => setActiveTab('suggestions')}
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
               activeTab === 'suggestions'
                 ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
                 : 'bg-surface/70 text-text-muted hover:bg-surface-2',
             )}
           >
-            <Target size={17} className={activeTab === 'suggestions' ? 'text-white' : 'text-primary-solid'} />
+            <Target size={17} className={activeTab === 'suggestions' ? 'text-on-primary' : 'text-primary-solid'} />
             <span>Gợi ý kết nối</span>
           </button>
 
@@ -189,7 +189,7 @@ export function AlumniDirectoryPage() {
             type="button"
             onClick={() => setActiveTab('network')}
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
               activeTab === 'network'
                 ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
                 : 'bg-surface/70 text-text-muted hover:bg-surface-2',
@@ -202,7 +202,8 @@ export function AlumniDirectoryPage() {
       )}
 
       {/* ===================== TAB 1: DANH BẠ THÀNH VIÊN ===================== */}
-      {activeTab === 'directory' && (
+      <FadeSwitch id={activeTab}>
+{activeTab === 'directory' && (
         <>
           {/* Filter & Search Bar */}
           <UserSearchFilterBar
@@ -217,7 +218,7 @@ export function AlumniDirectoryPage() {
               {Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5 backdrop-blur-xs"
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5-xs"
                 >
                   <div className="flex w-full flex-col items-center">
                     <Skeleton className="h-20 w-20 rounded-full" />
@@ -296,7 +297,7 @@ export function AlumniDirectoryPage() {
               {Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5 backdrop-blur-xs"
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5-xs"
                 >
                   <div className="flex w-full flex-col items-center">
                     <Skeleton className="h-20 w-20 rounded-full" />
@@ -364,7 +365,7 @@ export function AlumniDirectoryPage() {
                 type="button"
                 onClick={() => setNetworkSubTab('following')}
                 className={cn(
-                  'rounded-xl px-4 py-2 text-xs font-bold transition-all',
+                  'rounded-xl px-4 py-2 text-xs font-bold transition',
                   networkSubTab === 'following'
                     ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',
@@ -376,7 +377,7 @@ export function AlumniDirectoryPage() {
                 type="button"
                 onClick={() => setNetworkSubTab('followers')}
                 className={cn(
-                  'rounded-xl px-4 py-2 text-xs font-bold transition-all',
+                  'rounded-xl px-4 py-2 text-xs font-bold transition',
                   networkSubTab === 'followers'
                     ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',
@@ -390,6 +391,7 @@ export function AlumniDirectoryPage() {
             <div className="relative w-full sm:w-72">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
+                aria-label="Tìm nhanh trong mạng lưới..."
                 type="text"
                 value={networkSearch}
                 onChange={(e) => setNetworkSearch(e.target.value)}
@@ -500,6 +502,7 @@ export function AlumniDirectoryPage() {
           )}
         </div>
       )}
+</FadeSwitch>
     </div>
   )
 }

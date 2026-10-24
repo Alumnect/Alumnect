@@ -22,7 +22,7 @@ import {
   Users,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { Badge, Card, Skeleton, toast } from '@/components/ui'
+import { Badge, Card, Skeleton, toast, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { TRANSITION } from '@/lib/motion'
@@ -227,12 +227,10 @@ export function GroupDetailPage() {
       {/* Nội dung các Tab */}
       <div className="min-h-[32rem] space-y-5 [overflow-anchor:none]">
             {/* TAB 1: THẢO LUẬN (DISCUSSIONS) */}
-            {activeTab === 'discussions' && (
-              <motion.div
+            <FadeSwitch id={activeTab}>
+{activeTab === 'discussions' && (
+              <div
                 key="tab-discussions"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="space-y-4"
               >
                 {/* Trạng thái nhóm riêng tư mà người xem chưa là thành viên */}
@@ -263,16 +261,13 @@ export function GroupDetailPage() {
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
 
             {/* TAB 2: GIỚI THIỆU (ABOUT & RULES) */}
             {activeTab === 'about' && (
-              <motion.div
+              <div
                 key="tab-about"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="space-y-5"
               >
                 <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
@@ -345,16 +340,13 @@ export function GroupDetailPage() {
                     </div>
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             )}
 
             {/* TAB 3: THÀNH VIÊN (MEMBERS) */}
             {activeTab === 'members' && (
-              <motion.div
+              <div
                 key="tab-members"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
                   <div className="mb-4 flex items-center justify-between">
@@ -371,19 +363,17 @@ export function GroupDetailPage() {
                     viewerUserId={viewerUserId}
                   />
                 </Card>
-              </motion.div>
+              </div>
             )}
+</FadeSwitch>
 
             {/* TAB 4: QUẢN TRỊ NHÓM (MANAGEMENT - CHỈ CHO OWNER/ADMIN) */}
             {activeTab === 'manage' && isManager && (
-              <motion.div
+              <div
                 key="tab-manage"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <GroupManagePanel group={group} />
-              </motion.div>
+              </div>
             )}
       </div>
 

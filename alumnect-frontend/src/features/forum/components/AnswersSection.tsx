@@ -153,7 +153,7 @@ function InlineAnswerForm({
         <button
           type="submit"
           disabled={isPending || bodyLength === 0}
-          className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition-all cursor-pointer inline-flex items-center gap-1.5"
+          className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
         >
           {isPending ? (
             <Loader2 size={13} className="animate-spin" />
@@ -231,7 +231,7 @@ function AnswerBubble({
   return (
     <div
       className={cn(
-        'group flex items-start gap-2.5 transition-all duration-300',
+        'group flex items-start gap-2.5 transition duration-300',
         isReply &&
           'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
       )}
@@ -266,7 +266,7 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="text-text-subtle hover:text-primary-solid transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
                   aria-label="Chỉnh sửa câu trả lời"
                 >
                   <Pencil size={13} />
@@ -276,7 +276,7 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setDeleting(true)}
-                  className="text-text-subtle hover:text-danger transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
                   aria-label="Xóa câu trả lời"
                 >
                   <Trash2 size={13} />
@@ -320,7 +320,7 @@ function AnswerBubble({
                 aria-pressed={voted}
                 aria-label={voted ? 'Bỏ bình chọn' : 'Bình chọn'}
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold transition-all cursor-pointer',
+                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold transition cursor-pointer',
                   voted
                     ? 'bg-primary-soft text-primary-solid'
                     : 'bg-surface-2 text-text-subtle hover:bg-surface-3 hover:text-primary-solid'
@@ -351,7 +351,7 @@ function AnswerBubble({
                 <span>
                   Trả lời <strong className="text-primary-solid">@{a.author}</strong>
                 </span>
-                <button type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
+                <button aria-label="Đóng" type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
                   <X size={13} />
                 </button>
               </div>
@@ -451,12 +451,13 @@ function AnswerForm({ questionId }: { questionId: string }) {
         <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={32} verified={user?.verified} className="shrink-0" />
         <div className="relative flex-1">
           <input
+            aria-label="Chia sẻ câu trả lời hoặc thảo luận..."
             type="text"
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={MAX_BODY}
             placeholder="Chia sẻ câu trả lời hoặc thảo luận..."
-            className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition-all shadow-2xs"
+            className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
           />
           <button
             type="submit"

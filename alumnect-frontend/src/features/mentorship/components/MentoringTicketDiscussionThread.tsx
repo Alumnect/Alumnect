@@ -1,3 +1,4 @@
+import { ImageViewerModal } from '@/components/ui/ImageViewerModal'
 import { useState, useRef, useEffect } from 'react'
 import {
   MessageSquare,
@@ -11,7 +12,6 @@ import {
   Paperclip,
   CheckCircle2,
   Eye,
-  X,
   FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -205,7 +205,7 @@ export function MentoringTicketDiscussionThread({
             return (
               <div
                 key={msg.id}
-                className={`p-3.5 rounded-xl border transition-all ${
+                className={`p-3.5 rounded-xl border transition ${
                   isAdminMsg
                     ? 'bg-info-soft border-info shadow-2xs'
                     : isStudentMsg
@@ -217,7 +217,7 @@ export function MentoringTicketDiscussionThread({
                 <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-cream-300/60 dark:border-white/10">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white ${
+                      className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
                         isAdminMsg ? 'bg-info' : isStudentMsg ? 'bg-info' : 'bg-success'
                       }`}
                     >
@@ -228,7 +228,7 @@ export function MentoringTicketDiscussionThread({
                         {msg.senderName}
                       </span>
                       <span
-                        className={`px-1.5 py-0.2 rounded text-[11px] font-semibold ${
+                        className={`px-1.5 py-0.2 rounded text-xs font-semibold ${
                           isAdminMsg
                             ? 'bg-info-soft text-info'
                             : isStudentMsg
@@ -248,7 +248,7 @@ export function MentoringTicketDiscussionThread({
 
                 {/* Offer Card nếu là MEDIATION_OFFER */}
                 {isOffer && (
-                  <div className="mb-2.5 p-3 rounded-lg bg-gradient-to-r from-violet-500/10 to-violet-500/10 dark:from-violet-600/60 dark:to-violet-600/60 border border-violet-300 dark:border-violet-500">
+                  <div className="bg-surface-2 mb-2.5 p-3 rounded-lg border border-violet-300 dark:border-violet-500">
                     <div className="flex items-center gap-2 mb-1.5">
                       <Scale className="h-4 w-4 text-info" />
                       <span className="text-xs font-bold text-info uppercase tracking-wide">
@@ -533,30 +533,12 @@ export function MentoringTicketDiscussionThread({
       )}
 
       {/* Lightbox Xem ảnh phóng to */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 bg-plum-900/80 backdrop-blur-xs dark:bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div
-            className="relative max-w-4xl max-h-[90vh] bg-black rounded-xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
-            >
-              <X size={18} />
-            </button>
-            <img
-              src={previewImage}
-              alt="Evidence zoom"
-              className="max-h-[85vh] w-auto object-contain mx-auto"
-            />
-          </div>
-        </div>
-      )}
+      <ImageViewerModal
+        isOpen={previewImage !== null}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage ?? ''}
+        alt="Ảnh bằng chứng phóng to"
+      />
     </div>
   )
 }

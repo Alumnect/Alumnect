@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink, Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
 import {
@@ -14,22 +14,24 @@ import {
   ArrowUp,
   Sun,
   Moon,
-  GlobeSimple,
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import { useSearchStore } from '@/store/searchStore'
 import { useThemeStore } from '@/store/themeStore'
-import { useLogout } from '@/features/auth'
-import { useWebSocketChat } from '@/features/message'
-import { useWebSocketNotifications, useUnreadNotificationCount } from '@/features/notification'
+import { useLogout } from '@/features/auth/hooks/useAuthMutations'
+import { useWebSocketChat } from '@/features/message/hooks/useWebSocketChat'
+import { useWebSocketNotifications } from '@/features/notification/hooks/useWebSocketNotifications'
+import { useUnreadNotificationCount } from '@/features/notification/hooks/useNotifications'
+import { PageHeadingGuard } from './PageHeadingGuard'
+import { RouteTransition } from './RouteTransition'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
-import { MentorshipLayout } from '@/features/mentorship'
+import { MentorshipLayout } from '@/features/mentorship/components/MentorshipLayout'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 /* ----------------------------- small popover ----------------------------- */
@@ -88,7 +90,7 @@ function IconLink({ to, label, icon, badge, dot }: { to: string; label: string; 
     >
       <span className="transition-transform duration-200 group-hover:-translate-y-0.5">{icon}</span>
       {/* hover tooltip label */}
-      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100 dark:bg-black dark:text-white">
+      <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-full group-hover:opacity-100 dark:bg-black dark:text-white">
         {label}
       </span>
       {badge ? (
@@ -126,11 +128,13 @@ export function AppShell() {
   const isMentoringRoute = location.pathname.startsWith('/app/mentoring')
   const isMentoringChatRoute = location.pathname.startsWith('/app/mentoring/chats/')
 
+  // Ô tìm kiếm trên thanh đầu tìm bài viết ở Bảng tin: gõ chỉ cập nhật từ khóa, nhấn Enter mới chuyển về Bảng tin
+  // (không tự nhảy trang giữa lúc đang gõ).
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
-    if (location.pathname !== '/app') {
-      navigate('/app')
-    }
+  }
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && location.pathname !== '/app') navigate('/app')
   }
 
   // Trạng thái hiển thị nút "Cuộn lên đầu trang" (Back to top)
@@ -148,20 +152,6 @@ export function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Trạng thái ngôn ngữ (thiết kế sẵn sàng kết nối i18n)
-  const [currentLang, setCurrentLang] = useState<'vi' | 'en'>(() => {
-    return (localStorage.getItem('alumnect_lang') as 'vi' | 'en') || 'vi'
-  })
-  const [langMenuOpen, setLangMenuOpen] = useState(false)
-  const langMenuRef = useRef<HTMLDivElement>(null)
-  useClickOutside(langMenuRef, () => setLangMenuOpen(false), langMenuOpen)
-
-  const handleSelectLang = (lang: 'vi' | 'en') => {
-    setCurrentLang(lang)
-    localStorage.setItem('alumnect_lang', lang)
-    setLangMenuOpen(false)
-  }
-
   const handleClearSearch = () => {
     setKeyword('')
   }
@@ -171,9 +161,6 @@ export function AppShell() {
     setActivePopover(null)
   }, [location.pathname])
 
-  if (user?.role === 'ADMIN') {
-    return <Navigate to="/admin" replace />
-  }
   const logoutM = useLogout()
   // ADMIN đã được điều hướng về /admin ở trên, nên tại đây role chỉ còn STUDENT/ALUMNI.
   const roleLabel = user ? (user.role === 'STUDENT' ? 'Sinh viên' : 'Cựu sinh viên') : ''
@@ -183,6 +170,11 @@ export function AppShell() {
     () => APP_MORE_NAV.filter((item) => item.to !== '/app/groups' || user?.role === 'ALUMNI'),
     [user?.role]
   )
+
+  // Admin dùng khung riêng (đặt SAU mọi Hook để thứ tự Hook luôn cố định giữa các lần render)
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />
+  }
 
   // Menu "Khám phá" (desktop)
   const renderMoreApps = (items: typeof APP_MORE_NAV) => (
@@ -197,7 +189,7 @@ export function AppShell() {
             <span className="transition-transform duration-200 group-hover:-translate-y-0.5">
               <SquaresFour size={21} weight={activePopover === 'apps' ? 'fill' : 'regular'} />
             </span>
-            <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-full group-hover:opacity-100">
+            <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-full group-hover:opacity-100">
               Khám phá
             </span>
           </span>
@@ -212,7 +204,7 @@ export function AppShell() {
                 key={item.to}
                 to={item.to}
                 aria-label={item.label}
-                className="group relative grid h-12 w-12 place-items-center rounded-2xl text-primary-solid transition-all hover:bg-primary-soft active:scale-95"
+                className="group relative grid h-12 w-12 place-items-center rounded-2xl text-primary-solid transition hover:bg-primary-soft active:scale-95"
               >
                 {Icon && (
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100/80 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:bg-primary-soft">
@@ -220,7 +212,7 @@ export function AppShell() {
                   </span>
                 )}
                 {/* Tooltip khi hover giống hệt icon ở ngoài */}
-                <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition-all duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
+                <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
                   {item.label}
                 </span>
               </Link>
@@ -250,10 +242,12 @@ export function AppShell() {
           <label className="relative ml-2 hidden items-center md:flex">
             <MagnifyingGlass size={17} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm kiếm bài viết…"
               value={keyword}
               onChange={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Tìm kiếm bài viết…"
-              className="h-9.5 w-48 rounded-full border border-border bg-surface-2 pl-9 pr-8 text-sm text-text placeholder:text-text-subtle transition-all focus:w-64 focus:border-[#F27024]/80 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 lg:w-56"
+              className="h-9.5 w-40 rounded-full border border-border bg-surface-2 pl-9 pr-8 text-sm text-text placeholder:text-text-subtle transition focus:border-[#F27024]/80 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 lg:w-44 xl:w-48"
             />
             {keyword && (
               <button
@@ -268,7 +262,7 @@ export function AppShell() {
           </label>
 
           {/* primary nav (centre) */}
-          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex h-full">
+          <nav className="hidden h-full min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex xl:gap-1">
             {APP_PRIMARY_NAV.map((item) => {
               const Icon = item.icon
               return (
@@ -287,20 +281,20 @@ export function AppShell() {
                   {({ isActive }) => (
                     <>
                       <div className={cn(
-                        'flex h-11 w-full items-center justify-center rounded-xl transition-all duration-200',
+                        'flex h-11 w-full items-center justify-center rounded-xl transition-colors duration-200',
                         isActive ? 'bg-primary-soft text-primary-solid' : 'hover:bg-surface-2 text-text-subtle hover:text-text'
                       )}>
                         {Icon && (
                           <Icon
                             size={23}
                             weight={isActive ? 'fill' : 'regular'}
-                            className={cn('transition-all duration-200 group-hover:scale-110', isActive && 'text-primary-solid')}
+                            className={cn('transition duration-200 group-hover:scale-110', isActive && 'text-primary-solid')}
                           />
                         )}
                       </div>
 
                       {/* hover tooltip label */}
-                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0.5 dark:bg-black dark:text-white">
+                      <span className="pointer-events-none absolute top-[calc(100%+4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition duration-200 group-hover:opacity-100 group-hover:translate-y-0.5 dark:bg-black dark:text-white">
                         {item.label}
                       </span>
                       {isActive && (
@@ -384,6 +378,17 @@ export function AppShell() {
                   <div className="my-1 h-px bg-border" />
                   <button
                     type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setTheme(theme === 'dark' ? 'light' : 'dark')
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                  >
+                    {theme === 'dark' ? <Sun size={18} weight="regular" className="text-text-subtle" /> : <Moon size={18} weight="regular" className="text-text-subtle" />}
+                    {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => logoutM.mutate()}
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-danger transition-colors hover:bg-coral-300/25 dark:hover:bg-rose-500/15"
                   >
@@ -393,6 +398,14 @@ export function AppShell() {
               </>
             ) : (
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+                  className="grid h-10 w-10 place-items-center rounded-2xl text-text-subtle transition-colors hover:bg-surface-2 hover:text-text sm:h-11 sm:w-11"
+                >
+                  {theme === 'dark' ? <Sun size={20} weight="fill" className="text-warning" /> : <Moon size={20} weight="regular" />}
+                </button>
                 <Link to="/login" className="ml-1">
                   <Button size="sm" variant="primary" className="rounded-xl font-bold shadow-sm">
                     Đăng nhập
@@ -416,9 +429,11 @@ export function AppShell() {
               <label className="relative flex items-center px-4 py-3">
                 <MagnifyingGlass size={17} className="pointer-events-none absolute left-7 text-text-subtle" />
                 <input
+                  aria-label="Tìm kiếm bài viết…"
                   autoFocus
                   value={keyword}
                   onChange={handleSearchChange}
+                  onKeyDown={handleSearchKeyDown}
                   placeholder="Tìm kiếm bài viết…"
                   className="h-11 w-full rounded-xl border border-border bg-surface pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
                 />
@@ -444,42 +459,27 @@ export function AppShell() {
         location.pathname === '/app/map'
           ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
           : location.pathname === '/app/messages'
-          ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100vh-3.85rem)] overflow-y-auto no-scrollbar"
+          ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] overflow-y-auto no-scrollbar lg:h-[calc(100vh-3.85rem)]"
           : isMentoringChatRoute
           ? "h-[calc(100dvh-7.65rem)] max-w-[1560px] overflow-hidden px-3 py-3 sm:px-6 lg:h-[calc(100dvh-4.1rem)] lg:px-8"
           : isMentoringRoute
           ? "h-[calc(100vh-7.65rem)] max-w-[1560px] overflow-y-auto overscroll-contain px-3 pb-8 pt-3 scroll-pb-8 sm:px-6 lg:h-auto lg:overflow-visible lg:px-8 lg:pb-10 xl:h-[calc(100vh-4.1rem)] xl:overflow-hidden xl:pb-3"
           : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
+        <PageHeadingGuard />
         <ErrorBoundary>
           {isMentoringRoute ? (
             <MentorshipLayout>
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={TRANSITION.page}
-                className={isMentoringChatRoute ? 'h-full min-h-0 overflow-hidden' : 'xl:min-h-full'}
-              >
-                <Outlet />
-              </motion.div>
+              <RouteTransition className={isMentoringChatRoute ? 'h-full min-h-0 overflow-hidden' : 'xl:min-h-full'} />
             </MentorshipLayout>
           ) : (
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={TRANSITION.page}
-              className={location.pathname === '/app/messages' ? "h-full min-h-0" : undefined}
-            >
-              <Outlet />
-            </motion.div>
+            <RouteTransition className={location.pathname === '/app/messages' ? 'h-full min-h-0' : undefined} />
           )}
         </ErrorBoundary>
       </main>
 
       {/* ===== mobile bottom tab bar ===== */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-raised backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-stretch justify-around">
           {APP_PRIMARY_NAV.map((item) => {
             const Icon = item.icon
@@ -511,7 +511,7 @@ export function AppShell() {
                         className={cn('relative', isActive && 'text-primary-solid')}
                       />
                     )}
-                    <span className="relative w-full truncate text-center">{item.label}</span>
+                    <span className="relative w-full truncate text-center">{item.tabLabel ?? item.shortLabel ?? item.label}</span>
                   </>
                 )}
               </NavLink>
@@ -532,7 +532,7 @@ export function AppShell() {
         {sheet && (
           <>
             <motion.div
-              className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-40 bg-overlay lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: TRANSITION.exit }}
@@ -573,6 +573,15 @@ export function AppShell() {
               </div>
 
 
+              <button
+                type="button"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-surface px-4 py-3 text-sm font-semibold text-text-muted ring-1 ring-inset ring-border"
+              >
+                {theme === 'dark' ? <Sun size={18} weight="fill" className="text-warning" /> : <Moon size={18} weight="regular" />}
+                {theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+              </button>
+
               <div className="mt-3 grid grid-cols-2 gap-2" onClick={() => setSheet(false)}>
                 {isAuthenticated ? (
                   <>
@@ -593,91 +602,6 @@ export function AppShell() {
         )}
       </AnimatePresence>
 
-      {/* Floating Preferences Dock (Theme & Language Switcher) - Góc dưới bên trái (Mini Compact) */}
-      <div className={cn(
-        'fixed z-30 items-center rounded-full border border-border bg-surface p-1 shadow-raised transition-all hover:shadow-overlay lg:bottom-6 lg:left-6 lg:right-auto lg:top-auto lg:flex',
-        isMentoringRoute ? 'right-3 top-[4.55rem] flex' : 'bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 flex',
-      )}>
-        {/* Nút chuyển chế độ Sáng / Tối */}
-        <button
-          type="button"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-          title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-          className="group relative grid h-9 w-9 place-items-center rounded-full text-text-subtle hover:bg-surface-2 hover:text-text transition-all cursor-pointer"
-        >
-          {theme === 'dark' ? (
-            <Sun size={15} weight="fill" className="text-warning transition-transform duration-300 group-hover:rotate-45" />
-          ) : (
-            <Moon size={15} weight="fill" className="text-text-muted transition-transform duration-300 group-hover:-rotate-12" />
-          )}
-          {/* Tooltip khi hover */}
-          <span className="pointer-events-none absolute bottom-[calc(100%+6px)] left-0 z-50 whitespace-nowrap rounded-md bg-slate-900 px-2 py-0.5 text-xs font-medium text-white opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100 dark:bg-white dark:text-slate-900">
-            {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
-          </span>
-        </button>
-
-        {/* Divider chia tách Theme và Language */}
-        <div className="mx-0.5 h-3.5 w-px bg-surface-3" />
-
-        {/* Nút Ngôn ngữ (Language Switcher) */}
-        <div className="relative" ref={langMenuRef}>
-          <button
-            type="button"
-            onClick={() => setLangMenuOpen((prev) => !prev)}
-            aria-label="Chọn ngôn ngữ"
-            title="Đổi ngôn ngữ (Language)"
-            className="group relative flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold text-text-muted hover:bg-surface-2 hover:text-text transition-all cursor-pointer"
-          >
-            <GlobeSimple size={14} weight="bold" className="text-text-subtle group-hover:text-primary-solid transition-colors" />
-            <span className="tracking-wider">{currentLang.toUpperCase()}</span>
-          </button>
-
-          {/* Menu chọn ngôn ngữ khi click */}
-          <AnimatePresence>
-            {langMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 6, scale: 0.95 }}
-                transition={TRANSITION.pop}
-                className="absolute bottom-full left-0 mb-1.5 w-32 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-lg backdrop-blur-md"
-              >
-                <div className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-text-subtle">
-                  Ngôn ngữ
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLang('vi')}
-                  className={cn(
-                    'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors cursor-pointer',
-                    currentLang === 'vi'
-                      ? 'bg-primary-soft text-primary-solid'
-                      : 'text-text-muted hover:bg-surface-2'
-                  )}
-                >
-                  <span className="flex items-center gap-1.5">🇻🇳 Tiếng Việt</span>
-                  {currentLang === 'vi' && <span className="h-1.5 w-1.5 rounded-full bg-primary-solid" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLang('en')}
-                  className={cn(
-                    'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors cursor-pointer',
-                    currentLang === 'en'
-                      ? 'bg-primary-soft text-primary-solid'
-                      : 'text-text-muted hover:bg-surface-2'
-                  )}
-                >
-                  <span className="flex items-center gap-1.5">🇬🇧 English</span>
-                  {currentLang === 'en' && <span className="h-1.5 w-1.5 rounded-full bg-primary-solid" />}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
       {/* Popup mời đăng nhập (kiểu Facebook) — hiện khi Guest cố tương tác */}
       <LoginPromptModal />
 
@@ -693,7 +617,7 @@ export function AppShell() {
             transition={TRANSITION.pop}
             aria-label="Cuộn lên đầu trang"
             title="Cuộn lên đầu trang"
-            className="fixed bottom-20 right-6 z-30 lg:bottom-7 lg:right-7 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary-solid shadow-lg shadow-orange-500/10 backdrop-blur-md transition-all hover:bg-primary-soft hover:border-orange-300 hover:scale-110 active:scale-95 cursor-pointer"
+            className="fixed bottom-20 right-6 z-30 lg:bottom-7 lg:right-7 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary-solid transition hover:bg-primary-soft hover:border-orange-300 hover:scale-110 active:scale-95 cursor-pointer"
           >
             <ArrowUp size={20} weight="bold" />
           </motion.button>

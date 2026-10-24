@@ -100,9 +100,9 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
         </div>
 
         <div>
-          <h2 className="text-2xl font-extrabold text-text tracking-tight">
+          <h1 className="text-2xl font-extrabold text-text tracking-tight">
             Xác thực email thành công!
-          </h2>
+          </h1>
           <p className="mt-2 text-sm text-text-muted leading-relaxed max-w-sm mx-auto">
             {verifySuccess}
           </p>
@@ -153,7 +153,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
         Quay lại sửa thông tin
       </button>
       
-      <h2 className="text-3xl font-extrabold text-text tracking-tight">Xác thực Email</h2>
+      <h1 className="text-3xl font-extrabold text-text tracking-tight">Xác thực Email</h1>
       <p className="mt-2 text-sm text-text-subtle leading-relaxed">
         Chúng tôi đã gửi mã xác thực OTP 6 số đến địa chỉ <strong className="text-text">{email}</strong>. Vui lòng kiểm tra email (cả hòm thư Spam) và nhập mã vào bên dưới.
       </p>

@@ -19,7 +19,7 @@ import { Avatar, Badge, Card } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
 import { TRANSITION } from '@/lib/motion'
 import { useAuthStore } from '@/store/authStore'
-import { ShareModal } from '@/features/feed'
+import { ShareModal } from '@/features/feed/components/ShareModal'
 import { ConfirmDialog } from './ConfirmDialog'
 import { GroupEditPostModal } from './GroupEditPostModal'
 import type { GroupComment, GroupPost } from '../model/group'
@@ -440,6 +440,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                     />
                     <div className="relative flex-1">
                       <input
+                        aria-label="Viết phản hồi của bạn..."
                         type="text"
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
@@ -450,7 +451,8 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                       <button
                         type="submit"
                         disabled={!commentText.trim() || createCommentMutation.isPending}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40"
+                        aria-label="Gửi bình luận"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 cursor-pointer place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40"
                       >
                         {createCommentMutation.isPending ? (
                           <Loader2 size={13} className="animate-spin" />
@@ -497,10 +499,10 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                               </Link>
 
                               {c.author.groupRole === 'OWNER' && (
-                                <span className="text-xs font-black text-warning">👑 Sáng lập</span>
+                                <span className="text-xs font-semibold text-warning">Sáng lập</span>
                               )}
                               {c.author.groupRole === 'ADMIN' && (
-                                <span className="text-xs font-black text-primary-solid">🛡️ Quản trị</span>
+                                <span className="text-xs font-semibold text-primary-solid">Quản trị</span>
                               )}
 
                               <span className="text-xs text-text-subtle">

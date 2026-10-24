@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { Card, Skeleton } from '@/components/ui/primitives'
 
 type MentorshipLoadingSkeletonProps = {
@@ -7,7 +6,7 @@ type MentorshipLoadingSkeletonProps = {
 
 function HeroSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-primary-soft-border bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-white/40 p-6 sm:p-8 shadow-xs dark:bg-surface dark:from-brand-700/20">
+    <div className="relative overflow-hidden rounded-3xl border border-primary-soft-border p-6 sm:p-8 shadow-xs dark:bg-surface">
       {/* Hiệu ứng hào quang nền mờ */}
       <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-500/5" />
       <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
@@ -141,17 +140,13 @@ function TermsSkeleton() {
 
 export function MentorshipLoadingSkeleton({ variant }: MentorshipLoadingSkeletonProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+    <div
       aria-busy="true"
       aria-label="Đang tải nội dung Mentorship"
     >
       {variant === 'home' && <HomeSkeleton />}
       {variant === 'registration' && <RegistrationSkeleton />}
       {variant === 'terms' && <TermsSkeleton />}
-    </motion.div>
+    </div>
   )
 }

@@ -49,7 +49,7 @@ export function MentorExperienceTimeline({ experiences }: MentorExperienceTimeli
             <div key={exp.id} className="relative group">
               {/* Biểu tượng timeline */}
               <span
-                className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition-all dark:border-border ${
+                className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition dark:border-border ${
                   exp.isPrimary
                     ? 'bg-amber-400 ring-amber-300'
                     : exp.isCurrent
@@ -58,7 +58,7 @@ export function MentorExperienceTimeline({ experiences }: MentorExperienceTimeli
                 }`}
               />
 
-              <div className="rounded-2xl p-4 transition-all duration-200 bg-cream-100/40 hover:bg-cream-100/80 border border-border dark:bg-white/[0.02] dark:hover:bg-white/[0.05] dark:border-white/[0.04]">
+              <div className="rounded-2xl p-4 transition duration-200 bg-cream-100/40 hover:bg-cream-100/80 border border-border dark:bg-white/[0.02] dark:hover:bg-white/[0.05] dark:border-white/[0.04]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">

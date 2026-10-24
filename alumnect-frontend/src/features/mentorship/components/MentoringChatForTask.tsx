@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { mentoringWalletApi } from '../api/mentoringWalletApi'
@@ -26,7 +25,7 @@ import {
   ThumbsUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { Avatar, Button, Skeleton, toast } from '@/components/ui'
+import { Avatar, Button, Skeleton, toast, DialogFrame } from '@/components/ui'
 import {
   MessageBubble,
   MessageInput,
@@ -905,7 +904,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                     type="button"
                     onClick={() => setIsDealMenuOpen((v) => !v)}
                     title="Giao dịch Deal Ticket"
-                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-brand-50/60 px-3 text-xs font-bold text-primary-solid transition-all hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 px-3 text-xs font-bold text-primary-solid transition hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
                   >
                     <Handshake className="h-4 w-4 shrink-0" />
                     <span className="font-display font-bold">Giao dịch</span>
@@ -920,7 +919,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           setIsDealMenuOpen(false)
                           setIsAcceptByRequestOpen(true)
                         }}
-                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <span className="rounded-lg bg-success-soft p-1.5 text-success">
                           <ThumbsUp className="h-4 w-4" />
@@ -941,7 +940,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           setIsDealMenuOpen(false)
                           setIsFormOpen(true)
                         }}
-                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition-all hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <span className="rounded-lg bg-brand-100/70 p-1.5 text-primary-solid dark:bg-brand-700/60">
                           <Edit3 className="h-4 w-4" />
@@ -963,9 +962,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       </div>
 
       {/* Dialog: Chấp nhận Deal theo Request */}
-      {isAcceptByRequestOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-900/60 p-4 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-6 text-left shadow-2xl">
+      {isAcceptByRequestOpen && typeof document !== 'undefined' && <DialogFrame
+          onClose={() => setIsAcceptByRequestOpen(false)}
+          zIndexClassName="z-[100]"
+          maxWidthClassName="max-w-md"
+          className="space-y-4 p-6 text-left"
+        >
             <h4 className="font-display text-base font-bold text-text">Chấp nhận Deal theo Request</h4>
             <p className="text-xs text-text-subtle">
               Hệ thống tạo Deal Ticket từ điều kiện hiện tại của Request. Bạn được tính là đã xác nhận phiên bản này; Học viên cần xác nhận để khóa Deal.
@@ -990,15 +992,15 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 Gửi Deal Ticket
               </Button>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
 
       {/* Dialog: Từ chối */}
-      {rejectTarget !== null && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-6 text-left shadow-2xl dark:bg-surface">
+      {rejectTarget !== null && typeof document !== 'undefined' && <DialogFrame
+          onClose={() => setRejectTarget(null)}
+          zIndexClassName="z-[100]"
+          maxWidthClassName="max-w-md"
+          className="space-y-4 p-6 text-left"
+        >
             <h4 className="font-display text-base font-bold text-text">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
             <p className="text-xs leading-relaxed text-text-muted">
               Chỉ từ chối đề xuất hiện tại; Request vẫn giữ nguyên và hai bên có thể tiếp tục trao đổi.
@@ -1018,10 +1020,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 {rejectMutation.isPending ? 'Đang gửi...' : 'Từ chối'}
               </Button>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </DialogFrame>}
 
       {/* Dialog: Yêu cầu điều chỉnh */}
       {adjustTarget !== null && (() => {
@@ -1029,9 +1028,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         const currentPrice = targetSnap ? targetSnap.agreedPrice : deal?.agreedPrice
         const currentDeadline = targetSnap ? targetSnap.deadline : deal?.deadline
         if (typeof document === 'undefined') return null
-        return createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-plum-900/60 p-4 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-6 text-left shadow-2xl">
+        return <DialogFrame
+            onClose={() => setAdjustTarget(null)}
+            zIndexClassName="z-[100]"
+            maxWidthClassName="max-w-md"
+            className="space-y-4 p-6 text-left"
+          >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning text-text-inverse shadow-xs">
                   <RefreshCw className="h-5 w-5" />
@@ -1087,10 +1089,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi Ticket điều chỉnh'}
                 </Button>
               </div>
-            </div>
-          </div>,
-          document.body
-        )
+            </DialogFrame>
       })()}
 
       {/* Modal chi tiết một phiên bản Ticket */}

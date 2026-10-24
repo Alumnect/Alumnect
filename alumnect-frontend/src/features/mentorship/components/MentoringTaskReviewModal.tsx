@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   CheckCircle2,
   X,
@@ -12,7 +11,7 @@ import {
   User,
   Clock,
 } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
 import { useRespondTaskCompletion } from '../hooks/useMentoringTaskCompletion'
 import type { MentoringTaskCompletion } from '../model/mentoringTaskTypes'
@@ -80,14 +79,14 @@ export function MentoringTaskReviewModal({
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-xl bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-xl"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-violet-500/5 via-violet-500/5 to-transparent dark:from-violet-600/20 dark:to-violet-600/20 border-b border-border">
+        <div className="bg-surface-2 flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-info text-text-inverse shadow-sm">
               <FileCheck className="w-5 h-5" />
@@ -101,7 +100,7 @@ export function MentoringTaskReviewModal({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Đóng"
             type="button"
             onClick={onClose}
             className="p-1.5 text-text-subtle hover:text-text-muted rounded-lg hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -155,7 +154,7 @@ export function MentoringTaskReviewModal({
           {completion.deliverables && (
             <div className="p-4 bg-surface-2 border border-border rounded-xl shadow-xs space-y-1.5">
               <h4 className="text-xs font-semibold text-text">
-                📦 Sản phẩm bàn giao / Deliverables:
+                Sản phẩm bàn giao / Deliverables:
               </h4>
               <p className="text-xs text-text-muted whitespace-pre-wrap leading-relaxed">
                 {completion.deliverables}
@@ -167,7 +166,7 @@ export function MentoringTaskReviewModal({
           {completion.attachmentUrls && completion.attachmentUrls.length > 0 && (
             <div className="p-4 bg-surface-2 border border-border rounded-xl shadow-xs space-y-2">
               <h4 className="text-xs font-semibold text-text">
-                📎 Tệp & Đường dẫn đính kèm:
+                Tệp & đường dẫn đính kèm:
               </h4>
               <div className="space-y-1.5">
                 {completion.attachmentUrls.map((url, idx) => (
@@ -196,7 +195,7 @@ export function MentoringTaskReviewModal({
               value={feedbackNote}
               onChange={(e) => setFeedbackNote(e.target.value)}
               placeholder="Nhập cảm nhận hoặc yêu cầu chỉnh sửa bổ sung (bắt buộc nếu yêu cầu chỉnh sửa)..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
           </div>
 
@@ -247,8 +246,5 @@ export function MentoringTaskReviewModal({
             </div>
           </div>
         </div>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

@@ -114,8 +114,8 @@ export function MentoringSettlementProposalModal({
 
         <div className="space-y-1.5">
           <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-surface-3">
-            <div className="h-full bg-primary-solid transition-all" style={{ width: `${mentorPercent}%` }} />
-            <div className="h-full bg-info transition-all" style={{ width: `${100 - mentorPercent}%` }} />
+            <div className="h-full bg-primary-solid transition" style={{ width: `${mentorPercent}%` }} />
+            <div className="h-full bg-info transition" style={{ width: `${100 - mentorPercent}%` }} />
           </div>
           <div className="flex justify-between text-xs font-semibold">
             <span className="text-primary-solid">Mentor {mentorPercent}%</span>

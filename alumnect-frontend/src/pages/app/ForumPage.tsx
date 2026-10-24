@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HelpCircle, ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap, Search, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -68,7 +68,7 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
   }
 
   return (
-    <Card hover={false} className="p-5 transition-all hover:-translate-y-0.5">
+    <Card hover={false} className="p-5 transition">
       <div className="flex gap-4">
         <div className="flex flex-col items-center gap-1">
           <button
@@ -112,7 +112,7 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
                   <img src={url} alt="" className="h-full w-full object-cover" />
                   {/* Nhãn "+N" trên ảnh cuối nếu còn ảnh chưa hiển thị */}
                   {idx === 2 && q.images.length > 3 && (
-                    <span className="absolute inset-0 grid place-items-center bg-plum-900/50 text-xs font-bold text-white">+{q.images.length - 3}</span>
+                    <span className="absolute inset-0 grid place-items-center bg-black/50 text-xs font-bold text-white">+{q.images.length - 3}</span>
                   )}
                 </div>
               ))}
@@ -263,6 +263,7 @@ export function ForumPage() {
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
           <input
+            aria-label="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
@@ -337,7 +338,8 @@ export function ForumPage() {
         </div>
       </Card>
 
-      {/* Vùng nội dung theo trạng thái */}
+      {/* Vùng nội dung theo trạng thái — đổi bộ lọc/sắp xếp thì mờ đi rồi hiện lại */}
+      <FadeSwitch id={`${sorts.join("+")}|${topicIds.join(",")}|${majorIds.join(",")}|${isLoading ? "loading" : isError ? "error" : "ready"}`}>
       {isLoading ? (
         <div className="space-y-4">
           <QuestionSkeleton />
@@ -372,6 +374,7 @@ export function ForumPage() {
           )}
         </>
       )}
+      </FadeSwitch>
 
       {/* Modal đặt câu hỏi (UC40) */}
       {askOpen && <AskQuestionModal onClose={() => setAskOpen(false)} />}

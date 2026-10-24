@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { X, Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { toast, DialogFrame } from '@/components/ui'
 import { PlaceAutocomplete } from './PlaceAutocomplete'
 import { MonthYearPicker } from './MonthYearPicker'
 
@@ -297,9 +296,12 @@ export function ExperienceFormModal({
 
   if (!isOpen) return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-plum-950/50 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-surface rounded-3xl border border-border shadow-2xl overflow-hidden flex flex-col min-h-[580px] max-h-[90vh] animate-scale-up">
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[9999]"
+      maxWidthClassName="max-w-2xl"
+      className="overflow-hidden flex flex-col min-h-[580px]"
+    >
         {/* Header (Fixed) */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-2 shrink-0">
           <h2 className="text-base font-extrabold text-text flex items-center gap-2">
@@ -308,7 +310,7 @@ export function ExperienceFormModal({
             {mode === 'edit' && 'Chỉnh sửa kinh nghiệm'}
             {mode === 'promote' && 'Thăng chức / Vai trò mới'}
           </h2>
-          <button
+          <button aria-label="Đóng"
             onClick={onClose}
             disabled={loading}
             className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
@@ -365,7 +367,7 @@ export function ExperienceFormModal({
                   placeholder="VD: Senior Frontend Developer..."
                   required
                   disabled={loading}
-                  className="w-full rounded-2xl border border-border bg-surface py-2.5 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-2xl border border-border bg-surface py-2.5 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -381,7 +383,7 @@ export function ExperienceFormModal({
                   placeholder="VD: FPT Software..."
                   required
                   disabled={loading || mode === 'promote' || mode === 'rejoin'}
-                  className="w-full rounded-2xl border border-border bg-plum-50/30 disabled:bg-surface-2 disabled:text-text-subtle py-2.5 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-2xl border border-border bg-plum-50/30 disabled:bg-surface-2 disabled:text-text-subtle py-2.5 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -484,7 +486,7 @@ export function ExperienceFormModal({
                 placeholder="Mô tả công việc, dự án đã tham gia..."
                 rows={5}
                 disabled={loading}
-                className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text placeholder-plum-400 transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
+                className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
               />
             </div>
           </div>
@@ -514,10 +516,7 @@ export function ExperienceFormModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }
 
 

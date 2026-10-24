@@ -50,7 +50,7 @@ export function MentoringTaskCard({ task, onSelect }: MentoringTaskCardProps) {
   }
 
   return (
-    <article className="flex flex-col rounded-2xl border border-border bg-surface p-5 shadow-xs transition hover:border-brand-500/40 hover:shadow-sm dark:hover:border-brand-500/40">
+    <article className="flex flex-col rounded-2xl border border-border bg-surface p-5 shadow-xs transition hover:border-brand-500/40 dark:hover:border-brand-500/40">
       <div className="flex items-center justify-between gap-2">
         <MentoringTaskBadge status={task.status} />
         <span className="text-xs font-medium text-text-subtle">Task #{task.id}</span>
@@ -86,7 +86,7 @@ export function MentoringTaskCard({ task, onSelect }: MentoringTaskCardProps) {
           <span className="font-semibold text-text">{progress}%</span>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
-          <div className="h-full rounded-full bg-primary-solid transition-all duration-500" style={{ width: `${progress}%` }} />
+          <div className="h-full rounded-full bg-primary-solid transition duration-500" style={{ width: `${progress}%` }} />
         </div>
       </div>
 

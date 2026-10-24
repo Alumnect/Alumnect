@@ -64,7 +64,7 @@ export function MentoringTaskStageProgressBar({
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <div className="h-2 w-28 sm:w-36 overflow-hidden rounded-full bg-surface-3">
             <motion.div
-              className="h-full rounded-full bg-linear-to-r from-brand-500 via-violet-500 to-mint-500"
+              className="h-full rounded-full bg-primary"
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -86,7 +86,7 @@ export function MentoringTaskStageProgressBar({
             <div
               key={stage.key}
               className={cn(
-                'relative flex items-center gap-3.5 rounded-2xl p-3.5 transition-all duration-200 border',
+                'relative flex items-center gap-3.5 rounded-2xl p-3.5 transition duration-200 border',
                 isCurrent
                   ? 'border-primary-soft-border bg-brand-50/70 shadow-xs dark:bg-brand-500/10'
                   : isPassed

@@ -21,7 +21,7 @@ import {
   ArrowLeft,
   Loader2,
 } from 'lucide-react'
-import { Card, Container, Skeleton, toast } from '@/components/ui'
+import { Card, Container, Skeleton, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { MentoringTermsGate } from '@/features/mentorship'
@@ -363,7 +363,8 @@ export function MentoringGroupDetailPage() {
         </Card>
 
         {/* TAB 1: OVERVIEW */}
-        {activeTab === 'OVERVIEW' && (
+        <FadeSwitch id={activeTab}>
+{activeTab === 'OVERVIEW' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
               {/* Snapshot Active Members Preview */}
@@ -816,7 +817,7 @@ export function MentoringGroupDetailPage() {
                   {requests.map((req) => (
                     <div
                       key={req.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border p-4 hover:border-primary-soft-border transition-all"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border p-4 hover:border-primary-soft-border transition"
                     >
                       <div className="space-y-1">
                         <Link
@@ -869,6 +870,7 @@ export function MentoringGroupDetailPage() {
             </Card>
           </div>
         )}
+</FadeSwitch>
 
         {/* MODAL: Invite Members */}
         {group && (
@@ -886,8 +888,12 @@ export function MentoringGroupDetailPage() {
 
         {/* DIALOG: Confirmation to Remove Member */}
         {memberToRemove && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
+          <DialogFrame
+            onClose={() => setMemberToRemove(null)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-md"
+            className="p-6 space-y-4 border-danger-border"
+          >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <AlertTriangle className="h-5 w-5" />
@@ -920,14 +926,17 @@ export function MentoringGroupDetailPage() {
                   {removeMemberMutation.isPending ? 'Đang xóa...' : 'Xóa khỏi nhóm'}
                 </Button>
               </div>
-            </Card>
-          </div>
+            </DialogFrame>
         )}
 
         {/* DIALOG: Confirmation to Cancel Invitation */}
         {invitationToCancel && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-warning-border">
+          <DialogFrame
+            onClose={() => setInvitationToCancel(null)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-md"
+            className="p-6 space-y-4 border-warning-border"
+          >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning">
                   <Ban className="h-5 w-5" />
@@ -960,14 +969,17 @@ export function MentoringGroupDetailPage() {
                   {cancelInvitationMutation.isPending ? 'Đang thu hồi...' : 'Thu hồi lời mời'}
                 </Button>
               </div>
-            </Card>
-          </div>
+            </DialogFrame>
         )}
 
         {/* DIALOG: Confirmation to Leave Group */}
         {isLeaveConfirmOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
+          <DialogFrame
+            onClose={() => setIsLeaveConfirmOpen(false)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-md"
+            className="p-6 space-y-4 border-danger-border"
+          >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <LogOut className="h-5 w-5" />
@@ -1000,13 +1012,16 @@ export function MentoringGroupDetailPage() {
                   {leaveGroupMutation.isPending ? 'Đang xử lý...' : 'Xác nhận rời nhóm'}
                 </Button>
               </div>
-            </Card>
-          </div>
+            </DialogFrame>
         )}
         {/* DIALOG: Confirmation to Delete Group */}
         {isDeleteConfirmOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-fade-in">
-            <Card hover={false} className="max-w-md w-full p-6 space-y-4 shadow-xl border border-danger-border">
+          <DialogFrame
+            onClose={() => setIsDeleteConfirmOpen(false)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-md"
+            className="p-6 space-y-4 border-danger-border"
+          >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger-soft text-danger">
                   <Trash2 className="h-5 w-5" />
@@ -1039,8 +1054,7 @@ export function MentoringGroupDetailPage() {
                   {deleteGroupMutation.isPending ? 'Đang xử lý...' : 'Xác nhận giải tán'}
                 </Button>
               </div>
-            </Card>
-          </div>
+            </DialogFrame>
         )}
       </MentoringTermsGate>
     </Container>

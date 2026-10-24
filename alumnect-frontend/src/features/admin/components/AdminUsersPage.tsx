@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { Search, Lock, Unlock, Users, X, Loader2, Mail, Phone, BookOpen, GraduationCap, Calendar, FileText, Award } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal, Pagination } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -95,7 +94,7 @@ export function AdminUsersPage() {
                   setPage(0) // reset về trang đầu
                 }}
                 className={cn(
-                  'rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                  'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
                   tab === t.value
                     ? 'bg-primary-solid text-on-primary shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -108,6 +107,7 @@ export function AdminUsersPage() {
           <div className="relative flex items-center sm:w-72">
             <Search size={16} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm theo tên, email, mã số..."
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value)
@@ -210,7 +210,7 @@ export function AdminUsersPage() {
                                 setSelectedCvMentorId(u.mentorProfileId || u.id)
                                 setIsCvModalOpen(true)
                               }}
-                              className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1.5 text-xs font-bold text-primary-solid hover:bg-orange-100 border border-orange-200/80 shadow-sm transition-all"
+                              className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1.5 text-xs font-bold text-primary-solid hover:bg-orange-100 border border-orange-200/80 shadow-sm transition"
                               title="Xem CV Mentor"
                             >
                               <FileText size={13} /> CV Mentor
@@ -226,7 +226,7 @@ export function AdminUsersPage() {
                             <button
                               onClick={() => handleToggleLock(u.id, u.accountStatus)}
                               className={cn(
-                                'grid h-8 w-8 place-items-center rounded-lg ring-1 ring-inset transition-all',
+                                'grid h-8 w-8 place-items-center rounded-lg ring-1 ring-inset transition',
                                 u.accountStatus === 'LOCKED'
                                   ? 'bg-success-soft text-success ring-success hover:bg-success-border/60'
                                   : 'bg-danger-soft text-danger ring-danger hover:bg-danger-border/60'
@@ -256,18 +256,12 @@ export function AdminUsersPage() {
 
       {/* User Profile Detail Drawer / Modal */}
       {selectedUserId !== null &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-plum-950/40 backdrop-blur-xs transition-opacity duration-300"
-              onClick={() => setSelectedUserId(null)}
-            />
-
-            <Card
-              hover={false}
-              className="relative z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto bg-surface p-0 shadow-2xl border border-plum-950/15 rounded-3xl pop"
-            >
+        <DialogFrame
+            onClose={() => setSelectedUserId(null)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-xl"
+            className="z-10 overflow-y-auto p-0 border-plum-950/15 pop"
+          >
               {/* Header Banner - Clean white matching user modals */}
               <div className="relative bg-surface p-6 border-b border-border rounded-t-3xl">
                 <button
@@ -428,7 +422,7 @@ export function AdminUsersPage() {
                             handleToggleLock(userDetail.id, userDetail.accountStatus)
                           }}
                           className={cn(
-                            'font-bold text-xs rounded-xl px-4 py-2 transition-all',
+                            'font-bold text-xs rounded-xl px-4 py-2 transition',
                             userDetail.accountStatus === 'LOCKED'
                               ? 'bg-success text-text-inverse hover:opacity-90 shadow-xs'
                               : 'border border-danger-border bg-danger-soft text-danger hover:bg-danger-border/60 hover:text-danger'
@@ -456,10 +450,7 @@ export function AdminUsersPage() {
                   </>
                 ) : null}
               </div>
-            </Card>
-          </div>,
-          document.body
-        )}
+            </DialogFrame>}
 
       {/* Modal xác nhận khóa / mở khóa tài khoản */}
       {confirmUserLock && (

@@ -195,14 +195,14 @@ function QuestionDetailContent({
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-primary-solid"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-primary-solid"
                 >
                   <Pencil size={13} /> Chỉnh sửa
                 </button>
                 <button
                   type="button"
                   onClick={onDelete}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition-all hover:-translate-y-0.5 hover:border-danger hover:bg-danger-soft hover:text-danger"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition hover:border-danger hover:bg-danger-soft hover:text-danger"
                 >
                   <Trash2 size={13} /> Xóa
                 </button>

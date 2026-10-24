@@ -65,7 +65,7 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={cn(
-              'inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+              'inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
               tab === t.key
                 ? 'bg-surface text-text shadow-sm'
                 : 'text-text-subtle hover:text-text',
@@ -186,7 +186,7 @@ function SettingRow({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4.5 transition-all',
+        'flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4.5 transition',
         danger
           ? 'border-danger bg-danger-soft'
           : 'border-border bg-surface',

@@ -293,7 +293,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
         /* ================= GIAO DIỆN CHÍNH: TÙY CHỌN CHIA SẺ CAO CẤP ================= */
         <div className="flex flex-col gap-2.5">
           {/* Tóm tắt bài viết dạng mini-card */}
-          <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-slate-50 via-slate-50/80 to-blue-50/30 p-2.5 border border-border dark:from-white/5 dark:to-white/[0.02] mb-0.5">
+          <div className="flex items-center gap-3 rounded-2xl bg-surface-2 p-2.5 border border-border mb-0.5">
             {thumbnail ? (
               <img
                 src={thumbnail}
@@ -330,9 +330,9 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           <button
             type="button"
             onClick={() => setViewMode('messenger')}
-            className="group relative flex items-center gap-3.5 rounded-2xl p-3.5 text-left transition-all duration-200 border border-border bg-surface hover:border-info-border hover:bg-info-soft hover:shadow-md hover:shadow-blue-500/5 cursor-pointer"
+            className="group relative flex items-center gap-3.5 rounded-2xl p-3.5 text-left transition duration-200 border border-border bg-surface hover:border-info-border hover:bg-info-soft hover:shadow-blue-500/5 cursor-pointer"
           >
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-tr from-[#0064e0] via-[#0084ff] to-[#00b2fe] text-white shadow-md shadow-blue-500/25 transition-transform duration-200 group-hover:scale-105">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-info text-text-inverse shadow-md shadow-blue-500/25 transition-transform duration-200 group-hover:scale-105">
               <MessageSquare size={20} className="fill-white/20" />
             </div>
             <div className="min-w-0 flex-1">
@@ -343,7 +343,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
                 Gửi trực tiếp cho bạn bè hoặc các nhóm trò chuyện
               </p>
             </div>
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle group-hover:text-info group-hover:translate-x-0.5 group-hover:bg-info-soft transition-all">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle group-hover:text-info group-hover:translate-x-0.5 group-hover:bg-info-soft transition">
               <ChevronRight size={18} />
             </div>
           </button>
@@ -352,10 +352,10 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           <button
             type="button"
             onClick={handleCopyLink}
-            className="group relative flex items-center gap-3.5 rounded-2xl p-3.5 text-left transition-all duration-200 border border-border bg-surface hover:border-border-strong hover:bg-surface-2 hover:shadow-md hover:shadow-slate-500/5 cursor-pointer"
+            className="group relative flex items-center gap-3.5 rounded-2xl p-3.5 text-left transition duration-200 border border-border bg-surface hover:border-border-strong hover:bg-surface-2 cursor-pointer"
           >
             <div
-              className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white shadow-md transition-all duration-200 group-hover:scale-105 ${
+              className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white shadow-md transition duration-200 group-hover:scale-105 ${
                 copied
                   ? 'bg-gradient-to-tr from-emerald-500 to-teal-600 shadow-emerald-500/25'
                   : 'bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-900 shadow-slate-500/15 dark:from-slate-600 dark:to-slate-800'
@@ -378,7 +378,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
                 Sao chép đường dẫn {resolvedTypeLabel} vào bộ nhớ tạm
               </p>
             </div>
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle group-hover:text-text-muted group-hover:translate-x-0.5 group-hover:bg-slate-200/50 transition-all dark:group-hover:bg-white/10">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle group-hover:text-text-muted group-hover:translate-x-0.5 group-hover:bg-slate-200/50 transition dark:group-hover:bg-white/10">
               {copied ? <Check size={18} className="text-success" /> : <ChevronRight size={18} />}
             </div>
           </button>
@@ -427,6 +427,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           {/* 2. Ô nhập lời nhắn gửi kèm (Cố định, không cuộn) */}
           <div className="shrink-0">
             <textarea
+              aria-label="Viết lời nhắn gửi kèm (không bắt buộc)..."
               rows={2}
               value={customNote}
               onChange={(e) => setCustomNote(e.target.value)}
@@ -439,6 +440,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           <div className="relative shrink-0">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
+              aria-label="Tìm kiếm bạn bè hoặc nhóm trò chuyện..."
               type="text"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
@@ -501,12 +503,12 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
                       type="button"
                       disabled={isSending || isSent}
                       onClick={() => handleSendToRecipient(item)}
-                      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                         isSent
                           ? 'bg-success-soft text-success border border-success-border'
                           : isSending
                             ? 'bg-primary-soft text-primary-solid'
-                            : 'bg-primary-solid text-on-primary shadow-2xs hover:bg-primary-hover hover:shadow-xs'
+                            : 'bg-primary-solid text-on-primary shadow-2xs hover:bg-primary-hover'
                       }`}
                     >
                       {isSending ? (

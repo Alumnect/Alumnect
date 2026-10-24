@@ -257,7 +257,7 @@ export const MentorRegistrationForm: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/app/mentoring/subscription')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-md transition cursor-pointer"
             >
               <span>Quản lý gói dịch vụ</span>
               <ArrowRight className="w-3.5 h-3.5 text-white" />
@@ -266,7 +266,7 @@ export const MentorRegistrationForm: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/app/mentoring/packages')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-md transition cursor-pointer"
             >
               <span>Chọn gói & Kích hoạt</span>
               <ArrowRight className="w-3.5 h-3.5 text-white" />
@@ -328,7 +328,7 @@ export const MentorRegistrationForm: React.FC = () => {
               type="button"
               onClick={handleSaveDraft}
               disabled={saveMutation.isPending}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border-strong hover:bg-surface-2 text-text-muted font-semibold text-sm transition-all disabled:opacity-50 cursor-pointer"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border-strong hover:bg-surface-2 text-text-muted font-semibold text-sm transition disabled:opacity-50 cursor-pointer"
             >
               <Save className="w-4 h-4 text-text-subtle" />
               <span>{saveMutation.isPending ? 'Đang lưu...' : 'Lưu nháp'}</span>
@@ -338,7 +338,7 @@ export const MentorRegistrationForm: React.FC = () => {
               type="button"
               onClick={handleComplete}
               disabled={saveMutation.isPending}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary font-semibold text-sm shadow-md transition disabled:opacity-50 cursor-pointer"
             >
               <CheckCircle className="w-4 h-4 text-white" />
               <span className="text-white">{isActive ? 'Lưu hồ sơ' : 'Hoàn tất'}</span>

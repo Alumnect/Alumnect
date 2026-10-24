@@ -626,7 +626,7 @@ function AlumniClusterMarker({ map, alumni, count, onExpand }: AlumniClusterMark
       }}
       className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-surface shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary"
     >
-      <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-violet-100 text-primary-solid">
+      <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary-solid">
         <Users size={23} strokeWidth={2.2} />
       </span>
       <span className="absolute -right-2 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-primary-solid px-1.5 text-xs font-extrabold text-on-primary shadow-sm ring-2 ring-surface">
@@ -708,7 +708,7 @@ function AlumniMarker({
       <div
         className={`
           flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-soft
-          transition-all duration-300 transform group-hover:scale-110
+          transition duration-300 transform group-hover:scale-110
           ${isSelected
             ? 'ring-4 ring-primary scale-110 shadow-glow'
             : 'border border-border hover:border-primary-soft-border'
@@ -730,7 +730,7 @@ function AlumniMarker({
       {/* Mũi tên chỉ xuống */}
       <div
         className={`
-          h-2.5 w-2.5 rotate-45 -mt-1.5 transition-all duration-300
+          h-2.5 w-2.5 rotate-45 -mt-1.5 transition duration-300
           ${isSelected ? 'bg-primary-solid' : 'bg-surface border-r border-b border-border'}
         `}
       />

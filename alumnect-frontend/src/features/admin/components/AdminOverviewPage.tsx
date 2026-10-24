@@ -425,7 +425,7 @@ export function AdminOverviewPage() {
                     <h2 className="font-extrabold text-base text-text flex items-center gap-2">
                       <span>Cần xử lý</span>
                       {totalActionItems > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning text-text-inverse animate-pulse">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning text-text-inverse">
                           {totalActionItems}
                         </span>
                       )}
@@ -518,7 +518,7 @@ export function AdminOverviewPage() {
                       <div
                         key={item.id}
                         className={cn(
-                          'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl transition-all border',
+                          'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl transition border',
                           item.isUrgent
                             ? 'bg-danger-soft border-danger-border hover:border-danger-border'
                             : 'bg-surface-2 dark:bg-surface border-border dark:border-border hover:border-brand-500/40'
@@ -558,7 +558,7 @@ export function AdminOverviewPage() {
                             variant={item.isUrgent ? 'primary' : 'secondary'}
                             onClick={() => navigate(item.actionHref)}
                             className={cn(
-                              'rounded-xl text-xs font-bold px-3.5 py-1.5 transition-all cursor-pointer flex items-center gap-1.5',
+                              'rounded-xl text-xs font-bold px-3.5 py-1.5 transition cursor-pointer flex items-center gap-1.5',
                               item.isUrgent
                                 ? 'bg-danger text-text-inverse hover:opacity-90 shadow-raised'
                                 : 'bg-surface dark:bg-bg text-text hover:bg-surface-2 dark:hover:bg-surface-2 border border-border'

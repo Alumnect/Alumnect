@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Card } from '@/components/ui'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import {
   ConversationList,
   ChatWindow,
@@ -23,6 +23,8 @@ export function MessagesPage() {
   const hasTargetUser = targetUserId !== null && !isNaN(targetUserId) && targetUserId > 0
 
   const [currentTab, setCurrentTab] = useState<'primary' | 'requests'>('primary')
+  // Màn rộng: tự mở hội thoại đầu tiên; điện thoại: hiện danh sách trước để người dùng chọn
+  const isDesktop = useMediaQuery('(min-width: 768px)', true)
 
   const { data: fetchedConversations = [], isLoading: isLoadingConversations } = useConversations(
     currentTab,
@@ -88,7 +90,7 @@ export function MessagesPage() {
       // Tự động chọn cuộc hội thoại đầu tiên khi danh sách đã nạp xong
       if (!isLoadingConversations) {
         if (!activeConversation) {
-          if (conversations.length > 0) {
+          if (isDesktop && conversations.length > 0) {
             setActiveConversation(conversations[0])
           }
         } else {
@@ -105,6 +107,7 @@ export function MessagesPage() {
     directConvData,
     conversations,
     isLoadingConversations,
+    isDesktop,
     activeConversation?.id,
     activeConversation?.recipientId,
     targetUserId,
@@ -242,10 +245,7 @@ export function MessagesPage() {
 
   return (
     <div className="mx-auto h-full max-w-6xl">
-      <Card
-        hover={false}
-        className="grid h-full grid-cols-1 overflow-hidden border border-border bg-surface/70 shadow-sm backdrop-blur-xl md:grid-cols-[340px_1fr]"
-      >
+      <div className="grid h-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-surface md:grid-cols-[340px_1fr]">
         {/* Danh sách các cuộc trò chuyện bên trái */}
         <div className={`${activeGeneralConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>
           <ConversationList
@@ -288,9 +288,13 @@ export function MessagesPage() {
               setCurrentTab('primary')
             }}
             onConversationUpdated={setActiveConversation}
+            onBack={() => {
+              setActiveConversation(null)
+              if (targetUserIdParam) setSearchParams({})
+            }}
           />
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

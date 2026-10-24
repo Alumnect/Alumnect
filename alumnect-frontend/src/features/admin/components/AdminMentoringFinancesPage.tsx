@@ -213,6 +213,7 @@ export function AdminMentoringFinancesPage() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-subtle" />
             <input
+              aria-label="Tìm theo Mã Task, Tên Task..."
               type="text"
               placeholder="Tìm theo Mã Task, Tên Task..."
               value={keyword}
@@ -405,7 +406,7 @@ export function AdminMentoringFinancesPage() {
                         size="sm"
                         variant="secondary"
                         onClick={() => handleOpenDetail(task.taskId)}
-                        className="gap-1.5 text-xs font-semibold bg-surface hover:bg-primary-soft hover:text-primary-solid hover:border-orange-300 text-text-muted border border-border transition-all shadow-2xs"
+                        className="gap-1.5 text-xs font-semibold bg-surface hover:bg-primary-soft hover:text-primary-solid hover:border-orange-300 text-text-muted border border-border transition shadow-2xs"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         Xem Sổ quỹ

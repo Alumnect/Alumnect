@@ -97,7 +97,7 @@ export function MentorDirectoryList({
             <button
               type="button"
               onClick={onClearFilters}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-semibold text-on-primary shadow-xs transition-all hover:bg-primary-hover active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-semibold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95 cursor-pointer"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               <span>Xóa bộ lọc</span>

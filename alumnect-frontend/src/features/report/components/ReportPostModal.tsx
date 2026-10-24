@@ -163,7 +163,7 @@ export function ReportPostModal({
                   aria-checked={selected}
                   onClick={() => setValue('reason', value, { shouldValidate: true, shouldDirty: true })}
                   className={cn(
-                    'group relative flex w-full items-center justify-between rounded-xl border p-2 text-left transition-all duration-150 cursor-pointer',
+                    'group relative flex w-full items-center justify-between rounded-xl border p-2 text-left transition duration-150 cursor-pointer',
                     selected
                       ? 'border-primary bg-primary-soft shadow-2xs ring-1 ring-primary/30'
                       : 'border-border bg-surface hover:border-border-strong hover:bg-surface-2',
@@ -186,7 +186,7 @@ export function ReportPostModal({
                   {/* Radio Indicator */}
                   <span
                     className={cn(
-                      'grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full border transition-all duration-150',
+                      'grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full border transition duration-150',
                       selected
                         ? 'border-primary bg-primary-solid text-on-primary shadow-2xs'
                         : 'border-border-strong bg-surface group-hover:border-slate-400',
@@ -217,7 +217,7 @@ export function ReportPostModal({
                 : 'Bổ sung thông tin giúp chúng tôi xem xét nhanh hơn...'
             }
             className={cn(
-              'w-full resize-none rounded-xl border bg-surface px-3 py-2 text-xs text-text placeholder:text-text-subtle outline-none transition-all dark:placeholder:text-text-subtle',
+              'w-full resize-none rounded-xl border bg-surface px-3 py-2 text-xs text-text placeholder:text-text-subtle outline-none transition dark:placeholder:text-text-subtle',
               errors.description
                 ? 'border-danger ring-2 ring-danger'
                 : 'border-border focus:border-primary focus:ring-2 focus:ring-primary/20',

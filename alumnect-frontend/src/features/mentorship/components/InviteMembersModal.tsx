@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, UserPlus, X, Loader2, CheckCircle2, Clock, RotateCcw } from 'lucide-react'
-import { Card, toast, Avatar } from '@/components/ui'
+import { Card, toast, Avatar, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { mentoringGroupApi } from '../api/mentoringGroupApi'
 import type { MentoringGroupData, MentoringGroupMemberData } from '../model/mentoringRequestTypes'
@@ -76,8 +76,12 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg animate-in fade-in zoom-in-95 duration-150">
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-lg"
+      className="fade-in zoom-in-95 duration-150"
+    >
         <Card hover={false} className="border border-border-strong p-6 shadow-2xl dark:bg-surface">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border pb-4">
@@ -90,7 +94,7 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
                 <p className="text-xs text-text-subtle truncate max-w-[280px]">{effectiveGroupName}</p>
               </div>
             </div>
-            <button
+            <button aria-label="Đóng"
               type="button"
               onClick={onClose}
               className="rounded-lg p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
@@ -104,6 +108,7 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
               <input
+                aria-label="Tìm sinh viên hoặc cựu sinh viên theo tên hoặc email..."
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -214,7 +219,6 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
             </Button>
           </div>
         </Card>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

@@ -88,7 +88,7 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
-                className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold transition-all sm:px-4 ${
+                className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold transition sm:px-4 ${
                   filter === tab.id
                     ? 'bg-primary-solid text-on-primary shadow-md'
                     : 'bg-transparent text-text-subtle hover:bg-surface-2 hover:text-text'
@@ -162,7 +162,7 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
                 </div>
               )}
               {!hasNextPage && posts.length > 0 && (
-                <p className="text-sm text-text-subtle">Đã hiển thị tất cả bài viết 🎉</p>
+                <p className="text-sm text-text-subtle">Đã hiển thị tất cả bài viết</p>
               )}
             </div>
           </>

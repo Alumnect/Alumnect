@@ -26,7 +26,7 @@ import {
   MessageCircle,
 } from 'lucide-react'
 import axios from 'axios'
-import { Avatar, Card, Skeleton, EmptyState, SmartImage, toast } from '@/components/ui'
+import { Avatar, Card, Skeleton, EmptyState, SmartImage, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAuthStore } from '@/store/authStore'
@@ -364,15 +364,15 @@ export function ProfilePage() {
       <Reveal>
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden text-left">
           {/* 1. Ảnh Bìa với Nút camera đổi ảnh bìa kiểu Facebook */}
-          <div className="relative h-52 sm:h-72 w-full bg-surface-2">
-            <SmartImage
-              src={profile.coverUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1200'}
-              alt="Profile cover"
-              className="h-full w-full"
-              imgClassName="object-cover"
-            />
+          <div className="relative h-44 w-full bg-surface-2 sm:h-60">
+            {profile.coverUrl ? (
+              <SmartImage src={profile.coverUrl} alt="Ảnh bìa" className="h-full w-full" imgClassName="object-cover" />
+            ) : (
+              // Chưa có ảnh bìa: nền nhạt theo màu thương hiệu (không dùng ảnh ngoài nhiều màu)
+              <div className="h-full w-full bg-gradient-to-br from-primary-soft via-surface-2 to-info-soft" aria-hidden />
+            )}
             {isOwnProfile && (
-              <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-text bg-surface hover:bg-surface backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95">
+              <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-text bg-surface hover:bg-surface backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition hover:scale-105 active:scale-95">
                 {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
                 <span>Chỉnh sửa ảnh bìa</span>
                 <input
@@ -399,7 +399,7 @@ export function ProfilePage() {
                   className="bg-surface shadow-xl rounded-full border-4 border-white"
                 />
                 {isOwnProfile && (
-                  <label className="absolute bottom-2 right-2 p-2 rounded-full bg-surface-2 hover:bg-plum-200 text-text shadow-md cursor-pointer transition-all border-2 border-white hover:scale-110 active:scale-90">
+                  <label className="absolute bottom-2 right-2 p-2 rounded-full bg-surface-2 hover:bg-plum-200 text-text shadow-md cursor-pointer transition border-2 border-white hover:scale-110 active:scale-90">
                     {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={16} />}
                     <input
                       type="file"
@@ -472,7 +472,7 @@ export function ProfilePage() {
                   {profile.fullName}
                 </h1>
                 {isAlumni ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-[#d45105] dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-primary-solid dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
                     <GraduationCap size={13} className="shrink-0" />
                     Cựu sinh viên
                   </span>
@@ -599,6 +599,7 @@ export function ProfilePage() {
       </Reveal>
 
       {/* MAIN BODY CONTAINER */}
+      <FadeSwitch id={activeTab}>
       {isOwnProfile && activeTab === 'about' ? (
         /* Chế độ Chỉnh sửa Hồ sơ dạng Facebook */
         <EditProfileView
@@ -643,7 +644,7 @@ export function ProfilePage() {
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-text-muted bg-surface-2 border border-border hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm ${platform.color}`}
+                            className={`inline-flex items-center gap-2 rounded-2xl px-3.5 py-1.5 text-xs font-semibold text-text-muted bg-surface-2 border border-border hover:scale-[1.02] active:scale-[0.98] transition duration-200 shadow-sm ${platform.color}`}
                           >
                             {platform.icon}
                             <span>{platform.name}</span>
@@ -698,7 +699,7 @@ export function ProfilePage() {
                     <div key={exp.id} className="relative group">
                       {/* Biểu tượng trên Timeline */}
                       <span
-                        className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition-all ${exp.isPrimary
+                        className={`absolute -left-[21px] sm:-left-[29px] top-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full border-2 border-white ring-2 transition ${exp.isPrimary
                           ? 'bg-amber-400 ring-amber-300'
                           : exp.isCurrent
                             ? 'bg-primary-solid ring-brand-200'
@@ -706,7 +707,7 @@ export function ProfilePage() {
                           }`}
                       />
 
-                      <div className="rounded-2xl p-4 transition-all duration-200 hover:bg-surface-2 border border-transparent hover:border-border">
+                      <div className="rounded-2xl p-4 transition duration-200 hover:bg-surface-2 border border-transparent hover:border-border">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
@@ -738,7 +739,7 @@ export function ProfilePage() {
                                   type="button"
                                   onClick={() => handleOpenPromoteExp(exp)}
                                   title="Thăng chức / Đổi vai trò mới tại công ty"
-                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition-all"
+                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition"
                                 >
                                   <TrendingUp size={15} />
                                 </button>
@@ -748,7 +749,7 @@ export function ProfilePage() {
                                   type="button"
                                   onClick={() => handleOpenRejoinExp(exp)}
                                   title="Thêm kinh nghiệm khác tại công ty này (Hiện tại hoặc Quá khứ)"
-                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition-all"
+                                  className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition"
                                 >
                                   <PlusSquare size={15} />
                                 </button>
@@ -757,7 +758,7 @@ export function ProfilePage() {
                                 type="button"
                                 onClick={() => handleOpenEditExp(exp)}
                                 title="Chỉnh sửa vị trí"
-                                className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-plum-100/50 transition-all"
+                                className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-plum-100/50 transition"
                               >
                                 <Edit3 size={15} />
                               </button>
@@ -765,7 +766,7 @@ export function ProfilePage() {
                                 type="button"
                                 onClick={() => setDeleteExpId(exp.id)}
                                 title="Xóa vị trí"
-                                className="p-1.5 rounded-xl text-text-subtle hover:text-danger hover:bg-danger-soft transition-all"
+                                className="p-1.5 rounded-xl text-text-subtle hover:text-danger hover:bg-danger-soft transition"
                               >
                                 <Trash2 size={15} />
                               </button>
@@ -837,6 +838,7 @@ export function ProfilePage() {
           )}
         </div>
       )}
+      </FadeSwitch>
 
       {/* Modal Quản lý Kinh nghiệm (Thêm / Sửa / Thăng chức) */}
       {isOwnProfile && (
@@ -850,8 +852,12 @@ export function ProfilePage() {
 
       {/* Modal Xác nhận xóa Kinh nghiệm */}
       {deleteExpId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-surface rounded-3xl border border-border shadow-2xl p-6 text-left space-y-4">
+        <DialogFrame
+          onClose={() => setDeleteExpId(null)}
+          zIndexClassName="z-50"
+          maxWidthClassName="max-w-md"
+          className="p-6 text-left space-y-4"
+        >
             <div className="flex items-center gap-3 text-danger">
               <span className="p-2 rounded-2xl bg-danger-soft border border-danger-border">
                 <AlertTriangle size={20} />
@@ -882,8 +888,7 @@ export function ProfilePage() {
                 Xóa
               </Button>
             </div>
-          </div>
-        </div>
+          </DialogFrame>
       )}
 
       {/* Modal danh sách Follower / Following */}

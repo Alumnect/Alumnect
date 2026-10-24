@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Handshake, RefreshCw } from 'lucide-react'
-import { Button, ButtonLink, Container, EmptyState, Pagination } from '@/components/ui'
+import { Button, ButtonLink, Container, EmptyState, Pagination, FadeSwitch } from '@/components/ui'
 import {
   MentoringTermsGate,
   MentorPageHeader,
@@ -73,7 +73,8 @@ function MentoringDealsContent() {
         }}
       />
 
-      {isLoading ? (
+      <FadeSwitch id={filter}>
+{isLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-64 animate-pulse rounded-2xl border border-border bg-surface-2 dark:bg-white/[0.04]" />
@@ -115,6 +116,7 @@ function MentoringDealsContent() {
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
+</FadeSwitch>
 
       {selectedDeal && (
         <MentoringDealActionModal

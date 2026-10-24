@@ -1,9 +1,10 @@
-import { useEffect, type ReactNode } from 'react'
+import { useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useDialog } from '@/hooks/useDialog'
 
 interface ModalProps {
   isOpen: boolean
@@ -35,17 +36,10 @@ export function Modal({
   zIndexClassName = 'z-50',
   bodyClassName,
 }: ModalProps) {
-  // Ngăn cuộn trang (scroll) khi modal đang mở
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isOpen])
+  // Bẫy tiêu điểm, Esc, inert nền, khóa cuộn, trả tiêu điểm: xem hooks/useDialog
+  const titleId = useId()
+  const panelRef = useRef<HTMLDivElement>(null)
+  useDialog(panelRef, { open: isOpen, onClose })
 
   return createPortal(
     <AnimatePresence>
@@ -53,7 +47,7 @@ export function Modal({
         <div className={cn("fixed inset-0 flex items-end justify-center sm:items-center sm:p-4", zIndexClassName)}>
           {/* Lớp nền mờ (Backdrop) phủ toàn màn hình */}
           <motion.div
-            className="absolute inset-0 bg-overlay backdrop-blur-xs"
+            className="absolute inset-0 bg-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: TRANSITION.exit }}
@@ -63,8 +57,10 @@ export function Modal({
 
           {/* Hộp thoại Modal Box */}
           <motion.div
+            ref={panelRef}
             role="dialog"
             aria-modal="true"
+            aria-labelledby={titleId}
             className={cn(
               "relative flex w-full flex-col overflow-hidden rounded-t-2xl border border-border bg-surface text-text shadow-overlay max-h-[90vh] pb-[env(safe-area-inset-bottom)] sm:rounded-2xl sm:max-h-[85vh] sm:pb-0",
               maxWidthClassName,
@@ -84,11 +80,12 @@ export function Modal({
                     {icon}
                   </span>
                 )}
-                <h3 className="line-clamp-1 text-base font-extrabold text-text">{title}</h3>
+                <h3 id={titleId} className="line-clamp-1 text-base font-extrabold text-text">{title}</h3>
               </div>
               <button
                 onClick={onClose}
                 type="button"
+                data-dialog-close
                 aria-label="Đóng"
                 className="-mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-focus"
               >

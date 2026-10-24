@@ -56,6 +56,7 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
       <div className="relative mb-3">
         <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
         <input
+          aria-label="Tìm thành viên theo tên…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Tìm thành viên theo tên…"

@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { X, ShieldCheck, CheckCircle2, History, Loader2, MessagesSquare, Info } from 'lucide-react'
-import { Button } from '@/components/ui'
+import { Button, DialogFrame } from '@/components/ui'
 import { MentoringDealSnapshotCard } from './MentoringDealSnapshotCard'
 import { MentoringDealHistoryTimeline } from './MentoringDealHistoryTimeline'
 import { useDealDetail } from '../hooks/useMentoringDeals'
@@ -32,9 +31,12 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
 
   if (typeof document === 'undefined') return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-3xl bg-surface rounded-3xl border border-border shadow-2xl p-6 sm:p-7 text-left space-y-6 max-h-[92vh] overflow-y-auto chat-scrollbar">
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[100]"
+      maxWidthClassName="max-w-3xl"
+      className="p-6 sm:p-7 text-left space-y-6 overflow-y-auto chat-scrollbar"
+    >
         <button
           type="button"
           onClick={onClose}
@@ -62,7 +64,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
             <button
               type="button"
               onClick={() => setActiveTab('snapshot')}
-              className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'snapshot'
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -73,7 +75,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
             <button
               type="button"
               onClick={() => setActiveTab('history')}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'history'
                   ? 'bg-primary-solid text-on-primary shadow-xs'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
@@ -132,8 +134,5 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
             </div>
           </div>
         )}
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }

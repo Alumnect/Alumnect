@@ -16,7 +16,7 @@ import {
 } from '@/features/auth'
 import type { ForgotInput, OtpFormInput, PasswordFormInput } from '@/features/auth'
 import { Button } from '@/components/ui/Button'
-import { toast } from '@/components/ui'
+import { toast, FadeSwitch } from '@/components/ui'
 
 export function ForgotPasswordPage() {
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email')
@@ -202,7 +202,8 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthScaffold>
-      {step === 'email' && (
+      <FadeSwitch id={step}>
+{step === 'email' && (
         <>
           <Link
             to="/login"
@@ -211,7 +212,7 @@ export function ForgotPasswordPage() {
             <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" /> Quay lại đăng nhập
           </Link>
 
-          <h2 className="text-3xl font-extrabold text-text tracking-tight">Quên mật khẩu?</h2>
+          <h1 className="text-3xl font-extrabold text-text tracking-tight">Quên mật khẩu?</h1>
           <p className="mt-2 text-sm text-text-subtle leading-relaxed">
             Nhập email tài khoản của bạn. Hệ thống sẽ gửi một mã OTP 6 chữ số để xác minh danh tính.
           </p>
@@ -259,7 +260,7 @@ export function ForgotPasswordPage() {
             <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /> Quay lại nhập email
           </button>
 
-          <h2 className="text-3xl font-extrabold text-text tracking-tight">Xác thực mã OTP</h2>
+          <h1 className="text-3xl font-extrabold text-text tracking-tight">Xác thực mã OTP</h1>
           <p className="mt-2 text-sm text-text-subtle leading-relaxed">
             Mã OTP 6 số đã được gửi tới email <strong className="text-text">{email}</strong>. Vui lòng nhập mã để tiếp tục.
           </p>
@@ -344,9 +345,9 @@ export function ForgotPasswordPage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-text tracking-tight">
+              <h1 className="text-2xl font-extrabold text-text tracking-tight">
                 Đặt lại mật khẩu thành công!
-              </h2>
+              </h1>
               <p className="mt-2 text-sm text-text-muted leading-relaxed max-w-sm mx-auto">
                 Mật khẩu mới của bạn đã được cập nhật an toàn. Vui lòng đăng nhập bằng mật khẩu mới.
               </p>
@@ -390,7 +391,7 @@ export function ForgotPasswordPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">Bước cuối cùng</span>
             </div>
 
-            <h2 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Thiết lập mật khẩu mới</h2>
+            <h1 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Thiết lập mật khẩu mới</h1>
             <p className="mt-2 text-sm text-text-subtle leading-relaxed">
               Xác thực OTP thành công. Vui lòng nhập mật khẩu mới của bạn dưới đây.
             </p>
@@ -455,6 +456,7 @@ export function ForgotPasswordPage() {
           </div>
         )
       )}
+</FadeSwitch>
     </AuthScaffold>
   )
 }

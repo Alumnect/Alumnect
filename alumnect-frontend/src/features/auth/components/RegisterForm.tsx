@@ -154,7 +154,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         <Sparkles size={20} className="text-primary-solid animate-pulse" />
         <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">Gia nhập AlumNect</span>
       </div>
-      <h2 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Đăng ký tài khoản</h2>
+      <h1 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Đăng ký tài khoản</h1>
       <p className="mt-1 text-sm text-text-subtle">Kết nối với cộng đồng sinh viên và cựu sinh viên FPTU.</p>
 
       {googleData && (
@@ -182,7 +182,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
               type="button"
               onClick={() => setValue('role', r.key as 'STUDENT' | 'ALUMNI')}
               className={cn(
-                'relative rounded-2xl border p-4 text-left transition-all duration-300',
+                'relative rounded-2xl border p-4 text-left transition duration-300',
                 active
                   ? 'border-brand-400/60 bg-primary-soft ring-2 ring-primary/30'
                   : 'border-border bg-surface-2 hover:border-border-strong hover:bg-surface-2',
@@ -333,7 +333,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         <>
           <div className="my-6 flex items-center gap-4">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-plum-300">hoặc</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">hoặc</span>
             <span className="h-px flex-1 bg-border" />
           </div>
 
