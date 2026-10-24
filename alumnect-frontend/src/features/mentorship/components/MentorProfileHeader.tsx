@@ -30,9 +30,6 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
       hover={false}
       className="relative w-full overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6"
     >
-      {/* Background Gradient Accent nhỏ */}
-      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-brand-300/15 via-violet-300/10 to-transparent blur-2xl" />
-
       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         {/* Khối Trái: Avatar & Định danh cá nhân */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 min-w-0 flex-1">

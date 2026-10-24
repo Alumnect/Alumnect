@@ -215,7 +215,7 @@ export function JobsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       {/* Left: Job Title & Company */}
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 text-primary-solid ring-1 ring-orange-200/70 font-bold shadow-xs dark:from-surface-2 dark:to-surface-2 dark:text-primary-solid dark:ring-border-strong">
+                        <div className="bg-surface-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-primary-solid ring-1 ring-orange-200/70 font-bold shadow-xs dark:text-primary-solid dark:ring-border-strong">
                           <Building2 size={22} />
                         </div>
                         <div className="min-w-0 flex-1">

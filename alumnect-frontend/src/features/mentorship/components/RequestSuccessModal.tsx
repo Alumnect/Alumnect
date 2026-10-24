@@ -1,5 +1,5 @@
 import React from 'react'
-import { CheckCircle2, Sparkles, Users, ArrowRight, AlertCircle, Calendar } from 'lucide-react'
+import { CheckCircle2, Users, ArrowRight, AlertCircle, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { DialogFrame } from '@/components/ui/DialogFrame'
 import { Badge } from '@/components/ui/primitives'
@@ -41,7 +41,6 @@ export const RequestSuccessModal: React.FC<RequestSuccessModalProps> = ({
                 <h3 className="font-display text-lg font-bold text-text">
                   Tạo yêu cầu Mentoring thành công!
                 </h3>
-                <Sparkles className="h-4 w-4 text-primary-solid animate-pulse" />
               </div>
               <p className="text-xs text-text-subtle">
                 Mã yêu cầu: <span className="font-semibold text-text-muted">#{data.id}</span>

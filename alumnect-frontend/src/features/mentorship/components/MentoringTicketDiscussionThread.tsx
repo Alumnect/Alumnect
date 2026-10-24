@@ -248,7 +248,7 @@ export function MentoringTicketDiscussionThread({
 
                 {/* Offer Card nếu là MEDIATION_OFFER */}
                 {isOffer && (
-                  <div className="mb-2.5 p-3 rounded-lg bg-gradient-to-r from-violet-500/10 to-violet-500/10 dark:from-violet-600/60 dark:to-violet-600/60 border border-violet-300 dark:border-violet-500">
+                  <div className="bg-surface-2 mb-2.5 p-3 rounded-lg border border-violet-300 dark:border-violet-500">
                     <div className="flex items-center gap-2 mb-1.5">
                       <Scale className="h-4 w-4 text-info" />
                       <span className="text-xs font-bold text-info uppercase tracking-wide">

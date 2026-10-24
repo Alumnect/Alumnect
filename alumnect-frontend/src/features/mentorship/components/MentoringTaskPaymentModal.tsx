@@ -270,7 +270,7 @@ export function MentoringTaskPaymentModal({
             </div>
 
             {/* Khung hiển thị VietQR */}
-            <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-gradient-to-b from-brand-50/50 to-white border border-primary-soft-border shadow-sm dark:from-white/5 dark:to-transparent space-y-4">
+            <div className="bg-surface-2 flex flex-col items-center justify-center p-6 rounded-3xl border border-primary-soft-border shadow-sm space-y-4">
               <div className="relative group p-3 bg-surface rounded-2xl shadow-md border border-border dark:border-transparent">
                 <img
                   src={qrImageUrl}
@@ -300,10 +300,7 @@ export function MentoringTaskPaymentModal({
 
               {/* Trạng thái Polling động */}
               <div className="flex items-center gap-2 text-xs text-text-subtle">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
-                </span>
+                <span aria-hidden className="inline-flex h-2.5 w-2.5 rounded-full bg-success"></span>
                 <span>Hệ thống đang tự động lắng nghe kết quả chuyển khoản...</span>
               </div>
             </div>

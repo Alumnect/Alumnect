@@ -128,7 +128,7 @@ export const CreateMentoringGroupModal: React.FC<CreateMentoringGroupModalProps>
             </div>
 
             <div className="rounded-xl bg-warning-soft p-3 text-xs leading-relaxed text-warning">
-              💡 Sau khi tạo nhóm, bạn sẽ là <strong>Trưởng nhóm</strong> và có thể mời các thành viên tham gia trước khi submit Mentoring Request.
+              Sau khi tạo nhóm, bạn sẽ là <strong>Trưởng nhóm</strong> và có thể mời các thành viên tham gia trước khi submit Mentoring Request.
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">

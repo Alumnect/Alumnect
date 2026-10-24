@@ -97,7 +97,7 @@ export function MentoringTaskReportModal({
       className="overflow-hidden flex flex-col"
     >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-violet-500/5 to-violet-500/5 dark:from-surface dark:to-violet-600/20">
+        <div className="bg-surface-2 px-6 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-info text-text-inverse rounded-xl shadow-sm">
               <FileText className="w-5 h-5" />

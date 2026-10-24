@@ -302,7 +302,7 @@ function PostDetailCard({
       {post.type === 'recruitment' && post.job && (
         <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-orange-200 bg-surface shadow-sm ring-1 ring-orange-50 transition dark:border-border dark:ring-0">
           {/* Header Tuyển dụng - Thiết kế trang trọng, nổi bật */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-amber-50/40 to-white px-6 py-4 dark:border-border dark:from-surface-2 dark:to-surface">
+          <div className="bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 px-6 py-4 dark:border-border">
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-orange-100 text-primary-solid shadow-2xs dark:bg-orange-500/20 dark:text-orange-400">
                 <Briefcase size={22} />
@@ -327,7 +327,7 @@ function PostDetailCard({
 
           <div className="p-6">
             {/* Box Kêu gọi Ứng tuyển (tương tự RSVP của Sự kiện) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/30 p-4 shadow-xs dark:border-border dark:bg-none dark:bg-surface-2">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
               <div className="min-w-0">
                 <p className="text-sm font-bold text-text">Ứng tuyển vị trí này</p>
                 <p className="text-xs text-text-subtle mt-0.5">
@@ -441,7 +441,7 @@ function PostDetailCard({
       {post.type === 'event' && post.event && (
         <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-info-border bg-surface shadow-sm ring-1 ring-info-border transition dark:border-border dark:ring-0">
           {/* Header Sự kiện */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4 dark:border-border dark:from-surface-2 dark:to-surface">
+          <div className="bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 px-6 py-4 dark:border-border">
             <h3 className="flex items-center gap-2 font-bold text-info text-lg dark:text-text">
               <CalendarPlus size={20} className="text-info" />
               <span>Sự kiện: <span className="text-text">{post.event.title}</span></span>
@@ -466,7 +466,7 @@ function PostDetailCard({
 
           <div className="p-6">
             {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-brand-50/30 p-4 shadow-xs dark:border-border dark:bg-none dark:bg-surface-2">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
               <div className="min-w-0">
                 <p className="text-sm font-bold text-text">Đăng ký tham gia sự kiện</p>
               </div>

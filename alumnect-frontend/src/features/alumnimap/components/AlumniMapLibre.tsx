@@ -626,7 +626,7 @@ function AlumniClusterMarker({ map, alumni, count, onExpand }: AlumniClusterMark
       }}
       className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-surface shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary"
     >
-      <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-violet-100 text-primary-solid">
+      <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary-solid">
         <Users size={23} strokeWidth={2.2} />
       </span>
       <span className="absolute -right-2 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-primary-solid px-1.5 text-xs font-extrabold text-on-primary shadow-sm ring-2 ring-surface">

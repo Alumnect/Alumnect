@@ -86,7 +86,7 @@ export function MentoringTaskReviewModal({
       className="overflow-hidden flex flex-col"
     >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-violet-500/5 via-violet-500/5 to-transparent dark:from-violet-600/20 dark:to-violet-600/20 border-b border-border">
+        <div className="bg-surface-2 flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-info text-text-inverse shadow-sm">
               <FileCheck className="w-5 h-5" />
@@ -154,7 +154,7 @@ export function MentoringTaskReviewModal({
           {completion.deliverables && (
             <div className="p-4 bg-surface-2 border border-border rounded-xl shadow-xs space-y-1.5">
               <h4 className="text-xs font-semibold text-text">
-                📦 Sản phẩm bàn giao / Deliverables:
+                Sản phẩm bàn giao / Deliverables:
               </h4>
               <p className="text-xs text-text-muted whitespace-pre-wrap leading-relaxed">
                 {completion.deliverables}
@@ -166,7 +166,7 @@ export function MentoringTaskReviewModal({
           {completion.attachmentUrls && completion.attachmentUrls.length > 0 && (
             <div className="p-4 bg-surface-2 border border-border rounded-xl shadow-xs space-y-2">
               <h4 className="text-xs font-semibold text-text">
-                📎 Tệp & Đường dẫn đính kèm:
+                Tệp & đường dẫn đính kèm:
               </h4>
               <div className="space-y-1.5">
                 {completion.attachmentUrls.map((url, idx) => (

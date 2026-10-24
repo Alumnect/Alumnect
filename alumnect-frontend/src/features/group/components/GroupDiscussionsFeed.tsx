@@ -67,7 +67,7 @@ export function GroupDiscussionsFeed({
           topics={topics}
         />
       ) : !isGroupActive ? null : (
-        <Card hover={false} className="rounded-3xl border border-primary-soft-border bg-gradient-to-r from-brand-50/50 to-coral-50/30 p-5 shadow-card dark:from-brand-950/20 dark:to-surface">
+        <Card hover={false} className="bg-surface-2 rounded-3xl border border-primary-soft-border p-5 shadow-card">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="text-sm font-extrabold text-text">

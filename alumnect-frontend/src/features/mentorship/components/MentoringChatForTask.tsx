@@ -904,7 +904,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                     type="button"
                     onClick={() => setIsDealMenuOpen((v) => !v)}
                     title="Giao dịch Deal Ticket"
-                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 bg-gradient-to-r from-brand-50 to-brand-50/60 px-3 text-xs font-bold text-primary-solid transition hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 px-3 text-xs font-bold text-primary-solid transition hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
                   >
                     <Handshake className="h-4 w-4 shrink-0" />
                     <span className="font-display font-bold">Giao dịch</span>

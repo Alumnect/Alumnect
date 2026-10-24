@@ -161,13 +161,13 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
         <div className="flex items-center gap-5">
           {/* Bar Legend */}
           <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-md bg-gradient-to-t from-brand-600 to-brand-400 shadow-sm" />
+            <span className="h-3 w-3 rounded-sm bg-primary shadow-sm" />
             <span className="font-semibold text-text-muted">Tài khoản đăng ký</span>
           </div>
 
           {/* Line Legend */}
           <div className="flex items-center gap-2">
-            <span className="h-0.5 w-4 rounded bg-gradient-to-r from-amber-500 to-coral-500" />
+            <span className="h-0.5 w-4 rounded bg-warning" />
             <span className="h-2.5 w-2.5 rounded-full bg-coral-500 ring-2 ring-coral-200" />
             <span className="font-semibold text-text-muted">Xu hướng tăng trưởng</span>
           </div>
@@ -296,7 +296,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                         'w-full max-w-[42px] rounded-t-xl transition duration-300',
                         isHovered
                           ? 'bg-gradient-to-t from-brand-600 via-brand-500 to-violet-400 shadow-lg shadow-brand-500/40 ring-2 ring-brand-400'
-                          : 'bg-gradient-to-t from-brand-500/40 via-brand-500/70 to-brand-400 opacity-90'
+                          : 'bg-primary'
                       )}
                     />
                   </div>

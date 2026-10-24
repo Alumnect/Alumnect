@@ -26,11 +26,8 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
   return (
     <Card
       hover={false}
-      className="relative overflow-hidden border border-primary-soft-border bg-gradient-to-br from-white via-cream-50/40 to-brand-50/30 p-6 sm:p-7 shadow-sm rounded-3xl dark:from-surface dark:via-surface dark:to-brand-700/20 text-left"
+      className="bg-surface-2 relative overflow-hidden border border-primary-soft-border p-6 sm:p-7 shadow-sm rounded-3xl text-left"
     >
-      {/* Decorative Pastel Background Glow */}
-      <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-brand-300/20 via-violet-300/15 to-transparent blur-2xl" />
-
       {/* Header Tag Phân biệt Direct Request */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-border dark:border-white/[0.06]">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid border border-brand-500/25">

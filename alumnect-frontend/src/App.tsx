@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
 import { ProtectedRoute, RoleRoute } from '@/components/routing/guards'
 import { AppShell, AdminShell, ScrollToTop } from '@/components/layout'
+import { SectionTransition } from '@/components/layout/SectionTransition'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { FeedPage } from '@/pages/app/FeedPage'
 import { ToastContainer } from '@/components/ui'
@@ -67,7 +68,9 @@ function App() {
       <ToastContainer />
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
+        <SectionTransition>
+          {(location) => (
+        <Routes location={location}>
           {/* Trang chủ mở thẳng vào app ở chế độ khách (đã bỏ landing page) */}
           <Route path="/" element={<Navigate to="/app" replace />} />
 
@@ -164,6 +167,8 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+          )}
+        </SectionTransition>
       </BrowserRouter>
     </QueryClientProvider>
   )

@@ -415,7 +415,7 @@ export function AdminResolveTicketModal({
             </div>
             {!isFundBalanced && (
               <div className="text-3xs text-danger font-medium">
-                ⚠️ Tổng tiền phân bổ không khớp quỹ Escrow. Vui lòng điều chỉnh lại số tiền!
+                Tổng tiền phân bổ không khớp quỹ Escrow. Vui lòng điều chỉnh lại số tiền!
               </div>
             )}
           </div>

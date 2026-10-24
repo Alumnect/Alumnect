@@ -261,7 +261,7 @@ export function AdminTaskLedgerDetailModal({
 
               {/* Bảng cân đối dòng tiền Task (KPI Cards) */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-50/50 to-white dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-surface border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Tổng thu ký quỹ</span>
                     <ArrowDownLeft className="w-4 h-4 text-success" />
@@ -274,7 +274,7 @@ export function AdminTaskLedgerDetailModal({
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-blue-50/50 to-white dark:from-blue-950/30 dark:via-blue-950/10 dark:to-surface border border-blue-200/80 dark:border-blue-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-blue-200/80 dark:border-blue-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Đang giữ Escrow</span>
                     <Wallet className="w-4 h-4 text-info" />
@@ -287,7 +287,7 @@ export function AdminTaskLedgerDetailModal({
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-500/10 via-purple-50/50 to-white dark:from-purple-950/30 dark:via-purple-950/10 dark:to-surface border border-purple-200/80 dark:border-purple-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Đã chi Cố vấn</span>
                     <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -298,7 +298,7 @@ export function AdminTaskLedgerDetailModal({
                   <p className="text-xs text-text-subtle mt-0.5">Thù lao Mentoring</p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-50/50 to-white dark:from-amber-950/30 dark:via-amber-950/10 dark:to-surface border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Đã hoàn Học viên</span>
                     <RotateCcw className="w-4 h-4 text-warning" />
@@ -309,7 +309,7 @@ export function AdminTaskLedgerDetailModal({
                   <p className="text-xs text-text-subtle mt-0.5">Hoàn tiền giải quyết</p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-500/10 via-slate-50/50 to-white dark:from-slate-800/40 dark:via-slate-800/20 dark:to-surface border border-border shadow-xs">
+                <div className="bg-surface-2 p-3.5 rounded-2xl border border-border shadow-xs">
                   <div className="flex items-center justify-between text-text-muted">
                     <span className="text-xs font-semibold">Phí nền tảng/Hòa giải</span>
                     <ShieldCheck className="w-4 h-4 text-text-subtle" />

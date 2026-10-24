@@ -121,7 +121,7 @@ export function MentoringAddEvidenceModal({
       className="overflow-hidden flex flex-col"
     >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-amber-50 to-brand-50 dark:from-amber-950/20 dark:to-brand-700/20">
+        <div className="bg-surface-2 px-6 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-warning-soft text-warning rounded-xl">
               <FileText className="w-5 h-5" />

@@ -206,7 +206,7 @@ function SavedFeedCard({
               </a>
             )}
           </div>
-          <p className="text-xs font-semibold text-text-muted mb-2">🏢 {post.job.company}</p>
+          <p className="text-xs font-semibold text-text-muted mb-2">{post.job.company}</p>
           {post.job.location && (
             <p className="text-xs text-text-subtle flex items-center gap-1 mb-2">
               <MapPin size={12} className="text-primary-solid" /> {post.job.location}
@@ -307,7 +307,7 @@ function SavedGridCard({
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-plum-100/80 via-plum-50 to-orange-50/50 p-4 flex flex-col justify-center">
+          <div className="h-full w-full bg-surface-2 p-4 flex flex-col justify-center">
             <p className="text-xs text-text-muted line-clamp-3 font-medium">{post.text || 'Bài viết AlumNect'}</p>
           </div>
         )}
@@ -337,11 +337,11 @@ function SavedGridCard({
         <Link to={`/app/posts/${post.id}`} className="block">
           {post.type === 'recruitment' && post.job ? (
             <p className="font-bold text-text text-xs line-clamp-1 mb-1">
-              💼 {post.job.title} ({post.job.company})
+              {post.job.title} ({post.job.company})
             </p>
           ) : post.type === 'event' && post.event ? (
             <p className="font-bold text-text text-xs line-clamp-1 mb-1">
-              📅 {post.event.title}
+              {post.event.title}
             </p>
           ) : null}
 

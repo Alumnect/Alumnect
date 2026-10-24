@@ -2,19 +2,19 @@ import { useState } from 'react'
 import { Users2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-/** Bảng màu gradient ngẫu hứng nhưng đồng nhất theo tên hội nhóm khi chưa có ảnh bìa */
-const GRADIENT_PALETTES = [
-  'from-brand-500/30 via-coral-400/20 to-gold-400/30 text-primary-solid',
-  'from-violet-600/30 via-brand-500/20 to-sky-400/30 text-violet-700',
-  'from-sky-500/30 via-aqua-400/20 to-mint-400/30 text-sky-700',
-  'from-mint-500/30 via-brand-400/20 to-gold-400/30 text-mint-700',
-  'from-coral-500/30 via-violet-400/20 to-brand-500/30 text-coral-600',
+/** Nền phẳng nhạt theo tên hội nhóm khi chưa có ảnh bìa (cùng bảng sắc ngữ nghĩa của hệ thống) */
+const PALETTES = [
+  'bg-primary-soft text-primary-solid',
+  'bg-info-soft text-info',
+  'bg-success-soft text-success',
+  'bg-warning-soft text-warning',
+  'bg-danger-soft text-danger',
 ]
 
 function getGradient(name: string) {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return GRADIENT_PALETTES[Math.abs(hash) % GRADIENT_PALETTES.length]
+  return PALETTES[Math.abs(hash) % PALETTES.length]
 }
 
 /**
@@ -41,7 +41,7 @@ export function GroupCover({
   const initial = (name || 'G').trim().charAt(0).toUpperCase()
 
   return (
-    <div className={cn('relative w-full overflow-hidden bg-gradient-to-br', aspect, palette, className)}>
+    <div className={cn('relative w-full overflow-hidden', aspect, palette, className)}>
       {url && !failed ? (
         <>
           {fit === 'contain' && (
@@ -66,14 +66,14 @@ export function GroupCover({
           />
         </>
       ) : (
-        <div className="absolute inset-0 grid place-items-center bg-gradient-to-tr from-plum-900/10 via-transparent to-white/20 p-4 text-center">
+        <div className="absolute inset-0 grid place-items-center p-4 text-center">
           {showInitial ? (
-            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-surface/70 shadow-sm backdrop-blur-md">
+            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-surface/70">
               <span className="text-3xl font-extrabold tracking-tight">{initial}</span>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1.5 opacity-80">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface/60 shadow-sm backdrop-blur-md">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface/60">
                 <Users2 size={24} />
               </span>
               <span className="max-w-[80%] truncate text-xs font-bold tracking-wide uppercase opacity-75">{name}</span>
@@ -81,7 +81,6 @@ export function GroupCover({
           )}
         </div>
       )}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
     </div>
   )
 }

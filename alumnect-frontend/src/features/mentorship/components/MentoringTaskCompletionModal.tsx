@@ -80,7 +80,7 @@ export function MentoringTaskCompletionModal({
       className="overflow-hidden flex flex-col"
     >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-mint-50 via-mint-50 to-transparent dark:from-mint-950/20 dark:to-mint-950/20 border-b border-border">
+        <div className="bg-surface-2 flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-success text-text-inverse shadow-sm">
               <FileCheck2 className="w-5 h-5" />

@@ -13,7 +13,7 @@ export function WorldMap({ className, markers = [] }: { className?: string; mark
 
   return (
     <div className={className}>
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-ink-850 to-ink-950 ring-1 ring-inset ring-border">
+      <div className="bg-surface-2 relative aspect-[16/9] w-full overflow-hidden rounded-2xl ring-1 ring-inset ring-border">
         {/* dotted grid as a faux landmass texture */}
         <div className="absolute inset-0 bg-dots opacity-30 mask-radial" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-brand-700/10 via-transparent to-violet-700/10" />

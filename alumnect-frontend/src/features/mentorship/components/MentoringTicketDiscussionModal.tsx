@@ -32,7 +32,7 @@ export function MentoringTicketDiscussionModal({
       className="overflow-hidden flex flex-col"
     >
         {/* Header Modal */}
-        <div className="px-5 py-3.5 bg-gradient-to-r from-violet-500/10 via-violet-500/10 to-transparent border-b border-border flex items-center justify-between shrink-0">
+        <div className="bg-surface-2 px-5 py-3.5 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-info text-text-inverse shadow-xs">
               <MessageSquare className="w-5 h-5" />

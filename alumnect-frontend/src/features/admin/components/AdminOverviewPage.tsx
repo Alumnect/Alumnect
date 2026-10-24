@@ -425,7 +425,7 @@ export function AdminOverviewPage() {
                     <h2 className="font-extrabold text-base text-text flex items-center gap-2">
                       <span>Cần xử lý</span>
                       {totalActionItems > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning text-text-inverse animate-pulse">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning text-text-inverse">
                           {totalActionItems}
                         </span>
                       )}

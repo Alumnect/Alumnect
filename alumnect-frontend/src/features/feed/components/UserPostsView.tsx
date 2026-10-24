@@ -162,7 +162,7 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
                 </div>
               )}
               {!hasNextPage && posts.length > 0 && (
-                <p className="text-sm text-text-subtle">Đã hiển thị tất cả bài viết 🎉</p>
+                <p className="text-sm text-text-subtle">Đã hiển thị tất cả bài viết</p>
               )}
             </div>
           </>

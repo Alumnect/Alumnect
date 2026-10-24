@@ -445,7 +445,7 @@ export function MentoringWorkLogList({
 
                 {/* UC108: Student Action Bar (Visible if student can review this pending work log) */}
                 {canStudentReview && (
-                  <div className="mt-4 rounded-2xl border border-mint-300/80 bg-linear-to-r from-mint-50/90 via-mint-50/50 to-mint-50/90 p-4 shadow-2xs dark:border-mint-700/60 dark:from-mint-950/40 dark:via-[#1c2e2e] dark:to-mint-950/40">
+                  <div className="bg-surface-2 mt-4 rounded-2xl border border-mint-300/80 p-4 shadow-2xs dark:border-mint-700/60">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <h6 className="text-xs font-bold text-success flex items-center gap-1.5">

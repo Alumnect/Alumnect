@@ -497,10 +497,10 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                               </Link>
 
                               {c.author.groupRole === 'OWNER' && (
-                                <span className="text-xs font-black text-warning">👑 Sáng lập</span>
+                                <span className="text-xs font-semibold text-warning">Sáng lập</span>
                               )}
                               {c.author.groupRole === 'ADMIN' && (
-                                <span className="text-xs font-black text-primary-solid">🛡️ Quản trị</span>
+                                <span className="text-xs font-semibold text-primary-solid">Quản trị</span>
                               )}
 
                               <span className="text-xs text-text-subtle">

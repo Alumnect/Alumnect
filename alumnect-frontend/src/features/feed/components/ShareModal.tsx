@@ -293,7 +293,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
         /* ================= GIAO DIỆN CHÍNH: TÙY CHỌN CHIA SẺ CAO CẤP ================= */
         <div className="flex flex-col gap-2.5">
           {/* Tóm tắt bài viết dạng mini-card */}
-          <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-slate-50 via-slate-50/80 to-blue-50/30 p-2.5 border border-border dark:from-white/5 dark:to-white/[0.02] mb-0.5">
+          <div className="flex items-center gap-3 rounded-2xl bg-surface-2 p-2.5 border border-border mb-0.5">
             {thumbnail ? (
               <img
                 src={thumbnail}
@@ -332,7 +332,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
             onClick={() => setViewMode('messenger')}
             className="group relative flex items-center gap-3.5 rounded-2xl p-3.5 text-left transition duration-200 border border-border bg-surface hover:border-info-border hover:bg-info-soft hover:shadow-blue-500/5 cursor-pointer"
           >
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-tr from-[#0064e0] via-[#0084ff] to-[#00b2fe] text-white shadow-md shadow-blue-500/25 transition-transform duration-200 group-hover:scale-105">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-info text-text-inverse shadow-md shadow-blue-500/25 transition-transform duration-200 group-hover:scale-105">
               <MessageSquare size={20} className="fill-white/20" />
             </div>
             <div className="min-w-0 flex-1">

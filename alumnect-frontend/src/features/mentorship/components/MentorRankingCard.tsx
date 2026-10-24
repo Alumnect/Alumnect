@@ -15,7 +15,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-gold-500 text-white font-bold text-sm shadow-md shadow-gold-500/30">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-warning-border bg-warning-soft text-warning font-semibold text-sm shadow-md shadow-gold-500/30">
           <Trophy className="h-4 w-4" />
         </span>
       )
