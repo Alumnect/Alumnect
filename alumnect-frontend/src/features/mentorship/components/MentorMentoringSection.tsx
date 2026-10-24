@@ -274,6 +274,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
               <div className="p-3 border-b border-border dark:border-border bg-cream-100/60 dark:bg-bg flex items-center gap-2">
                 <Search className="w-4 h-4 text-text-subtle shrink-0" />
                 <input
+                  aria-label="Tìm kiếm..."
                   type="text"
                   placeholder="Tìm kiếm..."
                   value={searchQuery}

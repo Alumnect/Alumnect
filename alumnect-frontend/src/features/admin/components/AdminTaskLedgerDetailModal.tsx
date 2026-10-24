@@ -335,8 +335,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <Wallet className="w-4 h-4" />
                     <span>Sổ quỹ giao dịch</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'ledgers' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'ledgers' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.ledgers?.length || 0}
                     </span>
@@ -353,8 +353,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <Clock className="w-4 h-4" />
                     <span>Gia hạn thời hạn</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'extensions' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'extensions' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.extensionHistory?.length || 0}
                     </span>
@@ -371,8 +371,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <TrendingUp className="w-4 h-4" />
                     <span>Điều chỉnh & Bổ sung quỹ</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'amendments' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'amendments' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.amendmentHistory?.length || 0}
                     </span>
@@ -389,8 +389,8 @@ export function AdminTaskLedgerDetailModal({
                   >
                     <Scale className="w-4 h-4" />
                     <span>Vé tranh chấp & Phán quyết</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      activeTab === 'disputes' ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                    <span className={`px-1.5 py-0.2 rounded-full text-xs font-bold ${
+                      activeTab === 'disputes' ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                     }`}>
                       {detail.disputeTickets?.length || 0}
                     </span>

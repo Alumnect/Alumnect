@@ -114,6 +114,7 @@ export function ConversationList({
         <label className="relative flex items-center">
           <Search size={16} className="pointer-events-none absolute left-3.5 text-text-subtle" />
           <input
+            aria-label="Tìm kiếm người hoặc nhóm..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm kiếm người hoặc nhóm..."

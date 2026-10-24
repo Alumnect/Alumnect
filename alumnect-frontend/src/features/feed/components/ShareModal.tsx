@@ -427,6 +427,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           {/* 2. Ô nhập lời nhắn gửi kèm (Cố định, không cuộn) */}
           <div className="shrink-0">
             <textarea
+              aria-label="Viết lời nhắn gửi kèm (không bắt buộc)..."
               rows={2}
               value={customNote}
               onChange={(e) => setCustomNote(e.target.value)}
@@ -439,6 +440,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           <div className="relative shrink-0">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
+              aria-label="Tìm kiếm bạn bè hoặc nhóm trò chuyện..."
               type="text"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}

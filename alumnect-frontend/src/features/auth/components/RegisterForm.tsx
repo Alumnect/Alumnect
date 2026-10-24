@@ -154,7 +154,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         <Sparkles size={20} className="text-primary-solid animate-pulse" />
         <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">Gia nhập AlumNect</span>
       </div>
-      <h2 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Đăng ký tài khoản</h2>
+      <h1 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Đăng ký tài khoản</h1>
       <p className="mt-1 text-sm text-text-subtle">Kết nối với cộng đồng sinh viên và cựu sinh viên FPTU.</p>
 
       {googleData && (
@@ -333,7 +333,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         <>
           <div className="my-6 flex items-center gap-4">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-plum-300">hoặc</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">hoặc</span>
             <span className="h-px flex-1 bg-border" />
           </div>
 

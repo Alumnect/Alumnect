@@ -10,13 +10,15 @@ import type { AdminVerificationRequestDto } from '../api/adminApi'
 import { AdminReportsQueue } from './AdminReportsQueue'
 import { AdminVerificationDetailModal } from './AdminVerificationDetailModal'
 
+/** Trang theo mục quản trị: "Báo cáo" dùng hàng đợi riêng; các mục còn lại dùng khung chung bên dưới (tách để thứ tự Hook luôn cố định). */
 export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
+  if (sectionKey === 'reports') return <AdminReportsQueue />
+  return <AdminGenericSection sectionKey={sectionKey} />
+}
+
+function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
   const s = ADMIN_SECTIONS[sectionKey]
   const Icon = s.icon
-
-  if (sectionKey === 'reports') {
-    return <AdminReportsQueue />
-  }
 
   const isVerifications = sectionKey === 'verifications'
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING')

@@ -6,7 +6,10 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from '@/lib/queryClient'
 import './index.css'
 import '@/store/themeStore'
+import { installAutoLabel } from '@/lib/autoLabel'
 import App from './App.tsx'
+
+installAutoLabel()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

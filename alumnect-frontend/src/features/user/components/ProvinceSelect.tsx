@@ -156,6 +156,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
             <div className="relative flex items-center">
               <Search size={15} className="absolute left-3 text-text-subtle" />
               <input
+                aria-label="Tìm tên Tỉnh / Thành phố..."
                 type="text"
                 autoFocus
                 value={searchTerm}

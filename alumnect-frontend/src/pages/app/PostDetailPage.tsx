@@ -735,7 +735,7 @@ function CommentItem({
                 <button
                   type="button"
                   onClick={handleStartEdit}
-                  className="text-text-subtle hover:text-primary-solid transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
                   aria-label="Chỉnh sửa bình luận"
                 >
                   <Pencil size={13} />
@@ -745,7 +745,7 @@ function CommentItem({
                 <button
                   type="button"
                   onClick={() => onDelete(comment)}
-                  className="text-text-subtle hover:text-danger transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
                   aria-label="Xóa bình luận"
                 >
                   <Trash2 size={13} />
@@ -956,6 +956,7 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
       <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
       <div className="relative flex-1">
         <input
+          aria-label="Viết bình luận công khai..."
           type="text"
           value={content}
           onChange={(e) => setContent(e.target.value)}

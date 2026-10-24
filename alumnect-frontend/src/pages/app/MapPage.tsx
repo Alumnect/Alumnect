@@ -291,6 +291,7 @@ export function MapPage() {
               <div className="relative mt-3">
                 <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
                 <input
+                  aria-label="Tìm theo tên, công ty, vị trí..."
                   type="text"
                   placeholder="Tìm theo tên, công ty, vị trí..."
                   value={searchQuery}
@@ -474,7 +475,7 @@ export function MapPage() {
                     className={cn(
                       'rounded-xl px-2.5 py-1 text-xs font-bold transition cursor-pointer',
                       mapTheme === entry.theme
-                        ? 'bg-plum-900 text-white shadow-sm'
+                        ? 'bg-text text-text-inverse shadow-sm'
                         : 'bg-surface-2 text-text-muted hover:bg-border',
                       switchingState === 'switching' && 'opacity-60 pointer-events-none'
                     )}

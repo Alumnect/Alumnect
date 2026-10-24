@@ -181,7 +181,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                   <button
                     type="button"
                     onClick={() => setValue('coverImageUrl', null, { shouldDirty: true })}
-                    className="rounded-lg bg-plum-900/60 px-2.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:opacity-90"
+                    className="rounded-lg bg-black/60 px-2.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:opacity-90"
                   >
                     Gỡ ảnh
                   </button>
@@ -281,6 +281,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                   }
                 }}
                 maxLength={GROUP_TOPIC_MAX_LENGTH}
+                aria-label="Chủ đề thảo luận"
                 placeholder="Nhập chủ đề"
                 className={`h-11 ${FIELD_CLASS}`}
               />

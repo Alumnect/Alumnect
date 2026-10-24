@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 import type { ReactNode, InputHTMLAttributes } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -41,9 +41,9 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
           <span className="brand-logo border-l-2 border-white/50 pl-4 transition-colors group-hover:text-white/90">AlumNect</span>
         </Link>
 
-        <h1 className="text-4xl font-extrabold text-white drop-shadow-md leading-tight">
+        <p className="text-4xl font-extrabold text-white drop-shadow-md leading-tight">
           Cộng đồng Cựu sinh viên <br /> Trường Đại học FPT
-        </h1>
+        </p>
         <p className="mt-5 text-sm leading-relaxed text-white/90 drop-shadow">
           Tham gia cộng đồng bạn sẽ có cơ hội kết nối, tìm kiếm và giao lưu với hàng chục nghìn cựu sinh viên FPTU trên khắp thế giới. Tìm kiếm những người có cùng sở thích, kinh nghiệm, hoặc đơn giản là muốn kết nối để chia sẻ những câu chuyện thú vị.
         </p>
@@ -67,6 +67,8 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   { label, icon, trailing, error, className, ...rest },
   ref,
 ) {
+  const autoId = useId()
+  const inputId = rest.id ?? autoId
   return (
     <div className="relative">
       {icon && (
@@ -77,6 +79,9 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
       <input
         ref={ref}
         {...rest}
+        id={inputId}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? inputId + '-error' : undefined}
         placeholder=" "
         className={cn(
           'peer block w-full appearance-none rounded-xl border border-border-strong bg-surface px-4 pb-2.5 pt-4 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_var(--c-surface)]',
@@ -87,6 +92,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
         )}
       />
       <label
+        htmlFor={inputId}
         className={cn(
           'pointer-events-none absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform px-1 text-xs font-medium text-text-muted duration-300',
           'bg-surface',
@@ -103,7 +109,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           {trailing}
         </div>
       )}
-      {error && <span className="mt-1 block text-sm text-danger">{error}</span>}
+      {error && <span id={inputId + '-error'} role="alert" className="mt-1 block text-sm text-danger">{error}</span>}
     </div>
   )
 })

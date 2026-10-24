@@ -72,11 +72,11 @@ export function GroupCover({
               <span className="text-3xl font-extrabold tracking-tight">{initial}</span>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-1.5 opacity-80">
+            <div className="flex flex-col items-center gap-1.5">
               <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface/60">
                 <Users2 size={24} />
               </span>
-              <span className="max-w-[80%] truncate text-xs font-bold tracking-wide uppercase opacity-75">{name}</span>
+              <span className="max-w-[80%] truncate text-xs font-bold tracking-wide uppercase">{name}</span>
             </div>
           )}
         </div>

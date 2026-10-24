@@ -148,6 +148,7 @@ export function AdminMentorListSection() {
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-text-subtle" />
               <input
+                aria-label="Tìm theo tên, email, vị trí, công ty..."
                 type="text"
                 value={keyword}
                 onChange={(e) => {

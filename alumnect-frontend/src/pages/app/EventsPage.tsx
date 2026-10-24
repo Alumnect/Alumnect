@@ -75,6 +75,7 @@ export function EventsPage() {
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
           <input
+            aria-label="Tìm kiếm sự kiện theo tên, địa điểm hoặc từ khóa..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Tìm kiếm sự kiện theo tên, địa điểm hoặc từ khóa..."

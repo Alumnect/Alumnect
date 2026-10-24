@@ -177,10 +177,12 @@
 
   --c-border: #e2e8f0;
   --c-border-strong: #cbd5e1;
+  /* viền ô nhập: >= 3:1 trên nền trắng/xám nhạt (WCAG 1.4.11) */
+  --c-border-input: #7c8aa0;
 
   --c-text: #0f172a;
   --c-text-muted: #475569;
-  --c-text-subtle: #64748b;
+  --c-text-subtle: #566579;
   --c-text-disabled: #94a3b8;
   --c-text-inverse: #ffffff;
 
@@ -230,16 +232,17 @@ html.dark {
 
   --c-border: #393a3b;
   --c-border-strong: #4e4f50;
+  --c-border-input: #75787d;
 
   --c-text: #e4e6eb;
-  --c-text-muted: #b0b3b8;
-  --c-text-subtle: #8f9399;
+  --c-text-muted: #c2c5ca;
+  --c-text-subtle: #a8abb0;
   --c-text-disabled: #65676b;
   --c-text-inverse: #18191a;
 
   --c-primary: #ff8c38;
-  --c-primary-solid: #f27024;
-  --c-primary-hover: #ff8c38;
+  --c-primary-solid: #ff8c38;
+  --c-primary-hover: #ffa05c;
   --c-primary-soft: #2d2621;
   --c-primary-soft-border: #4a382b;
   --c-on-primary: #18191a;
@@ -274,6 +277,7 @@ html.dark {
   --color-overlay: var(--c-overlay);
   --color-border: var(--c-border);
   --color-border-strong: var(--c-border-strong);
+  --color-border-input: var(--c-border-input);
   --color-text: var(--c-text);
   --color-text-muted: var(--c-text-muted);
   --color-text-subtle: var(--c-text-subtle);
@@ -532,10 +536,13 @@ html.dark {
 
 /* Gradient text — FPT Orange & Navy */
 .text-gradient {
-  background-image: linear-gradient(110deg, #f27024 0%, #ff8c38 45%, #004f9e 100%);
+  background-image: linear-gradient(110deg, #c2410c 0%, #ea580c 45%, #004f9e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+html.dark .text-gradient {
+  background-image: linear-gradient(110deg, #ff8c38 0%, #ffb27a 45%, #7cb7ff 100%);
 }
 .text-gradient-cool {
   background-image: linear-gradient(110deg, #004f9e, #0284c7 55%, #f27024);
@@ -1162,7 +1169,7 @@ html.dark textarea,
 html.dark select {
   background-color: #242526 !important;
   color: #f0f2f5 !important;
-  border: 1px solid #55575a !important;
+  border: 1px solid var(--c-border-input) !important;
 }
 html.dark input:not([type="checkbox"]):not([type="radio"]):focus,
 html.dark textarea:focus,
@@ -1174,6 +1181,29 @@ html.dark select:focus {
 html.dark input::placeholder,
 html.dark textarea::placeholder {
   color: #9ca3af !important;
+}
+
+/* Light: placeholder + viền ô nhập đạt WCAG (chữ >= 4.5:1, viền >= 3:1) cho mọi ô nhập, kể cả ô viết class riêng */
+input::placeholder,
+textarea::placeholder {
+  color: var(--c-text-subtle);
+  opacity: 1;
+}
+input[class~='border-border']:not([type='checkbox']):not([type='radio']),
+input[class~='border-border-strong']:not([type='checkbox']):not([type='radio']),
+textarea[class~='border-border'],
+textarea[class~='border-border-strong'],
+select[class~='border-border'],
+select[class~='border-border-strong'] {
+  border-color: var(--c-border-input);
+}
+input[class~='border-border']:focus,
+input[class~='border-border-strong']:focus,
+textarea[class~='border-border']:focus,
+textarea[class~='border-border-strong']:focus,
+select[class~='border-border']:focus,
+select[class~='border-border-strong']:focus {
+  border-color: var(--c-primary);
 }
 
 /* Avatar Offset in Dark Mode */

@@ -367,6 +367,7 @@ export function AdminPostsPage() {
           <div className="relative flex items-center sm:w-48">
             <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm nội dung..."
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value)
@@ -380,6 +381,7 @@ export function AdminPostsPage() {
           <div className="relative flex items-center sm:w-48">
             <User size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm tác giả, email..."
               value={author}
               onChange={(e) => {
                 setAuthor(e.target.value)

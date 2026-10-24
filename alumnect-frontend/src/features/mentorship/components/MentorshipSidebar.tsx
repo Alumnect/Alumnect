@@ -171,7 +171,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         <nav aria-label="Điều hướng Mentoring" className="space-y-3">
           {sections.map((section) => (
             <section key={section.label} className="border-t border-border pt-2.5 first:border-t-0 first:pt-0">
-              <h3 className="mb-1 px-3 text-xs font-bold uppercase tracking-[0.12em] text-plum-400/80 dark:text-text-subtle">{section.label}</h3>
+              <h3 className="mb-1 px-3 text-xs font-bold uppercase tracking-[0.12em] text-text-subtle">{section.label}</h3>
               <div className="space-y-0.5">{section.items.map((item) => item.children ? renderParent(item) : renderLink(item))}</div>
             </section>
           ))}

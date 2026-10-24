@@ -107,6 +107,7 @@ export function AdminUsersPage() {
           <div className="relative flex items-center sm:w-72">
             <Search size={16} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm theo tên, email, mã số..."
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value)

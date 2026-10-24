@@ -472,7 +472,7 @@ export function ProfilePage() {
                   {profile.fullName}
                 </h1>
                 {isAlumni ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-[#d45105] dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-primary-solid dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
                     <GraduationCap size={13} className="shrink-0" />
                     Cựu sinh viên
                   </span>

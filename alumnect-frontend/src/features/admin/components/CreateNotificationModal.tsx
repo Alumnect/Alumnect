@@ -568,6 +568,7 @@ export function CreateNotificationModal({ isOpen, onClose }: CreateNotificationM
                       className="pointer-events-none absolute left-3 top-2.5 text-text-subtle"
                     />
                     <input
+                      aria-label="Tìm theo tên hoặc email người nhận..."
                       type="text"
                       placeholder="Tìm theo tên hoặc email người nhận..."
                       value={userQuery}

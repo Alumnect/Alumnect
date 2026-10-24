@@ -320,6 +320,7 @@ export function CreatePostModal({
                       {...register('content')}
                       rows={5}
                       maxLength={POST_CONTENT_MAX}
+                      aria-label="Nội dung bài viết"
                       placeholder={type === 'recruitment' ? "Mô tả chi tiết công việc tuyển dụng..." : "Bạn muốn chia sẻ điều gì với cộng đồng?"}
                       className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-4 text-[15px] leading-relaxed text-text outline-none transition-colors placeholder:text-text-subtle focus:border-primary transition duration-300 focus:bg-surface dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
                     />

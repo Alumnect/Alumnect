@@ -274,7 +274,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       className="absolute -top-14 z-30 flex flex-col items-center pointer-events-none"
                     >
-                      <div className="rounded-xl bg-plum-900 px-3 py-1.5 text-xs font-bold text-white shadow-xl shadow-plum-900/30 ring-1 ring-white/10 whitespace-nowrap">
+                      <div className="rounded-xl bg-text px-3 py-1.5 text-xs font-bold text-text-inverse shadow-xl shadow-black/30 ring-1 ring-white/10 whitespace-nowrap">
                         <span className="block text-gold-300 font-extrabold">{d.label}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span>Đăng ký: <strong className="text-white">{d.count}</strong></span>

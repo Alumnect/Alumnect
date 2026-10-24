@@ -134,6 +134,7 @@ export function EventAttendeesModal({
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle"
             />
             <input
+              aria-label="Tìm theo họ tên, chức danh..."
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

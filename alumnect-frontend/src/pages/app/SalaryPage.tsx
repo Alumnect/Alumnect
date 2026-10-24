@@ -156,7 +156,7 @@ export function SalaryPage() {
         title="Bảng lương cộng đồng"
         subtitle="Khám phá mức thu nhập thực tế theo vị trí, ngành nghề và cấp bậc do cựu sinh viên FPTU chia sẻ."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -196,6 +196,7 @@ export function SalaryPage() {
           <div className="relative">
             <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
+              aria-label="Tìm theo chức danh..."
               value={jobTitleInput}
               onChange={(e) => setJobTitleInput(e.target.value)}
               placeholder="Tìm theo chức danh..."

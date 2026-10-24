@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { PageHeadingGuard } from './PageHeadingGuard'
 import { RouteTransition } from './RouteTransition'
 import { motion } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
@@ -128,6 +129,7 @@ export function AdminShell() {
         </nav>
 
         <main className="px-4 py-6 sm:px-8 sm:py-7">
+          <PageHeadingGuard />
           <RouteTransition />
         </main>
       </div>

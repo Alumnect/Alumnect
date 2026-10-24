@@ -122,7 +122,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
           <div className="pt-3">
             <Link
               to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-2 text-xs font-bold text-text-muted transition-colors hover:bg-primary-solid hover:text-white"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-2 text-xs font-bold text-text-muted transition-colors hover:bg-primary-solid hover:text-on-primary"
             >
               <span>Xem chi tiết cố vấn</span>
               <ArrowRight className="h-3 w-3" />

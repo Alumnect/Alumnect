@@ -237,7 +237,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                     <button aria-label="Đóng"
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
-                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-plum-900/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-90"
+                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-90"
                     >
                       <X size={12} />
                     </button>
@@ -253,7 +253,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                     <video src={url} className="h-full w-full object-cover" muted preload="metadata" />
                     <button type="button" onClick={() => setVideos((prev) => prev.filter((_, i) => i !== idx))}
                       aria-label={`Gỡ video ${idx + 1}`}
-                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-plum-900/80 text-white">
+                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/80 text-white">
                       <X size={12} />
                     </button>
                   </div>

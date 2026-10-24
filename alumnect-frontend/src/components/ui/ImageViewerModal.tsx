@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TRANSITION } from '@/lib/motion'
+import { useDialog } from '@/hooks/useDialog'
 import { 
   X, 
   Download, 
@@ -47,6 +48,7 @@ export function ImageViewerModal({
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef({ x: 0, y: 0 })
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   // Reset trạng thái hiển thị khi mở ảnh mới
   useEffect(() => {
@@ -132,9 +134,7 @@ export function ImageViewerModal({
   // Phím tắt bàn phím
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      } else if (e.key === 'ArrowLeft' && onPrev) {
+      if (e.key === 'ArrowLeft' && onPrev) {
         onPrev()
       } else if (e.key === 'ArrowRight' && onNext) {
         onNext()
@@ -154,21 +154,18 @@ export function ImageViewerModal({
         setPan({ x: 0, y: 0 })
       }
     },
-    [onClose, onPrev, onNext]
+    [onPrev, onNext]
   )
 
   useEffect(() => {
     if (!isOpen) return
 
     window.addEventListener('keydown', handleKeyDown)
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = originalOverflow
-    }
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, handleKeyDown])
+
+  // Esc, bẫy tiêu điểm, khóa cuộn, trả tiêu điểm khi đóng
+  useDialog(dialogRef, { open: isOpen && !!src, onClose })
 
   // Tải ảnh về máy
   const handleDownload = async (e: React.MouseEvent) => {
@@ -194,8 +191,10 @@ export function ImageViewerModal({
   return createPortal(
     <AnimatePresence>
       <motion.div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
+        aria-label={alt}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, transition: TRANSITION.exit }}
@@ -204,7 +203,7 @@ export function ImageViewerModal({
         onWheel={handleWheel}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        className="fixed inset-0 z-[999999] flex select-none items-center justify-center bg-black/92 backdrop-blur-sm"
+        className="fixed inset-0 z-[999999] flex select-none outline-none items-center justify-center bg-black/92 backdrop-blur-sm"
       >
         {/* --- HEADER CHUẨN FACEBOOK MESSENGER --- */}
         <div
@@ -245,6 +244,8 @@ export function ImageViewerModal({
             type="button"
             onClick={onClose}
             title="Đóng (Esc)"
+            aria-label="Đóng"
+            data-dialog-close
             className="flex h-10 w-10 items-center justify-center rounded-full bg-[#242526] text-white/90 shadow-md border border-white/10 transition hover:bg-[#3a3b3c] hover:text-white hover:scale-105 active:scale-95"
           >
             <X size={20} strokeWidth={2.5} />

@@ -138,7 +138,6 @@ export function AdminBroadcastPage() {
         actions={
           <Button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 font-bold shadow-sm"
             leftIcon={<Plus size={16} />}
           >
             Tạo thông báo mới
@@ -185,7 +184,7 @@ export function AdminBroadcastPage() {
                   className={cn(
                     'rounded-full px-3 py-1 text-xs font-bold transition cursor-pointer select-none',
                     timeFilter === t.value
-                      ? 'bg-plum-900 text-white shadow-xs'
+                      ? 'bg-text text-text-inverse shadow-xs'
                       : 'bg-surface-2 text-text-muted hover:bg-surface-3'
                   )}
                 >

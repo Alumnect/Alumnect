@@ -55,8 +55,6 @@ export function ImageCarousel({
     setCurrent(0)
   }, [images])
 
-  if (!images || images.length === 0) return null
-
   // Áp transform trực tiếp lên DOM — không qua state
   const applyTransform = useCallback((idx: number, extraPx = 0, animate = true) => {
     if (!trackRef.current) return
@@ -161,6 +159,8 @@ export function ImageCarousel({
     },
     [applyTransform, goTo],
   )
+
+  if (!images || images.length === 0) return null
 
   return (
     <div

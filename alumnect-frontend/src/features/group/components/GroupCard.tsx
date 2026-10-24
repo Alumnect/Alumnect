@@ -26,10 +26,10 @@ export function GroupCard({ group }: { group: GroupCardData }) {
 
         <div className="absolute right-3 top-3 flex items-center gap-1">
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold shadow-sm backdrop-blur-md ${
               isPrivate
-                ? 'bg-amber-600 text-white dark:bg-amber-500'
-                : 'bg-emerald-600 text-white dark:bg-emerald-500'
+                ? 'bg-amber-700 text-white dark:bg-amber-400 dark:text-amber-950'
+                : 'bg-emerald-700 text-white dark:bg-emerald-400 dark:text-emerald-950'
             }`}
           >
             {isPrivate ? <Lock size={10} /> : <Globe size={10} />}

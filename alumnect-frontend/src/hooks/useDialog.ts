@@ -68,7 +68,10 @@ export function useDialog(
   { open, onClose, initialFocus }: { open: boolean; onClose: () => void; initialFocus?: RefObject<HTMLElement | null> },
 ) {
   const closeRef = useRef(onClose)
-  closeRef.current = onClose
+  // Cập nhật callback mới nhất sau mỗi lần render (không ghi ref trong lúc render)
+  useEffect(() => {
+    closeRef.current = onClose
+  })
 
   useEffect(() => {
     const el = ref.current

@@ -124,6 +124,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
         <label className="relative flex flex-1 items-center">
           <Search size={18} className="pointer-events-none absolute left-3.5 text-text-subtle" />
           <input
+            aria-label="Tìm theo tên, chức danh, kỹ năng, công ty hoặc mã SV..."
             type="text"
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}

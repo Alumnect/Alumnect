@@ -112,7 +112,7 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
                   <img src={url} alt="" className="h-full w-full object-cover" />
                   {/* Nhãn "+N" trên ảnh cuối nếu còn ảnh chưa hiển thị */}
                   {idx === 2 && q.images.length > 3 && (
-                    <span className="absolute inset-0 grid place-items-center bg-plum-900/50 text-xs font-bold text-white">+{q.images.length - 3}</span>
+                    <span className="absolute inset-0 grid place-items-center bg-black/50 text-xs font-bold text-white">+{q.images.length - 3}</span>
                   )}
                 </div>
               ))}
@@ -263,6 +263,7 @@ export function ForumPage() {
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
           <input
+            aria-label="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"

@@ -24,6 +24,7 @@ import { useLogout } from '@/features/auth/hooks/useAuthMutations'
 import { useWebSocketChat } from '@/features/message/hooks/useWebSocketChat'
 import { useWebSocketNotifications } from '@/features/notification/hooks/useWebSocketNotifications'
 import { useUnreadNotificationCount } from '@/features/notification/hooks/useNotifications'
+import { PageHeadingGuard } from './PageHeadingGuard'
 import { RouteTransition } from './RouteTransition'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar } from '@/components/ui/primitives'
@@ -160,9 +161,6 @@ export function AppShell() {
     setActivePopover(null)
   }, [location.pathname])
 
-  if (user?.role === 'ADMIN') {
-    return <Navigate to="/admin" replace />
-  }
   const logoutM = useLogout()
   // ADMIN đã được điều hướng về /admin ở trên, nên tại đây role chỉ còn STUDENT/ALUMNI.
   const roleLabel = user ? (user.role === 'STUDENT' ? 'Sinh viên' : 'Cựu sinh viên') : ''
@@ -172,6 +170,11 @@ export function AppShell() {
     () => APP_MORE_NAV.filter((item) => item.to !== '/app/groups' || user?.role === 'ALUMNI'),
     [user?.role]
   )
+
+  // Admin dùng khung riêng (đặt SAU mọi Hook để thứ tự Hook luôn cố định giữa các lần render)
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />
+  }
 
   // Menu "Khám phá" (desktop)
   const renderMoreApps = (items: typeof APP_MORE_NAV) => (
@@ -239,6 +242,7 @@ export function AppShell() {
           <label className="relative ml-2 hidden items-center md:flex">
             <MagnifyingGlass size={17} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm kiếm bài viết…"
               value={keyword}
               onChange={handleSearchChange}
               onKeyDown={handleSearchKeyDown}
@@ -425,6 +429,7 @@ export function AppShell() {
               <label className="relative flex items-center px-4 py-3">
                 <MagnifyingGlass size={17} className="pointer-events-none absolute left-7 text-text-subtle" />
                 <input
+                  aria-label="Tìm kiếm bài viết…"
                   autoFocus
                   value={keyword}
                   onChange={handleSearchChange}
@@ -461,6 +466,7 @@ export function AppShell() {
           ? "h-[calc(100vh-7.65rem)] max-w-[1560px] overflow-y-auto overscroll-contain px-3 pb-8 pt-3 scroll-pb-8 sm:px-6 lg:h-auto lg:overflow-visible lg:px-8 lg:pb-10 xl:h-[calc(100vh-4.1rem)] xl:overflow-hidden xl:pb-3"
           : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
+        <PageHeadingGuard />
         <ErrorBoundary>
           {isMentoringRoute ? (
             <MentorshipLayout>

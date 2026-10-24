@@ -32,6 +32,7 @@ function MentoringMessagesContent() {
         <label className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-cream-100/50 px-3.5 dark:bg-bg">
           <Search className="h-4 w-4 shrink-0 text-text-subtle" />
           <input
+            aria-label="Tìm Mentor hoặc học viên..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm Mentor hoặc học viên..."

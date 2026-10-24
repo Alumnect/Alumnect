@@ -108,6 +108,7 @@ export const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
               <input
+                aria-label="Tìm sinh viên hoặc cựu sinh viên theo tên hoặc email..."
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

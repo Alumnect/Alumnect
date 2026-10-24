@@ -137,6 +137,7 @@ export function GroupsPage() {
           <div className="relative">
             <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
+              aria-label="Tìm kiếm hội nhóm theo tên, từ khóa hoặc chủ đề…"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Tìm kiếm hội nhóm theo tên, từ khóa hoặc chủ đề…"

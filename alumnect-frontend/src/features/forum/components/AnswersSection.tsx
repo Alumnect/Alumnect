@@ -266,7 +266,7 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="text-text-subtle hover:text-primary-solid transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
                   aria-label="Chỉnh sửa câu trả lời"
                 >
                   <Pencil size={13} />
@@ -276,7 +276,7 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setDeleting(true)}
-                  className="text-text-subtle hover:text-danger transition-colors cursor-pointer"
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
                   aria-label="Xóa câu trả lời"
                 >
                   <Trash2 size={13} />
@@ -451,6 +451,7 @@ function AnswerForm({ questionId }: { questionId: string }) {
         <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={32} verified={user?.verified} className="shrink-0" />
         <div className="relative flex-1">
           <input
+            aria-label="Chia sẻ câu trả lời hoặc thảo luận..."
             type="text"
             value={body}
             onChange={(e) => setBody(e.target.value)}

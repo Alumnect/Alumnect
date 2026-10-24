@@ -94,7 +94,7 @@ export function CampusSelect({
         <div className="absolute top-full left-0 mt-2 z-50 w-full bg-surface rounded-3xl border border-border shadow-2xl overflow-hidden animate-scale-up p-1.5">
           <div className="px-3 py-2 text-xs font-extrabold text-text-subtle uppercase tracking-wider border-b border-border mb-1 flex items-center justify-between">
             <span>Cơ sở FPT University</span>
-            <span className="text-xs lowercase font-normal text-plum-400/80">5 cơ sở</span>
+            <span className="text-xs lowercase font-normal text-text-subtle">5 cơ sở</span>
           </div>
 
           <div className="space-y-0.5 max-h-64 overflow-y-auto overscroll-contain pr-1">

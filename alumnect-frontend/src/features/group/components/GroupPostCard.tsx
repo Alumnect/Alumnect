@@ -440,6 +440,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                     />
                     <div className="relative flex-1">
                       <input
+                        aria-label="Viết phản hồi của bạn..."
                         type="text"
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
@@ -450,7 +451,8 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                       <button
                         type="submit"
                         disabled={!commentText.trim() || createCommentMutation.isPending}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40"
+                        aria-label="Gửi bình luận"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 cursor-pointer place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40"
                       >
                         {createCommentMutation.isPending ? (
                           <Loader2 size={13} className="animate-spin" />

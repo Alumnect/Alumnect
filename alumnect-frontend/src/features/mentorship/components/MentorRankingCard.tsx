@@ -123,7 +123,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           {/* Nút Xem chi tiết hồ sơ Mentor */}
           <Link
             to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
-            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-solid hover:text-white sm:col-auto sm:py-1.5"
+            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-solid hover:text-on-primary sm:col-auto sm:py-1.5"
           >
             <span>Chi tiết</span>
             <ExternalLink className="h-3 w-3" />

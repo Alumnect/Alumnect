@@ -195,7 +195,7 @@ export function AskQuestionModal({ onClose, editQuestion }: { onClose: () => voi
                     type="button"
                     onClick={() => removeImage(idx)}
                     aria-label="Xóa ảnh"
-                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-plum-900/60 text-white shadow-sm backdrop-blur-sm transition hover:scale-110 hover:opacity-90"
+                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white shadow-sm backdrop-blur-sm transition hover:scale-110 hover:opacity-90"
                   >
                     <X size={13} />
                   </button>

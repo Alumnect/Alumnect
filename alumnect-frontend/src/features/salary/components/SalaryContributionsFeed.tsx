@@ -158,6 +158,7 @@ export function SalaryContributionsFeed({
               <div className="relative">
                 <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
                 <input
+                  aria-label="Tìm chức danh, công ty…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm chức danh, công ty…"

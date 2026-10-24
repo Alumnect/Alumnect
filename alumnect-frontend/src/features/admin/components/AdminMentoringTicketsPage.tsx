@@ -173,6 +173,7 @@ export function AdminMentoringTicketsPage() {
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-text-subtle" />
               <input
+                aria-label="Tìm mã ticket, tiêu đề, task, email..."
                 type="text"
                 value={keyword}
                 onChange={(e) => {
@@ -459,7 +460,7 @@ export function AdminMentoringTicketsPage() {
                       {selectedTicket.ticketCode}
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                      className={`px-2 py-0.5 rounded text-xs font-semibold border ${
                         getTypeBadge(selectedTicket.ticketType).className
                       }`}
                     >
@@ -657,7 +658,7 @@ export function AdminMentoringTicketsPage() {
                                     {/* Header card: Người nộp */}
                                     <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-border">
                                       <div className="flex items-center gap-2 min-w-0">
-                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
+                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
                                           isStudent ? 'bg-info' : 'bg-success'
                                         }`}>
                                           {isStudent ? 'HV' : 'CV'}
@@ -672,7 +673,7 @@ export function AdminMentoringTicketsPage() {
                                         </div>
                                       </div>
 
-                                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                                      <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${
                                         isStudent
                                           ? 'bg-info-soft text-info border-info-border'
                                           : 'bg-success-soft text-success border-success-border'
@@ -872,7 +873,7 @@ export function AdminMentoringTicketsPage() {
                                     </div>
                                   </div>
                                   <div>
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
                                       ext.status === 'CONFIRMED'
                                         ? 'bg-success-soft text-success border-success-border'
                                         : ext.status === 'REJECTED'

@@ -135,6 +135,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
 
         {/* Khung nhập văn bản */}
         <input
+          aria-label="Nhập tin nhắn..."
           ref={messageInputRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}

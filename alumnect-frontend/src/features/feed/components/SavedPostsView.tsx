@@ -436,7 +436,7 @@ export function SavedPostsView() {
                     <span
                       className={cn(
                         'rounded-full px-2 py-0.5 text-xs font-extrabold',
-                        active ? 'bg-white/25 text-white' : 'bg-surface-3 text-text-muted'
+                        active ? 'bg-black/15 text-on-primary' : 'bg-surface-3 text-text-muted'
                       )}
                     >
                       {count}

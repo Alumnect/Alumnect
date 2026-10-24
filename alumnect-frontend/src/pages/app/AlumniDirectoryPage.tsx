@@ -181,7 +181,7 @@ export function AlumniDirectoryPage() {
                 : 'bg-surface/70 text-text-muted hover:bg-surface-2',
             )}
           >
-            <Target size={17} className={activeTab === 'suggestions' ? 'text-white' : 'text-primary-solid'} />
+            <Target size={17} className={activeTab === 'suggestions' ? 'text-on-primary' : 'text-primary-solid'} />
             <span>Gợi ý kết nối</span>
           </button>
 
@@ -391,6 +391,7 @@ export function AlumniDirectoryPage() {
             <div className="relative w-full sm:w-72">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
+                aria-label="Tìm nhanh trong mạng lưới..."
                 type="text"
                 value={networkSearch}
                 onChange={(e) => setNetworkSearch(e.target.value)}

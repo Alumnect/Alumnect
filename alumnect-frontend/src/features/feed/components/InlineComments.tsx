@@ -65,6 +65,7 @@ export function InlineComments({
           <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
           <div className="relative flex-1">
             <input
+              aria-label="Viết phản hồi công khai..."
               type="text"
               value={content}
               onChange={(e) => setContent(e.target.value)}

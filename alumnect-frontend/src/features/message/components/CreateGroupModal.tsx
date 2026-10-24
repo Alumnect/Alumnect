@@ -213,6 +213,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
             <div className="relative flex items-center">
               <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
               <input
+                aria-label="Tìm kiếm theo tên thành viên..."
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

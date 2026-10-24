@@ -398,6 +398,7 @@ export function AdminReportsQueue() {
           <div className="relative flex items-center sm:w-48">
             <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm nội dung..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -411,6 +412,7 @@ export function AdminReportsQueue() {
           <div className="relative flex items-center sm:w-48">
             <User size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
             <input
+              aria-label="Tìm tác giả, email..."
               value={authorQuery}
               onChange={(e) => {
                 setAuthorQuery(e.target.value)

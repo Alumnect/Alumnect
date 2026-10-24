@@ -88,6 +88,7 @@ function MyMentoringTasksContent() {
         <div className="relative w-full sm:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
           <input
+            aria-label="Tìm theo tiêu đề, người tham gia..."
             type="search"
             placeholder="Tìm theo tiêu đề, người tham gia..."
             value={searchQuery}

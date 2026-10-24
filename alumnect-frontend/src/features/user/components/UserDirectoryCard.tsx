@@ -181,7 +181,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                   variant={isFollowingLocal ? 'secondary' : 'outline'}
                   className={cn(
                     'flex-1 text-xs font-semibold transition duration-200',
-                    !isFollowingLocal && 'text-primary-solid border-primary-soft-border bg-primary-soft hover:bg-primary-solid hover:text-white shadow-xs'
+                    !isFollowingLocal && 'text-primary-solid border-primary-soft-border bg-primary-soft hover:bg-primary-solid hover:text-on-primary shadow-xs'
                   )}
                   disabled={isPending}
                   leftIcon={

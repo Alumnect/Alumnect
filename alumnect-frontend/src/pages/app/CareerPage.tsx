@@ -142,6 +142,7 @@ export function CareerPage() {
             <div className="relative flex-1 w-full">
               <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
+                aria-label="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
                 type="text"
                 placeholder="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
                 value={search}
@@ -339,7 +340,7 @@ export function CareerPage() {
                             {alumni.careerPreview.slice(0, 3).map((step, idx) => (
                               <React.Fragment key={step.experienceId}>
                                 <span
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-medium truncate max-w-[85px] ${
+                                  className={`px-2 py-0.5 rounded-md text-xs font-medium truncate max-w-[96px] ${
                                     step.isCurrent ? 'bg-primary-soft text-primary-solid font-semibold' : 'bg-surface-2 text-text-subtle'
                                   }`}
                                   title={`${step.title} @ ${step.company}`}
@@ -356,7 +357,7 @@ export function CareerPage() {
                             )}
                           </div>
                         )}
-                        <div className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide transition-colors ${
+                        <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wide transition-colors ${
                           isActive ? 'text-primary-solid' : 'text-text-subtle'
                         }`}>
                           <span>{alumni.totalExperiences} vai trò</span>

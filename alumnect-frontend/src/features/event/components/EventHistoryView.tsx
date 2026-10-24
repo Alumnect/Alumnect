@@ -110,7 +110,7 @@ export function EventHistoryView() {
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-plum-800/90 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
             <span>{item.registrationStatus}</span>
           </span>
         )

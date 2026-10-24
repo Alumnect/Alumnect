@@ -217,7 +217,7 @@ export function MentoringTicketDiscussionThread({
                 <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-cream-300/60 dark:border-white/10">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white ${
+                      className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
                         isAdminMsg ? 'bg-info' : isStudentMsg ? 'bg-info' : 'bg-success'
                       }`}
                     >
@@ -228,7 +228,7 @@ export function MentoringTicketDiscussionThread({
                         {msg.senderName}
                       </span>
                       <span
-                        className={`px-1.5 py-0.2 rounded text-[11px] font-semibold ${
+                        className={`px-1.5 py-0.2 rounded text-xs font-semibold ${
                           isAdminMsg
                             ? 'bg-info-soft text-info'
                             : isStudentMsg
