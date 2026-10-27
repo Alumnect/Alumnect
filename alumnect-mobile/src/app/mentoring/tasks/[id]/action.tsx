@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Star } from '@/components/icons'
-import { Button, Card, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Card, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { DateField } from '@/components/DateField'
 import { formatVnd } from '@/api/mentoring'
@@ -18,7 +19,10 @@ const TITLES: Record<string, string> = {
   'settlement-ticket': 'Gửi biên bản hòa giải', completion: 'Nộp kết quả', dispute: 'Tạo ticket khiếu nại', review: 'Đánh giá mentor',
 }
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 /** Form dùng chung cho các hành động của task: UC97, 99, 100, 101, 102, 112. */
 export default function TaskActionScreen() {
@@ -32,7 +36,7 @@ export default function TaskActionScreen() {
   const [f, setF] = useState<Record<string, string>>({})
   const [date, setDate] = useState('')
   const [rating, setRating] = useState(0)
-  const [files, setFiles] = useState<{ fileUrl: string; fileName: string }[]>([])
+  const [files, setFiles] = useState<{ fileUrl: string; fileName: string; mediaType?: 'IMAGE' | 'VIDEO' | 'FILE'; fileSize?: number | null }[]>([])
   const [uploading, setUploading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loaded, setLoaded] = useState(false)
@@ -43,6 +47,8 @@ export default function TaskActionScreen() {
   if (existing && !loaded) {
     setLoaded(true)
     setF({ description: existing.description, workCompleted: existing.workCompleted, result: existing.result, nextAction: existing.nextAction ?? '' })
+    setDate(existing.logDate)
+    setFiles(existing.attachments.map((a) => ({ fileUrl: a.fileUrl, fileName: a.fileName, mediaType: a.mediaType, ...(a.fileSize != null ? { fileSize: a.fileSize } : {}) })))
   }
 
   const done = (msg: string) => {
@@ -56,7 +62,7 @@ export default function TaskActionScreen() {
     const [img] = await pickImage()
     if (!img) return
     setUploading(true)
-    try { const url = await uploadImage(img, type === 'dispute' ? 'evidence' : 'common'); setFiles((x) => [...x, { fileUrl: url, fileName: img.name }]) }
+    try { const url = await uploadImage(img, type === 'dispute' ? 'evidence' : 'common'); setFiles((x) => [...x, { fileUrl: url, fileName: img.name, mediaType: 'IMAGE' }]) }
     catch (e) { toast.error(errMsg(e)) } finally { setUploading(false) }
   }
 
@@ -65,7 +71,7 @@ export default function TaskActionScreen() {
       const urls = files.filter((x) => x.fileUrl)
       switch (type) {
         case 'worklog': {
-          const p: WorkLogPayload = { logDate: date || today(), description: f.description.trim(), workCompleted: f.workCompleted.trim(), result: f.result.trim(), nextAction: f.nextAction?.trim() || undefined, attachments: urls.map((u) => ({ fileUrl: u.fileUrl, fileName: u.fileName, mediaType: 'IMAGE' as const })) }
+          const p: WorkLogPayload = { logDate: (date || today()).slice(0, 10), description: f.description.trim(), workCompleted: f.workCompleted.trim(), result: f.result.trim(), nextAction: f.nextAction?.trim() || undefined, attachments: urls.map((u) => ({ ...u, mediaType: u.mediaType ?? 'IMAGE' })) }
           return workLogId ? taskApi.updateWorkLog(tid, Number(workLogId), p) : taskApi.createWorkLog(tid, p)
         }
         case 'extension': return taskApi.createExtension(tid, { proposedDeadline: date, reason: f.reason.trim() })
@@ -107,13 +113,15 @@ export default function TaskActionScreen() {
   )
 
   if (task.isLoading) return <Screen><Header title={TITLES[type!] ?? 'Task'} /><Loading /></Screen>
+  if (!task.data) return <Screen><Header title={TITLES[type!] ?? 'Task'} /><Empty text="Không tìm thấy task." error={task.error} onRetry={() => { void task.refetch() }} /></Screen>
+  if (workLogId && !existing) return <Screen><Header title="Nhật ký công việc" /><Empty text="Không tìm thấy nhật ký công việc." /></Screen>
 
   return (
     <Screen>
       <Header title={TITLES[type!] ?? 'Task'} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-          {type === 'worklog' ? (<><DateField label="Ngày làm việc" value={date} onChange={setDate} />{field('description', "Mô tả")}{field('workCompleted', "Công việc đã hoàn thành")}{field('result', "Kết quả đạt được")}{field('nextAction', "Việc tiếp theo (tùy chọn)")}</>) : null}
+          {type === 'worklog' ? (<><DateField label="Ngày làm việc" value={date} onChange={setDate} minimumDate={null} />{field('description', "Mô tả")}{field('workCompleted', "Công việc đã hoàn thành")}{field('result', "Kết quả đạt được")}{field('nextAction', "Việc tiếp theo (tùy chọn)")}</>) : null}
           {type === 'extension' ? (<><DateField label="Hạn chót mới" value={date} onChange={setDate} error={errors.date} />{field('reason', "Lý do")}</>) : null}
           {type === 'amendment' ? (<>{field('newScope', "Phạm vi mới (tùy chọn)")}{field('newResult', "Kết quả kỳ vọng mới (tùy chọn)")}{money('amount', "Chi phí phát sinh thêm (VND)")}<DateField label="Hạn chót mới (tùy chọn)" value={date} onChange={setDate} />{field('reason', "Lý do")}</>) : null}
           {type === 'settlement' ? (<><Txt muted size={13} style={{ marginBottom: 8 }}>Tổng ngân sách task: {formatVnd(task.data?.overview.agreedPrice)}</Txt>{money('mentor', "Mentor nhận (VND)")}{money('refund', "Hoàn cho sinh viên (VND)")}{field('reason', "Lý do")}</>) : null}

@@ -75,11 +75,11 @@ export default function NotificationsScreen() {
         <FlashList
           data={shown}
           keyExtractor={(n) => String(n.id)}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListEmptyComponent={
-            <Empty
+            <Empty error={q.error} onRetry={() => { void q.refetch() }}
               icon={<Bell size={28} color={t.primary} />}
               title={filter === 'unread' ? 'Không còn thông báo chưa đọc' : 'Chưa có thông báo'}
               text="Thông báo về lượt thích, bình luận, mentoring sẽ hiện ở đây."
@@ -89,7 +89,7 @@ export default function NotificationsScreen() {
             <Pressable
               onPress={() => open(item)}
               accessibilityRole="button"
-              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 12, backgroundColor: pressed ? t.inputBg : item.isRead ? t.card : t.primaryTint })}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16, gap: 12, backgroundColor: pressed ? t.inputBg : item.isRead ? t.card : t.surface })}
             >
               <Avatar uri={item.senderAvatarUrl} name={item.senderName ?? 'A'} size={52} />
               <View style={{ flex: 1 }}>

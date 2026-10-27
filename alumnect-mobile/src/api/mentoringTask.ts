@@ -28,7 +28,7 @@ export interface Task {
   pendingWorkLogs?: number
 }
 
-export interface WorkLogAttachment { id: number; fileUrl: string; fileName: string; mediaType: 'IMAGE' | 'VIDEO' | 'FILE' }
+export interface WorkLogAttachment { id: number; fileUrl: string; fileName: string; fileSize?: number | null; mediaType: 'IMAGE' | 'VIDEO' | 'FILE' }
 export interface WorkLog {
   id: number
   taskId: number

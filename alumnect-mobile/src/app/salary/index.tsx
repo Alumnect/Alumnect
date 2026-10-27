@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -13,7 +14,7 @@ import type { SalaryStatRow } from '@/api/salary'
 import { useAuthStore } from '@/store/authStore'
 import { VN_CITIES } from '@/constants/filters'
 import { useDebounced } from '@/lib/hooks'
-import { useTheme, palette } from '@/theme'
+import { useTheme } from '@/theme'
 
 type Tab = 'stats' | 'feed'
 const SORTS: [string, string][] = [['latest', 'Mới nhất'], ['salaryDesc', 'Lương cao nhất'], ['salaryAsc', 'Lương thấp nhất']]
@@ -86,7 +87,7 @@ export default function SalaryScreen() {
 
   const header = (
     <View>
-      <View style={{ backgroundColor: t.card, paddingTop: 12, paddingBottom: 4, marginBottom: 10 }}>
+      <View style={{ backgroundColor: t.card, paddingTop: 12, paddingBottom: 4, marginBottom: 16 }}>
         <SearchBar
           value={kw}
           onChangeText={(v) => {
@@ -105,23 +106,22 @@ export default function SalaryScreen() {
         </ScrollView>
       </View>
       {tab === 'stats' ? (
-        <View style={{ paddingHorizontal: 12 }}>
-          <View style={{ borderRadius: 18, padding: 18, backgroundColor: palette.primary, overflow: 'hidden', marginBottom: 10 }}>
-            <View style={{ position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: palette.primarySoft, opacity: 0.5, top: -80, right: -50 }} />
+        <View style={{ paddingHorizontal: 16 }}>
+          <View style={{ borderRadius: 16, padding: 20, backgroundColor: t.surface, marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <TrendingUp size={16} color="#fff" />
-              <Txt size={13} color="#FFEDE0" weight="600">{`Lương trung vị${region ? ` · ${region}` : ''}`}</Txt>
+              <TrendingUp size={16} color={t.textMuted} />
+              <Txt size={14} muted>{`Lương trung vị${region ? ` · ${region}` : ''}`}</Txt>
             </View>
-            <Txt size={30} weight="800" color="#fff" style={{ marginTop: 6 }}>{s?.overallMedian != null ? formatVnd(s.overallMedian) : '—'}</Txt>
+            <Txt size={30} weight="500" style={{ marginTop: 8, fontVariant: ['tabular-nums'] }}>{s?.overallMedian != null ? formatVnd(s.overallMedian) : '—'}</Txt>
             <View style={{ flexDirection: 'row', gap: 18, marginTop: 10 }}>
-              <Txt size={13} color="#FFEDE0">{`${s?.totalContributions ?? 0} đóng góp`}</Txt>
-              <Txt size={13} color="#FFEDE0">{`${s?.trackedPositions ?? 0} vị trí`}</Txt>
+              <Txt size={13} muted>{`${s?.totalContributions ?? 0} đóng góp`}</Txt>
+              <Txt size={13} muted>{`${s?.trackedPositions ?? 0} vị trí`}</Txt>
             </View>
           </View>
           {role === 'ALUMNI' ? (
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
               <Button title="Đóng góp lương" size="sm" icon={<Plus size={16} color="#fff" />} onPress={() => router.push('/salary/contribute')} style={{ flex: 1, height: 42 }} />
-              <Button title="Đóng góp của tôi" size="sm" variant="outline" onPress={() => router.push('/salary/mine')} style={{ flex: 1, height: 42 }} />
+              <Button title="Đóng góp của tôi" size="sm" variant="outline" onPress={() => router.push('/salary/mine')} style={{ flex: 1, minHeight: 44 }} />
             </View>
           ) : null}
           <Card style={{ paddingVertical: 4 }}>
@@ -144,7 +144,7 @@ export default function SalaryScreen() {
           data={tab === 'feed' && !feed.isLoading ? items : []}
           keyExtractor={(c) => c.id}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => tab === 'feed' && feed.hasNextPage && feed.fetchNextPage()}
+          onEndReached={() => tab === 'feed' && feed.hasNextPage && !feed.isFetchingNextPage && feed.fetchNextPage()}
           refreshing={tab === 'feed' ? feed.isRefetching : stats.isRefetching}
           onRefresh={() => (tab === 'feed' ? feed.refetch() : stats.refetch())}
           ListHeaderComponent={header}
@@ -152,7 +152,7 @@ export default function SalaryScreen() {
             tab === 'feed' && !feed.isLoading ? <Empty icon={<Coins size={28} color={t.primary} />} title="Chưa có đóng góp" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." /> : null
           }
           renderItem={({ item }) => (
-            <Card style={{ marginHorizontal: 12, marginBottom: 10 }}>
+            <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Txt weight="800" size={15}>{item.jobTitle}</Txt>

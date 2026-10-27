@@ -16,23 +16,26 @@ export const palette = {
 }
 
 /**
- * Hai hệ màu trung tính cùng một tông ấm (đá/stone) để hợp với màu cam, tránh trộn xám lạnh với xám ấm.
+ * Nền trung tính giữ trọng tâm ở con người và nội dung; màu cam dành cho thương hiệu.
  * Chế độ tối là thiết kế riêng, không chỉ đảo màu.
  */
 const light = {
   ...palette,
-  /** Nền màn hình: trắng ngà ấm, để thẻ trắng nổi lên bằng viền chứ không bằng đổ bóng. */
-  bg: '#FBFBFA',
+  /** Thẻ trắng trên nền xám nhạt, phân tách bằng viền thay vì bóng đổ. */
+  bg: '#F5F6F7',
   /** Nền thẻ, sheet, header */
   card: '#FFFFFF',
   /** Nền phụ bên trong thẻ (khối việc làm, sự kiện...) */
-  surface: '#F6F6F4',
-  border: '#E6E6E3',
-  divider: '#EEEEEC',
-  text: '#191918',
-  textMuted: '#5E5E5A',
-  textSubtle: '#787873',
-  inputBg: '#F3F3F1',
+  surface: '#F3F4F5',
+  border: '#E6E8EB',
+  divider: '#EEF0F2',
+  controlBorder: '#CFD3D8',
+  text: '#202329',
+  textMuted: '#5C626C',
+  textSubtle: '#666D77',
+  inputBg: '#F1F3F5',
+  action: '#202329',
+  onAction: '#FFFFFF',
   /** Chữ/biểu tượng đặt trên nền `primary`. */
   onPrimary: '#FFFFFF',
   primaryTint: '#FDF0E7',
@@ -52,15 +55,18 @@ const dark: typeof light = {
   danger: '#F87171',
   warning: '#FBBF24',
   info: '#60A5FA',
-  bg: '#12100E',
-  card: '#1C1A17',
-  surface: '#24211D',
-  border: '#35312B',
-  divider: '#2A2722',
-  text: '#F5F2EE',
-  textMuted: '#B3ABA1',
-  textSubtle: '#8F877D',
-  inputBg: '#26231F',
+  bg: '#101010',
+  card: '#191919',
+  surface: '#222222',
+  border: '#303030',
+  divider: '#292929',
+  controlBorder: '#505050',
+  text: '#F4F4F4',
+  textMuted: '#B8B8B8',
+  textSubtle: '#A6A6A6',
+  inputBg: '#252525',
+  action: '#F4F4F4',
+  onAction: '#191919',
   /** Cam sáng trên nền tối cần chữ tối để đủ tương phản. */
   onPrimary: '#1C1917',
   primaryTint: '#3A2414',
@@ -78,10 +84,21 @@ export function useTheme(): Theme {
   return useColorScheme() === 'dark' ? dark : light
 }
 
-/** Bo góc: thẻ 20, ô nhập 14, nút viên thuốc. Một hệ thống duy nhất cho cả app. */
-export const radius = { sm: 8, md: 12, lg: 20, xl: 28, full: 999 }
+/** Bo góc: thẻ 16, ô nhập và nút 12, sheet 24. */
+export const radius = { sm: 8, md: 12, lg: 16, xl: 24, full: 999 }
 /** Nhịp 4pt. */
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 }
+
+/** Phone grid: width = 16 + content + 16; two columns = (width - 48) / 2. */
+export const layout = { gutter: 16, gap: 16, touch: 44, control: 48, maxWidth: 720 }
+
+/** Stable, muted identity colours. These encode people, never status. */
+export function avatarColors(name: string, isDark: boolean): [string, string] {
+  const hash = Array.from(name.normalize('NFC')).reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 0)
+  const lightPairs: [string, string][] = [['#E4ECE8', '#315B46'], ['#E5EBF4', '#3E577C'], ['#F4E9DC', '#795733'], ['#F2E3E7', '#794452']]
+  const darkPairs: [string, string][] = [['#24372C', '#AFD2B9'], ['#283344', '#BACCE7'], ['#3A3025', '#E0C29E'], ['#3A2930', '#E0B7C4']]
+  return (isDark ? darkPairs : lightPairs)[hash % lightPairs.length]
+}
 
 /* ------------------------------------------------------------------ */
 /* Chữ: Be Vietnam Pro (thiết kế cho tiếng Việt, dấu rõ ràng)         */

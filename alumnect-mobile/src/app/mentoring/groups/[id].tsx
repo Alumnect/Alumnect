@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar, Button, Card, Empty, Input, Loading, Screen, Txt, SearchBar } from '@/components/ui'
@@ -49,8 +50,8 @@ export default function MentoringGroupDetailScreen() {
   const del = useMutation({ mutationFn: () => groupApi.delete(gid), onSuccess: onOk('Đã xoá nhóm', () => router.back()), onError: onErr })
 
   const g = q.data
-  if (q.isLoading) return <Screen><Header title="Nhóm Mentoring" /><Loading /></Screen>
-  if (!g) return <Screen><Header title="Nhóm Mentoring" /><Empty text="Không tìm thấy nhóm." /></Screen>
+  if (q.isLoading) return <Screen keyboard><Header title="Nhóm Mentoring" /><Loading /></Screen>
+  if (!g) return <Screen keyboard><Header title="Nhóm Mentoring" /><Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy nhóm." /></Screen>
 
   const isLeader = g.canManage || String(me?.id) === String(g.leaderId)
   const active = g.members.filter(isActiveMember)
@@ -70,7 +71,7 @@ export default function MentoringGroupDetailScreen() {
   )
 
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title={g.name} right={isLeader ? <Txt color={t.primary} weight="600" size={13} onPress={() => { setName(g.name); setDesc(g.description ?? ''); setEditing(true) }}>Sửa</Txt> : undefined} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         {editing ? (
@@ -126,6 +127,7 @@ export default function MentoringGroupDetailScreen() {
           </Card>
         ) : null}
 
+        {isLeader && g.status === 'ACTIVE' ? <Button title="Tạo yêu cầu cho nhóm" style={{ marginBottom: 12 }} onPress={() => router.push({ pathname: '/mentoring/create-request', params: { groupId: String(g.id) } })} /> : null}
         {isLeader ? <Button title="Xoá nhóm" variant="danger" onPress={() => setConfirm({ title: 'Xoá vĩnh viễn nhóm này?', action: () => del.mutate() })} /> : null}
         {!isLeader && iAmJoined ? <Button title="Rời nhóm" variant="danger" onPress={() => setConfirm({ title: 'Bạn chắc chắn muốn rời nhóm?', action: () => leave.mutate() })} /> : null}
       </ScrollView>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -24,7 +25,7 @@ const QuestionCard = React.memo(function QuestionCard({ item }: { item: Question
   const t = useTheme()
   const router = useRouter()
   return (
-    <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/forum/[id]', params: { id: item.id } })}>
+    <Card accessibilityRole="link" style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => router.push({ pathname: '/forum/[id]', params: { id: item.id } })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Avatar uri={item.avatar} name={item.author} size={32} />
         <View style={{ flex: 1 }}>
@@ -95,7 +96,7 @@ export default function ForumTab() {
           data={q.isLoading ? [] : items}
           keyExtractor={(x) => x.id}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
@@ -120,7 +121,7 @@ export default function ForumTab() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty
+              <Empty error={q.error} onRetry={() => { void q.refetch() }}
                 icon={<HelpCircle size={28} color={t.primary} />}
                 title="Chưa có câu hỏi phù hợp"
                 text="Đặt câu hỏi để nhận lời khuyên từ cựu sinh viên."

@@ -1,9 +1,10 @@
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { Check, X } from '@/components/icons'
-import { Button, Card, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Card, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { mentoringApi } from '@/api/mentoring'
 import { useTheme } from '@/theme'
@@ -26,7 +27,8 @@ export default function MentorStatusScreen() {
   const router = useRouter()
   const q = useQuery({ queryKey: ['mentoring-status'], queryFn: mentoringApi.status })
   const s = q.data
-  if (q.isLoading || !s) return <Screen><Header title="Trạng thái mentor" /><Loading /></Screen>
+  if (q.isLoading) return <Screen><Header title="Trạng thái mentor" /><Loading /></Screen>
+  if (!s) return <Screen><Header title="Trạng thái mentor" /><Empty text="Chưa có thông tin mentor." error={q.error} onRetry={() => { void q.refetch() }} /></Screen>
 
   return (
     <Screen>

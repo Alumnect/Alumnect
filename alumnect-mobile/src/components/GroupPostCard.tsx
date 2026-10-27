@@ -61,7 +61,7 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
   const images = post.imageUrls ?? []
 
   return (
-    <Card style={{ marginBottom: 10, paddingHorizontal: 0, paddingBottom: 4 }} onPress={detail ? undefined : open}>
+    <Card accessibilityRole="link" style={{ marginBottom: 16, paddingHorizontal: 0, paddingBottom: 4 }} onPress={detail ? undefined : open}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 }}>
         <Avatar uri={post.author.avatarUrl} name={post.author.fullName} size={42} />
         <View style={{ flex: 1 }}>

@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { WebView as RNWebView } from 'react-native-webview'
 import type { WebViewMessageEvent } from 'react-native-webview'
 import { useRouter } from 'expo-router'
@@ -77,7 +78,7 @@ export default function MapScreen() {
       <Header title="Bản đồ Alumni" />
       <SearchBar value={search} onChangeText={setSearch} placeholder="Tìm theo tên, công ty, chức danh..." style={{ margin: 12, marginBottom: 6 }} />
       <View style={{ height: 44 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
           <Chip label="Mọi khóa" active={cohort == null} onPress={() => setCohort(undefined)} />
           {cohorts.map((c) => <Chip key={c} label={`K${c}`} active={cohort === c} onPress={() => setCohort(cohort === c ? undefined : c)} />)}
         </ScrollView>

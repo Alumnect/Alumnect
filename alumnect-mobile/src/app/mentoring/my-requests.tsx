@@ -37,14 +37,14 @@ export default function MyRequestsScreen() {
             data={items}
             keyExtractor={(r) => String(r.id)}
             contentContainerStyle={{ paddingVertical: 12 }}
-            onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+            onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
             refreshing={q.isRefetching}
             onRefresh={() => q.refetch()}
             ListEmptyComponent={
-              <Empty icon={<FileText size={28} color={t.primary} />} title="Chưa có yêu cầu" text="Tạo yêu cầu để hệ thống ghép bạn với mentor phù hợp." action="Tạo yêu cầu" onAction={() => router.push('/mentoring/create-request')} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<FileText size={28} color={t.primary} />} title="Chưa có yêu cầu" text="Tạo yêu cầu để hệ thống ghép bạn với mentor phù hợp." action="Tạo yêu cầu" onAction={() => router.push('/mentoring/create-request')} />
             }
             renderItem={({ item }) => (
-              <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/mentoring/request/[id]', params: { id: String(item.id) } })}>
+              <Card style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => router.push({ pathname: '/mentoring/request/[id]', params: { id: String(item.id) } })}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
                   <Txt weight="800" size={15} style={{ flex: 1 }} numberOfLines={2}>{item.title}</Txt>
                   <Tag label={REQUEST_STATUS_LABEL[item.status] ?? item.status} tone={statusTone(item.status)} />

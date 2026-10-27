@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SlidersHorizontal, X } from '@/components/icons'
@@ -28,20 +29,20 @@ export function FilterButton({ count, onPress }: { count: number; onPress: () =>
       accessibilityRole="button"
       accessibilityLabel={active ? `Bộ lọc, đang bật ${count}` : 'Bộ lọc'}
       style={({ pressed }) => ({
-        height: 42,
-        minWidth: 42,
+        minHeight: 48,
+        minWidth: 48,
         paddingHorizontal: active ? 12 : 0,
-        borderRadius: radius.full,
+        borderRadius: radius.md,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        backgroundColor: active ? t.primary : t.inputBg,
+        backgroundColor: active ? t.action : t.inputBg,
         opacity: pressed ? 0.8 : 1,
       })}
     >
-      <SlidersHorizontal size={18} color={active ? t.onPrimary : t.text} />
-      {active ? <Text style={{ color: t.onPrimary, fontWeight: '800', fontSize: 13 }}>{count}</Text> : null}
+      <SlidersHorizontal size={18} color={active ? t.onAction : t.text} />
+      {active ? <Text style={{ color: t.onAction, fontWeight: '600', fontSize: 13 }}>{count}</Text> : null}
     </Pressable>
   )
 }
@@ -55,14 +56,16 @@ function OptionChip({ label, active, onPress }: { label: string; active: boolean
       accessibilityState={{ selected: active }}
       style={{
         paddingHorizontal: 14,
-        paddingVertical: 8,
+        paddingVertical: 10,
+        minHeight: 44,
+        justifyContent: 'center',
         borderRadius: radius.full,
         borderWidth: 1,
-        borderColor: active ? t.primary : t.border,
-        backgroundColor: active ? t.primaryTint : t.card,
+        borderColor: active ? t.text : t.controlBorder,
+        backgroundColor: active ? t.inputBg : t.card,
       }}
     >
-      <Text style={{ color: active ? t.primary : t.text, fontWeight: active ? '700' : '500', fontSize: 13 }}>{label}</Text>
+      <Text style={{ color: t.text, fontWeight: active ? '600' : '400', fontSize: 13, lineHeight: 20 }}>{label}</Text>
     </Pressable>
   )
 }
@@ -77,26 +80,27 @@ function SheetBody({ title, fields, initial, defaults, onApply, onClose }: { tit
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ maxHeight: '88%', backgroundColor: t.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl }}>
       <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: t.border, marginTop: 10 }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
-        <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Đóng">
+        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Đóng" style={{ width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <X size={22} color={t.text} />
         </Pressable>
-        <Txt size={17} weight="800" style={{ flex: 1, textAlign: 'center' }}>{title}</Txt>
-        <Pressable onPress={() => setDraft(defaults)} hitSlop={10} accessibilityRole="button">
+        <Txt size={18} weight="600" style={{ flex: 1 }}>{title}</Txt>
+        <Pressable onPress={() => setDraft(defaults)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: t.primary, fontWeight: '700' }}>Đặt lại</Text>
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }} keyboardShouldPersistTaps="handled">
         {fields.map((f) => (
           <View key={f.key} style={{ marginBottom: 18 }}>
-            <Txt weight="700" style={{ marginBottom: 10 }}>{f.title}</Txt>
+            <Txt weight="700" style={{ marginBottom: 16 }}>{f.title}</Txt>
             {f.type === 'text' ? (
               <TextInput
                 value={(draft[f.key] as string) ?? ''}
                 onChangeText={(v) => set(f.key, f.numeric ? v.replace(/\D/g, '') : v)}
                 placeholder={f.placeholder}
+                accessibilityLabel={f.title}
                 placeholderTextColor={t.textSubtle}
                 keyboardType={f.numeric ? 'number-pad' : 'default'}
-                style={{ backgroundColor: t.inputBg, color: t.text, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15 }}
+                style={{ minHeight: 50, backgroundColor: t.card, borderWidth: 1, borderColor: t.controlBorder, color: t.text, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15 }}
               />
             ) : (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
@@ -14,6 +15,7 @@ import { useDebounced } from '@/lib/hooks'
 import { useUnreadCount } from '@/api/notifications'
 import { useAuthStore } from '@/store/authStore'
 import { ListSkeleton } from '@/components/Skeleton'
+import { Brand } from '@/components/Brand'
 
 const FILTERS: [FeedFilter, string][] = [
   ['all', 'Tất cả'],
@@ -50,6 +52,16 @@ function Composer() {
         </Pressable>
         <IconButton filled={false} label="Đăng ảnh" icon={<ImageIcon size={24} color={t.primary} weight="duotone" />} onPress={() => go()} />
       </View>
+    </View>
+  )
+}
+
+function FeedIntro() {
+  const name = useAuthStore((s) => s.user?.name?.trim().split(' ').slice(-1)[0] ?? 'bạn')
+  return (
+    <View style={{ padding: 16, paddingBottom: 8 }}>
+      <Txt heading size={22} weight="500">Chào {name},</Txt>
+      <Txt muted size={13} style={{ marginTop: 4 }}>Câu chuyện mới từ cộng đồng FPTU</Txt>
     </View>
   )
 }
@@ -93,10 +105,10 @@ export default function FeedScreen() {
   const searching = !!keyword
 
   return (
-    <Screen bg={t.card}>
-      <View style={{ backgroundColor: t.card, paddingLeft: 16, paddingRight: 6, paddingTop: 2, paddingBottom: 6, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
+    <Screen>
+      <View style={{ backgroundColor: t.card, paddingLeft: 16, paddingRight: 12, paddingTop: 8, paddingBottom: 12, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Txt size={26} weight="800" color={t.primary} style={{ flex: 1, letterSpacing: -0.8 }}>alumnect</Txt>
+          <View style={{ flex: 1 }}><Brand /></View>
           <IconButton
             filled={false}
             label={searchOpen ? 'Đóng tìm kiếm' : 'Tìm kiếm'}
@@ -112,11 +124,12 @@ export default function FeedScreen() {
         {searchOpen ? <SearchBar value={search} onChangeText={setSearch} placeholder="Tìm bài viết, người đăng..." autoFocus style={{ paddingRight: 10 }} /> : null}
       </View>
 
-      <View style={{ flex: 1, backgroundColor: t.card }}>
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
         <FlashList
           data={q.isLoading ? [] : posts}
           keyExtractor={(p) => p.id}
           renderItem={({ item }) => <PostCard post={item} />}
+          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           onEndReachedThreshold={0.5}
@@ -129,6 +142,7 @@ export default function FeedScreen() {
             <View>
               {!searching ? (
                 <>
+                  <FeedIntro />
                   <Composer />
                   <Explore />
                   <Gap />
@@ -140,7 +154,7 @@ export default function FeedScreen() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty
+              <Empty error={q.error} onRetry={() => { void q.refetch() }}
                 icon={<MessageCircle size={28} color={t.primary} weight="duotone" />}
                 title={searching ? 'Không tìm thấy bài viết' : 'Bảng tin còn trống'}
                 text={searching ? 'Thử từ khoá khác hoặc bỏ bộ lọc.' : 'Hãy là người đầu tiên chia sẻ điều gì đó với cộng đồng.'}

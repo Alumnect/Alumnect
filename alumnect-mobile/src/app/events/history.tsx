@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -29,7 +30,7 @@ export default function EventHistoryScreen() {
     <Screen>
       <Header title="Lịch sử sự kiện" />
       <View style={{ backgroundColor: t.card }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {FILTERS.map(([k, l]) => <Chip key={k} label={l} active={filter === k} onPress={() => setFilter(k)} />)}
         </ScrollView>
       </View>
@@ -38,13 +39,13 @@ export default function EventHistoryScreen() {
           data={items}
           keyExtractor={(e) => String(e.registrationId)}
           contentContainerStyle={{ padding: 12 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty icon={<CalendarDays size={26} color={palette.primary} />} title="Chưa tham gia sự kiện" text="Sự kiện bạn đăng ký sẽ được lưu lại ở đây." action="Khám phá sự kiện" onAction={() => router.push('/events')} />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<CalendarDays size={26} color={palette.primary} />} title="Chưa tham gia sự kiện" text="Sự kiện bạn đăng ký sẽ được lưu lại ở đây." action="Khám phá sự kiện" onAction={() => router.push('/events')} />}
           renderItem={({ item }) => (
             <Card
-              style={{ marginBottom: 10 }}
+              style={{ marginBottom: 16 }}
               onPress={() => router.push({ pathname: '/events/[id]', params: { id: String(item.eventId), title: item.title, start: item.startTime ?? '', end: item.endTime ?? '', location: item.location ?? '' } })}
             >
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>

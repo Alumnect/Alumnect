@@ -3,7 +3,7 @@ import { View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bookmark, Briefcase, CalendarCheck, Coins, KeyRound, LogOut, MessageCircle, Pencil, Route, Users } from '@/components/icons'
-import { Button, Card, IconButton, Loading, MenuRow, Screen, Txt } from '@/components/ui'
+import { Button, Card, Empty, IconButton, Loading, MenuRow, PageHeader, Screen, Txt } from '@/components/ui'
 import { ProfileView } from '@/components/ProfileView'
 import { userApi } from '@/api/users'
 import { authApi } from '@/api/auth'
@@ -14,7 +14,7 @@ import { toast } from '@/lib/toast'
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={{ marginBottom: 12 }}>
-      <Txt muted size={12} weight="700" style={{ marginLeft: 4, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{title}</Txt>
+      <Txt muted size={14} weight="500" style={{ marginLeft: 4, marginBottom: 8 }}>{title}</Txt>
       <Card style={{ paddingVertical: 2 }}>{children}</Card>
     </View>
   )
@@ -42,14 +42,12 @@ export default function ProfileTab() {
     },
   })
 
-  if (q.isLoading || !q.data?.data) return <Screen><Loading /></Screen>
+  if (q.isLoading) return <Screen><PageHeader title="Cá nhân" /><Loading /></Screen>
+  if (!q.data?.data) return <Screen><PageHeader title="Cá nhân" /><Empty text="Chưa có thông tin hồ sơ." error={q.error} onRetry={() => { void q.refetch() }} /></Screen>
   const isAlumni = q.data.data.role === 'ALUMNI'
   return (
     <Screen bg={t.card}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 6, gap: 8, backgroundColor: t.card }}>
-        <Txt size={22} weight="800" style={{ flex: 1 }}>Cá nhân</Txt>
-        <IconButton label="Tin nhắn" icon={<MessageCircle size={20} color={t.text} />} onPress={() => router.push('/chat')} />
-      </View>
+      <PageHeader title="Cá nhân" right={<IconButton label="Tin nhắn" icon={<MessageCircle size={20} color={t.text} />} onPress={() => router.push('/chat')} />} />
       <ProfileView profile={q.data.data} isMe>
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
           <Button title="Sửa hồ sơ" size="sm" icon={<Pencil size={15} color={t.onPrimary} />} onPress={() => router.push('/profile/edit')} style={{ flex: 1, height: 40 }} />

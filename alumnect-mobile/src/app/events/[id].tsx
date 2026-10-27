@@ -1,5 +1,6 @@
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarDays, CalendarX2, CheckCircle2, ChevronRight, Clock, MapPin, Users } from '@/components/icons'
@@ -59,7 +60,7 @@ export default function EventScreen() {
       {status.isLoading ? <Loading /> : (
         <>
           <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }}>
-            <View style={{ backgroundColor: t.card, marginBottom: 10 }}>
+            <View style={{ backgroundColor: t.card, marginBottom: 16 }}>
               <BrandCover height={130} />
               <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
                 <View style={{ width: 72, marginTop: -40, borderRadius: 16, overflow: 'hidden', backgroundColor: t.card, alignItems: 'center', borderWidth: 1, borderColor: t.border }}>
@@ -77,7 +78,7 @@ export default function EventScreen() {
               </View>
             </View>
 
-            <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 4 }}>
+            <Card style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 4 }}>
               {start ? (
                 <InfoRow
                   icon={<CalendarDays size={16} color={t.primary} />}
@@ -95,7 +96,7 @@ export default function EventScreen() {
               {p.location ? <InfoRow icon={<MapPin size={16} color={t.primary} />} label="Địa điểm" value={p.location} last /> : null}
             </Card>
 
-            <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/events/attendees', params: { id } })}>
+            <Card style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => router.push({ pathname: '/events/attendees', params: { id } })}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center' }}>
                   <Users size={16} color={t.primary} />
@@ -120,7 +121,7 @@ export default function EventScreen() {
                 icon={<CalendarX2 size={16} color={t.danger} />}
                 onPress={() => cancelEvent.mutate()}
                 loading={cancelEvent.isPending}
-                style={{ marginHorizontal: 12 }}
+                style={{ marginHorizontal: 16 }}
               />
             ) : null}
           </ScrollView>

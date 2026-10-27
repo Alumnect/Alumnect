@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar, Button, Card, Empty, Input, Loading, Screen, Tag, Txt } from '@/components/ui'
@@ -41,8 +42,8 @@ export default function TaskDetailScreen() {
   })
 
   const d = q.data
-  if (q.isLoading) return <Screen><Header title="Task" /><Loading /></Screen>
-  if (!d) return <Screen><Header title="Task" /><Empty text="Không tìm thấy task." /></Screen>
+  if (q.isLoading) return <Screen keyboard><Header title="Task" /><Loading /></Screen>
+  if (!d) return <Screen keyboard><Header title="Task" /><Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy task." /></Screen>
   const { overview: o, permissions: p } = d
   const other = p.isStudent ? d.mentor : d.student
 
@@ -52,7 +53,7 @@ export default function TaskDetailScreen() {
     { key: 'report', label: 'Báo cáo & dòng tiền', icon: <BarChart3 size={20} color={palette.success} />, tone: palette.success, onPress: () => router.push({ pathname: '/mentoring/tasks/[id]/report', params: { id: String(tid) } }) },
     ...(p.canSubmitCompletion ? [{ key: 'completion', label: 'Nộp kết quả', icon: <PackageCheck size={20} color={palette.primary} />, onPress: () => go('completion') }] : []),
     ...(p.canRequestExtension ? [{ key: 'extension', label: 'Gia hạn', icon: <CalendarPlus size={20} color={palette.warning} />, tone: palette.warning, onPress: () => go('extension') }] : []),
-    ...(p.canRequestAmendment ? [{ key: 'amendment', label: 'Điều chỉnh task', icon: <FilePen size={20} color="#7C3AED" />, tone: '#7C3AED', onPress: () => go('amendment') }] : []),
+    ...(p.canRequestAmendment ? [{ key: 'amendment', label: 'Điều chỉnh task', icon: <FilePen size={20} color={t.textMuted} />, onPress: () => go('amendment') }] : []),
     ...(p.canProposeSettlement ? [{ key: 'settlement', label: 'Đề xuất hòa giải', icon: <Scale size={20} color="#0891B2" />, tone: '#0891B2', onPress: () => go('settlement') }] : []),
     ...(p.canSubmitSettlementTicket ? [{ key: 'ticket', label: 'Gửi biên bản hòa giải', icon: <FileCheck2 size={20} color="#0891B2" />, tone: '#0891B2', onPress: () => go('settlement-ticket') }] : []),
     ...(p.isStudent && o.status === 'COMPLETED' ? [{ key: 'review', label: 'Đánh giá mentor', icon: <Star size={20} color={palette.star} />, tone: palette.star, onPress: () => go('review') }] : []),
@@ -60,10 +61,10 @@ export default function TaskDetailScreen() {
   ]
 
   return (
-    <Screen bg={t.card}>
+    <Screen keyboard bg={t.card}>
       <Header title="Chi tiết task" />
       <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 40 }}>
-        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', gap: 6 }}>
             <Tag label={TASK_STATUS_LABEL[o.status] ?? o.status} tone={statusTone(o.status)} />
             {o.isOverdue ? <Tag label="Quá hạn" tone="danger" /> : null}
@@ -83,7 +84,7 @@ export default function TaskDetailScreen() {
           <Txt muted size={12} style={{ marginTop: 8 }}>{`Hạn chót: ${new Date(o.deadline).toLocaleString('vi-VN')}`}</Txt>
         </View>
 
-        <Card style={{ marginHorizontal: 12, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(other.id) } })}>
+        <Card style={{ marginHorizontal: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 10 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(other.id) } })}>
           <Avatar uri={other.avatarUrl} name={other.fullName} size={46} />
           <View style={{ flex: 1 }}>
             <Txt muted size={12}>{p.isStudent ? 'Mentor của bạn' : 'Sinh viên'}</Txt>
@@ -118,48 +119,48 @@ export default function TaskDetailScreen() {
         </SectionCard>
 
         {d.activeExtension && d.activeExtension.status === 'PENDING' ? (
-          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
+          <Card style={{ marginHorizontal: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Yêu cầu gia hạn</Txt>
             <Txt size={13}>{d.activeExtension.createdByName} đề xuất hạn mới {new Date(d.activeExtension.proposedDeadline).toLocaleString('vi-VN')}</Txt>
             <Txt muted size={13}>Lý do: {d.activeExtension.reason}</Txt>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-              {d.activeExtension.canConfirm ? <Button title="Đồng ý" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.respondExtension(d.activeExtension!.id, true), 'Đã chấp nhận gia hạn.')} /> : null}
-              {d.activeExtension.canReject ? <Button title="Từ chối" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.respondExtension(d.activeExtension!.id, false), 'Đã từ chối gia hạn.')} /> : null}
-              {d.activeExtension.canCancel ? <Button title="Hủy đề xuất" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.cancelExtension(d.activeExtension!.id), 'Đã hủy đề xuất.')} /> : null}
+              {d.activeExtension.canConfirm ? <Button title="Đồng ý" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.respondExtension(d.activeExtension!.id, true), 'Đã chấp nhận gia hạn.')} /> : null}
+              {d.activeExtension.canReject ? <Button title="Từ chối" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.respondExtension(d.activeExtension!.id, false), 'Đã từ chối gia hạn.')} /> : null}
+              {d.activeExtension.canCancel ? <Button title="Hủy đề xuất" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.cancelExtension(d.activeExtension!.id), 'Đã hủy đề xuất.')} /> : null}
             </View>
           </Card>
         ) : null}
 
         {d.activeAmendment && ['PENDING', 'AWAITING_TOPUP'].includes(d.activeAmendment.status) ? (
-          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
+          <Card style={{ marginHorizontal: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Đề xuất điều chỉnh task ({d.activeAmendment.status === 'AWAITING_TOPUP' ? 'chờ nạp thêm' : 'chờ phản hồi'})</Txt>
             {d.activeAmendment.newScope ? <Txt size={13}>Phạm vi mới: {d.activeAmendment.newScope}</Txt> : null}
             {d.activeAmendment.additionalAmount ? <Txt size={13}>Phát sinh: {formatVnd(d.activeAmendment.additionalAmount)}</Txt> : null}
             <Txt muted size={13}>Lý do: {d.activeAmendment.reason}</Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-              {d.activeAmendment.canConfirm ? <Button title="Đồng ý" style={{ height: 38 }} onPress={() => run(() => taskApi.respondAmendment(d.activeAmendment!.id, true), 'Đã chấp nhận điều chỉnh.')} /> : null}
-              {d.activeAmendment.canReject ? <Button title="Từ chối" variant="outline" style={{ height: 38 }} onPress={() => run(() => taskApi.respondAmendment(d.activeAmendment!.id, false), 'Đã từ chối điều chỉnh.')} /> : null}
-              {d.activeAmendment.canTopUp ? <Button title="Nạp thêm" style={{ height: 38 }} onPress={() => topup.mutate(d.activeAmendment!.id)} loading={topup.isPending} /> : null}
-              {d.activeAmendment.canCancel ? <Button title="Hủy đề xuất" variant="outline" style={{ height: 38 }} onPress={() => run(() => taskApi.cancelAmendment(d.activeAmendment!.id), 'Đã hủy đề xuất.')} /> : null}
+              {d.activeAmendment.canConfirm ? <Button title="Đồng ý" style={{ minHeight: 44 }} onPress={() => run(() => taskApi.respondAmendment(d.activeAmendment!.id, true), 'Đã chấp nhận điều chỉnh.')} /> : null}
+              {d.activeAmendment.canReject ? <Button title="Từ chối" variant="outline" style={{ minHeight: 44 }} onPress={() => run(() => taskApi.respondAmendment(d.activeAmendment!.id, false), 'Đã từ chối điều chỉnh.')} /> : null}
+              {d.activeAmendment.canTopUp ? <Button title="Nạp thêm" style={{ minHeight: 44 }} onPress={() => topup.mutate(d.activeAmendment!.id)} loading={topup.isPending} /> : null}
+              {d.activeAmendment.canCancel ? <Button title="Hủy đề xuất" variant="outline" style={{ minHeight: 44 }} onPress={() => run(() => taskApi.cancelAmendment(d.activeAmendment!.id), 'Đã hủy đề xuất.')} /> : null}
             </View>
           </Card>
         ) : null}
 
         {d.activeSettlementProposal && d.activeSettlementProposal.status === 'PENDING' ? (
-          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
+          <Card style={{ marginHorizontal: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Đề xuất hòa giải</Txt>
             <Txt size={13}>Mentor nhận {formatVnd(d.activeSettlementProposal.mentorAmount)} · Sinh viên hoàn {formatVnd(d.activeSettlementProposal.studentRefund)}</Txt>
             <Txt muted size={13}>Lý do: {d.activeSettlementProposal.reason}</Txt>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-              {d.activeSettlementProposal.canAccept ? <Button title="Đồng ý" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.respondSettlement(d.activeSettlementProposal!.id, true), 'Đã chấp nhận hòa giải.')} /> : null}
-              {d.activeSettlementProposal.canReject ? <Button title="Từ chối" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.respondSettlement(d.activeSettlementProposal!.id, false), 'Đã từ chối hòa giải.')} /> : null}
-              {d.activeSettlementProposal.canCancel ? <Button title="Hủy" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.cancelSettlement(d.activeSettlementProposal!.id), 'Đã hủy đề xuất.')} /> : null}
+              {d.activeSettlementProposal.canAccept ? <Button title="Đồng ý" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.respondSettlement(d.activeSettlementProposal!.id, true), 'Đã chấp nhận hòa giải.')} /> : null}
+              {d.activeSettlementProposal.canReject ? <Button title="Từ chối" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.respondSettlement(d.activeSettlementProposal!.id, false), 'Đã từ chối hòa giải.')} /> : null}
+              {d.activeSettlementProposal.canCancel ? <Button title="Hủy" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.cancelSettlement(d.activeSettlementProposal!.id), 'Đã hủy đề xuất.')} /> : null}
             </View>
           </Card>
         ) : null}
 
         {d.latestCompletion && d.latestCompletion.status === 'PENDING' ? (
-          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.warning }}>
+          <Card style={{ marginHorizontal: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: t.warning }}>
             <Txt weight="700">Kết quả được nộp</Txt>
             <Txt>{d.latestCompletion.finalSummary}</Txt>
             {d.latestCompletion.deliverables ? <Txt muted size={13}>Sản phẩm: {d.latestCompletion.deliverables}</Txt> : null}
@@ -167,8 +168,8 @@ export default function TaskDetailScreen() {
               <View style={{ marginTop: 8 }}>
                 <Input value={feedback[-1] ?? ''} onChangeText={(v) => setFeedback({ ...feedback, [-1]: v })} placeholder="Nhận xét (tùy chọn)" />
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <Button title="Nghiệm thu" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.respondCompletion(tid, d.latestCompletion!.id, true, feedback[-1]), 'Đã nghiệm thu task.')} />
-                  <Button title="Yêu cầu làm lại" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.respondCompletion(tid, d.latestCompletion!.id, false, feedback[-1]), 'Đã yêu cầu làm lại.')} />
+                  <Button title="Nghiệm thu" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.respondCompletion(tid, d.latestCompletion!.id, true, feedback[-1]), 'Đã nghiệm thu task.')} />
+                  <Button title="Yêu cầu làm lại" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.respondCompletion(tid, d.latestCompletion!.id, false, feedback[-1]), 'Đã yêu cầu làm lại.')} />
                 </View>
               </View>
             ) : null}
@@ -176,7 +177,7 @@ export default function TaskDetailScreen() {
         ) : null}
 
         {d.activeTicket ? (
-          <Card style={{ marginHorizontal: 12, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: t.danger }} onPress={() => router.push({ pathname: '/mentoring/dispute/[ticketId]/chat', params: { ticketId: String(d.activeTicket!.id), taskId: String(tid) } })}>
+          <Card style={{ marginHorizontal: 16, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: t.danger }} onPress={() => router.push({ pathname: '/mentoring/dispute/[ticketId]/chat', params: { ticketId: String(d.activeTicket!.id), taskId: String(tid) } })}>
             <Txt weight="700" color={t.danger}>Ticket {d.activeTicket.ticketCode} · {d.activeTicket.status}</Txt>
             <Txt>{d.activeTicket.title}</Txt>
             <Txt muted size={12}>Chạm để trao đổi & nộp minh chứng</Txt>
@@ -187,9 +188,9 @@ export default function TaskDetailScreen() {
           <Txt weight="800" size={16} style={{ flex: 1 }}>Nhật ký công việc</Txt>
           {p.canAddWorkLog ? <Button title="Thêm nhật ký" size="sm" icon={<Plus size={15} color="#fff" />} onPress={() => go('worklog')} /> : null}
         </View>
-        {d.workLogs.length === 0 ? <Empty icon={<NotebookPen size={26} color={t.primary} />} title="Chưa có nhật ký" text="Mentor ghi nhật ký sau mỗi buổi làm việc để theo dõi tiến độ." /> : null}
+        {d.workLogs.length === 0 ? <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<NotebookPen size={26} color={t.primary} />} title="Chưa có nhật ký" text="Mentor ghi nhật ký sau mỗi buổi làm việc để theo dõi tiến độ." /> : null}
         {d.workLogs.map((w) => (
-          <Card key={w.id} style={{ marginHorizontal: 12, marginBottom: 10 }}>
+          <Card key={w.id} style={{ marginHorizontal: 16, marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <CalendarDays size={15} color={t.textMuted} />
               <Txt weight="800" style={{ flex: 1 }}>{new Date(w.logDate).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}</Txt>
@@ -209,8 +210,8 @@ export default function TaskDetailScreen() {
               <View style={{ marginTop: 8 }}>
                 <Input value={feedback[w.id] ?? ''} onChangeText={(v) => setFeedback({ ...feedback, [w.id]: v })} placeholder="Phản hồi (bắt buộc khi yêu cầu làm rõ)" />
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  {w.canConfirm ? <Button title="Xác nhận" style={{ flex: 1, height: 38 }} onPress={() => run(() => taskApi.confirmWorkLog(tid, w.id, feedback[w.id]), 'Đã xác nhận nhật ký.')} /> : null}
-                  {w.canReject ? <Button title="Yêu cầu làm rõ" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => (feedback[w.id]?.trim() ? run(() => taskApi.rejectWorkLog(tid, w.id, feedback[w.id]), 'Đã gửi yêu cầu làm rõ.') : toast.error('Vui lòng nhập lý do cần làm rõ.'))} /> : null}
+                  {w.canConfirm ? <Button title="Xác nhận" style={{ flex: 1, minHeight: 44 }} onPress={() => run(() => taskApi.confirmWorkLog(tid, w.id, feedback[w.id]), 'Đã xác nhận nhật ký.')} /> : null}
+                  {w.canReject ? <Button title="Yêu cầu làm rõ" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => (feedback[w.id]?.trim() ? run(() => taskApi.rejectWorkLog(tid, w.id, feedback[w.id]), 'Đã gửi yêu cầu làm rõ.') : toast.error('Vui lòng nhập lý do cần làm rõ.'))} /> : null}
                 </View>
               </View>
             ) : null}

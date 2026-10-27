@@ -36,12 +36,12 @@ export default function IncomingRequestsScreen() {
             data={items}
             keyExtractor={(r) => String(r.id)}
             contentContainerStyle={{ paddingVertical: 12 }}
-            onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+            onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
             refreshing={q.isRefetching}
             onRefresh={() => q.refetch()}
-            ListEmptyComponent={<Empty icon={<Inbox size={28} color={t.primary} />} title="Chưa có yêu cầu" text="Khi sinh viên gửi yêu cầu phù hợp, bạn sẽ thấy ở đây." />}
+            ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<Inbox size={28} color={t.primary} />} title="Chưa có yêu cầu" text="Khi sinh viên gửi yêu cầu phù hợp, bạn sẽ thấy ở đây." />}
             renderItem={({ item }) => (
-              <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/mentoring/incoming/[id]', params: { id: String(item.id) } })}>
+              <Card style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => router.push({ pathname: '/mentoring/incoming/[id]', params: { id: String(item.id) } })}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <Avatar uri={item.studentAvatar} name={item.studentName} size={44} />
                   <View style={{ flex: 1 }}>

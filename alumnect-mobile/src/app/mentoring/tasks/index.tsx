@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -33,7 +34,7 @@ export default function TasksScreen() {
     <Screen bg={t.card}>
       <Header title="Task của tôi" />
       <View style={{ backgroundColor: t.card }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {TASK_STAGES.map(([k, l]) => <Chip key={l} label={l} active={stage === k} onPress={() => setStage(k)} />)}
         </ScrollView>
       </View>
@@ -43,17 +44,17 @@ export default function TasksScreen() {
             data={items}
             keyExtractor={(x) => String(x.id)}
             contentContainerStyle={{ paddingVertical: 12 }}
-            onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+            onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
             refreshing={q.isRefetching}
             onRefresh={() => q.refetch()}
-            ListEmptyComponent={<Empty icon={<ListChecks size={28} color={t.primary} />} title="Chưa có task" text="Task được tạo sau khi hai bên chốt thỏa thuận." />}
+            ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<ListChecks size={28} color={t.primary} />} title="Chưa có task" text="Task được tạo sau khi hai bên chốt thỏa thuận." />}
             renderItem={({ item }) => {
               const pct = Math.min(100, item.progressPercentage ?? 0)
               const other = me?.role === 'STUDENT' ? item.mentorName : item.studentName
               const deadline = new Date(item.deadline)
               const late = isPast(deadline) && pct < 100
               return (
-                <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(item.id) } })}>
+                <Card style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(item.id) } })}>
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
                     <Txt weight="800" size={15} style={{ flex: 1 }} numberOfLines={2}>{item.taskTitle}</Txt>
                     <Tag label={TASK_STATUS_LABEL[item.status] ?? item.status} tone={statusTone(item.status)} />

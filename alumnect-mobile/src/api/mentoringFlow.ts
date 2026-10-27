@@ -26,6 +26,7 @@ export const RESPONSE_STATUS_LABEL: Record<string, string> = { WAITING: 'Đang c
 
 export interface CreateRequestPayload {
   mentorId?: number | null
+  groupId?: number | null
   title: string
   description: string
   industryId: number

@@ -91,6 +91,8 @@ import { WalletIcon as PhWallet } from 'phosphor-react-native/src/icons/Wallet'
 import { WarningIcon as PhWarning } from 'phosphor-react-native/src/icons/Warning'
 import { XIcon as PhX } from 'phosphor-react-native/src/icons/X'
 import { XCircleIcon as PhXCircle } from 'phosphor-react-native/src/icons/XCircle'
+import { EyeIcon as PhEye } from 'phosphor-react-native/src/icons/Eye'
+import { EyeSlashIcon as PhEyeSlash } from 'phosphor-react-native/src/icons/EyeSlash'
 
 /**
  * Bộ icon của app: Phosphor (nét bo tròn, có nhiều độ đậm).
@@ -122,6 +124,8 @@ function make(Glyph: PhosphorIcon, name: string) {
   return C
 }
 export const AlertTriangle = make(PhWarning, 'AlertTriangle')
+export const Eye = make(PhEye, 'Eye')
+export const EyeOff = make(PhEyeSlash, 'EyeOff')
 export const ArrowBigUp = make(PhArrowFatUp, 'ArrowBigUp')
 export const ArrowDownLeft = make(PhArrowDownLeft, 'ArrowDownLeft')
 export const Award = make(PhMedal, 'Award')

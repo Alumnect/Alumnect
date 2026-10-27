@@ -41,7 +41,7 @@ export default function CreateGroupScreen() {
   const toggle = (id: number) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
 
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title="Tạo nhóm chat" />
       <View style={{ padding: 16, paddingBottom: 0 }}>
         <Input label="Tên nhóm" value={title} onChangeText={setTitle} error={error} />

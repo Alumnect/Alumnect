@@ -32,15 +32,15 @@ export default function MyContributionsScreen() {
           data={q.data ?? []}
           keyExtractor={(c) => c.id}
           contentContainerStyle={{ padding: 16 }}
-          ListEmptyComponent={<Empty text="Bạn chưa có đóng góp nào." />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text="Bạn chưa có đóng góp nào." />}
           renderItem={({ item }) => (
-            <Card style={{ marginBottom: 10 }}>
+            <Card style={{ marginBottom: 16 }}>
               <Txt weight="700">{item.jobTitle}</Txt>
               <Txt muted size={13}>{[item.company, item.region].filter(Boolean).join(' · ')}</Txt>
               <Txt weight="800" color={palette.primary} style={{ marginVertical: 4 }}>{formatVnd(item.grossAmount)}</Txt>
               <View style={{ flexDirection: 'row', gap: 10 }}>
-                <Button title="Sửa" variant="outline" style={{ flex: 1, height: 38 }} onPress={() => router.push({ pathname: '/salary/contribute', params: { id: item.id } })} />
-                <Button title="Xóa" variant="danger" style={{ flex: 1, height: 38 }} onPress={() => del.mutate(item.id)} />
+                <Button title="Sửa" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => router.push({ pathname: '/salary/contribute', params: { id: item.id } })} />
+                <Button title="Xóa" variant="danger" style={{ flex: 1, minHeight: 44 }} onPress={() => del.mutate(item.id)} />
               </View>
             </Card>
           )}

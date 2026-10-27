@@ -26,6 +26,11 @@ public class MentorRegistrationSaveResponse {
     /** Cờ đánh giá hồ sơ đã thỏa mãn toàn bộ điều kiện hoàn tất UC91 hay chưa */
     private boolean isComplete;
 
+    @com.fasterxml.jackson.annotation.JsonProperty("isComplete")
+    public boolean isComplete() {
+        return isComplete;
+    }
+
     /** Mã bước tiếp theo gợi ý cho giao diện người dùng (ví dụ: UC92_SELECT_PACKAGE hoặc STAY_IN_DRAFT) */
     private String nextStep;
 

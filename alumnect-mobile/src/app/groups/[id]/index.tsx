@@ -13,7 +13,8 @@ import { ShareSheet } from '@/components/ShareSheet'
 import { groupPath } from '@/lib/share'
 import { GroupPostCard } from '@/components/GroupPostCard'
 import { categoryLabel, groupApi, isManager } from '@/api/groups'
-import { useTheme, palette } from '@/theme'
+import { useTheme } from '@/theme'
+import { BrandCover } from '@/components/DetailBits'
 import { toast, errMsg } from '@/lib/toast'
 
 /** UC114–120, 125: chi tiết nhóm + bài viết + thao tác quản lý. */
@@ -58,7 +59,7 @@ export default function GroupDetailScreen() {
   })
 
   if (group.isLoading) return <Screen><Header title="Nhóm" /><Loading /></Screen>
-  if (!g) return <Screen><Header title="Nhóm" /><Empty text="Không tìm thấy nhóm." /></Screen>
+  if (!g) return <Screen><Header title="Nhóm" /><Empty text="Không tìm thấy nhóm." error={group.error} onRetry={() => { void group.refetch() }} /></Screen>
   const manager = isManager(g.viewerRole)
   const owner = g.viewerRole === 'OWNER'
   const pending = g.viewerMembershipStatus === 'PENDING'
@@ -82,19 +83,16 @@ export default function GroupDetailScreen() {
           data={items}
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => posts.hasNextPage && posts.fetchNextPage()}
+          onEndReached={() => posts.hasNextPage && !posts.isFetchingNextPage && posts.fetchNextPage()}
           refreshing={posts.isRefetching}
           onRefresh={() => { group.refetch(); posts.refetch() }}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.card, marginBottom: 10 }}>
+              <View style={{ backgroundColor: t.card, marginBottom: 16 }}>
                 {g.coverImageUrl ? (
                   <Image source={{ uri: g.coverImageUrl }} style={{ height: 170, backgroundColor: t.inputBg }} contentFit="cover" />
                 ) : (
-                  <View style={{ height: 110, backgroundColor: palette.primary, overflow: 'hidden' }}>
-                    <View style={{ position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: palette.primarySoft, opacity: 0.55, top: -100, right: -40 }} />
-                    <View style={{ position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: palette.primaryDark, opacity: 0.45, bottom: -70, left: 20 }} />
-                  </View>
+                  <BrandCover height={110} />
                 )}
                 <View style={{ padding: 16 }}>
                   <Txt size={24} weight="800">{g.name}</Txt>
@@ -165,14 +163,14 @@ export default function GroupDetailScreen() {
               {isMember ? (
                 <Pressable
                   onPress={() => router.push({ pathname: '/groups/[id]/create-post', params: { id } })}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: t.card, marginHorizontal: 12, marginBottom: 10, padding: 12, borderRadius: 16 }}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: t.card, marginHorizontal: 16, marginBottom: 16, padding: 12, borderRadius: 16 }}
                   accessibilityRole="button"
                 >
                   <Avatar uri={me?.avatarUrl} name={me?.name} size={38} />
                   <View style={{ flex: 1, height: 38, borderRadius: 19, backgroundColor: t.inputBg, justifyContent: 'center', paddingHorizontal: 14 }}>
                     <Txt muted>Viết gì đó cho nhóm...</Txt>
                   </View>
-                  <ImagePlus size={22} color={palette.success} />
+                  <ImagePlus size={22} color={t.textMuted} />
                 </Pressable>
               ) : null}
               {canSee ? <Txt weight="800" size={16} style={{ paddingHorizontal: 16, marginBottom: 8 }}>Bài viết</Txt> : null}
@@ -183,13 +181,15 @@ export default function GroupDetailScreen() {
               <Loading />
             ) : (
               <Empty
+                error={canSee ? posts.error : undefined}
+                onRetry={() => { void posts.refetch() }}
                 icon={canSee ? <MessageSquare size={26} color={t.primary} /> : <Lock size={26} color={t.primary} />}
                 title={canSee ? 'Chưa có bài viết' : 'Nhóm riêng tư'}
                 text={canSee ? 'Hãy mở đầu cuộc trò chuyện trong nhóm.' : 'Tham gia nhóm để xem bài viết và thảo luận.'}
               />
             )
           }
-          renderItem={({ item }) => <View style={{ paddingHorizontal: 12 }}><GroupPostCard post={item} /></View>}
+          renderItem={({ item }) => <View style={{ paddingHorizontal: 16 }}><GroupPostCard post={item} /></View>}
         />
       </View>
       <ShareSheet

@@ -1,8 +1,9 @@
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { mentoringApi } from '@/api/mentoring'
 import { MENTORING_TERMS_SECTIONS } from '@/constants/mentoringTerms'
@@ -25,6 +26,7 @@ export default function MentoringTermsScreen() {
     onError: (e) => toast.error(errMsg(e)),
   })
   if (status.isLoading) return <Screen><Header title="Điều khoản" /><Loading /></Screen>
+  if (status.isError) return <Screen><Header title="Điều khoản" /><Empty text="Không tải được trạng thái điều khoản." error={status.error} onRetry={() => { void status.refetch() }} /></Screen>
   return (
     <Screen>
       <Header title="Điều khoản Hướng dẫn & Hỗ trợ" />

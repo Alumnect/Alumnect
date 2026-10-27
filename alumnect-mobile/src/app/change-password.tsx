@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView } from 'react-native'
+import {  } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useRouter } from 'expo-router'
 import { useMutation } from '@tanstack/react-query'
 import { Button, Input, Screen } from '@/components/ui'
@@ -34,7 +35,7 @@ export default function ChangePasswordScreen() {
   }
 
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title="Đổi mật khẩu" />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Input label="Mật khẩu hiện tại" value={f.oldPassword} onChangeText={set('oldPassword')} secureTextEntry error={errors.oldPassword} />

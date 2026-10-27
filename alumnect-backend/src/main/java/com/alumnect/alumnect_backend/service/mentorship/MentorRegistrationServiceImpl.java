@@ -313,8 +313,13 @@ public class MentorRegistrationServiceImpl implements MentorRegistrationService 
         String nextStep;
         if (isComplete) {
             // Khi thỏa mãn 100% điều kiện, chuyển sang PAYMENT_PENDING để thanh toán gói tại UC92 & UC93
-            profile.setMentorStatus(MentorStatus.PAYMENT_PENDING);
-            nextStep = "UC92_SELECT_PACKAGE";
+            // Editing a complete, paid mentor profile must retain its active subscription.
+            if (profile.getMentorStatus() == MentorStatus.ACTIVE) {
+                nextStep = "MENTOR_ACTIVE";
+            } else {
+                profile.setMentorStatus(MentorStatus.PAYMENT_PENDING);
+                nextStep = "UC92_SELECT_PACKAGE";
+            }
             log.info("Hồ sơ Mentor của Alumni {} đã hoàn tất đầy đủ. Chuyển sang PAYMENT_PENDING.", userEmail);
         } else {
             // Nếu chưa đủ thông tin hoặc lưu nháp, giữ nguyên INCOMPLETE (nếu chưa từng ACTIVE)

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { Linking, Pressable, ScrollView, View } from 'react-native'
+import { Linking, Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
@@ -92,12 +93,12 @@ export default function JobsScreen() {
           data={q.isLoading ? [] : jobs}
           keyExtractor={(p) => p.id}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 10 }}>
+              <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 16 }}>
                 <SearchBar value={kw} onChangeText={setKw} placeholder="Chức danh, công ty hoặc từ khóa..." style={{ paddingHorizontal: 16 }} right={<FilterButton count={countActive(filters)} onPress={() => setSheet(true)} />} />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
                   <Chip label="Mọi địa điểm" active={!city} onPress={() => setFilters((f) => ({ ...f, city: undefined }))} />
@@ -109,24 +110,24 @@ export default function JobsScreen() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty icon={<BriefcaseBusiness size={28} color={t.primary} />} title="Chưa có tin phù hợp" text="Thử đổi địa điểm hoặc từ khoá khác." action={countActive(filters) ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BriefcaseBusiness size={28} color={t.primary} />} title="Chưa có tin phù hợp" text="Thử đổi địa điểm hoặc từ khoá khác." action={countActive(filters) ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
             )
           }
           renderItem={({ item: p }) => {
             const j = p.job!
             const saved = savedMap[p.id] ?? p.saved
             return (
-              <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })}>
+              <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                   <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: t.infoTint, alignItems: 'center', justifyContent: 'center' }}>
                     <Txt size={20} weight="800" color={t.info}>{(j.company || p.author || '?').trim().charAt(0).toUpperCase()}</Txt>
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Xem việc làm ${j.title}`} onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })} style={{ flex: 1, minHeight: 44 }}>
                     <Txt weight="800" size={16} numberOfLines={2}>{j.title}</Txt>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
                       <Building2 size={14} color={t.textMuted} /><Txt muted size={13} numberOfLines={1} style={{ flex: 1 }}>{j.company || p.author}</Txt>
                     </View>
-                  </View>
+                  </Pressable>
                   <Pressable onPress={() => void toggleSave(p)} hitSlop={8} accessibilityRole="button" accessibilityLabel={saved ? 'Bỏ lưu tin' : 'Lưu tin'}>
                     <Bookmark size={22} color={saved ? t.primary : t.textMuted} fill={saved ? t.primary : 'transparent'} />
                   </Pressable>

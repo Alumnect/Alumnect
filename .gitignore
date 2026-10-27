@@ -29,3 +29,7 @@ Thumbs.db
 
 # Thư mục bàn giao chứa bí mật (env, keystore): tuyệt đối không commit
 _handover-secrets/
+
+# Local integration-test services, credentials, logs and emulator captures
+/.test-runtime/
+/alumnect-backend/src/test/java/com/alumnect/alumnect_backend/dto/response/mentorship/MentorRegistrationJsonTest.java

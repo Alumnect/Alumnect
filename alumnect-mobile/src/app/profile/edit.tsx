@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Briefcase, Camera, GraduationCap, Link2, Phone, Plus, Sparkles, Star, UserRound, X } from '@/components/icons'
-import { Avatar, Button, Card, Input, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, Input, Loading, Screen, Tag, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { BottomBar, BrandCover, SectionCard } from '@/components/DetailBits'
 import { SelectField } from '@/components/SelectField'
@@ -150,6 +151,7 @@ export default function EditProfileScreen() {
     save.mutate()
   }
 
+  if (profile.isError) return <Screen><Header title="Chỉnh sửa hồ sơ" /><Empty text="Không tải được hồ sơ." error={profile.error} onRetry={() => { void profile.refetch() }} /></Screen>
   if (profile.isLoading || !f) return <Screen><Header title="Chỉnh sửa hồ sơ" /><Loading /></Screen>
   const groups = Array.from(new Set(skills.map((s) => s.groupName)))
 
@@ -159,10 +161,10 @@ export default function EditProfileScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
           {/* Ảnh bìa + ảnh đại diện */}
-          <View style={{ backgroundColor: t.card, marginBottom: 10, paddingBottom: 16 }}>
+          <View style={{ backgroundColor: t.card, marginBottom: 16, paddingBottom: 16 }}>
             <Pressable onPress={() => changeImage('cover')} accessibilityRole="button" accessibilityLabel="Đổi ảnh bìa">
               {cover ? <Image source={{ uri: cover }} style={{ height: 140, backgroundColor: t.inputBg }} contentFit="cover" /> : <BrandCover height={140} />}
-              <View style={{ position: 'absolute', right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.55)' }}>
+              <View style={{ position: 'absolute', right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 7, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.55)' }}>
                 <Camera size={14} color="#fff" />
                 <Txt size={12} weight="700" color="#fff">{uploading === 'cover' ? 'Đang tải...' : 'Đổi ảnh bìa'}</Txt>
               </View>
@@ -231,9 +233,9 @@ export default function EditProfileScreen() {
           </SectionCard>
 
           <SectionCard title="Kỹ năng chuyên môn" icon={<Sparkles size={18} color={t.primary} />}>
-            {groups.length === 0 ? <Txt muted size={13} style={{ marginBottom: 10 }}>Chưa có kỹ năng nào. Thêm kỹ năng để mentor và nhà tuyển dụng dễ tìm thấy bạn.</Txt> : null}
+            {groups.length === 0 ? <Txt muted size={13} style={{ marginBottom: 16 }}>Chưa có kỹ năng nào. Thêm kỹ năng để mentor và nhà tuyển dụng dễ tìm thấy bạn.</Txt> : null}
             {groups.map((g) => (
-              <View key={g} style={{ marginBottom: 10 }}>
+              <View key={g} style={{ marginBottom: 16 }}>
                 <Txt muted size={12} weight="700" style={{ marginBottom: 6 }}>{g.toUpperCase()}</Txt>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                   {skills.map((s, i) =>
@@ -284,7 +286,7 @@ export default function EditProfileScreen() {
               </Pressable>
             ))}
           </SectionCard>
-          <Card flat style={{ marginHorizontal: 12, backgroundColor: 'transparent' }}>
+          <Card flat style={{ marginHorizontal: 16, backgroundColor: 'transparent' }}>
             <Txt muted size={12} style={{ textAlign: 'center' }}>Email và mã sinh viên được quản lý bởi nhà trường, không thể sửa tại đây.</Txt>
           </Card>
         </ScrollView>

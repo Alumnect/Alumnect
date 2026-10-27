@@ -39,3 +39,22 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Local dependency cache and visual verification artifacts
+.npm-cache/
+.taste-skill/inspect*/
+.taste-skill/screenshots/
+.taste-skill/*.cjs
+.taste-skill/*.mjs
+.taste-skill/*.png
+.taste-skill/visual-results.json
+.taste-skill/*audit.json
+.taste-skill/api-comparison.json
+.taste-skill/regression-results.json
+dist-native-check/
+
+# Local QA only; excluded from delivery commits
+/.taste-skill/
+/tests/e2e/
+/MOBILE_CODE_AUDIT.md
+/MOBILE_UI.md

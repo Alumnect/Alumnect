@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
@@ -12,7 +13,8 @@ import { GROUP_CATEGORIES, categoryLabel, groupApi } from '@/api/groups'
 import type { GroupCard } from '@/api/groups'
 import { useAuthStore } from '@/store/authStore'
 import { useDebounced } from '@/lib/hooks'
-import { useTheme, palette } from '@/theme'
+import { useTheme } from '@/theme'
+import { BrandCover } from '@/components/DetailBits'
 
 type Tab = 'all' | 'mine'
 
@@ -20,13 +22,11 @@ const GroupItem = React.memo(function GroupItem({ g }: { g: GroupCard }) {
   const t = useTheme()
   const router = useRouter()
   return (
-    <Card style={{ marginHorizontal: 12, marginBottom: 10, padding: 0, overflow: 'hidden' }} onPress={() => router.push({ pathname: '/groups/[id]', params: { id: String(g.id) } })}>
+    <Card style={{ marginHorizontal: 16, marginBottom: 16, padding: 0, overflow: 'hidden' }} onPress={() => router.push({ pathname: '/groups/[id]', params: { id: String(g.id) } })}>
       {g.coverImageUrl ? (
         <Image source={{ uri: g.coverImageUrl }} style={{ height: 120, backgroundColor: t.inputBg }} contentFit="cover" />
       ) : (
-        <View style={{ height: 72, backgroundColor: palette.primary, overflow: 'hidden' }}>
-          <View style={{ position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: palette.primarySoft, opacity: 0.6, top: -70, right: -20 }} />
-        </View>
+        <BrandCover height={96} />
       )}
       <View style={{ padding: 14, gap: 4 }}>
         <Txt weight="800" size={16} numberOfLines={1}>{g.name}</Txt>
@@ -79,13 +79,13 @@ export default function GroupsScreen() {
           data={q.isLoading ? [] : items}
           keyExtractor={(g) => String(g.id)}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
             <View>
               {tab === 'all' ? (
-                <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 10 }}>
+                <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 16 }}>
                   <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm nhóm theo tên, chủ đề..." style={{ paddingHorizontal: 16 }} />
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
                     <Chip label="Tất cả" active={!category} onPress={() => setCategory('')} />
@@ -100,7 +100,7 @@ export default function GroupsScreen() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty
+              <Empty error={q.error} onRetry={() => { void q.refetch() }}
                 icon={<Users size={28} color={t.primary} />}
                 title={tab === 'mine' ? 'Bạn chưa tham gia nhóm nào' : 'Không tìm thấy nhóm'}
                 text={tab === 'mine' ? 'Khám phá các nhóm cùng sở thích, ngành nghề.' : 'Thử đổi chủ đề hoặc từ khoá khác.'}

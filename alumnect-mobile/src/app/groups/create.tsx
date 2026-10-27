@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Chip, Input, Screen, Txt } from '@/components/ui'
+import { Button, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { GROUP_CATEGORIES, groupApi } from '@/api/groups'
 import { pickImage, uploadImage } from '@/lib/upload'
@@ -68,8 +69,11 @@ export default function GroupFormScreen() {
     if (!Object.keys(e).length) m.mutate()
   }
 
+  if (id && existing.isLoading) return <Screen><Header title="Cập nhật nhóm" /><Loading /></Screen>
+  if (id && !g) return <Screen><Header title="Cập nhật nhóm" /><Empty text="Không tìm thấy nhóm." error={existing.error} onRetry={() => { void existing.refetch() }} /></Screen>
+
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title={id ? 'Cập nhật nhóm' : 'Tạo nhóm mới'} />
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         {cover ? <Image source={{ uri: cover }} style={{ height: 140, borderRadius: 12, marginBottom: 8 }} contentFit="cover" /> : null}

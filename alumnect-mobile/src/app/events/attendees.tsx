@@ -22,7 +22,7 @@ export default function AttendeesScreen() {
         <FlashList
           data={q.data?.data ?? []}
           keyExtractor={(a) => String(a.userId)}
-          ListEmptyComponent={<Empty text="Chưa có người tham gia." />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text="Chưa có người tham gia." />}
           renderItem={({ item }) => (
             <Pressable
               onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(item.userId) } })}

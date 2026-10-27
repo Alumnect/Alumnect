@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -39,7 +40,7 @@ export default function MentoringGroupsScreen() {
   const Item = ({ g }: { g: MentoringGroup }) => {
     const joined = g.joinedMemberCount ?? g.members?.filter(isActiveMember).length ?? 1
     return (
-      <Card style={{ marginBottom: 10 }} onPress={tab === 'INVITATIONS' ? undefined : () => router.push({ pathname: '/mentoring/groups/[id]', params: { id: String(g.id) } })}>
+      <Card style={{ marginBottom: 16 }} onPress={tab === 'INVITATIONS' ? undefined : () => router.push({ pathname: '/mentoring/groups/[id]', params: { id: String(g.id) } })}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
           <Txt weight="800" size={16} style={{ flex: 1 }} numberOfLines={2}>{g.name}</Txt>
           {g.canManage ? <Tag label="Trưởng nhóm" /> : null}
@@ -54,8 +55,8 @@ export default function MentoringGroupsScreen() {
         <Txt muted size={12} style={{ marginTop: 6 }}>{`Trưởng nhóm: ${g.leaderName ?? '—'}`}</Txt>
         {tab === 'INVITATIONS' ? (
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-            <Button title="Tham gia" style={{ flex: 1, height: 40 }} loading={respond.isPending} onPress={() => respond.mutate({ id: g.id, ok: true })} />
-            <Button title="Từ chối" variant="outline" style={{ flex: 1, height: 40 }} onPress={() => respond.mutate({ id: g.id, ok: false })} />
+            <Button title="Tham gia" style={{ flex: 1, minHeight: 44 }} loading={respond.isPending} onPress={() => respond.mutate({ id: g.id, ok: true })} />
+            <Button title="Từ chối" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => respond.mutate({ id: g.id, ok: false })} />
           </View>
         ) : null}
       </Card>
@@ -66,7 +67,7 @@ export default function MentoringGroupsScreen() {
     <Screen>
       <Header title="Nhóm Mentoring" right={<Button title="Tạo nhóm" size="sm" icon={<Plus size={15} color="#fff" />} onPress={() => router.push('/mentoring/groups/create')} />} />
       <View style={{ backgroundColor: t.card }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {TABS.map(([k, l]) => <Chip key={k} label={k === 'INVITATIONS' && invites.data?.length ? `Lời mời (${invites.data.length})` : l} active={tab === k} onPress={() => setTab(k)} />)}
         </ScrollView>
       </View>

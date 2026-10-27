@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import * as DocumentPicker from 'expo-document-picker'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Chip, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Card, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import type { MentoringType, WorkingMode } from '@/api/mentoring'
@@ -107,6 +108,7 @@ export default function RegisterMentorScreen() {
   }
 
   if (reg.isLoading) return <Screen><Header title="Đăng ký mentor" /><Loading /></Screen>
+  if (!reg.data) return <Screen><Header title="Hồ sơ mentor" /><Empty text="Không tải được hồ sơ mentor." error={reg.error} onRetry={() => { void reg.refetch() }} /></Screen>
   const shownBanks = (banks.data ?? []).filter((b) => b.name.toLowerCase().includes(bankQ.toLowerCase())).slice(0, 8)
 
   return (
@@ -119,11 +121,11 @@ export default function RegisterMentorScreen() {
           <Input label="Năm tốt nghiệp" value={f.graduationYear} onChangeText={set('graduationYear')} keyboardType="number-pad" />
           <Input label="Giới thiệu bản thân" value={f.bio} onChangeText={set('bio')} multiline />
           <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Hình thức làm việc</Txt>
-          <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
             {(Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((k) => <Chip key={k} label={WORKING_MODE_LABEL[k]} active={mode === k} onPress={() => setMode(k)} />)}
           </View>
           <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Loại hình hướng dẫn</Txt>
-          <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
             {(Object.keys(MENTORING_TYPE_LABEL) as MentoringType[]).map((k) => <Chip key={k} label={MENTORING_TYPE_LABEL[k]} active={type === k} onPress={() => setType(k)} />)}
           </View>
           <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Lĩnh vực hỗ trợ</Txt>

@@ -1,7 +1,6 @@
 import React from 'react'
 import { FlashList } from '@shopify/flash-list'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { View } from 'react-native'
 import { Bookmark } from '@/components/icons'
 import { Empty, Screen } from '@/components/ui'
 import { ListSkeleton } from '@/components/Skeleton'
@@ -26,10 +25,10 @@ export default function SavedPostsScreen() {
           data={posts}
           keyExtractor={(p) => p.id}
           contentContainerStyle={{ paddingVertical: 12 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty icon={<Bookmark size={26} color={palette.primary} />} title="Chưa lưu bài viết nào" text="Bấm biểu tượng Lưu trên bài viết để đọc lại sau." />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<Bookmark size={26} color={palette.primary} />} title="Chưa lưu bài viết nào" text="Bấm biểu tượng Lưu trên bài viết để đọc lại sau." />}
           renderItem={({ item }) => <PostCard post={item} />}
         />
       )}

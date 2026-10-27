@@ -87,7 +87,7 @@ export default function PostDetailScreen() {
           ListHeaderComponent={
             <View>
               <View style={{ backgroundColor: t.bg, paddingTop: 10 }}>
-                <View style={{ paddingHorizontal: 12 }}>
+                <View style={{ paddingHorizontal: 16 }}>
                   <PostCard post={post.data} detail />
                 </View>
               </View>
@@ -101,7 +101,7 @@ export default function PostDetailScreen() {
             comments.isLoading ? <Loading /> : <Empty icon={<MessageCircle size={26} color={t.primary} />} title="Chưa có bình luận" text="Hãy là người đầu tiên bình luận." />
           }
           contentContainerStyle={{ paddingBottom: 12 }}
-          onEndReached={() => comments.hasNextPage && comments.fetchNextPage()}
+          onEndReached={() => comments.hasNextPage && !comments.isFetchingNextPage && comments.fetchNextPage()}
           renderItem={({ item }) => (
             <CommentBubble
               author={item.author}

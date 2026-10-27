@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -32,7 +33,7 @@ export default function DealsScreen() {
     <Screen bg={t.card}>
       <Header title="Thỏa thuận" />
       <View style={{ backgroundColor: t.card }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {TABS.map(([k, l]) => <Chip key={l} label={l} active={status === k} onPress={() => setStatus(k)} />)}
         </ScrollView>
       </View>
@@ -42,22 +43,22 @@ export default function DealsScreen() {
             data={items}
             keyExtractor={(d) => String(d.id)}
             contentContainerStyle={{ paddingVertical: 12 }}
-            onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+            onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
             refreshing={q.isRefetching}
             onRefresh={() => q.refetch()}
             ListEmptyComponent={
-              <Empty
+              <Empty error={q.error} onRetry={() => { void q.refetch() }}
                 icon={<Handshake size={28} color={t.primary} />}
                 title="Chưa có thỏa thuận"
                 text={status ? 'Không có thỏa thuận nào ở trạng thái này.' : 'Thỏa thuận được tạo trong phần trao đổi sau khi Mentor đồng ý yêu cầu.'}
               />
             }
             renderItem={({ item: d }) => (
-              <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(d.id) } })}>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+              <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Xem thỏa thuận" onPress={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(d.id) } })} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, minHeight: 44 }}>
                   <Txt weight="800" size={15} numberOfLines={2} style={{ flex: 1 }}>{d.requestTitle || d.taskScope}</Txt>
                   <Tag label={DEAL_STATUS_LABEL[d.status] ?? d.status} tone={statusTone(d.status)} />
-                </View>
+                </Pressable>
                 <Txt muted size={13} style={{ marginTop: 4 }}>{`${d.studentName} ↔ ${d.mentorName}`}</Txt>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                   <Tag label={taskTypeLabel(d.taskType)} tone="neutral" />

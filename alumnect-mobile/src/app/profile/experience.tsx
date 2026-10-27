@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { ScrollView, Switch, View } from 'react-native'
+import { Switch, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Input, Screen, Txt } from '@/components/ui'
+import { Button, Card, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { experienceApi } from '@/api/explore'
 import { useTheme } from '@/theme'
@@ -35,7 +36,20 @@ export default function ExperienceScreen() {
 
   const save = useMutation({
     mutationFn: () => {
-      const p = { title: f.title.trim(), company: f.company.trim(), location: f.location.trim() || null, startDate: f.startDate, endDate: isCurrent ? null : f.endDate || null, isCurrent, isPrimary, description: f.description.trim() || null }
+      const sameLocation = (existing?.location?.trim() ?? '') === f.location.trim()
+      const p = {
+        title: f.title.trim(), company: f.company.trim(), location: f.location.trim() || null,
+        startDate: f.startDate, endDate: isCurrent ? null : f.endDate || null, isCurrent, isPrimary,
+        description: f.description.trim() || null,
+        // Keep geocoding when editing other fields; changed text must not retain stale coordinates.
+        latitude: sameLocation ? existing?.latitude ?? null : null,
+        longitude: sameLocation ? existing?.longitude ?? null : null,
+        placeId: sameLocation ? existing?.placeId ?? null : null,
+        locationCity: sameLocation ? existing?.locationCity ?? null : null,
+        locationCountry: sameLocation ? existing?.locationCountry ?? null : null,
+        locationCountryCode: sameLocation ? existing?.locationCountryCode ?? null : null,
+        geocodingProvider: sameLocation ? existing?.geocodingProvider ?? null : null,
+      }
       return id ? experienceApi.update(Number(id), p) : experienceApi.create(p)
     },
     onSuccess: () => after(id ? 'Đã cập nhật kinh nghiệm.' : 'Đã thêm kinh nghiệm.'),
@@ -59,8 +73,11 @@ export default function ExperienceScreen() {
     if (!Object.keys(e).length) save.mutate()
   }
 
+  if (id && list.isLoading) return <Screen><Header title="Sửa kinh nghiệm" /><Loading /></Screen>
+  if (id && !existing) return <Screen><Header title="Sửa kinh nghiệm" /><Empty text="Không tìm thấy kinh nghiệm." error={list.error} onRetry={() => { void list.refetch() }} /></Screen>
+
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title={id ? 'Sửa kinh nghiệm' : 'Thêm kinh nghiệm'} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         <Input label="Chức danh" value={f.title} onChangeText={set('title')} error={errors.title} />

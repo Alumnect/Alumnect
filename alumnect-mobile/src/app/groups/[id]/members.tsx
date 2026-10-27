@@ -55,8 +55,8 @@ export default function GroupMembersScreen() {
         <FlashList
           data={items}
           keyExtractor={(m) => String(m.userId)}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
-          ListEmptyComponent={<Empty text="Không có thành viên." />}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không có thành viên." />}
           renderItem={({ item }) => (
             <Pressable
               onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(item.userId) } })}

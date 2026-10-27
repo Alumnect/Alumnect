@@ -50,9 +50,9 @@ function ActionToast({ text, actions }: { text?: string; actions: NonNullable<Ac
 
 const toastConfig: ToastConfig = {
   action: ({ text1, props }) => <ActionToast text={text1} actions={(props as ActionToastProps).actions ?? []} />,
-  success: (p) => <BaseToast {...p} style={{ borderLeftColor: palette.success }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
-  error: (p) => <ErrorToast {...p} style={{ borderLeftColor: palette.danger }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
-  info: (p) => <BaseToast {...p} style={{ borderLeftColor: palette.info }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
+  success: (p) => <BaseToast {...p} style={{ width: '92%', maxWidth: 480, borderLeftColor: palette.success }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
+  error: (p) => <ErrorToast {...p} style={{ width: '92%', maxWidth: 480, borderLeftColor: palette.danger }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
+  info: (p) => <BaseToast {...p} style={{ width: '92%', maxWidth: 480, borderLeftColor: palette.info }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
 }
 
 function AuthGate({ children }: { children: React.ReactNode }) {

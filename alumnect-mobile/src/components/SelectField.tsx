@@ -3,7 +3,7 @@ import { FlatList, Modal, Pressable, View } from 'react-native'
 import { Text } from '@/components/AppText'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Check, ChevronDown, X } from '@/components/icons'
-import { SearchBar, Txt } from './ui'
+import { IconButton, SearchBar, Txt } from './ui'
 import { normalize } from '@/constants/filters'
 import { useTheme, radius } from '@/theme'
 
@@ -39,24 +39,23 @@ export function SelectField({
 
   return (
     <View style={{ marginBottom: 14 }}>
-      {label ? <Text style={{ color: t.text, fontWeight: '600', marginBottom: 6, fontSize: 13 }}>{label}</Text> : null}
-      <Pressable
-        onPress={() => {
-          setQ('')
-          setOpen(true)
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={label ?? placeholder}
-        style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, borderRadius: 14, paddingHorizontal: 14, backgroundColor: t.inputBg, borderWidth: 1.5, borderColor: error ? t.danger : 'transparent' }}
-      >
-        <Txt style={{ flex: 1 }} color={current ? t.text : t.textSubtle} numberOfLines={1}>{current?.label ?? placeholder}</Txt>
+      {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
+      <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 50, borderRadius: 12, paddingLeft: 14, paddingRight: 8, backgroundColor: t.card, borderWidth: 1, borderColor: error ? t.danger : t.controlBorder }}>
+        <Pressable
+          onPress={() => { setQ(''); setOpen(true) }}
+          accessibilityRole="button"
+          accessibilityLabel={label ?? placeholder}
+          style={{ flex: 1, minWidth: 0, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+        >
+          <Txt style={{ flex: 1 }} color={current ? t.text : t.textSubtle} numberOfLines={2}>{current?.label ?? placeholder}</Txt>
+          <ChevronDown size={18} color={t.textMuted} />
+        </Pressable>
         {clearable && current ? (
-          <Pressable onPress={() => onChange(null)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Xoá lựa chọn" style={{ marginRight: 6 }}>
+          <Pressable onPress={(e) => { e.stopPropagation(); onChange(null) }} accessibilityRole="button" accessibilityLabel="Xoá lựa chọn" style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={t.textMuted} />
           </Pressable>
         ) : null}
-        <ChevronDown size={18} color={t.textMuted} />
-      </Pressable>
+      </View>
       {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
 
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
@@ -64,7 +63,10 @@ export function SelectField({
           <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: t.overlay }} onPress={() => setOpen(false)} />
           <View style={{ maxHeight: '80%', backgroundColor: t.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingBottom: insets.bottom + 8 }}>
             <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: t.border, marginTop: 10 }} />
-            <Txt size={17} weight="800" style={{ paddingHorizontal: 16, paddingVertical: 12 }}>{label ?? placeholder}</Txt>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingLeft: 16, gap: 8 }}>
+              <Txt heading size={18} weight="600" style={{ flex: 1 }}>{label ?? placeholder}</Txt>
+              <IconButton filled={false} label="Đóng danh sách" icon={<X size={20} color={t.textMuted} />} onPress={() => setOpen(false)} />
+            </View>
             {options.length > 8 ? <SearchBar value={q} onChangeText={setQ} placeholder="Tìm..." style={{ paddingHorizontal: 16, marginBottom: 6 }} /> : null}
             <FlatList
               data={filtered}
@@ -74,6 +76,8 @@ export function SelectField({
                 const active = item.value === value
                 return (
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
                     onPress={() => {
                       onChange(item.value)
                       setOpen(false)

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -25,7 +26,7 @@ const EventCard = React.memo(function EventCard({ p }: { p: Post }) {
   const pct = e.capacity ? Math.min(1, e.attendeeCount / e.capacity) : 0
   return (
     <Card
-      style={{ marginHorizontal: 12, marginBottom: 10 }}
+      style={{ marginHorizontal: 16, marginBottom: 16 }}
       onPress={() => e.id && router.push({ pathname: '/events/[id]', params: { id: String(e.id), title: e.title ?? '', start: e.startTime ?? '', end: e.endTime ?? '', location: e.location ?? '', hostId: p.authorId ?? '', postId: p.id } })}
     >
       <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -104,12 +105,12 @@ export default function EventsScreen() {
           data={q.isLoading ? [] : events}
           keyExtractor={(p) => p.id}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 10 }}>
+              <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 16 }}>
                 <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm sự kiện theo tên, địa điểm..." style={{ paddingHorizontal: 16 }} />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
                   {([['all', 'Tất cả'], ['registered', 'Đã đăng ký'], ['available', 'Còn chỗ'], ['online', 'Trực tuyến']] as [Quick, string][]).map(([k, l]) => (
@@ -121,7 +122,7 @@ export default function EventsScreen() {
             </View>
           }
           ListEmptyComponent={
-            q.isLoading ? null : <Empty icon={<CalendarDays size={28} color={t.primary} />} title="Chưa có sự kiện" text="Sự kiện mới sẽ xuất hiện ở đây khi được đăng." />
+            q.isLoading ? null : <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<CalendarDays size={28} color={t.primary} />} title="Chưa có sự kiện" text="Sự kiện mới sẽ xuất hiện ở đây khi được đăng." />
           }
           renderItem={({ item }) => <EventCard p={item} />}
         />

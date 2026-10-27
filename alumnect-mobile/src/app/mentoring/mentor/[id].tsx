@@ -1,5 +1,6 @@
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { BadgeCheck, Briefcase, Laptop, MapPin, MessageCircle, Send, Sparkles, Star, Target, UserRound } from '@/components/icons'
@@ -19,25 +20,25 @@ export default function MentorDetailScreen() {
   const q = useQuery({ queryKey: ['mentor', id], queryFn: () => mentoringApi.mentor(id!) })
   const m = q.data
   if (q.isLoading) return <Screen><Header title="Mentor" /><Loading /></Screen>
-  if (!m) return <Screen><Header title="Mentor" /><Empty text="Không tìm thấy mentor." /></Screen>
+  if (!m) return <Screen><Header title="Mentor" /><Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy mentor." /></Screen>
   const job = [m.currentPosition, m.currentCompany].filter(Boolean).join(' tại ')
 
   return (
     <Screen bg={t.card}>
       <Header title="Hồ sơ mentor" />
       <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={{ backgroundColor: t.card, marginBottom: 10, paddingBottom: 16 }}>
+        <View style={{ backgroundColor: t.card, marginBottom: 16, paddingBottom: 16 }}>
           <BrandCover height={110} />
-          <View style={{ alignItems: 'center', marginTop: -52, paddingHorizontal: 16 }}>
+          <View style={{ alignItems: 'flex-start', marginTop: -24, paddingHorizontal: 16 }}>
             <View style={{ borderWidth: 4, borderColor: t.card, borderRadius: 60 }}>
-              <Avatar uri={m.avatarUrl} name={m.fullName} size={100} />
+              <Avatar uri={m.avatarUrl} name={m.fullName} size={80} />
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-              <Txt size={22} weight="800">{m.fullName}</Txt>
+              <Txt size={22} weight="600" style={{ flexShrink: 1 }}>{m.fullName}</Txt>
               {m.isVerifiedAlumni !== false ? <BadgeCheck size={20} color={t.info} /> : null}
             </View>
-            {job || m.headline ? <Txt muted style={{ textAlign: 'center', marginTop: 2 }}>{job || m.headline}</Txt> : null}
-            <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
+            {job || m.headline ? <Txt muted style={{ marginTop: 4 }}>{job || m.headline}</Txt> : null}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
               <Tag label={m.canReceiveRequest ? 'Đang nhận yêu cầu' : 'Tạm ngưng nhận'} tone={m.canReceiveRequest ? 'success' : 'neutral'} />
               {m.city ? <Tag label={m.city} tone="neutral" icon={<MapPin size={11} color={t.textMuted} />} /> : null}
             </View>

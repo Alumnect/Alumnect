@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type TextInputProps, type ViewStyle } from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps, type ViewStyle } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ChevronRight, Search, X } from '@/components/icons'
-import { useTheme, radius, shadow, lineHeightFor } from '@/theme'
+import { useSegments } from 'expo-router'
+import { ChevronRight, Search, X, Eye, EyeOff } from '@/components/icons'
+import { useTheme, radius, shadow, lineHeightFor, avatarColors, layout } from '@/theme'
 
 /* ------------------------------------------------------------------ */
 /* Khung màn hình & chữ                                               */
@@ -14,13 +16,17 @@ import { useTheme, radius, shadow, lineHeightFor } from '@/theme'
  * Khung màn hình. Vùng tai thỏ / thanh trạng thái phía trên luôn cùng màu thẻ (trắng) để liền với thanh tiêu đề,
  * phần thân dùng màu nền xám nhạt để các thẻ nổi lên.
  */
-export function Screen({ children, edges = ['top'] as ('top' | 'bottom')[], bg }: { children: React.ReactNode; edges?: ('top' | 'bottom')[]; bg?: string }) {
+export function Screen({ children, edges, bg, keyboard = false }: { children: React.ReactNode; edges?: ('top' | 'bottom')[]; bg?: string; keyboard?: boolean }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
+  const segments = useSegments()
+  // Tabs own the bottom inset; stack screens must protect their last control too.
+  const safeEdges = edges ?? (segments[0] === '(tabs)' ? ['top'] : ['top', 'bottom'])
   return (
     <View style={{ flex: 1, backgroundColor: bg ?? t.bg }}>
-      {edges.includes('top') ? <View style={{ height: insets.top, backgroundColor: t.card }} /> : null}
-      <View style={{ flex: 1, paddingBottom: edges.includes('bottom') ? insets.bottom : 0 }}>{children}</View>
+      {safeEdges.includes('top') ? <View style={{ height: insets.top, backgroundColor: t.card }} /> : null}
+      {keyboard ? <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>{children}</KeyboardAvoidingView> : <View style={{ flex: 1 }}>{children}</View>}
+      {safeEdges.includes('bottom') ? <View style={{ height: insets.bottom, backgroundColor: t.card }} /> : null}
     </View>
   )
 }
@@ -34,9 +40,11 @@ export function Txt({
   style,
   numberOfLines,
   onPress,
+  heading,
 }: {
   children: React.ReactNode
   onPress?: () => void
+  heading?: boolean
   size?: number
   weight?: '400' | '500' | '600' | '700' | '800'
   muted?: boolean
@@ -47,9 +55,10 @@ export function Txt({
   const t = useTheme()
   return (
     <Text
+      accessibilityRole={heading ? 'header' : undefined}
       numberOfLines={numberOfLines}
       onPress={onPress}
-      style={[{ fontSize: size, lineHeight: lineHeightFor(size), fontWeight: weight, color: color ?? (muted ? t.textMuted : t.text), letterSpacing: size >= 20 ? -0.3 : 0 }, style]}
+      style={[{ fontSize: Math.max(12, size), lineHeight: lineHeightFor(Math.max(12, size)), fontWeight: weight, color: color ?? (muted ? t.textMuted : t.text), letterSpacing: size >= 20 ? -0.3 : 0 }, style]}
     >
       {children}
     </Text>
@@ -82,9 +91,9 @@ export function Button({
   style?: ViewStyle
 }) {
   const t = useTheme()
-  const bg = { primary: t.primary, secondary: t.primaryTint, outline: 'transparent', ghost: 'transparent', danger: t.danger }[variant]
-  const fg = { primary: t.onPrimary, secondary: t.primary, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
-  const height = { sm: 36, md: 46, lg: 52 }[size]
+  const bg = { primary: t.action, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
+  const fg = { primary: t.onAction, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
+  const height = { sm: 44, md: 48, lg: 52 }[size]
   return (
     <Pressable
       onPress={onPress}
@@ -95,12 +104,12 @@ export function Button({
       style={({ pressed }) => [
         styles.btn,
         {
-          height,
+          minHeight: height,
+          paddingVertical: 10,
           paddingHorizontal: size === 'sm' ? 14 : 18,
           backgroundColor: bg,
-          borderColor: variant === 'outline' ? t.border : 'transparent',
-          opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          borderColor: variant === 'outline' ? t.controlBorder : 'transparent',
+          opacity: disabled ? 0.65 : pressed ? 0.8 : 1,
         },
         style,
       ]}
@@ -108,9 +117,9 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, maxWidth: '100%' }}>
           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: fg }) : icon}
-          <Text style={{ color: fg, fontWeight: '700', fontSize: size === 'sm' ? 13 : 15 }}>{title}</Text>
+          <Text style={{ color: fg, fontWeight: '600', fontSize: size === 'sm' ? 13 : 15, lineHeight: 22, flexShrink: 1, textAlign: 'center' }}>{title}</Text>
         </View>
       )}
     </Pressable>
@@ -143,14 +152,14 @@ export function IconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       style={({ pressed }) => [
-        { width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: filled ? t.inputBg : 'transparent', opacity: pressed ? 0.7 : 1 },
+        { width: Math.max(layout.touch, size), height: Math.max(layout.touch, size), borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: filled ? t.inputBg : 'transparent', opacity: pressed ? 0.7 : 1 },
         style,
       ]}
     >
       {icon}
       {badge && badge > 0 ? (
-        <View style={{ position: 'absolute', top: -2, right: -2, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: t.danger, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: t.card }}>
-          <Text style={{ color: '#fff', fontSize: 9, fontWeight: '800' }}>{badge > 99 ? '99+' : badge}</Text>
+        <View style={{ position: 'absolute', top: -2, right: -2, minWidth: 22, height: 22, paddingHorizontal: 4, borderRadius: 11, backgroundColor: t.danger, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: t.card }}>
+          <Text style={{ color: t.isDark ? t.bg : '#fff', fontSize: 11, fontWeight: '600' }}>{badge > 99 ? '99+' : badge}</Text>
         </View>
       ) : null}
     </Pressable>
@@ -164,12 +173,17 @@ export function IconButton({
 export function Input({ label, error, ...props }: TextInputProps & { label?: string; error?: string }) {
   const t = useTheme()
   const [focus, setFocus] = useState(false)
+  const [revealed, setRevealed] = useState(false)
   return (
-    <View style={{ marginBottom: 14 }}>
-      {label ? <Text style={{ color: t.text, fontWeight: '600', marginBottom: 6, fontSize: 13 }}>{label}</Text> : null}
+    <View style={{ marginBottom: 18 }}>
+      {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
+      <View style={{ justifyContent: 'center' }}>
       <TextInput
         placeholderTextColor={t.textSubtle}
+        accessibilityLabel={label ?? props.placeholder}
         {...props}
+        secureTextEntry={props.secureTextEntry && !revealed}
+        selectionColor={t.primary}
         onFocus={(e) => {
           setFocus(true)
           props.onFocus?.(e)
@@ -180,11 +194,14 @@ export function Input({ label, error, ...props }: TextInputProps & { label?: str
         }}
         style={[
           styles.input,
-          { backgroundColor: focus ? t.card : t.inputBg, color: t.text, borderColor: error ? t.danger : focus ? t.primary : 'transparent' },
+          { backgroundColor: t.card, color: t.text, borderColor: error ? t.danger : focus ? t.primary : t.controlBorder },
           props.multiline ? { minHeight: 110, textAlignVertical: 'top' } : null,
+          props.secureTextEntry ? { paddingRight: 52 } : null,
           props.style,
         ]}
       />
+      {props.secureTextEntry ? <Pressable onPress={() => setRevealed(!revealed)} accessibilityRole="button" accessibilityLabel={revealed ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} style={{ position: 'absolute', right: 2, width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>{revealed ? <EyeOff size={20} color={t.textMuted} /> : <Eye size={20} color={t.textMuted} />}</Pressable> : null}
+      </View>
       {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
     </View>
   )
@@ -209,7 +226,7 @@ export function SearchBar({
   const t = useTheme()
   return (
     <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 8 }, style]}>
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', height: 42, backgroundColor: t.inputBg, borderRadius: radius.full, paddingHorizontal: 14 }}>
+      <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', minHeight: 48, backgroundColor: t.inputBg, borderRadius: radius.md, paddingLeft: 14, paddingRight: 4 }}>
         <Search size={18} color={t.textMuted} />
         <TextInput
           value={value}
@@ -217,11 +234,12 @@ export function SearchBar({
           placeholder={placeholder}
           placeholderTextColor={t.textSubtle}
           autoFocus={autoFocus}
+          accessibilityLabel={placeholder}
           returnKeyType="search"
-          style={{ flex: 1, color: t.text, fontSize: 15, paddingHorizontal: 8, paddingVertical: 0 }}
+          style={{ flex: 1, minWidth: 0, color: t.text, fontSize: 15, paddingHorizontal: 8, paddingVertical: 12 }}
         />
         {value ? (
-          <Pressable onPress={() => onChangeText('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Xoá tìm kiếm">
+          <Pressable onPress={() => onChangeText('')} accessibilityRole="button" accessibilityLabel="Xoá tìm kiếm" style={{ width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color={t.textMuted} />
           </Pressable>
         ) : null}
@@ -237,24 +255,26 @@ export function SearchBar({
 
 export function Avatar({ uri, name, size = 40, ring }: { uri?: string | null; name?: string; size?: number; ring?: boolean }) {
   const t = useTheme()
-  const initial = (name ?? '?').trim().charAt(0).toUpperCase()
+  const parts = (name ?? '?').trim().split(/\s+/)
+  const initial = parts.slice(-2).map((p) => p.charAt(0)).join('').toUpperCase()
+  const [avatarBg, avatarInk] = avatarColors(name ?? '?', t.isDark)
   const inner = uri ? (
     <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: t.inputBg }} contentFit="cover" cachePolicy="disk" transition={150} />
   ) : (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: t.primary, fontWeight: '800', fontSize: size * 0.4 }}>{initial}</Text>
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: avatarBg, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: avatarInk, fontWeight: '600', fontSize: size * 0.33 }}>{initial}</Text>
     </View>
   )
   if (!ring) return inner
   return <View style={{ padding: 2, borderRadius: size, borderWidth: 2, borderColor: t.primary }}>{inner}</View>
 }
 
-export function Card({ children, style, onPress, flat }: { children: React.ReactNode; style?: ViewStyle; onPress?: () => void; flat?: boolean }) {
+export function Card({ children, style, onPress, flat, accessibilityRole = 'button' }: { children: React.ReactNode; style?: ViewStyle; onPress?: () => void; flat?: boolean; accessibilityRole?: 'button' | 'link' }) {
   const t = useTheme()
   const body: ViewStyle = { backgroundColor: t.card, borderColor: t.border, ...(flat ? {} : shadow(1, t.isDark)) }
   if (onPress) {
     return (
-      <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.card, body, { opacity: pressed ? 0.92 : 1 }, style]}>
+      <Pressable onPress={onPress} accessibilityRole={accessibilityRole} style={({ pressed }) => [styles.card, body, { opacity: pressed ? 0.92 : 1 }, style]}>
         {children}
       </Pressable>
     )
@@ -265,7 +285,7 @@ export function Card({ children, style, onPress, flat }: { children: React.React
 type Tone = 'primary' | 'success' | 'danger' | 'info' | 'warning' | 'neutral'
 
 /** Nhãn nhỏ dạng viên thuốc (loại bài, trạng thái...). */
-export function Tag({ label, tone = 'primary', icon, style }: { label: string; tone?: Tone; icon?: React.ReactNode; style?: ViewStyle }) {
+export function Tag({ label, tone = 'neutral', icon, style }: { label: string; tone?: Tone; icon?: React.ReactNode; style?: ViewStyle }) {
   const t = useTheme()
   const map: Record<Tone, [string, string]> = {
     primary: [t.primaryTint, t.primary],
@@ -277,9 +297,9 @@ export function Tag({ label, tone = 'primary', icon, style }: { label: string; t
   }
   const [bg, fg] = map[tone]
   return (
-    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: bg, borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 4 }, style]}>
+    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, alignSelf: 'flex-start', backgroundColor: bg, borderRadius: radius.sm, paddingHorizontal: 8, paddingVertical: 4 }, style]}>
       {icon}
-      <Text style={{ color: fg, fontSize: 12, fontWeight: '700' }}>{label}</Text>
+      <Text style={{ color: fg, fontSize: 12, lineHeight: 17, fontWeight: '500', flexShrink: 1 }}>{label}</Text>
     </View>
   )
 }
@@ -297,12 +317,12 @@ export function Divider({ style }: { style?: ViewStyle }) {
 export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   const t = useTheme()
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 10, backgroundColor: t.card, gap: 8 }}>
-      <View style={{ flex: 1 }}>
-        <Txt size={26} weight="800">{title}</Txt>
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, backgroundColor: t.card, gap: 12 }}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text accessibilityRole="header" style={{ fontSize: 24, lineHeight: 32, fontWeight: '600', color: t.text, letterSpacing: -0.5 }}>{title}</Text>
         {subtitle ? <Txt muted size={13}>{subtitle}</Txt> : null}
       </View>
-      {right ? <View style={{ flexDirection: 'row', gap: 8 }}>{right}</View> : null}
+      {right ? <View style={{ flexDirection: 'row', gap: 8, flexShrink: 1 }}>{right}</View> : null}
     </View>
   )
 }
@@ -310,10 +330,10 @@ export function PageHeader({ title, subtitle, right }: { title: string; subtitle
 export function SectionHeader({ title, action, onAction, style }: { title: string; action?: string; onAction?: () => void; style?: ViewStyle }) {
   const t = useTheme()
   return (
-    <View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }, style]}>
-      <Txt size={17} weight="800">{title}</Txt>
+    <View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }, style]}>
+      <Txt size={16} weight="600" style={{ flex: 1 }}>{title}</Txt>
       {action ? (
-        <Pressable onPress={onAction} hitSlop={8} accessibilityRole="button">
+        <Pressable onPress={onAction} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center', paddingLeft: 12 }}>
           <Text style={{ color: t.primary, fontWeight: '700', fontSize: 13 }}>{action}</Text>
         </Pressable>
       ) : null}
@@ -340,6 +360,9 @@ export function Segmented<K extends string>({
   scrollable?: boolean
 }) {
   const t = useTheme()
+  const { width } = useWindowDimensions()
+  // Give long labels their natural width instead of truncating a navigation destination.
+  const shouldScroll = scrollable || tabs.some(([, label]) => label.length * 7.5 + 16 > (width - 16) / tabs.length)
   const items = tabs.map(([k, label]) => {
     const active = k === value
     return (
@@ -348,15 +371,15 @@ export function Segmented<K extends string>({
         onPress={() => onChange(k)}
         accessibilityRole="tab"
         accessibilityState={{ selected: active }}
-        style={{ flex: scrollable ? undefined : 1, paddingHorizontal: scrollable ? 14 : 4, alignItems: 'center', paddingTop: 10 }}
+        style={{ flex: shouldScroll ? undefined : 1, minHeight: 48, paddingHorizontal: shouldScroll ? 16 : 6, justifyContent: 'center', alignItems: 'center', paddingTop: 12 }}
       >
-        <Text style={{ fontSize: 14, fontWeight: active ? '800' : '600', color: active ? t.primary : t.textMuted }} numberOfLines={1}>{label}</Text>
-        <View style={{ height: 3, alignSelf: 'stretch', marginTop: 9, borderRadius: 2, backgroundColor: active ? t.primary : 'transparent' }} />
+        <Text style={{ fontSize: 13, lineHeight: 20, fontWeight: active ? '600' : '400', color: active ? t.text : t.textMuted }} numberOfLines={1}>{label}</Text>
+        <View style={{ height: 2, alignSelf: 'stretch', marginTop: 12, backgroundColor: active ? t.text : 'transparent' }} />
       </Pressable>
     )
   })
   const box: ViewStyle = { backgroundColor: t.card, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }
-  if (scrollable) {
+  if (shouldScroll) {
     return (
       <View style={[box, style]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 6 }}>
@@ -379,7 +402,9 @@ export function Chip({ label, active, onPress, icon }: { label: string; active?:
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        height: 36,
+        minHeight: 44,
+        maxWidth: '100%',
+        paddingVertical: 10,
         paddingHorizontal: 14,
         borderRadius: radius.full,
         marginRight: 8,
@@ -388,7 +413,7 @@ export function Chip({ label, active, onPress, icon }: { label: string; active?:
       })}
     >
       {icon}
-      <Text style={{ color: active ? t.card : t.text, fontWeight: '600', fontSize: 13 }}>{label}</Text>
+      <Text style={{ color: active ? t.card : t.text, fontWeight: '500', fontSize: 13, lineHeight: 20, flexShrink: 1 }}>{label}</Text>
     </Pressable>
   )
 }
@@ -432,8 +457,8 @@ export function MenuRow({
       accessibilityRole="button"
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, backgroundColor: pressed ? t.inputBg : 'transparent', borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth, borderBottomColor: t.divider })}
     >
-      <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? t.dangerTint : tint ?? t.primaryTint }}>{icon}</View>
-      <View style={{ flex: 1 }}>
+      <View style={{ width: 24, alignItems: 'center', justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: danger ? t.danger : t.textMuted }) : icon}</View>
+      <View style={{ flex: 1, minWidth: 0 }}>
         <Txt weight="600" color={danger ? t.danger : undefined}>{label}</Txt>
         {hint ? <Txt muted size={12}>{hint}</Txt> : null}
       </View>
@@ -456,11 +481,17 @@ export function Loading() {
 }
 
 /** Trạng thái rỗng, có thể kèm icon và nút hành động. */
-export function Empty({ text, title, icon, action, onAction }: { text: string; title?: string; icon?: React.ReactNode; action?: string; onAction?: () => void }) {
-  const t = useTheme()
+export function Empty({ text, title, icon, action, onAction, error, onRetry }: { text: string; title?: string; icon?: React.ReactNode; action?: string; onAction?: () => void; error?: unknown; onRetry?: () => void }) {
+  if (error) return (
+    <View accessibilityRole="alert" style={{ paddingVertical: 32, paddingHorizontal: 24, alignItems: 'center', gap: 10 }}>
+      <Txt size={16} weight="600">Không tải được nội dung</Txt>
+      <Txt muted style={{ textAlign: 'center' }}>{error instanceof Error ? error.message : 'Kiểm tra kết nối rồi thử lại.'}</Txt>
+      {onRetry ? <Button title="Thử lại" variant="outline" onPress={onRetry} style={{ marginTop: 6 }} /> : null}
+    </View>
+  )
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 8 }}>
-      {icon ? <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>{icon}</View> : null}
+      {icon ? <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>{icon}</View> : null}
       {title ? <Txt size={16} weight="700" style={{ textAlign: 'center' }}>{title}</Txt> : null}
       <Txt muted style={{ textAlign: 'center' }}>{text}</Txt>
       {action ? <Button title={action} size="sm" variant="secondary" onPress={onAction} style={{ marginTop: 8 }} /> : null}
@@ -470,14 +501,15 @@ export function Empty({ text, title, icon, action, onAction }: { text: string; t
 
 const styles = StyleSheet.create({
   btn: {
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
   input: {
-    borderWidth: 1.5,
-    borderRadius: 14,
+    borderWidth: 1,
+    minHeight: 50,
+    borderRadius: radius.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
@@ -485,7 +517,7 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
     borderRadius: radius.lg,
-    padding: 14,
+    padding: 16,
   },
 })
 
@@ -498,7 +530,7 @@ export function QuickTile({ icon, label, onPress, width = 76 }: { icon: React.Re
   const t = useTheme()
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => ({ alignItems: 'center', width, gap: 6, opacity: pressed ? 0.7 : 1 })}>
-      <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
+      <View style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: t.textMuted }) : icon}</View>
       <Txt size={12} weight="600" style={{ textAlign: 'center' }} numberOfLines={2}>{label}</Txt>
     </Pressable>
   )
@@ -512,10 +544,10 @@ export function PillLink({ icon, label, onPress }: { icon: React.ReactNode; labe
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({ height: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, marginRight: 8, borderRadius: 20, backgroundColor: pressed ? t.border : t.primaryTint })}
+      style={({ pressed }) => ({ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, marginRight: 8, borderRadius: radius.md, borderWidth: 1, borderColor: t.border, backgroundColor: pressed ? t.inputBg : t.card })}
     >
-      {icon}
-      <Txt size={13} weight="600" color={t.primary}>{label}</Txt>
+      {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: t.textMuted }) : icon}
+      <Txt size={13} weight="500">{label}</Txt>
     </Pressable>
   )
 }

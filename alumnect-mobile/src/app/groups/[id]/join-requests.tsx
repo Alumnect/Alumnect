@@ -36,8 +36,8 @@ export default function JoinRequestsScreen() {
         <FlashList
           data={items}
           keyExtractor={(r) => String(r.requestId)}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
-          ListEmptyComponent={<Empty text="Không có yêu cầu nào đang chờ." />}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không có yêu cầu nào đang chờ." />}
           renderItem={({ item }) => (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 10 }}>
               <Avatar uri={item.avatarUrl} name={item.fullName} size={44} />
@@ -45,8 +45,8 @@ export default function JoinRequestsScreen() {
                 <Txt weight="700">{item.fullName}</Txt>
                 <Txt muted size={12} numberOfLines={1}>{item.headline ?? ''}</Txt>
               </View>
-              <Button title="Duyệt" style={{ height: 36, paddingHorizontal: 12 }} onPress={() => handle(item.requestId, 'APPROVE')} />
-              <Button title="Từ chối" variant="outline" style={{ height: 36, paddingHorizontal: 12 }} onPress={() => handle(item.requestId, 'REJECT')} />
+              <Button title="Duyệt" style={{ minHeight: 44, paddingHorizontal: 16 }} onPress={() => handle(item.requestId, 'APPROVE')} />
+              <Button title="Từ chối" variant="outline" style={{ minHeight: 44, paddingHorizontal: 16 }} onPress={() => handle(item.requestId, 'REJECT')} />
             </View>
           )}
         />

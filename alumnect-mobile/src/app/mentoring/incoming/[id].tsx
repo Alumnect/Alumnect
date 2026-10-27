@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar, Button, Card, Empty, Input, Loading, Screen, Tag, Txt } from '@/components/ui'
@@ -39,13 +40,13 @@ export default function IncomingDetailScreen() {
     onError: (e) => toast.error(errMsg(e)),
   })
   const r = q.data
-  if (q.isLoading) return <Screen><Header title="Yêu cầu" /><Loading /></Screen>
-  if (!r) return <Screen><Header title="Yêu cầu" /><Empty text="Không tìm thấy yêu cầu." /></Screen>
+  if (q.isLoading) return <Screen keyboard><Header title="Yêu cầu" /><Loading /></Screen>
+  if (!r) return <Screen keyboard><Header title="Yêu cầu" /><Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy yêu cầu." /></Screen>
   return (
-    <Screen bg={t.card}>
+    <Screen keyboard bg={t.card}>
       <Header title="Chi tiết yêu cầu" />
       <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
-        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 16 }}>
           <Pressable onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(r.studentId) } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Avatar uri={r.studentAvatar} name={r.studentName} size={48} />
             <View style={{ flex: 1 }}>
@@ -57,7 +58,7 @@ export default function IncomingDetailScreen() {
           <Txt size={21} weight="800" style={{ marginTop: 14, lineHeight: 28 }}>{r.title}</Txt>
           <Txt style={{ marginTop: 8, lineHeight: 22 }}>{r.description}</Txt>
         </View>
-        <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 4 }}>
+        <Card style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 4 }}>
           <InfoRow icon={<ClipboardList size={16} color={t.primary} />} label="Loại hỗ trợ" value={taskTypeLabel(r.taskType)} />
           <InfoRow icon={<Layers size={16} color={t.primary} />} label="Lĩnh vực" value={r.industryName ?? '—'} />
           <InfoRow icon={<Laptop size={16} color={t.primary} />} label="Hình thức" value={WORKING_MODE_LABEL[r.workingMode] ?? '—'} last={r.budgetMin == null && r.budgetMax == null && !r.expectedDeadline} />
@@ -65,7 +66,7 @@ export default function IncomingDetailScreen() {
           {r.expectedDeadline ? <InfoRow icon={<CalendarClock size={16} color={t.primary} />} label="Hạn mong muốn" value={new Date(r.expectedDeadline).toLocaleString('vi-VN')} last /> : null}
         </Card>
         {r.canRespond ? (
-          <Card style={{ marginHorizontal: 12 }}>
+          <Card style={{ marginHorizontal: 16 }}>
             <Input label="Lời nhắn cho sinh viên (tuỳ chọn)" value={note} onChangeText={setNote} multiline placeholder="VD: Mình có kinh nghiệm phần này, hẹn trao đổi chi tiết nhé!" />
           </Card>
         ) : null}

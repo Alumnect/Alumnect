@@ -36,7 +36,17 @@ export interface CareerDetail {
   experiences: { id: number; title: string; company: string; location?: string | null; startDate: string; endDate?: string | null; isCurrent: boolean; isPrimary: boolean; description?: string | null }[]
 }
 
-export interface Experience {
+export interface ExperienceLocation {
+  latitude?: number | null
+  longitude?: number | null
+  placeId?: string | null
+  locationCity?: string | null
+  locationCountry?: string | null
+  locationCountryCode?: string | null
+  geocodingProvider?: string | null
+}
+
+export interface Experience extends ExperienceLocation {
   id: number
   title: string
   company: string
@@ -47,7 +57,7 @@ export interface Experience {
   isPrimary: boolean
   description?: string | null
 }
-export interface ExperienceRequest {
+export interface ExperienceRequest extends ExperienceLocation {
   title: string
   company: string
   location?: string | null

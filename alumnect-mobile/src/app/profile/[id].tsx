@@ -14,7 +14,7 @@ export default function UserProfileScreen() {
   return (
     <Screen>
       <Header title="Hồ sơ" />
-      {q.isLoading ? <Loading /> : q.data?.data ? <ProfileView profile={q.data.data} isMe={me?.id === id} /> : <Empty text="Không tìm thấy người dùng." />}
+      {q.isLoading ? <Loading /> : q.data?.data ? <ProfileView profile={q.data.data} isMe={me?.id === id} /> : <Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy người dùng." />}
     </Screen>
   )
 }

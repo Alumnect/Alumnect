@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -95,7 +96,13 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
     setErrors(e)
     if (Object.keys(e).length) return
     const input: CreatePostInput = { content: text, type, mediaUrls: media }
-    if (type === 'recruitment') input.job = { title: job.title.trim(), company: job.company.trim(), location: job.location || undefined, applyUrl: job.applyUrl || undefined }
+    if (type === 'recruitment') input.job = {
+      title: job.title.trim(), company: job.company.trim(), location: job.location || undefined, applyUrl: job.applyUrl || undefined,
+      // The backend replaces the full job record, including fields this form does not edit.
+      salaryMin: existing?.job?.salaryMin ?? undefined,
+      salaryMax: existing?.job?.salaryMax ?? undefined,
+      contactEmail: existing?.job?.contactEmail ?? undefined,
+    }
     if (type === 'event') input.event = { title: ev.title.trim(), startTime: ev.startTime, endTime: ev.endTime || undefined, location: ev.location || undefined, capacity: ev.capacity ? Number(ev.capacity) : undefined }
     mutation.mutate(input)
   }

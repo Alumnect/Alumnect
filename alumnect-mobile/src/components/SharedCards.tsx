@@ -12,10 +12,10 @@ import { useTheme } from '@/theme'
 
 const STALE = 5 * 60_000
 
-function Shell({ onPress, children, mine }: { onPress?: () => void; children: React.ReactNode; mine?: boolean }) {
+function Shell({ onPress, children }: { onPress?: () => void; children: React.ReactNode; mine?: boolean }) {
   const t = useTheme()
   return (
-    <Card onPress={onPress} style={{ width: 250, padding: 10, borderColor: mine ? t.primary : t.border }}>
+    <Card onPress={onPress} style={{ width: 250, maxWidth: '100%', padding: 12, borderColor: t.border }}>
       {children}
     </Card>
   )

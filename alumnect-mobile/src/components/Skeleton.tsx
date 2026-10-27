@@ -1,22 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import { Animated, View, type DimensionValue } from 'react-native'
+import React from 'react'
+import { View, type DimensionValue } from 'react-native'
 import { useTheme, radius } from '@/theme'
 
 /** Khối xám nhấp nháy dùng làm placeholder khi đang tải. */
 export function SkeletonBlock({ width = '100%', height = 14, round = false, style }: { width?: DimensionValue; height?: number; round?: boolean; style?: object }) {
   const t = useTheme()
-  const [opacity] = useState(() => new Animated.Value(0.45))
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.45, duration: 700, useNativeDriver: true }),
-      ]),
-    )
-    loop.start()
-    return () => loop.stop()
-  }, [opacity])
-  return <Animated.View style={[{ width, height, borderRadius: round ? radius.full : radius.sm, backgroundColor: t.border, opacity }, style]} />
+  return <View style={[{ width, height, borderRadius: round ? radius.full : radius.sm, backgroundColor: t.border }, style]} />
 }
 
 function PostSkeleton() {

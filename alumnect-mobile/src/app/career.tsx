@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -87,12 +88,12 @@ export default function CareerScreen() {
           data={q.isLoading ? [] : items}
           keyExtractor={(c) => String(c.userId)}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.card, paddingVertical: 12, marginBottom: 10 }}>
+              <View style={{ backgroundColor: t.card, paddingVertical: 12, marginBottom: 16 }}>
                 <SearchBar value={kw} onChangeText={setKw} placeholder="Tên, công ty, chức danh, ngành..." style={{ paddingHorizontal: 16 }} right={<FilterButton count={active} onPress={() => setSheet(true)} />} />
               </View>
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
@@ -100,11 +101,11 @@ export default function CareerScreen() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty icon={<Route size={28} color={t.primary} />} title="Không tìm thấy lộ trình" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." action={active ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<Route size={28} color={t.primary} />} title="Không tìm thấy lộ trình" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." action={active ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
             )
           }
           renderItem={({ item }) => (
-            <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => setSel(item)}>
+            <Card style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => setSel(item)}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <Avatar uri={item.avatarUrl} name={item.fullName} size={46} />
                 <View style={{ flex: 1 }}>
@@ -121,7 +122,7 @@ export default function CareerScreen() {
       </View>
       <ActionSheet visible={!!sel} onClose={() => setSel(null)} title={sel?.fullName}>
         {detail.isLoading ? <Loading /> : detail.data ? (
-          <View style={{ gap: 12, maxHeight: 480, paddingHorizontal: 12 }}>
+          <View style={{ gap: 12, maxHeight: 480, paddingHorizontal: 16 }}>
             <ScrollView style={{ maxHeight: 380 }}>
               <Timeline items={detail.data.experiences.map((e) => ({ key: e.id, title: e.title, company: e.company, start: e.startDate, end: e.endDate, current: e.isCurrent }))} />
             </ScrollView>

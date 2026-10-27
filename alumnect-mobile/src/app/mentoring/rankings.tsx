@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -31,7 +32,7 @@ export default function RankingsScreen() {
     <Screen bg={t.card}>
       <Header title="Bảng xếp hạng mentor" subtitle="Theo điểm uy tín trong từng lĩnh vực" />
       <View style={{ backgroundColor: t.card }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
           {(industries.data ?? []).map((i) => <Chip key={i.id} label={i.name} active={fieldId === i.id} onPress={() => setFieldId(i.id)} />)}
         </ScrollView>
       </View>
@@ -41,12 +42,12 @@ export default function RankingsScreen() {
             data={items}
             keyExtractor={(m) => String(m.mentorId)}
             contentContainerStyle={{ paddingVertical: 12 }}
-            onEndReached={() => q.hasNextPage && q.fetchNextPage()}
-            ListEmptyComponent={<Empty icon={<Trophy size={28} color={t.primary} />} title="Chưa có xếp hạng" text="Lĩnh vực này chưa có mentor nào được xếp hạng." />}
+            onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
+            ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<Trophy size={28} color={t.primary} />} title="Chưa có xếp hạng" text="Lĩnh vực này chưa có mentor nào được xếp hạng." />}
             renderItem={({ item }) => {
               const m = medal(item.rank)
               return (
-                <Card style={{ marginHorizontal: 12, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }} onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(item.mentorId) } })}>
+                <Card style={{ marginHorizontal: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }} onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(item.mentorId) } })}>
                   <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: m ? `${m}26` : t.inputBg }}>
                     {m ? <Trophy size={16} color={m} /> : <Txt weight="800" muted>{item.rank}</Txt>}
                   </View>

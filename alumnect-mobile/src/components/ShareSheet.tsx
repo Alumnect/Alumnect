@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
 import * as Clipboard from 'expo-clipboard'
@@ -30,8 +31,8 @@ type SendState = 'sending' | 'sent'
 function Row({ icon, title, sub, onPress, dim }: { icon: React.ReactNode; title: string; sub?: string; onPress: () => void; dim?: boolean }) {
   const t = useTheme()
   return (
-    <Pressable onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, backgroundColor: t.inputBg, marginBottom: 10, opacity: dim ? 0.55 : 1 }}>
-      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
+    <Pressable onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, backgroundColor: t.inputBg, marginBottom: 16, opacity: dim ? 0.55 : 1 }}>
+      <View style={{ width: 24, alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
       <View style={{ flex: 1 }}>
         <Txt weight="700">{title}</Txt>
         {sub ? <Txt muted size={12}>{sub}</Txt> : null}
@@ -116,7 +117,7 @@ export function ShareSheet({ visible, onClose, item }: { visible: boolean; onClo
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
             {view === 'send' ? <Pressable onPress={() => setView('options')} hitSlop={10} style={{ marginRight: 6 }}><ChevronLeft size={24} color={t.text} /></Pressable> : null}
             <Txt size={17} weight="800" style={{ flex: 1 }}>{view === 'send' ? 'Gửi qua tin nhắn' : `Chia sẻ ${label}`}</Txt>
-            <Txt color={t.primary} weight="700" onPress={close}>{view === 'send' ? 'Xong' : 'Đóng'}</Txt>
+            <Pressable onPress={close} accessibilityRole="button" accessibilityLabel="Đóng chia sẻ" style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}><Txt weight="600">{view === 'send' ? 'Xong' : 'Đóng'}</Txt></Pressable>
           </View>
 
           {/* Bản xem trước */}
@@ -135,8 +136,8 @@ export function ShareSheet({ visible, onClose, item }: { visible: boolean; onClo
             </View>
           ) : (
             <View style={{ flexShrink: 1 }}>
-              <TextInput value={note} onChangeText={setNote} maxLength={1000} placeholder="Thêm lời nhắn (tùy chọn)..." placeholderTextColor={t.textMuted} style={{ backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 }} />
-              <TextInput value={kw} onChangeText={setKw} placeholder="Tìm bạn bè hoặc nhóm chat..." placeholderTextColor={t.textMuted} style={{ backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 }} />
+              <TextInput value={note} onChangeText={setNote} maxLength={1000} placeholder="Thêm lời nhắn (tùy chọn)..." placeholderTextColor={t.textMuted} style={{ backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 8 }} />
+              <TextInput value={kw} onChangeText={setKw} placeholder="Tìm bạn bè hoặc nhóm chat..." placeholderTextColor={t.textMuted} style={{ backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 8 }} />
               <ScrollView style={{ maxHeight: 320 }} keyboardShouldPersistTaps="handled">
                 {recipients.length === 0 ? <Txt muted style={{ textAlign: 'center', padding: 16 }}>{convs.isLoading ? 'Đang tải...' : 'Không tìm thấy người nhận.'}</Txt> : null}
                 {recipients.map((r) => {
@@ -151,9 +152,11 @@ export function ShareSheet({ visible, onClose, item }: { visible: boolean; onClo
                       <Pressable
                         disabled={!!s}
                         onPress={() => void send(r)}
-                        style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, backgroundColor: s === 'sent' ? t.inputBg : t.primary, opacity: s === 'sending' ? 0.6 : 1 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Gửi cho ${r.name}`}
+                        style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: s === 'sent' ? t.inputBg : t.action, opacity: s === 'sending' ? 0.6 : 1 }}
                       >
-                        <Txt size={13} weight="700" color={s === 'sent' ? t.textMuted : t.onPrimary}>{s === 'sent' ? 'Đã gửi' : s === 'sending' ? 'Đang gửi' : 'Gửi'}</Txt>
+                        <Txt size={13} weight="500" color={s === 'sent' ? t.textMuted : t.onAction}>{s === 'sent' ? 'Đã gửi' : s === 'sending' ? 'Đang gửi' : 'Gửi'}</Txt>
                       </Pressable>
                     </View>
                   )

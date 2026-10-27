@@ -27,8 +27,8 @@ export default function NetworkListScreen() {
           data={users}
           keyExtractor={(u) => String(u.userId)}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
-          ListEmptyComponent={<Empty title="Danh sách trống" text={tab === 'followers' ? 'Chưa có ai theo dõi.' : 'Chưa theo dõi ai.'} />}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} title="Danh sách trống" text={tab === 'followers' ? 'Chưa có ai theo dõi.' : 'Chưa theo dõi ai.'} />}
           renderItem={({ item }) => <UserRow user={item} />}
         />
       )}
