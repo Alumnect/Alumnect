@@ -5,10 +5,13 @@ import { WebView as RNWebView } from 'react-native-webview'
 import type { WebViewMessageEvent } from 'react-native-webview'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, Button, Chip, Loading, Screen, Txt, SearchBar } from '@/components/ui'
+import { Avatar, Button, Chip, Empty, Loading, Screen, Txt, SearchBar } from '@/components/ui'
+import { SelectField } from '@/components/SelectField'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
 import { exploreApi } from '@/api/explore'
+import { authApi } from '@/api/auth'
+import { userApi } from '@/api/users'
 import type { MapPoint } from '@/api/explore'
 import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
@@ -55,12 +58,16 @@ export default function MapScreen() {
   const [ready, setReady] = useState(false)
   const [search, setSearch] = useState('')
   const [cohort, setCohort] = useState<number | undefined>()
+  const [majorId, setMajorId] = useState<string | null>(null)
+  const [listOpen, setListOpen] = useState(false)
   const [sel, setSel] = useState<MapPoint | null>(null)
   const keyword = useDebounced(search, 500)
 
-  const q = useQuery({ queryKey: ['alumni-map', keyword, cohort], queryFn: () => exploreApi.map({ search: keyword || undefined, cohort }) })
+  const majors = useQuery({ queryKey: ['majors'], queryFn: authApi.getMajors, staleTime: 30 * 60_000 })
+  const options = useQuery({ queryKey: ['user-filter-options'], queryFn: userApi.filterOptions })
+  const q = useQuery({ queryKey: ['alumni-map', keyword, cohort, majorId], queryFn: () => exploreApi.map({ search: keyword || undefined, cohort, majorId: majorId ? Number(majorId) : undefined }) })
   const points = useMemo(() => q.data ?? [], [q.data])
-  const cohorts = useMemo(() => Array.from(new Set(points.map((p) => p.cohort).filter((c): c is number => c != null))).sort((a, b) => b - a), [points])
+  const cohorts = useMemo(() => [...(options.data?.cohorts ?? [])].sort((a, b) => b - a), [options.data])
 
   React.useEffect(() => {
     if (ready) web.current?.postMessage(JSON.stringify(points))
@@ -77,6 +84,8 @@ export default function MapScreen() {
     <Screen>
       <Header title="Bản đồ Alumni" />
       <SearchBar value={search} onChangeText={setSearch} placeholder="Tìm theo tên, công ty, chức danh..." style={{ margin: 12, marginBottom: 6 }} />
+      <View style={{ paddingHorizontal: 12 }}><SelectField label="Ngành học" placeholder="Mọi ngành" value={majorId} options={(majors.data?.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))} onChange={setMajorId} error={majors.isError ? 'Không tải được danh sách ngành.' : undefined} /></View>
+      {majors.isError ? <Button title="Thử tải lại ngành" variant="ghost" onPress={() => void majors.refetch()} /> : null}
       <View style={{ height: 44 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
           <Chip label="Mọi khóa" active={cohort == null} onPress={() => setCohort(undefined)} />
@@ -86,11 +95,13 @@ export default function MapScreen() {
       <View style={{ flex: 1 }}>
         <WebView ref={web} source={{ html: HTML, baseUrl: 'https://alumnect.local' }} originWhitelist={['*']} onMessage={onMessage} javaScriptEnabled style={{ flex: 1 }} />
         {q.isLoading ? <View style={{ position: 'absolute', top: 8, alignSelf: 'center' }}><Loading /></View> : null}
-        <View style={{ position: 'absolute', left: 12, bottom: 12, backgroundColor: t.card, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
-          <Txt size={12} weight="600">{points.length} cựu sinh viên</Txt>
+        {q.isError ? <View style={{ position: 'absolute', inset: 12, backgroundColor: t.card, justifyContent: 'center' }}><Empty title="Không tải được dữ liệu bản đồ" text="Vui lòng thử lại." error={q.error} onRetry={() => void q.refetch()} /></View> : null}
+        <View style={{ position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: t.card, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Txt size={12} weight="600">{q.isLoading ? 'Đang tải...' : q.isError ? 'Chưa có dữ liệu' : `${points.length} cựu sinh viên`}</Txt>
+          <Button title="Xem danh sách" variant="ghost" disabled={q.isLoading || q.isError} onPress={() => setListOpen(true)} />
         </View>
       </View>
-      <ActionSheet visible={!!sel} onClose={() => setSel(null)}>
+      <ActionSheet visible={!!sel || listOpen} title={sel?.fullName ?? 'Cựu sinh viên trên bản đồ'} onClose={() => { setSel(null); setListOpen(false) }}>
         {sel ? (
           <View style={{ gap: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -101,9 +112,11 @@ export default function MapScreen() {
                 <Txt muted size={12}>{sel.location}{sel.cohort ? ` · K${sel.cohort}` : ''}</Txt>
               </View>
             </View>
-            <Button title="Xem hồ sơ" onPress={() => { const id = sel.userId; setSel(null); router.push({ pathname: '/profile/[id]', params: { id: String(id) } }) }} />
+            <Button title="Xem hồ sơ" onPress={() => { const id = sel.userId; setSel(null); setListOpen(false); router.push({ pathname: '/profile/[id]', params: { id: String(id) } }) }} />
+            <Button title="Xem lộ trình sự nghiệp" variant="outline" onPress={() => { const point = sel; setSel(null); setListOpen(false); router.push({ pathname: '/career', params: { userId: String(point.userId), name: point.fullName } }) }} />
+            {listOpen ? <Button title="Quay lại danh sách" variant="ghost" onPress={() => setSel(null)} /> : null}
           </View>
-        ) : null}
+        ) : points.length ? points.map((point) => <Button key={point.userId} title={point.fullName} variant="ghost" onPress={() => setSel(point)} style={{ justifyContent: 'flex-start' }} />) : <Txt muted>Không có cựu sinh viên phù hợp với bộ lọc.</Txt>}
       </ActionSheet>
     </Screen>
   )

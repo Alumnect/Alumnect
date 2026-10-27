@@ -30,7 +30,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
   const [content, setContent] = useState(existing?.text ?? '')
   const [media, setMedia] = useState<string[]>(existing?.images.length ? existing.images : existing?.image ? [existing.image] : [])
   const [uploading, setUploading] = useState(false)
-  const [job, setJob] = useState({ title: existing?.job?.title ?? '', company: existing?.job?.company ?? '', location: existing?.job?.location ?? '', applyUrl: existing?.job?.applyUrl ?? '' })
+  const [job, setJob] = useState({ title: existing?.job?.title ?? '', company: existing?.job?.company ?? '', location: existing?.job?.location ?? '', applyUrl: existing?.job?.applyUrl ?? '', salaryMin: existing?.job?.salaryMin == null ? '' : String(existing.job.salaryMin), salaryMax: existing?.job?.salaryMax == null ? '' : String(existing.job.salaryMax), contactEmail: existing?.job?.contactEmail ?? '' })
   const [ev, setEv] = useState({ title: existing?.event?.title ?? '', startTime: existing?.event?.startTime ?? '', endTime: existing?.event?.endTime ?? '', location: existing?.event?.location ?? '', capacity: existing?.event?.capacity ? String(existing.event.capacity) : '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -59,6 +59,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       if (!existing) AsyncStorage.removeItem(DRAFT_KEY).catch(() => {})
       qc.invalidateQueries({ queryKey: ['feed'] })
       if (existing) qc.invalidateQueries({ queryKey: ['post', existing.id] })
+      if (existing?.eventId) qc.invalidateQueries({ queryKey: ['event-detail', existing.eventId] })
       router.back()
     },
     onError: (e) => toast.error(errMsg(e)),
@@ -86,6 +87,9 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
     if (type === 'recruitment') {
       if (!job.title.trim()) e.jobTitle = 'Bắt buộc nhập chức danh'
       if (!job.company.trim()) e.jobCompany = 'Bắt buộc nhập công ty'
+      for (const field of ['salaryMin', 'salaryMax'] as const) if (job[field] && (!Number.isFinite(Number(job[field])) || Number(job[field]) < 0)) e[field] = 'Mức lương phải là số không âm'
+      if (job.salaryMin && job.salaryMax && Number(job.salaryMin) > Number(job.salaryMax)) e.salaryMax = 'Lương tối đa phải lớn hơn hoặc bằng tối thiểu'
+      if (job.contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(job.contactEmail.trim())) e.contactEmail = 'Email liên hệ không hợp lệ'
     }
     if (type === 'event') {
       if (!ev.title.trim()) e.evTitle = 'Bắt buộc nhập tên sự kiện'
@@ -98,10 +102,9 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
     const input: CreatePostInput = { content: text, type, mediaUrls: media }
     if (type === 'recruitment') input.job = {
       title: job.title.trim(), company: job.company.trim(), location: job.location || undefined, applyUrl: job.applyUrl || undefined,
-      // The backend replaces the full job record, including fields this form does not edit.
-      salaryMin: existing?.job?.salaryMin ?? undefined,
-      salaryMax: existing?.job?.salaryMax ?? undefined,
-      contactEmail: existing?.job?.contactEmail ?? undefined,
+      salaryMin: job.salaryMin ? Number(job.salaryMin) : undefined,
+      salaryMax: job.salaryMax ? Number(job.salaryMax) : undefined,
+      contactEmail: job.contactEmail.trim() || undefined,
     }
     if (type === 'event') input.event = { title: ev.title.trim(), startTime: ev.startTime, endTime: ev.endTime || undefined, location: ev.location || undefined, capacity: ev.capacity ? Number(ev.capacity) : undefined }
     mutation.mutate(input)
@@ -125,6 +128,9 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
               <Input label="Chức danh" value={job.title} onChangeText={(v) => setJob({ ...job, title: v })} error={errors.jobTitle} />
               <Input label="Công ty" value={job.company} onChangeText={(v) => setJob({ ...job, company: v })} error={errors.jobCompany} />
               <Input label="Địa điểm" value={job.location} onChangeText={(v) => setJob({ ...job, location: v })} />
+              <Input label="Lương tối thiểu (VND)" value={job.salaryMin} onChangeText={(v) => setJob({ ...job, salaryMin: v.replace(/\D/g, '') })} keyboardType="number-pad" error={errors.salaryMin} />
+              <Input label="Lương tối đa (VND)" value={job.salaryMax} onChangeText={(v) => setJob({ ...job, salaryMax: v.replace(/\D/g, '') })} keyboardType="number-pad" error={errors.salaryMax} />
+              <Input label="Email liên hệ" value={job.contactEmail} onChangeText={(v) => setJob({ ...job, contactEmail: v })} keyboardType="email-address" autoCapitalize="none" maxLength={255} error={errors.contactEmail} />
               <Input label="Link ứng tuyển" value={job.applyUrl} onChangeText={(v) => setJob({ ...job, applyUrl: v })} autoCapitalize="none" />
             </>
           ) : null}

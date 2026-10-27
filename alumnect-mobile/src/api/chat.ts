@@ -1,7 +1,22 @@
 import http from '@/lib/http'
 import type { ApiResponse, PageResponse } from '@/lib/http'
+import type { Deal } from './mentoringFlow'
 
 export type MediaType = 'IMAGE' | 'VIDEO' | 'FILE'
+export type OutgoingAttachment = { mediaType: MediaType; url: string; fileName?: string; fileSize?: number }
+
+export interface MentoringChatContext {
+  conversationId: number
+  readOnly: boolean
+  readOnlyReason?: string | null
+  canSendMessage: boolean
+  canCreateDealTicket: boolean
+  canAcceptDealByRequest: boolean
+  acceptByRequestUnavailableReason?: string | null
+  deal?: { deal: Deal } | null
+  taskId?: number | null
+  groupId?: number | null
+}
 
 export interface MessageAttachment {
   id: number
@@ -61,12 +76,13 @@ export const convName = (c: Conversation) => (isGroup(c) ? c.title : c.recipient
 export const convAvatar = (c: Conversation) => (isGroup(c) ? c.avatarUrl : c.recipientAvatar)
 
 export const chatApi = {
+  mentoringContext: (id: number) => http.get<unknown, ApiResponse<MentoringChatContext>>(`/mentoring/conversations/${id}`).then((r) => r.data),
   conversations: (tab: 'primary' | 'requests' = 'primary', scope: 'GENERAL' | 'MENTORING' = 'GENERAL') =>
     http.get<unknown, ApiResponse<Conversation[]>>('/conversations', { params: { tab, scope } }),
   direct: (userId: number) => http.post<unknown, ApiResponse<Conversation>>(`/conversations/direct/${userId}`),
   messages: (id: number, page = 0, size = 30) =>
     http.get<unknown, ApiResponse<PageResponse<Message>>>(`/conversations/${id}/messages`, { params: { page, size } }),
-  send: (p: { conversationId?: number | null; recipientId?: number | null; content?: string; attachments?: { mediaType: MediaType; url: string; fileName?: string; fileSize?: number }[] }) =>
+  send: (p: { conversationId?: number | null; recipientId?: number | null; content?: string; attachments?: OutgoingAttachment[] }) =>
     http.post<unknown, ApiResponse<Message>>('/messages', p),
   read: (id: number) => http.post<unknown, ApiResponse<void>>(`/conversations/${id}/read`),
   accept: (id: number) => http.post<unknown, ApiResponse<void>>(`/conversations/${id}/accept`),

@@ -44,7 +44,7 @@ public class ExperienceRequest {
 
     private BigDecimal longitude;
 
-    @Size(max = 255, message = "Place ID tối đa 255 ký tự")
+    @Size(max = 4096, message = "Place ID tối đa 4096 ký tự")
     private String placeId;
 
     @Size(max = 120, message = "Location City tối đa 120 ký tự")

@@ -10,6 +10,7 @@ import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventDetailResponse;
 import com.alumnect.alumnect_backend.entity.event.Event;
 import com.alumnect.alumnect_backend.entity.event.EventRegistration;
 import com.alumnect.alumnect_backend.entity.post.Post;
@@ -47,6 +48,33 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final PostRepository postRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public EventDetailResponse getEventDetail(Long eventId, String email) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện"));
+        Post post = postRepository.findActiveByEventIdIn(List.of(eventId)).stream().findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Bài viết sự kiện không còn khả dụng"));
+        User viewer = email == null ? null : userRepository.findByEmail(email).orElse(null);
+        boolean member = viewer != null && viewer.getRole() != null
+                && ("STUDENT".equals(viewer.getRole().getName()) || "ALUMNI".equals(viewer.getRole().getName()));
+        boolean registered = viewer != null && eventRegistrationRepository.existsByEventIdAndUserIdAndStatus(eventId, viewer.getId(), "REGISTERED");
+        boolean upcoming = event.getStartTime() != null && event.getStartTime().isAfter(Instant.now());
+        boolean active = "ACTIVE".equalsIgnoreCase(event.getStatus());
+        boolean available = event.getCapacity() == null || event.getCapacity() <= 0 || event.getAttendeeCount() < event.getCapacity();
+        String organizerName = userProfileRepository.findById(event.getOrganizer().getId())
+                .map(UserProfile::getFullName).orElse("Người tổ chức");
+        return EventDetailResponse.builder()
+                .eventId(event.getId()).postId(post.getId()).title(event.getTitle()).location(event.getLocation())
+                .startTime(event.getStartTime()).endTime(event.getEndTime()).capacity(event.getCapacity())
+                .attendeeCount(event.getAttendeeCount()).status(event.getStatus())
+                .organizerId(event.getOrganizer().getId()).organizerName(organizerName).registered(registered).started(!upcoming)
+                .canRegister(member && active && upcoming && available && !registered)
+                .canCancelRegistration(member && registered && active && upcoming)
+                .canCancel(member && viewer.getId().equals(event.getOrganizer().getId()) && "ALUMNI".equals(viewer.getRole().getName()) && active && upcoming)
+                .build();
+    }
 
     @Override
     @Transactional

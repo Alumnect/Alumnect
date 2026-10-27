@@ -5,6 +5,21 @@ import type { ApiResponse } from './http'
 
 export type PickedImage = { uri: string; name: string; type: string; width?: number }
 
+/** Upload an original document/video without converting its bytes to an image. */
+export async function uploadFile(file: { uri: string; name: string; mimeType?: string | null; size?: number }, folder = 'messages') {
+  const contentType = file.mimeType?.trim().toLowerCase() || 'application/octet-stream'
+  const signed = await http.get<unknown, ApiResponse<{ uploadUrl: string; publicUrl: string }>>('/files/presigned-url', { params: { fileName: file.name, contentType, folder } })
+  const read = await fetch(file.uri)
+  if (!read.ok) throw new Error('Không thể đọc tệp đã chọn.')
+  const blob = await read.blob()
+  if (!blob.size) throw new Error('Tệp đã chọn không có nội dung.')
+  // Keep the binary payload MIME type identical to the type used to sign the URL.
+  const body = blob.slice(0, blob.size, contentType)
+  const result = await fetch(signed.data.uploadUrl, { method: 'PUT', body, headers: { 'Content-Type': contentType } })
+  if (!result.ok) throw new Error('Tải tệp lên thất bại. Vui lòng thử lại.')
+  return { url: signed.data.publicUrl, fileName: file.name, fileSize: blob.size }
+}
+
 /** Chọn ảnh từ thư viện (đăng bài, avatar, bằng chứng...). */
 export async function pickImage(multiple = false): Promise<PickedImage[]> {
   const res = await ImagePicker.launchImageLibraryAsync({

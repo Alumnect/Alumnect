@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Route } from '@/components/icons'
 import { Avatar, Button, Card, Empty, Loading, Screen, SearchBar, Tag, Txt } from '@/components/ui'
@@ -44,10 +44,18 @@ function Timeline({ items }: { items: { key: string | number; title: string; com
 export default function CareerScreen() {
   const t = useTheme()
   const router = useRouter()
+  const linked = useLocalSearchParams<{ userId?: string; name?: string }>()
   const [kw, setKw] = useState('')
   const [filters, setFilters] = useState<FilterValues>({})
   const [sheet, setSheet] = useState(false)
-  const [sel, setSel] = useState<CareerSummary | null>(null)
+  const linkedPerson = (): CareerSummary | null => {
+    const id = Number(linked.userId)
+    return Number.isSafeInteger(id) && id > 0 ? { userId: id, fullName: linked.name ?? 'Lộ trình sự nghiệp', avatarUrl: '', verifiedStatus: false, careerPreview: [], totalExperiences: 0 } : null
+  }
+  const linkKey = `${linked.userId ?? ''}:${linked.name ?? ''}`
+  const [activeLink, setActiveLink] = useState(linkKey)
+  const [sel, setSel] = useState<CareerSummary | null>(linkedPerson)
+  if (activeLink !== linkKey) { setActiveLink(linkKey); setSel(linkedPerson()) }
   const search = useDebounced(kw, 400)
   const majors = useQuery({ queryKey: ['majors'], queryFn: authApi.getMajors, staleTime: 30 * 60_000 })
 
@@ -120,18 +128,18 @@ export default function CareerScreen() {
           )}
         />
       </View>
-      <ActionSheet visible={!!sel} onClose={() => setSel(null)} title={sel?.fullName}>
+      <ActionSheet visible={!!sel} onClose={() => setSel(null)} title={detail.data?.fullName ?? sel?.fullName}>
         {detail.isLoading ? <Loading /> : detail.data ? (
           <View style={{ gap: 12, maxHeight: 480, paddingHorizontal: 16 }}>
             <ScrollView style={{ maxHeight: 380 }}>
-              <Timeline items={detail.data.experiences.map((e) => ({ key: e.id, title: e.title, company: e.company, start: e.startDate, end: e.endDate, current: e.isCurrent }))} />
+              {detail.data.experiences.length ? <Timeline items={detail.data.experiences.map((e) => ({ key: e.id, title: e.title, company: e.company, start: e.startDate, end: e.endDate, current: e.isCurrent }))} /> : <Txt muted>Chưa có kinh nghiệm được chia sẻ.</Txt>}
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <Button title="Xem hồ sơ" style={{ flex: 1 }} onPress={() => { const id = sel!.userId; setSel(null); router.push({ pathname: '/profile/[id]', params: { id: String(id) } }) }} />
               <Button title="Nhắn tin" variant="secondary" style={{ flex: 1 }} onPress={() => { const id = sel!.userId; setSel(null); router.push({ pathname: '/chat/direct/[userId]', params: { userId: String(id) } }) }} />
             </View>
           </View>
-        ) : null}
+        ) : <Empty text="Không tải được lộ trình sự nghiệp." error={detail.error} onRetry={() => void detail.refetch()} />}
       </ActionSheet>
       <FilterSheet visible={sheet} onClose={() => setSheet(false)} title="Lọc lộ trình" fields={fields} values={filters} onApply={setFilters} />
     </Screen>

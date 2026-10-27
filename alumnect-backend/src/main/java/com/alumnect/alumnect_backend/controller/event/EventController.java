@@ -6,6 +6,7 @@ import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventDetailResponse;
 import com.alumnect.alumnect_backend.service.event.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,13 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+
+    @GetMapping("/{eventId}")
+    public ResponseEntity<ApiResponse<EventDetailResponse>> getEventDetail(
+            @PathVariable Long eventId, Authentication authentication) {
+        String email = isAuthenticated(authentication) ? authentication.getName() : null;
+        return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết sự kiện thành công", eventService.getEventDetail(eventId, email)));
+    }
 
     /**
      * API lấy lịch sử tham gia sự kiện của người dùng hiện tại (UC28 - View attended-event history).

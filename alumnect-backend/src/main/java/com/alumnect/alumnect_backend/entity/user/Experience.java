@@ -55,7 +55,7 @@ public class Experience {
     @Column(precision = 9, scale = 6)
     private BigDecimal longitude;
 
-    @Column(name = "place_id", length = 255)
+    @Column(name = "place_id", columnDefinition = "text")
     private String placeId;
 
     @Column(name = "location_city", length = 120)

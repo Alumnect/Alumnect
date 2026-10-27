@@ -73,6 +73,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 
 export function Button({
   title,
+  accessibilityLabel,
   onPress,
   loading,
   disabled,
@@ -82,6 +83,7 @@ export function Button({
   style,
 }: {
   title: string
+  accessibilityLabel?: string
   onPress?: () => void
   loading?: boolean
   disabled?: boolean
@@ -99,7 +101,7 @@ export function Button({
       onPress={onPress}
       disabled={disabled || loading}
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
       style={({ pressed }) => [
         styles.btn,
