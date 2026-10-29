@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react'
-import { FlatList, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, useWindowDimensions, View } from 'react-native'
+import React, { useDeferredValue, useMemo, useState } from 'react'
+import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, useWindowDimensions, View } from 'react-native'
+import { FlashList } from '@shopify/flash-list'
 import { Text } from '@/components/AppText'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Check, ChevronDown, X } from '@/components/icons'
@@ -35,13 +36,14 @@ export function SelectOptions({ options, values, multiple = false, onSelect }: {
 }) {
   const t = useTheme()
   const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
   const filtered = useMemo(() => {
-    const key = normalize(query)
+    const key = normalize(deferredQuery)
     return key ? options.filter((o) => normalize(o.label).includes(key)) : options
-  }, [options, query])
+  }, [options, deferredQuery])
   return <View style={{ flex: 1, minHeight: 0 }}>
     {options.length > 5 ? <SearchBar value={query} onChangeText={setQuery} placeholder="Tìm lựa chọn..." style={{ paddingHorizontal: 16, marginBottom: 8 }} /> : null}
-    <FlatList
+    <FlashList
       style={{ flex: 1 }}
       data={filtered}
       extraData={values}
@@ -79,7 +81,11 @@ function SelectionField({ label, options, placeholder = 'Chọn...', error, clea
     <SelectTrigger label={label ?? placeholder} summary={summary} placeholder={placeholder} expanded={open} error={error} onPress={() => setOpen(true)} onClear={clearable && values.some(Boolean) ? () => onChange([]) : undefined} />
     {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
     <Modal visible={open} transparent animationType="slide" onRequestClose={close}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end' }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'android' ? insets.top : 0}
+        style={{ flex: 1, justifyContent: 'flex-end' }}
+      >
         <Pressable accessibilityRole="button" accessibilityLabel="Đóng danh sách lựa chọn" style={{ position: 'absolute', inset: 0, backgroundColor: t.overlay }} onPress={close} />
         <View style={{ height: sheetHeight, maxHeight: '85%', backgroundColor: t.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingBottom: insets.bottom + 8 }}>
           <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: t.border, marginTop: 10 }} />

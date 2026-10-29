@@ -12,47 +12,54 @@ import { BeVietnamPro_800ExtraBold } from '@expo-google-fonts/be-vietnam-pro/800
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
-import Toast, { BaseToast, ErrorToast, type ToastConfig } from 'react-native-toast-message'
+import Toast, { type ToastConfig } from 'react-native-toast-message'
 import { queryClient } from '@/lib/queryClient'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/lib/toast'
 import { authApi } from '@/api/auth'
-import { useTheme, palette, FONT } from '@/theme'
+import { useTheme, FONT } from '@/theme'
+import { AlertTriangle, CheckCircle2, Info, XCircle } from '@/components/icons'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { startRealtime } from '@/lib/socket'
 
 export { ErrorFallback as ErrorBoundary } from '@/components/ErrorFallback'
 
-type ActionToastProps = { actions?: { label: string; secondary?: boolean; onPress: () => void }[] }
+type ToastAction = { label: string; secondary?: boolean; onPress: () => void }
+type AppToastTone = 'success' | 'error' | 'info' | 'warning'
 
-function ActionToast({ text, actions }: { text?: string; actions: NonNullable<ActionToastProps['actions']> }) {
+function AppToast({ text, tone, actions = [] }: { text?: string; tone: AppToastTone; actions?: ToastAction[] }) {
   const t = useTheme()
+  const styles = {
+    success: { color: t.success, tint: t.successTint, Icon: CheckCircle2 },
+    error: { color: t.danger, tint: t.dangerTint, Icon: XCircle },
+    info: { color: t.info, tint: t.infoTint, Icon: Info },
+    warning: { color: t.warning, tint: t.warningTint, Icon: AlertTriangle },
+  }
+  const { color, tint, Icon } = styles[tone]
   return (
-    <View style={{ width: '92%', backgroundColor: t.card, borderRadius: 14, borderLeftWidth: 5, borderLeftColor: palette.info, padding: 14, elevation: 6, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8 }}>
-      <Text style={{ color: t.text, fontSize: 14 }} numberOfLines={4}>{text}</Text>
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+    <View accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ width: '92%', maxWidth: 480, backgroundColor: t.card, borderRadius: 16, borderWidth: 1, borderColor: t.border, padding: 14, elevation: 8, shadowColor: '#000', shadowOpacity: 0.16, shadowRadius: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: tint }}>
+          <Icon size={21} color={color} />
+        </View>
+        <Text style={{ flex: 1, color: t.text, fontSize: 14, lineHeight: 21, fontFamily: FONT.medium }} numberOfLines={3}>{text}</Text>
+      </View>
+      {actions.length ? <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
         {actions.map((a) => (
-          <Pressable
-            key={a.label}
-            onPress={() => {
-              Toast.hide()
-              a.onPress()
-            }}
-            style={{ flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center', backgroundColor: a.secondary ? t.inputBg : t.primary }}
-          >
+          <Pressable key={a.label} onPress={() => { Toast.hide(); a.onPress() }} style={{ flex: 1, minHeight: 42, paddingVertical: 9, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: a.secondary ? t.inputBg : t.primary }}>
             <Text style={{ color: a.secondary ? t.text : t.onPrimary, fontWeight: '700', fontSize: 13 }}>{a.label}</Text>
           </Pressable>
         ))}
-      </View>
+      </View> : null}
     </View>
   )
 }
 
 const toastConfig: ToastConfig = {
-  action: ({ text1, props }) => <ActionToast text={text1} actions={(props as ActionToastProps).actions ?? []} />,
-  success: (p) => <BaseToast {...p} style={{ width: '92%', maxWidth: 480, borderLeftColor: palette.success }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
-  error: (p) => <ErrorToast {...p} style={{ width: '92%', maxWidth: 480, borderLeftColor: palette.danger }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
-  info: (p) => <BaseToast {...p} style={{ width: '92%', maxWidth: 480, borderLeftColor: palette.info }} text1Style={{ fontSize: 14, fontFamily: FONT.medium, fontWeight: undefined }} text1NumberOfLines={3} />,
+  action: ({ text1, props }) => <AppToast text={text1} tone="info" actions={(props as { actions?: ToastAction[] }).actions ?? []} />,
+  success: ({ text1 }) => <AppToast text={text1} tone="success" />,
+  error: ({ text1 }) => <AppToast text={text1} tone="error" />,
+  info: ({ text1 }) => <AppToast text={text1} tone="info" />,
 }
 
 function AuthGate({ children }: { children: React.ReactNode }) {
