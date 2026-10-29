@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import { View } from 'react-native'
-import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Globe, Lock, Plus, Users } from '@/components/icons'
-import { Button, Card, Chip, Empty, Screen, SearchBar, Segmented, Tag, Txt } from '@/components/ui'
+import { Button, Card, Empty, Screen, SearchBar, Segmented, Tag, Txt } from '@/components/ui'
+import { SelectField } from '@/components/SelectField'
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
 import { GROUP_CATEGORIES, categoryLabel, groupApi } from '@/api/groups'
@@ -87,12 +87,9 @@ export default function GroupsScreen() {
               {tab === 'all' ? (
                 <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 16 }}>
                   <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm nhóm theo tên, chủ đề..." style={{ paddingHorizontal: 16 }} />
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Chip label="Tất cả" active={!category} onPress={() => setCategory('')} />
-                    {GROUP_CATEGORIES.map((c) => (
-                      <Chip key={c.value} label={c.label} active={category === c.value} onPress={() => setCategory(category === c.value ? '' : c.value)} />
-                    ))}
-                  </ScrollView>
+                  <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                    <SelectField label="Chủ đề nhóm" placeholder="Tất cả chủ đề" value={category} options={[...GROUP_CATEGORIES]} onChange={(value) => setCategory(value ?? '')} />
+                  </View>
                 </View>
               ) : <View style={{ height: 10 }} />}
               {q.isLoading ? <ListSkeleton variant="post" /> : null}

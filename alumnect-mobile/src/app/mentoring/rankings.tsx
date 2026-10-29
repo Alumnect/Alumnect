@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { View } from 'react-native'
-import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Avatar, Card, Chip, Empty, Screen, Txt } from '@/components/ui'
+import { Avatar, Card, Empty, Screen, Txt } from '@/components/ui'
+import { SelectField } from '@/components/SelectField'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Star, Trophy } from '@/components/icons'
 import { Header } from '@/components/Header'
@@ -32,9 +32,9 @@ export default function RankingsScreen() {
     <Screen bg={t.card}>
       <Header title="Bảng xếp hạng mentor" subtitle="Theo điểm uy tín trong từng lĩnh vực" />
       <View style={{ backgroundColor: t.card }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-          {(industries.data ?? []).map((i) => <Chip key={i.id} label={i.name} active={fieldId === i.id} onPress={() => setFieldId(i.id)} />)}
-        </ScrollView>
+        <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+          <SelectField label="Lĩnh vực" value={fieldId == null ? null : String(fieldId)} clearable={false} options={(industries.data ?? []).map((i) => ({ value: String(i.id), label: i.name }))} onChange={(value) => { if (value != null) setFieldId(Number(value)) }} />
+        </View>
       </View>
       <View style={{ flex: 1, backgroundColor: t.bg }}>
         {q.isLoading ? <ListSkeleton variant="row" /> : (

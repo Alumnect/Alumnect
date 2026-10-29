@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { BadgeCheck, CheckCircle2, Clock, Flame, HelpCircle, MessageSquare, PenSquare } from '@/components/icons'
-import { Avatar, Button, Card, Chip, Empty, PageHeader, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, PageHeader, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { MultiSelectField } from '@/components/SelectField'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { VoteButton } from '@/components/VoteButton'
 import { forumApi } from '@/api/forum'
@@ -82,11 +82,6 @@ export default function ForumTab() {
     ],
     [topics.data, majors.data],
   )
-  const toggleTopic = (id: string) =>
-    setFilters((f) => {
-      const cur = (f.topics as string[]) ?? []
-      return { ...f, topics: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] }
-    })
 
   return (
     <Screen bg={t.card}>
@@ -109,12 +104,9 @@ export default function ForumTab() {
                   style={{ paddingHorizontal: 16 }}
                   right={<FilterButton count={countActive(filters, ['sort'])} onPress={() => setSheet(true)} />}
                 />
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                  <Chip label="Mọi thể loại" active={topicIds.length === 0} onPress={() => setFilters((f) => ({ ...f, topics: [] }))} />
-                  {(topics.data ?? []).map((tp) => (
-                    <Chip key={tp.id} label={tp.name} active={topicIds.includes(tp.id)} onPress={() => toggleTopic(String(tp.id))} />
-                  ))}
-                </ScrollView>
+                <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                  <MultiSelectField label="Thể loại" placeholder="Mọi thể loại" values={(filters.topics as string[]) ?? []} options={(topics.data ?? []).map((tp) => ({ value: String(tp.id), label: tp.name }))} onChange={(values) => setFilters((f) => ({ ...f, topics: values }))} />
+                </View>
               </View>
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>

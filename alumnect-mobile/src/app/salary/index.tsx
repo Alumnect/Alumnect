@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Briefcase, Coins, MapPin, Plus, TrendingUp } from '@/components/icons'
-import { Button, Card, Chip, Empty, Screen, SearchBar, Segmented, Tag, Txt } from '@/components/ui'
+import { Button, Card, Empty, Screen, SearchBar, Segmented, Tag, Txt } from '@/components/ui'
+import { SelectField } from '@/components/SelectField'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
@@ -98,12 +98,9 @@ export default function SalaryScreen() {
           style={{ paddingHorizontal: 16 }}
           right={<FilterButton count={countActive(filters, ['sort'])} onPress={() => setSheet(true)} />}
         />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-          <Chip label="Mọi ngành" active={!filters.industry} onPress={() => setFilters((f) => ({ ...f, industry: undefined }))} />
-          {(industries.data ?? []).map((i) => (
-            <Chip key={i.id} label={i.name} active={filters.industry === String(i.id)} onPress={() => setFilters((f) => ({ ...f, industry: f.industry === String(i.id) ? undefined : String(i.id) }))} />
-          ))}
-        </ScrollView>
+        <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+          <SelectField label="Ngành nghề" placeholder="Mọi ngành" value={filters.industry as string | undefined} options={(industries.data ?? []).map((i) => ({ value: String(i.id), label: i.name }))} onChange={(value) => setFilters((f) => ({ ...f, industry: value ?? undefined }))} />
+        </View>
       </View>
       {tab === 'stats' ? (
         <View style={{ paddingHorizontal: 16 }}>

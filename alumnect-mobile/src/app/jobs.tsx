@@ -1,14 +1,14 @@
 import React, { useMemo, useState } from 'react'
 import { Linking, Pressable, View } from 'react-native'
-import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Bookmark, Building2, BriefcaseBusiness, MapPin, Coins } from '@/components/icons'
-import { Avatar, Button, Card, Chip, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { SelectField } from '@/components/SelectField'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
-import { MAJOR_CITIES, VN_CITIES, matchCity, normalize } from '@/constants/filters'
+import { VN_CITIES, matchCity, normalize } from '@/constants/filters'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import { feedApi } from '@/api/feed'
@@ -100,10 +100,9 @@ export default function JobsScreen() {
             <View>
               <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 16 }}>
                 <SearchBar value={kw} onChangeText={setKw} placeholder="Chức danh, công ty hoặc từ khóa..." style={{ paddingHorizontal: 16 }} right={<FilterButton count={countActive(filters)} onPress={() => setSheet(true)} />} />
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                  <Chip label="Mọi địa điểm" active={!city} onPress={() => setFilters((f) => ({ ...f, city: undefined }))} />
-                  {MAJOR_CITIES.map((c) => <Chip key={c} label={c} active={city === c} onPress={() => setFilters((f) => ({ ...f, city: f.city === c ? undefined : c }))} />)}
-                </ScrollView>
+                <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                  <SelectField label="Địa điểm" placeholder="Mọi địa điểm" value={city} options={VN_CITIES.map((c) => ({ value: c, label: c }))} onChange={(value) => setFilters((f) => ({ ...f, city: value ?? undefined }))} />
+                </View>
               </View>
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>

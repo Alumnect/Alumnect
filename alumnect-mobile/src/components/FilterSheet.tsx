@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native'
+import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, useWindowDimensions, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { SlidersHorizontal, X } from '@/components/icons'
+import { ChevronLeft, SlidersHorizontal, X } from '@/components/icons'
 import { Button, Txt } from './ui'
 import { useTheme, radius } from '@/theme'
+import { selectionLabel, SelectOptions, SelectTrigger } from './SelectField'
 
 export type FilterOption = { value: string; label: string }
 export type FilterField =
@@ -70,25 +71,34 @@ function OptionChip({ label, active, onPress }: { label: string; active: boolean
   )
 }
 
-function SheetBody({ title, fields, initial, defaults, onApply, onClose }: { title: string; fields: FilterField[]; initial: FilterValues; defaults: FilterValues; onApply: (v: FilterValues) => void; onClose: () => void }) {
+function SheetBody({ title, fields, initial, defaults, onApply, onClose, picker, setPicker }: { title: string; fields: FilterField[]; initial: FilterValues; defaults: FilterValues; onApply: (v: FilterValues) => void; onClose: () => void; picker: string | null; setPicker: (key: string | null) => void }) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const [draft, setDraft] = useState<FilterValues>(initial)
+  const { height } = useWindowDimensions()
   const set = (k: string, v: string | string[] | undefined) => setDraft((d) => ({ ...d, [k]: v }))
+  const active = fields.find((f) => f.key === picker)
+  const choice = active && active.type !== 'text' ? active : null
+  const back = () => { Keyboard.dismiss(); setPicker(null) }
+  const selected = (key: string) => { const value = draft[key]; return Array.isArray(value) ? value : value ? [value] : [] }
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ maxHeight: '88%', backgroundColor: t.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl }}>
       <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: t.border, marginTop: 10 }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
-        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Đóng" style={{ width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
-          <X size={22} color={t.text} />
+        <Pressable onPress={choice ? back : onClose} accessibilityRole="button" accessibilityLabel={choice ? 'Quay lại bộ lọc' : 'Đóng'} style={{ width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
+          {choice ? <ChevronLeft size={22} color={t.text} /> : <X size={22} color={t.text} />}
         </Pressable>
-        <Txt size={18} weight="600" style={{ flex: 1 }}>{title}</Txt>
-        <Pressable onPress={() => setDraft(defaults)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
-          <Text style={{ color: t.primary, fontWeight: '700' }}>Đặt lại</Text>
+        <Txt size={18} weight="600" style={{ flex: 1 }}>{choice?.title ?? title}</Txt>
+        <Pressable onPress={() => choice ? set(choice.key, choice.type === 'multi' ? [] : undefined) : setDraft(defaults)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
+          <Text style={{ color: t.primary, fontWeight: '700' }}>{choice ? 'Bỏ chọn' : 'Đặt lại'}</Text>
         </Pressable>
       </View>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }} keyboardShouldPersistTaps="handled">
+      {choice ? <View style={{ height: Math.min(height * 0.55, 440), flexShrink: 1 }}><SelectOptions key={choice.key} options={choice.options} values={selected(choice.key)} multiple={choice.type === 'multi'} onSelect={(value) => {
+        const values = selected(choice.key)
+        set(choice.key, choice.type === 'multi' ? values.includes(value) ? values.filter((v) => v !== value) : [...values, value] : value || undefined)
+        if (choice.type === 'single') back()
+      }} /></View> : <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }} keyboardShouldPersistTaps="handled">
         {fields.map((f) => (
           <View key={f.key} style={{ marginBottom: 18 }}>
             <Txt weight="700" style={{ marginBottom: 16 }}>{f.title}</Txt>
@@ -102,6 +112,8 @@ function SheetBody({ title, fields, initial, defaults, onApply, onClose }: { tit
                 keyboardType={f.numeric ? 'number-pad' : 'default'}
                 style={{ minHeight: 50, backgroundColor: t.card, borderWidth: 1, borderColor: t.controlBorder, color: t.text, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15 }}
               />
+            ) : f.options.length > 4 ? (
+              <SelectTrigger label={f.title} summary={selectionLabel(f.options, selected(f.key))} placeholder={f.type === 'multi' ? 'Tất cả' : f.options.find((o) => !o.value)?.label ?? 'Tất cả'} onPress={() => { Keyboard.dismiss(); setPicker(f.key) }} onClear={selected(f.key).length ? () => set(f.key, f.type === 'multi' ? [] : undefined) : undefined} />
             ) : (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {f.options.map((o) => {
@@ -127,9 +139,9 @@ function SheetBody({ title, fields, initial, defaults, onApply, onClose }: { tit
             )}
           </View>
         ))}
-      </ScrollView>
+      </ScrollView>}
       <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: insets.bottom + 12, borderTopWidth: 1, borderTopColor: t.divider }}>
-        <Button title="Huỷ" variant="outline" onPress={onClose} style={{ flex: 1 }} />
+        {choice ? <Button title="Xong" onPress={back} style={{ flex: 1 }} /> : <><Button title="Huỷ" variant="outline" onPress={onClose} style={{ flex: 1 }} />
         <Button
           title="Xem kết quả"
           onPress={() => {
@@ -137,7 +149,7 @@ function SheetBody({ title, fields, initial, defaults, onApply, onClose }: { tit
             onClose()
           }}
           style={{ flex: 2 }}
-        />
+        /></>}
       </View>
     </KeyboardAvoidingView>
   )
@@ -162,11 +174,14 @@ export function FilterSheet({
   onApply: (v: FilterValues) => void
 }) {
   const t = useTheme()
+  const [picker, setPicker] = useState<string | null>(null)
+  const close = () => { Keyboard.dismiss(); setPicker(null); onClose() }
+  const dismiss = () => { if (picker) { Keyboard.dismiss(); setPicker(null) } else close() }
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={dismiss}>
       <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: t.overlay }} onPress={onClose} />
-        {visible ? <SheetBody title={title} fields={fields} initial={values} defaults={defaults} onApply={onApply} onClose={onClose} /> : null}
+        <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: t.overlay }} onPress={dismiss} />
+        {visible ? <SheetBody title={title} fields={fields} initial={values} defaults={defaults} onApply={onApply} onClose={close} picker={picker} setPicker={setPicker} /> : null}
       </View>
     </Modal>
   )

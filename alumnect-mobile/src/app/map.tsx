@@ -1,11 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { View } from 'react-native'
-import { ScrollView } from '@/components/ScrollView'
 import { WebView as RNWebView } from 'react-native-webview'
 import type { WebViewMessageEvent } from 'react-native-webview'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, Button, Chip, Empty, Loading, Screen, Txt, SearchBar } from '@/components/ui'
+import { Avatar, Button, Empty, Loading, Screen, Txt, SearchBar } from '@/components/ui'
 import { SelectField } from '@/components/SelectField'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
@@ -84,14 +83,11 @@ export default function MapScreen() {
     <Screen>
       <Header title="Bản đồ Alumni" />
       <SearchBar value={search} onChangeText={setSearch} placeholder="Tìm theo tên, công ty, chức danh..." style={{ margin: 12, marginBottom: 6 }} />
-      <View style={{ paddingHorizontal: 12 }}><SelectField label="Ngành học" placeholder="Mọi ngành" value={majorId} options={(majors.data?.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))} onChange={setMajorId} error={majors.isError ? 'Không tải được danh sách ngành.' : undefined} /></View>
-      {majors.isError ? <Button title="Thử tải lại ngành" variant="ghost" onPress={() => void majors.refetch()} /> : null}
-      <View style={{ height: 44 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-          <Chip label="Mọi khóa" active={cohort == null} onPress={() => setCohort(undefined)} />
-          {cohorts.map((c) => <Chip key={c} label={`K${c}`} active={cohort === c} onPress={() => setCohort(cohort === c ? undefined : c)} />)}
-        </ScrollView>
+      <View style={{ paddingHorizontal: 12, flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1, minWidth: 0 }}><SelectField label="Ngành học" placeholder="Mọi ngành" value={majorId} options={(majors.data?.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))} onChange={setMajorId} error={majors.isError ? 'Không tải được danh sách ngành.' : undefined} /></View>
+        <View style={{ flex: 1, minWidth: 0 }}><SelectField label="Khóa" placeholder="Mọi khóa" value={cohort == null ? null : String(cohort)} options={cohorts.map((c) => ({ value: String(c), label: `K${c}` }))} onChange={(value) => setCohort(value == null ? undefined : Number(value))} /></View>
       </View>
+      {majors.isError ? <Button title="Thử tải lại ngành" variant="ghost" onPress={() => void majors.refetch()} /> : null}
       <View style={{ flex: 1 }}>
         <WebView ref={web} source={{ html: HTML, baseUrl: 'https://alumnect.local' }} originWhitelist={['*']} onMessage={onMessage} javaScriptEnabled style={{ flex: 1 }} />
         {q.isLoading ? <View style={{ position: 'absolute', top: 8, alignSelf: 'center' }}><Loading /></View> : null}
