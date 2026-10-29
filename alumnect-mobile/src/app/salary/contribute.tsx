@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Chip, Input, Screen, Txt } from '@/components/ui'
+import { Button, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { salaryApi } from '@/api/salary'
 import { toast, errMsg } from '@/lib/toast'
@@ -55,8 +56,11 @@ export default function ContributeScreen() {
     if (!Object.keys(e).length) m.mutate()
   }
 
+  if (id && mine.isLoading) return <Screen><Header title="Sửa đóng góp lương" /><Loading /></Screen>
+  if (id && !existing) return <Screen><Header title="Sửa đóng góp lương" /><Empty text="Không tìm thấy đóng góp lương." error={mine.error} onRetry={() => { void mine.refetch() }} /></Screen>
+
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title={id ? 'Sửa đóng góp lương' : 'Đóng góp lương'} />
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Ngành</Txt>

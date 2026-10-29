@@ -31,7 +31,7 @@ export default function MentoringMessagesScreen() {
           keyExtractor={(c) => String(c.id)}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty text={kw ? 'Không tìm thấy cuộc trò chuyện.' : 'Cuộc trò chuyện sẽ xuất hiện khi một yêu cầu Mentoring được kết nối.'} />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text={kw ? 'Không tìm thấy cuộc trò chuyện.' : 'Cuộc trò chuyện sẽ xuất hiện khi một yêu cầu Mentoring được kết nối.'} />}
           renderItem={({ item }) => (
             <Pressable
               onPress={() => item.id != null && router.push({ pathname: '/chat/[id]', params: { id: String(item.id) } })}

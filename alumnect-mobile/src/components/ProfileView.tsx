@@ -1,17 +1,19 @@
 import React from 'react'
-import { Linking, Pressable, ScrollView, View } from 'react-native'
+import { Linking, Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { BadgeCheck, Briefcase, GraduationCap, MapPin, MessageCircle, Link2, Sparkles, UserRound } from '@/components/icons'
 import { Avatar, Button, Card, Tag, Txt } from './ui'
 import { FollowButton } from './UserRow'
 import type { UserProfile } from '@/api/users'
-import { useTheme, palette } from '@/theme'
+import { useTheme } from '@/theme'
+import { BrandCover } from './DetailBits'
 
 function Stat({ value, label, onPress }: { value: number | string; label: string; onPress?: () => void }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}>
-      <Txt size={18} weight="800">{value}</Txt>
+      <Txt size={22} weight="500" style={{ fontVariant: ['tabular-nums'] }}>{value}</Txt>
       <Txt muted size={12}>{label}</Txt>
     </Pressable>
   )
@@ -19,10 +21,10 @@ function Stat({ value, label, onPress }: { value: number | string; label: string
 
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Card style={{ marginBottom: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+    <Card style={{ marginBottom: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         {icon}
-        <Txt weight="800" size={16}>{title}</Txt>
+        <Txt weight="600" size={16}>{title}</Txt>
       </View>
       {children}
     </Card>
@@ -37,23 +39,20 @@ export function ProfileView({ profile, isMe, children }: { profile: UserProfile;
   const net = (tab: string) => router.push({ pathname: '/profile/network', params: { id: String(profile.userId), tab } })
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 32 }} style={{ backgroundColor: t.bg }}>
-      <View style={{ backgroundColor: t.card, paddingBottom: 16, marginBottom: 10 }}>
-        <View style={{ height: 150 }}>
+      <View style={{ backgroundColor: t.card, paddingBottom: 16, marginBottom: 16 }}>
+        <View style={{ height: 120 }}>
           {profile.coverUrl ? (
             <Image source={{ uri: profile.coverUrl }} style={{ flex: 1 }} contentFit="cover" />
           ) : (
-            <View style={{ flex: 1, backgroundColor: palette.primary, overflow: 'hidden' }}>
-              <View style={{ position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: palette.primarySoft, opacity: 0.6, top: -90, right: -40 }} />
-              <View style={{ position: 'absolute', width: 160, height: 160, borderRadius: 80, backgroundColor: palette.primaryDark, opacity: 0.5, bottom: -80, left: 30 }} />
-            </View>
+            <BrandCover height={120} />
           )}
         </View>
-        <View style={{ paddingHorizontal: 16, marginTop: -48 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: -24 }}>
           <View style={{ borderWidth: 4, borderColor: t.card, borderRadius: 60, alignSelf: 'flex-start' }}>
-            <Avatar uri={profile.avatarUrl} name={profile.fullName} size={96} />
+            <Avatar uri={profile.avatarUrl} name={profile.fullName} size={80} />
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-            <Txt size={24} weight="800" style={{ flexShrink: 1 }}>{profile.fullName}</Txt>
+            <Txt size={24} weight="600" style={{ flexShrink: 1 }}>{profile.fullName}</Txt>
             {profile.isAccountVerified ? <BadgeCheck size={20} color={t.info} /> : null}
           </View>
           {profile.headline ? <Txt style={{ marginTop: 2 }}>{profile.headline}</Txt> : null}
@@ -69,7 +68,7 @@ export function ProfileView({ profile, isMe, children }: { profile: UserProfile;
               </View>
             ) : null}
             {profile.primaryExperience ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Briefcase size={15} color={t.textMuted} /><Txt muted size={13}>{`${profile.primaryExperience.title} tại ${profile.primaryExperience.company}`}</Txt></View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Briefcase size={15} color={t.textMuted} /><Txt muted size={13} style={{ flex: 1 }}>{`${profile.primaryExperience.title} tại ${profile.primaryExperience.company}`}</Txt></View>
             ) : null}
             {profile.city ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><MapPin size={15} color={t.textMuted} /><Txt muted size={13}>{profile.city}</Txt></View>
@@ -94,7 +93,7 @@ export function ProfileView({ profile, isMe, children }: { profile: UserProfile;
                 variant="secondary"
                 size="sm"
                 icon={<MessageCircle size={16} color={t.primary} />}
-                style={{ flex: 1, height: 38 }}
+                style={{ flex: 1 }}
                 onPress={() => router.push({ pathname: '/chat/direct/[userId]', params: { userId: String(profile.userId) } })}
               />
             </View>
@@ -102,7 +101,7 @@ export function ProfileView({ profile, isMe, children }: { profile: UserProfile;
         </View>
       </View>
 
-      <View style={{ paddingHorizontal: 12 }}>
+      <View style={{ paddingHorizontal: 16 }}>
         {profile.biography ? (
           <Section title="Giới thiệu" icon={<UserRound size={18} color={t.primary} />}>
             <Txt style={{ lineHeight: 22 }}>{profile.biography}</Txt>

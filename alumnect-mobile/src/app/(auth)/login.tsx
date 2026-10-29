@@ -27,13 +27,14 @@ export default function LoginScreen() {
 
   React.useEffect(() => {
     void (async () => {
+      if (!(await SecureStore.isAvailableAsync())) return
       const [hw, enrolled, cred] = await Promise.all([
         LocalAuthentication.hasHardwareAsync(),
         LocalAuthentication.isEnrolledAsync(),
         SecureStore.getItemAsync(CRED_KEY),
       ])
       setHasBio(hw && enrolled && !!cred)
-    })()
+    })().catch(() => setHasBio(false))
   }, [])
 
   const mutation = useMutation({

@@ -48,7 +48,7 @@ export default function PlansScreen() {
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={{ padding: 12 }}
           ListHeaderComponent={<Txt muted style={{ marginBottom: 12, paddingHorizontal: 4 }}>Chọn gói để kích hoạt hồ sơ mentor và bắt đầu nhận yêu cầu từ sinh viên.</Txt>}
-          ListEmptyComponent={<Empty text="Hiện chưa có gói nào." />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text="Hiện chưa có gói nào." />}
           renderItem={({ item, index }) => (
             <Card style={{ marginBottom: 12, borderWidth: index === 0 ? 2 : 1, borderColor: index === 0 ? t.primary : t.isDark ? t.border : 'transparent' }}>
               {index === 0 ? <Tag label="Phổ biến" style={{ marginBottom: 8 }} /> : null}

@@ -1,9 +1,10 @@
 import http from '@/lib/http'
 import type { ApiResponse, PageResponse } from '@/lib/http'
+import type { ExperienceLocation } from './explore'
 
 export interface Major { id: number; code: string; name: string }
 
-export interface Experience {
+export interface Experience extends ExperienceLocation {
   id: number
   title: string
   company: string

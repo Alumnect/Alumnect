@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { TextInput } from '@/components/AppText'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { CornerDownRight, Send, X } from '@/components/icons'
 import { Avatar, Txt } from './ui'
@@ -36,16 +35,16 @@ export const CommentBubble = React.memo(function CommentBubble({
   const router = useRouter()
   const openAuthor = () => authorId && router.push({ pathname: '/profile/[id]', params: { id: String(authorId) } })
   return (
-    <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingVertical: 6, paddingLeft: reply ? 56 : 12 }}>
+    <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 6, paddingLeft: reply ? 56 : 12 }}>
       <Pressable onPress={openAuthor} accessibilityRole="button" accessibilityLabel={`Trang cá nhân ${author}`}>
         <Avatar uri={avatar} name={author} size={reply ? 28 : 36} />
       </Pressable>
       <View style={{ flex: 1, alignItems: 'flex-start' }}>
-        <Pressable onLongPress={onMore} delayLongPress={300} style={{ backgroundColor: t.inputBg, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, maxWidth: '100%' }}>
+        <Pressable onLongPress={onMore} delayLongPress={300} style={{ backgroundColor: t.inputBg, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 8, maxWidth: '100%' }}>
           <Txt weight="700" size={13} onPress={openAuthor}>{author}</Txt>
           <Txt size={14} style={{ lineHeight: 20 }}>{text}</Txt>
         </Pressable>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 12, marginTop: 3 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, marginTop: 3 }}>
           {time ? <Txt muted size={12}>{time}</Txt> : null}
           {edited ? <Txt muted size={12}>Đã chỉnh sửa</Txt> : null}
           {onReply ? <Txt muted size={12} weight="700" onPress={onReply}>Phản hồi</Txt> : null}
@@ -77,12 +76,11 @@ export function CommentComposer({
   autoFocusKey?: string | number | null
 }) {
   const t = useTheme()
-  const insets = useSafeAreaInsets()
   const user = useAuthStore((s) => s.user)
   const [focus, setFocus] = useState(false)
   const canSend = !!value.trim() && !sending
   return (
-    <View style={{ backgroundColor: t.card, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border, paddingBottom: Math.max(insets.bottom, 8) }}>
+    <View style={{ backgroundColor: t.card, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border, paddingBottom: 12 }}>
       {context ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingTop: 8 }}>
           <CornerDownRight size={14} color={t.primary} />
@@ -92,7 +90,7 @@ export function CommentComposer({
           </Pressable>
         </View>
       ) : null}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 12, paddingTop: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 16, paddingTop: 8 }}>
         <Avatar uri={user?.avatarUrl} name={user?.name} size={34} />
         <TextInput
           key={autoFocusKey ?? 'composer'}
@@ -104,16 +102,17 @@ export function CommentComposer({
           multiline
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
-          style={{ flex: 1, maxHeight: 110, minHeight: 38, backgroundColor: t.inputBg, color: t.text, borderRadius: 19, paddingHorizontal: 14, paddingTop: 9, paddingBottom: 9, fontSize: 15, borderWidth: 1, borderColor: focus ? t.primary : 'transparent' }}
+          accessibilityLabel={placeholder}
+          style={{ flex: 1, maxHeight: 130, minHeight: 44, backgroundColor: t.inputBg, color: t.text, borderRadius: 12, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 12, fontSize: 15, borderWidth: 1, borderColor: focus ? t.primary : 'transparent' }}
         />
         <Pressable
           onPress={() => canSend && onSend()}
           disabled={!canSend}
           accessibilityRole="button"
           accessibilityLabel="Gửi"
-          style={{ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: canSend ? t.primary : t.inputBg }}
+          style={{ width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: canSend ? t.action : t.inputBg }}
         >
-          <Send size={18} color={canSend ? t.onPrimary : t.textSubtle} />
+          <Send size={18} color={canSend ? t.onAction : t.textSubtle} />
         </Pressable>
       </View>
     </View>

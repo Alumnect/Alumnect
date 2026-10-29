@@ -81,8 +81,8 @@ export function PaymentSheet({
           {checkout.accountName ? <Txt muted size={13}>{checkout.accountName}{checkout.accountNumber ? ` · ${checkout.accountNumber}` : ''}</Txt> : null}
           <Txt muted size={12} style={{ textAlign: 'center' }}>{checkout.description ?? ''}</Txt>
           <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'stretch' }}>
-            <Button title="Sao chép số tiền" variant="outline" style={{ flex: 1, height: 40 }} onPress={() => copy(String(checkout.amount), 'số tiền')} />
-            <Button title="Sao chép nội dung" variant="outline" style={{ flex: 1, height: 40 }} onPress={() => copy(checkout.description || String(checkout.orderCode), 'nội dung chuyển khoản')} />
+            <Button title="Sao chép số tiền" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => copy(String(checkout.amount), 'số tiền')} />
+            <Button title="Sao chép nội dung" variant="outline" style={{ flex: 1, minHeight: 44 }} onPress={() => copy(checkout.description || String(checkout.orderCode), 'nội dung chuyển khoản')} />
           </View>
           <Button title="Mở trang thanh toán PayOS" style={{ alignSelf: 'stretch' }} onPress={() => WebBrowser.openBrowserAsync(checkout.checkoutUrl)} />
           {failed ? (

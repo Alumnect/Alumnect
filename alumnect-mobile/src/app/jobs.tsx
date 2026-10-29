@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react'
-import { Linking, Pressable, ScrollView, View } from 'react-native'
+import { Linking, Pressable, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Bookmark, Building2, BriefcaseBusiness, MapPin, Coins } from '@/components/icons'
-import { Avatar, Button, Card, Chip, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { SelectField } from '@/components/SelectField'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
-import { MAJOR_CITIES, VN_CITIES, matchCity, normalize } from '@/constants/filters'
+import { VN_CITIES, matchCity, normalize } from '@/constants/filters'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import { feedApi } from '@/api/feed'
@@ -92,41 +93,40 @@ export default function JobsScreen() {
           data={q.isLoading ? [] : jobs}
           keyExtractor={(p) => p.id}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 10 }}>
+              <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 16 }}>
                 <SearchBar value={kw} onChangeText={setKw} placeholder="Chức danh, công ty hoặc từ khóa..." style={{ paddingHorizontal: 16 }} right={<FilterButton count={countActive(filters)} onPress={() => setSheet(true)} />} />
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                  <Chip label="Mọi địa điểm" active={!city} onPress={() => setFilters((f) => ({ ...f, city: undefined }))} />
-                  {MAJOR_CITIES.map((c) => <Chip key={c} label={c} active={city === c} onPress={() => setFilters((f) => ({ ...f, city: f.city === c ? undefined : c }))} />)}
-                </ScrollView>
+                <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                  <SelectField label="Địa điểm" placeholder="Mọi địa điểm" value={city} options={VN_CITIES.map((c) => ({ value: c, label: c }))} onChange={(value) => setFilters((f) => ({ ...f, city: value ?? undefined }))} />
+                </View>
               </View>
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty icon={<BriefcaseBusiness size={28} color={t.primary} />} title="Chưa có tin phù hợp" text="Thử đổi địa điểm hoặc từ khoá khác." action={countActive(filters) ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BriefcaseBusiness size={28} color={t.primary} />} title="Chưa có tin phù hợp" text="Thử đổi địa điểm hoặc từ khoá khác." action={countActive(filters) ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
             )
           }
           renderItem={({ item: p }) => {
             const j = p.job!
             const saved = savedMap[p.id] ?? p.saved
             return (
-              <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })}>
+              <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                   <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: t.infoTint, alignItems: 'center', justifyContent: 'center' }}>
                     <Txt size={20} weight="800" color={t.info}>{(j.company || p.author || '?').trim().charAt(0).toUpperCase()}</Txt>
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Xem việc làm ${j.title}`} onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })} style={{ flex: 1, minHeight: 44 }}>
                     <Txt weight="800" size={16} numberOfLines={2}>{j.title}</Txt>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
                       <Building2 size={14} color={t.textMuted} /><Txt muted size={13} numberOfLines={1} style={{ flex: 1 }}>{j.company || p.author}</Txt>
                     </View>
-                  </View>
+                  </Pressable>
                   <Pressable onPress={() => void toggleSave(p)} hitSlop={8} accessibilityRole="button" accessibilityLabel={saved ? 'Bỏ lưu tin' : 'Lưu tin'}>
                     <Bookmark size={22} color={saved ? t.primary : t.textMuted} fill={saved ? t.primary : 'transparent'} />
                   </Pressable>

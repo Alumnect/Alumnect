@@ -63,10 +63,10 @@ export default function GroupPostDetailScreen() {
           data={items}
           keyExtractor={(c) => String(c.id)}
           contentContainerStyle={{ paddingBottom: 12 }}
-          onEndReached={() => comments.hasNextPage && comments.fetchNextPage()}
+          onEndReached={() => comments.hasNextPage && !comments.isFetchingNextPage && comments.fetchNextPage()}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.bg, paddingTop: 10, paddingHorizontal: 12 }}>
+              <View style={{ backgroundColor: t.bg, paddingTop: 10, paddingHorizontal: 16 }}>
                 <GroupPostCard post={post.data} detail />
               </View>
               <Txt weight="800" size={16} style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>Bình luận</Txt>

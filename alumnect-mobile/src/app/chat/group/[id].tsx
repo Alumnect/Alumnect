@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar, Button, Input, Loading, Screen, Txt, Card } from '@/components/ui'
@@ -50,7 +51,7 @@ export default function GroupChatInfoScreen() {
   })
 
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title="Thông tin nhóm" />
       {members.isLoading ? <Loading /> : (
         <ScrollView contentContainerStyle={{ padding: 16 }}>

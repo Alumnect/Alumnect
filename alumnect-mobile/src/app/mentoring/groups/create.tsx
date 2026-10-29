@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView } from 'react-native'
+import {  } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useRouter } from 'expo-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Input, Screen } from '@/components/ui'
@@ -31,7 +32,7 @@ export default function CreateMentoringGroupScreen() {
   }
 
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title="Tạo nhóm Mentoring" />
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <Input label="Tên nhóm" value={name} onChangeText={setName} error={error} />

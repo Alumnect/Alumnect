@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { BadgeCheck, CheckCircle2, Clock, Flame, HelpCircle, MessageSquare, PenSquare } from '@/components/icons'
-import { Avatar, Button, Card, Chip, Empty, PageHeader, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { Avatar, Button, Card, Empty, PageHeader, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { MultiSelectField } from '@/components/SelectField'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { VoteButton } from '@/components/VoteButton'
 import { forumApi } from '@/api/forum'
@@ -24,7 +25,7 @@ const QuestionCard = React.memo(function QuestionCard({ item }: { item: Question
   const t = useTheme()
   const router = useRouter()
   return (
-    <Card style={{ marginHorizontal: 12, marginBottom: 10 }} onPress={() => router.push({ pathname: '/forum/[id]', params: { id: item.id } })}>
+    <Card accessibilityRole="link" style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => router.push({ pathname: '/forum/[id]', params: { id: item.id } })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Avatar uri={item.avatar} name={item.author} size={32} />
         <View style={{ flex: 1 }}>
@@ -81,11 +82,6 @@ export default function ForumTab() {
     ],
     [topics.data, majors.data],
   )
-  const toggleTopic = (id: string) =>
-    setFilters((f) => {
-      const cur = (f.topics as string[]) ?? []
-      return { ...f, topics: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] }
-    })
 
   return (
     <Screen bg={t.card}>
@@ -95,7 +91,7 @@ export default function ForumTab() {
           data={q.isLoading ? [] : items}
           keyExtractor={(x) => x.id}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
@@ -108,19 +104,16 @@ export default function ForumTab() {
                   style={{ paddingHorizontal: 16 }}
                   right={<FilterButton count={countActive(filters, ['sort'])} onPress={() => setSheet(true)} />}
                 />
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                  <Chip label="Mọi thể loại" active={topicIds.length === 0} onPress={() => setFilters((f) => ({ ...f, topics: [] }))} />
-                  {(topics.data ?? []).map((tp) => (
-                    <Chip key={tp.id} label={tp.name} active={topicIds.includes(tp.id)} onPress={() => toggleTopic(String(tp.id))} />
-                  ))}
-                </ScrollView>
+                <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+                  <MultiSelectField label="Thể loại" placeholder="Mọi thể loại" values={(filters.topics as string[]) ?? []} options={(topics.data ?? []).map((tp) => ({ value: String(tp.id), label: tp.name }))} onChange={(values) => setFilters((f) => ({ ...f, topics: values }))} />
+                </View>
               </View>
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty
+              <Empty error={q.error} onRetry={() => { void q.refetch() }}
                 icon={<HelpCircle size={28} color={t.primary} />}
                 title="Chưa có câu hỏi phù hợp"
                 text="Đặt câu hỏi để nhận lời khuyên từ cựu sinh viên."

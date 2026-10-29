@@ -22,7 +22,7 @@ export default function SearchUsersScreen() {
         <FlashList
           data={q.data?.data ?? []}
           keyExtractor={(u) => String(u.userId)}
-          ListEmptyComponent={<Empty text="Không tìm thấy người dùng." />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy người dùng." />}
           renderItem={({ item }) => (
             <Pressable onPress={() => router.replace({ pathname: '/chat/direct/[userId]', params: { userId: String(item.userId) } })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
               <Avatar uri={item.avatarUrl} name={item.fullName} size={46} />

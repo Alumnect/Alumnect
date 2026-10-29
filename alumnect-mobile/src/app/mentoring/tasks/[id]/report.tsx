@@ -1,5 +1,6 @@
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { Card, Empty, Loading, Screen, Txt } from '@/components/ui'
@@ -20,7 +21,7 @@ export default function TaskReportScreen() {
   const q = useQuery({ queryKey: ['mentoring-task-report', id], queryFn: () => taskApi.report(Number(id)) })
   const r = q.data
   if (q.isLoading) return <Screen><Header title="Báo cáo task" /><Loading /></Screen>
-  if (!r) return <Screen><Header title="Báo cáo task" /><Empty text="Không có dữ liệu báo cáo." /></Screen>
+  if (!r) return <Screen><Header title="Báo cáo task" /><Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không có dữ liệu báo cáo." /></Screen>
   return (
     <Screen>
       <Header title="Báo cáo task" />

@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
 import { Bookmark, Building2, Heart, MapPin, MessageCircle, MoreHorizontal, Share2, BadgeCheck } from '@/components/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Tag, Txt } from './ui'
+import { Avatar, Button, Chip, Input, Tag, Txt } from './ui'
 import { ActionSheet } from './ActionSheet'
 import { feedApi } from '@/api/feed'
 import type { Post } from '@/api/feed'
@@ -74,6 +74,9 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
   const [menu, setMenu] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('SPAM')
+  const [reportDescription, setReportDescription] = useState('')
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const isMine = me?.id === post.authorId
   const images = post.images.length ? post.images : post.image ? [post.image] : []
 
@@ -106,8 +109,8 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
     onError: (e) => toast.error(errMsg(e)),
   })
   const reportM = useMutation({
-    mutationFn: (reason: string) => feedApi.report(post.id, { reason }),
-    onSuccess: () => toast.success('Đã gửi báo cáo vi phạm, cảm ơn bạn đã đóng góp!'),
+    mutationFn: () => feedApi.report(post.id, { reason: reportReason, description: reportDescription.trim() || undefined }),
+    onSuccess: () => { setReportOpen(false); setReportDescription(''); toast.success('Đã gửi báo cáo vi phạm, cảm ơn bạn đã đóng góp!') },
     onError: (e) => toast.error(errMsg(e)),
   })
 
@@ -132,7 +135,7 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
   const eventDate = post.event?.startTime ? new Date(post.event.startTime) : null
 
   return (
-    <Pressable onPress={detail ? undefined : openPost} style={{ backgroundColor: t.card, paddingTop: 14, paddingBottom: 4, borderBottomWidth: detail ? 0 : 1, borderBottomColor: t.divider }}>
+    <Pressable onPress={detail ? undefined : openPost} style={{ backgroundColor: t.card, paddingTop: 16, paddingBottom: 4, borderBottomWidth: detail ? 0 : 1, borderBottomColor: t.border }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
         <Pressable onPress={openAuthor} accessibilityRole="button" accessibilityLabel={`Trang cá nhân ${post.author}`}>
           <Avatar uri={post.avatar} name={post.author} size={40} />
@@ -144,7 +147,7 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
           </View>
           <Txt muted size={12} numberOfLines={1}>{[post.role, post.time].filter(Boolean).join(' · ')}</Txt>
         </Pressable>
-        <Pressable onPress={() => setMenu(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Tùy chọn bài viết" style={{ padding: 4 }}>
+        <Pressable onPress={() => setMenu(true)} accessibilityRole="button" accessibilityLabel="Tùy chọn bài viết" style={{ width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <MoreHorizontal size={24} color={t.textMuted} weight="bold" />
         </Pressable>
       </View>
@@ -156,7 +159,7 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
       ) : null}
 
       {post.job ? (
-        <View style={{ marginTop: 12, marginHorizontal: 16, padding: 12, borderRadius: 14, backgroundColor: t.infoTint, gap: 4 }}>
+        <View style={{ marginTop: 12, marginHorizontal: 16, padding: 16, borderRadius: 12, backgroundColor: t.surface, gap: 6 }}>
           <Txt weight="800" size={15}>{post.job.title}</Txt>
           {post.job.company ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Building2 size={14} color={t.textMuted} /><Txt muted size={13} numberOfLines={1}>{post.job.company}</Txt></View>
@@ -242,17 +245,28 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
           isMine
             ? [
                 { label: 'Chỉnh sửa bài viết', onPress: () => router.push({ pathname: '/post/edit/[id]', params: { id: post.id } }) },
-                { label: 'Xóa bài viết', danger: true, onPress: () => delM.mutate() },
+                { label: 'Xóa bài viết', danger: true, onPress: () => setDeleteOpen(true) },
               ]
             : [{ label: 'Báo cáo vi phạm', danger: true, onPress: () => setReportOpen(true) }]
         }
       />
       <ActionSheet
+        visible={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Xóa bài viết này?"
+        actions={[{ label: 'Xác nhận xóa bài viết', danger: true, onPress: () => delM.mutate() }]}
+      />
+      <ActionSheet
         visible={reportOpen}
         onClose={() => setReportOpen(false)}
         title="Báo cáo vi phạm"
-        actions={REPORT_REASONS.map(([k, label]) => ({ label, onPress: () => reportM.mutate(k) }))}
-      />
+      >
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 16 }}>
+          {REPORT_REASONS.map(([k, label]) => <Chip key={k} label={label} active={reportReason === k} onPress={() => setReportReason(k)} />)}
+        </View>
+        <Input label={reportReason === 'OTHER' ? 'Mô tả lý do (bắt buộc)' : 'Mô tả thêm (tùy chọn)'} placeholder="Cho biết nội dung cần xem xét..." value={reportDescription} onChangeText={setReportDescription} multiline maxLength={500} />
+        <Button title="Gửi báo cáo" loading={reportM.isPending} disabled={reportReason === 'OTHER' && !reportDescription.trim()} onPress={() => reportM.mutate()} />
+      </ActionSheet>
     </Pressable>
   )
 }

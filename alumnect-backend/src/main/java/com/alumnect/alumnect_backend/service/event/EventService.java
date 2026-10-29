@@ -5,6 +5,7 @@ import com.alumnect.alumnect_backend.dto.response.event.EventAttendeeResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventCancelResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventHistoryResponse;
 import com.alumnect.alumnect_backend.dto.response.event.EventRegistrationResponse;
+import com.alumnect.alumnect_backend.dto.response.event.EventDetailResponse;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * Service định nghĩa các thao tác nghiệp vụ cho Sự kiện & RSVP (UC25).
  */
 public interface EventService {
+    EventDetailResponse getEventDetail(Long eventId, String email);
 
     /**
      * Đăng ký tham gia sự kiện (RSVP) (UC25).

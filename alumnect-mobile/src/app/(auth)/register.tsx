@@ -123,7 +123,7 @@ export default function RegisterScreen() {
           <Chip key={m.id} label={m.name} active={majorId === m.id} onPress={() => setMajorId(m.id)} />
         ))}
       </View>
-      {errors.majorId ? <Txt size={12} color={palette.danger} style={{ marginBottom: 10 }}>{errors.majorId}</Txt> : <View style={{ height: 10 }} />}
+      {errors.majorId ? <Txt size={12} color={palette.danger} style={{ marginBottom: 16 }}>{errors.majorId}</Txt> : <View style={{ height: 10 }} />}
       <Input label="Mã số sinh viên" value={f.studentCode} onChangeText={set('studentCode')} autoCapitalize="characters" error={errors.studentCode} />
       {role === 'ALUMNI' ? (
         <View style={{ marginBottom: 14 }}>

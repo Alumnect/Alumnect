@@ -1,8 +1,9 @@
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Card, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Card, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { Info } from '@/components/icons'
 import { WalletView } from '@/components/WalletView'
@@ -17,7 +18,7 @@ export default function EarningsScreen() {
   return (
     <Screen>
       <Header title="Thu nhập" />
-      {q.isLoading ? <Loading /> : (
+      {q.isLoading ? <Loading /> : q.isError ? <Empty text="Không tải được thu nhập." error={q.error} onRetry={() => { void q.refetch() }} /> : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
           <View style={{ flexDirection: 'row', gap: 8, padding: 12, borderRadius: 12, backgroundColor: t.infoTint, marginBottom: 12 }}>
             <Info size={16} color={t.info} />

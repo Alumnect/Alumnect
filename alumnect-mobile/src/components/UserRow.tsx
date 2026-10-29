@@ -31,13 +31,15 @@ export function FollowButton({ userId, initial, onChange, block }: { userId: num
   }
   return (
     <Pressable
-      onPress={toggle}
+      onPress={(e) => { e.stopPropagation(); toggle() }}
+      disabled={m.isPending}
       accessibilityRole="button"
       accessibilityLabel={following ? 'Bỏ theo dõi' : 'Theo dõi'}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, height: block ? 38 : 34, paddingHorizontal: 14, borderRadius: 999, backgroundColor: following ? t.inputBg : 'transparent', borderWidth: following ? 0 : 1.5, borderColor: t.primary, opacity: pressed ? 0.8 : 1 })}
+      accessibilityState={{ selected: following, busy: m.isPending }}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, paddingHorizontal: block ? 16 : 12, borderRadius: 12, backgroundColor: following ? t.inputBg : t.card, borderWidth: 1, borderColor: following ? t.border : t.controlBorder, opacity: pressed || m.isPending ? 0.65 : 1 })}
     >
-      {following ? <Check size={14} color={t.text} /> : <UserPlus size={14} color={t.primary} weight="bold" />}
-      <Txt size={13} weight="700" color={following ? t.text : t.primary}>{following ? 'Đang theo dõi' : 'Theo dõi'}</Txt>
+      {following ? <Check size={16} color={t.text} /> : <UserPlus size={16} color={t.text} />}
+      <Txt size={13} weight="500">{following ? 'Đã theo dõi' : 'Theo dõi'}</Txt>
     </Pressable>
   )
 }
@@ -53,20 +55,20 @@ function UserRowImpl({ user, compact }: { user: UserCard; compact?: boolean }) {
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(user.userId) } })}
-      accessibilityRole="button"
+      accessibilityRole="link"
       accessibilityLabel={`Trang cá nhân ${user.fullName}`}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, paddingHorizontal: 16, backgroundColor: pressed ? t.inputBg : t.card, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.divider })}
     >
-      <Avatar uri={user.avatarUrl} name={user.fullName} size={compact ? 48 : 56} />
-      <View style={{ flex: 1, gap: 2 }}>
+      <Avatar uri={user.avatarUrl} name={user.fullName} size={compact ? 40 : 48} />
+      <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Txt weight="700" numberOfLines={1} style={{ flexShrink: 1 }}>{user.fullName}</Txt>
+          <Txt weight="600" numberOfLines={2} style={{ flexShrink: 1 }}>{user.fullName}</Txt>
           {user.isAccountVerified ? <BadgeCheck size={14} color={t.info} /> : null}
         </View>
         {user.headline ? <Txt size={13} numberOfLines={1}>{user.headline}</Txt> : null}
-        <Txt muted size={12} numberOfLines={1}>{user.suggestionReason || meta}</Txt>
+        <Txt muted size={12} numberOfLines={2}>{user.suggestionReason || meta}</Txt>
+        {!isMe ? <View style={{ alignSelf: 'flex-start', marginTop: 6 }}><FollowButton userId={user.userId} initial={!!user.isFollowing} /></View> : null}
       </View>
-      {!isMe ? <FollowButton userId={user.userId} initial={!!user.isFollowing} /> : null}
     </Pressable>
   )
 }

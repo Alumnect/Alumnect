@@ -65,7 +65,7 @@ export default function InboxScreen() {
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListEmptyComponent={
-            <Empty
+            <Empty error={q.error} onRetry={() => { void q.refetch() }}
               icon={<MessageCircle size={28} color={t.primary} />}
               title={tab === 'requests' ? 'Không có tin nhắn chờ' : 'Chưa có cuộc trò chuyện'}
               text={tab === 'requests' ? 'Tin nhắn từ người chưa kết nối sẽ nằm ở đây.' : 'Bắt đầu nhắn tin với bạn bè và cựu sinh viên.'}

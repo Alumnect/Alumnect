@@ -6,7 +6,7 @@ import { Calendar } from '@/components/icons'
 import { useTheme } from '@/theme'
 
 /** Chọn ngày + giờ (Android: hiện lần lượt hộp ngày rồi giờ). Giá trị là chuỗi ISO local 'YYYY-MM-DDTHH:mm:ss'. */
-export function DateField({ label, value, onChange, error }: { label?: string; value: string; onChange: (iso: string) => void; error?: string }) {
+export function DateField({ label, value, onChange, error, minimumDate = new Date() }: { label?: string; value: string; onChange: (iso: string) => void; error?: string; minimumDate?: Date | null }) {
   const t = useTheme()
   const [step, setStep] = useState<'date' | 'time' | null>(null)
   const date = value ? new Date(value) : new Date()
@@ -16,10 +16,12 @@ export function DateField({ label, value, onChange, error }: { label?: string; v
 
   return (
     <View style={{ marginBottom: 14 }}>
-      {label ? <Text style={{ color: t.text, fontWeight: '600', marginBottom: 6, fontSize: 13 }}>{label}</Text> : null}
+      {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
       <Pressable
         onPress={() => { setDraft(date); setStep('date') }}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.inputBg, borderRadius: 12, borderWidth: 1, borderColor: error ? t.danger : t.border, paddingHorizontal: 14, paddingVertical: 12 }}
+        accessibilityRole="button"
+        accessibilityLabel={label ?? 'Chọn ngày giờ'}
+        style={{ minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.card, borderRadius: 12, borderWidth: 1, borderColor: error ? t.danger : t.controlBorder, paddingHorizontal: 14, paddingVertical: 12 }}
       >
         <Calendar size={18} color={t.textMuted} />
         <Text style={{ color: value ? t.text : t.textMuted, fontSize: 15 }}>{value ? new Date(value).toLocaleString('vi-VN') : 'Chọn ngày giờ'}</Text>
@@ -30,7 +32,7 @@ export function DateField({ label, value, onChange, error }: { label?: string; v
           value={draft}
           mode={step}
           is24Hour
-          minimumDate={step === 'date' ? new Date() : undefined}
+          minimumDate={step === 'date' ? minimumDate ?? undefined : undefined}
           onChange={(e, d) => {
             if (e.type === 'dismissed' || !d) return setStep(null)
             if (step === 'date') {

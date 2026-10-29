@@ -1,15 +1,15 @@
 import React from 'react'
 import { StyleSheet, View, type ViewStyle } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Card, Txt } from './ui'
-import { useTheme, palette } from '@/theme'
+import { useTheme } from '@/theme'
 
 /** Dải nền màu thương hiệu có hoạ tiết tròn, dùng làm ảnh bìa mặc định. */
 export function BrandCover({ height = 120, style }: { height?: number; style?: ViewStyle }) {
+  const t = useTheme()
   return (
-    <View style={[{ height, backgroundColor: palette.primary, overflow: 'hidden' }, style]}>
-      <View style={{ position: 'absolute', width: height * 2, height: height * 2, borderRadius: height, backgroundColor: palette.primarySoft, opacity: 0.55, top: -height, right: -height * 0.4 }} />
-      <View style={{ position: 'absolute', width: height * 1.3, height: height * 1.3, borderRadius: height, backgroundColor: palette.primaryDark, opacity: 0.45, bottom: -height * 0.7, left: height * 0.2 }} />
+    <View style={[{ height, backgroundColor: t.surface, justifyContent: 'center', paddingHorizontal: 24, overflow: 'hidden', borderBottomWidth: 1, borderBottomColor: t.border }, style]}>
+      <Txt size={24} weight="600" color={t.textMuted}>alumnect<Txt size={24} color={t.primary}>.</Txt></Txt>
+      <Txt size={12} muted>FPT University · Kết nối những thế hệ</Txt>
     </View>
   )
 }
@@ -18,7 +18,7 @@ export function BrandCover({ height = 120, style }: { height?: number; style?: V
 export function StatBox({ value, label, color }: { value: string | number; label: string; color?: string }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', paddingVertical: 6 }}>
-      <Txt size={18} weight="800" color={color}>{value}</Txt>
+      <Txt size={22} weight="500" color={color} style={{ fontVariant: ['tabular-nums'] }}>{value}</Txt>
       <Txt muted size={12} style={{ textAlign: 'center' }}>{label}</Txt>
     </View>
   )
@@ -43,10 +43,10 @@ export function StatRow({ children, style }: { children: React.ReactNode; style?
 /** Thẻ mục có tiêu đề + icon. */
 export function SectionCard({ title, icon, right, children, style }: { title: string; icon?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode; style?: ViewStyle }) {
   return (
-    <Card style={{ marginHorizontal: 12, marginBottom: 10, ...style }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+    <Card style={{ marginHorizontal: 16, marginBottom: 16, ...style }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         {icon}
-        <Txt weight="800" size={16} style={{ flex: 1 }}>{title}</Txt>
+        <Txt weight="600" size={16} style={{ flex: 1 }}>{title}</Txt>
         {right}
       </View>
       {children}
@@ -59,7 +59,7 @@ export function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; l
   const t = useTheme()
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth, borderBottomColor: t.divider }}>
-      <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
+      <View style={{ width: 24, alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
       <View style={{ flex: 1 }}>
         <Txt muted size={12}>{label}</Txt>
         {typeof value === 'string' ? <Txt weight="600">{value}</Txt> : value}
@@ -71,9 +71,8 @@ export function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; l
 /** Thanh nút hành động cố định ở đáy màn hình. */
 export function BottomBar({ children }: { children: React.ReactNode }) {
   const t = useTheme()
-  const insets = useSafeAreaInsets()
   return (
-    <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 10), backgroundColor: t.card, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border }}>
+    <View style={{ flexDirection: 'row', gap: 12, padding: 16, backgroundColor: t.card, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border }}>
       {children}
     </View>
   )

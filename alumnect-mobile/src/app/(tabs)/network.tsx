@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -145,6 +146,8 @@ export default function NetworkScreen() {
           ListEmptyComponent={
             loading ? null : (
               <Empty
+                error={tab === 'directory' ? results.error : tab === 'suggestions' ? suggestions.error : following.error}
+                onRetry={() => { void (tab === 'directory' ? results.refetch() : tab === 'suggestions' ? suggestions.refetch() : following.refetch()) }}
                 icon={<UserSearch size={28} color={t.primary} />}
                 title={tab === 'following' ? 'Bạn chưa theo dõi ai' : 'Không tìm thấy thành viên'}
                 text={tab === 'following' ? 'Theo dõi cựu sinh viên để cập nhật hoạt động của họ.' : 'Thử bỏ bớt bộ lọc hoặc đổi từ khoá.'}

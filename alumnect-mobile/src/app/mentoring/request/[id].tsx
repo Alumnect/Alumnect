@@ -1,5 +1,6 @@
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar, Button, Card, Empty, Loading, Screen, Tag, Txt } from '@/components/ui'
@@ -30,18 +31,18 @@ export default function RequestDetailScreen() {
   })
   const r = q.data
   if (q.isLoading) return <Screen><Header title="Yêu cầu" /><Loading /></Screen>
-  if (!r) return <Screen><Header title="Yêu cầu" /><Empty text="Không tìm thấy yêu cầu." /></Screen>
+  if (!r) return <Screen><Header title="Yêu cầu" /><Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy yêu cầu." /></Screen>
   const responses = r.mentorResponses ?? []
   return (
     <Screen bg={t.card}>
       <Header title="Chi tiết yêu cầu" />
       <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 16 }}>
           <Tag label={REQUEST_STATUS_LABEL[r.status] ?? r.status} tone={statusTone(r.status)} />
           <Txt size={21} weight="800" style={{ marginTop: 10, lineHeight: 28 }}>{r.title}</Txt>
           <Txt style={{ marginTop: 10, lineHeight: 22 }}>{r.description}</Txt>
         </View>
-        <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 4 }}>
+        <Card style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 4 }}>
           <InfoRow icon={<ClipboardList size={16} color={t.primary} />} label="Loại hỗ trợ" value={taskTypeLabel(r.taskType)} />
           <InfoRow icon={<Layers size={16} color={t.primary} />} label="Lĩnh vực" value={r.industryName ?? '—'} />
           <InfoRow icon={<Laptop size={16} color={t.primary} />} label="Hình thức" value={WORKING_MODE_LABEL[r.workingMode] ?? '—'} last={r.budgetMin == null && r.budgetMax == null && !r.expectedDeadline} />
@@ -50,7 +51,7 @@ export default function RequestDetailScreen() {
         </Card>
 
         {r.confirmedDealId || r.taskId ? (
-          <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 12, marginBottom: 10 }}>
+          <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginBottom: 16 }}>
             {r.confirmedDealId ? <Button title="Xem deal đã chốt" size="sm" icon={<Handshake size={15} color="#fff" />} style={{ flex: 1, height: 42 }} onPress={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(r.confirmedDealId) } })} /> : null}
             {r.taskId ? <Button title="Mở task" size="sm" variant="secondary" icon={<ListChecks size={15} color={t.primary} />} style={{ flex: 1, height: 42 }} onPress={() => router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(r.taskId) } })} /> : null}
           </View>
@@ -58,10 +59,10 @@ export default function RequestDetailScreen() {
 
         <Txt weight="800" size={16} style={{ paddingHorizontal: 16, marginVertical: 8 }}>{`Phản hồi từ mentor (${responses.length})`}</Txt>
         {responses.length === 0 ? (
-          <Empty icon={<Hourglass size={26} color={t.primary} />} title="Đang chờ mentor phản hồi" text="Bạn sẽ nhận thông báo khi có mentor chấp nhận yêu cầu." />
+          <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<Hourglass size={26} color={t.primary} />} title="Đang chờ mentor phản hồi" text="Bạn sẽ nhận thông báo khi có mentor chấp nhận yêu cầu." />
         ) : null}
         {responses.map((m) => (
-          <Card key={m.mentorProfileId} style={{ marginHorizontal: 12, marginBottom: 10 }}>
+          <Card key={m.mentorProfileId} style={{ marginHorizontal: 16, marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Avatar uri={m.mentorAvatar} name={m.mentorName} size={46} />
               <View style={{ flex: 1 }}>
@@ -81,7 +82,7 @@ export default function RequestDetailScreen() {
             </View>
           </Card>
         ))}
-        {r.canCancel ? <Button title="Huỷ yêu cầu" variant="ghost" icon={<XCircle size={16} color={t.danger} />} style={{ marginHorizontal: 12, marginTop: 4 }} onPress={() => cancel.mutate()} loading={cancel.isPending} /> : null}
+        {r.canCancel ? <Button title="Huỷ yêu cầu" variant="ghost" icon={<XCircle size={16} color={t.danger} />} style={{ marginHorizontal: 16, marginTop: 4 }} onPress={() => cancel.mutate()} loading={cancel.isPending} /> : null}
       </ScrollView>
     </Screen>
   )

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Tag, Button, Card, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
@@ -47,8 +48,8 @@ export default function DealScreen() {
 
   const pay = useMutation({ mutationFn: () => taskApi.checkout(Number(id)), onSuccess: setCheckout, onError: (e) => toast.error(errMsg(e)) })
 
-  if (q.isLoading) return <Screen><Header title="Deal" /><Loading /></Screen>
-  if (!deal) return <Screen><Header title="Deal" /><Empty text="Không tìm thấy deal." /></Screen>
+  if (q.isLoading) return <Screen keyboard><Header title="Deal" /><Loading /></Screen>
+  if (!deal) return <Screen keyboard><Header title="Deal" /><Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy deal." /></Screen>
 
   const goTask = async () => {
     try {
@@ -60,10 +61,10 @@ export default function DealScreen() {
   const hasNote = deal.canReject || deal.canRequestAdjustment
 
   return (
-    <Screen bg={t.card}>
+    <Screen keyboard bg={t.card}>
       <Header title={`Thỏa thuận #${deal.id}`} subtitle={`Phiên bản ${deal.version}`} />
       <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
-        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+        <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 16 }}>
           <Tag label={DEAL_STATUS_LABEL[deal.status] ?? deal.status} tone={statusTone(deal.status)} />
           <Txt muted size={12} style={{ marginTop: 12 }}>GIÁ THỎA THUẬN</Txt>
           <Txt size={30} weight="800" color={t.primary}>{formatVnd(deal.agreedPrice)}</Txt>
@@ -82,13 +83,13 @@ export default function DealScreen() {
           <Txt style={{ lineHeight: 21, marginTop: 2 }}>{deal.expectedResult}</Txt>
         </SectionCard>
 
-        <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 4 }}>
+        <Card style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 4 }}>
           <InfoRow icon={<CalendarClock size={16} color={t.primary} />} label="Hạn chót" value={new Date(deal.deadline).toLocaleString('vi-VN')} />
           <InfoRow icon={<Laptop size={16} color={t.primary} />} label="Hình thức" value={`${WORKING_MODE_LABEL[deal.workingMode] ?? ''} · ${deal.participationType === 'GROUP' ? 'Nhóm' : 'Cá nhân'}`} />
           <InfoRow icon={<ClipboardList size={16} color={t.primary} />} label="Loại công việc" value={taskTypeLabel(deal.taskType)} last />
         </Card>
         {deal.readOnlyReason ? (
-          <View style={{ marginHorizontal: 12, marginBottom: 10, padding: 12, borderRadius: 12, backgroundColor: t.infoTint }}>
+          <View style={{ marginHorizontal: 16, marginBottom: 16, padding: 12, borderRadius: 12, backgroundColor: t.infoTint }}>
             <Txt size={13} color={t.info}>{deal.readOnlyReason}</Txt>
           </View>
         ) : null}
@@ -111,7 +112,7 @@ export default function DealScreen() {
         ) : null}
 
         {hasNote ? (
-          <Card style={{ marginHorizontal: 12, marginBottom: 10 }}>
+          <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
             <Input label="Ghi chú / lý do (khi yêu cầu điều chỉnh hoặc từ chối)" value={note} onChangeText={setNote} multiline />
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {deal.canRequestAdjustment ? <Button title="Yêu cầu điều chỉnh" size="sm" variant="outline" style={{ flex: 1 }} onPress={run(() => dealApi.requestAdjustment(deal.id, note || undefined, deal.version), 'Đã gửi yêu cầu điều chỉnh.')} /> : null}
@@ -120,7 +121,7 @@ export default function DealScreen() {
           </Card>
         ) : null}
         {deal.canEdit ? (
-          <Button title="Chỉnh sửa điều khoản" variant="secondary" icon={<FilePen size={16} color={t.primary} />} style={{ marginHorizontal: 12 }} onPress={() => router.push({ pathname: '/mentoring/deal/form', params: { dealId: String(deal.id) } })} />
+          <Button title="Chỉnh sửa điều khoản" variant="secondary" icon={<FilePen size={16} color={t.primary} />} style={{ marginHorizontal: 16 }} onPress={() => router.push({ pathname: '/mentoring/deal/form', params: { dealId: String(deal.id) } })} />
         ) : null}
       </ScrollView>
       {deal.canConfirm || deal.canPay || deal.isPaid || deal.taskId ? (

@@ -29,6 +29,11 @@ public class MentorRegistrationResponse {
     /** Cờ kiểm tra hồ sơ đã hoàn tất tất cả điều kiện UC91 hay chưa */
     private boolean isComplete;
 
+    @com.fasterxml.jackson.annotation.JsonProperty("isComplete")
+    public boolean isComplete() {
+        return isComplete;
+    }
+
     /** Thông tin cá nhân cơ bản (tái sử dụng từ UserProfile & User, Read-only) */
     private PersonalInfo personalInfo;
 

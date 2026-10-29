@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Chip, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Card, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { WalletView } from '@/components/WalletView'
 import { walletApi } from '@/api/mentoringWallet'
@@ -64,7 +65,7 @@ export default function RefundsScreen() {
   return (
     <Screen>
       <Header title="Hoàn tiền" />
-      {refunds.isLoading || account.isLoading ? <Loading /> : (
+      {refunds.isLoading || account.isLoading ? <Loading /> : refunds.isError || account.isError ? <Empty text="Không tải được thông tin hoàn tiền." error={refunds.error ?? account.error} onRetry={() => { void Promise.all([refunds.refetch(), account.refetch()]) }} /> : (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
             <Txt muted size={13} style={{ marginBottom: 12 }}>Khoản hoàn khi Task dừng theo thỏa thuận hoặc được Ban Quản Trị phân xử sẽ chuyển về tài khoản bạn khai báo.</Txt>

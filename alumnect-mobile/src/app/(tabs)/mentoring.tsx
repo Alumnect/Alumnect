@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -84,7 +85,7 @@ export default function MentoringTab() {
           data={q.isLoading ? [] : items}
           keyExtractor={(m) => String(m.mentorId)}
           contentContainerStyle={{ paddingBottom: 24 }}
-          onEndReached={() => q.hasNextPage && q.fetchNextPage()}
+          onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
           ListHeaderComponent={
@@ -115,7 +116,7 @@ export default function MentoringTab() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty
+              <Empty error={q.error} onRetry={() => { void q.refetch() }}
                 icon={<GraduationCap size={28} color={t.primary} />}
                 title="Không tìm thấy mentor"
                 text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá."

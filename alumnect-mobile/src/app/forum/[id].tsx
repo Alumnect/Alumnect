@@ -129,10 +129,10 @@ export default function QuestionDetailScreen() {
           keyExtractor={(a) => a.id}
           style={{ backgroundColor: t.bg }}
           contentContainerStyle={{ paddingBottom: 16 }}
-          onEndReached={() => answers.hasNextPage && answers.fetchNextPage()}
+          onEndReached={() => answers.hasNextPage && !answers.isFetchingNextPage && answers.fetchNextPage()}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 10 }}>
+              <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 16 }}>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                   {qd.topic ? <Tag label={qd.topic} /> : null}
                   {qd.major ? <Tag label={qd.major} tone="neutral" /> : null}
@@ -168,7 +168,7 @@ export default function QuestionDetailScreen() {
             answers.isLoading ? <Loading /> : <Empty icon={<MessageSquare size={26} color={t.primary} />} title="Chưa có câu trả lời" text="Chia sẻ kinh nghiệm của bạn để giúp người hỏi." />
           }
           renderItem={({ item }) => (
-            <Card style={{ marginHorizontal: 12, marginBottom: 10, paddingVertical: 8, paddingHorizontal: 0 }}>
+            <Card style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 8, paddingHorizontal: 0 }}>
               <AnswerItem a={item} qid={id!} meId={me?.id} onReply={startReply} onMore={(a) => setTarget({ answer: a, mine: true })} />
               {item.replies.length ? (
                 <View style={{ marginLeft: 30, borderLeftWidth: 2, borderLeftColor: t.divider }}>

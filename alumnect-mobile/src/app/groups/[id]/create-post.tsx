@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { X } from '@/components/icons'
-import { Button, Input, Screen } from '@/components/ui'
+import { Button, Empty, Input, Loading, Screen } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { groupApi } from '@/api/groups'
 import { pickImage, uploadImage } from '@/lib/upload'
@@ -50,8 +51,11 @@ export default function GroupPostFormScreen() {
     catch (e) { toast.error(errMsg(e)) } finally { setUploading(false) }
   }
 
+  if (postId && existing.isLoading) return <Screen><Header title="Sửa bài viết" /><Loading /></Screen>
+  if (postId && !existing.data) return <Screen><Header title="Sửa bài viết" /><Empty text="Không tìm thấy bài viết." error={existing.error} onRetry={() => { void existing.refetch() }} /></Screen>
+
   return (
-    <Screen>
+    <Screen keyboard>
       <Header title={postId ? 'Sửa bài viết' : 'Đăng bài trong nhóm'} />
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <Input value={content} onChangeText={setContent} multiline placeholder="Chia sẻ với nhóm..." error={error} />

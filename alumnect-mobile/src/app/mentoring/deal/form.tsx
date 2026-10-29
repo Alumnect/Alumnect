@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, View } from 'react-native'
+import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Chip, Input, Screen, Txt } from '@/components/ui'
+import { Button, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { DateField } from '@/components/DateField'
 import { DEAL_TASK_TYPES, dealApi } from '@/api/mentoringFlow'
@@ -59,6 +60,9 @@ export default function DealFormScreen() {
     if (!Object.keys(e).length) m.mutate()
   }
 
+  if (dealId && existing.isLoading) return <Screen><Header title="Chỉnh sửa deal" /><Loading /></Screen>
+  if (dealId && !d) return <Screen><Header title="Chỉnh sửa deal" /><Empty text="Không tìm thấy thỏa thuận." error={existing.error} onRetry={() => { void existing.refetch() }} /></Screen>
+
   return (
     <Screen>
       <Header title={dealId ? 'Chỉnh sửa deal' : 'Đề xuất deal'} />
@@ -69,7 +73,7 @@ export default function DealFormScreen() {
           <Input label="Giá thỏa thuận (VND)" value={f.price} onChangeText={(v) => set('price')(v.replace(/\D/g, ''))} keyboardType="number-pad" error={errors.price} />
           <DateField label="Hạn chót" value={deadline} onChange={setDeadline} error={errors.deadline} />
           <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Hình thức</Txt>
-          <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
             {(Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((k) => <Chip key={k} label={WORKING_MODE_LABEL[k]} active={mode === k} onPress={() => setMode(k)} />)}
           </View>
           <View style={{ flexDirection: 'row', marginBottom: 12 }}>
