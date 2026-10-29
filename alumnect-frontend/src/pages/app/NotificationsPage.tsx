@@ -25,6 +25,7 @@ import type { LucideIcon } from 'lucide-react'
 import { PageHeader, Avatar, Card, EmptyState, Skeleton, Pagination, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import http from '@/lib/http'
 import { useAuthStore } from '@/store/authStore'
 import { mentoringGroupApi } from '@/features/mentorship/api/mentoringGroupApi'
 import { useAcceptIncomingRequest, useDeclineIncomingRequest } from '@/features/mentorship'
@@ -249,6 +250,16 @@ export function NotificationsPage() {
       navigate(`/app/profile?userId=${item.targetId}`)
     } else if (item.targetType === 'QUESTION' && item.targetId) {
       navigate(`/app/forum/${item.targetId}`)
+    } else if (item.targetType?.toUpperCase() === 'EVENT' && item.targetId) {
+      // Gọi endpoint sự kiện để lấy postId và mở bài viết sự kiện tương ứng
+      http.get(`/events/${item.targetId}`)
+        .then((res: any) => {
+          const postId = res?.data?.postId || res?.postId
+          navigate(postId ? `/app/posts/${postId}` : '/app/events')
+        })
+        .catch(() => {
+          navigate('/app/events')
+        })
     } else {
       navigate('/app')
     }
